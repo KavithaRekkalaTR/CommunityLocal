@@ -1,0 +1,33 @@
+##
+## Gets a serialized Reply
+##
+## Paramters
+##
+##   _w_replyId
+##   _w_threadLastReadDateOnLoad
+##
+
+$core_v2_page.SetContentType('application/json')
+
+$core_v2_widget.ExecuteFile('common-config.vm')
+
+##
+## Parse Parameters
+##
+#set ($replyId = false)
+#set ($replyIdQuery = false)
+#set ($replyIdQuery = $core_v2_page.GetQueryStringValue('_w_replyId'))
+#if ($replyIdQuery && $replyIdQuery.length > 0)
+	#set ($replyId = $core_v2_utility.ParseInt($replyIdQuery))
+#end
+
+#set ($threadLastReadDateOnLoadQuery = false)
+#set ($threadLastReadDateOnLoadQuery = $core_v2_page.GetQueryStringValue('_w_threadLastReadDateOnLoad'))
+#if ($threadLastReadDateOnLoadQuery && $threadLastReadDateOnLoadQuery.length > 0)
+	#set ($threadLastReadDateOnLoad = $core_v2_utility.ParseLong($threadLastReadDateOnLoadQuery))
+#end
+
+#set ($forumReply = $core_v2_forumReply.Get($replyId))
+
+#set ($excludeContainer = false)
+$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')

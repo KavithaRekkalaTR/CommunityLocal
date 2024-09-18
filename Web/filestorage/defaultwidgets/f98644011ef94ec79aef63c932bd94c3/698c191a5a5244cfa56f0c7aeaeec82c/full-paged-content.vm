@@ -1,0 +1,64 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($activities = $context.GetDetail($options))
+
+#foreach($activity in $activities)
+#beforeall
+<div class="responsive-wrapper">
+	<table>
+    <thead>
+		<tr>
+            $reporting_ui.SortableTableHeader("", "Name", "ascending", $core_v2_language.GetResource('Title'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("", "ActivityDate", "descending", $core_v2_language.GetResource('ActivityDate'), $sortBy, $sortOrder)
+			<th>$core_v2_language.GetResource('ActivityType')</th>
+			<th>$core_v2_language.GetResource('User')</th>
+			<th>$core_v2_language.GetResource('UserCreated')</th>
+			<th>$core_v2_language.GetResource('Location')</th>
+		</tr>
+	</thead>
+	<tbody>
+#each
+        #set ($apiContent = false)
+		#set ($apiContent = $core_v2_content.Get($activity.PrimaryContent.ContentId, $activity.PrimaryContent.ContentTypeId))
+
+		<tr data-id="$activity.PrimaryContent.ContentId">
+                #set($title = '')
+
+				#if ($apiContent && !$apiContent.HasErrors())
+					#set($title = $apiContent.HtmlName('web'))
+				#end
+				#if (!$title || $title.Length == 0)
+					#if ($activity.PrimaryContent.Subject && $activity.PrimaryContent.Subject.Length > 0)
+						#set ($title = $activity.PrimaryContent.Subject)
+					#else
+						#set ($title = $core_v2_language.GetResource('Unknown'))
+					#end
+				#end
+			$reporting_ui.ContentNameTableCellWithActions($activity.PrimaryContent.ContentId, $title, $apiContent.Url)
+			<td data-title="$core_v2_language.GetResource('ActivityDate')">#if($activity.ActivityDate)$core_v2_language.FormatDateAndTime($activity.ActivityDate, "%{AdjustTimeZone = 'false'}")#end</td>
+			<td data-title="$core_v2_language.GetResource('ActivityType')">$!activity.Description</td>
+			<td data-title="$core_v2_language.GetResource('User')">$!activity.User.ExpandedName</td>
+			<td data-title="$core_v2_language.GetResource('UserCreated')">#if($activity.User.CreatedDate)$reporting_ui.FormatAgoDate($activity.User.CreatedDate)#end</td>
+			<td data-title="$core_v2_language.GetResource('Location')">
+				$!activity.PrimaryContent.Application.Name #if($activity.PrimaryContent.Application.Name && $activity.PrimaryContent.Application.Container.Name) - #end $!activity.PrimaryContent.Application.Container.Name
+			</td>
+		</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$activities.PageSize" data-totalitems="$activities.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

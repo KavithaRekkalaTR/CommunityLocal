@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:RoleFilter_Name}"
+                           version="10.0.0.0"
+                           description="${resource:RoleFilter_Description}"
+                           instanceIdentifier="47045d1a04e54e3aa7f2f0d76b496280"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+
+#set($userRolePicker = $core_v2_widget.UniqueId("userRolePicker"))
+
+<div id="$userRolePicker" class="custom-filter">
+    <span></span> <b class="caret"></b>
+</div>
+
+#registerEndOfPageHtml('telligent.reporting.widgets.usersAndRolesFilter')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('userrolepicker.js')"></script>
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	var includeRoles = [];
+	var includeUsers = [];
+
+  jQuery.telligent.reporting.widgets.usersAndRolesFilter.register({
+    tabKey: '$filterContext.TabKey',
+    includeRoles: includeRoles,
+    includeUsers: includeUsers,
+    fields: {
+      userRolePickerId: '#$userRolePicker',
+    },
+    resources: {
+      filterByUsers: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('filterByUsers'))',
+      filterByMembers: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('filterByMembers'))',
+    },
+    urls: {
+      lookupRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-roles.vm'))',
+      lookupUsers: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))'
+    }
+  });
+</script>
+#end
+
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="RoleFilter_Name">Member and Role Filter</resource>
+        <resource name="RoleFilter_Description">Displays a member and role filter reports and dashboards</resource>
+        <resource name="filterByUsers">All users</resource>
+        <resource name="filterByMembers">All members</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

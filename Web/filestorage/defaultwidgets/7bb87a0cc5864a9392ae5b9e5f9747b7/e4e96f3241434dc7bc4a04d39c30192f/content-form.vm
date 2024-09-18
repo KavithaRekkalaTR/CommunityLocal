@@ -1,0 +1,74 @@
+#set($tempKey = $core_v2_page.GetQueryStringValue("tempkey"))
+#if ($tempKey)
+  #set($tempBody = $core_v2_utility.GetTemporaryData($tempKey))
+#end
+
+#if ($commentFormVisible)
+	<div class="comment-form #if($userMustLogin) must-login #end">
+	    $core_v2_widget.ExecuteFile('content-statistics.vm')
+	    #if ($userMustLogin)
+	        <fieldset class="login">
+    			<ul class="field-list">
+    				<li class="field-item">
+    					<span class="field-item-input">
+                            <a href="#" data-messagename="ui.comments.login" class="button primary">$core_v2_language.GetResource('login_to_reply')</a>
+                        </span>
+                    </li>
+                </ul>
+            </fieldset>
+	    #else
+    		<div class="author" #if ($user.ProfileUrl) data-authorprofileurl="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" #else data-authorprofileurl="" #end>
+    			<div class="avatar">
+    				#if ($user.ProfileUrl)
+    					<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="internal-link view-user-profile">
+    						$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 44, 44, "%{border='0px', alt=$user.DisplayName, ResizeMethod='ZoomAndCrop'}")
+    					</a>
+    				#else
+    					$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 44, 44, "%{border='0px', alt=$user.DisplayName, ResizeMethod='ZoomAndCrop'}")
+    				#end
+    			</div>
+    			#if (!$isAnonymous)
+    				<div class="meta">
+    					<span class="user-name">
+    						$core_v2_ui.UserPresence($user.Id)
+    						#if ($user.ProfileUrl)
+    							<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="internal-link view-user-profile">
+    								$user.DisplayName
+    							</a>
+    						#else
+    							$user.DisplayName
+    						#end
+    					</span>
+    				</div>
+    			#end
+    		</div>
+    		<fieldset>
+    			<ul class="field-list">
+    				<li class="field-item post-body">
+    					<span class="field-item-input">
+    						#set ($submittableEditorOptions = "%{}")
+    						$submittableEditorOptions.Add('ContentTypeId', $core_v2_comments.ContentTypeId.ToString())
+    						$submittableEditorOptions.Add('Width','100%')
+    						$submittableEditorOptions.Add('Height','60px')
+    						$submittableEditorOptions.Add('Placeholder', $core_v2_language.GetResource('placeholder'))
+    						$submittableEditorOptions.Add('AutoResize', true)
+    						$submittableEditorOptions.Add('aria-label', $core_v2_language.GetResource('comment'))
+    						#if ($userMustLogin)
+    							$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('Comment_EnterToLogin'))
+    							$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('Comment_Login'))
+    						#else
+    							$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('Comment_EnterToComment'))
+    							$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('comment'))
+    						#end
+    						$core_v2_submittableEditor.Render($createEditorId, "function() { jQuery.telligent.evolution.messaging.publish('widgets.comments.submit', { from: '$core_v2_widget.WrapperElementId', #if ($userMustLogin) login: true #else login: false #end }); }", $submittableEditorOptions)
+    					</span>
+    					<span class="field-item-validation" style="display: none;"></span>
+    					<span class="processing"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+    				</li>
+    			</ul>
+    		</fieldset>
+        #end
+    </div>
+
+	#set($returnUrl = $core_v2_urls.Current)
+#end

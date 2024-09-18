@@ -1,0 +1,60 @@
+#set ($sortBy = $core_v2_widget.GetStringValue('sortBy', 'GroupQualityAuthorScore'))
+#if ($sortBy == 'GroupQualityAuthorScore')
+	#set ($sortBy = "Score:${core_v2_groupAuthorQualityScore.ScoreId}")
+#end
+#set ($sortOrder = $core_v2_widget.GetStringValue('sortOrder', 'Descending'))
+#set ($groupId = false)
+#set ($groupId = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('groupSelection','')).Value('Group')))
+#if ($groupId <= 0)
+	#set ($groupId = $core_v2_group.Current.Id)
+#end
+
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 20))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($show = $core_v2_widget.GetStringValue('show', 'owners'))
+
+#set ($members = false)
+#if ($show == 'owners')
+	#set ($members = $core_v2_groupUserMember.ListEffectiveGroupMembers($groupId, "%{ MembershipType='Owner', PageIndex = $pageIndex, PageSize = $pageSize, SortBy = 'DisplayName', SortOrder = 'Ascending', IncludeRoleMembers='True' }"))
+#elseif ($sortBy == "Score:${core_v2_groupAuthorQualityScore.ScoreId}")
+		#set ($members = $core_v2_groupUserMember.ListEffectiveGroupMembers($groupId, "%{ PageIndex = $pageIndex, PageSize = $pageSize, SortBy = $sortBy, SortOrder = $sortOrder }"))
+#else
+		#set ($members = $core_v2_groupUserMember.ListEffectiveGroupMembers($groupId, "%{ PageIndex = $pageIndex, PageSize = $pageSize, SortBy = $sortBy, SortOrder = $sortOrder, MembershipType='Owner,Manager,Member' }"))
+#end
+
+#if (!$members || $members.TotalCount == 0)
+	 $core_v2_widget.Hide()
+#end
+
+#foreach ($member in $members)
+#beforeall
+	<div class="avatar-list">
+	<ul class="content-list">
+#each
+		<li class="content-item" #if ($member.User.ProfileUrl) data-href="$core_v2_encoding.HtmlAttributeEncode($member.User.ProfileUrl)" #end>
+			<div class="author">
+				<div class="avatar">
+					#if ($member.User.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($member.User.ProfileUrl)" class="internal-link">
+							$core_v2_ui.GetResizedImageHtml($member.User.AvatarUrl, 35, 35, "%{border='0px', ResizeMethod='ZoomAndCrop', alt = $member.User.DisplayName}")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($member.User.AvatarUrl, 35, 35, "%{border='0px', alt=$member.User.DisplayName, ResizeMethod='ZoomAndCrop' }")
+					#end
+				</div>
+				#if ($member.User.ProfileUrl)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($member.User.ProfileUrl)" class="internal-link view-full-post navigable">
+						<div class="content">$core_v2_language.Truncate($member.User.DisplayName, 100, "...")</div>
+					</a>
+				#else
+					<div class="content">$core_v2_language.Truncate($member.User.DisplayName, 100, "...")</div>
+				#end
+				<div class="meta">
+					$core_v2_language.GetResource($member.MembershipType.ToLower())
+				</div>
+			</div>
+		</li>
+#afterall
+	</ul>
+	</div>
+#end

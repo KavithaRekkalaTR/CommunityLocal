@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Contact Request" version="13.0.0.0" description="Sends an email when a user requests to contact a blog author." id="81da4d3bbdd64d718c750333a522fe66" lastModified="2023-05-09 19:43:52Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('application_name')
+    $context_v1_email.Context.ContactRequest.ApplicationName
+#token('contact_subject')
+    $context_v1_email.Context.ContactRequest.Subject
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$context_v1_email.Context.ContactRequest.Subject]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[$context_v1_email.Context.ContactRequest.Body]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('application_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ContactRequest.Link)">$context_v1_email.Context.ContactRequest.ApplicationName</a>
+#token('contact_name')
+    $context_v1_email.Context.ContactRequest.SubmittedName
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Footer">This contact request was sent from {application_name_link} by {contact_name} without sharing your email address.</resource>
+  <resource name="Subject"> {application_name}: {contact_subject}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

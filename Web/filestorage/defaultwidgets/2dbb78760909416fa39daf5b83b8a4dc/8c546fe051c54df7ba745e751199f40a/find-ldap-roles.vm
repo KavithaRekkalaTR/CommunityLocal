@@ -1,0 +1,17 @@
+﻿$core_v2_page.SetContentType('application/json')
+#set($searchText = $core_v2_page.GetQueryStringValue('searchText'))
+
+#set($loweredSearchText = "$core_v2_language.Lowercase($searchText)")
+#set($results = $context.LdapGroupSearch($loweredSearchText))
+
+$core_v2_page.SetContentType('application/json')
+
+{"Results":[
+	#if($results)
+		#foreach($result in $results)
+			{"Id":"$result.Id","Name":"$core_v2_encoding.JavascriptEncode($result.Name)"}
+		#between
+			,
+		#end
+	#end
+]}

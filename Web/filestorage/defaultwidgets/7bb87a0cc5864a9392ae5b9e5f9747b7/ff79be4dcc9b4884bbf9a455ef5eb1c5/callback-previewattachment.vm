@@ -1,0 +1,22 @@
+## Loads Attachment Preview
+#set($messageBody = $core_v2_page.GetFormValue('message'))
+
+#set ($attachedFileName = false)
+#set ($attachedFileName = $core_v2_page.GetFormValue('fileName'))
+#set ($attachedFileContext = false)
+#set ($attachedFileContext = $core_v2_page.GetFormValue('contextId'))
+#set ($attachedUrl = false)
+#if ($attachedFileName.length > 0 && $attachedFileContext.length > 0)
+	#set ($attachedFile = false)
+	#set ($attachedFile = $core_v2_uploadedFile.Get($attachedFileContext, $attachedFileName))
+	#if ($attachedFile)
+	   #set ($attachedUrl = $attachedFile.Url)
+	#end
+#end
+
+#set ($options = "%{}")
+#if ($attachedUrl)
+	$options.Add('AttachedUrl', $attachedUrl)
+#end
+
+$core_v2_statusMessage.PreviewAttachment($messageBody, $options)

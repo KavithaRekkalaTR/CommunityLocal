@@ -1,0 +1,66 @@
+@small-sidebars: ~'.left-sidebar, .split-sidebar-right, .split-sidebar-left, .content-left-sidebar-right .right-sidebar, .sidebar-left-content-center-sidebar-right .right-sidebar, .header-top-sidebar-left-content-center-sidebar-right .right-sidebar, .header-top-content-left-sidebar-right .right-sidebar, .header-top-content-left-sidebar-right-footer .right-sidebar, .header-top-sidebar-left-content-center-sidebar-right-footer .right-sidebar, .header-top-content-left-split-sidebar-right-top-single-sidebar-right-bottom-footer .right-sidebar';
+
+.scale_replaced_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @padding: 0px) {
+	width: @size + (@padding * 2);
+	height: @size + (@padding * 2);
+	&:before {
+		width: @size + (@padding * 2);
+		height: @size + (@padding * 2);
+		top: @padding;
+		font-size: @size;
+		line-height: @size;
+	}
+}
+.content-fragment.event-list .content-list.content li.content-item {
+	padding: 10px/1.5 0;
+	margin: 10px/1.5 0;
+	color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #ffffff), 45%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));;
+	&:last-child {
+		border-bottom: 0px;
+	}
+	.content.abbreviated {
+		h3.name {
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px)*1.4;
+		}
+		.content {
+			padding-bottom: 5px;
+		}
+	}
+	a {
+		color: -evo-themeconfig-color('foregroundColor', #11171A);
+		&:hover {
+			color: -evo-themeconfig-color('linkFontColor', #2196F3);
+		}
+		&.cancelled_event {
+			color:#ff0000;
+		}
+		&.edit {
+			.scale_replaced_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2);
+			color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 44%, -evo-themeconfig-color('backgroundColor', #ffffff), -evo-themeconfig-double('contrast', 0));
+			&:hover {
+				color: -evo-themeconfig-color('foregroundColor', #11171A);
+			}
+		}
+	}
+}
+
+.content-fragment.event-list {
+	.avatar-list .content-list .content-item {
+		padding-left: 0;
+	}
+	.avatar-list {
+		margin-bottom: 0;
+	}
+	p	{
+		display:block;
+		margin: 0 0 10px 0;
+		font-size: 110%;
+	}
+}
+
+@{small-sidebars} {
+ .content-fragment.event-list.view-calendar {
+		margin-top: 78px !important;
+		padding-top: 0 !important;
+	}
+}

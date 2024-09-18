@@ -1,0 +1,124 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.user-defined-markup {
+
+	 max-width: 100%;
+	 overflow: hidden;
+	 position: relative;
+	 word-wrap: break-word;
+
+	.hyphenate;
+	a {
+		color: @color-link;
+		text-decoration: none;
+		&:hover {
+			text-decoration: underline;
+		}
+		&:visited {
+			color: -evo-increase-contrast(@color-accent, 29%, @color-background, @color-contrast);
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+		&> img {
+			display: inline;
+		}
+		&.ui-contentpeek {
+			background-color: -evo-decrease-contrast(@color-background, 4%, @color-accent, @color-contrast);
+			border: 1px solid -evo-decrease-contrast(@color-background, 10%, @color-accent, @color-contrast);
+			border-radius: 3px;
+			padding: 1px 3px 1px 3px;
+		}
+	}
+	pre:not(.ui-code) {
+		padding: @spacing;
+		background-color: -evo-decrease-contrast(@color-background, 6%, @color-foreground, @color-contrast);
+		border-radius: 3px;
+		font-size: .9em;
+	}
+	blockquote {
+		line-height: @line-height;
+		font-style: italic;
+		border-left: @spacing solid -evo-decrease-contrast(@color-background, 6%, @color-foreground, @color-contrast);
+		margin: 0px;
+		padding: 0 0 0 .5em;
+
+		&.quote {
+			.quote-user {
+				a {
+					color: -evo-decrease-contrast(@color-background, 42%, @color-foreground, @color-contrast);
+					&:hover, &:active {
+						color: @color-link;
+					}
+				}
+				font-weight: 600;
+				color: -evo-decrease-contrast(@color-background, 42%, @color-foreground, @color-contrast);
+				padding-bottom: @spacing / 2;
+			}
+		}
+	}
+	.quote-footer + p {
+		margin-top: @spacing / 2;
+	}
+	ol,
+	ul {
+		line-height: @line-height;
+		padding: 0 0 0 2em;
+		margin: 1em 0 1em 0;
+		ol, ul {
+			margin: 0;
+		}
+	}
+
+	ol { list-style-type: decimal; }
+	ol ol { list-style-type: lower-alpha; }
+	ol ol ol { list-style-type: upper-alpha; }
+	ol ol ol ol { list-style-type: lower-roman; }
+	ol ol ol ol ol{ list-style-type: upper-roman; }
+
+	ul {
+		list-style: disc;
+	}
+	table {
+		margin: 0px;
+		padding: 0px;
+		width: 100%;
+		th, td {
+			word-wrap: normal;
+			line-height: @line-height;
+			padding: @spacing / 1.5;
+			border-bottom: 1px solid -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+		}
+		td {
+
+		}
+		th {
+			text-align: left;
+			font-weight: bold;
+			border-bottom: 1px solid @color-foreground;
+		}
+	}
+
+	img.align-left {
+		margin: 0 @spacing @spacing 0;
+	}
+
+	img.align-right {
+		margin: 0 0 @spacing @spacing;
+	}
+
+	pre {
+		white-space: pre;
+		word-wrap: normal;
+	}
+
+	> div {
+		line-height: 1.5em;
+	}
+}

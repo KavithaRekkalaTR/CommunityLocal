@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Translatable Plugin" version="9.0.0.0" description="" instanceIdentifier="0e0aa7657f37450ea39f2d0dc389ffcc" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="40e6d7d629f343c89bcfad8ecfaaf40b">
+	<contentScript><![CDATA[<div id="$core_v2_widget.UniqueId('tab')" class="translations">
+
+	#set ($translationsListId = $core_v2_widget.UniqueId('translationsList'))
+	#set ($filterId = $core_v2_widget.UniqueId('filter'))
+	#set ($translationsWrapperId = $core_v2_widget.UniqueId('translationsWrapper'))
+
+	#set ($languages = $core_v2_administrationPanels.GetLanguages())
+	#set ($currentlanguage = '')
+
+	<p>$core_v2_language.GetResource('Instructions')</p>
+
+	<form><fieldset id="$core_v2_encoding.HtmlAttributeEncode($filterId)" class="language-filter">
+		<div class="filter-selector">
+			#foreach ($language in $languages)
+			#beforeall
+				<select class="language">
+			#each
+				#if ($currentlanguage == '')
+					#set($currentlanguage = $language.Key)
+					<option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)" selected>$core_v2_encoding.HtmlEncode($language.Name)</option>
+				#else
+					<option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)">$core_v2_encoding.HtmlEncode($language.Name)</option>
+				#end
+			#afterall
+				</select>
+			#end
+		</div>
+	</fieldset>
+
+	<fieldset>
+	<ul class="field-list" id="$core_v2_encoding.HtmlAttributeEncode($translationsListId)">
+		<li class="field-item" data-language='all'>
+			<span class="field-item-name">$core_v2_language.GetResource('Name')</span>
+			<span class="field-item-name">$core_v2_language.GetResource('Value')</span>
+		</li>
+		#set($id = 1)
+		#foreach ($language in $languages)
+			#set($hide = false)
+			#if($currentlanguage != $language.Key)
+				#set($hide = true)
+			#end
+			#set ($resources = false)
+			#set ($resources = $core_v2_administrationPanels.GetResources($context.PluginType, $language.Key))
+			#foreach ($resource in $resources)
+			#each
+				<li class="field-item" data-resourcekey="$core_v2_encoding.HtmlAttributeEncode($resource.Key)" data-language="$core_v2_encoding.HtmlAttributeEncode($language.Key)" #if($hide == true)style="display: none;"#end>
+					<label class="field-item-name" for="$core_v2_widget.UniqueId("resource$id")">$core_v2_encoding.HtmlAttributeEncode($resource.Key)</label>
+					<span class="field-item-input">
+						<input type="text" id="$core_v2_widget.UniqueId("resource$id")" value="$core_v2_encoding.HtmlAttributeEncode($resource.Value)" />
+					</span>
+				</li>
+				#set($id = $id + 1)
+			#end
+		#end
+	</ul>
+	</fieldset></form>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.pluginTranslations')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		(function(){
+			var api = $context.JsonApi;
+			api.registerContent({
+				name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Translation'))',
+				orderNumber: 90100,
+				selected: function() {
+					jQuery('#$core_v2_widget.UniqueId('tab')').css({
+						visibility: 'visible',
+						height: 'auto',
+						width: 'auto',
+						left: '0',
+						position: 'static',
+						overflow: 'visible',
+						top: '0'
+					});
+				},
+				unselected: function() {
+					jQuery('#$core_v2_widget.UniqueId('tab')').css({
+						visibility: 'hidden',
+						height: '100px',
+						width: '800px',
+						left: '-1000px',
+						position: 'absolute',
+						overflow: 'hidden',
+						top: '-1000px'
+					});
+				}
+			});
+
+			jQuery.telligent.evolution.widgets.pluginTranslations.register({
+				api: api,
+				list: '#$core_v2_encoding.JavascriptEncode($translationsListId)',
+				filter: '#$core_v2_encoding.JavascriptEncode($filterId)',
+				saveTranslationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))'
+			});
+		})();
+	</script>
+#end]]></contentScript>
+	<languageResources><language key="en-us">
+  <resource name="Translation">Translation</resource>
+  <resource name="Name">Resource Name</resource>
+  <resource name="Value">Translated Text</resource>
+  <resource name="Instructions">The following language resources are used to translate this functionality. The translations can be adjusted below.</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

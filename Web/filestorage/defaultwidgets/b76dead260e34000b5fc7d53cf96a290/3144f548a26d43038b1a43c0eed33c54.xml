@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ForumMailingListPanel_Name}" version="11.0.0.0" description="${resource:ForumMailingListPanel_Description}" instanceIdentifier="3144f548a26d43038b1a43c0eed33c54" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-forummailinglist" lastModified="2020-08-27 20:03:34Z" provider="b76dead260e34000b5fc7d53cf96a290">
+    <contentScript language="Velocity"><![CDATA[
+#set($forum = $context.Forum)
+#set($list = $context.MailingList)
+
+#set($mediaGalleryId = '00000000-0000-0000-0000-000000000000')
+#if ($list)
+	#set($mediaGalleryId = $list.MappedMediaGalleryId)
+#end
+
+#if ($mediaGalleryId != '00000000-0000-0000-0000-000000000000')
+	#set($mediaGallery = $core_v2_gallery.Get($list.MappedMediaGalleryId))
+#end
+
+<div id="$core_v2_widget.WrapperElementId">
+
+	<form><fieldset>
+		<ul class="field-list">
+			
+			<li class="field-item enable">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('Enable')" name="Enable" #if($list.IsEnabled)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('Enable')" class="field-item-name">$core_v2_language.GetResource('Enable')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('Enable_Detail')</span>
+			</li>			
+			
+			<li class="field-item name">
+				<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('Name')" name="listName" maxlength="256" value="$!list.ListName" /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			
+			<li class="field-item email-address">
+				<label for="$core_v2_widget.UniqueId('EmailAddress')" class="field-item-name">$core_v2_language.GetResource('EmailAddress')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('EmailAddress_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('EmailAddress')" name="mailingList-EmailAddress" style="width: 50%;" maxlength="256" value="$!list.EmailAddress" />@$context.MailGatewayEmailDomain
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>			
+			
+			<li class="field-item email-footer">
+				<label for="$core_v2_widget.UniqueId('FooterMessage')" class="field-item-name">$core_v2_language.GetResource('FooterMessage')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('FooterMessage_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('FooterMessage')" name="FooterMessage" value="$!list.FooterMessage" /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>			
+			
+			<li class="field-item passive-mode">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnablePassiveMode')" name="PassiveMode" #if($list.PassiveMode == 'True')checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('EnablePassiveMode')" class="field-item-name">$core_v2_language.GetResource('PassiveMode')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('PassiveMode_Detail')</span>
+			</li>	
+			
+			<li class="field-item passive-email-address">
+				<label for="$core_v2_widget.UniqueId('PassiveModeAddress')" class="field-item-name">$core_v2_language.GetResource('PassiveModeAddress')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('PassiveModeAddress_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('PassiveModeAddress')" name="PassiveModeAddress" maxlength="256" value="$!list.PassiveModeAddress" /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item mapped-gallery">
+				<label for="$core_v2_widget.UniqueId('MappedMediaGallery')" class="field-item-name">$core_v2_language.GetResource('MappedMediaGallery')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('MappedMediaGallery_Detail')</span>
+
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('MappedMediaGallery')" /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		</ul>
+	</fieldset></form>
+
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.forumMailingListPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.forumMailingListPanel.register({
+			applicationId: '$context.ApplicationId',
+			applicationTypeId: '$context.ApplicationTypeId',
+			mailingListId: #if ($list) '$list.Id' #else '' #end,
+			parentGroupId: '$context.Forum.Group.Id',
+			mediaGalleryId: '$mediaGalleryId',
+			mediaGalleryName: #if($mediaGallery)'$mediaGallery.Name'#else '' #end,			
+			inputs: {
+				enableId: "#$core_v2_widget.UniqueId('Enable')",
+				nameId: "#$core_v2_widget.UniqueId('Name')",
+				emailAddressId: "#$core_v2_widget.UniqueId('EmailAddress')",
+				footerMessageId: "#$core_v2_widget.UniqueId('FooterMessage')",
+				enablePassiveModeId: "#$core_v2_widget.UniqueId('EnablePassiveMode')",
+				passiveModeAddressId: "#$core_v2_widget.UniqueId('PassiveModeAddress')",
+				mappedMediaGalleryId: "#$core_v2_widget.UniqueId('MappedMediaGallery')"
+			},
+			resources: {
+				noGalleriesMatch: "$core_v2_language.GetResource('MediaGalleryLookUp_NoMatches')",
+				save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+				namePatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NamePatternMessage'))",
+				forumUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForumUpdated'))",
+				requiredText: "$core_v2_language.GetResource('RequiredText')",
+				passiveEmailRequiredText: "$core_v2_language.GetResource('PassiveEmailRequiredText')",
+				enabledListRequiredText: "$core_v2_language.GetResource('EnabledListRequiredText')"
+			},
+			urls: {
+				lookupGalleries:  "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/galleries.json')",
+				save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))'
+			}
+		});
+	});
+	</script>
+#end
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Delete">Delete</resource>
+  <resource name="EmailAddress">List Email Address</resource>
+  <resource name="EmailAddress_Detail">This is the email address the list will use</resource>
+  <resource name="Enable">Enable as a mailing list</resource>
+  <resource name="Enable_Detail">When enabled, this forum can act as a mailing list using Mail Gateway</resource>
+  <resource name="EnabledListRequiredText">This field is required when mailing list is enabled.</resource>
+  <resource name="FooterMessage">Email Footer</resource>
+  <resource name="FooterMessage_Detail">This text will be appended to the end of email messages from this forum</resource>
+  <resource name="ForumMailingListPanel_Description">Manage a forum's mailing list options.</resource>
+  <resource name="ForumMailingListPanel_Name">Mailing List Options</resource>
+  <resource name="ForumUpdated">Mailing list options have been updated.</resource>
+  <resource name="MappedMediaGallery">Create Attachments in Mapped Media Gallery</resource>
+  <resource name="MappedMediaGallery_Detail">When a media gallery is selected, Evolution will create a media file in the selected gallery for each email attachment into the mailing list and a link will be provided on the forum post. If no media gallery is selected, attachments will be added to the forum post itself.</resource>
+  <resource name="MediaGalleryLookUp_NoMatches">A matching gallery could not be found.</resource>
+  <resource name="Name">Mailing list name</resource>
+  <resource name="Name_Detail">This is the name of the mailing list that will show up in the subject of messages between two brackets (ie, [ ])</resource>
+  <resource name="NamePatternMessage">Email Address contains invalid characters</resource>
+  <resource name="PassiveEmailRequiredText">This field is required when passive mode is enabled.</resource>
+  <resource name="PassiveMode">Enable Passive Mode</resource>
+  <resource name="PassiveMode_Detail">This option enables the "passive" mode for a mailing list where it will accept post by email, but not send emails back to the subscribers. It will, however, still send emails to the subscribers for posts made on the website.</resource>
+  <resource name="PassiveModeAddress">Passive Mode Email Address</resource>
+  <resource name="PassiveModeAddress_Detail">This option is the email address that is used when Passive Mode is enabled. Posts to/cc'd to this address will be accepted without sending the message out to subscribers, and posts on the web will be emailed to this address. Typically, this address will be a distribution list.</resource>
+  <resource name="RequiredText">This field is required.</resource>
+  <resource name="Save">Save</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="galleries.galleries.readonly" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

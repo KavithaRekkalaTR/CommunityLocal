@@ -1,0 +1,106 @@
+#set ($fragmentId = false)
+#set ($fragmentIdQuery = $core_v2_page.GetQueryStringValue('_w_id'))
+#if ($fragmentIdQuery)
+	#set ($fragmentId = $core_v2_utility.ParseGuid($fragmentIdQuery))
+#end
+
+#set ($options = "%{}")
+#set ($fragment = false)
+
+#if ($fragmentId)
+	$options.Add('InstanceIdentifier', $fragmentId)
+#end
+
+#set ($fragment = $context.GetFragment($options))
+
+#set ($themeTypesId = "${core_v2_widget.UniqueId('themeTypes')}-${fragmentId}")
+#set ($selectAllId = $core_v2_widget.UniqueId('selectAll'))
+#set ($deselectAllId = $core_v2_widget.UniqueId('deselectAll'))
+#set ($revertId = $core_v2_widget.UniqueId('revert'))
+
+<form>
+	<fieldset>
+		<ul class="field-list">
+
+			<li class="field-item supported-theme-types" id="$core_v2_encoding.HtmlAttributeEncode($themeTypesId)">
+				<label class="field-item-name">$core_v2_language.GetResource('AvailableWithin')</label>
+				<span class="field-item-description">
+					#format($core_v2_language.GetResource('AvailableWithinDesc'))
+						#token('name')
+							$fragment.ProcessedName
+					#end
+				</span>
+
+				<div class="actions">
+					<div class="navigation-list ui-links" data-direction="horizontal">
+						<ul>
+							<li class="navigation-list-item">
+								<a class="inline-button" href="#" id="$core_v2_encoding.HtmlAttributeEncode($selectAllId)">$core_v2_language.GetResource('SelectAll')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a class="inline-button" href="#" id="$core_v2_encoding.HtmlAttributeEncode($deselectAllId)">$core_v2_language.GetResource('DeselectAll')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a class="inline-button" href="#" id="$core_v2_encoding.HtmlAttributeEncode($revertId)">$core_v2_language.GetResource('RevertToDefault')</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				#foreach ($themeType in $fragment.AvailableThemeTypes)
+					<span class="field-item-input supported-theme-types">
+						<input class="supported-theme-types"
+							type="checkbox"
+							id="themeType-${fragmentId}-${themeType.TypeId}"
+							value="${themeType.TypeId}"
+							#if ($themeType.Default) data-default="true" #else data-default="false" #end
+							#if ($themeType.Available) checked data-last="true" #else data-last="false" #end />
+						<label for="themeType-${fragmentId}-${themeType.TypeId}">${themeType.Name}
+							<span class="pill defaultvalue">
+								#if ($themeType.Default)
+									$core_v2_language.GetResource('DefaultEnabled')
+								#else
+									$core_v2_language.GetResource('DefaultDisabled')
+								#end
+							</span>
+						</label>
+						<span class="pill negative unsavedchange">$core_v2_language.GetResource('UnsavedChange')</span>
+					</span>
+				#end
+			</li>
+
+		</ul>
+	</fieldset>
+</form>
+
+#set ($availabilityHeaderTemplate = $core_v2_widget.UniqueId('availabilityHeaderTemplate'))
+#registerClientTemplate($availabilityHeaderTemplate)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button internal-link save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+#registerEndOfPageHtml('fragmentsPanel.availability')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-availability.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.widgets.fragmentAdministration.availability.register({
+			fragmentId: #if ($fragment) '$fragment.InstanceIdentifier' #else null #end,
+			saveCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.jsm'))',
+			headerTemplateId: '$core_v2_encoding.JavascriptEncode($availabilityHeaderTemplate)',
+			themeTypesId: '#$core_v2_encoding.JavascriptEncode($themeTypesId)',
+			selectAll: '#$core_v2_encoding.JavascriptEncode($selectAllId)',
+			deselectAll: '#$core_v2_encoding.JavascriptEncode($deselectAllId)',
+			revert: '#$core_v2_encoding.JavascriptEncode($revertId)'
+		});
+	});
+	</script>
+#end

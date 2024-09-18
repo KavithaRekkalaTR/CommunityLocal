@@ -1,0 +1,144 @@
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 5))
+#set ($daysBack = $core_v2_widget.GetIntValue('daysBack', 60))
+
+#set ($groupId = false)
+#set ($groupId = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('groups','')).Value('Group')))
+#if ($groupId <= 0)
+	#set ($current = false)
+	#set ($currentGroup = $core_v2_group.Current)
+	#if ($currentGroup)
+		#set ($groupId = $currentGroup.Id)
+	#end
+#end
+#set ($includeSubGroups = $core_v2_widget.GetBoolValue('includeSubGroups',false))
+
+#set ($currentContent = $core_v2_content.Current)
+
+#if($core_v2_widget.IsInWidgetPreviewMode && !$currentContent)
+	$core_v2_language.GetResource('CF_RelatedContent_Availability')
+#elseif (!$core_v2_widget.IsInWidgetPreviewMode && !$currentContent)
+	$core_v2_widget.Hide()
+#else
+	## build search filters
+	#set ($filters = "")
+	#set($contentTypeIds = $core_v2_widget.GetCustomValue('includeContentTypeIds', 'all'))
+	#if ($contentTypeIds == 'all')
+	    #set ($filters = "${filters}contenttypeid::(")
+	    #set($first = true)
+	    #foreach($contentType in $core_v2_contentType.List())
+            #if ($core_v2_searchResult.IsSearchable($contentType.Id))
+            	#set($applicationType = false)
+            	#set($applicationType = $core_v2_applicationType.Get($contentType.Id))
+            	#set($containerType = false)
+            	#set($containerType = $core_v2_containerType.Get($contentType.Id))
+            	#if ((!$applicationType || $applicationType.HasErrors()) && (!$containerType || $containerType.HasErrors()))
+            	   #if ($first)
+                        #set($filters = "${filters}${contentType.Id}")
+                        #set($first = false)
+                    #else
+                        #set($filters = "${filters} OR ${contentType.Id}")
+                    #end
+            	#end
+            #end
+        #end
+        #set($filters = "$filters)")
+	#else
+	    #set ($filters = "${filters}contenttypeid::(")
+	    #set($first = true)
+    	#foreach($v in $core_v2_page.ParseQueryString($contentTypeIds).Values('ContentTypeId'))
+        #each
+            #if ($first)
+                #set($filters = "${filters}${core_v2_utility.ParseGuid($v)}")
+                #set($first = false)
+            #else
+                #set($filters = "${filters} OR ${core_v2_utility.ParseGuid($v)}")
+            #end
+        #nodata
+            #set($filters="${filters}00000000-0000-0000-0000-000000000000")
+        #end
+        #set($filters = "$filters)")
+    #end
+
+	## if no types were explicitly specified,
+	## explicitly specify all of the ones which are allowed to be shown
+	#if ($filters.Length == 0)
+		#set ($filters = "contenttypeid::($core_v2_blogPost.ContentTypeId OR $core_v2_wikiPage.ContentTypeId OR $core_v2_media.ContentTypeId OR $core_v2_forumThread.ContentTypeId)")
+	#end
+
+	## build group filters
+	#if ($groupId)
+		#if ($filters.Length > 0)
+			#set ($filters = "${filters}||")
+		#end
+		#set ($filters = "${filters}group::${groupId}")
+		#if ($includeSubGroups)
+			#set ($subGroups = $core_v2_group.List("%{ IncludeAllSubGroups = 'true', PageSize = 50, ParentGroupId = $groupId, Permission = 'Group_ReadGroup' }"))
+			#foreach ($subGroup in $subGroups)
+				#set ($filters = "${filters},${subGroup.Id}")
+			#end
+		#end
+	#end
+	
+	#set ($dateFilter = "")
+	#if ($daysBack > 0)
+	    #set ($daysBack = $daysBack * -1)
+	    #set ($currentDate = $core_v2_utility.GetTimestamp($core_v2_utility.CurrentDate))
+	    #set ($minDate = $core_v2_utility.GetTimestamp($core_v2_utility.CurrentDate.AddDays($daysBack)))
+	    #set ($dateFilter = "1,date,$minDate,$currentDate,true")
+	#end
+
+	## combine query parts
+	#set ($query = "%{ PageSize = $pageSize, PageIndex = 0 }")
+	#if ($filters.Length > 0)
+		$query.Add('Filters', $filters)
+	#end
+	#if ($dateFilter.Length > 0)
+	    $query.Add('DateRangeFilters', $dateFilter)
+    #end
+    
+	## perform query
+
+	#set ($items = false)
+	#set ($items = $core_v2_searchResult.GetRelatedContent($currentContent.ContentId.ToString(), $query))
+	#if (!$items || $items.TotalCount == 0)
+		$core_v2_widget.Hide()
+	#end
+
+	#foreach ($item in $items)
+	#beforeall
+		<div class="avatar-list">
+		<ul class="content-list">
+	#each
+
+	#if ($item.Content && $item.Content.Errors.Count == 0)
+		#set($author = $core_v2_user.Get("%{Id = $item.Content.CreatedByUserId}"))
+
+		<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)"
+			    $core_v2_ui.ContentPeek($item.Content.ContentId, $item.Content.ContentTypeId, 'internal-link view-post navigable')>
+				<div class="content">$core_v2_language.Truncate($item.Content.HtmlName('Web'), 200, "...")</div>
+			</a>
+			<div class="author">
+				<div class="avatar">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)"
+						    $core_v2_ui.ContentPeek($item.Content.ContentId, $item.Content.ContentTypeId, 'internal-link')>
+                            #if ($item.Content.AvatarUrl && $item.Content.AvatarUrl != '')
+                                $core_v2_ui.GetResizedImageHtml($item.Content.AvatarUrl, 35, 35, "%{border='0px', ResizeMethod='ZoomAndCrop', alt=$item.Content.HtmlName('Web')}")
+                            #elseif($author && $author.AvatarUrl && $author.AvatarUrl != '')
+                                $core_v2_ui.GetResizedImageHtml($author.AvatarUrl, 35, 35, "%{border='0px', alt=$author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+                            #end
+						</a>
+				</div>
+				<div class="meta">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)" class="internal-link view-post navigable">
+						$core_v2_language.Truncate($item.Content.HtmlDescription('Web'), 200, "...")
+					</a>
+				</div>
+			</div>
+		</li>
+	#end
+	#afterall
+		</ul>
+	</div>
+	#end
+#end

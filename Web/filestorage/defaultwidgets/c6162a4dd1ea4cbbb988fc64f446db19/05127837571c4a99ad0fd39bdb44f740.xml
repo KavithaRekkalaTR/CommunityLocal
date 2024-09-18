@@ -1,0 +1,96 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ExpireCaches_Name}" cssClass="expire-caches" description="${resource:ExpireCaches_Description}" instanceIdentifier="05127837571c4a99ad0fd39bdb44f740" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<label class="field-item-name"><a href="#" id="$core_v2_widget.UniqueId('expire-all')">$core_v2_language.GetResource('expire-all-caches')</a></label>
+			<span class="field-item-description">$core_v2_language.GetResource('expire-all-caches-description')</span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name"><a href="#" id="$core_v2_widget.UniqueId('expire-ui')">$core_v2_language.GetResource('expire-ui-caches')</a></label>
+			<span class="field-item-description">$core_v2_language.GetResource('expire-ui-caches-description')</span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name"><a href="#" id="$core_v2_widget.UniqueId('reload-plugins')">$core_v2_language.GetResource('reload-plugins')</a></label>
+			<span class="field-item-description">$core_v2_language.GetResource('reload-plugins-description')</span>
+		</li>
+	</ul>
+</fieldset>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery('#$core_v2_widget.UniqueId('expire-all')').on('click', function() {
+		var b = jQuery(this);
+		if (!b.hasClass('disabled')) {
+			b.addClass('disabled');
+			jQuery.telligent.evolution.post({
+				url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('expire-all-caches.vm'))'
+			})
+				.then(function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('expire-all-caches-success'))', { type: 'success' });
+				})
+				.always(function() {
+					b.removeClass('disabled');
+				})
+		}
+		return false;
+	});
+
+	jQuery('#$core_v2_widget.UniqueId('expire-ui')').on('click', function() {
+		var b = jQuery(this);
+		if (!b.hasClass('disabled')) {
+			b.addClass('disabled');
+			jQuery.telligent.evolution.post({
+				url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('expire-ui-caches.vm'))'
+			})
+				.then(function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('expire-ui-caches-success'))', { type: 'success' });
+				})
+				.always(function() {
+					b.removeClass('disabled');
+				})
+		}
+		return false;
+	});
+
+	jQuery('#$core_v2_widget.UniqueId('reload-plugins')').on('click', function() {
+		var b = jQuery(this);
+		if (!b.hasClass('disabled')) {
+			b.addClass('disabled');
+			jQuery.telligent.evolution.post({
+				url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('reload-plugins.vm'))'
+			})
+				.then(function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reload-plugins-success'))', { type: 'success' });
+				})
+				.always(function() {
+					b.removeClass('disabled');
+				})
+		}
+		return false;
+	});
+
+});
+</script>
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="ExpireCaches_Name">Expire Caches</resource>
+	<resource name="ExpireCaches_Description">Force the expiration of caches.</resource>
+	<resource name="expire-all-caches">Expire All Caches</resource>
+	<resource name="expire-all-caches-description">Expire all cached data. Note that plugins and some other statically stored data will not be affected.</resource>
+	<resource name="expire-all-caches-success">All caches have been expired.</resource>
+	<resource name="expire-ui-caches">Expire UI Caches and Data</resource>
+	<resource name="expire-ui-caches-description">Expire only caches and temporary data related to UI rendering. This includes widgets, themes, and processed LESS files.</resource>
+	<resource name="expire-ui-caches-success">UI caches have been expired.</resource>
+	<resource name="reload-plugins">Reload Plugins</resource>
+	<resource name="reload-plugins-description">Reload and initialize all plugins.</resource>
+	<resource name="reload-plugins-success">Plugins have been reloaded.</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,18 @@
+##
+## Store Export Lists in a temporary location via AJAX/POST so they can be retrieved from a subsequent GET handler
+##
+#if ($core_v2_page.IsPost)
+	#set ($options = "%{}")
+
+	#set ($idsQuery = $core_v2_page.GetFormValue("_w_ids"))
+	#if ($idsQuery)
+		$options.Add('Ids', $idsQuery)
+	#end
+
+	#set ($storageKey = $context.StoreTemporaryExportList($options))
+
+	$core_v2_page.SetContentType('application/json')
+	{
+		"key": "$core_v2_encoding.JavascriptEncode($storageKey)"
+	}
+#end

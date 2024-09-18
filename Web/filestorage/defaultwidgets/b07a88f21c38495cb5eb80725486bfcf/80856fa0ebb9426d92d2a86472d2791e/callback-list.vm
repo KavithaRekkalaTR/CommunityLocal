@@ -1,0 +1,5 @@
+#set ($pageSize = 5)
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set ($status = $core_v2_page.GetQueryStringValue('w_status'))
+#set ($documents = $context.List($status, $pageSize, $pageIndex))
+$core_v2_widget.ExecuteFile('list.vm')

@@ -1,0 +1,180 @@
+.scale_prepended_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @margin: 2px) {
+	&:before {
+		width: @size;
+		height: @size;
+		font-size: @size;
+		line-height: @size;
+		margin-right: @margin;
+	}
+}
+.content-fragment.idea-post {
+	.content.full {
+		position: relative;
+		min-height: 0;
+		overflow: hidden;
+		clear: both;
+		.content {
+			margin-left: 55px;
+			margin-bottom: 20px;
+		}
+		.name {
+			margin-left: 55px;
+			margin-bottom: 20px;
+			margin-top: 0px !important;
+		}
+		.idea-status {
+			padding: 2px 5px;
+			font-weight: bold;
+			position: absolute;
+			top: 15px;
+			right: 0;
+			border-radius: 3px;
+		}
+		.content-tags {
+			margin-left: 55px;
+		}
+		.actions {
+			padding-left: 55px;
+		}
+	}
+
+	.ui-vote {
+		top: 3px;
+		&.updownvote {
+			margin-top: 3px;
+		}
+	}
+	.idea-status-notes {
+		position: relative;
+		margin: 0 0 20px 0;
+		border: 1px solid -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		border-radius: 3px;
+		.idea-status-notes-header {
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px);
+			color: -evo-themeconfig-color('foregroundColor', #11171A);
+			background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			padding: 10px 0px 10px 10px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: nowrap;
+			a {
+				color: -evo-themeconfig-color('foregroundColor', #11171A);
+				&.links-expanded {
+					background-color: -evo-themeconfig-color('foregroundColor', #11171A);
+					color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+				}
+			}
+			.status-name {
+				.scale_prepended_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2);
+			}
+			.status {
+			}
+			.attributes {
+				display: flex;
+				align-items: center;
+				flex-wrap: nowrap;
+				.user-avatar {
+					img {
+						border-radius: 500px;
+					}
+				}
+				.date {
+					margin-right: 10px;
+				}
+				.actions {
+					a {
+						&.links-expanded {
+							border-top-right-radius: 3px;
+							border-top-left-radius: 3px;
+						}
+					}
+				}
+			}
+		}
+		.idea-status-notes-content {
+			padding: 10px 10px 10px 12px;
+		}
+		&.status-comingsoon {
+			border-color: -evo-themeconfig-color('statePending', #FFB300);
+			.idea-status-notes-header {
+				background-color: -evo-themeconfig-color('statePending', #FFB300);
+				color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+				a {
+					color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+					&.links-expanded {
+						background-color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+						color: -evo-themeconfig-color('statePending', #FFB300);
+					}
+				}
+			}
+		}
+		&.status-complete {
+			border-color: -evo-themeconfig-color('statePositive', #9CCC65);
+			.idea-status-notes-header {
+				background-color: -evo-themeconfig-color('statePositive', #9CCC65);
+				color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+				a {
+					color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+					&.links-expanded {
+						background-color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+						color: -evo-themeconfig-color('statePositive', #9CCC65);
+					}
+				}
+			}
+		}
+		&.status-notplanned {
+			border-color: -evo-themeconfig-color('stateNegative', #E53935);
+			.idea-status-notes-header {
+				background-color: -evo-themeconfig-color('stateNegative', #E53935);
+				color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+				a {
+					color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+					&.links-expanded {
+						background-color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+						color: -evo-themeconfig-color('stateNegative', #E53935);
+					}
+				}
+			}
+		}
+		&.status-underreview {
+			border-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			.idea-status-notes-header {
+				background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+				color: -evo-themeconfig-color('foregroundColor', #11171A);
+				a {
+					color: -evo-themeconfig-color('foregroundColor', #11171A);
+					&.links-expanded {
+						background-color: -evo-themeconfig-color('foregroundColor', #11171A);
+						color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+					}
+				}
+			}
+		}
+	}
+}
+
+@media only screen and (max-width: -evo-themeconfig-unit('minWidth', 670px)) {
+	.content-fragment.idea-post .content.full {
+		.author {
+			width: 100%;
+			padding-left: 44px;
+			position: relative;
+			.avatar {
+				position: absolute;
+				top: 7px;
+				left: 0;
+			}
+			.user-name {
+				float: left;
+			}
+			margin-bottom: 0px;
+		}
+		.actions {
+			float: left;
+			padding-left: 0;
+			padding: 0;
+			margin: 0;
+		}
+	}
+}

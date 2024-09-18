@@ -1,0 +1,396 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_FeaturedContentSlider_Name}" version="13.0.0.0" description="${resource:Core_FeaturedContentSlider_Description}" instanceIdentifier="387656725d5b48bdae2c451035b95d4d" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="featured-content-carousel" lastModified="2023-05-19 14:49:16Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+$core_v2_widget.ExecuteFile('config.vm')
+$core_v2_widget.ExecuteFile('load-custom.vm')
+$core_v2_widget.ExecuteFile('load-features.vm')
+
+## Hide if there are no featured content or custom content
+#if ((!$contentFeatures || $contentFeatures.Count == 0) && (!$customFeatures || $customFeatures.Count() == 0))
+	$core_v2_widget.Hide()
+#end
+
+$core_v2_widget.ExecuteFile('style.vm')
+
+<div class="slider-container">
+	<div class="slider">
+		<ul class="content-list content">
+		#if ($customFeatureStrategy == 'exclude')
+			#if ($contentFeatures && $contentFeatures.Count > 0)
+				#set ($featureCount = $contentFeatures.Count)
+				$core_v2_widget.ExecuteFile('feature.vm')
+			#else
+				$core_v2_widget.hide()
+			#end
+		#elseif ($customFeatureStrategy == 'includeOnly')
+			#if ($customFeatures && $customFeatures.Count() > 0)
+				#set ($featureCount = $customFeatures.Count())
+				$core_v2_widget.ExecuteFile('custom.vm')
+			#else
+				$core_v2_widget.hide()
+			#end
+		#elseif ($customFeatureStrategy == 'includeBefore')
+			#if ($customFeatures && $customFeatures.Count() > 0)
+				#set ($featureCount = $featureCount + $customFeatures.Count())
+				$core_v2_widget.ExecuteFile('custom.vm')
+			#end
+			#if ($contentFeatures && $contentFeatures.Count > 0)
+				#set ($featureCount = $featureCount + $contentFeatures.Count)
+				$core_v2_widget.ExecuteFile('feature.vm')
+			#end
+		#elseif ($customFeatureStrategy == 'includeAfter')
+			#if ($contentFeatures && $contentFeatures.Count > 0)
+				#set ($featureCount = $featureCount + $contentFeatures.Count)
+				$core_v2_widget.ExecuteFile('feature.vm')
+			#end
+			#if ($customFeatures && $customFeatures.Count() > 0)
+				#set ($featureCount = $featureCount + $customFeatures.Count())
+				$core_v2_widget.ExecuteFile('custom.vm')
+			#end
+		#elseif ($customFeatureStrategy == 'noContent')
+			#if ((!$contentFeatures || $contentFeatures.Count == 0) && ($customFeatures && $customFeatures.Count() > 0))
+				#set ($featureCount = $customFeatures.Count())
+				$core_v2_widget.ExecuteFile('custom.vm')
+			#elseif ($contentFeatures && $contentFeatures.Count > 0)
+				#set ($featureCount = $contentFeatures.Count)
+				$core_v2_widget.ExecuteFile('feature.vm')
+			#else
+				$core_v2_widget.hide()
+			#end
+		#end
+		</ul>
+	</div>
+
+	#if ($featureCount > 1)
+		<div class="feature-navigation">
+			<a href="#" data-messagename="widget.featured-content-carousel.prev" class="navigation previous replace-with-icon left-open-big">Previous</a>
+			#set ($maxFeatutureIndex = $featureCount - 1)
+			#foreach($i in [0..$maxFeatutureIndex])
+			#beforeall
+				<ul class="feature-links">
+			#each
+					<li>
+						<a href="#" class="feature-link replace-with-icon record" data-messagename="widget.featured-content-carousel.feature" data-featureindex="$i">
+							$core_v2_language.FormatString($core_v2_language.GetResource("feature"), $i.ToString())
+						</a>
+					</li>
+			#afterall
+				</ul>
+			#end
+			<a href="#" data-messagename="widget.featured-content-carousel.next" class="navigation next replace-with-icon right-open-big">Next</a>
+		</div>
+	#end
+</div>
+
+<style>
+#set ($featureListWidthPercent = $featureCount * 100)
+#${core_v2_widget.WrapperElementId}.content-fragment.featured-content-carousel .slider-container .slider .content-list.content {
+	width: ${featureListWidthPercent}%;
+}
+</style>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.featuredContentList')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.featuredContentList.register({
+				wrapper: '#$core_v2_widget.WrapperElementId',
+				automatic: #if ($transition == 'transitionAutomatic') true #else false #end,
+				duration: $duration
+			});
+		});
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_FeaturedContentSlider_Name}'))
+#set ($group = $core_v2_group.Current)
+#set ($featuredContentRssUrl = false)
+#set ($featuredContentRssUrl = $core_v2_groupUrls.FeaturedContentRss($group.Id))
+#if ($featuredContentRssUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($featuredContentRssUrl)" class="internal-link rss"><span></span>$group.Name</a>
+#end
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_FeaturedContentSlider_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="customFeatureStrategy" labelResourceName="customFeatureStrategy" descriptionResourceName="customFeatureStrategy_Description" defaultValue="includeBefore" dataType="String">
+		<propertyValue value="exclude" labelResourceName="customFeatureStrategyExclude" />
+		<propertyValue value="includeOnly" labelResourceName="customFeatureStrategyIncludeOnly" />
+		<propertyValue value="includeBefore" labelResourceName="customFeatureStrategyBefore" />
+		<propertyValue value="includeAfter" labelResourceName="customFeatureStrategyAfter" />
+		<propertyValue value="noContent" labelResourceName="customFeatureStrategyNoContent" />
+	</property>
+	<property id="pageSize" labelResourceName="pageSize" defaultValue="5" dataType="Int">
+		<propertyRule name="minmax" min="1" max="20" />
+	</property>
+	<property id="transition" labelResourceName="transition" defaultValue="transitionAutomatic" dataType="String">
+		<propertyValue value="transitionAutomatic" labelResourceName="transitionAutomatic" orderNumber="1000000" propertiesToShow="duration" />
+		<propertyValue value="transitionManual" labelResourceName="transitionManual" orderNumber="1000001" propertiesToHide="duration" />
+	</property>
+	<property id="duration" labelResourceName="duration" descriptionResourceName="durationDescription" defaultValue="5000" dataType="Int" />
+	<property id="truncateLength" labelResourceName="truncateLength" defaultValue="100" dataType="Int" />
+</propertyGroup>
+<propertyGroup id="layout" labelResourceName="layout">
+	<property id="layoutWidth" labelResourceName="width" descriptionResourceName="width_description" defaultValue="page" dataType="String">
+		<propertyValue value="window" labelResourceName="layoutWidthWindow" orderNumber="1000000" propertiesToShow="foregroundWidth,scalingMode,dynamicScalingWidth,dynamicScalingHeight" propertiesToHide="scaleMode" />
+		<propertyValue value="page" labelResourceName="layoutWidthPage" orderNumber="1000001" propertiesToShow="scaleMode" propertiesToHide="foregroundWidth,scalingMode,dynamicScalingWidth,dynamicScalingHeight" />
+	</property>
+	<property id="scalingMode" labelResourceName="scalingMode" descriptionResourceName="scalingModeDesc" defaultValue="fixed" dataType="String" renderValueLabelAsHtml="true" showHtmlWhenSelected="true" labelWidth="520">
+		<propertyValue value="dynamic" labelResourceName="scalingModeDynamic" propertiesToShow="dynamicScalingWidth,dynamicScalingHeight" propertiesToHide="height,blur,feature0blur,feature1blur,feature2blur,feature3blur,feature4blur" />
+		<propertyValue value="fixed" labelResourceName="scalingModeFixed" propertiesToShow="height,blur,feature0blur,feature1blur,feature2blur,feature3blur,feature4blur" propertiesToHide="dynamicScalingWidth,dynamicScalingHeight" />
+	</property>
+	<property id="dynamicScalingWidth" labelResourceName="dynamicScalingWidth" descriptionResourceName="dynamicScalingWidthDesc" defaultValue="1350" dataType="Int" />
+	<property id="dynamicScalingHeight" labelResourceName="dynamicScalingHeight" descriptionResourceName="dynamicScalingHeightDesc" defaultValue="450" dataType="Int" />
+	<property id="height" labelResourceName="height" descriptionResourceName="height_description" defaultValue="315" dataType="Int" />
+	<property id="scaleMode" labelResourceName="scaleMode" descriptionResourceName="scaleMode_desc" defaultValue="crop" dataType="String">
+		<propertyValue value="crop" labelResourceName="scaleModeCrop" orderNumber="1000000" propertiesToShow="" propertiesToHide="width" />
+		<propertyValue value="scale" labelResourceName="scaleModeScale" orderNumber="1000001" propertiesToShow="width" propertiesToHide="" />
+	</property>
+	<property id="foregroundWidth" labelResourceName="foregroundWidth" descriptionResourceName="foregroundWidth_description" defaultValue="page" dataType="String">
+		<propertyValue value="window" labelResourceName="layoutWidthWindow" />
+		<propertyValue value="page" labelResourceName="layoutWidthPage" />
+	</property>
+	<property id="backgroundAlignment" labelResourceName="backgroundAlignment" descriptionResourceName="backgroundAlignmentDesc" defaultValue="center center" dataType="String">
+		<propertyValue value="top left" labelResourceName="alignment-top-left" />
+		<propertyValue value="top center" labelResourceName="alignment-top-center" />
+		<propertyValue value="top right" labelResourceName="alignment-top-right" />
+		<propertyValue value="center left" labelResourceName="alignment-center-left" />
+		<propertyValue value="center center" labelResourceName="alignment-center-center" />
+		<propertyValue value="center right" labelResourceName="alignment-center-right" />
+		<propertyValue value="bottom left" labelResourceName="alignment-bottom-left" />
+		<propertyValue value="bottom center" labelResourceName="alignment-bottom-center" />
+		<propertyValue value="bottom right" labelResourceName="alignment-bottom-right" />
+	</property>
+	<property id="alignment" labelResourceName="alignment" descriptionResourceName="alignment_description" defaultValue="center-center" dataType="String">
+		<propertyValue value="top-left" labelResourceName="alignment-top-left" />
+		<propertyValue value="top-center" labelResourceName="alignment-top-center" />
+		<propertyValue value="top-right" labelResourceName="alignment-top-right" />
+		<propertyValue value="center-left" labelResourceName="alignment-center-left" />
+		<propertyValue value="center-center" labelResourceName="alignment-center-center" />
+		<propertyValue value="center-right" labelResourceName="alignment-center-right" />
+		<propertyValue value="bottom-left" labelResourceName="alignment-bottom-left" />
+		<propertyValue value="bottom-center" labelResourceName="alignment-bottom-center" />
+		<propertyValue value="bottom-right" labelResourceName="alignment-bottom-right" />
+	</property>
+</propertyGroup>
+<propertyGroup id="design" labelResourceName="design">
+	<property id="blur" labelResourceName="PhotoBlur" descriptionResourceName="PhotoBlur_desc" defaultValue="False" dataType="Bool" />
+	<property id="featureShadow" labelResourceName="shadowText" descriptionResourceName="shadowText_description" defaultValue="True" dataType="Bool" />
+	<property id="designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" defaultValue="color" dataType="String">
+		<propertyValue value="color" labelResourceName="color" orderNumber="1000000" propertiesToShow="paletteId,colorMode,featureBackground,featureBackground2,featureForeground" propertiesToHide="image" />
+		<propertyValue value="photo" labelResourceName="photo" orderNumber="1000001" propertiesToShow="image" propertiesToHide="paletteId,colorMode,featureBackground,featureBackground2,featureForeground" />
+	</property>
+	<property id="paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="image" labelResourceName="photo" descriptionResourceName="PhotoUrl_desc" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+</propertyGroup>
+<propertyGroup id="feature0" labelResourceName="feature0" descriptionResourceName="customFeatureStrategy_Description">
+	<property id="feature0title" labelResourceName="featureName" dataType="String" />
+	<property id="feature0description" labelResourceName="featureDescription" dataType="String" />
+	<property id="feature0url" labelResourceName="featureUrl" dataType="Url" />
+	<property id="feature0designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" dataType="String" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyValue value="inherit" labelResourceName="inherit" propertiesToShow="" propertiesToHide="feature0image,feature0blur,feature0shadow,feature0paletteId" />
+		<propertyValue value="color" labelResourceName="color" propertiesToShow="feature0paletteId" propertiesToHide="feature0image,feature0blur,feature0shadow" />
+		<propertyValue value="photo" labelResourceName="photo" propertiesToShow="feature0image,feature0blur,feature0shadow" propertiesToHide="feature0paletteId" />
+	</property>
+	<property id="feature0paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" defaultValue="white" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="feature0image" labelResourceName="featureImage" descriptionResourceName="featureImage_description" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+	<property id="feature0blur" labelResourceName="PhotoBlur" descriptionResourceName="PhotoBlur_desc" defaultValue="False" dataType="Bool" />
+	<property id="feature0shadow" labelResourceName="shadowText" defaultValue="True" dataType="Bool" />
+</propertyGroup>
+<propertyGroup id="feature1" labelResourceName="feature1" descriptionResourceName="customFeatureStrategy_Description">
+	<property id="feature1title" labelResourceName="featureName" dataType="String" />
+	<property id="feature1description" labelResourceName="featureDescription" dataType="String" />
+	<property id="feature1url" labelResourceName="featureUrl" dataType="Url" />
+	<property id="feature1designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" dataType="String">
+		<propertyValue value="inherit" labelResourceName="inherit" orderNumber="1000000" propertiesToShow="" propertiesToHide="feature1image,feature1blur,feature1shadow,feature1paletteId" />
+		<propertyValue value="color" labelResourceName="color" orderNumber="1000001" propertiesToShow="feature1paletteId" propertiesToHide="feature1image,feature1blur,feature1shadow" />
+		<propertyValue value="photo" labelResourceName="photo" orderNumber="1000002" propertiesToShow="feature1image,feature1blur,feature1shadow" propertiesToHide="feature1paletteId" />
+	</property>
+	<property id="feature1paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" defaultValue="white" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="feature1image" labelResourceName="featureImage" descriptionResourceName="featureImage_description" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+	<property id="feature1blur" labelResourceName="PhotoBlur" descriptionResourceName="PhotoBlur_desc" defaultValue="False" dataType="Bool" />
+	<property id="feature1shadow" labelResourceName="shadowText" defaultValue="True" dataType="Bool" />
+</propertyGroup>
+<propertyGroup id="feature2" labelResourceName="feature2" descriptionResourceName="customFeatureStrategy_Description">
+	<property id="feature2title" labelResourceName="featureName" dataType="String" />
+	<property id="feature2description" labelResourceName="featureDescription" dataType="String" />
+	<property id="feature2url" labelResourceName="featureUrl" dataType="Url" />
+	<property id="feature2designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" dataType="String">
+		<propertyValue value="inherit" labelResourceName="inherit" orderNumber="1000000" propertiesToShow="" propertiesToHide="feature2image,feature2blur,feature2shadow,feature2paletteId" />
+		<propertyValue value="color" labelResourceName="color" orderNumber="1000001" propertiesToShow="feature2paletteId" propertiesToHide="feature2image,feature2blur,feature2shadow" />
+		<propertyValue value="photo" labelResourceName="photo" orderNumber="1000002" propertiesToShow="feature2image,feature2blur,feature2shadow" propertiesToHide="feature2paletteId" />
+	</property>
+	<property id="feature2paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" defaultValue="white" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="feature2image" labelResourceName="featureImage" descriptionResourceName="featureImage_description" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+	<property id="feature2blur" labelResourceName="PhotoBlur" descriptionResourceName="PhotoBlur_desc" defaultValue="False" dataType="Bool" />
+	<property id="feature2shadow" labelResourceName="shadowText" defaultValue="True" dataType="Bool" />
+</propertyGroup>
+<propertyGroup id="feature3" labelResourceName="feature3" descriptionResourceName="customFeatureStrategy_Description">
+	<property id="feature3title" labelResourceName="featureName" dataType="String" />
+	<property id="feature3description" labelResourceName="featureDescription" dataType="String" />
+	<property id="feature3url" labelResourceName="featureUrl" dataType="Url" />
+	<property id="feature3designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" dataType="String">
+		<propertyValue value="inherit" labelResourceName="inherit" orderNumber="1000000" propertiesToShow="" propertiesToHide="feature3image,feature3blur,feature3shadow,feature3paletteId" />
+		<propertyValue value="color" labelResourceName="color" orderNumber="1000001" propertiesToShow="feature3paletteId" propertiesToHide="feature3image,feature3blur,feature3shadow" />
+		<propertyValue value="photo" labelResourceName="photo" orderNumber="1000002" propertiesToShow="feature3image,feature3blur,feature3shadow" propertiesToHide="feature3paletteId" />
+	</property>
+	<property id="feature3paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" defaultValue="white" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="feature3image" labelResourceName="featureImage" descriptionResourceName="featureImage_description" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+	<property id="feature3blur" labelResourceName="PhotoBlur" descriptionResourceName="PhotoBlur_desc" defaultValue="False" dataType="Bool" />
+	<property id="feature3shadow" labelResourceName="shadowText" defaultValue="True" dataType="Bool" />
+</propertyGroup>
+<propertyGroup id="feature4" labelResourceName="feature4" descriptionResourceName="customFeatureStrategy_Description">
+	<property id="feature4title" labelResourceName="featureName" dataType="String" />
+	<property id="feature4description" labelResourceName="featureDescription" dataType="String" />
+	<property id="feature4url" labelResourceName="featureUrl" dataType="Url" />
+	<property id="feature4designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" dataType="String">
+		<propertyValue value="inherit" labelResourceName="inherit" orderNumber="1000000" propertiesToShow="" propertiesToHide="feature4image,feature4blur,feature4shadow,feature4paletteId" />
+		<propertyValue value="color" labelResourceName="color" orderNumber="1000001" propertiesToShow="feature4paletteId" propertiesToHide="feature4image,feature4blur,feature4shadow" />
+		<propertyValue value="photo" labelResourceName="photo" orderNumber="1000002" propertiesToShow="feature4image,feature4blur,feature4shadow" propertiesToHide="feature4paletteId" />
+	</property>
+	<property id="feature4paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" defaultValue="white" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="feature4image" labelResourceName="featureImage" descriptionResourceName="featureImage_description" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+	<property id="feature4blur" labelResourceName="PhotoBlur" descriptionResourceName="PhotoBlur_desc" defaultValue="False" dataType="Bool" />
+	<property id="feature4shadow" labelResourceName="shadowText" defaultValue="True" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="alignment">Foreground Alignment</resource>
+  <resource name="alignment_description">Foreground content alignment</resource>
+  <resource name="alignment-bottom-center">Bottom Center</resource>
+  <resource name="alignment-bottom-left">Bottom Left</resource>
+  <resource name="alignment-bottom-right">Bottom Right</resource>
+  <resource name="alignment-center-center">Center Center</resource>
+  <resource name="alignment-center-left">Center Left</resource>
+  <resource name="alignment-center-right">Center Right</resource>
+  <resource name="alignment-top-center">Top Center</resource>
+  <resource name="alignment-top-left">Top Left</resource>
+  <resource name="alignment-top-right">Top Right</resource>
+  <resource name="amber">Amber</resource>
+  <resource name="backgroundAlignment">Background Alignment</resource>
+  <resource name="backgroundAlignmentDesc">When photos exceeds the carousel's boundaries, they can be aligned.</resource>
+  <resource name="blue">Blue</resource>
+  <resource name="bluegray">Blue Gray</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="city">City</resource>
+  <resource name="color">Use Color</resource>
+  <resource name="colorMode">Color Type</resource>
+  <resource name="Core_FeaturedContentSlider_Description">Displays a slider of featured content or custom widget-defined items for the current group and child groups</resource>
+  <resource name="Core_FeaturedContentSlider_Name">Featured Content Carousel</resource>
+  <resource name="custom">Custom</resource>
+  <resource name="customFeatureStrategy">Custom Features</resource>
+  <resource name="customFeatureStrategy_Description">Custom features are defined by this widget instance and are separate from site content marked to be featured.</resource>
+  <resource name="customFeatureStrategyAfter">Include custom features after featured content</resource>
+  <resource name="customFeatureStrategyBefore">Include custom features before featured content</resource>
+  <resource name="customFeatureStrategyExclude">Exclude custom features</resource>
+  <resource name="customFeatureStrategyIncludeOnly">Only show custom features</resource>
+  <resource name="customFeatureStrategyNoContent">Include custom features only if there is no featured content</resource>
+  <resource name="cyan">Cyan</resource>
+  <resource name="design">Design</resource>
+  <resource name="designMode">Design Mode</resource>
+  <resource name="designMode_desc">Use either color or a photo as the default feature background.</resource>
+  <resource name="duration">Slide Duration</resource>
+  <resource name="durationDescription">Length (in ms) to display each slide when automatically transitioning</resource>
+  <resource name="dynamicScalingHeight">Dynamic scaling crop height</resource>
+  <resource name="dynamicScalingHeightDesc">The height, in pixels, to which photos will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="dynamicScalingWidth">Dynamic scaling crop width</resource>
+  <resource name="dynamicScalingWidthDesc">The width, in pixels, to which photos will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="feature">Feature {0}</resource>
+  <resource name="feature0">1</resource>
+  <resource name="feature1">2</resource>
+  <resource name="feature2">3</resource>
+  <resource name="feature3">4</resource>
+  <resource name="feature4">5</resource>
+  <resource name="featureBackground">Background Color</resource>
+  <resource name="featureBackground2">Secondary Gradient Background Color</resource>
+  <resource name="featureDescription">Description</resource>
+  <resource name="featureForeground">Foreground Color</resource>
+  <resource name="featureImage">Image</resource>
+  <resource name="featureImage_description">Image used as a background for the feature. Text should not be placed on this image as it will be cropped when rendered to mobile devices.</resource>
+  <resource name="featureName">Title</resource>
+  <resource name="featureUrl">URL</resource>
+  <resource name="foregroundWidth">Foreground Width</resource>
+  <resource name="foregroundWidth_description">In window width, foreground content can expand to the full width or retain the page width.</resource>
+  <resource name="gradient">Gradient</resource>
+  <resource name="green">Green</resource>
+  <resource name="height">Height</resource>
+  <resource name="height_description">The height of the feature rendering and the feature image, if defined.</resource>
+  <resource name="inherit">Use Default</resource>
+  <resource name="layout">Layout</resource>
+  <resource name="layoutWidthPage">Page or Region</resource>
+  <resource name="layoutWidthWindow">Window</resource>
+  <resource name="lightblue">Light Blue</resource>
+  <resource name="lightbluegray">Light Blue Gray</resource>
+  <resource name="lime">Lime</resource>
+  <resource name="limeade">Limeade</resource>
+  <resource name="moonrise">Moonrise</resource>
+  <resource name="Options">Options</resource>
+  <resource name="pageSize">Featured Content Items to Display</resource>
+  <resource name="palette">Default Color Palette</resource>
+  <resource name="palette_desc">Choose a color palette or create a custom one.</resource>
+  <resource name="peach">Peach</resource>
+  <resource name="photo">Photo</resource>
+  <resource name="PhotoBlur">Blur Photo</resource>
+  <resource name="PhotoBlur_desc">Blur background photos to improve foreground legibility</resource>
+  <resource name="PhotoUrl_desc">Background photo when not defined by a feature.</resource>
+  <resource name="pink">Pink</resource>
+  <resource name="proportional_width">Proportional Width</resource>
+  <resource name="proportional_width_description">When scaling, the original width is required</resource>
+  <resource name="purple">Purple</resource>
+  <resource name="red">Red</resource>
+  <resource name="river">River</resource>
+  <resource name="scaleMode">Responsive Mode</resource>
+  <resource name="scaleMode_desc">In page width when the widget is resized for smaller screens, it either retain the full original widget's aspect ratio, or crop it horizontally.</resource>
+  <resource name="scaleModeCrop">Crop</resource>
+  <resource name="scaleModeScale">Scale</resource>
+  <resource name="scalingMode">Scaling Mode</resource>
+  <resource name="scalingModeDesc">Select the way in which photos and the carousel are scaled and positioned. With dynamic height, the carousel resizes in proportion to the width of the browser to keep the photos fully visible. With fixed, the photos resize to fill the fixed space of the carousel and may be cropped.</resource>
+  <resource name="scalingModeDynamic">&lt;span class="cover-layout dynamic"&gt;&lt;strong&gt;Dynamic&lt;/strong&gt; carousel height proportional to the browser width to show consistent photos at all sizes&lt;/span&gt;</resource>
+  <resource name="scalingModeFixed">&lt;span class="cover-layout cover"&gt;&lt;strong&gt;Fixed&lt;/strong&gt; carousel height with photos scaled and cropped to fill the available carousel space&lt;/span&gt;</resource>
+  <resource name="scooter">Scooter</resource>
+  <resource name="shadowText">Shadow Photos</resource>
+  <resource name="shadowText_description">Darken the background photo corresponding to the foreground position.</resource>
+  <resource name="solid">Solid</resource>
+  <resource name="stellar">Stellar</resource>
+  <resource name="sunny">Sunny</resource>
+  <resource name="sunset">Sunset</resource>
+  <resource name="teal">Teal</resource>
+  <resource name="transition">Transition Slides</resource>
+  <resource name="transitionAutomatic">Automatically and Manually</resource>
+  <resource name="transitionManual">Manually</resource>
+  <resource name="tropic">Tropic</resource>
+  <resource name="truncateLength">Truncation Length</resource>
+  <resource name="white">White</resource>
+  <resource name="width">Width</resource>
+  <resource name="width_description">Widget Width</resource>
+  <resource name="yellow">Yellow</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[
+$core_v2_widget.ExecuteFile('config.vm')
+#if ($fullWidth)
+	full-width
+#end
+#if (!$foregroundFullWidth)
+	foreground-page-width
+#end
+	]]></additionalCssScript>
+    <requiredContext>
+      <context id="54d4201aced3447ca1e4498398289f44" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

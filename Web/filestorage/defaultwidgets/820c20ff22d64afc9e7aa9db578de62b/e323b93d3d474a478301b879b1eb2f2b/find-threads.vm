@@ -1,0 +1,16 @@
+﻿#set($query = $core_v2_page.GetQueryStringValue('w_query'))
+$core_v2_page.SetContentType('application/json')
+
+{
+	"matches": [
+		#foreach($thread in $context.FindThreads($query))
+			#each
+				#set($forum = false)
+				#set($forum = $core_v2_forum.Get($thread.ForumId))
+
+				{ "label": "$core_v2_encoding.JavascriptEncode($thread.Subject)#if($forum) (#if($forum.Group)$core_v2_encoding.JavascriptEncode($forum.Group.Name):#end $forum.Name)#end", "id": "$thread.Id" }
+			#between
+			,
+		#end
+	]
+}

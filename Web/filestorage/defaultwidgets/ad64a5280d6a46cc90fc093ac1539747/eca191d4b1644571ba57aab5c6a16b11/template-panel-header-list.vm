@@ -1,0 +1,38 @@
+##
+## Expects in scope: $embeddables
+##
+<div class="panelheader-list">
+	<fieldset class="fieldset-list">
+		#set ($maxLinks = 1)
+		#if ($embeddables && $embeddables.Count > 0)
+			#set ($maxLinks = 2)
+		#end
+		<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="$maxLinks">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="embeddable-upload">$core_v2_language.GetResource('Import')</a>
+				</li>
+				#if ($embeddables && $embeddables.Count > 0)
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="embeddable-multiselect">$core_v2_language.GetResource('SelectMultiple')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="embeddable-exportall">$core_v2_language.GetResource('ExportAll')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="embeddable-exportallresources">$core_v2_language.GetResource('ExportAllResources')</a>
+					</li>
+				#end
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())">$core_v2_language.GetResource('Studio')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+</div>

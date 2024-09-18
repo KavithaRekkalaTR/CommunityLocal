@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Achievements_AchievementList_Name}" version="11.0.0.0" description="${resource:Achievements_AchievementList_Description}" instanceIdentifier="07878a11169e4929a349bcd1c851aa7d" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="achievement-list" lastModified="2020-01-14 16:06:36Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($enablePaging = $core_v2_widget.GetBoolValue('enablePaging', true))
+$core_v2_widget.ExecuteFile('inSidebar.vm')
+
+$core_v2_ui.PagedContent('pagedContent.vm')
+
+#if ($inSidebar || !$enablePaging)
+   #if ($queryType == 'accesingUser')
+		#set($remaining = $achievements.TotalCount - $achievements.PageSize)
+		#set($url = false)
+		#set($url = $core_v2_urls.UserAchievements($core_v2_user.Acessing.Id))
+		#if ($url)
+			#if ($remaining == 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#elseif ($remaining > 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#end
+		#end
+	#elseif($queryType == 'currentUser')
+		#set($remaining = $achievements.TotalCount - $achievements.PageSize)
+		#set($url = false)
+		#set($url = $core_v2_urls.UserAchievements($core_v2_user.Current.Id))
+		#if ($url)
+			#if ($remaining == 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#elseif ($remaining > 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#end
+		#end
+	#end
+#else
+	#if ($viewType == 'thumbnails')
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			jQuery(function(j){
+				var isLoadingMore = false, pageIndex = 0, hasMore =#if($hasMore) true#else false#end;
+				j(document).on('scrollend', function(e){
+					if(isLoadingMore || !hasMore)
+						return;
+
+					isLoadingMore = true;
+
+					var data = {}
+					data['$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'] = pageIndex + 2;
+
+					j.telligent.evolution.get({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('pagedContent.vm'))',
+						data: data
+					}).then(function(response){
+						var items = $(response).find('div.content-item.thumbnail');
+						hasMore = items.data('hasmore') == 'True';
+						j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))').evolutionMasonry('append', items);
+						pageIndex++;
+						isLoadingMore = false;
+					});
+				});
+			});
+			</script>
+		#end
+	#else
+		$core_v2_ui.Pager($achievements.PageIndex, $achievements.PageSize, $achievements.TotalCount, "%{ PagedContentFile = 'pagedContent.vm' }")
+	#end
+
+	#if($queryType!='achievements')
+		<div class="navigation-list margin-top">
+			<ul class="navigation-list">
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Achievements())">$core_v2_language.GetResource('All_Achievements')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+#if($header == '')
+	#if($core_v2_urls.Current == 'Home')
+		#set ($header = '${resource:Achievements_AchievementList_Name_ForAccessingUser}')
+	#elseif($core_v2_user.Current)
+		#set ($header = $core_v2_language.FormatString($core_v2_language.GetResource('Achievements_AchievementList_Name_ForContextualUser'), $core_v2_user.Current.DisplayName))
+	#else
+		#set ($header = '${resource:Achievements_AchievementList_Name}')
+	#end
+#end
+$core_v2_widget.ApplyTokens($header)
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" dataType="String" template="core_v2_tokenizedString" />
+	<property id="queryType" labelResourceName="CF_AchievementList_QueryType" dataType="String">
+		<propertyValue value="achievements" labelResourceName="CF_AchievementList_QueryType_Achievements" />
+		<propertyValue value="currentUser" labelResourceName="CF_AchievementList_QueryType_CurrentUser" />
+		<propertyValue value="accessingUser" labelResourceName="CF_AchievementList_QueryType_AccessingUser" />
+	</property>
+	<property id="viewType" labelResourceName="Achievements_AchievementList_ViewType" defaultValue="standard" dataType="String">
+		<propertyValue value="list" labelResourceName="Achievements_AchievementList_ListView" />
+		<propertyValue value="thumbnails" labelResourceName="Achievements_AchievementList_ThumbnailView" />
+	</property>
+	<property id="sortBy" labelResourceName="CF_SortBy" defaultValue="alphabetical" dataType="String">
+		<propertyValue value="alphabetical" labelResourceName="CF_AchievementList_QueryType_SortBy_Alphabetical" />
+		<propertyValue value="createddate" labelResourceName="CF_AchievementList_QueryType_SortBy_CreatedDate" />
+	</property>
+	<property id="sortOrder" labelResourceName="CF_SortOrder" defaultValue="ascending" dataType="String">
+		<propertyValue value="ascending" labelResourceName="SortOrderDropDownList_Asc" />
+		<propertyValue value="descending" labelResourceName="SortOrderDropDownList_Desc" />
+	</property>
+	<property id="pageSize" labelResourceName="Pagesize" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="enablePaging" labelResourceName="EnablePaging" defaultValue="True" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Achievements">Achievements</resource>
+  <resource name="Achievements_AchievementList_Description">Displays a list of achievements.</resource>
+  <resource name="Achievements_AchievementList_ListView">List</resource>
+  <resource name="Achievements_AchievementList_Name">Achievement - List</resource>
+  <resource name="Achievements_AchievementList_Name_ForAccessingUser">My Achievements</resource>
+  <resource name="Achievements_AchievementList_Name_ForContextualUser">{0}'s Achievements</resource>
+  <resource name="Achievements_AchievementList_NoAchievements">No achievements have been created yet.</resource>
+  <resource name="Achievements_AchievementList_ThumbnailView">Thumbnails</resource>
+  <resource name="Achievements_AchievementList_ViewType">View Type</resource>
+  <resource name="Achievements_UserAchievements_None">{0} hasn't obtained any achievements yet.</resource>
+  <resource name="All_Achievements">See all possible achievements</resource>
+  <resource name="And_Multiple_More">And {0} more...</resource>
+  <resource name="And_One_More">And 1 more...</resource>
+  <resource name="CF_AchievementList_QueryType">Show</resource>
+  <resource name="CF_AchievementList_QueryType_AccessingUser">Accessing user's achievements</resource>
+  <resource name="CF_AchievementList_QueryType_Achievements">All available achievements</resource>
+  <resource name="CF_AchievementList_QueryType_CurrentUser">Current contextual user's achievements</resource>
+  <resource name="CF_AchievementList_QueryType_SortBy_Alphabetical">Alphabetical</resource>
+  <resource name="CF_AchievementList_QueryType_SortBy_CreatedDate">Created Date</resource>
+  <resource name="CF_SortBy">Sort By</resource>
+  <resource name="CF_SortOrder">Sort Order</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="EnablePaging">Enable paging</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Pagesize">Number of items to display</resource>
+  <resource name="SortOrderDropDownList_Asc">Ascending</resource>
+  <resource name="SortOrderDropDownList_Desc">Descending</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

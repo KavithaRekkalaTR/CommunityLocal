@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" id="e2d368d5437d4acf8f9c83a50efb3b07" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2022-05-11 18:36:48Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="follow.aftercreate" />
+      <event key="follow.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[if (core_v2_widget.GetStringValue('awardTo', 'follower') == 'follower') {
+    var userId = context_v2_automationTrigger.Arguments.FollowerId;
+    var user = core_v2_user.Get({ Id: context_v2_automationTrigger.Arguments.FollowingId });
+} else if (core_v2_widget.GetStringValue('awardTo', 'follower') == 'followedMember') {
+    var userId = context_v2_automationTrigger.Arguments.FollowingId;
+    var user = core_v2_user.Get({ Id: context_v2_automationTrigger.Arguments.FollowerId });
+}
+
+if (!user || user.HasErrors()) {
+        return;
+    }
+
+var contentId = user.ContentId;
+
+if (context_v2_automationTrigger.Event == 'AfterCreate') {
+    context_v1_pointsAutomation.AwardPoints(userId, contentId, core_v2_user.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterDelete') {
+    // ensure points not awarded
+    if (context_v1_pointsAutomation.ArePointsAwarded(userId, contentId, core_v2_user.ContentTypeId)) {
+        context_v1_pointsAutomation.AwardPoints(userId, contentId, core_v2_user.ContentTypeId, {
+            Description: core_v2_language.FormatString(core_v2_language.GetResource('Revoked'), context_v1_pointsAutomation.Description),
+            Points: context_v1_pointsAutomation.Points * -1
+        });
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="awardTo" labelResourceName="AwardTo" descriptionResourceName="AwardTo_Description" dataType="string" defaultValue="follower">
+        <propertyValue labelResourceName="AwardTo_Follower" value="follower" />
+        <propertyValue labelResourceName="AwardTo_FollowedMember" value="followedMember" />
+    </property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AwardTo">Award points to</resource>
+  <resource name="AwardTo_Description">Select which member should receive points.</resource>
+  <resource name="AwardTo_FollowedMember">Followed Member</resource>
+  <resource name="AwardTo_Follower">Follower</resource>
+  <resource name="Description">Awards points when a member is followed.</resource>
+  <resource name="Revoked">Revoked: {0}</resource>
+  <resource name="Title">When a member is followed</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

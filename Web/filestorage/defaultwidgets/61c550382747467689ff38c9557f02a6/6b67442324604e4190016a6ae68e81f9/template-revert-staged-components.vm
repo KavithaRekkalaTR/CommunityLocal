@@ -1,0 +1,68 @@
+<div class="theme-revert-staged-components-dialog">
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				<span>$core_v2_language.GetResource('RevertComponentsDesc')</span>
+
+				<li class="field-item managed-items">
+
+					<span class="field-item-input managed-item">
+						<input type="checkbox" data-type="theme" checked disabled />
+						<label class="field-item-name">
+							<span>$core_v2_language.GetResource('Theme')</span>
+						</label>
+					</span>
+
+					<% if(children.StagedHeaders && children.StagedHeaders > 0) { %>
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="revert-headers" data-type="headers" checked />
+							<label for="revert-headers" class="field-item-name">
+								<span>$core_v2_language.GetResource('ThemeHeaders') (<%= children.StagedHeaders %>)</span>
+							</label>
+						</span>
+					<% } %>
+
+					<% if(children.StagedFooters && children.StagedFooters > 0) { %>
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="revert-footers" data-type="footers" checked />
+							<label  for="revert-footers" class="field-item-name">
+								<span>$core_v2_language.GetResource('ThemeFooters') (<%= children.StagedFooters %>)</span>
+							</label>
+						</span>
+					<% } %>
+
+					<% if(children.StagedPages && children.StagedPages > 0) { %>
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="revert-pages" data-type="pages" checked />
+							<label  for="revert-pages" class="field-item-name">
+								<span>$core_v2_language.GetResource('ThemePages') (<%= children.StagedPages %>)</span>
+							</label>
+						</span>
+					<% } %>
+
+
+					<% if(children.StagedFragments && children.StagedFragments > 0) { %>
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="revert-fragments" data-type="fragments" checked />
+							<label  for="revert-fragments" class="field-item-name">
+								<span>$core_v2_language.GetResource('ThemeFragments') (<%= children.StagedFragments %>)</span>
+							</label>
+						</span>
+					<% } %>
+
+				</li>
+
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+					</span>
+					<span class="field-item-input">
+						<a href="#" class="button continue">$core_v2_language.GetResource('RevertStagedChanges')</a>
+					</span>
+				</li>
+
+			</ul>
+		</fieldset>
+	</form>
+</div>

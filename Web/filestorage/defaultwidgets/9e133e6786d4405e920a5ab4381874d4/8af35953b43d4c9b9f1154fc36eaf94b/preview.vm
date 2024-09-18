@@ -1,0 +1,31 @@
+#set ($id = $core_v2_widget.UniqueId('id'))
+<div class="font-file-viewer preview" id="$core_v2_encoding.HtmlAttributeEncode($id)">
+	<div class="viewer">
+		<div class="ffv-glyph ffv-styled">${context.Glyph}${context.Glyph.ToLowerInvariant()}</div>
+	</div>
+	<div class="default">
+		<span>$core_v2_language.GetResource('Unsupported')</span>
+	</div>
+</div>
+
+<script>
+	jQuery(function(j){
+		var wrapper = j('#${id}')
+		if(!j.telligent.evolution.fileViewers.fontSupport.supports('$context.Format')) {
+			wrapper.find('.default').show();
+			return;
+		} else {
+			wrapper.find('.viewer').show();
+		}
+
+		if(document.fonts && document.fonts.ready) {
+			document.fonts.ready.then(function () {
+				if(wrapper.data('_ffv')) { return }
+				wrapper.find('.ffv-glyph').css({ opacity: 1 }).evolutionSqueezeText();
+				wrapper.data('_ffv', true);
+			});
+		} else {
+			wrapper.find('.ffv-glyph').css({ opacity: 1 }).evolutionSqueezeText();
+		}
+	});
+</script>

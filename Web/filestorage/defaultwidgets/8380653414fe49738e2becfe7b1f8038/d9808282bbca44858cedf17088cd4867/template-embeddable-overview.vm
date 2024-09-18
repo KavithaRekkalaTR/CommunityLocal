@@ -1,0 +1,175 @@
+<div class="editor-header">
+	<form class="template-editor-header"></form>
+	<div class="editor-state template-editor-state"></div>
+	<span class="field-description ui-tip" data-tip="<%= description %>"><%= description %></span>
+</div>
+<div class="editor-content overview">
+	<div class="components">
+		<div class="embeddable-components">
+			$core_v2_widget.ExecuteFile('template-embeddable-overview-components.vm')
+		</div>
+		<div class="embeddable-files">
+			$core_v2_widget.ExecuteFile('template-embeddable-overview-files.vm')
+		</div>
+	</div>
+	<div class="metadata">
+		<form>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item name">
+						<label class="field-item-name">$core_v2_language.GetResource('Name')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('NameDesc')</span>
+						<span class="field-item-input name">
+							<div class="token-editor">
+								<span class="processed"><%: ProcessedName %></span>
+								<input type="text" tabindex="0" class="raw name" size="40" class="name" value="<%: Name %>" />
+							</div>
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item description">
+						<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('DescriptionDesc')</span>
+						<span class="field-item-input description">
+							<div class="token-editor">
+								<span class="processed"><%: ProcessedDescription %></span>
+								<input type="text" tabindex="1" class="raw description" value="<%: Description %>" />
+							</div>
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item category">
+						<label class="field-item-name">$core_v2_language.GetResource('Category')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('CategoryDesc')</span>
+						<span class="field-item-input category">
+							<div class="token-editor">
+								<span class="processed"><%: ProcessedDescription %></span>
+								<input type="text" tabindex="1" class="raw category" value="<%: Category %>" />
+							</div>
+						</span>
+						<span class="field-item-category was"></span>
+					</li>
+
+					<li class="field-item">
+						<label class="field-item-name">$core_v2_language.GetResource('Caching')</label>
+						<span class="field-item-input IsCacheable">
+							<input id="cb-<%: Id %>-cacheable" type="checkbox" class="is-cacheable" <% if(IsCacheable) { %> checked="checked" <% } %> />
+							<label for="cb-<%: Id %>-cacheable">$core_v2_language.GetResource('IsCacheable')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('IsCacheableDesc')</span>
+						</span>
+						<span class="field-item-input VaryCacheByUser">
+							<input id="cb-<%: Id %>-vary-by-user" type="checkbox" class="vary-cache" <% if(VaryCacheByUser) { %> checked="checked" <% } %> />
+							<label for="cb-<%: Id %>-vary-by-user">$core_v2_language.GetResource('VaryByUser')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('VaryByUserDesc')</span>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item icon">
+						<label class="field-item-name">$core_v2_language.GetResource('IconImage')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('IconImageDesc')</span>
+						<span class="field-item-input">
+							<% if(IconImageUrl) { %>
+								<div class="ui-viewhtml" data-width="128" data-height="128" data-url="<%: IconImageUrl %>"></div>
+							<% } else { %>
+								<div class="message">$core_v2_language.GetResource('NoIcon')</div>
+							<% } %>
+						</span>
+						<div class="field-item-description was"></div>
+						<span class="field-item-input">
+							<% if(IconImageUrl) { %>
+								<a href="#" class="button" data-messagename="me.view.embeddable.remove-icon" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('Remove')</a>
+							<% } %>
+							<a href="#" class="button" data-messagename="me.view.embeddable.upload-icon" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('Upload')</a>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item preview">
+						<label class="field-item-name">$core_v2_language.GetResource('PreviewImage')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('PreviewImageDesc')</span>
+						<span class="field-item-input">
+							<% if(PreviewImageUrl) { %>
+								<div class="ui-viewhtml" data-width="128" data-height="128" data-url="<%: PreviewImageUrl %>"></div>
+							<% } else { %>
+								<div class="message">$core_v2_language.GetResource('NoPreview')</div>
+							<% } %>
+						</span>
+						<div class="field-item-description was"></div>
+						<span class="field-item-input">
+							<% if(PreviewImageUrl) { %>
+								<a href="#" class="button" data-messagename="me.view.embeddable.remove-preview" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('Remove')</a>
+							<% } %>
+							<a href="#" class="button" data-messagename="me.view.embeddable.upload-preview" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('Upload')</a>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+			<fieldset>
+				<ul class="field-list">
+
+					<li class="field-item supported-content-types-scope">
+						<label class="field-item-name">$core_v2_language.GetResource('EmbeddableWithin')</label>
+						<span class="field-item-description">
+							#format($core_v2_language.GetResource('EmbeddableWithinDesc'))
+								#token('management-link-open')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($context.ManagementUrl())">
+								#token('management-link-close')
+									</a>
+							#end
+						</span>
+						<span class="field-item-input supported-content-types-scope">
+							<select class="supported-content-types-scope">
+								<option value="all" <% if(SupportedContentTypes === null) { %> selected <% } %>>$core_v2_language.GetResource('EmbeddableAnywhere')</option>
+								<option value="custom" <% if(SupportedContentTypes !== null) { %> selected <% } %>>$core_v2_language.GetResource('EmbeddableCustom')</option>
+							</select>
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item supported-content-types">
+						<div class="message information supported-content-types-warning">$core_v2_language.GetResource('NoTypesDefined')</div>
+						<% if(SupportedContentTypes !== null) { %>
+							<% foreach(SupportedContentTypes, function(contentType) { %>
+								<span class="field-item-input supported-content-types-scope">
+									<input class="supported-content-types" type="checkbox" id="contentType-<%: Id %>-<%: contentType.TypeId %>" value="<%: contentType.TypeId %>"  <% if(contentType.Supported) { %> checked <% } %> />
+									<label for="contentType-<%: Id %>-<%: contentType.TypeId %>"><%: contentType.Name %></label>
+								</span>
+							<% }); %>
+						<% } else { %>
+							<% foreach(SupportableContentTypes, function(contentType) { %>
+								<span class="field-item-input supported-content-types-scope">
+									<input class="supported-content-types" type="checkbox" id="contentType-<%: Id %>-<%: contentType.TypeId %>" value="<%: contentType.TypeId %>" />
+									<label for="contentType-<%: Id %>-<%: contentType.TypeId %>"><%: contentType.Name %></label>
+								</span>
+							<% }); %>
+						<% } %>
+					</li>
+
+					<li class="field-item rest-scopes">
+						<label class="field-item-name">$core_v2_language.GetResource('RestScopes')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('RestScopesDesc')</span>
+						<span class="field-item-input">
+							<input type="text" class="rest-scopes" id="rest-scopes-<%= Id %>" />
+						</span>
+						<span class="field-item-validation" style="display:none;"></span>
+						<span class="field-item-description was"></span>
+					</li>
+
+				</ul>
+			</fieldset>
+
+		</form>
+		<div class="content full details">
+			<div class="attributes" style="display:block">
+				$core_v2_widget.ExecuteFile('template-embeddable-overview-details.vm')
+			</div>
+		</div>
+	</div>
+</div>

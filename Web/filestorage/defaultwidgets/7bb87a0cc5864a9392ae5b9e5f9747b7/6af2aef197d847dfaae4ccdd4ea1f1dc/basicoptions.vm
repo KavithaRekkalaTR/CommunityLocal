@@ -1,0 +1,263 @@
+<form><fieldset>
+	 <ul class="field-list">
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('PrivateEmail')">$core_v2_language.GetResource("EditProfile_ContactPrivateEmail")</label>
+			<span class="field-item-description">$core_v2_language.GetResource("EditProfile_ContactPrivateEmailDesc")</span>
+			<span class="field-item-input"><input type="text" size="30" maxlength="254" id="$core_v2_widget.UniqueId('PrivateEmail')" name="$core_v2_widget.UniqueId('PrivateEmail')" value="$core_v2_encoding.HtmlAttributeEncode($user.PrivateEmail)" /></span>
+			<span class="field-item-validation" style="display: none;"></span>
+			#set($unverifiedEmails = $core_v2_user.ListUnverifiedEmails($user.Id))
+			#if($unverifiedEmails && $unverifiedEmails.Count > 0)
+			    #foreach($record in $unverifiedEmails)
+			        #if($record.IsPrivate)
+                        <span class="field-item-description message warning">
+                            $core_v2_language.FormatString($core_v2_language.GetResource("Verification_UnverifiedEmail"), $record.EmailAddress)
+        			        <a id="$core_v2_widget.UniqueId('ResendVerification')" name="$core_v2_widget.UniqueId('ResendVerification')" 
+                                data-email="$record.EmailAddress" data-user="$record.UserId" href='#'>
+        			            $core_v2_language.GetResource("Verification_Resend")</a>
+                        </span>
+			        #end
+			    #end
+			#end
+		</li>
+		#if ($core_v2_configuration.EnableEmail)
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('ReceiveEmails')" #if ($user.EnableEmail) checked="checked" #end />
+					<label for="$core_v2_widget.UniqueId('ReceiveEmails')">$core_v2_language.GetResource("EditProfile_OptionsReceiveEmails")</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource("EditProfile_OptionsReceiveEmailsDesc")</span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableHtmlEmail')" #if ($user.EnableHtmlEmail) checked="checked" #end />
+					<label for="$core_v2_widget.UniqueId('EnableHtmlEmail')">$core_v2_language.GetResource("EditProfile_OptionsHtmlEmail")</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource("EditProfile_OptionsHtmlEmailDesc")</span>
+			</li>
+			#if ($core_v2_configuration.ShowContactCheckboxes)
+				<li class="field-item">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId('AllowSiteToContact')" #if ($user.AllowSiteToContact) checked="checked" #end />
+						<label for="$core_v2_widget.UniqueId('AllowSiteToContact')">$core_v2_language.GetResource("EditProfile_AllowSiteToContact")</label>
+					</span>
+					<span class="field-item-description">$core_v2_language.GetResource("EditProfile_AllowSiteToContact_Desc")</span>
+				</li>
+				<li class="field-item">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId('AllowSitePartnersToContact')" #if ($user.AllowSitePartnersToContact) checked="checked" #end />
+						<label for="$core_v2_widget.UniqueId('AllowSitePartnersToContact')">$core_v2_language.GetResource("EditProfile_AllowSitePartnersToContact")</label>
+					</span>
+					<span class="field-item-description">$core_v2_language.GetResource("EditProfile_AllowSitePartnersToContact_Desc")</span>
+				</li>
+			#end
+		#end
+		#if ($core_v2_configuration.Editors.Count > 1)
+    		<li class="field-item setting-editor">
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('EditorList')">${core_v2_language.GetResource("EditProfile_Editor")}</label>
+    			<span class="field-item-description">$core_v2_language.GetResource('EditProfile_Editor_Description')</span>
+    			<span class="field-item-input">
+    				#foreach($editor in $core_v2_configuration.Editors)
+    				#beforeall
+    					<select id="$core_v2_widget.UniqueId('EditorList')" name="$core_v2_widget.UniqueId('EditorList')" class="ui-select">
+    				#each
+    					<option value="$editor.Value"#if ($editor.Value == $user.EditorType) selected="selected"#end>$editor.Name</option>
+    				#afterall
+    					</select>
+    				#end
+    			</span>
+    		</li>
+    	#end
+		<li class="field-item setting-time-zone">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('Timezone')">${core_v2_language.GetResource("EditProfile_AboutTimeZone")}</label>
+			<span class="field-item-description">$core_v2_language.GetResource('EditProfile_AboutTimeZone_Description')</span>
+			<span class="field-item-input">
+				#foreach($timezone in $core_v2_configuration.TimeZones)
+				#beforeall
+					<select id="$core_v2_widget.UniqueId('Timezone')" name="$core_v2_widget.UniqueId('Timezone')" class="ui-select">
+				#each
+					<option value="$timezone.Id"#if ($timezone.Id == $user.TimeZoneId) selected="selected"#end>$timezone.Name</option>
+				#afterall
+					</select>
+				#end
+			</span>
+		</li>
+		<li class="field-item setting-date-format">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('DateFormat')">${core_v2_language.GetResource("EditProfile_OptionsDateFormat")}</label>
+			<span class="field-item-description">$core_v2_language.GetResource('EditProfile_OptionsDateFormat_Description')</span>
+			<span class="field-item-input">
+				#foreach($format in $core_v2_configuration.GetDateFormats($language))
+				#beforeall
+					<select id="$core_v2_widget.UniqueId('DateFormat')" name="$core_v2_widget.UniqueId('DateFormat')" class="ui-select">
+				#each
+					<option value="$core_v2_encoding.HtmlAttributeEncode($format.Format)"#if ($format.Format == $user.DateFormat) selected="selected"#end>$format.Name</option>
+				#afterall
+					</select>
+				#end
+			</span>
+		</li>
+		#if ($core_v2_configuration.EnableConversations)
+			<li class="field-item" id="$core_v2_widget.UniqueId('ConversationContactType')">
+				<span class="field-item-name">$core_v2_language.GetResource("EditProfile_AllowConversationsFromDescription")</span>
+				<span class="field-item-input">
+					<input type="radio" name="$core_v2_widget.UniqueId('ConversationContactType')" id="$core_v2_widget.UniqueId('UserContactTypeNone')" value="None" #if ($user.ConversationContactType == "" || $user.ConversationContactType == "None") checked="checked" #end />
+					<label for="$core_v2_widget.UniqueId('UserContactTypeNone')">$core_v2_language.GetResource("EditProfile_AllowConversationsFromNone")</label>
+				</span>
+				<span class="field-item-input">
+					<input type="radio" name="$core_v2_widget.UniqueId('ConversationContactType')" id="$core_v2_widget.UniqueId('UserContactTypeFriendsOnly')" value="FriendsOnly" #if ($user.ConversationContactType == "FriendsOnly") checked="checked" #end />
+					<label for="$core_v2_widget.UniqueId('UserContactTypeFriendsOnly')">$core_v2_language.GetResource("EditProfile_AllowConversationsFromFriendsOnly")</label>
+				</span>
+				<span class="field-item-input">
+					<input type="radio" name="$core_v2_widget.UniqueId('ConversationContactType')" id="$core_v2_widget.UniqueId('UserContactTypeAllUsers')" value="AllUsers" #if ($user.ConversationContactType == "AllUsers") checked="checked" #end />
+					<label for="$core_v2_widget.UniqueId('UserContactTypeAllUsers')">$core_v2_language.GetResource("EditProfile_AllowConversationsFromAllUsers")</label>
+				</span>
+			</li>
+		#end
+		#if ($core_v2_configuration.EnableUserPresenceTrackingToggle)
+		    <li class="field-item setting-user-presence-tracking">
+    			<span class="field-item-input">
+    				<input type="checkbox" name="$core_v2_widget.UniqueId('EnablePresenceTracking')" id="$core_v2_widget.UniqueId('EnablePresenceTracking')"  #if ($user.EnablePresenceTracking) checked="checked" #end />
+    				<label for="$core_v2_widget.UniqueId('EnablePresenceTracking')">${core_v2_language.GetResource("EditProfile_EnablePresenceTracking")}</label>
+    			</span>
+    			<span class="field-item-description">$core_v2_language.GetResource('EditProfile_EnablePresenceTracking_Description')</span>
+    		</li>
+		#end
+		<li class="field-item setting-share-favorites">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('ShareFavorites')" id="$core_v2_widget.UniqueId('ShareFavorites')"  #if ($user.EnableFavoriteSharing) checked="checked" #end />
+				<label for="$core_v2_widget.UniqueId('ShareFavorites')">${core_v2_language.GetResource("EditProfile_Favorites_Share")}</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EditProfile_Favorites_Share_Description')</span>
+		</li>
+		<li class="field-item setting-display-in-member-list">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableDisplayInMemberList')" #if (${user.EnableDisplayInMemberList}) checked="checked" #end />
+				<label for="$core_v2_widget.UniqueId('EnableDisplayInMemberList')">${core_v2_language.GetResource("EditProfile_DisplayInMemberList")}</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EditProfile_DisplayInMemberList_Description')</span>
+		</li>
+		#if ($core_v2_configuration.EnableSignatures)
+			<li class="field-item setting-enable-user-signatures">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableUserSignatures')" #if (${user.EnableUserSignatures}) checked="checked" #end />
+					<label for="$core_v2_widget.UniqueId('EnableUserSignatures')">${core_v2_language.GetResource("EditProfile_EnableUserSignatures")}</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EditProfile_EnableUserSignatures_Description')</span>
+			</li>
+			<li class="field-item setting-signature">
+	    			<label class="field-item-name" for="$core_v2_widget.UniqueId('Signature')">${core_v2_language.GetResource("EditProfile_AboutSignature")}</label>
+				<span class="field-item-description">$core_v2_language.GetResource('EditProfile_AboutSignature_Description')</span>
+				<span class="field-item-input">$core_v2_editor.Render('Signature',"%{Width='100%',Value='$!user.Signature',ContentTypeId=$core_v2_user.ContentTypeId}")</span>
+				<span class="field-item-validation" style="display: none;" id="$core_v2_widget.UniqueId('SignatureValidation')"></span>
+			</li>
+		#end
+
+	 </ul>
+</fieldset>
+
+#foreach($activityStoryType in $core_v2_activityStorySitePreference.List("%{Preferences='AlwaysOnVisible,ControlledOptIn,ControlledOptOut'}"))
+#beforeall
+	
+	<fieldset id="$core_v2_widget.UniqueId('ActivityVisibilityOptions')">
+		<h3>$core_v2_language.GetResource("Profile_ActivityVisibility")</h3>
+		<ul class="field-list">
+			<li class="field-item">
+			    <p><span class="field-item-description">$core_v2_language.GetResource('Profile_ActivityVisibility_Description')</span></p>
+				<span class="field-item-input">
+					<a href="#" class="all">$core_v2_language.GetResource('SelectAll')</a>
+	                		<a href="#" class="none">$core_v2_language.GetResource('DeSelectAll')</a>
+				</span>
+			</li>
+#each
+	<li class="field-item">
+		#set($userActivityStoryPreference = $core_v2_activityStoryUserPreference.Get($activityStoryType.ActivityStoryType.ActivityStoryTypeId))
+		#set($astDescription = $activityStoryType.ActivityStoryType.Description)
+		<span class="field-item-input">
+			<input type="checkbox"
+				name="activity-story-type:$core_v2_encoding.HtmlAttributeEncode($activityStoryType.ActivityStoryType.ActivityStoryTypeId.ToString())"
+				id="activity-story-type:$core_v2_encoding.HtmlAttributeEncode($activityStoryType.ActivityStoryType.ActivityStoryTypeId.ToString())"
+				value="$activityStoryType.ActivityStoryType.ActivityStoryTypeId.ToString()"
+				data-activitystorytypeid="$activityStoryType.ActivityStoryType.ActivityStoryTypeId.ToString()"
+				#if ($userActivityStoryPreference.IsLoggingEnabled) data-originalvalue="true" #else data-originalvalue="false" #end
+				#if ($activityStoryType.LoggingPreference == 'AlwaysOnVisible') disabled="disabled" data-disabled="true" #else data-disabled="false" #end
+				#if ($userActivityStoryPreference.IsLoggingEnabled) checked="checked" #end />
+                	<label for="activity-story-type:$core_v2_encoding.HtmlAttributeEncode($activityStoryType.ActivityStoryType.ActivityStoryTypeId.ToString())">$activityStoryType.ActivityStoryType.Name ($core_v2_language.Lowercase($astDescription.Substring(0,1))$astDescription.Substring(1))</label>
+            	</span>
+	</li>
+#afterall
+		</ul>
+	</fieldset></form>
+	
+#end
+
+<fieldset>
+    <h3>$core_v2_language.GetResource('EditLoginPreferences_Account')</h3>
+    <ul class="field-list">
+    	<li class="field-item setting-sign-in-name">
+            <span class="label field-item-name">${core_v2_language.GetResource("EditLoginPreferences_SignInName")}</span>
+            <span class="field-item-description">$core_v2_language.GetResource("EditLoginPreferences_SignInNameDesc")</span>
+            <span class="field-item-input"><div id="$core_v2_widget.UniqueId('UserNameDisplay')">$user.Username</div></span>
+        </li>
+	#if ($user.HasPassword)
+	        <li class="field-item setting-password">
+	                <span class="field-item-name">${core_v2_language.GetResource("EditProfile_Password")}</span>
+	                <span class="field-item-description">
+	                    #if ($core_v2_configuration.AuthenticationType == "windows")
+	                        ${core_v2_language.GetResource("EditLoginPreferences_PasswordDesc_SSO")}
+	                    #else
+	                        ${core_v2_language.GetResource("EditLoginPreferences_PasswordDesc")}
+	                    #end
+	                </span>
+			<span class="field-item-input">
+				<a href="$core_v2_urls.ChangePassword()" class="internal-link edit-password"><span></span>$core_v2_language.GetResource("EditProfile_PasswordChange")</a>
+			</span>
+	        </li>
+	#else
+	        <li class="field-item setting-password">
+			<span class="field-item-name">$core_v2_language.GetResource("EditProfile_DefinePassword")</span>
+			<span class="field-item-description">
+			   $core_v2_language.GetResource("EditProfile_DefinePassword_Description")
+			</span>
+			<span class="field-item-input">
+				<a href="#" class="internal-link edit-password" id="$core_v2_widget.UniqueId('ResetPassword')"><span></span>$core_v2_language.GetResource("EditProfile_ResetPassword")</a>
+			</span>
+	        </li>
+	#end
+        <li class="field-item setting-last-sign-in">
+		<span class="field-item-name">${core_v2_language.GetResource("EditLoginPreferences_LastSignIn")}</span>
+		<span class="field-item-description">$core_v2_language.GetResource("EditLoginPreferences_LastSignInDesc")</span>
+		<span class="field-item-input"><div id="$core_v2_widget.UniqueId('LastLogin')">$core_v2_language.FormatDate($user.LastLoginDate)</div></span>
+        </li>
+        #if ($core_v2_widget.GetBoolValue('showExport', true))
+            <li class="field-item setting-password">
+                <span class="field-item-name">${core_v2_language.GetResource("EditProfile_ExportData")}</span>
+                <span class="field-item-description">${core_v2_language.GetResource("EditProfile_ExportData_Desc")}</span>
+        		<span class="field-item-input">
+        			<a href="#" class="internal-link export-data"><span></span>$core_v2_language.GetResource("ExportData")</a>
+        		</span>
+            </li>
+        #end
+        #if ($core_v2_widget.GetBoolValue('showDelete', true) && $core_v2_userPermission.HasPermission($core_v2_sitePermissions.UserDeleteSelf))
+            <li class="field-item setting-delete">
+                <span class="field-item-name">${core_v2_language.GetResource("EditProfile_DeleteAccount")}</span>
+                <span class="field-item-description">${core_v2_language.GetResource("EditProfile_DeleteAccount_Desc")}</span>
+                <span class="field-item-input">
+                    <a href="#" class="internal-link delete-account"><span></span>$core_v2_language.GetResource("DeleteAccount")</a>
+                </span>
+            </li>
+        #end
+
+    </ul>
+</fieldset>
+
+#set ($canUseApiKeys = $core_v3_permission.CheckPermission($core_v2_sitePermissions.UseRestWithApiKey, $core_v2_user.Accessing.Id).IsAllowed)
+#if ($canUseApiKeys)
+    <fieldset>
+        <h3>$core_v2_language.GetResource("Profile_EditApiKeys")</h3>
+        <ul class="field-list">
+            <li class="field-item setting-edit-api-keys">
+                <span class="field-item-description">$core_v2_language.GetResource("Profile_EditApiKeys_Description")</span>
+                <span class="field-item-input"><a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.ApiKeys())" class="internal-link edit-api-keys">${core_v2_language.GetResource("Profile_EditApiKeysDescription")}</a></span>
+            </li>
+        </ul>
+    </fieldset>
+#end

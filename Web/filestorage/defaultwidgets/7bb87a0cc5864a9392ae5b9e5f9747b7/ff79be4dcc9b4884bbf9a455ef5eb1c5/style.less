@@ -1,0 +1,72 @@
+// activity story stream
+.scale_prepended_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @margin: 2px) {
+	&:before {
+		width: @size;
+		height: @size;
+		font-size: @size;
+		line-height: @size;
+		margin-right: @margin;
+	}
+}
+.content-fragment.activity-story-stream {
+	.internal-link.comment {
+		.scale_prepended_icon(12px);
+		&:before {
+			top: 0px;
+		}
+	}
+
+	.loading {
+		color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 31%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+	}
+	.more-stories {
+		padding: 10px;
+		background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 2%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		margin-top: 10px;
+		text-align: center;
+		a {
+			color: -evo-themeconfig-color('linkFontColor', #2196F3);
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .95;
+		}
+	}
+	.internal-link .post-date {
+		.scale_prepended_icon(12px);
+		&:before {
+			top: 0px;
+		}
+	}
+	.activity-date-grouping {
+		background-color: transparent;
+		font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.4;
+		font-weight: -evo-themeconfig-int('baseFontWeight', 400);
+		color: -evo-themeconfig-color('foregroundColor', #11171A);
+		line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em);
+		margin: (-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.5) 0 (-evo-themeconfig-unit('baseFontSizeValue', 14px) * .5) 0;
+		&.today {
+			color: -evo-themeconfig-color('foregroundColor', #11171A);
+			background-color: transparent;
+		}
+	}
+	.embedded-content {
+		margin-bottom: 20px;
+	}
+	.filter {
+		margin-top: 10px * 2;
+	}
+	.content-list.single {
+		.content-item.activity-story {
+			padding-top: 0;
+			padding-left: 0;
+			.activity-summary .user-name { display: none; }
+			.post-author .avatar { display: none; }
+		}
+	}
+}
+
+@media only screen and (max-width: -evo-themeconfig-unit('minWidth', 670px)) {
+	.content-fragment.activity-story-stream {
+		.activity-date-grouping {
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.5;
+		}
+	}
+}

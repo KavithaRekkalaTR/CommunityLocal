@@ -1,0 +1,31 @@
+#if ($core_v2_page.IsPost) 
+    #set($progressKey = "ArticleManagement-${context.ApplicationId}-${core_v2_user.Accessing.Id}");
+    
+    #set($parameters = "%{}")
+    $parameters.Add('queryText', $core_v2_page.GetFormValue('queryText'))
+    $parameters.Add('sortBy', $core_v2_page.GetFormValue('sortBy'))
+    $parameters.Add('sortOrder', $core_v2_page.GetFormValue('sortOrder'))
+    $parameters.Add('filter', $core_v2_page.GetFormValue('filter'))
+    $parameters.Add('isDefault', $core_v2_page.GetFormValue('isDefault'))
+    $parameters.Add('publishGroupId', $core_v2_page.GetFormValue('publishGroupId'))
+    $parameters.Add('categoryId', $core_v2_page.GetFormValue('categoryId'))
+    $parameters.Add('except', $core_v2_page.GetFormValue('except'))
+    $parameters.Add('action', $core_v2_page.GetFormValue('action'))
+
+    $core_v2_widget.ScheduleFile('task-bulkchange.jsm', "%{ ProgressKey = $progressKey, Durable = 'False', Parameters = $parameters }")
+
+    $core_v2_ui.ScheduledFile($progressKey, "%{ IncludeProgress = 'True', IncludeAllMessages = 'False', IncludeLatestMessage = 'False' }")
+
+    <script type="text/javascript">
+        jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+            jQuery.telligent.evolution.messaging.subscribe('scheduledFile.complete', function (data) {
+    			if ('$core_v2_encoding.JavascriptEncode($progressKey)' == data.progressKey) {
+    			    window.setTimeout(function() {
+        			    jQuery.telligent.evolution.messaging.publish('articlemanagement.bulkactioncompleted');
+        			    jQuery.telligent.evolution.administration.close();
+    			    }, 1000);
+    			}
+    		});
+        });
+    </script>
+#end

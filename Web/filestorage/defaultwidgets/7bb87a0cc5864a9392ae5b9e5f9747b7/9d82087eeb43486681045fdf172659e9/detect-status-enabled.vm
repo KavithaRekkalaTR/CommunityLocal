@@ -1,0 +1,18 @@
+﻿##
+## Assumes $group to be in scope.
+## Injects an $enableStatus boolean into scope based on logic
+##
+
+#set ($enableStatus = false)
+#set ($enableStatus = $group.EnableGroupMessages)
+#if ($group.GroupType == 'Joinless')
+	#set ($enableStatus = $enableStatus && $core_v2_user.IsRegistered($accessingUser.Id))
+#elseif ($enableStatus)
+	#set ($enableStatus = false)
+	#set ($groupUserMember = false)
+	#set ($groupUserMember = $core_v2_groupUserMember.Get($group.Id, "%{ UserId = $accessingUser.Id }"))
+	#if ($groupUserMember && ($groupUserMember.MembershipType == "Owner" || $groupUserMember.MembershipType == "Manager" || $groupUserMember.MembershipType == "Member"))
+		#set($enableStatus = true)
+	#end
+#end
+#set ($enableStatus = $enableStatus && $core_v2_activityStoryUserPreference.Get($core_v2_statusMessage.StoryTypeId).IsLoggingEnabled)

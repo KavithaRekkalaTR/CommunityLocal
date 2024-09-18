@@ -1,0 +1,6 @@
+#if ($core_v2_page.IsPost)
+    #set($key = $core_v2_page.GetFormValue('key'))
+    #set($response = $core_v2_user.VerifyWithKey($key))
+    #set($isNew = $core_v2_user.IsNewAccount($key))
+{ "result": "$response", "isNew": $core_v2_utility.ToJson($isNew) }
+#end

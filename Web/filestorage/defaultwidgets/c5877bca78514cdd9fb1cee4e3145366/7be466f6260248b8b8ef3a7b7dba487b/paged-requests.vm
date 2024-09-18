@@ -1,0 +1,69 @@
+#set($query = "%{SortBy = 'DisplayName', SortOrder = 'Ascending', MembershipType = 'PendingMember' }")
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$query.Add('PageIndex', $pageIndex)
+$query.Add('PageSize', 20)
+
+#set($members = $core_v2_groupUserMember.List($context.Group.Id, $query))
+#set ($hasMore = 'false')
+#if ($members.PageIndex == $pageIndex)
+    #set ($currentPagedQuantity = ($members.PageIndex + 1) * $members.PageSize)
+    #if ($members.TotalCount > $currentPagedQuantity)
+    	#set ($hasMore = 'true')
+    #end
+#else
+    #set($members = [])
+#end
+
+<div data-hasmore="$hasMore">
+    #if ($pageIndex == 0 && $members.TotalCount > 0) 
+        <div class="result-overview">
+            #if ($members.TotalCount == 1)
+                $core_v2_language.FormatString($core_v2_language.GetResource('request-count-singular'), $core_v2_language.FormatNumber($members.TotalCount))
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('request-count'), $core_v2_language.FormatNumber($members.TotalCount))
+            #end
+        </div>
+    #end
+
+    <ul class="content-list content expandable simple">
+    #foreach($member in $members)
+    #each
+      <li class="content-item with-avatar request" data-userid="$member.User.Id">
+          <div class="author">
+            <div class="avatar">
+                $core_v2_ui.GetResizedImageHtml($member.User.AvatarUrl, 44, 44, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt='$member.User.DisplayName'}")
+            </div>
+          </div>
+    	<h4 class="name">$member.User.DisplayName</h4>
+    		<div class="content expandable">
+    			$!member.Message
+    		</div>
+    		<div class="actions expandable">
+    			<div class="navigation-list ui-links" data-direction="horizontal">
+    				<ul>
+    				    #if ($member.User.ProfileUrl)
+        					<li class="navigation-list-item view-page">
+        						<a href="$core_v2_encoding.HtmlAttributeEncode($member.User.ProfileUrl)">$core_v2_language.GetResource('view-user')</a>
+        					</li>
+        				#end
+    					<li class="navigation-list-item edit">
+    						<a href="#" data-messagename="groupmembers.edit" data-to="Member" data-userid="$member.User.Id">$core_v2_language.GetResource('accept-user')</a>
+    					</li>
+    					<li class="navigation-list-item delete">
+    						<a href="#" data-messagename="groupmembers.delete" data-userid="$member.User.Id" data-isdirectmember="true">$core_v2_language.GetResource('reject-user')</a>
+    					</li>
+    					<li class="navigation-list-item">
+    						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+    					</li>
+    					<li class="navigation-list-item">
+    						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+    					</li>
+    				</ul>
+    			</div>
+    		</div>
+      </li>
+    #end
+    </ul>
+</div>

@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="250aac778a9b481e9d70e64be013f2a6" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Job" schedule="06:00 Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday" lastModified="2019-06-04 15:18:11Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <executionScript language="JavaScript"><![CDATA[var unit = core_v2_widget.GetStringValue('ageUnit', '');
+if(unit === '') {
+    return;
+}
+
+var contentRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('accountAge', ''));
+var minAgeString = contentRangeQuery.Value('Minimum');
+var maxAgeString = contentRangeQuery.Value('Maximum');
+
+var minAge = core_v2_utility.ParseInt(minAgeString);
+var maxAge = core_v2_utility.ParseInt(maxAgeString);
+
+var currentDate = core_v2_utility.CurrentDate;
+var startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+var endDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59);
+
+if(unit === 'y')
+{
+    startDate.setFullYear(startDate.getFullYear() - maxAge);
+    endDate.setFullYear(endDate.getFullYear() - minAge);
+}
+else if (unit === 'd')
+{
+    startDate.setDate(startDate.getDate() - maxAge);
+    endDate.setDate(endDate.getDate() - minAge);
+}
+else return;
+
+var pageIndex = 0;
+var done = false;
+while(!done) {
+    var users = core_v2_user.List({
+       SortBy: 'JoinedDate',
+       SortOrder: 'Ascending',
+       PageSize: 100,
+       PageIndex: pageIndex
+    });
+    
+    for(var i = 0; i < users.Count; i++) {
+        var hasAchievement = context_v1_achievementAutomation.IsAwarded(users[i].Id);
+    
+        if(users[i].JoinDate !== null) {
+            if((minAgeString === null || users[i].JoinDate <= endDate) && (maxAgeString === null || users[i].JoinDate >= startDate)) {
+                if (!hasAchievement) {
+                    context_v1_achievementAutomation.Award(users[i].Id);
+                }
+            } else {
+                if (hasAchievement) {
+                    context_v1_achievementAutomation.Revoke(users[i].Id);
+                }
+            }
+        }
+    }
+    
+    if(users.TotalCount <= 100 * (pageIndex + 1)) {
+        done = true;
+    }
+    
+    pageIndex++;
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="ageUnit" labelResourceName="AccountAgeUnit" descriptionResourceName="AccountAgeUnit_Description" dataType="String" defaultValue="y">
+        <propertyValue value="y" labelResourceName="Unit_Years" />
+        <propertyValue value="d" labelResourceName="Unit_Days" />
+    </property>
+    <property id="accountAge" labelResourceName="AccountAge" descriptionResourceName="AccountAge_Description" dataType="Custom" template="core_v2_intRange" 
+        minimum="0" maximum="" defaultValue="Minimum=1&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AccountAge">Account age range</resource>
+  <resource name="AccountAge_Description">Award achievement when a member's account is within this range. A blank value for the minimum or maximum is treated as an unbounded range.</resource>
+  <resource name="AccountAgeUnit">Review account age in</resource>
+  <resource name="AccountAgeUnit_Description">Specify whether to measure in days or years.</resource>
+  <resource name="Description">Grants or revokes an achievement based on the age of a member's account.</resource>
+  <resource name="Title">Award to members based on their account age</resource>
+  <resource name="Unit_Days">Days</resource>
+  <resource name="Unit_Years">Years</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

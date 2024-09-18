@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_QuickPost_Name}" version="11.0.0.0" description="${resource:Core_QuickPost_Description}" instanceIdentifier="9d82087eeb43486681045fdf172659e9" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="quick-post" lastModified="2021-08-10 16:03:53Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($group = false)
+#set ($group = $core_v2_group.Current)
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#set ($groupSelectorTemplateId = 'telligent.evolution.widgets.quickPost.groupSelector')
+#set ($groupSelectorGroupsTemplateId = 'telligent.evolution.widgets.quickPost.groupSelectorGroups')
+#set ($groupSelectorId = $core_v2_widget.UniqueId('groupSelector'))
+
+$core_v2_widget.ExecuteFile('load-group-selection-mode.vm')
+
+$core_v2_widget.ExecuteFile('detect-status-enabled.vm')
+#if (!$enableStatus)
+	$core_v2_widget.Hide()
+#end
+
+<fieldset>
+	<ul class="field-list">
+		#if ($groupSelectionMode == 'targetable')
+			<li class="field-item post-container">
+				<span class="field-item-input">
+					<div class="group-selector ui-tip"
+						data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ShareWith'))"
+						id="$core_v2_encoding.HtmlAttributeEncode($groupSelectorId)">
+						<span class="cancel-selection">
+							<a class="ui-tip replace-with-icon cancel" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ShareWithSite'))" href="#">$core_v2_language.GetResource('ShareWithSite')</a>
+						</span>
+						<span class="group-avatar"></span>
+						<span class="group-name">
+							<a href="#" class="internal-link group append-icon right-open-mini">
+								$core_v2_language.GetResource('ShareWithSite')
+							</a>
+						</span>
+					</div>
+				</span>
+			</li>
+		#end
+
+		<li class="field-item post-type">
+			$core_v2_widget.ExecuteFile('new-post-links.vm')
+		</li>
+
+        #set($statusMessagePrompt = $core_v2_widget.GetStringValue('statusPrompt', ''))
+		#if ($group.ParentGroupId == -1 && (!$statusMessagePrompt || $statusMessagePrompt == ""))
+			#set ($statusMessagePrompt = "${}{resource:CF_QuickPost_DefaultStatusPrompt}")
+			#set ($statusMessagePrompt = $statusMessagePrompt.Replace("{}", ""))
+			$core_v2_widget.SetStringValue("statusPrompt", $statusMessagePrompt)
+		#elseif (!$statusMessagePrompt || $statusMessagePrompt == "")
+			#set ($statusMessagePrompt = "${}{resource:CF_QuickPost_DefaultGroupStatus}")
+			#set ($statusMessagePrompt = $statusMessagePrompt.Replace("{}", ""))
+			$core_v2_widget.SetStringValue("statusPrompt", $statusMessagePrompt)
+		#end
+		#set ($statusMessagePrompt = $core_v2_encoding.HtmlDecode($core_v2_widget.ApplyTokens($statusMessagePrompt)))
+		<li class="field-item status">
+			#set($editorPrefix = $core_v2_widget.ExecuteFile('editor-prefix.vm'))
+			<span #if ($core_v2_user.IsRegistered($accessingUser.Id)) $core_v2_tourTip.Render($core_v2_language.GetResource('TourTip'), "%{ CssClass = 'field-item-input' }") #else class="field-item-input" #end >
+				$core_v2_submittableEditor.Render('ActivityMessageReplyBody', "function() { jQuery.telligent.evolution.widgets.quickPost.submit('$core_v2_widget.WrapperElementId'); }", "%{ ContentTypeId = $core_v2_statusMessage.ContentTypeId, EnterToSubmitPrompt = $core_v2_language.GetResource('EnterToSubmitPrompt'), Height = '20px', SubmitLabel = $core_v2_language.GetResource('SubmitLabel'), Width = '100%', BeforeHtml = $editorPrefix, Placeholder = $statusMessagePrompt, AutoResize = 'True' }")
+			</span>
+			<span class="field-item-input preview" style="display: none;"></span>
+		</li>
+	</ul>
+</fieldset>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.quickPost')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($groupSelectorTemplateId)">
+		<div>
+			<div class="group-selector-popup">
+				<form>
+					<input type="text" class="search" placeholder="$core_v2_language.GetResource('SearchGroups')" />
+				</form>
+				<div class="groups"></div>
+			</div>
+		</div>
+	</script>
+	<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($groupSelectorGroupsTemplateId)">
+		<% if(groups && groups.length > 0) { %>
+			<ul class="navigation-list">
+				<% foreach(groups, function(group){ %>
+					<li class="navigation-list-item">
+						<span class="group-avatar">
+							<%= group.avatarHtml %>
+						</span>
+						<span class="group-name">
+							<a href="#" class="internal-link append-icon right-open-mini" data-containerid="<%= group.id %>" data-name="<%= group.name %>"><%= group.name %></a>
+						</span>
+					</li>
+				<% }); %>
+			</ul>
+		<% } else { %>
+			<div class="no-match">$core_v2_language.GetResource('NoMatching')</div>
+		<% } %>
+	</script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function(){
+		jQuery.telligent.evolution.widgets.quickPost.register({
+			wrapperSelector: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.WrapperElementId)',
+			editor: {
+			  getContent: function() { return $core_v2_submittableEditor.GetContentScript('ActivityMessageReplyBody') },
+			  setContent: function(c) { $core_v2_submittableEditor.GetUpdateContentScript('ActivityMessageReplyBody', 'c') },
+			  onChange: function(f) { $core_v2_submittableEditor.GetAttachOnKeyDownScript('ActivityMessageReplyBody', 'f') },
+			  onReady: function(f) { $core_v2_submittableEditor.GetAttachOnReadyScript('ActivityMessageReplyBody', 'f') }
+			},
+			addUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('add-status.vm'))',
+			successMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CF_Core_QuickPost_PostSuccess'))',
+			groupId: $group.Id,
+			containerId: '$group.ContainerId',
+			uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			uploadContextId : '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+			previewAttachmentUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))",
+			loadFormUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('load-status-form.vm'))",
+			progressMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Uploading'))',
+			changeFileMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+			uploadFileMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('StatusMessage_UploadFile'))',
+			groupSelectorTemplateId: '$core_v2_encoding.JavascriptEncode($groupSelectorTemplateId)',
+			groupSelectorGroupsTemplateId: '$core_v2_encoding.JavascriptEncode($groupSelectorGroupsTemplateId)',
+			groupSelectorId: '#$core_v2_encoding.JavascriptEncode($groupSelectorId)',
+			applicationLinkMessageName: '$core_v2_encoding.JavascriptEncode("widget.${core_v2_widget.WrapperElementId}.applicationLink")',
+			storeUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('store-temp-data.vm'))",
+			groupSearchUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search-groups.vm'))",
+			groupBookmarkAndMembershipUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('prefill-groups.vm'))",
+			shareWithSite: '$core_v2_language.GetResource('ShareWithSite')',
+			statusMessageContentTypeId: '$core_v2_statusMessage.ContentTypeId.ToString()',
+			rootContainerId: '$core_v2_group.Root.ContainerId'
+			#if ($groupSelectionMode == 'targetable' && $group.Id != $core_v2_group.Root.Id)
+				,initialName: '$core_v2_encoding.JavascriptEncode($group.Name)',
+				initialContainerId: '$group.ContainerId',
+				initialAvatarHtml: '$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($group.AvatarUrl, 16, 16, "%{ ResizeMethod = 'ZoomAndCrop', alt='$group.Name' }"))'
+			#end
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_QuickPost_Name}'))
+]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_QuickPost_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="statusPrompt" labelResourceName="CF_QuickPost_StatusPrompt" dataType="String" template="core_v2_tokenizedString" />
+	<property id="groupSelectionMode" labelResourceName="GroupSelectionMode" dataType="String">
+		<propertyValue value="targetable" labelResourceName="GroupSelectionMode_Enabled" />
+		<propertyValue value="current" labelResourceName="GroupSelectionMode_Disabled" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Core_QuickPost_PostSuccess">Your message was published successfully. </resource>
+  <resource name="CF_QuickPost_DefaultGroupStatus">Leave a message for the group...</resource>
+  <resource name="CF_QuickPost_DefaultStatusPrompt">Leave a message...</resource>
+  <resource name="CF_QuickPost_StatusPrompt">Status Message Prompt</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="ChangeFile">Change file</resource>
+  <resource name="Core_QuickPost_Description">Displays a form for creating a status message for the site or current group.</resource>
+  <resource name="Core_QuickPost_Name">Quick Post</resource>
+  <resource name="EnterToSubmitPrompt">Enter to post</resource>
+  <resource name="GroupSelectionMode">Group Selection</resource>
+  <resource name="GroupSelectionMode_Disabled">Current</resource>
+  <resource name="GroupSelectionMode_Enabled">Targetable</resource>
+  <resource name="more">More</resource>
+  <resource name="NoMatching">No matching groups</resource>
+  <resource name="Options">Options</resource>
+  <resource name="RemoveFile">Remove file</resource>
+  <resource name="SearchGroups">Search Groups...</resource>
+  <resource name="ShareWith">Share With</resource>
+  <resource name="ShareWithSite">Share with everyone</resource>
+  <resource name="statusMessage">Post a Status Message</resource>
+  <resource name="StatusMessage_UploadFile">Add file</resource>
+  <resource name="SubmitLabel">Post</resource>
+  <resource name="TourTip">Add your own status message for the group or comment on someone else's message. If you are new to the group, why not introduce yourself?</resource>
+  <resource name="Uploading">Uploading ({0}%)...</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

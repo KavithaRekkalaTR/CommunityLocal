@@ -1,0 +1,321 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:BlogSyndicationApplicationPanel_Name}" cssClass="blog-syndication" description="${resource:BlogSyndicationApplicationPanel_Description}" instanceIdentifier="802475d726a5460891b36557eb092f9d" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+
+#set ($blog = false)
+#set ($blog = $context.Blog)
+#if (!$blog)
+	$core_v2_widget.Hide()
+#end
+
+#set ($saveButtonTemplateId = $core_v2_widget.UniqueId('saveButtonTemplate'))
+#set ($metaDescription = $core_v2_widget.UniqueId('metaDescription'))
+#set ($metaKeywords = $core_v2_widget.UniqueId('metaKeywords'))
+#set ($enableRss = $core_v2_widget.UniqueId('enableRss'))
+#set ($enableAtom = $core_v2_widget.UniqueId('enableAtom'))
+#set ($enableTagsRss = $core_v2_widget.UniqueId('enableTagsRss'))
+#set ($enableCommentsRss = $core_v2_widget.UniqueId('enableCommentsRss'))
+#set ($enableITunes = $core_v2_widget.UniqueId('enableITunes'))
+#set ($iTunesCategory = $core_v2_widget.UniqueId('iTunesCategory'))
+#set ($iTunesExplicit = $core_v2_widget.UniqueId('iTunesExplicit'))
+#set ($iTunesKeywords = $core_v2_widget.UniqueId('iTunesKeywords'))
+#set ($iTunesOwnerName = $core_v2_widget.UniqueId('iTunesOwnerName'))
+#set ($iTunesOwnerEmail = $core_v2_widget.UniqueId('iTunesOwnerEmail'))
+#set ($iTunesSubTitle = $core_v2_widget.UniqueId('iTunesSubTitle'))
+#set ($externalFeedUrl = $core_v2_widget.UniqueId('externalFeedUrl'))
+#set ($pingUrls = $core_v2_widget.UniqueId('pingUrls'))
+#set ($syndicateExternalLinks = $core_v2_widget.UniqueId('syndicateExternalLinks'))
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+#set($attachmentUrl = $blog.ITunesImageUrl)
+#set($attachmentFileName = $context.GetFileNameFromImageUrl($attachmentUrl))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Desc')</span>
+			<span class="field-item-input">
+				<textarea id="$core_v2_encoding.HtmlAttributeEncode($metaDescription)" name="$core_v2_encoding.HtmlAttributeEncode($metaDescription)">$core_v2_encoding.HtmlEncode($blog.MetaTagDescription)</textarea>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('Keywords')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Keywords_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" maxlength="512" value="$core_v2_encoding.HtmlAttributeEncode($blog.MetaTagKeywords)" id="$core_v2_encoding.HtmlAttributeEncode($metaKeywords)" name="$core_v2_encoding.HtmlAttributeEncode($metaKeywords)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		#if ($context.AllowRSS)
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" #if ($blog.EnableRss) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableRss)" name="$core_v2_encoding.HtmlAttributeEncode($enableRss)" />
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableRss)">$core_v2_language.GetResource('EnableRssLabel')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableRssLabel_Desc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" #if ($blog.EnableAtom) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableAtom)" name="$core_v2_encoding.HtmlAttributeEncode($enableAtom)" />
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableAtom)">$core_v2_language.GetResource('EnableAtomLabel')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableAtomLabel_Desc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" #if ($blog.EnableTagsRss) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableTagsRss)" name="$core_v2_encoding.HtmlAttributeEncode($enableTagsRss)" />
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableTagsRss)">$core_v2_language.GetResource('EnableTagsRssLabel')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableTagsRssLabel_Desc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" #if ($blog.EnableRssCommentFeedsOverride) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableCommentsRss)" name="$core_v2_encoding.HtmlAttributeEncode($enableCommentsRss)" />
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableCommentsRss)">$core_v2_language.GetResource('EnableCommentsRssLabel')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableCommentsRssLabel_Desc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" #if ($blog.EnableITunes) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableITunes)" name="$core_v2_encoding.HtmlAttributeEncode($enableITunes)" />
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableITunes)">$core_v2_language.GetResource('EnableITunesLabel')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableITunesLabel_Desc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item itunes-category" #if (!$blog.EnableITunes) style="display:none" #end>
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($iTunesCategory)">$core_v2_language.GetResource('ITunesCategoryLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ITunesCategoryLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($blog.ITunesCategory)" id="$core_v2_encoding.HtmlAttributeEncode($iTunesCategory)" name="$core_v2_encoding.HtmlAttributeEncode($iTunesCategory)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item itunes-explicit" #if (!$blog.EnableITunes) style="display:none" #end>
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($iTunesExplicit)">$core_v2_language.GetResource('ITunesExplicitLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ITunesExplicitLabel_Desc')</span>
+				<span class="field-item-input">
+					<select id="$core_v2_encoding.HtmlAttributeEncode($iTunesExplicit)" name="$core_v2_encoding.HtmlAttributeEncode($iTunesExplicit)" class="ui-select">
+						<option value="no" #if ($blog.ITunesExplicit == 'no') selected #end>$core_v2_language.GetResource('No')</option>
+						<option value="yes" #if ($blog.ITunesExplicit == 'yes') selected #end>$core_v2_language.GetResource('Yes')</option>
+						<option value="clean" #if ($blog.ITunesExplicit == 'clean') selected #end>$core_v2_language.GetResource('Clean')</option>
+					</select>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item itunes-keywords" #if (!$blog.EnableITunes) style="display:none" #end>
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($iTunesKeywords)">$core_v2_language.GetResource('ITunesKeywordsLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ITunesKeywordsLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($blog.ITunesKeywords)" id="$core_v2_encoding.HtmlAttributeEncode($iTunesKeywords)" name="$core_v2_encoding.HtmlAttributeEncode($iTunesKeywords)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item itunes-owner-name" #if (!$blog.EnableITunes) style="display:none" #end>
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($iTunesOwnerName)">$core_v2_language.GetResource('ITunesOwnerNameLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ITunesOwnerNameLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($blog.ITunesOwnerName)" id="$core_v2_encoding.HtmlAttributeEncode($iTunesOwnerName)" name="$core_v2_encoding.HtmlAttributeEncode($iTunesOwnerName)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item itunes-owner-address" #if (!$blog.EnableITunes) style="display:none" #end>
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($iTunesOwnerEmail)">$core_v2_language.GetResource('ITunesOwnerEmailLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ITunesOwnerEmailLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($blog.ITunesOwnerEmail)" id="$core_v2_encoding.HtmlAttributeEncode($iTunesOwnerEmail)" name="$core_v2_encoding.HtmlAttributeEncode($iTunesOwnerEmail)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item itunes-sub-title" #if (!$blog.EnableITunes) style="display:none" #end>
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($iTunesSubTitle)">$core_v2_language.GetResource('ITunesSubTitleLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ITunesSubTitleLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($blog.iTunesSubTitle)" id="$core_v2_encoding.HtmlAttributeEncode($iTunesSubTitle)" name="$core_v2_encoding.HtmlAttributeEncode($iTunesSubTitle)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item post-attachment upload-with-preview itunes-image" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false" #if (!$blog.EnableITunes) style="display:none" #end>
+				<label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('ITunesImageLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ITunesImageLabel_Desc')</span>
+				<span class="field-item-input preview"></span>
+				<span class="field-item-input upload">
+					<a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+					<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+			</li>
+			<li class="field-item">
+				<label class="field-item-name">$core_v2_language.GetResource('PrivateRssLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('PrivateRssLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($context.PrivateRss)"  />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($externalFeedUrl)">$core_v2_language.GetResource('ExternalFeedUrlLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('ExternalFeedUrlLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($blog.ExternalFeedUrl)" id="$core_v2_encoding.HtmlAttributeEncode($externalFeedUrl)" name="$core_v2_encoding.HtmlAttributeEncode($externalFeedUrl)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		#end
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($pingUrls)">$core_v2_language.GetResource('PingUrlsLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('PingUrlsLabel_Desc')</span>
+			<span class="field-item-input">
+				<textarea id="$core_v2_encoding.HtmlAttributeEncode($pingUrls)" name="$core_v2_encoding.HtmlAttributeEncode($pingUrls)">#foreach ($url in $blog.PingUrls)$url;
+#end</textarea>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.SyndicateExternalLinks) checked #end id="$core_v2_encoding.HtmlAttributeEncode($syndicateExternalLinks)" name="$core_v2_encoding.HtmlAttributeEncode($syndicateExternalLinks)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($syndicateExternalLinks)">$core_v2_language.GetResource('SyndicateExternalLinksLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('SyndicateExternalLinksLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		#if (!$context.AllowRSS)
+			<li><div class="message warning">$core_v2_language.GetResource('RssUnlicensed')</div></li>
+		#end
+	</ul>
+</fieldset></form>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveButtonTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogSyndicationApplicationPanel.register({
+		saveTemplateId: '$core_v2_encoding.JavascriptEncode($saveButtonTemplateId)',
+		updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update.vm'))',
+		inputs: {
+			metaDescription: '#$core_v2_encoding.JavascriptEncode($metaDescription)',
+			metaKeywords: '#$core_v2_encoding.JavascriptEncode($metaKeywords)',
+			enableRss: '#$core_v2_encoding.JavascriptEncode($enableRss)',
+			enableAtom: '#$core_v2_encoding.JavascriptEncode($enableAtom)',
+			enableTagsRss: '#$core_v2_encoding.JavascriptEncode($enableTagsRss)',
+			enableCommentsRss: '#$core_v2_encoding.JavascriptEncode($enableCommentsRss)',
+			enableITunes: '#$core_v2_encoding.JavascriptEncode($enableITunes)',
+			iTunesCategory: '#$core_v2_encoding.JavascriptEncode($iTunesCategory)',
+			iTunesExplicit: '#$core_v2_encoding.JavascriptEncode($iTunesExplicit)',
+			iTunesKeywords: '#$core_v2_encoding.JavascriptEncode($iTunesKeywords)',
+			iTunesOwnerName: '#$core_v2_encoding.JavascriptEncode($iTunesOwnerName)',
+			iTunesOwnerEmail: '#$core_v2_encoding.JavascriptEncode($iTunesOwnerEmail)',
+			iTunesSubTitle: '#$core_v2_encoding.JavascriptEncode($iTunesSubTitle)',
+			externalFeedUrl: '#$core_v2_encoding.JavascriptEncode($externalFeedUrl)',
+			pingUrls: '#$core_v2_encoding.JavascriptEncode($pingUrls)',
+			syndicateExternalLinks: '#$core_v2_encoding.JavascriptEncode($syndicateExternalLinks)'
+		},
+		file: {
+			fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+			url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+			isRemote:#if($attachmentIsRemote) true#else false#end,
+			isNew:#if($attachmentIsNew) true#else false#end
+		},
+		attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+		text: {
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UpdateSuccess'))',
+			urlNotValid: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UrlInvalid'))'
+		}
+	});
+});
+</script>
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="BlogSyndicationApplicationPanel_Name">Syndication SEO/SMO</resource>
+	<resource name="BlogSyndicationApplicationPanel_Description">Manage RSS, search engine, and social media optimization.</resource>
+	<resource name="Save">Save</resource>
+	<resource name="UpdateSuccess">Success</resource>
+	<resource name="UploadFile">Upload File</resource>
+	<resource name="RemoveFile">Remove File</resource>
+	<resource name="ChangeFile">Change File</resource>
+	<resource name="UploadProgress">Uploading ({0}%)...</resource>
+	<resource name="RssUnlicensed">RSS is not supported with this license.</resource>
+	<resource name="UrlInvalid">Invalid URL</resource>
+	<resource name="SEO">Search Engine Optimization</resource>
+	<resource name="Description">Site Description</resource>
+	<resource name="Description_Desc">Provide a concise description of your blog that includes keywords relevant to your readers</resource>
+	<resource name="Keywords">Site Keywords</resource>
+	<resource name="Keywords_Desc">Provide a list of comma separated keywords that describe content in your blog</resource>
+	<resource name="EnableRssLabel">Publish RSS for posts</resource>
+	<resource name="EnableRssLabel_Desc">Syndicate your blog’s content using RSS</resource>
+	<resource name="EnableAtomLabel">Publish Atom for posts</resource>
+	<resource name="EnableAtomLabel_Desc">Syndicate your blog’s content using Atom</resource>
+	<resource name="EnableTagsRssLabel">Publish RSS for keywords/tags</resource>
+	<resource name="EnableTagsRssLabel_Desc">Syndicate your blog’s content by keywords/tags</resource>
+	<resource name="EnableCommentsRssLabel">Publish RSS for comments</resource>
+	<resource name="EnableCommentsRssLabel_Desc">Syndicate your blog’s comments</resource>
+	<resource name="EnableITunesLabel">Enable iTunes Support</resource>
+	<resource name="EnableITunesLabel_Desc">When enabled, iTunes information will be included in your RSS feed.</resource>
+	<resource name="ITunesCategoryLabel">iTunes Category</resource>
+	<resource name="ITunesCategoryLabel_Desc">Enter the iTunes category your content relates to. To specify a nested category, use the '&gt;' character to separate categories.</resource>
+	<resource name="ITunesImageLabel">iTunes Image URL</resource>
+	<resource name="ITunesImageLabel_Desc">Enter the URL of the JPG image (600x600 pixels preferred) to associate to your feed within iTunes.</resource>
+	<resource name="ITunesExplicitLabel">iTunes Explicit Flag</resource>
+	<resource name="ITunesExplicitLabel_Desc">If your feed contains explicit content, select "Yes".</resource>
+	<resource name="ITunesKeywordsLabel">iTunes Keywords</resource>
+	<resource name="ITunesKeywordsLabel_Desc">Enter a comma-separated list of up to 12 keywords to associate to your feed in iTunes.</resource>
+	<resource name="ITunesOwnerNameLabel">iTunes Feed Owner Name</resource>
+	<resource name="ITunesOwnerNameLabel_Desc">Enter the name of the owner of this feed as you want it displayed in iTunes.</resource>
+	<resource name="ITunesOwnerEmailLabel">iTunes Feed Owner Email Address</resource>
+	<resource name="ITunesOwnerEmailLabel_Desc">Enter the email address of the owner of this feed as you want it displayed in iTunes.</resource>
+	<resource name="ITunesSubTitleLabel">iTunes Feed Sub-Title</resource>
+	<resource name="ITunesSubTitleLabel_Desc">Enter a short (few words) description of your feed as you want it displayed in iTunes.</resource>
+	<resource name="PrivateRssLabel">1. Community Server RSS URL</resource>
+	<resource name="PrivateRssLabel_Desc">Provide this URL to FeedBurner when registering your blog.</resource>
+	<resource name="ExternalFeedUrlLabel">2. FeedBurner URL</resource>
+	<resource name="ExternalFeedUrlLabel_Desc">Enter the URL provided to you by FeedBurner.</resource>
+	<resource name="PingUrlsLabel">Custom Blog Ping Service</resource>
+	<resource name="PingUrlsLabel_Desc">Enables automatic notification to services that new content is available</resource>
+	<resource name="SyndicateExternalLinksLabel">Syndicate External Links</resource>
+	<resource name="SyndicateExternalLinksLabel_Desc">Do you want the links to posts that come from an external source to be syndicated as the original link rather than a link to the internal copy of the post?</resource>
+	<resource name="No">No</resource>
+	<resource name="Yes">Yes</resource>
+	<resource name="Clean">Clean</resource>
+	<resource name="UploadFile">Upload File</resource>
+	<resource name="RemoveFile">Remove File</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>
+

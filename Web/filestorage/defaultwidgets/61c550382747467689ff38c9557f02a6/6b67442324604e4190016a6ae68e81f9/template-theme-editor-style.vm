@@ -1,0 +1,77 @@
+<div class="editor-header with-tabs">
+	<form class="template-editor-header"></form>
+	<div class="editor-state template-editor-state"></div>
+	<div class="state-labels" style="display:none">
+		<span class="from"></span>
+		<span class="to"></span>
+	</div>
+	<span class="field-description ui-tip" data-tip="<%= description %>"><%= description %></span>
+	<ul class="content-editor-tabs">
+		<li class="content-editor-tab content">
+			<a href="#" class="tab content selected">$core_v2_language.GetResource('Content')</a>
+		</li>
+		<li class="content-editor-tab options">
+			<a href="#" class="tab content">$core_v2_language.GetResource('Options')</a>
+		</li>
+	</ul>
+</div>
+<div class="editor-content with-tabs options" style="display:none">
+	<form>
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-input apply-to-non-modals">
+						<input id="<%: Id %>-<%: TypeId %>-style-<%: Name %>-ApplyToNonModals" type="checkbox" <% if(ApplyToNonModals) { %> checked <% } %> class="apply-to-non-modals" />
+						<label for="<%: Id %>-<%: TypeId %>-style-<%: Name %>-ApplyToNonModals" class="field-item-name">$core_v2_language.GetResource('ApplyToNonModals')</label>
+					</span>
+				</li>
+				<li class="field-item">
+					<span class="field-item-input apply-to-modals">
+						<input id="<%: Id %>-<%: TypeId %>-style-<%: Name %>-ApplyToModals" type="checkbox"  <% if(ApplyToModals) { %> checked <% } %> class="apply-to-modals" />
+						<label for="<%: Id %>-<%: TypeId %>-style-<%: Name %>-ApplyToModals" class="field-item-name">$core_v2_language.GetResource('ApplyToModals')</label>
+					</span>
+				</li>
+				<li class="field-item">
+					<span class="field-item-input apply-to-oauth">
+						<input id="<%: Id %>-<%: TypeId %>-style-<%: Name %>-ApplyToAuthorizationRequests" type="checkbox" <% if(ApplyToAuthorizationRequests) { %> checked <% } %> class="apply-to-oauth" />
+						<label for="<%: Id %>-<%: TypeId %>-style-<%: Name %>-ApplyToAuthorizationRequests" class="field-item-name">$core_v2_language.GetResource('ApplyToAuthorizationRequests')</label>
+					</span>
+				</li>
+				<li class="field-item apply-to-ie">
+					<span class="field-item-input">
+						<input id="<%: Id %>-<%: TypeId %>-style-<%: Name %>-InternetExplorerMaxVersion" type="checkbox" class="apply-to-ie" <% if(InternetExplorerMaxVersion !== null) { %> checked <% } %> />
+						<label for="<%: Id %>-<%: TypeId %>-style-<%: Name %>-InternetExplorerMaxVersion" class="field-item-name">$core_v2_language.GetResource('InternetExplorerMaxVersion')</label>
+					</span>
+					<span class="field-item-input">
+						<input type="number" step="1" class="ie-version secondary" value="<%= (InternetExplorerMaxVersion || '') %>"  />
+					</span>
+					<span class="field-item-description was"></span>
+				</li>
+				<li class="field-item query">
+					<span class="field-item-input">
+						<input id="<%: Id %>-<%: TypeId %>-style-<%: Name %>-MediaQuery" type="checkbox" class="with-query"  <% if(MediaQuery && MediaQuery.length > 0) { %> checked <% } %> />
+						<label for="<%: Id %>-<%: TypeId %>-style-<%: Name %>-MediaQuery" class="field-item-name">$core_v2_language.GetResource('MediaQuery')</label>
+					</span>
+					<span class="field-item-input">
+						<input type="text" class="media-query secondary" value="<%= (MediaQuery || '') %>"  />
+					</span>
+					<span class="field-item-description was"></span>
+				</li>
+				<li class="field-item language-direction">
+					<label class="field-item-name">$core_v2_language.GetResource('LanguageDirection')</label>
+					<select class="language-direction">
+						<option value="any" <% if(IsRightToLeft == null) { %> selected <% } %>>$core_v2_language.GetResource('AnyDirection')</option>
+						<option value="rtl" <% if(IsRightToLeft == true) { %> selected <% } %>>$core_v2_language.GetResource('RTL')</option>
+						<option value="ltr" <% if(IsRightToLeft == false) { %> selected <% } %>>$core_v2_language.GetResource('LTR')</option>
+					</select>
+					<span class="field-item-description was"></span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+</div>
+<div class="editor-content with-tabs content with-code-editor">
+	<form>
+		<textarea class="code-editor"></textarea>
+	</form>
+</div>

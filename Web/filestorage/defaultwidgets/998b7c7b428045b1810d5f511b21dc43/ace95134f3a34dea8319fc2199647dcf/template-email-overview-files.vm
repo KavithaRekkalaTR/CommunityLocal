@@ -1,0 +1,29 @@
+<% if(State != 'NotPersisted') { %>
+	<h3>$core_v2_language.GetResource('Files')</h3>
+	<ul class="navigation-list managed-items">
+	<% if(Files && Files.length > 0) { %>
+		<% foreach(Files, function(file){ %>
+			<li class="navigation-list-item">
+				<a class="managed-item-link file ui-tip" data-name="<%: file.Name %>" data-tip="<%: file.Name %>" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: Id %>&_et=file&_en=<%: file.Name %>"><%: file.Name %></a>
+				<a href="#" class="delete" data-messagename="me.view.file.delete" data-reqkey="_eid=<%: Id %>&_et=file&_en=<%: file.Name %>">$core_v2_language.GetResource('Delete')</a>
+			</li>
+		<% }); %>
+	<% } %>
+	</ul>
+	<div class="navigation-list managed-items actions">
+		<ul class="actions ui-links" data-maxlinks="0">
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="me.view.email.initiate-new-file" data-reqkey="_eid=<%: Id %>">$core_v2_language.GetResource('AddFile')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="me.view.email.initiate-upload" data-reqkey="_eid=<%: Id %>">$core_v2_language.GetResource('UploadFile')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a class="node-actions-more" href="#" data-more>$core_v2_language.GetResource('NewFile')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+			</li>
+		</ul>
+	</div>
+<% } %>

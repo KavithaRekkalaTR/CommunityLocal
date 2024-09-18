@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:calendar_CalendarWidgetName}" version="12.0.0.0" description="${resource:calendar_CalendarWidgetDescription}" instanceIdentifier="36ee9a45ac7a497ca43b07458e37d5c9" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="calendar-fragment" lastModified="2021-09-01 20:33:33Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($selectedCalendarOrGroup = $core_v2_widget.GetStringValue("selectedCalendarOrGroup", ""))
+#set($parsedCalendarOrGroup = $core_v2_page.ParseQueryString($selectedCalendarOrGroup))
+#set($calendars = false)
+#set($currentCalendar = false)
+#set($calendars = $parsedCalendarOrGroup.Values('Calendar'))
+#set($group = false)
+#set($group = $parsedCalendarOrGroup.Value('Group'))
+#set($includeSubGroups = $parsedCalendarOrGroup.Value('IncludeSubGroups'))
+#if ($selectedCalendarOrGroup.Length == 0)
+	#set ($includeSubGroups = false)
+#end
+
+#if(!$calendars && !$group)
+		#set($currentCalendar = $calendar_v1_calendars.Current)
+		#if (!$currentCalendar)
+				#set($group = $core_v2_group.Current.Id)
+		#end
+#elseif($calendars)
+	#set($calendarIds = "")
+	## get posts related to a group or groups
+	## construct a comma-separated string of calendar ids
+	#foreach ($calendar in $calendars)
+		## id of 0 means use the current calendar
+		#if ($calendar == -1)
+			#set ($calendar = $calendar_v1_calendars.Current.Id)
+		#end
+		#if($calendar > 0)
+			#if(!$calendars)
+				#set($calendarIds = "$calendar")
+			#else
+				#if($calendarIds == "")
+					#set($calendarIds = "$calendar")
+				#else
+					#set($calendarIds = "$calendarIds,$calendar")
+				#end
+			#end
+		#end
+	#end
+#elseif ($group)
+	#if ($group == 0)
+		#set($group = $core_v2_group.Current.Id)
+	#end
+#end
+
+<div id="$core_v2_widget.UniqueId('wrapper')" class="event-calendar">
+	<div id="$core_v2_widget.UniqueId('loading')" class="ui-loading"></div>
+	<div id="$core_v2_widget.UniqueId('content')" class="event_calendar_content"></div>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.Calendar.widgets.calendar')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	jQuery(function(j)
+	{
+		j.telligent.evolution.Calendar.widgets.calendar.register({
+			month: $core_v2_utility.CurrentDate.Month,
+			year: $core_v2_utility.CurrentDate.Year,
+			calendarId: #if($currentCalendar.Id > 0)$currentCalendar.Id #else -1 #end,
+			calendarIds: #if($calendarIds)'$calendarIds'#else''#end,
+			content: j('#$core_v2_widget.UniqueId('content')'),
+			errorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_CalendarErrorMessage'))',
+			includeSubGroups: #if($includeSubGroups == true)true #else false #end,
+			loadingUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('calendar.vm'))',
+			referenceId: #if($group) $group #else -1 #end,
+			wrapper: j('#$core_v2_widget.UniqueId('wrapper')'),
+			loading: j('#$core_v2_widget.UniqueId('loading')')
+		});
+	});
+	//>
+	</script>
+#end
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:calendar_CalendarWidgetTitle}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:calendar_CalendarWidgetTitle}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="selectedCalendarOrGroup" labelResourceName="calendar_SelectGroupAndCalendar" dataType="Custom" template="calendar_v1_calendarLookup" width="95%" maxCalendarSelections="20" includeCurrentGroup="True" format="csv" />
+	<property id="links" labelResourceName="calendar_Links" defaultValue="Link=calendarSubscribe&amp;Link=calendarRss" dataType="Custom" template="core_v2_sortableList" height="300" key="Link">
+		<propertyValue value="calendarRss" labelResourceName="calendar_CalendarLinks_RssLink" orderNumber="1000000" />
+		<propertyValue value="calendarSubscribe" labelResourceName="calendar_CalendarLinks_Subscribe" orderNumber="1000001" />
+		<propertyValue value="calendarEdit" labelResourceName="calendar_CalendarLinks_EditLink" orderNumber="1000002" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AndMore_Plural">And {0} more...</resource>
+  <resource name="AndMore_Singular">And 1 more...</resource>
+  <resource name="calendar_CalendarErrorMessage">There was an error loading the calendar.</resource>
+  <resource name="calendar_CalendarLinks_Add">&lt;span&gt;&lt;/span&gt;Add Calendar</resource>
+  <resource name="calendar_CalendarLinks_AddLink">Add Calendar</resource>
+  <resource name="calendar_CalendarLinks_DeleteCalendar">&lt;span&gt;&lt;/span&gt;Delete Calendar</resource>
+  <resource name="calendar_CalendarLinks_DeleteLink">Delete Calendar</resource>
+  <resource name="calendar_CalendarLinks_Edit">Manage Calendar</resource>
+  <resource name="calendar_CalendarLinks_EditLink">Manage Calendar</resource>
+  <resource name="calendar_CalendarLinks_Rss">RSS</resource>
+  <resource name="calendar_CalendarLinks_RssLink">RSS Subscription</resource>
+  <resource name="calendar_CalendarLinks_Subscribe">Email Subscribe</resource>
+  <resource name="calendar_CalendarMonthLabelFormat">MMMM yyyy</resource>
+  <resource name="calendar_CalendarNextLinkText">Go to next month</resource>
+  <resource name="calendar_CalendarPreviousLinkText">Go to previous month</resource>
+  <resource name="calendar_CalendarWidgetDescription">Renders an event calendar's events in a calendar format</resource>
+  <resource name="calendar_CalendarWidgetName">Event Calendar - Calendar</resource>
+  <resource name="calendar_CalendarWidgetTitle">Calendar</resource>
+  <resource name="calendar_EventLinks_Add">Add a new event</resource>
+  <resource name="calendar_EventLinks_AddLink">Add Event</resource>
+  <resource name="calendar_Links">Select, rearrange, and enable the links to be displayed</resource>
+  <resource name="calendar_Options_Description">Links for a calendar</resource>
+  <resource name="calendar_SelectGroupAndCalendar">Select group/calendar to pull content from</resource>
+  <resource name="calendar_Subscribe_Off">Turn Calendar notifications on</resource>
+  <resource name="calendar_Subscribe_On">Turn Calendar notifications off</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="EventDateTimeEndFormatString">hh:mm tt</resource>
+  <resource name="EventDateTimeFormatString">MMMM dd, yyyy, hh:mm tt</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Today">Today</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

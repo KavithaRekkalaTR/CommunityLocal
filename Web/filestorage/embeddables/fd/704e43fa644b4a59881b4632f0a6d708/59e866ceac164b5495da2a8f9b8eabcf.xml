@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<embeddables>
+  <embeddable name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" id="59e866ceac164b5495da2a8f9b8eabcf" lastModified="2021-09-02 18:31:04Z" provider="704e43fa-644b-4a59-881b-4632f0a6d708" isCacheable="true" varyCacheByUser="true" category="Formatting">
+    <supportedContentTypes>
+      <contentType id="d6391dab-5520-42d8-95a6-6e62d1c6394e" />
+      <contentType id="f7d226ab-d59f-475c-9d22-4a79e3f0ec07" />
+      <contentType id="07eef79e-7081-4fd2-b548-6cddd02e66b1" />
+      <contentType id="fb5d84b1-0a57-4544-8a7a-45dafc1faa43" />
+      <contentType id="08ca0da0-e017-4a80-9832-476c74d4f174" />
+      <contentType id="6b577b8c-0470-4e20-9d29-b6772bf67243" />
+    </supportedContentTypes>
+    <contentScript language="Velocity"><![CDATA[#set ($content = false)
+#set ($content = $core_v2_widget.GetStringValue('quoteContent', ''))
+#if (!$content || $content.length == 0)
+    $core_v2_widget.Hide()
+#end
+
+#set ($layout = $core_v2_widget.GetStringValue('layout', 'left'))
+
+#set ($attribution = false)
+#set ($attributionType = $core_v2_widget.GetStringValue('attributionType', 'none'))
+#if ($attributionType == 'member')
+        #set ($member = false)
+        #set ($attributionMemberQuery = $core_v2_widget.GetCustomValue('attributionMember', ''))
+        #set ($memberId = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('AttributionMember','')).Value('User')))
+        #set ($member = $core_v2_user.Get("%{ Id = $memberId }"))
+        #if ($member)
+            #set ($avatarSize = 24)
+            #store ($attribution)
+                #if ($context_v2_embeddable.RenderTarget == 'Web')
+                    <span class="pull-quote-avatar">
+                        #if (!$member.IsSystemAccount && $member.Url)
+                            <a href="$core_v2_encoding.HtmlAttributeEncode($member.Url)"
+                                $core_v2_ui.ContentPeek($member.ContentId, $core_v2_user.ContentTypeId)>
+                                $core_v2_ui.GetResizedImageHtml($member.AvatarUrl, $avatarSize, $avatarSize, "%{ ResizeMethod = 'ZoomAndCrop', border='0px', alt=$member.DisplayName }")
+                            </a>
+                        #else
+                            $core_v2_ui.GetResizedImageHtml($member.AvatarUrl, $avatarSize, $avatarSize, "%{ ResizeMethod = 'ZoomAndCrop', border='0px', alt=$member.DisplayName }")
+                        #end
+                    </span>
+                    <span class="pull-quote-name">
+                        #if (!$member.IsSystemAccount && $member.Url)
+                            <a href="$core_v2_encoding.HtmlAttributeEncode($member.Url)"
+                                $core_v2_ui.ContentPeek($member.ContentId, $core_v2_user.ContentTypeId)>
+                                $member.DisplayName
+                            </a>
+                        #else
+                            $member.DisplayName
+                        #end
+                    </span>
+                #else
+                    #if (!$member.IsSystemAccount && $member.Url)
+                        <a href="$core_v2_encoding.HtmlAttributeEncode($member.Url)">
+                            $member.DisplayName
+                        </a>
+                    #else
+                        $member.DisplayName
+                    #end
+                #end
+            #end
+        #end
+    #elseif ($attributionType == 'other')
+        #set ($attributionOther = $core_v2_widget.GetCustomValue('attributionOther', ''))
+        #set ($attributionOtherUrl = $core_v2_widget.GetUrlValue('attributionOtherUrl', ''))
+        #if ($attributionOther && $attributionOther.length > 0)
+            #store ($attribution)
+                #if ($context_v2_embeddable.RenderTarget == 'Web')
+                    <span class="pull-quote-name">
+                        #if ($attributionOtherUrl && $attributionOtherUrl.length > 0)
+                            <a href="$core_v2_encoding.HtmlAttributeEncode($attributionOtherUrl)">$attributionOther</a>
+                        #else
+                            $attributionOther
+                        #end
+                    </span>
+                #else
+                    #if ($attributionOtherUrl && $attributionOtherUrl.length > 0)
+                        <a href="$core_v2_encoding.HtmlAttributeEncode($attributionOtherUrl)">$attributionOther</a>
+                    #else
+                        $attributionOther
+                    #end
+                #end
+            #end
+        #end
+    #end
+
+#if ($context_v2_embeddable.RenderTarget == 'Web')
+    <aside class="pull-quote pull-quote-${layout}">
+        <div class="pull-quote-content">
+            $core_v2_ui.FormatTextAsHtml($core_v2_encoding.HtmlEncode($content))
+        </div>
+        #if ($attribution)
+            <div class="pull-quote-attribution">
+                $attribution     
+            </div>
+        #end
+    </aside>
+#else
+    <div style="margin: 2em 0;">
+        <div style="font-size: 150%;">
+            $core_v2_ui.FormatTextAsHtml($core_v2_encoding.HtmlEncode($content))
+        </div>
+        #if ($attribution)
+            <div style="font-size: 90%;">
+                $attribution
+            </div>
+        #end
+    </div>
+#end]]></contentScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="quoteContent" labelResourceName="Content" dataType="string" rows="3" />
+	<property id="attributionType" labelResourceName="AttributionType" dataType="string" defaultValue="none">
+	    <propertyValue value="none" labelResourceName="AttributionTypeNone" propertiesToHide="attributionMember,attributionOther" />
+	    <propertyValue value="member" labelResourceName="AttributionTypeMember" propertiesToHide="attributionOther,attributionOtherUrl" propertiesToShow="attributionMember" />
+	    <propertyValue value="other" labelResourceName="AttributionTypeOther" propertiesToHide="attributionMember" propertiesToShow="attributionOther,attributionOtherUrl" />
+	</property>
+	<property id="attributionMember" labelResourceName="AttributionMember" dataType="custom" template="core_v2_userLookup" enableCurrent="false" maxSelections="1" format="query" />
+	<property id="attributionOther" labelResourceName="AttributionOther" dataType="string" />
+	<property id="attributionOtherUrl" labelResourceName="AttributionOtherUrl" descriptionResourceName="AttributionOtherUrlDesc" dataType="url" template="url" allowLocal="false" allowRemote="true" />
+	<property id="layout" labelResourceName="Layout" dataType="string" defaultValue="left">
+	    <propertyValue value="left" labelResourceName="LayoutLeft" />
+	    <propertyValue value="center" labelResourceName="LayoutCenter" />
+	    <propertyValue value="right" labelResourceName="LayoutRight" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AttributionMember">Community member</resource>
+  <resource name="AttributionOther">Attribution name</resource>
+  <resource name="AttributionOtherUrl">Attribution URL</resource>
+  <resource name="AttributionOtherUrlDesc">URL of attribution (optional)</resource>
+  <resource name="AttributionType">Attribution</resource>
+  <resource name="AttributionTypeMember">Community member</resource>
+  <resource name="AttributionTypeNone">No attribution</resource>
+  <resource name="AttributionTypeOther">Other attribution</resource>
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Content">Quote</resource>
+  <resource name="Description">Displays a pull quote</resource>
+  <resource name="Layout">Layout</resource>
+  <resource name="LayoutCenter">Center</resource>
+  <resource name="LayoutLeft">Left</resource>
+  <resource name="LayoutRight">Right</resource>
+  <resource name="Name">Pull Quote</resource>
+</language>]]></languageResources>
+    <previewImage name="quote.svg" />
+    <iconImage name="quote.svg" />
+  </embeddable>
+</embeddables>

@@ -1,0 +1,333 @@
+##
+## Server-rendered forum reply body content
+##
+## Expected in scope: $forumReply, $allowsComments
+##
+
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($accessingUserIsRegistered = $core_v2_user.IsRegistered($accessingUser.Id))
+
+## QA-specific permission checks
+#set ($threadIsQA = false)
+#set ($threadStatusClass = '')
+#set ($accessingUserHasMarkAnswerPermission = false)
+#set ($replyIsNonAnswer = true)
+#set ($replyIsSuggestedAnswer = false)
+#set ($replyIsVerifiedAnswer = false)
+#set ($replyVote = false)
+#set ($verifiedByAccessing = false)
+#set ($rejectedByAccessing = false)
+
+#if ($thread.ThreadType == 'QuestionAndAnswer')
+	#set ($threadIsQA = true)
+
+	#set ($accessingUserHasMarkAnswerPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.MarkAsAnswer, $core_v2_user.Accessing.Id, "%{ ContentId = $forumReply.ContentId, ContentTypeId = $core_v2_forumReply.ContentTypeId }").IsAllowed)
+
+	#set ($replyIsSuggestedAnswer = $forumReply.IsSuggestedAnswer)
+	#set ($replyIsVerifiedAnswer = $forumReply.IsAnswer)
+	#if ($replyIsSuggestedAnswer || $replyIsVerifiedAnswer)
+		#set ($replyIsNonAnswer = false)
+	#end
+
+	#if ($threadIsQA && $forumReply.IsAnswer)
+		#set ($threadStatusClass = "verified")
+	#elseif ($threadIsQA && $forumReply.IsSuggestedAnswer)
+		#set ($threadStatusClass = "suggested")
+	#end
+
+	#set ($replyVote = $core_v2_forumReplyVote.Get($forumReply.Id))
+	#set ($verifiedByAccessing = ($replyVote && $replyVote.VoteType == 'AnswerVerification' && $replyVote.Value))
+	#set ($rejectedByAccessing = ($replyVote && $replyVote.VoteType == 'AnswerVerification' && !$replyVote.Value))
+#end
+
+#set ($hasAttachment = false)
+#set ($hasAttachment = $forumReply.File && $forumReply.File.FileUrl)
+#set ($mediaType = false)
+#set ($mediaRendered = false)
+#if ($hasAttachment)
+	#set ($mediaType = $core_v2_ui.GetMediaType($forumReply.File.FileUrl, "%{ ViewType = 'View' }"))
+#end
+
+#set ($explicitPageIndex = false)
+#if ($filter && $filter != '' && $forumReplies)
+	#set ($explicitPageIndex = $forumReplies.PageIndex + 1)
+#end
+
+<div data-status="$threadStatusClass" #if ($explicitPageIndex > 0) class="explicitpager" data-explicitpageindex="$explicitPageIndex" #end>
+	<div class="author" #if ($forumReply.Author.ProfileUrl) data-authorprofileurl="$core_v2_encoding.HtmlAttributeEncode($forumReply.Author.ProfileUrl)" #else data-authorprofileurl="" #end>
+		<div class="avatar">
+			#if ($forumReply.Author.ProfileUrl)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($forumReply.Author.ProfileUrl)" class="internal-link view-user-profile">
+					$core_v2_ui.GetResizedImageHtml($forumReply.Author.AvatarUrl, 44, 44, "%{border='0px', alt=$forumReply.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+				</a>
+			#else
+				$core_v2_ui.GetResizedImageHtml($forumReply.Author.AvatarUrl, 44, 44, "%{border='0px', alt=$forumReply.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+			#end
+		</div>
+		<div class="meta">
+			<span class="qa-votes">
+				## Verification Votes
+				#if (!$forumReply.IsDeleted && $threadIsQA)
+					$core_v2_ui.ForumVotes('reply', $forumReply.Id)
+				#end
+			</span>
+			<span class="user-name">
+				$core_v2_ui.UserPresence($forumReply.Author.Id)
+				#if ($forumReply.Author.ProfileUrl)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($forumReply.Author.ProfileUrl)" class="internal-link view-user-profile">
+						$forumReply.Author.DisplayName
+					</a>
+				#else
+					$forumReply.Author.DisplayName
+				#end
+			</span>
+			#if($forumReply.UserHostAddress && $forumReply.UserHostAddress != "")
+				<span class="host-address">
+					$forumReply.UserHostAddress
+				</span>
+			#end
+			<a href="$core_v2_encoding.HtmlAttributeEncode($forumReply.Url)" class="internal-link view-post navigable reply-permalink">
+				$core_v2_ui.AgoDate($forumReply.Date)
+			</a>
+			#if ($forumReply.ParentId)
+				#set ($parentForumReply = false)
+				#set ($parentForumReply = $core_v2_forumReply.Get($forumReply.ParentId))
+				#if ($parentForumReply)
+					<span class="parent">
+						$core_v2_language.GetResource('in_reply_to') <a class="internal-link view-post navigable ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_parent'))" href="$core_v2_encoding.HtmlAttributeEncode($parentForumReply.Url)">$parentForumReply.Author.DisplayName</a>
+					</span>
+				#end
+			#end
+		</div>
+	</div>
+
+	## attachment: audio/video
+	#if ($forumReply.Approved && $hasAttachment && ($mediaType == 'Video' || $mediaType == 'Audio'))
+		<div class="attachment">
+			$core_v2_ui.GetViewHtml($forumReply.File.FileUrl, "%{ AdjustToContainer = 'true' }")
+			<a href="$core_v2_encoding.HtmlAttributeEncode($forumReply.File.FileUrl)">$forumReply.File.FileName</a>
+		</div>
+		#set ($mediaRendered = true)
+	#end
+
+	## content
+	<div class="content full threaded-reply-content user-defined-markup" data-replyid="$!forumReply.Id" data-userid="$!forumReply.Author.Id" data-permalink="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.ApplicationEscapeUrl($forumReply.Url))">
+		#if ($forumReply.IsDeleted)
+			$core_v2_language.GetResource('reply_deleted')
+		#elseif (!$forumReply.Approved)
+			$core_v2_language.GetResource('reply_underreview')
+		#else
+			<div class="content">$forumReply.Body('Web')</div>
+		#end
+	</div>
+
+	## email files
+	#if($forumReply.Approved && $forumReply.EmailFiles && $forumReply.EmailFiles.Count() > 0)
+		#foreach($emailFile in $forumReply.EmailFiles)
+		#beforeall
+			<ul class="content-list attachments">
+		#each
+				<li class="content-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)" class="internal-link view-full-post preview">
+						$core_v2_ui.GetPreviewHtml($emailFile.DirectDownloadUrl, "%{ Width = 44 }")
+					</a>
+					<a href="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)" class="internal-link view-full-post">
+						$emailFile.FileName
+					</a>
+				</li>
+		#afterall
+			</ul>
+		#end
+	#end
+
+	## edit notes
+	#if($forumReply.Approved && $forumReply.EditNotes && $forumReply.EditNotes != "" && $core_v2_forumConfiguration.DisplayEditNotes)
+		<br /><br />
+		$forumReply.EditNotes
+		<br />
+	#end
+
+	## attachment: viewable non audio/video
+	#if ($forumReply.Approved && !$mediaRendered && $hasAttachment && $mediaType && $mediaType != 'Empty')
+		<div class="attachment margin-bottom">
+			<ul class="navigation-list">
+				<li class="navigation-list-item">
+					<a class="file-name" href="$core_v2_encoding.HtmlAttributeEncode($forumReply.File.FileUrl)">$forumReply.File.FileName</a>
+				</li>
+				<li class="navigation-list-item view-attachment">
+					<a href="#" data-messagename="telligent.evolution.widgets.thread.viewattachment">$core_v2_language.GetResource('view')</a>
+				</li>
+				<li class="navigation-list-item hide-attachment">
+					<a href="#" data-messagename="telligent.evolution.widgets.thread.hideattachment" class="hidden">$core_v2_language.GetResource('hide')</a>
+				</li>
+			</ul>
+			<div class="viewer hidden margin-bottom">
+				$core_v2_ui.GetViewHtml($forumReply.File.FileUrl, "%{ AdjustToContainer = 'true' }")
+			</div>
+		</div>
+		#set ($mediaRendered = true)
+	#end
+
+	## attachment: non-viewable
+	#if ($forumReply.Approved && !$mediaRendered && $hasAttachment && !$mediaType || $mediaType == 'Empty')
+		<a class="file-name" href="$core_v2_encoding.HtmlAttributeEncode($forumReply.File.FileUrl)">$forumReply.File.FileName</a>
+		#set ($mediaRendered = true)
+	#end
+
+	<div class="edit-form"></div>
+	<div class="actions meta edit">
+		<div class="navigation-list ui-links" data-maxlinks="1" data-direction="horizontal">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" class="primary" data-messagename="ui.replies.edit.cancel">$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div class="actions meta default">
+		## Determine max visible links
+		#set($maxLinks = 0)
+
+		## Quality Vote
+		#if (!$forumReply.IsDeleted)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		## Verify Answer Vote
+		#if (!$forumReply.IsDeleted && $threadIsQA && ($replyVote || $replyIsNonAnswer || $replyIsSuggestedAnswer) && ($hasModeratePermission || !$thread.IsLocked) && !$verifiedByAccessing)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		## Reject Answer Vote
+		#if (!$forumReply.IsDeleted && $threadIsQA && ($replyVote || $replyIsSuggestedAnswer || $replyIsVerifiedAnswer) && ($hasModeratePermission || !$thread.IsLocked) && !$rejectedByAccessing)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		## Replyable
+		#set ($hasReply = false)
+		#if ((!$filter || $filter == '') && !$forumReply.IsDeleted && ($hasModeratePermission || !$thread.IsLocked) && ($hasReplyPermission || $userMustLogin))
+			#set ($hasReply = true)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		## Contextual Link
+		#if ($filter && $filter != '')
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		## extra link to support showing the custom 'more' link
+		#if ($isRegistered)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		#set ($replyActionsId = $core_v2_widget.UniqueId("replyActions-${forumReply.ContentId}"))
+
+		<div class="navigation-list ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+			<ul>
+				## Quality Votes
+				#if (!$forumReply.IsDeleted)
+					<li class="navigation-list-item vote">
+						<span class="votes">
+							#set ($currentVotes = $forumReply.QualityYesVotes)
+							#set ($currentVotes = $currentVotes - $forumReply.QualityNoVotes)
+							#set ($forumReplyVote = false)
+
+							#if ($accessingUserIsRegistered)
+								#set ($forumReplyVote = $core_v2_forumReplyVote.Get($forumReply.Id, "%{ VoteType = 'Quality' }"))
+							#end
+
+							#if ($accessingUserIsRegistered)
+								<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_up'))"class="ui-tip vote up #if ($forumReplyVote && $forumReplyVote.Value) selected #end" data-messagename="ui.replies.vote.message" data-replyid="$forumReply.Id" data-value="true">$core_v2_language.GetResource('vote_up')</a>
+							#else
+								<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_up'))" class="ui-tip vote up" data-messagename="telligent.evolution.widgets.thread.login" data-replyurl="$core_v2_encoding.HtmlAttributeEncode($forumReply.Url)">$core_v2_language.GetResource('vote_up')</a>
+							#end
+
+							<span class="vote current ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_voters'))" data-replyid="$forumReply.Id">$currentVotes.ToString("+0;-0;0")</span>
+
+							#if ($accessingUserIsRegistered)
+								<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_down'))" class="ui-tip vote down #if ($forumReplyVote && !$forumReplyVote.Value) selected #end" data-messagename="ui.replies.vote.message" data-replyid="$forumReply.Id" data-value="false">$core_v2_language.GetResource('vote_down')</a>
+							#else
+								<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_down'))" class="ui-tip vote down" data-messagename="telligent.evolution.widgets.thread.login" data-replyurl="$core_v2_encoding.HtmlAttributeEncode($forumReply.Url)">$core_v2_language.GetResource('vote_down')</a>
+							#end
+						</span>
+					</li>
+				#end
+
+				## Reply Link
+				#if ($hasReply)
+					<li class="navigation-list-item">
+						#if ($hasReplyPermission)
+							<a href="#" class="internal-link new-reply"
+								data-label-reply="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('reply'))"
+								data-label-cancel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('cancel'))"
+								>$core_v2_language.GetResource('reply')</a>
+						#elseif ($userMustLogin)
+							<a href="#" class="primary internal-link login" data-messagename="telligent.evolution.widgets.thread.login" data-replyurl="$core_v2_encoding.HtmlAttributeEncode($forumReply.Url)">$core_v2_language.GetResource('login_to_reply')</a>
+						#end
+					</li>
+				#end
+
+				#set ($voteId = $core_v2_widget.UniqueId("vote${forumReply.ContentId}"))
+				#set ($unvoteId = $core_v2_widget.UniqueId("unvote${forumReply.ContentId}"))
+
+				## Verify Answer Vote
+				#if (!$forumReply.IsDeleted && $threadIsQA && ($replyVote || $replyIsNonAnswer || $replyIsSuggestedAnswer) && ($hasModeratePermission || !$thread.IsLocked) && !$verifiedByAccessing)
+					<li class="navigation-list-item vote has-question-only">
+						<a id="$core_v2_encoding.HtmlAttributeEncode($voteId)"
+							class="primary"
+							data-replyid="$forumReply.Id"
+							data-messagename="telligent.evolution.widgets.thread.votereply"
+							data-unvotelink="$core_v2_encoding.HtmlAttributeEncode($unvoteId)"
+							data-links="$core_v2_encoding.HtmlAttributeEncode($replyActionsId)"
+							href="#">
+							$core_v2_language.GetResource('VoteReply')
+						</a>
+					</li>
+				#end
+
+				## Reject Answer Vote
+				#if (!$forumReply.IsDeleted && $threadIsQA && ($replyVote || $replyIsSuggestedAnswer || $replyIsVerifiedAnswer) && ($hasModeratePermission || !$thread.IsLocked) && !$rejectedByAccessing)
+					<li class="navigation-list-item unvote has-question-only">
+						<a id="$core_v2_encoding.HtmlAttributeEncode($unvoteId)"
+							class="primary"
+							data-replyid="$forumReply.Id"
+							data-messagename="telligent.evolution.widgets.thread.unvotereply"
+							data-votelink="$core_v2_encoding.HtmlAttributeEncode($voteId)"
+							data-links="$core_v2_encoding.HtmlAttributeEncode($replyActionsId)"
+							href="#">
+							$core_v2_language.GetResource('UnvoteReply')
+						</a>
+					</li>
+				#end
+
+				## contextual link
+
+				#if ($filter && $filter != '')
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($forumReply.Url)" class="internal-link view-post navigable ui-tip"
+							data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_context_tip'))">
+							$core_v2_language.GetResource('view_context')
+						</a>
+					</li>
+				#end
+
+				## custom more link which we handle explicitly to first load more links
+				#if ($isRegistered)
+					<li class="navigation-list-item">
+						<a href="#"
+							data-messagename="widget.${core_v2_widget.WrapperElementId}.more"
+							data-forumapplicationid="$forum.ApplicationId"
+							data-threadcontentid="$thread.ContentId"
+							data-replycontentid="$forumReply.ContentId"
+							data-forumreplyactionsid="$core_v2_encoding.HtmlAttributeEncode($replyActionsId)">$core_v2_language.GetResource('more')</a>
+					</li>
+				#end
+
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+
+			</ul>
+		</div>
+	</div>
+</div>

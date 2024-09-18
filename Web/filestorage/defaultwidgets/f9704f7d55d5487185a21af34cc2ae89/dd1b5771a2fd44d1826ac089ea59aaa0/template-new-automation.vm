@@ -1,0 +1,78 @@
+#set ($isDeveloperModeEnabled = $context.IsDeveloperModeEnabled("%{}"))
+#set ($hasProviders = false)
+#if ($isDeveloperModeEnabled)
+	#set ($providers = $context.ListProviders("%{ DeveloperEnabledOnly = 'true' }"))
+	#foreach ($provider in $providers)
+		#set ($hasProviders = true)
+	#end
+#end
+
+<div class="select-automation">
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				<% if(hosts.length > 0) { %>
+					<li class="field-item">
+						<span class="field-item-input">
+							<input name="automation-host" id="automation-host-custom" type="radio" class="host-type" value="" checked #if ($isDeveloperModeEnabled && !$hasProviders) disabled #end />
+							<label for="automation-host-custom" class="field-item-name">
+								$core_v2_language.GetResource('CustomHost')
+								<span class="field-item-description">$core_v2_language.GetResource('CustomHostDesc')</span>
+							</label>
+						</span>
+						<% foreach(hosts, function(host) { %>
+							<span class="field-item-input">
+								<input name="automation-host" id="automation-host-<%= host.HostId %>" type="radio" class="host-type" value="<%: host.HostId %>" <% if (currentAutomationId == host.HostId) { %> checked <% } %> #if ($isDeveloperModeEnabled && !$hasProviders) disabled #end  />
+								<label for="automation-host-<%= host.HostId %>" class="field-item-name">
+									<%: host.HostName %>
+									<% if(host.HostDescription && host.HostDescription.length > 0) { %>
+										<span class="field-item-description"><%: host.HostDescription %></span>
+									<% } %>
+								</label>
+							</span>
+						<% }); %>
+					</li>
+				<% } %>
+
+				<li class="field-item automation-id">
+					<label class="field-item-name">$core_v2_language.GetResource('Id')</label>
+					<span class="field-item-description new">$core_v2_language.GetResource('NewIdDesc')</span>
+					<span class="field-item-input">
+						<input type="text" class="new-automation-id" #if ($isDeveloperModeEnabled && !$hasProviders) disabled #end />
+						<span class="field-item-validation new-automation-id-valid">$core_v2_language.GetResource('newAutomationIdInvalid')</span>
+					</span>
+				</li>
+
+				#if ($isDeveloperModeEnabled)
+					<li class="field-item provider-select">
+						<label class="field-item-name">$core_v2_language.GetResource('FactoryDefaultProvider')</label>
+						#if ($hasProviders)
+							<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderDesc')</span>
+							<span class="field-item-input">
+								<select class="provider-select">
+									#foreach ($provider in $providers)
+										<option value="$provider.Id" #if ($provider.Id == $context.CoreProviderId) selected #end>
+											$core_v2_encoding.HtmlEncode($provider.Name)
+										</option>
+									#end
+								</select>
+							</span>
+						#else
+							<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderNoneDesc')</span>
+						#end
+					</li>
+				#end
+
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+					</span>
+					<span class="field-item-input">
+						<a href="#" class="button continue #if ($isDeveloperModeEnabled && !$hasProviders) disabled #end ">$core_v2_language.GetResource('continue')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+</div>

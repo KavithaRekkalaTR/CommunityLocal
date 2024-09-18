@@ -1,0 +1,20 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($synonyms = $core_v2_page.GetFormValue('synonyms'))
+	#set($searchableContentTypes = $core_v2_page.GetFormValue('searchableContentTypes'))
+	#set($synonymResult = $context.SetSynonyms($synonyms))
+	#if ($synonymResult.HasErrors())
+		$core_v2_page.SendJsonError($synonymResult.Errors)
+	#end
+
+	#set($searchableContentTypesResult = $context.SetEnabledSearchableContentTypes($searchableContentTypes))
+	#if ($searchableContentTypesResult.HasErrors())
+		$core_v2_page.SendJsonError($searchableContentTypesResult.Errors)
+	#end
+
+	{
+		"synonyms": "$core_v2_encoding.JavascriptEncode($context.GetSynonyms())",
+		"contentTypes": $core_v2_utility.ToJson($context.ListSearchableContentTypes())
+	}
+#end

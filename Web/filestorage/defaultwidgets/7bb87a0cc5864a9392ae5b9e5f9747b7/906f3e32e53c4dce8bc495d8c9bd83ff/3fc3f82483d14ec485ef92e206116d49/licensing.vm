@@ -1,0 +1,45 @@
+$core_v2_page.SetContentType('application/json')
+
+{
+	"licensesRemaining": {
+		"group": $core_v2_group.TotalLicensedRemaining,
+		"applications": {
+			"forum": $core_v2_forum.TotalLicensedRemaining,
+			"blog": $core_v2_blog.TotalLicensedRemaining,
+			#if ($core_v2_wiki)
+				"wiki": $core_v2_wiki.TotalLicensedRemaining,
+			#else
+				"wiki":0,
+			#end
+			"gallery": $core_v2_gallery.TotalLicensedRemaining,
+			#if ($telligentIdeas_v1_challenges)
+				"ideation": $telligentIdeas_v1_challenges.TotalLicensedRemaining,
+			#else
+				"ideation": 0,
+			#end
+			#if ($calendar_v1_calendars)
+				"calendar": $calendar_v1_calendars.TotalLicensedRemaining,
+			#else
+				"calendar": 0,
+			#end
+			#if ($articles_v1_articleCollections)
+				"collection": $articles_v1_articleCollections.TotalLicensedRemaining
+			#else
+				"collection": 0
+			#end
+		},
+		#set($hasLimitedLicense = false)
+		#if ($core_v2_group.TotalLicensedRemaining < 50 || $core_v2_forum.TotalLicensedRemaining < 50 || $core_v2_blog.TotalLicensedRemaining < 50 || $core_v2_gallery.TotalLicensedRemaining < 50)
+		  #set($hasLimitedLicense = true)
+		#elseif ($telligentIdeas_v1_challenges.TotalLicensedRemaining < 50)
+		  #set($hasLimitedLicense = true)
+		#elseif ($calendar_v1_calendars.TotalLicensedRemaining < 50)
+		  #set($hasLimitedLicense = true)
+		#elseif( $core_v2_wiki.TotalLicensedRemaining < 50 )
+		     #set($hasLimitedLicense = true)
+		#elseif( $articles_v1_articleCollections.TotalLicensedRemaining < 50 )
+		     #set($hasLimitedLicense = true)
+		#end
+		"isLimited": #if($hasLimitedLicense) 1#else 0#end
+	}
+}

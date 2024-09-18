@@ -1,0 +1,89 @@
+##
+## Renders a theme file
+##
+## Requires in scope:
+##   $themeFile
+##
+## Optional in scope:
+##   $theme
+## 	 $includeFileDigests - if included and true, includes file digests
+##
+
+#if ($themeFile)
+	{
+		"Id": #if ($themeFile.Id) "$themeFile.Id" #else "" #end,
+		"TypeId": #if ($themeFile.TypeId) "$themeFile.TypeId" #else "" #end,
+		"TypeName": #if ($themeFile.TypeName) "$core_v2_encoding.JavascriptEncode($themeFile.TypeName)" #else "" #end,
+		"ThemeName": #if ($themeFile.ThemeName) "$core_v2_encoding.JavascriptEncode($themeFile.ThemeName)" #else "" #end,
+
+		"Name": #if ($themeFile.Name) "$core_v2_encoding.JavascriptEncode($themeFile.Name)" #else null #end,
+		"Type": #if ($themeFile.Type) "$themeFile.Type" #else "" #end,
+		"Url": #if ($themeFile.Url) "$core_v2_encoding.JavascriptEncode($themeFile.Url)" #else "" #end,
+
+		"ApplyToModals": #if ($themeFile.ApplyToModals) true #else false #end,
+		"ApplyToNonModals": #if ($themeFile.ApplyToNonModals) true #else false #end,
+		"ApplyToAuthorizationRequests": #if ($themeFile.ApplyToAuthorizationRequests) true #else false #end,
+		"InternetExplorerMaxVersion": #if ($themeFile.InternetExplorerMaxVersion) $themeFile.InternetExplorerMaxVersion #else null #end,
+		"MediaQuery": #if ($themeFile.MediaQuery) "$core_v2_encoding.JavascriptEncode($themeFile.MediaQuery)" #else "" #end,
+		"IsRightToLeft": #if ($themeFile.IsRightToLeft == true)
+			true
+		#elseif ($themeFile.IsRightToLeft == false)
+			false
+		#else
+			null
+		#end,
+
+		"Content": "$!core_v2_encoding.JavascriptEncode($!themeFile.Content)",
+		"ContentHash": "$!core_v2_encoding.JavascriptEncode($!themeFile.ContentHash)"
+
+		#if ($theme)
+			,"State": "$core_v2_encoding.JavascriptEncode($theme.State.ToString())"
+			,"IsStaged": #if ($theme.IsStaged) true #else false #end
+			,"IsEditable": #if ($theme.IsEditable) true #else false #end
+			,"IsTranslated": #if ($theme.IsTranslated) true #else false #end
+			,"IsReverted": #if ($theme.IsReverted) true #else false #end
+			,"IsDeleted": #if ($theme.IsDeleted) true #else false #end
+			,"Files": [
+				#foreach ($file in $theme.Files)
+				#between
+					,
+				#each
+					{
+						"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+						#if ($includeFileDigests)
+							,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+						#end
+					}
+				#end
+			]
+			,"ScriptFiles": [
+				#foreach ($file in $theme.ScriptFiles)
+				#between
+					,
+				#each
+					{
+						"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+						#if ($includeFileDigests)
+							,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+						#end
+					}
+				#end
+			]
+			,"StyleFiles": [
+				#foreach ($file in $theme.StyleFiles)
+				#between
+					,
+				#each
+					{
+						"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+						#if ($includeFileDigests)
+							,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+						#end
+					}
+				#end
+			]
+		#end
+	}
+#else
+	null
+#end

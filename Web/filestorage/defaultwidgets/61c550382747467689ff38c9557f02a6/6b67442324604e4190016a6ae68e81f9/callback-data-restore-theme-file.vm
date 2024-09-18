@@ -1,0 +1,62 @@
+##
+## Restore Theme File Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+	#set ($options = "%{}")
+
+	#set ($idQuery = $core_v2_page.GetFormValue("_w_id"))
+	#if ($idQuery)
+		$options.Add('Id', $idQuery)
+	#end
+
+	#set ($typeIdQuery = $core_v2_page.GetFormValue("_w_typeId"))
+	#if ($typeIdQuery)
+		$options.Add('TypeId', $typeIdQuery)
+	#end
+
+	#set ($nameQuery = $core_v2_page.GetFormValue("_w_name"))
+	#if ($nameQuery)
+		$options.Add('Name', $nameQuery)
+	#end
+
+	#set ($typeQuery = $core_v2_page.GetFormValue("_w_type"))
+	#if ($typeQuery)
+		#if ($typeQuery == 'script')
+			#set ($typeQuery = 'Script')
+		#elseif ($typeQuery == 'style')
+			#set ($typeQuery = 'Style')
+		#elseif ($typeQuery == 'file')
+			#set ($typeQuery = 'File')
+		#end
+		$options.Add('Type', $typeQuery)
+	#end
+
+	#set ($saveResult = $context.RestoreThemeFile($options))
+	#if ($saveResult && $saveResult.HasErrors())
+		$core_v2_page.SendJsonError($saveResult.Errors)
+	#end
+
+	#set ($themeFile = $saveResult.Model)
+
+	## return list of staged themes alongside new theme file
+	#set ($themes = $context.ListThemes("%{ Staged = 'true' }"))
+	#if ($themes && $themes.HasErrors())
+		$core_v2_page.SendJsonError($themes.Errors)
+	#end
+
+	## get related theme
+	#set ($theme = $context.GetTheme($options))
+	#if ($theme && $theme.HasErrors())
+		$core_v2_page.SendJsonError($theme.Errors)
+	#end
+
+	{
+		"savedThemeFile": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-file.vm'),
+		"stagedThemes": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summaries.vm'),
+		"theme": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-full.vm'),
+		"isNew": true
+	}
+
+#end

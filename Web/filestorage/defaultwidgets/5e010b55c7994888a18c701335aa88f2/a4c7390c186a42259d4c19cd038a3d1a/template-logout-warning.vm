@@ -1,0 +1,22 @@
+<form>
+	<p class="message warning">
+		#format($core_v2_language.GetResource('WarningMessage'))
+			#token('seconds')
+				<strong><%: remainingSeconds %></strong>
+		#end
+	</p>
+	<% if(renewable) { %>
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" data-messagename="admin.user-logout-warning.renew" class="button">
+							$core_v2_language.GetResource('Stay')
+						</a>
+						<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	<% } %>
+</form>

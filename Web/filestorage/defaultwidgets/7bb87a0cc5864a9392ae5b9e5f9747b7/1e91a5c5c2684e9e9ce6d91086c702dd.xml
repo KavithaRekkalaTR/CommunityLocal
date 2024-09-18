@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_CustomTitle_Name}" version="11.0.0.0" description="${resource:Core_CustomTitle_Description}" instanceIdentifier="1e91a5c5c2684e9e9ce6d91086c702dd" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="custom-title" lastModified="2020-01-14 16:06:59Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set ($title = false)
+#set ($title = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('title', '${resource:Core_CustomTitle_Name}')))
+#if ($title)
+	$core_v2_page.SetTitle($title, true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('title', '${resource:Core_CustomTitle_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="title" labelResourceName="Core_CustomTitle_Title_Name" defaultValue="${resource:Core_CustomTitle_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Core_CustomTitle_Description">Define a custom page title.</resource>
+  <resource name="Core_CustomTitle_Name">Custom Title</resource>
+  <resource name="Core_CustomTitle_Title_Name">Custom Title</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

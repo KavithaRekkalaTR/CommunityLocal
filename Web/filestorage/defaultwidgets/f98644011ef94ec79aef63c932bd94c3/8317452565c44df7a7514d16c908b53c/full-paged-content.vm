@@ -1,0 +1,124 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($forums = $context.GetForumSummaryDetailReport($options))
+
+#foreach($forum in $forums)
+#beforeall
+<div class="responsive-wrapper">
+	<table class="scrollable-table">
+	<thead>
+		<tr>
+            $reporting_ui.SortableTableHeader("", "Name", "ascending", $core_v2_language.GetResource('Name'), $sortBy, $sortOrder, 2)
+            $reporting_ui.SortableTableHeader("", "Group", "ascending", $core_v2_language.GetResource('Group'), $sortBy, $sortOrder, 2)
+			<th colspan="3" class="center sup-header break">$core_v2_language.GetResource('NewThreadCount')</th>
+			<th colspan="3" class="center sup-header">$core_v2_language.GetResource('NewReplyCount')</th>
+			<th colspan="3" class="center sup-header">$core_v2_language.GetResource('ResponseRate')</th>
+			<th colspan="3" class="center sup-header">$core_v2_language.GetResource('NewAnswers')</th>
+			<th colspan="3" class="center sup-header">$core_v2_language.GetResource('AnswerRate')</th>
+			<th colspan="3" class="center sup-header">$core_v2_language.GetResource('NewSuggestedAnswers')</th>
+			<th colspan="3" class="center sup-header">$core_v2_language.GetResource('SuggestedAnswerRate')</th>
+
+            $reporting_ui.SortableTableHeader("right sup-header break", "TotalThreadCount", "descending", $core_v2_language.GetResource('TotalThreadCount'), $sortBy, $sortOrder, 2)
+            $reporting_ui.SortableTableHeader("right sup-header", "TotalReplyCount", "descending", $core_v2_language.GetResource('TotalReplyCount'), $sortBy, $sortOrder, 2)
+		</tr>
+		<tr>
+            $reporting_ui.SortableTableHeader("sub-header break", "NewThreadCountLast1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewThreadCountLast7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewThreadCountLast30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+
+            $reporting_ui.SortableTableHeader("sub-header break", "NewReplyCountLast1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewReplyCountLast7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewReplyCountLast30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+
+            $reporting_ui.SortableTableHeader("sub-header break", "ResponseRateLast1DayLast1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "ResponseRateLast1DayLast7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "ResponseRateLast1DayLast30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+
+            $reporting_ui.SortableTableHeader("sub-header break", "NewAnswers1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewAnswers7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewAnswers30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+
+            $reporting_ui.SortableTableHeader("sub-header break", "AnswerRateLast1Day1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "AnswerRateLast1Day7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "AnswerRateLast1Day30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+
+            $reporting_ui.SortableTableHeader("sub-header break", "NewSuggestedAnswers1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewSuggestedAnswers7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewSuggestedAnswers30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+
+            $reporting_ui.SortableTableHeader("sub-header break", "SuggestedAnswerRate1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "SuggestedAnswerRate7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "SuggestedAnswerRate30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+		</tr>
+	</thead>
+	<tbody>
+#each
+        #set ($apiForum = false)
+		#set ($apiForum = $core_v2_forum.Get($forum.ApplicationId))
+        #if($apiForum && !$apiForum.HasErrors() && $apiForum.Url)
+            #set ($url = $apiForum.Url)
+        #else
+            #set ($url = '')
+        #end
+
+		<tr data-id="$forum.ApplicationId">
+            $reporting_ui.ForumNameTableCellWithActions($forum.ApplicationId, $forum.Name, $url)
+
+            <td data-title="$core_v2_language.GetResource('Group')" class="name">
+				$!forum.Container.Name
+			</td>
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewThreadCount'), $core_v2_language.GetResource('1Day'), "multi break", $forum.NewThreadCountLast1Day, $forum.NewThreadCount1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewThreadCount'), $core_v2_language.GetResource('7Day'), "multi", $forum.NewThreadCountLast7Days, $forum.NewThreadCount7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewThreadCount'), $core_v2_language.GetResource('30Day'), "multi", $forum.NewThreadCountLast30Days, $forum.NewThreadCount30DayTrend)
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewReplyCount'), $core_v2_language.GetResource('1Day'), "multi break", $forum.NewReplyCountLast1Day, $forum.NewReplyCount1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewReplyCount'), $core_v2_language.GetResource('7Day'), "multi", $forum.NewReplyCountLast7Days, $forum.NewReplyCount7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewReplyCount'), $core_v2_language.GetResource('30Day'), "multi", $forum.NewReplyCountLast30Days, $forum.NewReplyCount30DayTrend)
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('ResponseRate'), $core_v2_language.GetResource('1Day'), "multi break", $forum.ResponseRateLast1Day, $forum.ResponseRate1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('ResponseRate'), $core_v2_language.GetResource('7Day'), "multi", $forum.ResponseRateLast7Days, $forum.ResponseRate7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('ResponseRate'), $core_v2_language.GetResource('30Day'), "multi", $forum.ResponseRateLast30Days, $forum.ResponseRate30DayTrend)
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewAnswers'), $core_v2_language.GetResource('1Day'), "multi break", $forum.NewAnswerCountLast1Day, $forum.NewAnswerCount1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewAnswers'), $core_v2_language.GetResource('7Day'), "multi", $forum.NewAnswerCountLast7Days, $forum.NewAnswerCount7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewAnswers'), $core_v2_language.GetResource('30Day'), "multi", $forum.NewAnswerCountLast30Days, $forum.NewAnswerCount30DayTrend)
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('AnswerRate'), $core_v2_language.GetResource('1Day'), "multi break", $forum.AnswerRateLast1Day, $forum.AnswerRate1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('AnswerRate'), $core_v2_language.GetResource('7Day'), "multi", $forum.AnswerRateLast7Days, $forum.AnswerRate7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('AnswerRate'), $core_v2_language.GetResource('30Day'), "multi", $forum.AnswerRateLast30Days, $forum.AnswerRate30DayTrend)
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewSuggestedAnswers'), $core_v2_language.GetResource('1Day'), "multi break", $forum.NewSuggestedAnswerCountLast1Day, $forum.NewSuggestedAnswerCount1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewSuggestedAnswers'), $core_v2_language.GetResource('7Day'), "multi", $forum.NewSuggestedAnswerCountLast7Days, $forum.NewSuggestedAnswerCount7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewSuggestedAnswers'), $core_v2_language.GetResource('30Day'), "multi", $forum.NewSuggestedAnswerCountLast30Days, $forum.NewSuggestedAnswerCount30DayTrend)
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('SuggestedAnswerRate'), $core_v2_language.GetResource('1Day'), "multi break", $forum.SuggestedAnswerRateLast1Day, $forum.SuggestedAnswerRate1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('SuggestedAnswerRate'), $core_v2_language.GetResource('7Day'), "multi", $forum.SuggestedAnswerRateLast7Days, $forum.SuggestedAnswerRate7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('SuggestedAnswerRate'), $core_v2_language.GetResource('30Day'), "multi", $forum.SuggestedAnswerRateLast30Days, $forum.SuggestedAnswerRate30DayTrend)
+
+			<td data-title="$core_v2_language.GetResource('TotalThreadCount')" class="number break">
+				$!forum.TotalThreadCount.ToString("N0")
+			</td>
+			<td data-title="$core_v2_language.GetResource('TotalReplyCount')" class="number">
+				$!forum.TotalReplyCount.ToString("N0")
+			</td>
+		</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$forums.PageSize" data-totalitems="$forums.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

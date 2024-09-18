@@ -1,0 +1,81 @@
+##
+## Perform Query
+##
+
+## Analyzes context and performs a article query based on it,
+## resulting in an exposed $articles object in widget scope
+
+## paging
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize', 25))
+
+## base article query
+#set ($query = "%{ PageSize = $pageSize, PageIndex = $pageIndex }")
+
+#set ($hasCategory = false)
+#set ($categoryId = 0)
+#set($selectedCategory = $core_v2_widget.GetStringValue("selectedCategory", ""))
+#set($parsedCategory = $core_v2_page.ParseQueryString($selectedCategory))
+#set($categories = false)
+#set($categories = $parsedCategory.Values('Category'))
+
+#if($categories && $categories.Count > 0)
+    #set ($categoryId = $core_v2_utility.ParseInt($categories.get_item(0)))
+    #if ($categoryId == -1 && $articles_v1_categories.Current)
+        #set($categoryId = $articles_v1_categories.Current.Id)
+    #end
+    #if ($categoryId > 0)
+        $query.Add('CategoryIds', $categoryId)
+        #set ($hasCategory = true)
+    #end
+#end
+
+#if ($categoryId <= 0)
+    #set($selectedCollection = $core_v2_widget.GetStringValue("selectedCollection", ""))
+    #set($parsedCollection = $core_v2_page.ParseQueryString($selectedCollection))
+    #set($collections = false)
+    #set($collections = $parsedCollection.Values('ArticleCollection'))
+
+    #if($collections && $collections.Count > 0)
+        #if ($collections.get_item(0) == '00000000-0000-0000-0000-000000000000' && $articles_v1_articleCollections.Current)
+            $query.Add('ArticleCollectionId', $articles_v1_articleCollections.Current.Id)
+        #else
+            #set ($collectionId = $core_v2_utility.ParseGuid($collections.get_item(0)))
+            $query.Add('ArticleCollectionId', $collectionId)
+        #end
+    #end
+#end
+
+#set($selectedTypes = $core_v2_widget.GetStringValue("selectedTypes", ""))
+#set($parsedTypes = $core_v2_page.ParseQueryString($selectedTypes))
+#set($types = false)
+#set($types = $parsedTypes.Values('ArticleTypeId'))
+
+#if ($types && $types.Count > 0)
+    $query.Add('IncludeArticleTypeIds', $core_v2_utility.Join(",", $types))
+#end
+
+#set($sortBy = $core_v2_widget.GetStringValue('articleSortBy', 'SortOrder'))
+#if ($sortBy == 'ArticleIds')
+    #set($selectedArticles = $core_v2_widget.GetStringValue("articleOrder", ""))
+    #set($parsedArticles = $core_v2_page.ParseQueryString($selectedArticles))
+    #set($articleIds = false)
+    #set($articleIds = $parsedArticles.Values('Article'))
+
+    $query.Add('SortBy', $sortBy)
+    $query.Add('ArticleIds', $core_v2_utility.Join(",", $articleIds))
+#else
+    $query.Add('SortBy', $sortBy)
+#end
+
+#if ($sortBy != 'ArticleIds')
+    #set($tagsToFilter = $core_v2_widget.GetStringValue('tagsToFilter', ''))
+    #set($sortOrder = $core_v2_widget.GetStringValue('articleSortOrder', 'Ascending'))
+
+    $query.Add('Tags', $tagsToFilter)
+    $query.Add('SortOrder', $sortOrder)
+#end
+
+## Load Posts
+#set ($articles = false)
+#set ($articles = $articles_v1_articles.List($query))

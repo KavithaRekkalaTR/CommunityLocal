@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Scripted Email Plugin" version="12.0.0.0" description="" instanceIdentifier="837be08276aa439ebf232cddee999ed6" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-06-15 20:49:09Z" provider="678f9f8028134b3aba8552c0b3edf65b">
+    <contentScript language="Velocity"><![CDATA[#set($data = $context.GetConfigurationData())
+#set($propertyHeaderFormat = '<li class="field-item {PropertyDataType}-type" id="{PropertyWrapperId}"><label class="field-item-name">{PropertyName}</label><span class="field-item-description">{PropertyDescription}</span><span class="field-item-input">')
+#set($propertyFooterFormat = '</span></li>')
+#set($groupHeaderFormat = '<div class="group"><h2>{GroupName}</h2><fieldset class="field-list"><ul class="field-list">')
+#set($groupFooterFormat = '</ul></fieldset></div>')
+#set($formId = $core_v2_widget.UniqueId('form'))
+#set($formWrapperId = $core_v2_widget.UniqueId('formwrapper'))
+#set ($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#set ($uploadUrl = $core_v2_uploadedFile.GetUploadUrl($uploadContextId))
+#set ($languages = $context.ListLanguages())
+#set ($accessingUserLanguage = $core_v2_language.Lowercase($core_v2_user.Accessing.Language))
+#set ($selectLanguageTemplateId = $core_v2_widget.UniqueId('selectLanguageTemplate'))
+
+#registerClientTemplate($selectLanguageTemplateId)
+    <div class="select-language">
+        <form>
+            <p>$core_v2_language.GetResource('SampleLanguageSelect')</p>
+            <fieldset>
+                <ul class="field-list">
+                    <li class="field-item" id="">
+                        <label for="" class="field-item-name">$core_v2_language.GetResource('Language')</label>
+                        <span class="field-item-input select-language">
+                            <select>
+                                #foreach ($language in $languages)
+                                    <option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)" #if ($accessingUserLanguage == $language.Key) selected #end>$core_v2_encoding.HtmlEncode($language.Name)</option>
+                                #end
+                            </select>
+                        </span>
+                    </li>
+                    <li class="field-item submit">
+                        <span class="field-item-input">
+                            <a href="#" class="button cancel">$core_v2_language.GetResource('cancel')</a>
+                        </span>
+                        <span class="field-item-input">
+                            <a href="#" class="button continue">$core_v2_language.GetResource('SendSample')</a>
+                        </span>
+                    </li>
+                </ul>
+            </fieldset>
+        </form>
+    </div>
+#end
+
+<div id="$formWrapperId">
+    $context.RenderForm($formId, "%{GroupFooterHtmlFormat=$groupFooterFormat,GroupHeaderHtmlFormat=$groupHeaderFormat,PropertyFooterHtmlFormat=$propertyFooterFormat,PropertyHeaderHtmlFormat=$propertyHeaderFormat}")
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.scriptedEmailPlugin')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+    jQuery(function(){
+        var groups = [];
+        $('#$formWrapperId div.group > h2').each(function() {
+            var g = $(this).hide();
+            var w = g.parent();
+            w.attr('id', '${formWrapperId}_' + groups.length);
+            groups.push({
+                title: g.html(),
+                id: w.attr('id'),
+                formId: '${formId}'
+            });
+        });
+
+        var api = $context.JsonApi;
+		jQuery.telligent.evolution.widgets.scriptedEmailPlugin.register({
+			api: api,
+			type: 'inline',
+			configurationGroups: groups,
+			saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))',
+			previewUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-preview.vm'))',
+			sendEmailUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-sendsample.vm'))',
+            editUrl: '$core_v2_encoding.JavascriptEncode($context.EditUrl)',
+			exportUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export.jsm'))',
+            uploadContextId: '$uploadContextId',
+            uploadUrl: '$core_v2_encoding.JavascriptEncode($uploadUrl)',
+            importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+            selectLanguageTemplate: '$core_v2_encoding.JavascriptEncode($selectLanguageTemplateId)',
+            languagesCount: $languages.Count,
+            emailId: '$context.ScriptedEmailId',
+			text: {
+			    preview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview-email'))',
+			    sendEmail: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('send-sample-email'))',
+			    sendEmailSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('send-sample-email-successful'))',
+                customize: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('customize'))',
+                export: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('export'))',
+                exportResources: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('export-resources'))',
+                import: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('import'))',
+				importEmailsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportEmails'))',
+                sendSample: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SendSample'))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="preview-email">Preview</resource>
+  <resource name="send-sample-email">Send sample</resource>
+  <resource name="customize">Edit</resource>
+  <resource name="export">Export</resource>
+  <resource name="export-resources">Export resources</resource>
+  <resource name="import">Import</resource>
+  <resource name="send-sample-email-successful">The sample email was sent to your email address.</resource>
+  <resource name="ImportEmails">Import Emails</resource>
+  <resource name="ImportEmpty">The import contains no changes from current emails.</resource>
+  <resource name="ImportDevMode">With Developer Mode enabled, {studio} should be used instead for importing.</resource>
+  <resource name="EmailStudio">Email Studio</resource>
+  <resource name="UpdatedEmailResources">Updated Email Resources</resource>
+  <resource name="UpdatedEmails">Updated Emails</resource>
+  <resource name="UpdatedEmailDesc">The following updated emails will overwrite existing. To stage and compare detailed implementation differences, {studio-begin-link}import in Email Studio{studio-end-link}.</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="DeselectAll">Deselect All</resource>
+  <resource name="UpdatedConfiguredEmailDesc">The following updated email configurations will overwrite existing.</resource>
+  <resource name="UpdatedConfiguredEmails">Updated Email Configurations</resource>
+  <resource name="AlreadyInstalled">The import also contains other components already installed in your community.</resource>
+  <resource name="ImportComplete">Import Complete</resource>
+  <resource name="Import">Import</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ImportEmailStudio">Import through Email Studio</resource>
+  <resource name="more">More</resource>
+  <resource name="UpdatedEmailTemplate">Updated Email Template</resource>
+  <resource name="UpdatedEmailTemplateResources">Updated Email Template Resources</resource>
+  <resource name="UpdatedEmailTemplateDesc">This template will overwrite the existing. To stage and compare detailed implementation differences, {studio-begin-link}import in Email Studio{studio-end-link}.</resource>
+  <resource name="Language">Language</resource>
+  <resource name="SendSample">Send Sample</resource>
+  <resource name="SampleSent">Sample email has been sent</resource>
+  <resource name="SampleLanguageSelect">Select the email sample translation.</resource>
+  <resource name="Staged">Changes Staged</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:RolesExplicitPanel_Name}" version="13.0.0.0" description="${resource:RolesExplicitPanel_Description}" instanceIdentifier="6cdba3a2fcb941ada3a01c2aeaa62bfe" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="administration-roles-edit" lastModified="2023-01-12 17:44:14Z" provider="8b6b422218e64c288fb4a7f860dc02c2">
+    <contentScript language="Velocity"><![CDATA[#set($roleId = $context.RoleId)
+#set($isADMapped = false)
+
+#if($roleId > 0)
+	#set($role = $core_v2_role.Get($roleId))
+
+	#if ($role)
+		#set($isADMapped = $context.HasAssociatedGroupForADRole($roleId))
+	#end
+
+	#if ($isADMapped)
+		#set($adGroup = $context.GetAssociatedGroupForADRole($roleId))
+	#end
+#end
+
+#set($cloneRoleId = $context.CloneRoleId)
+#if($cloneRoleId > 0)
+	#set($cloneRole = $core_v2_role.Get($cloneRoleId))
+#end
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+#set($attachmentUrl = $role.AvatarUrl)
+#set($attachmentFileName = $context.GetFileNameFromImageUrl($attachmentUrl))
+
+#set($roleName = '')
+#if($role)
+	#set($roleName = $role.Name)
+#elseif($cloneRole)
+	#set($roleName = "$core_v2_language.GetResource('CloneOf') $cloneRole.Name")
+#end
+
+<div class="tab options">
+	$core_v2_widget.ExecuteFile('role-options.vm')
+</div>
+
+<div class="tab permissions" style="visibility: hidden;">
+	$core_v2_widget.ExecuteFile('role-permissions.vm')
+</div>
+
+#set ($membersListId = $core_v2_widget.UniqueId('membersListId'))
+
+#if($role && $role.Id > 0)
+<div class="tab members" style="visibility: hidden;">
+	$core_v2_widget.ExecuteFile('members.vm')
+</div>
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input role-options">
+					<a href="#" class="button save-role">$core_v2_language.GetResource('Save')</a>
+					<div style="float: left; width: 50%">
+						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="3" data-direction="horizontal">
+							<ul>
+								#if($role && !$role.IsSystemRole && $role.Id > 0)
+									<li class="navigation-list-item">
+										<a href="#" data-messagename="administration.role.delete" data-roleid="$role.Id" data-isADMapped="$isADMapped">$core_v2_language.GetResource('Delete')</a>
+									</li>
+								#end
+								#if($role && $role.Id > 0 && !$isADMapped)
+									<li class="navigation-list-item">
+										<a href="#" data-messagename="administration.role.addmember" data-roleid="$role.Id" data-rolename="$core_v2_encoding.HtmlAttributeEncode($role.Name)">$core_v2_language.GetResource('AddMembers')</a>
+									</li>
+								#end
+							</ul>
+						</div>
+					</div>
+				</span>
+				#if($role && $role.Id > 0)
+				<span class="field-item-input member-options"">
+					#if($role && $role.Id > 0 && !$isADMapped)
+						<a href="#" class="button addtorole" data-messagename="administration.role.addmember" data-roleid="$role.Id" data-rolename="$core_v2_encoding.HtmlAttributeEncode($role.Name)">$core_v2_language.GetResource('AddMembers')</a>
+					#end
+					<div style="float: left; width: 50%">
+						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="3" data-direction="horizontal">
+							<ul>
+								<li class="navigation-list-item">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('members-csv.vm'))">$core_v2_language.GetResource('DownloadCSV')</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</span>
+				#end
+			</li>
+		</ul>
+	</fieldset>
+
+	#if ($user.IsSystemAccount)
+		<div class="message error">$core_v2_language.GetResource('SystemUserWarning')</div>
+	#end
+
+	<ul class="filter">
+		<li class="filter-option selected"><a href="#" data-tab="options">$core_v2_language.GetResource('Tab_Options')</a></li>
+		<li class="filter-option"><a href="#" data-tab="permissions">$core_v2_language.GetResource('Tab_Permissions')</a></li>
+		#if($role && $role.Id > 0)
+		<li class="filter-option"><a href="#" data-tab="members">$core_v2_language.GetResource('Tab_Members')</a></li>
+		#end
+	</ul>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.administrationRolesEdit.register({
+		headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		roleId: $context.RoleId,
+		roleName: '$core_v2_encoding.JavascriptEncode($role.Name)',
+		cloneRoleId: $cloneRoleId,
+		isSystemRole: '$role.IsSystemRole',
+		isAdministratorRole: '$role.IsAdministratorRole',
+		isADMapped: '$isADMapped',
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			descriptionId: "#$core_v2_widget.UniqueId('Description')",
+			isPrivateId: "#$core_v2_widget.UniqueId('IsPrivate')",
+			membersListId: '#$core_v2_encoding.JavascriptEncode($membersListId)'
+		},
+		text: {
+			find: '$core_v2_language.GetResource('Find')',
+			roleCreated: '$core_v2_language.GetResource('RoleCreated')',
+			roleUpdated: '$core_v2_language.GetResource('RoleUpdated')',
+			roleDeleted: '$core_v2_language.GetResource('RoleDeleted')',
+			nomembersText: '$core_v2_language.GetResource('NoMembers')',
+			deleteConfirmation: '$core_v2_language.GetResource('DeleteConfirmation')',
+			deleteADConfirmation: '$core_v2_language.GetResource('DeleteADConfirmation')',
+			cloneOf: '$core_v2_language.GetResource('CloneOf')',
+			addMemberTo: '$core_v2_language.GetResource('AddMemberTo')',
+            unsavedCustomization:  '$core_v2_language.GetResource('UnsavedCustomization')',
+			removedFromRoleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('RemoveMemberFromRoleSuccessful'), '{0}', $roleName))',
+			removeMemberFromRoleConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('RemoveMemberFromRoleConfirmation'),  '{0}', $roleName))'
+		},
+		urls: {
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			delete: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+			pagedMembers: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-members.vm'))',
+			memberscsv: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('members-csv.vm'))',
+			addMember: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('addmember.vm'))'
+		},
+		file: {
+			fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+			url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+			isRemote:#if($attachmentIsRemote) true#else false#end,
+			isNew:#if($attachmentIsNew) true#else false#end
+		},
+		attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+        hasMore:#if ($hasMore) true#else false#end
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($roleId = $context.RoleId)
+
+#if($roleId > 0)
+	#set($role = $core_v2_role.Get($roleId))
+#end
+
+ #if ($role)
+	$role.Name
+ #else
+	$core_v2_language.GetResource('AddRole')
+ #end
+
+	]]></headerScript>
+    <configuration><![CDATA[
+
+			]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddMembers">Add members </resource>
+  <resource name="AddMemberTo">Add user to {0}</resource>
+  <resource name="AddRole">Add New Role</resource>
+  <resource name="AddRoleSomeSuccessful">Some of the selected users have been added to {0} successfully.</resource>
+  <resource name="AddRoleSuccessful">The selected users have been added to {0} successfully.</resource>
+  <resource name="ChangeFile">Change File</resource>
+  <resource name="CloneOf">Copy of</resource>
+  <resource name="DefaultAllowed">Default:  Allowed</resource>
+  <resource name="DefaultDenied">Default:  Denied</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteADConfirmation">Are you sure you want to delete this role? Doing so will also remove the mapped Active Directory group. Users will NOT be deleted.</resource>
+  <resource name="DeleteConfirmation">Are you sure you want to delete this role?</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Description_Detail">The description of this role.</resource>
+  <resource name="DownloadCSV">Export as CSV</resource>
+  <resource name="EditMember">Edit member</resource>
+  <resource name="find">Find a user...</resource>
+  <resource name="Find">Find a permission...</resource>
+  <resource name="ItemPermissions">{0} Permissions</resource>
+  <resource name="MappedFormat">This role is mapped to the LDAP group "{0}".</resource>
+  <resource name="MemberAlreadyInRole">Already In Role</resource>
+  <resource name="Name">Name</resource>
+  <resource name="Name_Detail">The name of this role.</resource>
+  <resource name="NoMembers">No members.</resource>
+  <resource name="NoPermissionsFound">No matching permissions found.</resource>
+  <resource name="Private">Private</resource>
+  <resource name="Private_Detail">When checked, role will only be viewable by members with the Manage Membership permission.</resource>
+  <resource name="ReadOnlyMode">The permissions for this role may not be edited.</resource>
+  <resource name="RemoveFile">Remove File</resource>
+  <resource name="RemoveMemberFromRole">Remove member from role</resource>
+  <resource name="RemoveMemberFromRoleConfirmation">Are you sure you want to remove {0} from the {1} role?</resource>
+  <resource name="RemoveMemberFromRoleSuccessful">{0} has been removed from the {1} role successfully.</resource>
+  <resource name="RevertToDefault">Revert to Factory Default</resource>
+  <resource name="RoleAvatar">Role Avatar</resource>
+  <resource name="RoleAvatar_Detail">The image that identifies this role. The avatar is displayed for users in this role.</resource>
+  <resource name="RoleCreated">Role has been created.</resource>
+  <resource name="RoleDeleted">Role has been deleted.</resource>
+  <resource name="RolesExplicitPanel_Description">Manage a site roles and its permissions.</resource>
+  <resource name="RolesExplicitPanel_Name">Role</resource>
+  <resource name="RoleUpdated">Role has been updated.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="SelectNone">Select None</resource>
+  <resource name="Tab_Members">Members</resource>
+  <resource name="Tab_Options">Role Options</resource>
+  <resource name="Tab_Permissions">Permissions</resource>
+  <resource name="UnsavedCustomization">Unsaved Customization</resource>
+  <resource name="UploadFile">Upload File</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="UserLookUp_NoMatches">A matching user could not be found.</resource>
+  <resource name="UserToAdd_Description">Search for user to add to role.</resource>
+  <resource name="UserToAdd_Title">Select users</resource>
+  <resource name="ViewMembers">View members</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="users.roles.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

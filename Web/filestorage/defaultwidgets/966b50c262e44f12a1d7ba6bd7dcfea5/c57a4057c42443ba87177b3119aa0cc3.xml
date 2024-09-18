@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Achievements_Name}" version="11.0.0.0" description="${resource:Achievements_Description}" instanceIdentifier="c57a4057c42443ba87177b3119aa0cc3" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="administration-achievements" lastModified="2019-05-08 18:27:31Z" provider="966b50c262e44f12a1d7ba6bd7dcfea5">
+    <contentScript language="Velocity"><![CDATA[#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input user-options">
+	                <a href="#" data-messagename="achievement.add" class="button add-achievement">$core_v2_language.GetResource('Action_Add')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<ul class="content-list content expandable simple"></ul>
+<div id="$core_v2_widget.UniqueId('noresults')" class="message information" style="display:none;">
+    $core_v2_language.GetResource('NoMatchingAchievements')
+</div>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.administrationAchievements.register({
+	    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+	    fields: {
+            noResults: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('noresults'))')
+	    },
+		urls: {
+		    list: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.vm'))',
+			addedit: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('addedit.vm'))',
+			del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+			award: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('award.vm'))',
+			revoke: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revoke.vm'))'
+		},
+		text:  {
+			deleteAchievement: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_DeleteAchievement'))',
+			addAchievement: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_AddAchievement'))',
+			awardAchievement: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_AwardAchievement'))',
+			revokeAchievement: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_RevokeAchievement'))',
+			editAchievement: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_EditAchievement'))',
+			deleteSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_AchievementDeleted'))',
+			deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Confirm_DeleteAchievement'))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AchievementNotFound">The selected achievement could not be found.</resource>
+  <resource name="Achievements_Description">Manage member achievements.</resource>
+  <resource name="Achievements_Name">Achievements</resource>
+  <resource name="Action_Add">Add Achievement</resource>
+  <resource name="Action_Award">Award</resource>
+  <resource name="Action_Delete">Delete</resource>
+  <resource name="Action_Edit">Edit</resource>
+  <resource name="Action_RemoveFile">Remove</resource>
+  <resource name="Action_Revoke">Revoke</resource>
+  <resource name="Action_Save">Save</resource>
+  <resource name="Action_UploadFile">Upload</resource>
+  <resource name="Action_View">View</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="Confirm_DeleteAchievement">Are you sure you want to delete the '{0}' achievement?</resource>
+  <resource name="Field_Automation">Award/Revoke Automation</resource>
+  <resource name="Field_Automation_Description">The automation rule for awarding and revoking this achievement.</resource>
+  <resource name="Field_AwardTo">Award to</resource>
+  <resource name="Field_AwardTo_Description">Find and select one or more members to award this achievement to.</resource>
+  <resource name="Field_Criteria">Criteria</resource>
+  <resource name="Field_Criteria_Description">An explanation of the criteria required to be awarded this achievement.</resource>
+  <resource name="Field_Enabled">Enabled</resource>
+  <resource name="Field_Enabled_Description">Only enabled achievements will be shown in the community.</resource>
+  <resource name="Field_Icon">Badge</resource>
+  <resource name="Field_Icon_Description">The image associated to this achievement.</resource>
+  <resource name="Field_RevokeFrom">Revoke from</resource>
+  <resource name="Field_RevokeFrom_Description">Find and select one or more members to revoke this achievement.</resource>
+  <resource name="Field_Title">Title</resource>
+  <resource name="Field_Title_Description">The title of this achievement.</resource>
+  <resource name="FieldRequired">This field is required.</resource>
+  <resource name="Identifier_AlreadyAwarded">Already Awarded</resource>
+  <resource name="Identifier_NotAwarded">Not Awarded</resource>
+  <resource name="more">More...</resource>
+  <resource name="NoMatchingAchievements">No achievements have been created yet.</resource>
+  <resource name="NoMatchingMembers">No matching members were found.</resource>
+  <resource name="NoMembersSelected">No members were selected.</resource>
+  <resource name="Placeholder_FindMember">Find members...</resource>
+  <resource name="Status_Disabled">Disabled</resource>
+  <resource name="Status_Enabled">Enabled</resource>
+  <resource name="Status_UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="Success_AchievementAwarded">The achievement was awarded successfully.</resource>
+  <resource name="Success_AchievementCreated">The achievement has been added.</resource>
+  <resource name="Success_AchievementDeleted">The '{0}' achievement has been deleted.</resource>
+  <resource name="Success_AchievementEdited">The achievement has been saved successfully.</resource>
+  <resource name="Success_AchievementRevoked">The achievement has been revoked successfully.</resource>
+  <resource name="Title_AddAchievement">Add Achievement</resource>
+  <resource name="Title_AwardAchievement">Award '{0}'</resource>
+  <resource name="Title_DeleteAchievement">Delete '{0}'</resource>
+  <resource name="Title_EditAchievement">Edit '{0}'</resource>
+  <resource name="Title_RevokeAchievement">Revoke '{0}'</resource>
+  <resource name="Value_Automation_NotSelected">(Not Automated)</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+        <scope id="achievements.achievements.modify" />
+        <scope id="achievements.userachievements.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,20 @@
+﻿<p>
+	#set($application = '?')
+	#set($application = $core_v2_application.Get($context.ApplicationId, $context.ApplicationTypeId).HtmlName('Web'))
+	$core_v2_language.FormatString($core_v2_language.GetResource('content_list_instructions'), $core_v2_encoding.HtmlEncode($core_v2_encoding.HtmlDecode($core_v2_page.GetQueryStringValue('w_tag'))), $application)
+</p>
+
+$core_v2_ui.PagedContent('paged-content.vm')
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(j){
+			jQuery.telligent.evolution.widgets.tagManagement.registerContentList({
+				applicationId: '$context.ApplicationId',
+				applicationTypeId: '$context.ApplicationTypeId',
+				pagedContentUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-content.vm'))',
+				tag: '$core_v2_encoding.JavaScriptEncode($core_v2_page.GetQueryStringValue('w_tag'))'
+			});
+		});
+	</script>
+#end

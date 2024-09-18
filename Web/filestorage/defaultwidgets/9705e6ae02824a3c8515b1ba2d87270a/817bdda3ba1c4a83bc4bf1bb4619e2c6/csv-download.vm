@@ -1,0 +1,23 @@
+﻿#set($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetQuerystringValue('articleId')))
+#set($applicationId = $core_v2_utility.ParseGuid($core_v2_page.GetQuerystringValue('applicationId')))
+#set($typeId = $core_v2_utility.ParseGuid($core_v2_page.GetQuerystringValue('typeId')))
+#set($username = $core_v2_page.GetQuerystringValue('usernameSearch'))
+
+#set($options = "%{}")
+
+#if ($typeId)
+    $options.Add("TypeId", $typeId)
+#end
+
+#if ($articleId && $articleId != '00000000-0000-0000-0000-000000000000')
+    $options.Add("ArticleId", $articleId)
+#end
+
+#if ($applicationId && $applicationId != '00000000-0000-0000-0000-000000000000')
+    $options.Add("ApplicationId", $applicationId)
+#end
+#if ($username && $username != '')
+    $options.Add("Username", $username)
+#end
+
+$context.HandleDownloadCsvRequest($options)

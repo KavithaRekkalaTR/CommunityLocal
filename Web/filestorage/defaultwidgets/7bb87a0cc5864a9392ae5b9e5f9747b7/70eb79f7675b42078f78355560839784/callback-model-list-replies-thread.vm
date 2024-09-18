@@ -1,0 +1,27 @@
+##
+##
+## Expects in scope:
+##   $threadId
+##   $parentId
+##   $flattenedDepth
+##   $endReplyId
+##   $startReplyId
+##   $sortBy
+##   $sortOrder
+##   $pageSize
+##   $flattenedSortBy
+##   $flattenedSortOrder
+##   $filter
+## 	 $initialPage
+##
+
+## Places $forumReplies in scope if not already in scope from the pre-check for permalinks on a first page
+#if (!$forumReplies)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-query.vm')
+#end
+
+$core_v2_page.SetContentType('application/json')
+{
+	"initialPage": #if ($initialPage) true #else false #end,
+	"replies": $core_v2_widget.ExecuteFile('callback-serialize-replies.vm')
+}

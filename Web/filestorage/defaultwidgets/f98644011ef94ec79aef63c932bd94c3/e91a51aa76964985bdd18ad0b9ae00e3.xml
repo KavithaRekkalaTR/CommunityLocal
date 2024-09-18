@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupFilter_Name}" version="13.0.0.0" description="${resource:GroupFilter_Description}" instanceIdentifier="e91a51aa76964985bdd18ad0b9ae00e3" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2023-09-26 01:08:02Z" provider="f98644011ef94ec79aef63c932bd94c3">
+    <contentScript language="Velocity"><![CDATA[#set($groupPicker = $core_v2_widget.UniqueId("groupPicker"))
+
+<div id="$groupPicker" class="custom-filter">
+    <span></span> <b class="caret"></b>
+</div>
+
+#registerEndOfPageHtml('telligent.reporting.widgets.groupFilter')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('grouppicker.js')"></script>
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	var applicationTypes = [];
+	#foreach($type in $filterContext.ListApplicationTypes())
+		applicationTypes.push({id: '$type.ApplicationTypeId', name: '$core_v2_encoding.JavascriptEncode($type.ApplicationTypeName)'});
+	#end
+
+	var defaultApplicationTypes = [];
+	#foreach($type in $filterContext.DefaultApplicationTypes())
+		defaultApplicationTypes.push('$type');
+	#end
+
+  jQuery.telligent.reporting.widgets.groupFilter.register({
+    tabKey: '$filterContext.TabKey',
+    isSiteReporter: '$reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id)',
+    showApplicationTypes: '$filterContext.ShowApplicationTypes',
+    defaultApplicationTypes: defaultApplicationTypes,
+    applicationTypes: applicationTypes,
+    fields: {
+      groupPickerId: '#$groupPicker',
+    },
+    resources: {
+      filterByGroups: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('filterByGroups'))',
+      filterByApplications: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('filterByApplications'))',
+      selectAGroupOrApplication: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectAGroupOrApplication'))',
+    },
+    urls: {
+      lookupGroups:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-groups.vm'))',
+      lookupApplications: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-applications.vm'))'
+    }
+  });
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="filterByApplications">In all applications</resource>
+  <resource name="filterByGroups">In all groups</resource>
+  <resource name="GroupFilter_Description">Displays group and application filter for reports and dashboards</resource>
+  <resource name="GroupFilter_Name">Group or Application Filter</resource>
+  <resource name="In">in</resource>
+  <resource name="SelectAGroupOrApplication">Required: Group or Application Selection</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,89 @@
+#if ($context.UserId < 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+    $core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('deleteHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button delete">$core_v2_language.GetResource('Delete')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+#set($formerMember = false)
+#set($formerMember = $core_v2_user.Get("%{Username=$core_v2_user.FormerMemberName}"))
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+    #set($userTitle = $user.DisplayName)
+    #if ($user.Username != $user.DisplayName)
+        #set($userTitle = "$userTitle ($user.Username)")
+    #end
+#end
+
+<p>$core_v2_language.GetResource('DeleteInstructions')</p>
+
+<form><fieldset>
+    <ul class="field-list">
+		<li class="field-item" id="$core_v2_widget.UniqueId('Reassign')">
+			<span class="field-item-name">$core_v2_language.GetResource("Field_ContentReassignment")</span>
+			<span class="field-item-input" style="margin-top: 1em;">
+				<input type="radio" name="$core_v2_widget.UniqueId('Reassign')" value="formermember" id="$core_v2_widget.UniqueId('ReassignToFormerMember')" checked="checked" />
+				<label for="$core_v2_widget.UniqueId('ReassignToFormerMember')">$core_v2_language.FormatString($core_v2_language.GetResource("Field_ReassignToFormerMember"), $formerMember.DisplayName)</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_ReassignToFormerMember_Desc')</span>
+			<span class="field-item-input" style="margin-top: .5em;">
+				<input type="radio" name="$core_v2_widget.UniqueId('Reassign')" value="user" id="$core_v2_widget.UniqueId('ReassignToUser')" />
+				<label for="$core_v2_widget.UniqueId('ReassignToUser')">$core_v2_language.GetResource("Field_ReassignToUser")</label>
+				<span style="position: relative; top: .5em;">
+				    <input type="text" id="$core_v2_widget.UniqueId('ReassignToUserId')" style="width: 200px;" />
+				</span>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_ReassignToUser_Desc')</span>
+			<span class="field-item-input" style="margin-top: 1em;">
+				<input type="radio" name="$core_v2_widget.UniqueId('Reassign')" value="delete" id="$core_v2_widget.UniqueId('ReassignDelete')" />
+				<label for="$core_v2_widget.UniqueId('ReassignDelete')">$core_v2_language.GetResource("Field_DoNotReassign")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_DoNotReassign_Desc')</span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationDelete')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('delete.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministrationDelete.register({
+		    userId: $context.UserId,
+		    formerMemberUserId: $formerMember.Id,
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        reassign: jQuery('#$core_v2_widget.UniqueId('Reassign')'),
+		        reassignToUser: jQuery('#$core_v2_widget.UniqueId('ReassignToUserId')')
+		    },
+		    urls: {
+		      lookupUsersUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-user.vm'))'  
+		    },
+		    text: {
+		        userLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Field_ReassignToUser_Placeholder'))',
+		        noUsersMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingUsers'))',
+		        deleteSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('DeleteSuccessful'), $userTitle))',
+		        verifyDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('DeleteConfirm'), $userTitle))'
+		    }
+    	});
+	});
+	</script>
+#end

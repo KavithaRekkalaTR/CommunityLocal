@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SingleApplicationFilter_Name}" version="13.0.0.0" description="${resource:SingleApplicationFilter_Description}" instanceIdentifier="8fd4371b1869427c84c67c2cf978674a" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2023-09-26 01:08:03Z" provider="f98644011ef94ec79aef63c932bd94c3">
+    <contentScript language="Velocity"><![CDATA[#set($appPicker = $core_v2_widget.UniqueId("singleApplicationPicker"))
+
+<div id="$appPicker" class="custom-filter">
+    <span></span> <b class="caret"></b>
+</div>
+
+#registerEndOfPageHtml('telligent.reporting.widgets.singleApplicationFilter')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('apppicker.js')"></script>
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+      jQuery.telligent.reporting.widgets.singleApplicationFilter.register({
+        tabKey: '$filterContext.TabKey',
+        applicationTypeId: #if ($filterContext.ApplicationType) '$filterContext.ApplicationType.Id' #else '' #end,
+        applicationTypeName: #if ($filterContext.ApplicationType) '$core_v2_encoding.JavascriptEncode($filterContext.ApplicationType.Name)' #else '' #end,
+        fields: {
+          appPickerId: '#$appPicker',
+        },
+      	resources: {
+      		select:  '$core_v2_language.GetResource('Select')',
+      		application:  '$core_v2_language.GetResource('application')',
+        },
+      	urls: {
+      		lookupApplications:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-applications.vm'))',
+        }
+      });
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="application">application </resource>
+  <resource name="In">in</resource>
+  <resource name="Select">Required: Select </resource>
+  <resource name="SingleApplicationFilter_Description">Displays single application filter for reports and dashboards</resource>
+  <resource name="SingleApplicationFilter_Name">Single Application Filter</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

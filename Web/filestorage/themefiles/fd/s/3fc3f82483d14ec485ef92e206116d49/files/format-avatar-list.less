@@ -1,0 +1,103 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.avatar-list {
+	h2, h3 {
+		margin: (@spacing) 0 (@spacing) 0;
+		font-size: @font-size * .85;
+		font-weight: 400;
+		color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+		-webkit-font-smoothing: subpixel-antialiased;
+	}
+	margin-bottom: @spacing * 2.5;
+	.content-list {
+		.content-item {
+			padding: 0 @spacing 0 0;
+			padding-left: 45px;
+			position: relative;
+			min-height: 35px;
+			margin: 0 0 @spacing 0;
+			&:first-child {
+			}
+			.author {
+				.meta {
+					font-size: @font-size * .85;
+					color: -evo-decrease-contrast(@color-background, 22%, @color-foreground, @color-contrast);
+					font-style: italic;
+					a {
+						.transition(color .3s);
+						color: -evo-decrease-contrast(@color-background, 45%, @color-foreground, @color-contrast);
+					}
+					padding: 0 0 (@spacing / 2) 0;
+				}
+				.votes {
+					color: -evo-decrease-contrast(@color-background, 34%, @color-foreground, @color-contrast);
+					margin-left: @spacing;
+					font-weight: 600;
+					font-style: normal;
+					margin-right: @spacing / 2;
+				}
+				.status {
+					font-size: @font-size * .6;
+					padding: 2px;
+					background-color: @color-negative;
+					color: @color-background;
+					.replace_with_icon(@check);
+					.round;
+					&:before {
+						left: auto;
+						right: 1px;
+						font-size: @font-size * .65;
+					}
+					&.verified {
+						background-color: @color-positive;
+					}
+					&.suggested {
+						background-color: @color-pending;
+					}
+					top: 3px;
+				}
+				.user-name {
+					font-size: @font-size;
+					font-weight: 600;
+					padding-right: @spacing / 2;
+					font-style: normal;
+					a {
+						color: @color-link;
+					}
+				}
+			}
+			.content {
+				max-width: 100%;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				word-break: break-word;
+				line-height: @line-height;
+			}
+			.view-full-post {
+				overflow: hidden;
+				display: inline-block;
+				max-width: 100%;
+				color: @color-foreground;
+				&:hover {
+					color: @color-link;
+				}
+			}
+		}
+		.avatar {
+			position: absolute;
+			left: 0;
+			top: 0;
+			.round;
+			overflow: hidden;
+			img {
+				.round;
+			}
+		}
+	}
+}

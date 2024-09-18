@@ -1,0 +1,161 @@
+##
+## List Replies
+##
+## Query String:
+##
+##   _w_forumId
+##   _w_threadId
+##   _w_parentId
+##   _w_replyId
+##   _w_flattenedDepth
+##   _w_sortBy
+##   _w_sortOrder
+##   _w_flattenedSortBy
+##   _w_flattenedSortOrder
+##   _w_startReplyId
+##   _w_endReplyId
+##   _w_includeSiblings
+##   _w_replyType
+##   _w_pageIndex
+##   _w_initial
+##   _w_threadLastReadDateOnLoad
+##
+
+$core_v2_widget.ExecuteFile('common-config.vm')
+
+##
+## Defaults
+##
+#set ($replyId = false)
+#set ($parentId = false)
+#set ($includeSiblings = false)
+#set ($pageIndex = false)
+#set ($initial = false)
+
+##
+## Parse Parameters
+##
+#set ($forumIdQuery = false)
+#set ($forumIdQuery = $core_v2_page.GetQueryStringValue('_w_forumId'))
+#if ($forumIdQuery && $forumIdQuery.length > 0)
+	#set ($forumId = $core_v2_utility.ParseInt($forumIdQuery))
+#end
+
+#set ($pageIndexQuery = false)
+#set ($pageIndexQuery = $core_v2_page.GetQueryStringValue('_w_pageIndex'))
+#if ($pageIndexQuery && $pageIndexQuery.length > 0)
+	#set ($pageIndex = $core_v2_utility.ParseInt($pageIndexQuery))
+#end
+
+#set ($threadIdQuery = false)
+#set ($threadIdQuery = $core_v2_page.GetQueryStringValue('_w_threadId'))
+#if ($threadIdQuery && $threadIdQuery.length > 0)
+	#set ($threadId = $core_v2_utility.ParseInt($threadIdQuery))
+#end
+
+#set ($replyIdQuery = false)
+#set ($replyIdQuery = $core_v2_page.GetQueryStringValue('_w_replyId'))
+#if ($replyIdQuery && $replyIdQuery.length > 0)
+	#set ($replyId = $core_v2_utility.ParseInt($replyIdQuery))
+#end
+
+#set ($replySortByQuery = false)
+#set ($replySortByQuery = $core_v2_page.GetQueryStringValue('_w_sortBy'))
+#if ($replySortByQuery)
+	#set ($sortBy = $replySortByQuery)
+#end
+
+#set ($replySortOrderQuery = false)
+#set ($replySortOrderQuery = $core_v2_page.GetQueryStringValue('_w_sortOrder'))
+#if ($replySortOrderQuery)
+	#set ($sortOrder = $replySortOrderQuery)
+#end
+
+#set ($flattenedReplySortByQuery = false)
+#set ($flattenedReplySortByQuery = $core_v2_page.GetQueryStringValue('_w_flattenedSortBy'))
+#if ($flattenedReplySortByQuery)
+	#set ($flattenedSortBy = $flattenedReplySortByQuery)
+#end
+
+#set ($flattenedReplySortOrderQuery = false)
+#set ($flattenedReplySortOrderQuery = $core_v2_page.GetQueryStringValue('_w_flattenedSortOrder'))
+#if ($flattenedReplySortOrderQuery)
+	#set ($flattenedSortOrder = $flattenedReplySortOrderQuery)
+#end
+
+#set ($parentIdQuery = false)
+#set ($parentIdQuery = $core_v2_page.GetQueryStringValue('_w_parentId'))
+#if ($parentIdQuery && $parentIdQuery.length > 0)
+	#set ($parentId = $core_v2_utility.ParseInt($parentIdQuery))
+#end
+
+#set ($flattenedDepthQuery = false)
+#set ($flattenedDepthQuery = $core_v2_page.GetQueryStringValue('_w_flattenedDepth'))
+#if ($flattenedDepthQuery)
+	#set ($flattenedDepth = $core_v2_utility.ParseInt($flattenedDepthQuery))
+#end
+
+#set ($startReplyIdQuery = false)
+#set ($startReplyIdQuery = $core_v2_page.GetQueryStringValue('_w_startReplyId'))
+#if ($startReplyIdQuery && $startReplyIdQuery.length > 0)
+	#set ($startReplyId = $core_v2_utility.ParseInt($startReplyIdQuery))
+#end
+
+#set ($endReplyIdQuery = false)
+#set ($endReplyIdQuery = $core_v2_page.GetQueryStringValue('_w_endReplyId'))
+#if ($endReplyIdQuery && $endReplyIdQuery.length > 0)
+	#set ($endReplyId = $core_v2_utility.ParseInt($endReplyIdQuery))
+#end
+
+#set ($includeSiblingsQuery = false)
+#set ($includeSiblingsQuery = $core_v2_page.GetQueryStringValue('_w_includeSiblings'))
+#if ($includeSiblingsQuery && $includeSiblingsQuery.length > 0)
+	#set ($includeSiblings = $core_v2_utility.ParseBool($includeSiblingsQuery))
+#end
+
+#set ($initialQuery = false)
+#set ($initialQuery = $core_v2_page.GetQueryStringValue('_w_initial'))
+#if ($initialQuery && $initialQuery.length > 0)
+	#set ($initial = $core_v2_utility.ParseBool($initialQuery))
+#end
+
+#set ($threadLastReadDateOnLoadQuery = false)
+#set ($threadLastReadDateOnLoadQuery = $core_v2_page.GetQueryStringValue('_w_threadLastReadDateOnLoad'))
+#if ($threadLastReadDateOnLoadQuery && $threadLastReadDateOnLoadQuery.length > 0)
+	#set ($threadLastReadDateOnLoad = $core_v2_utility.ParseLong($threadLastReadDateOnLoadQuery))
+#end
+
+#set ($replyTypeQuery = false)
+#set ($replyTypeQuery = $core_v2_page.GetQueryStringValue('_w_replyType'))
+#if ($replyTypeQuery)
+	#set ($filter = $replyTypeQuery)
+#end
+
+##
+## Get Thread
+##
+#set ($thread = $core_v2_forumThread.Get($threadId))
+
+## Detect if can use a single page of replies instead
+#set ($inInitialPage = false)
+#set ($forumReplies = false)
+#if ($initial && $replyId)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-query.vm')
+	#if ($forumReplies)
+		#set ($forumRepliesToSearch = $forumReplies)
+		$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-search.vm')
+	#end
+#end
+
+##
+## Render either a permalink's set of relevant replies (permalinked reply, all of its parents, its children)
+##
+#if ($replyId && !$inInitialPage)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-permalink.vm')
+##
+## Or a simple page of threaded replies
+##
+#else
+	#set ($initialPage = $inInitialPage)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-thread.vm')
+#end

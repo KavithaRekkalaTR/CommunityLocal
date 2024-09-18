@@ -1,0 +1,151 @@
+##
+## Rest Resource Renderer
+##
+## Requires in scope:
+##   $restResource
+##
+
+#if ($restResource)
+
+	<h2 class="documentation_title">$core_v2_encoding.HtmlEncode($restResource.Resource)</h2>
+
+	#foreach ($operation in $restResource.Operations)
+	#beforeall
+		<div class="methods">
+			<h4 class="members_heading">$core_v2_language.GetResource('RestOperations')</h4>
+	#each
+		<div class="documentation-member">
+
+			<a name="$core_v2_encoding.HtmlAttributeEncode($operation.Action)"></a>
+			<h3 class="member_heading">$core_v2_encoding.HtmlEncode($operation.Action)</h3>
+			<div class="documentation-member-body">
+
+				#foreach ($endpoint in $operation.Endpoints)
+					#foreach ($url in $endpoint.Urls)
+						<h4 class="member_sub_heading">$endpoint.Method $url</h4>
+					#end
+
+					#if ($endpoint.Obsolete)
+						<span class="obsolete_api">$core_v2_language.GetResource('Obsolete')</span>
+						#if ($endpoint.ObsolesenceMessage && $endpoint.ObsolesenceMessage.Length > 0 && $endpoint.ObsolesenceMessage != 'Obsolete')
+							<p>$endpoint.ObsolesenceMessage</p>
+						#end
+					#end
+
+					#if ($endpoint.Notes)
+						<p>$core_v2_encoding.HtmlEncode($endpoint.Notes)</p>
+					#end
+
+					#if ($endpoint.Scopes && $endpoint.Scopes.Count > 0)
+						<div class="documentation-section scopes">
+							<span class="label">$core_v2_language.GetResource('RestScopes')</span>
+							<div class="value">
+								<ul>
+									#foreach ($scope in $endpoint.Scopes)
+										<li>
+											#set($scopeName = false)
+											#set($scopeName = $shellApi.GetRestScopeName($scope))
+											#if ($scopeName && $scopeName.Length > 0)
+												$scopeName
+											#end
+											<code>$scope</code>
+										</li>
+									#end
+								</ul>
+							</div>
+						</div>
+					#end
+
+					#if ($endpoint.RequestParameters && $endpoint.RequestParameters.Count > 0)
+						<div class="documentation-section parameters">
+							<span class="label">$core_v2_language.GetResource('Parameters')</span>
+
+							<div class="value">
+								#foreach ($parameter in $endpoint.RequestParameters)
+								#beforeall
+									<table cellspacing="0">
+										<thead>
+											<tr>
+												<th>$core_v2_language.GetResource('Name')</th>
+												<th>$core_v2_language.GetResource('Type')</th>
+												<th>$core_v2_language.GetResource('Location')</th>
+												<th>$core_v2_language.GetResource('Description')</th>
+												<th>$core_v2_language.GetResource('Required')</th>
+												<th>$core_v2_language.GetResource('Default')</th>
+												<th>$core_v2_language.GetResource('Options')</th>
+											</tr>
+										</thead>
+										<tbody>
+								#each
+									<tr>
+										<td>$core_v2_encoding.HtmlEncode($parameter.Name)</td>
+										<td>$core_v2_encoding.HtmlEncode($shellApi.GetFriendlyName($parameter.Type))</td>
+										<td>$!parameter.Location</td>
+										<td>$!core_v2_encoding.HtmlEncode($parameter.Description)</td>
+										<td>
+											#if ($parameter.IsRequired)
+												$core_v2_language.GetResource('Required')
+											#else
+												$core_v2_language.GetResource('Optional')
+											#end
+										</td>
+										<td>$!core_v2_encoding.HtmlEncode($parameter.DefaultValue)</td>
+										<td>
+											#if ($parameter.Options)
+												#foreach ($opt in $parameter.Options)
+													$core_v2_encoding.HtmlEncode($opt)
+												#between
+													,
+												#end
+											#end
+										</td>
+									</tr>
+								#afterall
+										</tbody>
+									</table>
+								#end
+							</div>
+						</div>
+					#end
+
+					#set($request = false)
+					#set($request = $shellApi.GetSampleRequest($endpoint))
+					#if ($request)
+						<div class="documentation-section example">
+							<span class="label">$core_v2_language.GetResource('RestExample')</span>
+							<div class="value">
+								<pre>$core_v2_encoding.HtmlEncode($request)</pre>
+							</div>
+						</div>
+					#end
+
+					#set($responseJson = false)
+					#set($responseJson = $shellApi.GetSampleResponse($endpoint, 'json'))
+					#if ($responseJson && $responseJson.Length > 0)
+						<div class="documentation-section returns">
+							<span class="label">$core_v2_language.GetResource('RestJsonResponse')</span>
+							<span class="value" style="display: block; width: 100%; max-height: 200px; overflow: auto;">
+								<pre>$core_v2_encoding.HtmlEncode($responseJson)</pre>
+							</span>
+						</div>
+					#end
+
+					#set($responseXml = false)
+					#set($responseXml  = $shellApi.GetSampleResponse($endpoint, 'xml'))
+					#if ($responseXml && $responseXml.Length > 0)
+						<div class="documentation-section returns">
+							<span class="label">$core_v2_language.GetResource('RestXmlResponse')</span>
+							<span class="value" style="display: block; width: 100%; max-height: 200px; overflow: auto;">
+								<pre>$core_v2_encoding.HtmlEncode($responseXml)</pre>
+							</span>
+						</div>
+					#end
+				#end
+	
+			</div>
+		</div>
+
+	#afterall
+		</div>
+	#end
+#end

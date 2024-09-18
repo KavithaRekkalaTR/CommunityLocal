@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UrlProperty}" version="10.0.0.0" description="" instanceIdentifier="8f1887fc02c94208a0c65b21bb178b4e" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2018-05-31 18:10:11Z" provider="55e14ad38d6d44d5ab7af38990241b1d">
+    <contentScript><![CDATA[#set($value = false)
+#set($value = $context.Value)
+
+#set($defaultProtocol = false)
+#set($defaultProtocol = $context.DefaultProtocol)
+#if (!$defaultProtocol)
+    #set($defaultProtocol = 'http')
+#end
+
+#set($canUpload = $context.CanStoreUrlContents)
+#if (!$context.AllowLocal)
+    #set($canUpload = false)
+#end
+
+#set($isLocalUrl = false)
+#if ($value && $canUpload)
+    #set($isLocalUrl = $context.IsLocalUrl($value))
+#end
+
+#set($fileName = $value)
+#if ($isLocalUrl)
+    #set($fileName = $context.GetLocalUrlFileName($value))
+#end
+
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+#set($fileFilter = 'null')
+#if ($context.AllowedFileExtensions && $context.AllowedFileExtensions.Length > 0)
+    #set($fileFilter = "[{ title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Files'))', extensions: '$core_v2_utility.Join(',', $context.AllowedFileExtensions)' }]")
+#end
+
+#if ($context.Editable)
+    <span class="url-property #if($context.EnablePreview) with-preview #end #if($canUpload) with-upload #end">
+        <input type="text" columns="50" id="$context.UniqueId" #if($fileName) value="$core_v2_encoding.HtmlAttributeEncode($fileName)" data-url="$core_v2_encoding.HtmlAttributeEncode($value)" #end #if($context.AllowRemote) placeholder="$core_v2_encoding.HtmlAttributeEncode($defaultProtocol)://" #end #if(!$context.AllowRemote || $isLocalUrl) readonly="readonly" #end />
+        #if ($context.EnablePreview)
+            <span class="preview" id="${context.UniqueId}_preview"></span>
+        #end
+        #if ($canUpload)
+        	<span class="upload-options">
+    			<a href="#" class="upload add" id="${context.UniqueId}_upload">$core_v2_language.GetResource('Upload')</a>
+    			<a href="#" class="remove" id="${context.UniqueId}_remove" style="margin-left: 1em;">$core_v2_language.GetResource('Remove')</a>
+    		</span>
+    	#end
+    </span>
+
+    <script type="text/javascript">
+        jQuery(function() {
+            var api = $context.JsonApi;
+            var i = jQuery('#$context.UniqueId');
+            var upload = jQuery('#${context.UniqueId}_upload');
+            var preview = jQuery('#${context.UniqueId}_preview');
+            var remove = jQuery('#${context.UniqueId}_remove');
+            var p = new RegExp('$core_v2_encoding.JavascriptEncode($context.ValidUrlPattern)');
+            var allowLocal = #if ($canUpload) true #else false #end;
+            var allowRemote = #if ($context.AllowRemote) true #else false #end;
+            var uploading = false;
+            var previewTimeout = null;
+            var lastPreviewHtml = null;
+            var gv = function(v) {
+                if (v.toLowerCase() == '$defaultProtocol://'.toLowerCase()) {
+                    v = null;
+                    i.val('').data('url', '');
+                } else if(!(p.test(v))) {
+                    v = '$defaultProtocol://' + v;
+                    if(!(p.test(v)) || v.toLowerCase() == '$defaultProtocol://'.toLowerCase()) {
+                        v = null;
+                        i.val('').data('url', '');
+                    } else {
+                        i.val(v).data('url', v);
+                    }
+                }
+                return v;
+            };
+            var loadPreview = function() {
+                var url = gv(i.data('url'));
+				if (#if ($context.EnablePreview) true #else false #end && url != null && url.length > 0) {
+					clearTimeout(previewTimeout);
+					previewTimeout = setTimeout(function () {
+						jQuery.telligent.evolution.post({
+							url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-preview.vm'))',
+							data: {
+							    url: url
+							},
+							success: function (response) {
+								response = jQuery.trim(response);
+								if (response && response.length > 0 && response !== lastPreviewHtml) {
+									lastPreviewHtml = response;
+									preview.html(lastPreviewHtml).removeClass('empty');
+									i.removeClass('empty');
+								}
+							}
+						});
+					}, 150);
+				} else {
+					lastPreviewHtml = null;
+					preview.html('').addClass('empty');
+					i.addClass('empty');
+				}
+			};
+
+            upload.glowUpload({
+				fileFilter: $fileFilter,
+				uploadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+				renderMode: 'link'
+			})
+			.on('glowUploadBegun', function (e) {
+				uploading = true;
+				upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))'.replace('{0}', 0));
+			})
+			.on('glowUploadComplete', function (e, file) {
+				if (file && file.name.length > 0) {
+					jQuery.telligent.evolution.post({
+    			        url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getfileurl.vm'))',
+    			        data: {
+    			            filename: file.name,
+    			            contextid: '$uploadContextId'
+    			        },
+    			        success: function(response) {
+    			            if (response && response.url) {
+    			                i.data('url', response.url).val(file.name).attr('readonly', 'readonly');
+            					api.changed(gv(i.data('url')));
+            					uploading = false;
+            					loadPreview();
+            					upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Change'))').removeClass('add').addClass('change');
+            					remove.show();
+    			            }
+    			        }
+    			    });
+				}
+			})
+			.on('glowUploadFileProgress', function (e, details) {
+				uploading = true;
+				upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))'.replace('{0}', details.percent));
+			})
+			.on('glowUploadError', function(e) {
+				 jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Error'))', { type: 'error', duration: 5000 });
+				 uploading = false;
+				 upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Upload'))').removeClass('change').addClass('add')
+				 i.val('').data('url', '');
+				 remove.hide();
+				 loadPreview();
+			});
+
+			remove.on('click', function() {
+				i.val('').data('url', '');
+				upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Upload'))').removeClass('change').addClass('add')
+				i.removeAttr('readonly');
+				remove.hide();
+				loadPreview();
+				return false;
+			});
+
+            api.register({
+                val: function(val) { return (typeof val == 'undefined') ? gv(i.data('url')) : i.val(gv(val)); },
+                hasValue: function() { return gv(i.data('url')) != null; }
+            });
+            i.on('change', function() {
+                i.data('url', i.val());
+                api.changed(gv(i.data('url')));
+                loadPreview();
+            });
+
+            #if ($isLocalUrl)
+                upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Change'))').removeClass('add').addClass('change');
+				remove.show();
+			#else
+			    remove.hide();
+            #end
+
+            if (preview.length > 0) {
+                preview.css('border-style', i.css('border-style'));
+                preview.css('border-width', i.css('border-top-width'));
+                preview.css('border-left-width', i.css('border-left-width'));
+                preview.css('border-right-width', i.css('border-right-width'));
+                preview.css('border-color', i.css('border-color'));
+                preview.css('background-color', i.css('background-color'));
+            }
+
+            loadPreview();
+        });
+    </script>
+#else
+    #if ($value)
+        <a href="$core_v2_encoding.HtmlAttributeEncode($value)">$core_v2_encoding.HtmlEncode($value)</a>
+    #end
+#end]]></contentScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Change">Change</resource>
+  <resource name="Error">An error occurred while uploading the file.</resource>
+  <resource name="Files">Files</resource>
+  <resource name="Remove">Remove</resource>
+  <resource name="Upload">Upload</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="UrlProperty">URL</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

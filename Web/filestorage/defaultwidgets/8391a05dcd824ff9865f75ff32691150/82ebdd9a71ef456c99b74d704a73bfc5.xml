@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Plugin Templates" version="11.0.0.0" description="" instanceIdentifier="82ebdd9a71ef456c99b74d704a73bfc5" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2020-09-17 15:43:10Z" provider="8391a05dcd824ff9865f75ff32691150">
+    <contentScript language="Velocity"><![CDATA[<div id="$core_v2_widget.UniqueId('tab')" class="templates">
+    <p>$core_v2_language.GetResource('Instructions')</p>
+
+    <form><fieldset style="float: right; margin: 0 0 1em 1em;">
+		<div class="filter-selector">
+            <select id="$core_v2_widget.UniqueId('Language')">
+                #foreach ($language in $context.GetLanguages())
+                   <option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)" #if($language.IsRightToLeft) data-dir="rtl"#else data-dir="ltr"#end #if ($language == $core_v2_user.Accessing.User.Language) selected="selected"#end>$core_v2_encoding.HtmlEncode($language.Name)</option>
+                #end
+            </select>
+	    </div>
+	</fieldset></form>
+
+    <fieldset>
+        <ul class="field-list">
+        	<li class="field-item">
+        	    <span class="field-item-input">
+        	        <a href="#" data-messagename="plugintemplates.preview-email" class="inline-button">$core_v2_language.GetResource('Action_PreviewEmail')</a>
+        	        <a href="#" data-messagename="plugintemplates.preview-send-email" class="inline-button">$core_v2_language.GetResource('Action_PreviewAndSendEmail')</a>
+        	        <a href="#" data-messagename="plugintemplates.revert" class="inline-button">$core_v2_language.GetResource('Action_Revert')</a>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+
+    #set($editorCount = 1)
+    #set($editorId = '')
+    <ul class="content-list expandable" style="clear: right;">
+        #foreach($template in $context.ListTemplates())
+            #set($editorId = $core_v2_widget.UniqueId("editor$editorCount"))
+            #set($editorCount = $editorCount + 1)
+    		<li class="content-item template" data-templateid="$core_v2_encoding.HtmlAttributeEncode($template.Id)" data-datatypeids="$template.DataTypeIds" data-editorid="$editorId">
+        		<h4 class="name">$template.Title</h4>
+
+        		<div class="attributes">
+        			<ul class="attribute-list">
+        				<li class="attribute-item">
+        					<span class="attribute-value modified-status">$core_v2_language.GetResource('Not_Modified')</span>
+        				</li>
+        			</ul>
+        		</div>
+
+        		<div class="content">
+        		    $!template.Description
+        		</div>
+
+        		<div class="content expandable">
+                    <fieldset>
+                    <ul class="field-list">
+                		<li class="field-item">
+                		    <span class="field-item-input">
+                		        <textarea id="$editorId"></textarea>
+                		    </span>
+                		</li>
+                	</ul>
+                	</fieldset>
+        		</div>
+        	</li>
+        #end
+	</ul>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.pluginTemplates')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+    jQuery(function(){
+        var api = $context.JsonApi;
+		jQuery.telligent.evolution.widgets.pluginTemplates.register({
+			api: api,
+			templates: $core_v2_widget.ExecuteFile('make-template-json.vm'),
+			wrapper: jQuery('#$core_v2_widget.UniqueId('tab')'),
+			inputs: {
+			    language: jQuery('#$core_v2_widget.UniqueId('Language')')
+			},
+			urls: {
+			    save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))',
+			    revert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revert.vm'))',
+			    previewEmail: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-previewemail.vm'))'
+			},
+			text: {
+			    templates: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Templates'))',
+			    modified: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Modified'))',
+			    notModified: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Not_Modified'))',
+			    previewEmailSentSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_PreviewAndSendEmail_Success'))',
+			    revertConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Revert_Confirm'))',
+			    revertSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Revert_Success'))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Action_PreviewAndSendEmail">Send preview email</resource>
+  <resource name="Action_PreviewAndSendEmail_Success">The email has been sent to you successfully.</resource>
+  <resource name="Action_PreviewEmail">Preview</resource>
+  <resource name="Action_Revert">Revert all templates</resource>
+  <resource name="Action_Revert_Confirm">Are you sure you want to revert all templates associated to this functionality? This change is immediate.</resource>
+  <resource name="Action_Revert_Success">All templates have been reverted successfully.</resource>
+  <resource name="Instructions">Templates are used to render dynamic content through placeholder tokens. Individual templates can be edited below. To insert a new token, choose &lt;b&gt;Insert &amp;gt; Insert Token&lt;/b&gt; within the editor.</resource>
+  <resource name="Modified">Modified</resource>
+  <resource name="Not_Modified">Not modified</resource>
+  <resource name="Templates">Templates</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

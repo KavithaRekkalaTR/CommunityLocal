@@ -1,0 +1,23 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($emailAddress = false)
+	#set($emailAddress = $core_v2_page.GetFormValue('emailAddress'))
+
+	#if ($core_v2_configuration.PasswordRecoveryMethod == 'Reset')
+            #set ($response = $core_v2_authentication.ResetPassword($emailAddress))
+            #if (!$response.HasErrors())
+            	{"success":"true"}
+            #else
+            	$core_v2_page.SendJsonError($response.Errors)
+        	#end
+	#else
+		#set($response = $core_v2_authentication.SendChangePasswordEmail($emailAddress))
+		#if (!$response.HasErrors())
+			{"success":"true"}
+		#else
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+	#end
+		
+#end

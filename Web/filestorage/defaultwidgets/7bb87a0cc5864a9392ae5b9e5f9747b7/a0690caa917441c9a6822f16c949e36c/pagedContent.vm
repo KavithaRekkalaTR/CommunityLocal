@@ -1,0 +1,41 @@
+#set ($sortBy = $core_v2_widget.GetStringValue('sortBy', 'DateCreated'))
+#set ($sortOrder = $core_v2_widget.GetStringValue('sortOrder', 'Descending'))
+
+#set ($achievement = $core_v2_achievement.Current)
+
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 20))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+
+#if($achievement.Errors.Count() > 0)
+	$core_v2_widget.Hide();
+#end
+
+#set ($achievementUsers = false)
+#set($achievementUsers = $core_v2_userAchievement.List("%{AchievementId='$achievement.Id',PageSize=$pageSize,PageIndex=$pageIndex,SortBy='$sortBy',SortOrder='$sortOrder',Enabled='True'}"))
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($achievementUsers.PageIndex + 1) * $achievementUsers.PageSize)
+#if ($achievementUsers.TotalCount > $currentPagedQuantity)
+		#set ($hasMore = true)
+#end
+
+
+#foreach ($userAchievement in $achievementUsers)
+#beforeall
+	<div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+#each
+	<div class="content-item content thumbnail" data-hasmore="$hasMore" data-userid="$userAchievement.User.Id" data-url="$core_v2_encoding.HtmlAttributeEncode($!userAchievement.User.ProfileUrl)" style="cursor: pointer;">
+		<div class="avatar">
+			$core_v2_ui.GetResizedImageHtml($userAchievement.User.AvatarUrl, 140, 140, "%{alt=$userAchievement.User.DisplayName,border='0',ResizeMethod = 'ZoomAndCrop'}")
+				</div>
+				<h2 class="name">
+						$core_v2_language.Truncate($userAchievement.User.DisplayName, 30, "...")
+				</h2>
+	</div>
+#afterall
+	</div>
+#nodata
+	<div class="message norecords">
+		$core_v2_language.GetResource('NoMembers')
+	</div>
+#end

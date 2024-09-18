@@ -1,0 +1,17 @@
+$core_v2_ui.PagedContent('flat-thread-page.vm')
+
+## Paging away from a permalink should fully navigate away (non-ajax) so as to also
+## break the permalink and not attempt to combine a permalinked reply with page offsets
+#if ($currentReply)
+	#set ($threadUrl = $core_v2_forumUrls.Thread($core_v2_forumThread.Current.Id))
+
+	$core_v2_ui.Pager($replies.PageIndex, $replies.PageSize, $replies.TotalCount, "%{ BaseUrl = $threadUrl }")
+#else
+	## Customize the ajax paged callback to include the last read date before loading the host page
+	## to ensure unread new items on other pages also are indicated
+	#set ($pagedContentUrl = $core_v2_widget.GetExecutedFileUrl('flat-thread-page.vm'))
+	#set ($threadLastReadDateOnLoad = $core_v2_forumThread.Current.LastReadDate.Ticks)
+	#set ($pagedContentUrlWithDate = $core_v2_page.AdjustQueryString($pagedContentUrl, "_w_threadLastReadDateOnLoad=${threadLastReadDateOnLoad}"))
+
+	$core_v2_ui.Pager($replies.PageIndex, $replies.PageSize, $replies.TotalCount, "%{ PagedContentUrl = $pagedContentUrlWithDate, LoadingIndicator = 'true' }")
+#end

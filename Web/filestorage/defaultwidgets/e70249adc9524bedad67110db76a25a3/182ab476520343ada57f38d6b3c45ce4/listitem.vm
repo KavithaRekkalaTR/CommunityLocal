@@ -1,0 +1,76 @@
+#if (!$leaderboard)
+	#set($id = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('id')))
+	#set ($leaderboard = $core_v2_leaderboard.Get($id))
+#end
+
+  #set($canEdit = $core_v2_userPermission.HasPermission($core_v2_leaderboard.Permissions.ModifyLeaderboard))
+  #set($canDelete = $core_v2_userPermission.HasPermission($core_v2_leaderboard.Permissions.DeleteLeaderboard))
+
+  <li class="content-item leaderboard" data-id="$leaderboard.Id">
+	<h4 class="name">$leaderboard.Name</h4>
+
+	<div class="description expandable">
+		$!core_v2_language.Truncate($leaderboard.Description(), 150, '...')
+	</div>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item date-range">
+				#if($leaderboard.TimeSpanFilterType == "Static")
+					$core_v2_language.FormatString($core_v2_language.GetResource('DateRangeFormat'), $core_v2_language.FormatDate($leaderboard.StartDate, "%{AdjustTimeZone = 'true'}"), $core_v2_language.FormatDate($leaderboard.EndDate, "%{AdjustTimeZone = 'true'}"))
+				#elseif($leaderboard.TimeSpanFilterType == "Rolling")
+					#if ($leaderboard.TimeSpanLength == 1)
+						#if ($leaderboard.TimeSpanType == "Day")
+							#set ($spanType = $core_v2_language.GetResource('TimePeriod_Day'))
+						#elseif ($leaderboard.TimeSpanType == "Month")
+							#set ($spanType = $core_v2_language.GetResource('TimePeriod_Month'))
+						#else
+							#set ($spanType = $core_v2_language.GetResource('TimePeriod_Year'))
+						#end
+					#else
+						#if ($leaderboard.TimeSpanType == "Day")
+							#set ($spanType = $core_v2_language.GetResource('TimePeriod_Days'))
+						#elseif ($leaderboard.TimeSpanType == "Month")
+							#set ($spanType = $core_v2_language.GetResource('TimePeriod_Months'))
+						#else
+							#set ($spanType = $core_v2_language.GetResource('TimePeriod_Years'))
+						#end
+					#end
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('LastFormat'), $leaderboard.TimeSpanLength.ToString(), $spanType)</span>
+				#else
+					<span class="value">$core_v2_language.GetResource('TimePeriod_AllTime')</span>
+				#end
+			</li>
+			<li class="attribute-item">
+				#if(!$leaderboard.IsEnabled)
+					<span class="value highlight">$core_v2_language.GetResource('NotDisplayed')</span>
+				#else
+					<span class="value">$core_v2_language.GetResource('Displayed')</span>
+				#end
+			</li>
+		</ul>
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				#if($leaderboard.IsEnabled)
+				<li class="navigation-list-item view-leaderboard">
+					<a href="$core_v2_page.AbsoluteUrl($core_v2_leaderboardUrls.Leaderboard($leaderboard.Id))">$core_v2_language.GetResource('View')</a>
+				</li>
+				#end
+				<li class="navigation-list-item leaders">
+					<a href="#" data-messagename="contextual.leaderboard.leaders" data-id="$leaderboard.Id" data-name="$leaderboard.Name">$core_v2_language.GetResource('Leaders')</a>
+				</li>
+				#if($canEdit)
+				<li class="navigation-list-item edit-leaderboard">
+					<a href="#" data-messagename="contextual.leaderboard.edit" data-id="$leaderboard.Id" data-name="$leaderboard.Name">$core_v2_language.GetResource('Edit')</a>
+				</li>
+				#end
+				#if($core_v2_userPermission.HasPermission($core_v2_leaderboard.Permissions.DeleteLeaderboard, $leaderboard.ContentId, $core_v2_leaderboard.ContentTypeId))
+				<li class="navigation-list-item delete-leaderboard">
+					<a href="#" data-messagename="contextual.leaderboard.delete" data-id="$leaderboard.Id">$core_v2_language.GetResource('Delete')</a>
+				</li>
+				#end
+			</ul>
+		</div>
+	</div>
+  </li>

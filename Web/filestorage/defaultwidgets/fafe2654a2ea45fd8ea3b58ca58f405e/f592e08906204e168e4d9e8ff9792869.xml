@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="f592e08906204e168e4d9e8ff9792869" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="cache-monitor" lastModified="2019-10-16 17:04:55Z" provider="fafe2654a2ea45fd8ea3b58ca58f405e">
+    <contentScript language="Velocity"><![CDATA[<script type="text/javascript" src="$core_v2_widget.GetFileUrl('highcharts.js')"></script>
+
+<div id="$core_v2_widget.UniqueId('instructionswrapper')">
+    <p>$core_v2_language.GetResource('NoReportDataText')</p>
+</div>
+
+<div id="$core_v2_widget.UniqueId('allreportswrapper')">
+    <div class="abuse-report-filter">
+        <p>$core_v2_language.GetResource('NodeList-Description')</p>
+        <ul id="$core_v2_widget.UniqueId('hosts')" class="cache-hosts">
+        </ul>
+
+        <p>
+            <a href="#" class="inline-button" id="$core_v2_widget.UniqueId('clear')">$core_v2_language.GetResource('Action-Clear')</a>
+        </p>
+    </div>
+
+    <div id="$core_v2_widget.UniqueId('hitsandmissesheader')"></div>
+    <div id="$core_v2_widget.UniqueId('hitsandmisses')"></div>
+
+    <div id="$core_v2_widget.UniqueId('memoryheader')"></div>
+    <div id="$core_v2_widget.UniqueId('memory')"></div>
+
+    <h2>$core_v2_language.GetResource('TopHits')</h2>
+    <p>$core_v2_language.GetResource('TopHits_Description')</p>
+    <ul id="$core_v2_widget.UniqueId('tophits')" class="cache-top-summary-list hits">
+    </ul>
+
+    <h2>$core_v2_language.GetResource('TopMisses')</h2>
+    <p>$core_v2_language.GetResource('TopMisses_Description')</p>
+    <ul id="$core_v2_widget.UniqueId('topmisses')" class="cache-top-summary-list misses">
+    </ul>
+</div>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('hitsandmisses-template'))">
+	<h2>$core_v2_language.GetResource('HitsAndMisses')</h2>
+	<p>
+	    #format($core_v2_language.GetResource('HitsAndMisses_Description'))
+	    #token('totalhits')
+	        <%= TotalHits %>
+	    #token('totalmisses')
+	        <%= TotalMisses %>
+	    #token('totalitems')
+	        <%= TotalItems %>
+	    #end
+	</p>
+</script>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('memory-template'))">
+	<h2>$core_v2_language.GetResource('MemoryUsage')</h2>
+	<p>
+	    #format($core_v2_language.GetResource('MemoryUsage_Description'))
+	    #token('totalmemorymb')
+	        <%= TotalMemoryMB %>
+	    #token('maximummemorymb')
+	        <%= MaximumMemoryMB %>
+	    #end
+	</p>
+</script>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('topmiss-template'))">
+	<li>
+	    <span class="graph"><span class="graph-inner" style="width: <%= Percent %>%;"></span></span>
+	    <span class="count"><%= Count %></span>
+	    <code class="key"><%: Key %></code>
+	    <span class="scopes"><% foreach(Scope, function(scope) { %><span class="scope"><%: scope %></span><% }); %></span>
+	</li>
+</script>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('tophit-template'))">
+	<li>
+	    <span class="graph"><span class="graph-inner" style="width: <%= Percent %>%;"></span></span>
+	    <span class="count"><%= Count %></span>
+	    <code class="key"><%: Key %></code>
+	    <span class="scopes"><% foreach(Scope, function(scope) { %><span class="scope"><%: scope %></span><% }); %></span>
+	</li>
+</script>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('host-template'))">
+	<li>
+	    <input type="checkbox" value="<%: HostName %>" title="$core_v2_language.GetResource('IncludeInReports')" <% if (IncludedInReports) { %> checked="checked" <% } %> />
+	    <h3><%: HostName %></h3>
+	    <p>
+	        #format($core_v2_language.GetResource('Host_Description'))
+	        #token('totalhits')
+    	        <%= TotalHits %>
+    	    #token('totalmisses')
+    	        <%= TotalMisses %>
+    	    #token('totalitems')
+    	        <%= TotalItems %>
+	        #token('totalmemorymb')
+    	        <%= TotalMemoryMB %>
+    	    #token('maximummemorymb')
+    	        <%= MaximumMemoryMB %>
+	        #end
+	    </p>
+	</li>
+</script>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('header-template'))">
+	<form>
+    	<fieldset>
+    	    <ul class="field-list">
+    	        <li class="field-item">
+    	            <span class="field-item-input">
+    	                <a href="#" class="button disabled connecting">$core_v2_language.GetResource('Action_Connecting')</a>
+    	                <a href="#" class="button start">$core_v2_language.GetResource('Action_Start')</a>
+    	                <a href="#" class="button stop">$core_v2_language.GetResource('Action_Stop')</a>
+    	            </span>
+    	            <span class="field-item-description">
+    	                $core_v2_language.GetResource('Instructions')
+    	            </span>
+    	        </li>
+    	    </ul>
+    	</fieldset>
+	</form>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.cacheMonitor')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.cacheMonitor.register({
+			inputs: {
+				instructionsWrapper: jQuery('#$core_v2_widget.UniqueId('instructionswrapper')'),
+				reportsWrapper: jQuery('#$core_v2_widget.UniqueId('allreportswrapper')'),
+				hitsMisses: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('hitsandmisses'))',
+				memory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('memory'))',
+				hitsMissesHeader: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('hitsandmissesheader'))'),
+				memoryHeader: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('memoryheader'))'),
+				topMisses: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('topmisses'))'),
+				topHits: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('tophits'))'),
+				hosts: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('hosts'))'),
+				clear: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('clear'))')
+			},
+			templates: {
+				header: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('header-template'))',
+				hitsMissesHeader: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('hitsandmisses-template'))',
+				memoryHeader: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('memory-template'))',
+				topMiss: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('topmiss-template'))',
+				topHit: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('tophit-template'))',
+				host: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('host-template'))'
+			},
+			text: {
+				collectingData: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Collecting-Data'))',
+				collectingDataWithTime: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Collecting-Data-WithTime'))',
+				seriesMisses: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Series-NumberOfMisses'))',
+				seriesHits: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Series-NumberOfHits'))',
+				seriesTotalItems: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Series-TotalItems'))',
+				seriesCurrentMB: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Series-CurrentMB'))',
+				seriesMaximumMB: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Series-MaximumMB'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Action_Connecting">Connecting...</resource>
+  <resource name="Action_Start">Start</resource>
+  <resource name="Action_Stop">Stop</resource>
+  <resource name="Action-Clear">Clear Report Data</resource>
+  <resource name="Collecting-Data">Collecting initial data...</resource>
+  <resource name="Collecting-Data-WithTime">Collecting initial data ({seconds} seconds)...</resource>
+  <resource name="Description">Monitor data caching activity.</resource>
+  <resource name="HitsAndMisses">Hits and Misses</resource>
+  <resource name="HitsAndMisses_Description">Latest: {totalhits} hits and {totalmisses} misses on {totalitems} cached items.</resource>
+  <resource name="Host_Description">Latest: {totalhits} hits and {totalmisses} misses on {totalitems} cached items using {totalmemorymb}MB of {maximummemorymb}MB allowed.</resource>
+  <resource name="IncludeInReports">Include in reports</resource>
+  <resource name="Instructions">Click 'Start' to begin a monitoring session and 'Stop' to end or pause a monitoring session. Report data updates every 10 seconds.</resource>
+  <resource name="MemoryUsage">Memory Usage</resource>
+  <resource name="MemoryUsage_Description">Latest: {totalmemorymb}MB used of {maximummemorymb}MB allowed on average.</resource>
+  <resource name="Name">Cache</resource>
+  <resource name="NodeList-Description">Each application node serving this community is listed below. Check or uncheck a node to include/exclude it from the following reports.</resource>
+  <resource name="NoReportDataText">The cache monitor collects statistics from the caches on each application node serving this community to show performance, trends, and memory usage.</resource>
+  <resource name="Series-CurrentMB">{host}</resource>
+  <resource name="Series-MaximumMB">Maximum</resource>
+  <resource name="Series-NumberOfHits">Number of Hits</resource>
+  <resource name="Series-NumberOfMisses">Number of Misses</resource>
+  <resource name="Series-TotalItems">Total Cached Items</resource>
+  <resource name="TopHits">Top Cache Hits</resource>
+  <resource name="TopHits_Description">Top 50 cache requests that were found, ordered by frequency of cache hits during the monitoring session.</resource>
+  <resource name="TopMisses">Top Cache Misses</resource>
+  <resource name="TopMisses_Description">Top 50 cache requests that were not found, ordered by frequency of cache misses during the monitoring session.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

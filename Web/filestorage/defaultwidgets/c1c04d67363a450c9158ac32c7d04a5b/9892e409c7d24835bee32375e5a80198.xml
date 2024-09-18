@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="9892e409c7d24835bee32375e5a80198" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="cache-configuration" lastModified="2020-08-18 21:09:55Z" provider="c1c04d67363a450c9158ac32c7d04a5b">
+    <contentScript language="Velocity"><![CDATA[<div class="message warning">$core_v2_language.GetResource('warning')</div>
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('cacheMemoryLimitMegabytes')">$core_v2_language.GetResource('cacheMemoryLimitMegabytes_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('cacheMemoryLimitMegabytes_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('cacheMemoryLimitMegabytes')" name="$core_v2_widget.UniqueId('cacheMemoryLimitMegabytes')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('cacheMemoryLimitMegabytes', 500).ToString())" />
+			</span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('cacheRollingTimeoutMinutes')">$core_v2_language.GetResource('cacheRollingTimeoutMinutes_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('cacheRollingTimeoutMinutes_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('cacheRollingTimeoutMinutes')" name="$core_v2_widget.UniqueId('cacheRollingTimeoutMinutes')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('cacheRollingTimeoutMinutes', 30).ToString())" />
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+<script type="text/html" id="$core_v2_widget.UniqueId('header')">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="button save">$core_v2_language.GetResource('save')</a>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.cacheConfiguration')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+        jQuery.telligent.evolution.widgets.cacheConfiguration.register({
+            templates: {
+                headerId: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('header'))'
+            },
+            urls: {
+                save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.jsm'))'
+            },
+            inputs: {
+                cacheMemoryLimitMegabytes: jQuery('#$core_v2_widget.UniqueId('cacheMemoryLimitMegabytes')'),
+                cacheRollingTimeoutMinutes: jQuery('#$core_v2_widget.UniqueId('cacheRollingTimeoutMinutes')')
+            },
+            text: {
+                saveSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save_successful'))'
+            }
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cacheMemoryLimitMegabytes_description">Maximum amount of memory, in megabytes, that can be used by the community cache before items are removed. Memory usage is reviewed as frequently as every minute. Memory usage is always limited to use less than 80% of total server memory. Minimum: 100MB. Maximum: 128,000MB. Default: 500MB.</resource>
+  <resource name="cacheMemoryLimitMegabytes_name">Maximum Memory Cache Size</resource>
+  <resource name="cacheRollingTimeoutMinutes_description">Amount of time, in minutes, cached data remains in the cache by default without being accessed or changed. On access, the data will be kept in the cache for this amount of time. On change, the cached data is immediately expired. Minimum: 1 minute. Maximum: 43,200 minutes (30 days). Default: 30 minutes.</resource>
+  <resource name="cacheRollingTimeoutMinutes_name">Cache Duration</resource>
+  <resource name="Description">Manage data cache options.</resource>
+  <resource name="Name">Cache</resource>
+  <resource name="save">Save</resource>
+  <resource name="save_successful">Cache options have been saved.</resource>
+  <resource name="warning">Cache management is a costly action and occurs only when server resources are limited. A maximum memory configuration is not a hard-enforced setting and will be enforced more strictly when available memory is scarce than when it is abundant. Cache durations will be shortened, as necessary, when resources are scarce.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

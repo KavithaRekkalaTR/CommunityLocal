@@ -1,0 +1,14 @@
+##
+## Renders a list of theme summaries with attachments as JSON
+##
+## Requires in scope:
+##   $themes
+##
+[
+	#foreach ($theme in $themes)
+	#between
+		,
+	#each
+		$core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summary.vm')
+	#end
+]

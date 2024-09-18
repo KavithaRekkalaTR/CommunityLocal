@@ -1,0 +1,337 @@
+<li class="field-item enterprise company-name">
+	<label class="field-item-name" for="$core_v2_widget.UniqueId('enterprise-companyname')">$core_v2_language.GetResource('CompanyName')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CompanyName_Description')</span>
+	<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('enterprise-companytype')" /></span>
+</li>
+<li class="field-item enterprise community-name">
+	<label class="field-item-name" for="$core_v2_widget.UniqueId('enterprise-communityname')">$core_v2_language.GetResource('CommunityName')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityName_Description')</span>
+	<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('enterprise-communitytype')" /></span>
+</li>
+<li class="field-item enterprise community-description">
+	<label class="field-item-name" for="$core_v2_widget.UniqueId('enterprise-communitydescription')">$core_v2_language.GetResource('CommunityDescription')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityDescription_Description')</span>
+	<span class="field-item-input"><textarea id="$core_v2_widget.UniqueId('enterprise-communitydescription')"></textarea></span>
+</li>
+<li class="field-item enterprise photo-upload" id="$core_v2_widget.UniqueId('enterprise-logo')">
+	<label for="$core_v2_widget.UniqueId('enterprise-logo')" class="field-item-name">$core_v2_language.GetResource('CommunityLogo')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityLogo_Description')</span>
+	<span class="field-item-input preview" style="display: none;">
+	</span>
+		<span class="field-item-input upload">
+		<a href="#" class="prepend-icon upload add" id="$core_v2_widget.UniqueId('enterprise-upload-logo')">$core_v2_language.GetResource('UploadPhoto')</a>
+		<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemovePhoto')</a>
+	</span>
+</li>
+<li class="field-item enterprise departments">
+	<label class="field-item-name">$core_v2_language.GetResource('Departments')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('Departments_Description')</span>
+	<span class="field-item-input">
+		<table class="form">
+			<thead>
+				<tr>
+					<th style="width: 100%;">$core_v2_language.GetResource('Department_Name')</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><input type="text" class="group-name" placeholder="$core_v2_language.GetResource('Department_Name_Placeholder')" style="width: 100%;" /></td>
+					<td style="word-break: normal;"><a href="#" class="add-department button">$core_v2_language.GetResource('Add')</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</span>
+</li>
+<li class="field-item enterprise">
+	<span class="field-item-input">
+		<a id="$core_v2_widget.UniqueId('enterprise-save')" href="#" class="internal-link button">$core_v2_language.GetResource('Setup')</a>
+		<span class="progress" style="display: none;"></span>
+	</span>
+</li>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<![CDATA[
+		jQuery(function()
+		{
+			var siteLogo = {
+				field: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('enterprise-logo'))'),
+				progressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+				changeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePhoto'))',
+				addText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadPhoto'))',
+                previewUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('photo-preview.vm'))',
+                uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+                uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			};
+			jQuery.telligent.evolution.widgets.siteAndGroupSetup.setupFileUpload(siteLogo);
+
+			var wrapper = jQuery('#$core_v2_widget.WrapperElementId');
+			wrapper.find('.field-item.enterprise.community-description textarea').evolutionResize();
+			var rowIterator = 0;
+			var addDepartment = function(departmentName, selectedApplicationKeys) {
+				var row = wrapper.find('.field-item.enterprise.departments table tbody tr:last-child');
+
+				rowIterator++;
+				var newRow = jQuery('<tr data-rowid="' + rowIterator + '"><td style="border-bottom-width: 0;"><input type="text" class="group-name" style="width: 100%;" /></td><td style="word-break: normal; border-bottom-width: 0;"><a href="#" class="remove-department button">$core_v2_language.GetResource('Remove')</a></td></tr><tr data-rowid="' + rowIterator + '"><td colspan="2">$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('setup-site-enterprise-groupconfiguration.vm'))</td></tr>');
+
+				newRow.find('[id]').each(function() {
+					var e = jQuery(this);
+					e.attr('id', e.attr('id') + '_enterprise' + rowIterator);
+				});
+
+				newRow.find('[for]').each(function() {
+					var e = jQuery(this);
+					e.attr('for', e.attr('for') + '_enterprise' + rowIterator);
+				});
+
+				jQuery.each(selectedApplicationKeys, function(i, e) {
+					newRow.find('.group-application input[data-key="' + e + '"]').prop('checked', 'checked');
+				});
+
+				newRow.find('input.group-name').val(departmentName);
+				row.before(newRow);
+
+				var photo = newRow.find('.field-item.photo-upload');
+				var photoConfig = {
+					field: photo,
+					progressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+					changeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePhoto'))',
+					addText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadPhoto'))',
+                    previewUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('photo-preview.vm'))',
+                    uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+                    uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))'
+				}
+				photo.data('upload', photoConfig);
+				jQuery.telligent.evolution.widgets.siteAndGroupSetup.setupFileUpload(photoConfig);
+			}
+
+			wrapper.find('.field-item.enterprise.departments a.add-department').on('click', function() {
+				var row = jQuery(this).closest('tr');
+				var name = row.find('input.group-name');
+
+				if (name.val().length > 0) {
+					addDepartment(name.val(), []);
+					name.val('');
+				}
+
+				return false;
+			});
+
+			wrapper.on('click', '.field-item.enterprise.departments a.remove-department', function() {
+				if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RemoveDepartment_Confirm'))')) {
+					var b = jQuery(this);
+					var rowid = b.parents('tr').data('rowid');
+					var rows = b.parents('table').find('tr[data-rowid="' + rowid + '"]');
+					rows.fadeOut('fast', function() { rows.remove(); });
+				}
+				return false;
+			});
+
+			addDepartment('Sales & Marketing', ['announcements','whitepapers', 'presentations', 'events']);
+			addDepartment('Finance & Human Resources', ['announcements','forum', 'policies', 'positions']);
+			addDepartment('Products & Services', ['announcements','escalations', 'documentation', 'presentations', 'suggestions']);
+			addDepartment('Customer Support', ['forum', 'resources', 'knowledgebase']);
+			addDepartment('Information Technology', ['helpdesk']);
+			addDepartment('Executive Team', ['announcements']);
+
+			function getConfiguration() {
+				var departmentsGroupId = -1, helpdeskForumId = -1, executiveTeamGroupId = -1;
+
+				var configuration = {
+					uploadContextId: siteLogo.uploadContextId
+				};
+
+				var v = wrapper.find('.field-item.enterprise.community-name input').val();
+				if (v) {
+					configuration.siteName = v;
+				}
+
+				v = wrapper.find('.field-item.enterprise.community-description textarea').val();
+				if (v) {
+					configuration.siteDescription = v;
+				}
+
+				var logoFileName = null;
+				if (siteLogo.file != null && siteLogo.file.fileName.length > 0) {
+					configuration.headerTemplate = {
+						template: 'template-site-header-enterprise',
+						parameters: {
+							'{{LOGOFILENAME}}': siteLogo.file.fileName,
+							'{{LOGOCONTENTSBASE64}}': 'FILECONTENTS:' + siteLogo.file.fileName
+						}
+					};
+					configuration.logoFileName = siteLogo.file.fileName;
+				} else {
+					configuration.headerTemplate = {
+						template: 'template-site-header-enterprise-nologo'
+					};
+				}
+
+				configuration.pageTemplates = [];
+				configuration.pageTemplates.push({
+					template: 'template-user-home-enterprise',
+					themeTypeId: '$core_v2_user.ThemeTypeId.ToString()',
+					themeContextId: '$core_v2_configuration.DefaultThemeContextId.ToString()',
+					dynamicParameters: function() {
+						var p = {};
+
+						p['NAVIGATIONCONFIGURATION'] = '<navigation><links>';
+						p['NAVIGATIONCONFIGURATION'] += '<link type="Telligent.Evolution.Controls.SingleGroupCustomNavigationPlugin, Telligent.Evolution.Platform" id="cde00400c0f649a8adb58d34d7c77d40" configuration="group=IncludeSubGroups%3D%2520False%26Group%3D' + departmentsGroupId + '&amp;loadedFor=-1" />';
+						p['NAVIGATIONCONFIGURATION'] += '<link type="Telligent.Evolution.Controls.UserListCustomNavigationPlugin, Telligent.Evolution.Platform" id="b7aac7e7d3834906aea45e022bc2e39a" configuration="label=" />';
+						if (helpdeskForumId > 0) {
+							p['NAVIGATIONCONFIGURATION'] += '<link type="Telligent.Evolution.Discussions.Controls.SingleForumCustomNavigationPlugin, Telligent.Evolution.Discussions" id="a1a6331f9c9340d2ab5c62f8dfa7cccf" configuration="forum=Forum%3D' + helpdeskForumId + '&amp;label=" />';
+						}
+						p['NAVIGATIONCONFIGURATION'] += '</links></navigation>';
+
+						if (executiveTeamGroupId > 0) {
+							p['BLOGPOSTLISTGROUPSELECTION'] = 'IncludeSubGroups=%20False&Group=' + executiveTeamGroupId;
+							p['BLOGPOSTLISTTITLE'] = 'Executive Team Updates';
+						} else {
+							p['BLOGPOSTLISTGROUPSELECTION'] = '';
+							p['BLOGPOSTLISTTITLE'] = 'News and Updates';
+						}
+
+						return p;
+					}
+				});
+
+				configuration.groups = [];
+
+				var departments = {
+					name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Departments'))',
+					type: 'Joinless',
+					headerTemplate: { template: 'template-group-header-nonav' },
+					pageTemplates: [
+						{ template: 'template-group-home-groups' }
+					],
+					groups: [],
+					created: function(id) {
+						departmentsGroupId = id;
+					}
+				};
+				configuration.groups.push(departments);
+
+				wrapper.find('.field-item.enterprise.departments input.group-name').each(function() {
+					var g = jQuery(this);
+					var group = {};
+					if (g.val().length > 0) {
+						group.name = g.val();
+						group.type = 'PublicClosed';
+						var id = g.parents('tr').data('rowid');
+
+						if (group.name == 'Executive Team') {
+							group.created = function(id) {
+								executiveTeamGroupId = id;
+							}
+						}
+
+						group.applications = [];
+						wrapper.find('.field-item.enterprise.departments tr[data-rowid="' + id + '"] .group-application input[type="checkbox"]:checked').each(function() {
+							var appData = jQuery(this).data();
+							if (appData.type == 'forum' && appData.key == 'helpdesk') {
+								appData.created = function(id) {
+									helpdeskForumId = id;
+								}
+							}
+
+							group.applications.push(appData);
+						});
+
+						var a = wrapper.find('.field-item.enterprise.departments tr[data-rowid="' + id + '"] .field-item.photo-upload').data('upload');
+						if (a != null && a.file != null && a.file.fileName.length > 0) {
+							group.avatarFileName = a.file.fileName;
+						}
+
+						v = wrapper.find('.field-item.enterprise.departments tr[data-rowid="' + id + '"] .field-item.owner-email input').val();
+						if (v) {
+							group.ownerEmail = v;
+						}
+
+						var appType = null;
+						var singleApp = true;
+						jQuery.each(group.applications, function(i, a) {
+							if (appType == null) {
+								appType = a.type;
+							} else if (appType != a.type) {
+								singleApp = false;
+							}
+						});
+
+						group.pageTemplates = [];
+						if (group.applications.length > 0 && appType && singleApp) {
+							if (group.applications.length == 1) {
+								group.pageTemplates.push({ template: 'template-group-home-' + appType + '-single' });
+							} else {
+								group.pageTemplates.push({ template: 'template-group-home-' + appType + '-multiple' });
+							}
+
+							group.headerTemplate = { template: 'template-group-header-nonav' };
+						} else {
+							group.pageTemplates.push({ template: 'template-group-home-default' });
+						}
+
+						departments.groups.push(group);
+					}
+				});
+
+				var companyName = wrapper.find('.field-item.enterprise.company-name input').val();
+				if (!companyName || companyName.length == 0) {
+					companyName = null;
+				}
+
+				configuration.submit = jQuery('#$core_v2_widget.UniqueId('enterprise-save')');
+				configuration.progress = wrapper.find('.progress');
+				configuration.success = function() {
+					if (window.setCommunityType) {
+						window.setCommunityType('Enterprise');
+					}
+					wrapper.find('fieldset.setup-form').hide();
+					wrapper.find('fieldset.complete-form').show();
+				}
+				configuration.error = function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SiteCreationError'))', { type: 'error' });
+				};
+
+				return configuration;
+			}
+
+			function checkConfiguration() {
+				var configuration = getConfiguration();
+
+				jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.licenseCheck', configuration);
+				if (!configuration.valid && configuration.message) {
+					alert(configuration.message);
+					return false;
+				} else {
+					return true;
+				}
+			}
+
+			var save = jQuery('#$core_v2_widget.UniqueId('enterprise-save')');
+			save.on('click', function() {
+				var configuration = getConfiguration();
+
+				jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.licenseCheck', configuration);
+				if (!configuration.valid && configuration.message) {
+					alert(configuration.message);
+				} else {
+					jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.setup', configuration);
+				}
+
+				return false;
+			});
+
+			var checkTimeout = null;
+			wrapper.on('change', '.field-item.enterprise input[type="checkbox"]', function() {
+				if ($(this).is(':checked')) {
+					window.clearTimeout(checkTimeout);
+					checkTimeout = window.setTimeout(function() {
+						checkConfiguration();
+					}, 500);
+				}
+			});
+		});
+	//]]]]><![CDATA[>
+	</script>
+#end

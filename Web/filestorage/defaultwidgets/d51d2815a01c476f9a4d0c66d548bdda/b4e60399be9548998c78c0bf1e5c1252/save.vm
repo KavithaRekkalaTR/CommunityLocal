@@ -1,0 +1,20 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($stage = false)
+	#set($stage = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('stage')))
+
+    #set($configuration = false)
+    #set($configuration = $core_v2_page.ParseQueryString($core_v2_page.GetFormValue('configuration')))
+
+    #if ($configuration)
+		#set($response = $context.SaveConfiguration($configuration, $stage))
+		#if ($response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+	#end
+
+	{
+		"success":true
+	}
+#end

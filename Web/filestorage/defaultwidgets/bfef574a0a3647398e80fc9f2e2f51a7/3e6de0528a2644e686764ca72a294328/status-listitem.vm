@@ -1,0 +1,49 @@
+﻿#set($statuses = $telligentIdeas_v1_statuses.List())
+#set($canManage = $telligentIdeas_v1_ideaPermissions.CanManageIdeaStatus())
+
+<div class="message" style="display:none;">$core_v2_language.GetResource('DisabledPluginMessage')</div>
+
+<fieldset>
+	#foreach($status in $statuses)
+		#beforeall
+			<ul class="content-list expandable">
+		#each
+			<li class="content-item" style="position:relative;">
+				<div class="sortOrder">
+					<a class="up" data-messagename="administration.idea.status.up" data-statuskey="$status.Key"></a>
+					<a class="down" data-messagename="administration.idea.status.down" data-statuskey="$status.Key"></a>
+				</div>
+				<div class="content-container" style="margin-left:45px;">
+					<h4 class="name">$status.InternalName</h4>
+					<div class="attributes">
+						<div class="content">
+							#if($status.IsDefault)
+							<div class="content is-default">
+								$core_v2_language.GetResource('Default')
+							</div>
+							#else
+							<div class="content"></div>
+							#end
+						</div>
+					</div>
+
+					<div class="actions expandable">
+						<div class="navigation-list ui-links" data-direction="horizontal">
+							<ul>
+								<li class="navigation-list-item edit">
+									<a href="#" data-messagename="administration.idea.status.edit" data-statuskey="$status.Key" data-title="$core_v2_encoding.HtmlAttributeEncode($status.Name)">$core_v2_language.GetResource('Edit')</a>
+								</li>
+							#if(!$status.IsDefault)
+								<li class="navigation-list-item delete">
+									<a href="#" data-messagename="administration.idea.status.delete" data-statuskey="$status.Key" data-title="$core_v2_encoding.HtmlAttributeEncode($status.Name)">$core_v2_language.GetResource('Delete')</a>
+								</li>
+							#end
+							</ul>
+						</div>
+					</div>
+				</div>
+			</li>
+		#afterall
+			</ul>
+	#end
+</fieldset>

@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="d3d5b37171df4bf7ae17be811f020349" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-licensing" lastModified="2021-11-02 20:33:17Z" provider="a6cca04059bf43dca2fae6cbe3fa0bd7">
+    <contentScript language="Velocity"><![CDATA[#set($hasMessage = false)
+
+#if ($context.Status.SystemStatus == 'Critical')
+    #set($overLicense = '')
+    #set($expiredLicense = '')
+    #set($hasMultipleOver = false)
+    #set($hasMultipleExpired = false)
+    #foreach($pu in $context.Status.ProductUsage)
+        #foreach($u in $pu.Usages)
+            #if ($u.IsOver)
+                #if ($overLicense.Length == 0)
+                    #set($overLicense = "<strong>${pu.Name}: ${u.Name}</strong>")
+                #else
+                    #set($overLicense = "${overLicense}, <strong>${pu.Name}: ${u.Name}</strong>")
+                    #set($hasMultipleOver = true)
+                #end
+            #end
+        #end
+
+        #if ($pu.ExpiresDate && $core_v2_utility.CompareDates($pu.ExpiresDate, 'EarlierThan', $core_v2_utility.CurrentDate))
+            #if ($expiredLicense.Length == 0)
+                #set($expiredLicense = "<strong>${pu.Name}</strong>")
+            #else
+                #set($expiredLicense = "${expiredLicense}, <strong>${pu.Name}</strong>")
+                #set($hasMultipleExpired = true)
+            #end
+        #end
+    #end
+
+    #if ($expiredLicense.Length > 0 || $overLicense.Length > 0)
+        #if ($expiredLicense.Length > 0)
+            #if ($hasMultipleExpired)
+                $core_v2_language.FormatString($core_v2_language.GetResource('Critical_Expired_Multiple'), $expiredLicense)
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('Critical_Expired'), $expiredLicense)
+            #end
+        #end
+        #if ($overLicense.Length > 0)
+            #if ($hasMultipleOver)
+                $core_v2_language.FormatString($core_v2_language.GetResource('Critical_Over_Multiple'), $overLicense)
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('Critical_Over'), $overLicense)
+            #end
+        #end
+
+        #set($hasMessage = true)
+    #end
+#elseif ($context.Status.SystemStatus == 'Warning')
+    #set($expiringLicense = '')
+    #set($checkDate = $core_v2_utility.CurrentDate.AddDays(7))
+    #set($hasMultiple = false)
+    #foreach($pu in $context.Status.ProductUsage)
+        #if ($pu.ExpiresDate && $core_v2_utility.CompareDates($pu.ExpiresDate, 'EarlierThan', $checkDate))
+            #if ($expiringLicense.Length == 0)
+                #set($expiringLicense = "<strong>${pu.Name}</strong>")
+            #else
+                #set($expiringLicense = "$expiringLicense, <strong>${pu.Name}</strong>")
+                #set($hasMultiple = true)
+            #end
+        #end
+    #end
+
+    #if ($expiringLicense.Length > 0)
+        #if ($hasMultiple)
+            $core_v2_language.FormatString($core_v2_language.GetResource('Warning_Multiple'), $expiringLicense)
+        #else
+            $core_v2_language.FormatString($core_v2_language.GetResource('Warning'), $expiringLicense)
+        #end
+
+        #set($hasMessage = true)
+    #end
+#end
+
+#if (!$hasMessage)
+    $core_v2_language.GetResource('Normal')
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Critical_Expired">The license for {0} is expired.</resource>
+  <resource name="Critical_Expired_Multiple">The licenses for {0} are expired.</resource>
+  <resource name="Critical_Over">This community is currently over the license allowance for {0}.</resource>
+  <resource name="Critical_Over_Multiple">This community is currently over the license allowance for {0}.</resource>
+  <resource name="Normal">Licenses are healthy.</resource>
+  <resource name="Warning">The license for {0} will expire soon.</resource>
+  <resource name="Warning_Multiple">The licenses for {0} will expire soon.</resource>
+  <resource name="Widget-Description">Licensing System Indicator</resource>
+  <resource name="Widget-Title">Licensing</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

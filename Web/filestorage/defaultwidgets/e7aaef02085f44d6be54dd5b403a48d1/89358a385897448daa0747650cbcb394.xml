@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupLeaderboardsPanel_Name}" version="12.0.0.0" description="${resource:GroupLeaderboardsPanel_Description}" instanceIdentifier="89358a385897448daa0747650cbcb394" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-leaderboards" lastModified="2024-01-08 20:10:02Z" provider="e7aaef02085f44d6be54dd5b403a48d1">
+    <contentScript language="Velocity"><![CDATA[
+#set($group = $context.Group)
+#set ($leaderboardsListId = $core_v2_widget.UniqueId('leaderboardsListId'))
+
+<div class="message information">
+	$core_v2_language.GetResource('LeaderboardsPanel_Instructions')
+</div>
+
+<div>
+	$core_v2_widget.ExecuteFile('list.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.leaderboardPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.leaderboardPanel.register({
+			containerId: '$context.ContainerId',
+			containerTypeId: '$context.ContainerTypeId',
+			currentLeaderboardId: #if($core_v2_leaderboard.Current)$core_v2_leaderboard.Current.Id#else -1 #end,
+			canCreate: #if($core_v2_userPermission.HasPermission($core_v2_leaderboard.Permissions.CreateLeaderboard, $group.NodeId, $core_v2_group.ContentTypeId)) true#else false#end,
+			resources: {
+				addLeaderboard: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddLeaderboard'))",
+				editLeaderboard: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditLeaderboard'))",
+				delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+				confirmDelete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ConfirmDelete'))",
+				leaderboardDeleted: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('leaderboardDeleted'))",
+				leaders: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Leaders'))',
+				leadersOf: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('LeadersOf'))',
+			},
+			urls: {
+				pagedLeaderboards: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('list.vm'))',
+				editLeaderboard: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('edit.vm'))',
+				delete: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+				leaders: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('leaders.vm'))',
+				groupRedirect: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Group.Id)))'
+			}
+		});
+	});
+	</script>
+#end
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddLeaderboard">Add Leaderboard</resource>
+  <resource name="AddressLabel">Web Address</resource>
+  <resource name="AddressLabel_Desc">Enter the name of the leaderboard as you wish it to appear for the web address for this leaderboard</resource>
+  <resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource>
+  <resource name="ApplicationId">Application Identifier</resource>
+  <resource name="ApplicationTypeId">Application Type Identifier</resource>
+  <resource name="ConfirmDelete">Are you sure you want to delete this leaderboard?</resource>
+  <resource name="DateRangeFormat">{0} to {1}</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Description_Detail">A brief description of the leaderboard.</resource>
+  <resource name="Displayed">Displayed</resource>
+  <resource name="DisplayEndDate">Display End Date</resource>
+  <resource name="DisplayEndDate_Detail">The date this leaderboard should stop being displayed on the site (optional).</resource>
+  <resource name="DisplayStartDate">Display Start Date</resource>
+  <resource name="DisplayStartDate_Detail">The date this leaderboard should start being displayed on the site (optional).</resource>
+  <resource name="DownloadCSV">Export as CSV</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="EditLeaderboard">Edit {0}</resource>
+  <resource name="EndDate">End Date</resource>
+  <resource name="EndDate_Detail">Specify the ending of the date range that should be included when determining leaders.</resource>
+  <resource name="EntityId">Identifier</resource>
+  <resource name="ExcludeRoles">Users to Exclude (by role)</resource>
+  <resource name="ExcludeRoles_Detail">If set, the leaderboard will not list users who are members of one of the excluded roles.</resource>
+  <resource name="fieldRequired">This field is required.</resource>
+  <resource name="GroupLeaderboardsPanel_Description">Manage ${group_lowercase} leaderboards.</resource>
+  <resource name="GroupLeaderboardsPanel_Name">Leaderboards</resource>
+  <resource name="IncludeRoles">Users to Include (by role)</resource>
+  <resource name="IncludeRoles_Detail">If set, the leaderboard will only list users who are members of one of the included roles.</resource>
+  <resource name="invalidDateRange">The end date should occur after the start date.</resource>
+  <resource name="LastFormat">Last {0} {1}</resource>
+  <resource name="leaderboardDeleted">Leaderboard has been deleted.</resource>
+  <resource name="LeaderboardsPanel_Instructions">Leaderboards display the top users by points across the site or in a specific group.  The leaderboards displayed here are scoped to this group and only points received in this group are included when determining leaders.</resource>
+  <resource name="leaderboardUpdated">Leaderboard changes saved.</resource>
+  <resource name="Leaders">Leaders</resource>
+  <resource name="LeadersOf">{0} Leaders</resource>
+  <resource name="Name">Name</resource>
+  <resource name="Name_Detail">The name for the leaderboard.</resource>
+  <resource name="NoRecordsFormat">No leaderboards found in {0}</resource>
+  <resource name="NotDisplayed">Not displayed</resource>
+  <resource name="NumberOfLeaders">Number of Leaders</resource>
+  <resource name="NumberOfLeaders_Detail">The number of users to track for this leaderboard.</resource>
+  <resource name="PointsFormat">Points: {0}</resource>
+  <resource name="RankFormat">Rank: {0}</resource>
+  <resource name="RecordFormat">{0} leader.</resource>
+  <resource name="RecordsFormat">{0} leaders.</resource>
+  <resource name="RoleLookUp_NoMatches">A matching role could not be found.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="StartDate">Start Date</resource>
+  <resource name="StartDate_Detail">Specify the beginning of the date range that should be included when determining leaders.</resource>
+  <resource name="TimePeriod">Review period</resource>
+  <resource name="TimePeriod_AllTime">All time</resource>
+  <resource name="TimePeriod_Day">Day</resource>
+  <resource name="TimePeriod_Days">Days</resource>
+  <resource name="TimePeriod_Detail">The time period reviewed when determining leaders.</resource>
+  <resource name="TimePeriod_FixedDateRange">Specific date range</resource>
+  <resource name="TimePeriod_Month">Month</resource>
+  <resource name="TimePeriod_Months">Months</resource>
+  <resource name="TimePeriod_RollingTimePeriod">Recent time period</resource>
+  <resource name="TimePeriod_Year">Year</resource>
+  <resource name="TimePeriod_Years">Years</resource>
+  <resource name="TimeSpanLength">Time Period</resource>
+  <resource name="TimeSpanLength_Detail">Specify the historic duration to review when determining leaders.</resource>
+  <resource name="View">View</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+  <resource name="ViewUser">View User Profile</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

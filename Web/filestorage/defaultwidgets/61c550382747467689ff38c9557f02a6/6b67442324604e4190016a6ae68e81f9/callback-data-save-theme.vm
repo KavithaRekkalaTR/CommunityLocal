@@ -1,0 +1,123 @@
+##
+## Save Theme Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+	#set ($options = "%{}")
+
+	#set ($idQuery = $core_v2_page.GetFormValue("_w_id"))
+	#if ($idQuery)
+		$options.Add('Id', $idQuery)
+	#end
+
+	#set ($typeIdQuery = $core_v2_page.GetFormValue("_w_typeId"))
+	#if ($typeIdQuery)
+		$options.Add('TypeId', $typeIdQuery)
+	#end
+
+	#set ($nameQuery = $core_v2_page.GetFormValue("_w_name"))
+	#if ($nameQuery)
+		$options.Add('Name', $nameQuery)
+	#end
+
+	#set ($descriptionQuery = $core_v2_page.GetFormValue("_w_description"))
+	#if ($descriptionQuery)
+		$options.Add('Description', $descriptionQuery)
+	#end
+
+	#set ($mediaMaxWidthPixelsQuery = $core_v2_page.GetFormValue("_w_mediaMaxWidthPixels"))
+	#if ($mediaMaxWidthPixelsQuery)
+		$options.Add('MediaMaxWidthPixels', $mediaMaxWidthPixelsQuery)
+	#end
+
+	#set ($mediaMaxHeightPixelsQuery = $core_v2_page.GetFormValue("_w_mediaMaxHeightPixels"))
+	#if ($mediaMaxHeightPixelsQuery)
+		$options.Add('MediaMaxHeightPixels', $mediaMaxHeightPixelsQuery)
+	#end
+
+	#set ($headScriptQuery = $core_v2_page.GetFormValue("_w_headScript"))
+	#if ($headScriptQuery)
+		$options.Add('HeadScript', $headScriptQuery)
+	#end
+
+	#set ($headScriptLanguageQuery = $core_v2_page.GetFormValue("_w_headScriptLanguage"))
+	#if ($headScriptLanguageQuery)
+		$options.Add('HeadScriptLanguage', $headScriptLanguageQuery)
+	#end
+
+	#set ($bodyScriptQuery = $core_v2_page.GetFormValue("_w_bodyScript"))
+	#if ($bodyScriptQuery)
+		$options.Add('BodyScript', $bodyScriptQuery)
+	#end
+
+	#set ($bodyScriptLanguageQuery = $core_v2_page.GetFormValue("_w_bodyScriptLanguage"))
+	#if ($bodyScriptLanguageQuery)
+		$options.Add('BodyScriptLanguage', $bodyScriptLanguageQuery)
+	#end
+
+	#set ($resourcesToSaveQuery = $core_v2_page.GetFormValue("_w_resourcesToSave"))
+	#if ($resourcesToSaveQuery)
+		$options.Add('ResourcesToSave', $resourcesToSaveQuery)
+	#end
+
+	#set ($configurationXmlQuery = $core_v2_page.GetFormValue("_w_configurationXml"))
+	#if ($configurationXmlQuery)
+		$options.Add('ConfigurationXml', $configurationXmlQuery)
+	#end
+
+	#set ($configurationScriptQuery = $core_v2_page.GetFormValue("_w_configurationScript"))
+	#if ($configurationScriptQuery)
+		$options.Add('ConfigurationScript', $configurationScriptQuery)
+	#end
+
+	#set ($paletteTypesXmlQuery = $core_v2_page.GetFormValue("_w_paletteTypesXml"))
+	#if ($paletteTypesXmlQuery)
+		$options.Add('PaletteTypesXml', $paletteTypesXmlQuery)
+	#end
+
+	#set ($newPreviewFileNameQuery = $core_v2_page.GetFormValue("_w_newPreviewFileName"))
+	#if ($newPreviewFileNameQuery)
+		$options.Add('NewPreviewFileName', $newPreviewFileNameQuery)
+	#end
+
+	#set ($uploadContextQuery = $core_v2_page.GetFormValue("_w_uploadContext"))
+	#if ($uploadContextQuery)
+		$options.Add('UploadContext', $uploadContextQuery)
+	#end
+
+	#set ($newScriptFilesQuery = $core_v2_page.GetFormValue("_w_newScriptFiles"))
+	#if ($newScriptFilesQuery)
+		$options.Add('NewScriptFiles', $newScriptFilesQuery)
+	#end
+
+	#set ($newStyleFilesQuery = $core_v2_page.GetFormValue("_w_newStyleFiles"))
+	#if ($newStyleFilesQuery)
+		$options.Add('NewStyleFiles', $newStyleFilesQuery)
+	#end
+
+	#set ($restScopeIdsQuery = $core_v2_page.GetFormValue("_w_restScopeIds"))
+	#if ($restScopeIdsQuery)
+		$options.Add('RestScopeIds', $restScopeIdsQuery)
+	#end
+
+	#set ($saveResult = $context.SaveTheme($options))
+	#if ($saveResult && $saveResult.HasErrors())
+		$core_v2_page.SendJsonError($saveResult.Errors)
+	#end
+
+
+	#set ($theme = $saveResult.Model)
+
+	## return list of staged themes alongside new theme
+	#set ($themes = $context.ListThemes("%{ Staged = 'true' }"))
+	#if ($themes && $themes.HasErrors())
+		$core_v2_page.SendJsonError($themes.Errors)
+	#end
+
+	{
+		"savedTheme": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-full.vm'),
+		"stagedThemes": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summaries.vm'),
+		"isNew": #if ($saveResult.IsNew) true #else false #end
+	}
+#end

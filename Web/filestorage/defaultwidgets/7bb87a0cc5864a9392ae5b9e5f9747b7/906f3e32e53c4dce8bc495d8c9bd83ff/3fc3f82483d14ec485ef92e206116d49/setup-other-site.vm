@@ -1,0 +1,263 @@
+<li class="field-item other community-name">
+	<label class="field-item-name" for="$core_v2_widget.UniqueId('other-communityname')">$core_v2_language.GetResource('CommunityName')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityName_Description')</span>
+	<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('other-communitytype')" /></span>
+</li>
+<li class="field-item other community-description">
+	<label class="field-item-name" for="$core_v2_widget.UniqueId('other-communitydescription')">$core_v2_language.GetResource('CommunityDescription')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityDescription_Description')</span>
+	<span class="field-item-input"><textarea id="$core_v2_widget.UniqueId('other-communitydescription')"></textarea></span>
+</li>
+<li class="field-item other photo-upload" id="$core_v2_widget.UniqueId('other-logo')">
+	<label for="$core_v2_widget.UniqueId('other-logo')" class="field-item-name">$core_v2_language.GetResource('CommunityLogo')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityLogo_Description')</span>
+	<span class="field-item-input preview" style="display: none;">
+	</span>
+		<span class="field-item-input prepend-icon upload">
+		<a href="#" class="upload add" id="$core_v2_widget.UniqueId('other-upload-logo')">$core_v2_language.GetResource('UploadPhoto')</a>
+		<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemovePhoto')</a>
+	</span>
+</li>
+<li class="field-item other groups">
+	<label class="field-item-name">$core_v2_language.GetResource('Groups')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('Groups_Description')</span>
+	<span class="field-item-input">
+		<table class="form">
+			<thead>
+				<tr>
+					<th style="width: 100%;">$core_v2_language.GetResource('Group_Name')</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><input type="text" class="group-name" placeholder="$core_v2_language.GetResource('Group_Name_Placeholder')" style="width: 100%;" /></td>
+					<td style="word-break: normal;"><a href="#" class="add-group button">$core_v2_language.GetResource('Add')</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</span>
+</li>
+<li class="field-item other">
+	<span class="field-item-input">
+		<a id="$core_v2_widget.UniqueId('other-save')" href="#" class="internal-link button">$core_v2_language.GetResource('Setup')</a>
+		<span class="progress" style="display: none;"></span>
+	</span>
+</li>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<![CDATA[
+		jQuery(function()
+		{
+			var siteLogo = {
+				field: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('other-logo'))'),
+				progressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+				changeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePhoto'))',
+				addText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadPhoto'))',
+						previewUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('photo-preview.vm'))',
+						uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+						uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))'
+			};
+			jQuery.telligent.evolution.widgets.siteAndGroupSetup.setupFileUpload(siteLogo);
+
+			var wrapper = jQuery('#$core_v2_widget.WrapperElementId');
+			wrapper.find('.field-item.other.community-description textarea').evolutionResize();
+
+			var rowIterator = 0;
+
+			wrapper.find('.field-item.other.groups a.add-group').on('click', function() {
+				var row = jQuery(this).closest('tr');
+				var name = row.find('input.group-name');
+
+				if (name.val().length > 0) {
+					rowIterator++;
+					var newRow = jQuery('<tr data-rowid="' + rowIterator + '"><td style="border-bottom-width: 0;"><input type="text" class="group-name" style="width: 100%;" /></td><td style="word-break: normal; border-bottom-width: 0;"><a href="#" class="remove-group button">$core_v2_language.GetResource('Remove')</a></td></tr><tr data-rowid="' + rowIterator + '"><td colspan="2">$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('setup-site-other-groupconfiguration.vm'))</td></tr>');
+
+					newRow.find('[id]').each(function() {
+						var e = jQuery(this);
+						e.attr('id', e.attr('id') + '_other' + rowIterator);
+					});
+
+					newRow.find('[for]').each(function() {
+						var e = jQuery(this);
+						e.attr('for', e.attr('for') + '_other' + rowIterator);
+					});
+
+					newRow.find('input.group-name').val(name.val());
+					row.before(newRow);
+
+					var photo = newRow.find('.field-item.photo-upload');
+					var photoConfig = {
+						field: photo,
+						progressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+						changeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePhoto'))',
+						addText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadPhoto'))',
+								previewUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('photo-preview.vm'))',
+								uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+								uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))'
+					}
+					photo.data('upload', photoConfig);
+					jQuery.telligent.evolution.widgets.siteAndGroupSetup.setupFileUpload(photoConfig);
+
+					name.val('');
+				}
+
+				return false;
+			});
+
+			wrapper.on('click', '.field-item.other.groups a.remove-group', function() {
+				if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RemoveGroup_Confirm'))')) {
+					var b = jQuery(this);
+					var rowid = b.parents('tr').data('rowid');
+					var rows = b.parents('table').find('tr[data-rowid="' + rowid + '"]');
+					rows.fadeOut('fast', function() { rows.remove(); });
+				}
+				return false;
+			});
+
+			function getConfiguration() {
+				var configuration = {
+					uploadContextId: siteLogo.uploadContextId
+				};
+
+				var v = wrapper.find('.field-item.other.community-name input').val();
+				if (v) {
+					configuration.siteName = v;
+				}
+
+				v = wrapper.find('.field-item.other.community-description textarea').val();
+				if (v) {
+					configuration.siteDescription = v;
+				}
+
+				var logoFileName = null;
+				if (siteLogo.file != null && siteLogo.file.fileName.length > 0) {
+					configuration.headerTemplate = {
+						template: 'template-site-header-other',
+						parameters: {
+							'{{LOGOFILENAME}}': siteLogo.file.fileName,
+							'{{LOGOCONTENTSBASE64}}': 'FILECONTENTS:' + siteLogo.file.fileName
+						}
+					};
+					configuration.logoFileName = siteLogo.file.fileName;
+				} else {
+					configuration.headerTemplate = {
+						template: 'template-site-header-other-nologo'
+					};
+				}
+
+				configuration.pageTemplates = [];
+				configuration.pageTemplates.push({
+					template: 'template-user-home-other',
+					themeTypeId: '$core_v2_user.ThemeTypeId.ToString()',
+					themeContextId: '$core_v2_configuration.DefaultThemeContextId.ToString()'
+				});
+
+				configuration.groups = [];
+				wrapper.find('.field-item.other.groups input.group-name').each(function() {
+					var g = jQuery(this);
+					var group = {};
+					if (g.val().length > 0) {
+						group.name = g.val();
+						group.type = 'PublicClosed';
+						var id = g.parents('tr').data('rowid');
+
+						group.applications = [];
+						wrapper.find('.field-item.other.groups tr[data-rowid="' + id + '"] .group-application input[type="checkbox"]:checked').each(function() {
+							group.applications.push(jQuery(this).data());
+						});
+
+						var a = wrapper.find('.field-item.other.groups tr[data-rowid="' + id + '"] .field-item.photo-upload').data('upload');
+						if (a != null && a.file != null && a.file.fileName.length > 0) {
+							group.avatarFileName = a.file.fileName;
+						}
+
+						v = wrapper.find('.field-item.other.groups tr[data-rowid="' + id + '"] .field-item.owner-email input').val();
+						if (v) {
+							group.ownerEmail = v;
+						}
+
+						var appType = null;
+						var singleApp = true;
+						jQuery.each(group.applications, function(i, a) {
+							if (appType == null) {
+								appType = a.type;
+							} else if (appType != a.type) {
+								singleApp = false;
+							}
+						});
+
+						group.pageTemplates = [];
+						if (group.applications.length > 0 && appType && singleApp) {
+							if (group.applications.length == 1) {
+								group.pageTemplates.push({ template: 'template-group-home-' + appType + '-single' });
+							} else {
+								group.pageTemplates.push({ template: 'template-group-home-' + appType + '-multiple' });
+							}
+
+							group.headerTemplate = { template: 'template-group-header-nonav' };
+						} else {
+							configuration.headerTemplate = { template: 'template-group-header' };
+							group.pageTemplates.push({ template: 'template-group-home-default' });
+						}
+
+						configuration.groups.push(group);
+					}
+				});
+
+				configuration.submit = jQuery('#$core_v2_widget.UniqueId('other-save')');
+				configuration.progress = wrapper.find('.progress');
+				configuration.success = function() {
+					if (window.setCommunityType) {
+						window.setCommunityType('Other');
+					}
+					wrapper.find('fieldset.setup-form').hide();
+					wrapper.find('fieldset.complete-form').show();
+				}
+				configuration.error = function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SiteCreationError'))', { type: 'error' });
+				};
+
+				return configuration;
+			}
+
+			function checkConfiguration() {
+				var configuration = getConfiguration();
+
+				jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.licenseCheck', configuration);
+				if (!configuration.valid && configuration.message) {
+					alert(configuration.message);
+					return false;
+				} else {
+					return true;
+				}
+			}
+
+			var save = jQuery('#$core_v2_widget.UniqueId('other-save')');
+			save.on('click', function() {
+				var configuration = getConfiguration();
+
+				jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.licenseCheck', configuration);
+				if (!configuration.valid && configuration.message) {
+					alert(configuration.message);
+				} else {
+					jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.setup', configuration);
+				}
+
+				return false;
+			});
+
+			var checkTimeout = null;
+			wrapper.on('change', '.field-item.other input[type="checkbox"]', function() {
+				if ($(this).is(':checked')) {
+					window.clearTimeout(checkTimeout);
+					checkTimeout = window.setTimeout(function() {
+						checkConfiguration();
+					}, 500);
+				}
+			});
+		});
+	//]]]]><![CDATA[>
+	</script>
+#end

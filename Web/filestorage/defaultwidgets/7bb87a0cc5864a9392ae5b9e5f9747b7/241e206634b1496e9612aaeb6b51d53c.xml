@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:PeopleSearch_Name}" version="11.0.0.0" description="${resource:PeopleSearch_Description}" instanceIdentifier="241e206634b1496e9612aaeb6b51d53c" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="people-search" lastModified="2020-01-25 18:04:20Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+		<contentScript language="Velocity"><![CDATA[
+
+#set ($filterFormId = 'telligent_evolution_widgets_peopleSearch_filterForm')
+#set ($queryKey = "q")
+
+#set ($viewType = $core_v2_widget.GetStringValue('viewType', 'results'))
+$core_v2_widget.ExecuteFile("${viewType}.vm")
+
+	]]></contentScript>
+		<headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:PeopleSearch_Name}'))
+	]]></headerScript>
+		<configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:PeopleSearch_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="viewType" labelResourceName="view_type" defaultValue="results" dataType="String">
+		<propertyValue value="results" labelResourceName="view_type_results" orderNumber="1000000" propertiesToShow="pageSize" propertiesToHide="" />
+		<propertyValue value="options" labelResourceName="view_type_options" orderNumber="1000001" propertiesToShow="" propertiesToHide="pageSize" />
+	</property>
+	<property id="pageSize" labelResourceName="pagesize_name" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="1000" />
+	</property>
+</propertyGroup>]]></configuration>
+		<languageResources><![CDATA[<language key="en-us">
+	<resource name="cancel">Cancel</resource>
+	<resource name="CF_Title">Widget Title</resource>
+	<resource name="Core_SearchResults_Result">{0} Person</resource>
+	<resource name="Core_SearchResults_Results">{0} People</resource>
+	<resource name="norecords">No Results</resource>
+	<resource name="Options">Options</resource>
+	<resource name="pagesize_name">Page Size</resource>
+	<resource name="PeopleSearch_Description">Searches and filters people in the community</resource>
+	<resource name="PeopleSearch_Name">People Search</resource>
+	<resource name="search">Filter</resource>
+	<resource name="user_action">Connect</resource>
+	<resource name="view_type">View</resource>
+	<resource name="view_type_options">Filter Options</resource>
+	<resource name="view_type_results">Search Results</resource>
+</language>]]></languageResources>
+		<additionalCssScript language="Velocity" />
+	</scriptedContentFragment>
+</scriptedContentFragments>

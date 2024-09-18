@@ -1,0 +1,17 @@
+##
+## Server-rendered reply node
+##
+## Expected in scope: $forumReply
+##
+
+<li
+	class="threaded-reply"
+	data-id="$!forumReply.Id"
+	data-parentid="$!forumReply.ParentId"
+	data-createddate="$!core_v2_utility.GetTimestamp($forumReply.Date)"
+	data-yesvotes="$!forumReply.QualityYesVotes"
+	data-novotes="$!forumReply.QualityNoVotes"
+	data-url="$core_v2_encoding.HtmlAttributeEncode($forumReply.Url)"
+	>
+	<div>$core_v2_widget.ExecuteFile('common-rendered-reply-body.vm')</div>
+</li>

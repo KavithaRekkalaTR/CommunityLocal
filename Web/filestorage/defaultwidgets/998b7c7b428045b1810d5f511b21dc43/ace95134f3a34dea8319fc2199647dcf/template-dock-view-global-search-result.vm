@@ -1,0 +1,42 @@
+## Global Search Result Template
+<% foreach(results, function(result){ %>
+	<li class="search-result-item" data-request="_eid=<%: result.Id %>&_et=<%: result.ComponentType.toLowerCase() %>&_en=<%: (result.FileName || '') %>&_el=<%: (result.LineNumber || '') %>">
+		<div class="search-result-meta">
+			<% if(result.IsStaged) { %>
+				<span data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Staged'))" class="ui-tip staged-indicator">$core_v2_language.GetResource('Staged')</span>
+			<% } %>
+			<span class="search-result-name"><%: result.ProcessedName %></span>
+			<span class="search-result-name type-name">
+			TYPE
+			</span>
+			<% if (result.ComponentType === 'File' && result.FileName) { %>
+				<span class="search-result-attachment-name"><%: result.FileName %></span>
+			<% } else { %>
+				<span class="search-result-component-type">
+<% if(result.ComponentType == 'Overview') { %>
+	$core_v2_language.GetResource('Overview')
+<% } else if(result.ComponentType == 'TemplateScript') { %>
+	$core_v2_language.GetResource('Template')
+<% } else if(result.ComponentType == 'HeaderScript') { %>
+	$core_v2_language.GetResource('Header')
+<% } else if(result.ComponentType == 'FooterScript') { %>
+	$core_v2_language.GetResource('Footer')
+<% } else if(result.ComponentType == 'SubjectScript') { %>
+	$core_v2_language.GetResource('Subject')
+<% } else if(result.ComponentType == 'BodyScript') { %>
+	$core_v2_language.GetResource('Body')
+<% } else if(result.ComponentType == 'Configuration') { %>
+	$core_v2_language.GetResource('Configuration')
+<% } else if(result.ComponentType == 'Resources') { %>
+	$core_v2_language.GetResource('Resources')
+<% } %>
+				</span>
+			<% } %>
+
+			<% if (result.ComponentType !== 'Resources' && result.ComponentType !== 'Overview') { %>
+				<span class="search-result-line-number">: <%= result.LineNumber %></span>
+			<% } %>
+		</div>
+		<div class="search-result-excerpt"><%= result.Excerpt %></div>
+	</li>
+<% }); %>

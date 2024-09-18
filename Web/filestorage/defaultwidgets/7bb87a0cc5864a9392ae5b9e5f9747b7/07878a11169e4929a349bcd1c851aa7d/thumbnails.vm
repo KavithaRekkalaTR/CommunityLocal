@@ -1,0 +1,51 @@
+#foreach($achievement in $achievements)
+#beforeall
+	<div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+#each
+	#if ($content == 'userachievement')
+    	<div class="content-item content thumbnail" data-url="$core_v2_encoding.HtmlAttributeEncode($achievement.Achievement.Url)" style="cursor: pointer;">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($achievement.Achievement.BadgeIconUrl, 140, 140, "%{alt=$achievement.Achievement.Title,border='0',ResizeMethod = 'ZoomAndCrop'}")
+		        </div>
+		        <h2 class="name">
+		            $achievement.Achievement.Title
+		        </h2>
+		</div>
+	#else
+    	<div class="content-item content thumbnail" data-url="$core_v2_encoding.HtmlAttributeEncode($achievement.Url)" style="cursor: pointer;">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($achievement.BadgeIconUrl, 140, 140, "%{alt=$achievement.Title,border='0',ResizeMethod = 'ZoomAndCrop'}")
+		        </div>
+		        <h2 class="name">
+		            $achievement.Title
+		        </h2>
+		</div>
+	#end
+#afterall
+	</div>
+#nodata
+	<div class="message norecords">
+		#if($queryType=='achievements')
+			$core_v2_language.GetResource('Achievements_AchievementList_NoAchievements')
+		#elseif($queryType=='currentUser')
+			$core_v2_language.FormatString($core_v2_language.GetResource('Achievements_UserAchievements_None'), $core_v2_user.Current.DisplayName)
+		#else
+			$core_v2_language.FormatString($core_v2_language.GetResource('Achievements_UserAchievements_None'), $core_v2_user.Accessing.DisplayName)
+		#end
+	</div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.achievementUserList')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function()
+		{
+			jQuery.telligent.evolution.widgets.achievementList.register({
+				thumbnailsContainer: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))')
+			});
+		});
+	</script>
+#end

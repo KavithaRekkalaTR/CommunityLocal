@@ -1,0 +1,76 @@
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 25))
+
+#set ($subscriptions = $core_v2_applicationSubscription.List("%{PageIndex = $pageIndex, PageSize = $pageSize }"))
+
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<h3>$core_v2_language.GetResource('EditProfile_SubsriptionsTab_Title')</h3>
+			<span class="field-item-description">$core_v2_language.GetResource('EditProfile_SubsriptionsTab_Description')</span>
+		
+			#foreach($subscription in $subscriptions)
+			#beforeall
+				<ul class="content-list content simple margin-bottom tabular">
+				<li class="content-item">
+					<div class="name cell header nowrap">$core_v2_language.GetResource('Name')</div>
+					<div class="name cell header nowrap">$core_v2_language.GetResource('Group')</div>
+					<div class="name cell header nowrap align-right">&nbsp;</div>
+				</li>		
+			#each
+				<li class="content-item">
+					<div class="name cell nowrap">
+						$core_v2_language.FormatString($core_v2_language.GetResource('LinkFormat'), $core_v2_encoding.HtmlAttributeEncode($subscription.Application.Url), $subscription.Application.HtmlName('web'))
+					</div>
+					<div class="name cell nowrap">
+						$core_v2_language.FormatString($core_v2_language.GetResource('LinkFormat'), $core_v2_encoding.HtmlAttributeEncode($subscription.Application.Container.Url), $subscription.Application.Container.HtmlName('web'))
+					</div>
+					<div class="name cell nowrap align-right">
+						<a href="#" class="internal-link subscribe-on inline-button" data-contentid="$subscription.Application.ApplicationId.ToString()" data-contenttypeid="$subscription.Application.ApplicationTypeId.ToString()">
+							$core_v2_language.GetResource('Unsubscribe')
+						</a>
+					</div>
+				</li>
+			#afterall
+				</ul>
+			
+				$core_v2_ui.Pager($subscriptions.PageIndex, $subscriptions.PageSize, $subscriptions.TotalCount, "%{ PagedContentFile = 'subscriptionlist.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")
+			
+				#registerEndOfPageHtml()
+					<script type="text/javascript">
+						jQuery(function(j){
+							j('#$core_v2_widget.WrapperElementId a.subscribe-on').on('click', function(e,data){
+								var e = j(this);
+								var contentId = e.data('contentid');
+								var contentTypeId = e.data('contenttypeid');
+								var parent = e.parents('.content-item');
+								var subscriptionRemoved = '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('subscriptionRemoved'))';
+								
+								j.telligent.evolution.put({
+									url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/application/subscription.json',
+									data: {
+										ApplicationId: contentId,
+										ApplicationTypeId: contentTypeId,
+										IsSubscribed: false
+									},
+									success: function(response) {
+											j.telligent.evolution.notifications.show(subscriptionRemoved, { type: 'success' });
+											parent.fadeOut(200, function(){
+											parent.remove();
+										});
+									}
+								});
+			
+								return false;
+							});
+						});
+					</script>
+				#end
+			#nodata
+				<div class="message norecords">
+					$core_v2_language.GetResource('EditProfile_Subscriptions_NoData')
+				</div>
+			#end
+		</li>
+	</ul>
+<fieldset>

@@ -1,0 +1,33 @@
+<p>$core_v2_language.GetResource('Servers-Instructions')</p>
+
+#foreach ($server in $context.GetServers())
+    #beforeall
+        <ul class="content-list content simple">
+    #each
+        <li class="content-item">
+            <h4 class="name">
+                $server.Name
+            </h4>
+            <div class="actions">
+                <div class="navigation-list ui-links" data-direction="horizontal">
+                    <ul>
+                        <li class="navigation-list-item">
+                            <a href="#" data-messagename="licensing.removeserver" data-servername="$server.Name">
+                                $core_v2_language.GetResource('UnregisterServer')
+                            </a>
+                        </li>
+                        <li class="navigation-list-item">
+                            <a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+                        </li>
+                        <li class="navigation-list-item">
+                            <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </li>
+    #afterall
+        </ul>
+    #nodata
+        <div class="message norecords">$core_v2_language.GetResource('NoServersRegistered')</div>
+#end

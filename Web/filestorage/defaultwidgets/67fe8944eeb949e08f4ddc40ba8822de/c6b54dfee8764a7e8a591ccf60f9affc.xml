@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:FriendshipActivityStory_Name}" cssClass="" description="${resource:FriendshipActivityStory_Description}"
+		instanceIdentifier="c6b54dfee8764a7e8a591ccf60f9affc" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.Actors || $context.Story.Actors.Count == 0)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+
+	#set($actor0 = $context.Story.PrimaryUser)
+	#if ($actor0.Url)
+	 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor0.DisplayName, $actor0.Url))
+	#else
+		#set($profile0Html = $actor0.DisplayName)
+	#end
+
+	#if($context.Story.Actors.Count == 1)
+		#set($actor1 = $context.Story.Actors.get_item(0))
+
+		#if ($actor1.User.Url)
+			#set($profile1Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor1.User.DisplayName, $actor1.User.Url))
+		#else
+			#set($profile1Html = $actor1.User.DisplayName)
+		#end
+
+		$core_v2_language.FormatString($core_v2_language.GetResource('FriendshipStory_Pair_Preview'), $profile0Html, $profile1Html)
+	#elseif($context.Story.Actors.Count > 1)
+		$core_v2_language.FormatString($core_v2_language.GetResource('FriendshipStory_Multiple_Preview'), $profile0Html, $context.Story.Actors.Count.ToString())
+
+		#if(!$isPreview)
+			#foreach($actor in $context.Story.Actors)
+			#beforeall
+				<div class="content-list-header user"></div>
+				<ul class="content-list user">
+			#each
+				<li class="content-list-item user">
+					<span class="avatar">
+						#if ($actor.User.Url)
+							<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($actor.User.Url)">$!core_v2_ui.GetResizedImageHtml($actor.User.AvatarUrl, 32, 32, "%{border='0px', alt='$actor.User.DisplayName'}")</a>
+						#else
+							$!core_v2_ui.GetResizedImageHtml($actor.User.AvatarUrl, 32, 32, "%{border='0px', alt='$actor.User.DisplayName'}")
+						#end
+					</span>
+				</li>
+			#afterall
+				</ul>
+				<div class="content-list-footer user"></div>
+			#end
+		#end
+	#end
+#end
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="FriendshipActivityStory_Name">Group User Joined Activity Story</resource>
+	<resource name="FriendshipActivityStory_Description">Story for users joining a group.</resource>
+	<resource name="UserProfile_Html"><![CDATA[<span class="username"><a href="{1}" class="internal-link view-user-profile">{0}</a></span>]]></resource>
+	<resource name="FriendshipStory_Pair_Preview"><![CDATA[{0} and {1} are now ${friends_lowercase}.]]></resource>
+	<resource name="FriendshipStory_Multiple_Preview"><![CDATA[{0} is now ${friends_lowercase} with {1} others.]]></resource>
+</language>
+</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

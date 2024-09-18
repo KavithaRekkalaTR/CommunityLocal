@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ForumPeek}" cssClass="forum" description="${resource:ForumPeek_Description}" provider="cb2c2a9dd8d44f6cae643edabfa5b2b9" instanceIdentifier="bb4481f90449421ba64ea31fff703430" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+
+#set ($content = $context.Content)
+#if (!$content)
+	$core_v2_widget.Hide()
+#end
+
+#set ($forum = $core_v2_forum.Get($content.Application.ApplicationId))
+#if (!$forum)
+	$core_v2_widget.Hide()
+#end
+
+#set ($avatarSize = 32)
+
+#set ($target = $context.Target)
+#set ($title = $content.HtmlName($target))
+#set ($body = $content.HtmlDescription($target))
+
+#if($content.Application && $content.Application.Container)
+	#set ($containerName = $content.Application.Container.HtmlName($target))
+	#set ($containerUrl = $content.Application.Container.Url)
+	#set ($containerAvatarUrl = $content.Application.Container.AvatarUrl)
+#end
+
+<div class="content-peek">
+	<div class="content-peek-heading">
+		<div class="content-peek-avatar">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+				$core_v2_ui.GetResizedImageHtml($containerAvatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$containerName' }")
+			</a>
+		</div>
+		<div class="content-peek-name">
+			<div class="content-peek-title">
+				<a title="$core_v2_encoding.HtmlAttributeEncode($containerName)" href="$core_v2_encoding.HtmlAttributeEncode($containerUrl)">
+					$core_v2_language.Truncate($containerName, 100, '...')
+				</a>
+				<a title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 100, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 100, '...')
+				</a>
+			</div>
+			<div class="content-peek-subtitle">
+				${forum.Description}
+			</div>
+		</div>
+	</div>
+
+	#set ($posts = $core_v2_forumThread.List("%{ForumId=$forum.Id,PageIndex=0,PageSize=1,SortBy = 'lastpost', SortOrder = 'Descending', AreStickyPostsOnTop='false'}"))
+	<div class="content-peek-details">
+		<div class="content-peek-detail">
+			<div class="content-peek-detail-component">
+				#set ($hasQaForums = false)
+				#set ($hasDiscussionForums = false)
+				#foreach ($threadType in $forum.AllowedThreadTypes)
+					#if ($threadType == 'QuestionAndAnswer')
+						#set ($hasQaForums = true)
+					#elseif ($threadType == 'Discussion')
+						#set($hasDiscussionForums = true)
+					#end
+				#end
+				$core_v2_language.FormatNumber($posts.TotalCount)
+				#if ($posts.TotalCount == 1)
+					#if ($hasQaForums && $hasDiscussionForums)
+						$core_v2_language.GetResource('questionordiscussion_singular')
+					#elseif($hasQaForums)
+						$core_v2_language.GetResource('question_singular')
+					#else
+						$core_v2_language.GetResource('discussion_singular')
+					#end
+				#else
+					#if ($hasQaForums && $hasDiscussionForums)
+						$core_v2_language.GetResource('questionordiscussion_plural')
+					#elseif($hasQaForums)
+						$core_v2_language.GetResource('question_plural')
+					#else
+						$core_v2_language.GetResource('discussion_plural')
+					#end
+				#end
+			</div>
+		</div>
+		<div class="content-peek-detail">
+			<div class="content-peek-detail-component">
+
+				#set ($latest = false)
+				#set ($forumThread = false)
+
+				#if($posts.TotalCount > 0 && $forum.LatestPostDate)
+					## Get latest reply or thread
+
+					#set ($forumThreads = $core_v2_forumThread.List("%{ ForumId = $forum.Id, PageSize = 1, PageIndex = 0, SortBy = 'lastpost', SortOrder = 'Descending', AreStickyPostsOnTop='false' }"))
+					#foreach ($thread in $forumThreads)
+						#set ($forumThread = $thread)
+						#set ($latest = $forumThread)
+					#end
+
+					#if ($forumThread)
+						#set ($forumReply = false)
+						#set ($forumReplies = $core_v2_forumReply.List($forumThread.Id, "%{ ForumId = $forum.Id, PageSize = 1, PageIndex = 0, SortBy = 'PostDate', SortOrder = 'Descending' }"))
+						#foreach ($reply in $forumReplies)
+							#set ($forumReply = $reply)
+						#end
+
+						#if ($forumReply.Date > $forumThread.Date)
+							#set ($latest = $forumReply)
+						#end
+					#end
+				#end
+
+				#if($latest)
+					<span class="avatar ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($latest.Author.DisplayName)">
+						#if ($latest.Author.ProfileUrl)
+							<a class="internal-link view-user-profile" href="$core_v2_encoding.HtmlAttributeEncode($latest.Author.ProfileUrl)">
+								$core_v2_ui.GetResizedImageHtml($latest.Author.AvatarUrl, 16, 16, "%{border='0px', alt=$latest.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+							</a>
+						#else
+							$core_v2_ui.GetResizedImageHtml($latest.Author.AvatarUrl, 16, 16, "%{border='0px', alt=$latest.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+						#end
+					</span>
+
+					<a class="internal-link ui-tip" href="$core_v2_encoding.HtmlAttributeEncode($latest.Url)" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.FormatString($core_v2_language.GetResource('LastUpdated'), $latest.Subject))">$latest.Subject</a>
+
+					$core_v2_ui.AgoDate($latest.Date)
+				#end
+			</div>
+		</div>
+	</div>
+
+	## Actions
+	#set ($includeBookmark = $core_v2_bookmark.SupportsBookmarks($content.ContentTypeId) && $core_v2_bookmark.CanBookmark($content.ContentId, $content.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($content.ContentId, $content.ContentTypeId))
+	#set ($includeSubscriptions = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v2_applicationSubscription.SupportsSubscriptions($content.Application.ApplicationTypeId) && $core_v2_applicationSubscription.CanSubscribe($content.Application.ApplicationId, $content.Application.ApplicationTypeId))
+	#set ($includeModeration = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v2_abuseReport.CanBeMarkedAsAbusive($content.ContentTypeId))
+
+	#set ($maxLinks = 0)
+	#set ($totalLinks = 0)
+	#if ($includeBookmark)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeSubscriptions)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeModeration)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($totalLinks > 0)
+		<div class="content-peek-actions">
+			<ul class="ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+				#if ($includeBookmark)
+					<li class="navigation-list-item">$core_v2_ui.Bookmark($content.ContentId, $content.ContentTypeId, "%{ addBookmarkText = $core_v2_language.GetResource('bookmark'), deleteBookmarkText = $core_v2_language.GetResource('unbookmark') }")</li>
+				#end
+
+				#if ($includeSubscriptions)
+					#set ($subscription = $core_v2_applicationSubscription.Get($content.Application.ApplicationId, "%{}"))
+					#set ($isSubscribed = $subscription.IsSubscribed)
+					<li class="navigation-list-item">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.subscribe"
+							data-value="$isSubscribed"
+							data-labelon="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Subscribe'))"
+							data-labeloff="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Unsubscribe'))"
+							data-labelontip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SubscribeTip'))"
+							data-labelofftip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('UnsubscribeTip'))"
+							data-labelprocess="…"
+							title="#if ($isSubscribed) $core_v2_language.GetResource('UnsubscribeTip') #else $core_v2_language.GetResource('SubscribeTip') #end"
+							href="#">
+							#if ($isSubscribed) $core_v2_language.GetResource('Unsubscribe') #else $core_v2_language.GetResource('Subscribe') #end
+						</a>
+					</li>
+				#end
+
+				#if ($includeModeration)
+					<li class="navigation-list-item">$core_v2_ui.Moderate($content.ContentId, $content.ContentTypeId, "%{ }")</li>
+				#end
+				<li><a href="#" data-more><span class="more">$core_v2_language.GetResource('More')</span></a></li>
+				<li><a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a></li>
+			</ul>
+
+			#if ($includeSubscriptions)
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.appSubscribe")
+					<script>
+					jQuery(function(j){
+						j.telligent.evolution.messaging.unsubscribe('widget.${core_v2_widget.WrapperElementId}.subscribe');
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.subscribe', function(data){
+							var link = j(data.target);
+							var targetSubscriptionState = (link.data('value') === true || link.data('value') === 'True') ? false : true;
+							link.html(link.data('labelprocess'));
+							j.telligent.evolution.put({
+								url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/application/subscription.json',
+								data: {
+									ApplicationId: '$content.Application.ApplicationId',
+									ApplicationTypeId: '$content.Application.ApplicationTypeId',
+									IsSubscribed: targetSubscriptionState
+								}
+							}).then(function(){
+								link.data('value', targetSubscriptionState);
+								if (targetSubscriptionState === true) {
+									link.html(link.data('labeloff'))
+										.prop('title', link.data('labelofftip'));
+								} else {
+									link.html(link.data('labelon'))
+										.prop('title', link.data('labelontip'));
+								}
+							})
+						});
+					});
+					</script>
+				#end
+			#end
+		</div>
+	#end
+</div>
+
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="ForumPeek">Forum Peek</resource>
+	<resource name="ForumPeek_Description">Displays content for peeked forums.</resource>
+	<resource name="by">By {user} {date}</resource>
+	<resource name="More">&#8230;</resource>
+	<resource name="Cancel">Cancel</resource>
+	<resource name="question_plural"> questions</resource>
+	<resource name="question_singular"> question</resource>
+	<resource name="questionordiscussion_plural"> questions and discussions</resource>
+	<resource name="questionordiscussion_singular"> question or discussion</resource>
+	<resource name="discussion_plural">discussions</resource>
+	<resource name="discussion_singular">discussion</resource>
+	<resource name="LastUpdated">Latest: {0}</resource>
+	<resource name="Subscribe">Subscribe</resource>
+	<resource name="SubscribeTip">Subscribe to notifications</resource>
+	<resource name="Unsubscribe">Unsubscribe</resource>
+	<resource name="UnsubscribeTip">Unsubscribe from notifications</resource>
+	<resource name="bookmark">Bookmark</resource>
+	<resource name="unbookmark">Unbookmark</resource>
+</language>
+</languageResources>
+<restScopes>
+  <scope id="subscriptions.applications.modify" />
+</restScopes>
+	</scriptedContentFragment>
+</scriptedContentFragments>

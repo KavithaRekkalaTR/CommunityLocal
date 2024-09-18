@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_InviteUser_Name}" version="11.0.0.0" description="${resource:Core_InviteUser_Description}" instanceIdentifier="9f268aafcc6b4e1eb74ee21eabd11322" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="invite-user" lastModified="2020-01-14 16:08:22Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set($user = $core_v2_user.Accessing)
+#if(!$core_v2_user.IsRegistered($user.Id))
+	$core_v2_widget.Hide()
+#end
+
+<form><fieldset>
+	<h2>$core_v2_language.GetResource('Core_InviteUser_Name')</h2>
+	<p>$core_v2_language.GetResource("InviteUser_Instructions")</p>
+	<ul class="field-list">
+		<li class="field-item email-address">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('email')">${core_v2_language.GetResource("InviteUser_Email")}</label>
+			<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('email')" size="60" maxlength="5000" /></span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('message')">${core_v2_language.GetResource("InviteUser_Message")}</label>
+			<span class="field-item-input"><textarea id="$core_v2_widget.UniqueId('message')" rows="5" size="60"></textarea></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<a class="button" href="#" id="$core_v2_widget.UniqueId('send')">$core_v2_language.GetResource('Send')</a>
+				<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.inviteUser')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.inviteUser.register({
+				wrapperId : '$core_v2_widget.WrapperElementId',
+				emailInput : jQuery('#$core_v2_widget.UniqueId('email')'),
+				messageInput : jQuery('#$core_v2_widget.UniqueId('message')'),
+				sendButton : jQuery('#$core_v2_widget.UniqueId('send')'),
+				successMessage : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("InviteUser_SendSuccess"))',
+				successUrl: '$core_v2_encoding.JavascriptEncode($core_v2_urls.Home())',
+				createUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('create.vm'))',
+				createErrorMessage : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("InviteUser_CreateError"))'
+			});
+		});
+	</script>
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_InviteUser_Name}'))
+					]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_InviteUser_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_InviteUser_Description">Displays a form for a user to invite a person to join the community.</resource>
+  <resource name="Core_InviteUser_Name">Invite User</resource>
+  <resource name="InviteUser_CreateError">An error occurred while trying to create the invitation to send to the user.</resource>
+  <resource name="InviteUser_Email">Email Address(es):</resource>
+  <resource name="InviteUser_Instructions">Enter the email addresses of people you would like to invite to join this community along with a brief message. Multiple email addresses can be entered, delimited by semi-colons.</resource>
+  <resource name="InviteUser_Message">Message:</resource>
+  <resource name="InviteUser_SendSuccess">Your invitations have been sent successfully.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Send">Send</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

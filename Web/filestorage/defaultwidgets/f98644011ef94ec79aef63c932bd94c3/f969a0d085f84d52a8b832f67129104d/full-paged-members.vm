@@ -1,0 +1,59 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($members = $context.GetDetail($options))
+
+#foreach($member in $members)
+#beforeall
+<div class="responsive-wrapper">
+	<table>
+	<thead>
+		<tr>
+            $reporting_ui.SortableTableHeader("", "Name", "ascending", $core_v2_language.GetResource('Name'), $sortBy, $sortOrder)
+            <th>$core_v2_language.GetResource('EmailAddress')</th>
+            $reporting_ui.SortableTableHeader("", "ActivityDate", "descending", $core_v2_language.GetResource('ActivityDate'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("number", "ActivityCount", "descending", $core_v2_language.GetResource('ActivityCount'), $sortBy, $sortOrder)
+		</tr>
+	</thead>
+	<tbody>
+#each
+	#set ($apiUser = false)
+	#set ($apiUser = $core_v2_user.Get("%{ContentId = $member.MembershipId}"))
+
+	<tr data-id="$member.MembershipId">
+        #if($apiUser && !$apiUser.HasErrors() && $apiUser.Url)
+            #set ($url = $apiUser.Url)
+        #else
+            #set ($url = '')
+        #end
+        $reporting_ui.UserNameTableCellWithActions($member.UserId, $member.ExpandedName, $url)
+
+		<td data-title="$core_v2_language.GetResource('EmailAddress')">$!apiUser.PrivateEmail</td>
+        <td data-title="$core_v2_language.GetResource('ActivityDate')">$core_v2_language.FormatDateAndTime($member.LastActivityDate, "%{AdjustTimeZone = 'false'}")</td>
+        <td class="number" data-title="$core_v2_language.GetResource('ActivityCount')">
+            #if ($member.ActivityCount > 0)
+                <a href="#" class="report-drilldown" data-report-id="$reporting_reports.ActivitiesReport" data-localfiltertype="user"  data-localfilterid="$member.UserId" data-localfiltername="$core_v2_encoding.HtmlAttributeEncode($member.ExpandedName)"
+                 #if ($localStartDate.length > 0) data-localStartDate="$!localStartDate" #else data-localStartDate="$core_v2_utility.ParseDate($startDate).ToString("yyyy-MM-dd")" #end #if ($localEndDate.length > 0) data-localEndDate="$!localEndDate" #else data-localEndDate="$core_v2_utility.ParseDate($endDate).ToString("yyyy-MM-dd")" #end>$member.ActivityCount.ToString("N0")</a>
+            #else
+                $member.ActivityCount.ToString("N0")
+            #end
+        </td>
+    </tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$members.PageSize" data-totalitems="$members.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

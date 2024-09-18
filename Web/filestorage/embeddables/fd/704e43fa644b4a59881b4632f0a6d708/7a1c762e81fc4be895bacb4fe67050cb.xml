@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<embeddables>
+  <embeddable name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" id="7a1c762e81fc4be895bacb4fe67050cb" lastModified="2021-08-10 15:55:32Z" provider="704e43fa-644b-4a59-881b-4632f0a6d708" isCacheable="false" varyCacheByUser="false" category="External Content">
+    <contentScript language="Velocity"><![CDATA[#set ($sanitizedEmbedCode = false)
+#set ($sanitizedEmbedCode = $core_v2_widget.GetHtmlValue('sanitizedEmbedCode', ''))
+
+#if ($sanitizedEmbedCode && $sanitizedEmbedCode != '')
+  <span class="message">$sanitizedEmbedCode</span>
+#else
+  #set ($content = false)
+  #set ($content = $core_v2_widget.GetHtmlValue('embedCode', ''))
+
+  #set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+  #set($result = $api.validate($content))
+  #set($sanitizedContent = $api.sanitize($content))
+
+  #if ($result && $sanitizedContent)
+    <span class="message">$sanitizedEmbedCode</span>
+  #end
+#end]]></contentScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="embedCode" labelResourceName="EmbedCode" dataType="html" rows="5" enableRichEditing="false" sanitize="false">
+        <propertyRule name="rule.jsm" />
+    </property>
+    <property id="sanitizedEmbedCode" dataType="html" rows="5" enableRichEditing="false" sanitize="false" visible="false" />
+</propertyGroup>/]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Description">Displays an embed from Google Calendar</resource>
+  <resource name="EmbedCode">Embed Code</resource>
+  <resource name="Name">Google Calendar</resource>
+</language>]]></languageResources>
+    <previewImage name="google.svg" />
+    <iconImage name="google.svg" />
+    <files>
+      <file name="api.jsm" />
+      <file name="rule.jsm" />
+    </files>
+  </embeddable>
+</embeddables>

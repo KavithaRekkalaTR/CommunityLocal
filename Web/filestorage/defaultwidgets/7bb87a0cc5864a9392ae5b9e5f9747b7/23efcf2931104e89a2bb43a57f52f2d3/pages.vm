@@ -1,0 +1,25 @@
+#set($parentPageId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_parentPageId')))
+#set($wikiId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_wikiId')))
+#if ($wikiId > 0 && $parentPageId > 0)
+	#foreach($page in $core_v2_wikiToc.List($wikiId, $parentPageId))
+	#beforeall
+		<div class="hierarchy-children">
+			<ul class="hierarchy-list">
+	#each
+	    #if (!$page.HiddenInTableOfContents)
+    		<li data-pageid="$page.Id">
+    			<div class="hierarchy-item#if($currentPage && $currentPage.Id == $page.Id) selected#end#if($page.Children.Count > 0) with-children#else without-children#end">
+    			#if ($page.HasVisibleChildren)
+    					<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.Page($page.Id))"><span class="expand-collapse collapsed">+</span>$page.Title</a>
+    				</div>
+    			#else
+    					<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.Page($page.Id))">$page.Title</a>
+    				</div>
+    			#end
+    		</li>
+    	#end
+	#afterall
+			</ul>
+		</div>
+	#end
+#end

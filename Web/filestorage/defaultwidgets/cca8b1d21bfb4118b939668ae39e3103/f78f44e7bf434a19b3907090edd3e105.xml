@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="f78f44e7bf434a19b3907090edd3e105" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="article-ordering" lastModified="2021-03-08 16:41:23Z" provider="cca8b1d21bfb4118b939668ae39e3103">
+    <contentScript language="Velocity"><![CDATA[<p>$core_v2_language.GetResource('instructions')</p>
+
+<form><fieldset>
+	<ul class="field-list">
+	    <li class="field-item">
+		    <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('category')">
+                </select>
+            </span>
+        </li>
+		<li class="field-item">
+		    <span class="field-item-input">
+                <select id="$core_v2_widget.UniqueId('articles')" size="10">
+                </select>
+            </span>
+            <span class="field-item-input">
+    		    <div class="navigation-list ui-links" data-direction="horizontal">
+    			    <ul>
+    				    <li class="navigation-list-item"><a href="#" data-messagename="articleordering-movefirst">$core_v2_language.GetResource('Move_First')</a></li>
+            		    <li class="navigation-list-item"><a href="#" data-messagename="articleordering-moveup">$core_v2_language.GetResource('Move_Up')</a></li>
+            		    <li class="navigation-list-item"><a href="#" data-messagename="articleordering-movedown">$core_v2_language.GetResource('Move_Down')</a></li>
+            		    <li class="navigation-list-item"><a href="#" data-messagename="articleordering-movelast">$core_v2_language.GetResource('Move_Last')</a></li>
+    		        </ul>
+    		    </div>
+    		</span>
+        </li>
+	</ul>
+</fieldset></form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input"><a href="#" class="button save disabled">$core_v2_language.GetResource('save')</a></span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.articleOrderingManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.articleOrderingManagement.register({
+			collectionId: '$context.ArticleCollection.Id',
+			templates: {
+			    header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)'  
+			},
+			fields: {
+			    category: jQuery('#$core_v2_widget.UniqueId('category')'),
+			    articles: jQuery('#$core_v2_widget.UniqueId('articles')'),
+			},
+			urls: {
+			    getCategories: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcategories.jsm'))',
+			    getArticles: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcategoryarticles.jsm'))'
+			},
+			text: {
+			    saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-successful'))',
+			    saveProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('saving'))',
+			    save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+			    selectACategory: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-category'))',
+			    confirmUnsavedChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('unsavedChangesConfirmation'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Order articles by category.</resource>
+  <resource name="instructions">Select a category to order articles within that category.</resource>
+  <resource name="Move_Down">Down</resource>
+  <resource name="Move_First">First</resource>
+  <resource name="Move_Last">Last</resource>
+  <resource name="Move_Up">Up</resource>
+  <resource name="Name">Article Ordering</resource>
+  <resource name="save">Publish Changes</resource>
+  <resource name="save-successful">Ordering has been published successfully.</resource>
+  <resource name="saving">Publishing ({0}%...)</resource>
+  <resource name="select-category">Select a category...</resource>
+  <resource name="unsavedChangesConfirmation">There are unpublished changes. Are you sure you want to order a different category without saving?</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+		<restScopes>
+			<scope id="articlecollections.articlecategories.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

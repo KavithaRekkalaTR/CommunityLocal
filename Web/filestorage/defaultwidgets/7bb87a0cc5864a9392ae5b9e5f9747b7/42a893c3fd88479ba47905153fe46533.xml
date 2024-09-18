@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Achievements_Achievement_Name}" version="11.0.0.0" description="${resource:Achievements_Achievement_Description}" instanceIdentifier="42a893c3fd88479ba47905153fe46533" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="achievement" lastModified="2020-01-14 16:07:23Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($achievement = $core_v2_achievement.Current)
+
+#if ($achievement.Errors.Count() == 0)
+<ul class="content-list content margin-bottom">
+	<li class="content-item">
+		<div class="content abbreviated">
+			<div class="avatar round">
+				$core_v2_ui.GetResizedImageHtml($achievement.BadgeIconUrl, 88, 88, "%{alt=$achievement.Title,border='0',ResizeMethod = 'ZoomAndCrop'}")
+			</div>
+			<div class="summary">
+				<h1 class="name">$achievement.Title</h1>
+				<div class="content">$!achievement.Criteria</div>
+			</div>
+		</div>
+	</li>
+</ul>
+#else
+	<div class="message norecords">
+			$core_v2_language.GetResource('Achievements_AchievementList_NoAchievements')
+	</div>
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+#if($header == '')
+		#set ($header = '${resource:Achievements_Achievement_Name}')
+#end
+$core_v2_widget.ApplyTokens($header)
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Achievements_Achievement_Description">Displays an achievement.</resource>
+  <resource name="Achievements_Achievement_Name">Achievement</resource>
+  <resource name="Achievements_AchievementList_NoAchievements">No achievement found.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

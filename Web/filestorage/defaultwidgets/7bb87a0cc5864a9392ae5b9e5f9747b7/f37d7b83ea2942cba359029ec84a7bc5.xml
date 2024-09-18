@@ -1,0 +1,376 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_UserBanner_Name}" version="11.0.0.0" description="${resource:Core_UserBanner_Description}" instanceIdentifier="f37d7b83ea2942cba359029ec84a7bc5" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="user-banner" lastModified="2021-08-05 21:11:04Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($user = false)
+#set($user = $core_v2_user.Current)
+#if (!$user || !$user.Url || $core_v2_page.Url.ToLowerInvariant().IndexOf($user.Url.ToLowerInvariant()) == -1)
+	$core_v2_widget.Hide()
+#end
+
+#set($isEditable = true)
+#if ($user.Id != $core_v2_user.Accessing.Id || !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#set($isEditable = false)
+#end
+#set ($isInEditMode = true)
+#if (!$isEditable || !$core_v2_editableGroup.IsEditable('User'))
+	#set ($isInEditMode = false)
+#end
+
+#set ($isHome = false)
+#if ($core_v2_urls.Current == 'User')
+	#set($isHome = true)
+#end
+
+#set ($applicationNavigationId = $core_v2_widget.UniqueId('applicationNavigationId'))
+
+#set ($coverPhotoContainerId = $core_v2_widget.UniqueId('coverPhotoContainerId'))
+#set ($removeCoverPhotoLinkId = $core_v2_widget.UniqueId('removeCoverPhotoLink'))
+
+$core_v2_widget.ExecuteFile('style.vm')
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($coverPhotoContainerId)" class="cover-photo"></div>
+
+<div class="banner context #if ($isHome) home #end">
+
+	#if ($isInEditMode)
+		<div class="cover-photo-links">
+			#set($hasCoverPhotoPermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ChangeUserCoverPhoto, $core_v2_user.Accessing.Id).IsAllowed)
+			#if ($hasCoverPhotoPermission)
+				#set ($coverPhotoDimensionsTip = false)
+				#set ($coverPhotoLayout = $core_v2_widget.GetStringValue('coverPhotoLayout', 'cover'))
+				#set ($coverPhotoLayoutDynamicHeightMode = $core_v2_widget.GetStringValue('coverPhotoLayoutDynamicHeightMode', 'defined'))
+				#set ($coverPhotoWidth = $core_v2_widget.GetIntValue('coverPhotoLayoutDynamicDefinedWidth', 1500))
+				#set ($coverPhotoHeight = $core_v2_widget.GetIntValue('coverPhotoLayoutDynamicDefinedHeight', 375))
+				#if ($coverPhotoLayout == 'dynamic' && $coverPhotoLayoutDynamicHeightMode == 'defined')
+					#store($coverPhotoDimensionsTip)
+						#format ($core_v2_language.GetResource('dimensionsTip'))
+							#token('width')
+								$coverPhotoWidth
+							#token('height')
+								$coverPhotoHeight
+						#end
+					#end
+				#end
+
+				<a href="#" class="upload-cover prepend-icon camera ui-tip" #if ($coverPhotoDimensionsTip) data-tip="$core_v2_encoding.HtmlAttributeEncode($coverPhotoDimensionsTip)" #end id="$core_v2_widget.UniqueId('cover-photo-upload')" data-messagename="widgets.upload-cover">$core_v2_language.GetResource('SetCover')</a>
+				<a href="#" class="delete" id="$core_v2_encoding.HtmlAttributeEncode($removeCoverPhotoLinkId)" style="#if (!$hasCoverPhoto) display: none #end" data-messagename="widgets.delete-cover">$core_v2_language.GetResource('RemoveCover')</a>
+			#end
+			#set ($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+			#registerEndOfPageHtml('telligent.evolution.widgets.userBanner')
+				<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+			#end
+			#registerEndOfPageHtml()
+				<script type="text/javascript">
+					jQuery(function(){
+						jQuery.telligent.evolution.widgets.userBanner.register({
+							wrapper: '#$core_v2_widget.WrapperElementId',
+							userId: $user.Id,
+							uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+							uploadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+							resizedCoverPhotoUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('getResizedCoverPhotoUrl.vm'))',
+							coverPhotoContainer: '#$core_v2_encoding.JavascriptEncode($coverPhotoContainerId)',
+							removeConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RemoveConfirm'))',
+							removeCoverPhotoLink: '#$core_v2_encoding.JavascriptEncode($removeCoverPhotoLinkId)',
+							coverPhotoUploadLink: '#$core_v2_widget.UniqueId('cover-photo-upload')',
+							uploadText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SetCover'))',
+							progressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CoverUploadProgress'))',
+							contentTypeId: '$core_v2_user.ContentTypeId'
+						})
+					});
+				</script>
+			#end
+		</div>
+	#end
+
+	<div class="avatar">
+		#if($isInEditMode)
+			<a href="#" id="$core_v2_widget.UniqueId('editavatar')" class="internal-link edit-avatar ui-tip" title="$core_v2_language.GetResource('EditProfile_ChangeAvatar')" data-userhover="ignore">
+				$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 68, 68, "%{ alt = $user.DisplayName, ResizeMethod='ZoomAndCrop' }")
+				<span class="caption">$core_v2_language.GetResource('EditProfile_Change')</span>
+			</a>
+
+			<script type="text/javascript">
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+			jQuery(function(){
+				jQuery('#$core_v2_widget.UniqueId('editavatar')').on('click', function() {
+					jQuery.glowModal('$core_v2_encoding.JavascriptEncode($core_v2_urls.EditAvatar())', {
+						width:560,
+						height:300,
+						onClose: function() {
+							// load the updated avatar
+							jQuery.telligent.evolution.get({
+								url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('avatar.vm'))',
+								data: { w_userId: $user.Id },
+								success: function(response) {
+									var avatar = $('#$core_v2_widget.WrapperElementId .avatar img');
+									var newAvatar = $(response.avatar);
+									avatar.after(newAvatar).remove();
+								}
+							});
+						}
+					});
+
+					return false;
+				});
+			});
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+			</script>
+		#else
+			#if ($user.ProfileUrl)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="internal-link view-user-profile" data-userhover="ignore">
+					$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 68, 68, "%{ alt = $user.DisplayName, ResizeMethod='ZoomAndCrop' }")
+				</a>
+			#else
+				$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 68, 68, "%{ alt = $user.DisplayName, ResizeMethod='ZoomAndCrop' }")
+			#end
+		#end
+	</div>
+
+	<div class="hierarchy">
+
+		<div class="current-hierarchy">
+
+	#if ($isInEditMode && $core_v2_configuration.EnableDisplayNames)
+				<form><fieldset class="field-list hierarchy-component">
+			 <ul class="field-list">
+				<li class="field-item setting-name">
+					<label class="field-item-name hidden" for="$core_v2_widget.UniqueId('displayname')">${core_v2_language.GetResource("DisplayName")}</label>
+					<span class="field-item-input"><input type="text" size="30" maxlength="255" id="$core_v2_widget.UniqueId('displayname')" value="${user.DisplayName}" /></span>
+				</li>
+			</ul>
+		</fieldset></form>
+
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+			jQuery(function() {
+				var originalValue = jQuery.telligent.evolution.html.decode('$core_v2_encoding.JavascriptEncode($user.DisplayName)');
+				var displayName = jQuery('#$core_v2_widget.UniqueId('displayname')');
+
+				var save = function(success, failure)
+				{
+					var currentValue = displayName.val();
+					if (currentValue != originalValue) {
+						jQuery.telligent.evolution.put({
+							url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/users/{UserId}.json?IncludeFields=Id',
+							data: {
+								UserId: $user.Id,
+								DisplayName: currentValue,
+								EnableDisplayName: true
+							},
+							success: function(response) {
+								originalValue = currentValue;
+								success();
+							},
+							error: function(xhr, desc, ex) { jQuery.telligent.evolution.notifications.show(desc,{type:'error'}); failure(); }
+						});
+					} else {
+						success();
+					}
+				};
+
+				$core_v2_editableGroup.GetRegistrationScript('User', 'save')
+			});
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+			</script>
+		#end
+	#else
+		<h1 class="name hierarchy-component">
+			#if($user.Url)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)" class="internal-link view-user-profile" data-userhover="ignore">$user.DisplayName</a>
+			#else
+				$user.DisplayName
+			#end
+		</h1>
+	#end
+
+	#set ($navigationItems = $core_v2_customNavigation.Deserialize($core_v2_widget.GetCustomValue('navigation', ''), "%{UserId = $user.Id}"))
+	#if (!$isHome)
+		#foreach($navigationItem in $navigationItems)
+			#if ($navigationItem.IsSelected)
+						<span class="description hierarchy-component">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($navigationItem.Url)">$!navigationItem.Label</a>
+				</span>
+			#end
+		#end
+	#end
+
+	## Navigation List
+
+	#foreach($navigationItem in $navigationItems)
+	#beforeall
+		<div #if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id)) $core_v2_tourTip.Render($core_v2_language.GetResource('TourTipApps'), "%{ CssClass = 'navigation-list applications' }") #else class="navigation-list applications" #end >
+					<div class="ui-links" id="$core_v2_encoding.HtmlAttributeEncode($applicationNavigationId)" data-minlinks="0" #if ($isHome) data-maxlinks="50" data-direction="horizontal" #else data-maxlinks="0" data-direction="vertical" #end>
+				<ul>
+	#each
+					<li class="navigation-list-application #if($navigationItem.IsSelected) selected#end">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($navigationItem.Url)" class="$!app.CssClass #if($navigationItem.IsSelected) selected#end">$!navigationItem.Label</a>
+					</li>
+	#afterall
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	#nodata
+		<div class="navigation-list applications">
+			<div class="ui-links" data-minlinks="0" data-maxlinks="50" data-direction="horizontal">
+						<ul id="$core_v2_encoding.HtmlAttributeEncode($applicationNavigationId)">
+				</ul>
+			</div>
+		</div>
+	#end
+
+		</div>
+	</div>
+
+	## Action Links
+
+	#set($links = $core_v2_user.ListActionLinks($user.Id))
+	#foreach($link in $links)
+	#beforeall
+		<div class="navigation-list new">
+			<div class="ui-links" data-maxlinks="0">
+				<ul class="navigation-list">
+	#each
+				   <li class="navigation-list-item">
+						$!link.Html
+					</li>
+	#afterall
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('user_action')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	#end
+
+</div>
+
+#registerEndOfPageHtml()
+	<script>
+	jQuery(function(j){
+		var isHome = #if ($isHome) true #else false #end;
+		var applications = j('#${applicationNavigationId}');
+		function expand(links) {
+			links.uilinks('reconfigure', { maxLinks: 100 });
+		}
+		function collapse(links) {
+			links.uilinks('reconfigure', { maxLinks: 0 });
+		}
+		j.telligent.evolution.messaging.subscribe('theme.social.scrolled', function(){
+			collapse(applications);
+		});
+		j.telligent.evolution.messaging.subscribe('theme.social.unscrolled', function(){
+			if(isHome) {
+				expand(applications);
+			} else {
+				collapse(applications);
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_UserBanner_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_UserBanner_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="navigation" labelResourceName="Navigation_Options" descriptionResourceName="Navigation_Options_Description" dataType="Custom" template="core_v2_userCustomNavigation" navigationType="user" scope="site" maxDepth="1" />
+</propertyGroup>
+<propertyGroup id="design" labelResourceName="design">
+	<property id="coverPhotoLayout" labelResourceName="coverPhotoLayout" descriptionResourceName="coverPhotoLayoutDesc" defaultValue="cover" dataType="String" scope="site" renderValueLabelAsHtml="true" showHtmlWhenSelected="true" labelWidth="520">
+		<propertyValue value="dynamic" labelResourceName="coverPhotoLayoutDynamic" propertiesToShow="coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" propertiesToHide="coverPhotoFixedHeightHome,coverPhotoFixedHeightOther,coverPhotoBackgroundPaletteId" />
+		<propertyValue value="cover" labelResourceName="coverPhotoLayoutCover" propertiesToShow="coverPhotoFixedHeightHome,coverPhotoFixedHeightOther" propertiesToHide="coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId" />
+		<propertyValue value="contain" labelResourceName="coverPhotoLayoutContain" propertiesToShow="coverPhotoFixedHeightHome,coverPhotoFixedHeightOther,coverPhotoBackgroundPaletteId" propertiesToHide="coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" />
+	</property>
+	<property id="coverPhotoFixedHeightHome" labelResourceName="coverPhotoFixedHeightHome" descriptionResourceName="coverPhotoFixedHeightHomeDesc" defaultValue="176" dataType="Int" scope="site" />
+	<property id="coverPhotoFixedHeightOther" labelResourceName="coverPhotoFixedHeightOther" descriptionResourceName="coverPhotoFixedHeightOtherDesc" defaultValue="88" dataType="Int" scope="site" />
+	<property id="coverPhotoLayoutDynamicDefinedWidth" labelResourceName="coverPhotoLayoutDynamicDefinedWidth" descriptionResourceName="coverPhotoLayoutDynamicDefinedWidthDesc" defaultValue="1500" dataType="Int" scope="site" />
+	<property id="coverPhotoLayoutDynamicDefinedHeight" labelResourceName="coverPhotoLayoutDynamicDefinedHeight" descriptionResourceName="coverPhotoLayoutDynamicDefinedHeightDesc" defaultValue="375" dataType="Int" scope="site" />
+	<property id="coverPhotoAlignment" labelResourceName="coverPhotoAlignment" descriptionResourceName="coverPhotoAlignmentDesc" defaultValue="center center" dataType="String" scope="site">
+		<propertyValue value="left top" labelResourceName="lefttop" />
+		<propertyValue value="center top" labelResourceName="centertop" />
+		<propertyValue value="right top" labelResourceName="righttop" />
+		<propertyValue value="left center" labelResourceName="leftcenter" />
+		<propertyValue value="center center" labelResourceName="centercenter" />
+		<propertyValue value="right center" labelResourceName="rightcenter" />
+		<propertyValue value="left bottom" labelResourceName="leftbottom" />
+		<propertyValue value="center bottom" labelResourceName="centerbottom" />
+		<propertyValue value="right bottom" labelResourceName="rightbottom" />
+	</property>
+	<property id="coverPhotoBackgroundPaletteId" labelResourceName="coverPhotoBackgroundPalette" descriptionResourceName="coverPhotoBackgroundPaletteDesc" dataType="String" template="themepalette" paletteTypeId="contextBanner" scope="site" />
+	<property id="shadowCoverPhoto" labelResourceName="shadowCoverPhoto" descriptionResourceName="shadowCoverPhoto_desc" defaultValue="True" dataType="Bool" scope="site" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="centerbottom">Bottom, Center</resource>
+  <resource name="centercenter">Center, Center</resource>
+  <resource name="centertop">Top, Center</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_UserBanner_Description">Displays a banner of common user information and links.</resource>
+  <resource name="Core_UserBanner_Name">User - Banner</resource>
+  <resource name="coverPhotoAlignment">Cover Photo Alignment</resource>
+  <resource name="coverPhotoAlignmentDesc">When the cover photo exceeds its boundaries, it can be aligned.</resource>
+  <resource name="coverPhotoBackgroundPalette">Background</resource>
+  <resource name="coverPhotoBackgroundPaletteDesc">When using fixed banner height with the entire photo visible, this color will be used to fill any area not covered by the photo.</resource>
+  <resource name="coverPhotoFixedHeightHome">Banner height on user profile home page</resource>
+  <resource name="coverPhotoFixedHeightHomeDesc">The user banner will be fixed to this height in pixels on its user profile home page.</resource>
+  <resource name="coverPhotoFixedHeightOther">Banner height on other user profile pages</resource>
+  <resource name="coverPhotoFixedHeightOtherDesc">The user banner will be fixed to this height in pixels on all other user profile pages.</resource>
+  <resource name="coverPhotoLayout">Cover Photo Layout</resource>
+  <resource name="coverPhotoLayoutContain">&lt;span class="cover-layout contain"&gt;&lt;strong&gt;Fixed&lt;/strong&gt; banner height with entire photo &lt;strong&gt;scaled&lt;/strong&gt; to be visible within the banner space&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutCover">&lt;span class="cover-layout cover"&gt;&lt;strong&gt;Fixed&lt;/strong&gt; banner height with photo &lt;strong&gt;scaled and cropped&lt;/strong&gt; to fill the available banner space&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDesc">Select the way in which the cover photo and banner are positioned.</resource>
+  <resource name="coverPhotoLayoutDynamic">&lt;span class="cover-layout dynamic"&gt;&lt;strong&gt;Dynamic&lt;/strong&gt; banner height proportional to the browser width to show a consistent photo at all sizes&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeight">Dynamic banner crop height</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeightDesc">The height, in pixels, to which the cover photo will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidth">Dynamic banner crop width</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidthDesc">The width, in pixels, to which the cover photo will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="CoverUploadProgress">Uploading ({0}%)...</resource>
+  <resource name="design">Design</resource>
+  <resource name="dimensionsTip">Your photo will be resized to {width}x{height}.</resource>
+  <resource name="DisplayName">Your displayed name</resource>
+  <resource name="EditProfile_Change">Change</resource>
+  <resource name="EditProfile_ChangeAvatar">Change Avatar</resource>
+  <resource name="leftbottom">Bottom, Left</resource>
+  <resource name="leftcenter">Center, Left</resource>
+  <resource name="lefttop">Top, Left</resource>
+  <resource name="more">More</resource>
+  <resource name="Navigation_Options">Navigation Items</resource>
+  <resource name="Navigation_Options_Description">Add, edit, delete, and reorder navigation items for users.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="RemoveConfirm">Are you sure you want to remove your photo?</resource>
+  <resource name="RemoveCover">Remove</resource>
+  <resource name="rightbottom">Bottom, Right</resource>
+  <resource name="rightcenter">Center, Right</resource>
+  <resource name="righttop">Top, Right</resource>
+  <resource name="SetCover">Set Cover Photo</resource>
+  <resource name="shadowCoverPhoto">Shadow Cover Photo</resource>
+  <resource name="shadowCoverPhoto_desc">When selected, the cover photo is shadowed to increase legibility of text on a light photo.</resource>
+  <resource name="TourTipApps">View related people, content and groups</resource>
+  <resource name="user_action">Connect</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[
+	#if ($core_v2_user.Current.CoverPhotoUrl && $core_v2_user.Current.CoverPhotoUrl.Length > 0)
+		with-cover-photo
+	#end
+	]]></additionalCssScript>
+    <requiredContext>
+      <context id="0233cbb383784e11a1e5e541f3b0a795" />
+    </requiredContext>
+		<restScopes>
+			<scope id="users.users.modify" />
+			<scope id="users.coverphotos.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

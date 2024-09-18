@@ -1,0 +1,7 @@
+﻿#set ($items = $core_v2_customNavigation.Deserialize($core_v2_widget.GetCustomValue('navigation', '')))
+
+#foreach ($item in $items)
+	<li class="content-item #if($item.IsSelected) selected #end" data-contenturl="$core_v2_encoding.HtmlAttributeEncode($item.Url)">
+		<div class="content">$item.Label</div>
+	</li>
+#end

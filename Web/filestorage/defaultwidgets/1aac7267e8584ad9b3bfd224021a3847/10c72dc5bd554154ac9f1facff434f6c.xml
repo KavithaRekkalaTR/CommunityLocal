@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:EmoticonsAdministrationPanel_Name}" version="11.0.0.0" description="${resource:EmoticonsAdministrationPanel_Description}" instanceIdentifier="10c72dc5bd554154ac9f1facff434f6c" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="administration-emoticons" lastModified="2020-01-14 16:06:25Z" provider="1aac7267e8584ad9b3bfd224021a3847">
+    <contentScript language="Velocity"><![CDATA[
+#set($collectionsList = $core_v2_widget.UniqueId('collectionsList'))
+
+#set($collections = $context.ListCollections())
+
+<p>$core_v2_language.GetResource('EmoticonsDescription')</p>
+
+#foreach($collection in $collections)
+#beforeall
+	<ul class="content-list expandable" id="$collectionsList" style="margin-bottom: 1em;">
+#each
+	<li class="content-item" data-collectionid="$collection.Id">
+		<div class="sortOrder">
+			<a class="up" data-messagename="administration.emoticoncollection.up" data-collectionid="$collection.Id"></a>
+			<a class="down" data-messagename="administration.emoticoncollection.down" data-collectionid="$collection.Id"></a>
+		</div>
+		<div class="avatar" style="margin-left: 45px;"">
+			$!core_v2_ui.GetResizedImageHtml($collection.Url, 50, 50, "%{border='0px', ResizeMethod = 'ZoomAndCrop', alt='$collection.Name' }")
+		</div>
+		<div class="content-container" style="margin-left: 105px;">
+			<h4 class="name">$collection.Name</h4>
+			<div class="post-attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item">
+					#if($collection.Enabled)
+						<span class="value">$core_v2_language.GetResource('Enabled')</span>
+					#else
+						<span class="value highlight">$core_v2_language.GetResource('Disabled')</span>
+					#end
+					</li>
+				</ul>
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item edit">
+							<a href="#" data-messagename="administration.emoticoncollection.edit" data-collectionid="$collection.Id" data-collectionname="$collection.Name">$core_v2_language.GetResource('Edit')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#end
+
+#set($headerTemplate = $core_v2_widget.UniqueId('header'))
+<script type="text/html" id="$headerTemplate">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button add-collection">$core_v2_language.GetResource('AddCollection')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#set($collectionList = "")
+#foreach($collection in $collections)
+	#each
+		#set($collectionList = "${collectionList} '${collection.Id}'")
+	#between
+		#set($collectionList = "${collectionList} , ")
+#end
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('jquery-ui.min.js'))"></script>
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.administrationEmoticons.register({
+		headerTemplateId: '$headerTemplate',
+		collectionsList: '$collectionsList',
+		urls: {
+			editCollection: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('edit-collection.vm'))',
+			listEmoticons: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-emoticons.vm'))',
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-collection.vm'))',
+		},
+		text:  {
+			title: '$core_v2_language.GetResource('EmoticonsAdministrationPanel_Title')',
+			save: '$core_v2_language.GetResource('Save')',
+			editCollection: '$core_v2_language.GetResource('Edit')',
+			addCollection: '$core_v2_language.GetResource('AddCollection')',
+			collectionSortError: '$core_v2_language.GetResource('CollectionSortError')',
+		},
+		collectionList : [$collectionList],
+	});
+});
+</script>
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:EmoticonsAdministrationPanel_Title}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:EmoticonsAdministrationPanel_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddCollection">Add Collection</resource>
+  <resource name="AddEmoticon">Add Emoticon</resource>
+  <resource name="AddEmoticonToCollection">Add Emoticon to</resource>
+  <resource name="ChangeFile">Change File</resource>
+  <resource name="CollectionCreated">Collection has been created.</resource>
+  <resource name="CollectionDeleteConfirmation">Are you sure you want to delete this collection?</resource>
+  <resource name="CollectionDeleted">Collection has been deleted.</resource>
+  <resource name="CollectionDeleteError">Error deleting collection</resource>
+  <resource name="CollectionImage">Collection Avatar</resource>
+  <resource name="CollectionImage_Detail">The image that identifies this collection.</resource>
+  <resource name="CollectionSortError">An error occurred while trying to reorder the collection.</resource>
+  <resource name="CollectionUpdated">Collection has been updated.</resource>
+  <resource name="Custom">Custom</resource>
+  <resource name="Default">Default</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Disabled">Disabled</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="EmoticonCreated">Emoticon has been created.</resource>
+  <resource name="EmoticonDeleteConfirmation">Are you sure you want to delete this emoticon?</resource>
+  <resource name="EmoticonDeleted">Emoticon has been deleted.</resource>
+  <resource name="EmoticonDeleteError">Error deleting emoticon</resource>
+  <resource name="EmoticonId">Unique Identifier</resource>
+  <resource name="EmoticonImage">Emoticon Media</resource>
+  <resource name="EmoticonImage_Detail">The media to be displayed for this emoticon.</resource>
+  <resource name="EmoticonInstructions">Click emoticon to edit. Drag to reorder, use save button to persist order changes.</resource>
+  <resource name="Emoticons">Emoticons</resource>
+  <resource name="EmoticonsAdministrationPanel_Description">Manage emoticons.</resource>
+  <resource name="EmoticonsAdministrationPanel_Name">Emoticons</resource>
+  <resource name="EmoticonsAdministrationPanel_Title">Emoticon Collections</resource>
+  <resource name="EmoticonsDescription">Emoticons are organized into collections for easier selection when entering content.</resource>
+  <resource name="EmoticonUpdated">Emoticon has been updated.</resource>
+  <resource name="Enabled">Enabled</resource>
+  <resource name="Enabled_Detail">When disabled this emoticon can not be used on the site.</resource>
+  <resource name="Enabled_Field">Enable this emoticon</resource>
+  <resource name="EnabledCollection_Detail">When disabled emoticons in this collection can not be used on the site.</resource>
+  <resource name="EnabledCollection_Field">Enable this collection</resource>
+  <resource name="FileRequired">File is required.</resource>
+  <resource name="LegacyId">Legacy Identifier</resource>
+  <resource name="Name">Name</resource>
+  <resource name="Name_Detail">The name of this collection.</resource>
+  <resource name="Name_Detail_Emoticon">The name of this emoticon.</resource>
+  <resource name="NoEmoticons">No Emoticons found.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="ShortCode">Short code</resource>
+  <resource name="Shortcut">Shortcut</resource>
+  <resource name="Shortcut_Detail">A unique sequence of characters that allow the emoticon to be typed, rather than selected from a list or entered using an emoji keyboard.</resource>
+  <resource name="UnicodeSequence">Unicode Sequence</resource>
+  <resource name="UploadFile">Upload File</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="Variations">Variations</resource>
+  <resource name="VariationUpdated">Variation has been updated.</resource>
+  <resource name="View">View emoticons</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

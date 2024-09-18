@@ -1,0 +1,35 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($query = false)
+#set($query = $core_v2_page.GetQueryStringValue('w_query'))
+
+#set($parentId = false)
+#set($parentId = $core_v2_page.GetQueryStringValue('w_parentId'))
+
+#if ($parentId && $parentId.Length > 0)
+    #set($tags = $context.LookupTags($query, $parentId))
+#else
+    #set($tags = $context.LookupTags($query))
+#end
+
+#if ($response.HasErrors())
+	$core_v2_page.SendJsonError($response.Errors)
+#end
+
+{
+    "tags": [
+        #set($isFirst = true)
+        #foreach ($tag in $tags)
+            #if ($isFirst)
+                #set($isFirst = false)
+            #else
+                ,
+            #end
+            {
+                "id": "$core_v2_encoding.JavascriptEncode($tag.Id)",
+                "name": "$core_v2_encoding.JavascriptEncode($tag.Name)"
+            }
+        #end
+    ]
+}
+

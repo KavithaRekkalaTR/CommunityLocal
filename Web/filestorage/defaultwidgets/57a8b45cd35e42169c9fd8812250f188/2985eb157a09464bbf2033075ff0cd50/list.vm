@@ -1,0 +1,140 @@
+#set($idea = false)
+#set($idea = $telligentIdeas_v1_ideas.Current)
+#if (!$idea)
+	$core_v2_widget.Hide()
+#end
+
+<h1>$core_v2_language.FormatString($core_v2_language.GetResource('title'), $idea.Name)</h1>
+<p>
+	$core_v2_language.FormatString($core_v2_language.GetResource('instructions'), $core_v2_encoding.HtmlAttributeEncode($telligentIdeas_v1_urls.Idea($idea.Id)))
+</p>
+
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+
+#set($ideaStatuses = false)
+#set($ideaStatuses = $telligentIdeas_v1_ideaStatuses.List($idea.Id, "%{ PageSize = 10, PageIndex = $pageIndex }"))
+
+#set($hasPermission = $telligentIdeas_v1_ideaPermissions.CanManageIdeaStatus($idea.Challenge.Id))
+
+#foreach ($ideaStatus in $ideaStatuses)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+	<li class="content-item">
+		<div class="content full">
+			#if ($ideaStatus.Status.Key == 'comingsoon')
+				#set ($icon = 'clock')
+			#elseif ($ideaStatus.Status.Key == 'complete')
+				#set ($icon = 'check')
+			#elseif ($ideaStatus.Status.Key == 'notplanned')
+				#set ($icon = 'cancel-circled')
+			#elseif ($ideaStatus.Status.Key == 'underreview')
+				#set ($icon = 'eye')
+			#else
+				#set ($icon = 'light-up')
+			#end
+			<h2 class="name status-$ideaStatus.Status.Key prepend-icon $icon">
+				$ideaStatus.Status.Name
+			</h2>
+
+			<div class="content">
+				#set($note = false)
+				#set($note = $!ideaStatus.Note())
+				#if ($note && $note.Length > 0)
+					$note
+				#else
+					<p><em>$core_v2_language.GetResource('NoNote')</em></p>
+				#end
+			</div>
+
+			<div class="author">
+				#if ($ideaStatus.Author)
+					<span class="user-name">
+						#if ($ideaStatus.Author.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($ideaStatus.Author.ProfileUrl)" class="internal-link view-user-profile">
+								$ideaStatus.Author.DisplayName
+							</a>
+						#else
+							$ideaStatus.Author.DisplayName
+						#end
+					</span>
+					<div class="avatar">
+						#if ($ideaStatus.Author.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Author.ProfileUrl)">
+								$core_v2_ui.GetResizedImageHtml($ideaStatus.Author.AvatarUrl, 24, 24, "%{border='0px', alt=$ideaStatus.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+							</a>
+						#else
+							$core_v2_ui.GetResizedImageHtml($ideaStatus.Author.AvatarUrl, 24, 24, "%{border='0px', alt=$ideaStatus.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+						#end
+					</div>
+				#end
+			</div>
+
+			#set($minLinks = 2)
+			#if ($hasPermission)
+				#set($minLinks = 3)
+			#end
+			<div class="actions">
+				<div class="ui-links navigation-list" data-minlinks="$minLinks" data-direction="horizontal" data-maxlinks="$minLinks">
+					<ul class="navigation-list">
+						<li class="navigation-list-item date">
+							<span class="attribute-value">
+								$core_v2_language.FormatDateAndTime($ideaStatus.CreatedDate)
+							</span>
+						</li>
+
+						#set($statusUrl = false)
+						#set($statusUrl = $telligentIdeas_v1_urls.EditIdeaStatus($idea.Id, $ideaStatus.Id, true))
+						#if ($statusUrl)
+							<li class="navigation-list-item">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($statusUrl, "ReturnUrl=$core_v2_encoding.UrlEncode($core_v2_page.Url)"))">$core_v2_language.GetResource('IdeaLinks_EditIdeaStatus')</a>
+							</li>
+						#end
+
+						#if ($hasPermission)
+							<li class="navigateion-list-item">
+								<a href="#" data-messagename="ideas.delete-ideastatus" data-ideastatusid="$ideaStatus.Id" data-ideaid="$idea.Id.ToString()">$core_v2_language.GetResource('IdeaLinks_DeleteIdeaStatus')</a>
+							</li>
+						#end
+
+						<li class="navigation-list-item">
+							<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+								<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+	</li>
+
+#afterall
+	</ul>
+#end
+
+#if ($hasPermission)
+	<script type="text/javascript">
+		jQuery(function() {
+			jQuery.telligent.evolution.messaging.subscribe('ideas.delete-ideastatus', function(data){
+				var ideaStatusId = $(data.target).data('ideastatusid');
+				var ideaId = $(data.target).data('ideaid');
+				if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VerifyIdeaStatusDeletion'))')) {
+					jQuery.telligent.evolution.del({
+						url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/ideas/status.json',
+						data: {
+							IdeaId: ideaId,
+							IdeaStatusId: ideaStatusId
+						}
+					})
+						.then(function() {
+						   window.location.reload(true);
+						});
+				}
+			});
+		});
+	</script>
+#end
+
+$core_v2_ui.Pager($ideaStatuses.PageIndex, $ideaStatuses.PageSize, $ideaStatuses.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'false' }")

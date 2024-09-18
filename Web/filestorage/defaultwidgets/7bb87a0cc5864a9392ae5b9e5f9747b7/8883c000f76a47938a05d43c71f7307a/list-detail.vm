@@ -1,0 +1,94 @@
+#if(!$medias)
+	$core_v2_widget.ExecuteFile('load.vm')
+#end
+
+	#foreach($media in $medias)
+	#beforeall
+		<ul class="content-list content margin-bottom">
+	#each
+		#set ($mediaType = $core_v2_ui.GetMediaType($media.File.FileUrl, "%{ViewType='View'}"))
+		<li class="content-item" data-mediaid="$media.Id" data-href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">
+			<div class="content abbreviated">
+				<div class="avatar">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)" class="internal-link view-post">
+						$!core_v2_ui.GetPreviewHtml($media.File.FileUrl, "%{width=100,height=100}")
+					</a>
+				</div>
+				<div class="summary">
+					<h2 class="name">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)" class="internal-link view-post">$media.Title</a>
+					</h2>
+					<div class="author">
+						<div class="avatar">
+							#if ($media.Author.ProfileUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($media.Author.ProfileUrl)">
+									$core_v2_ui.GetResizedImageHtml($media.Author.AvatarUrl, 24, 24, "%{border='0px', alt=$media.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+								</a>
+							#else
+								$core_v2_ui.GetResizedImageHtml($media.Author.AvatarUrl, 24, 24, "%{border='0px', alt=$media.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+							#end
+						</div>
+						<span class="user-name">
+							#if ($media.Author.ProfileUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($media.Author.ProfileUrl)" class="internal-link view-user-profile">
+									$media.Author.DisplayName
+								</a>
+							#else
+								$media.Author.DisplayName
+							#end
+						</span>
+					</div>
+					<div class="status">
+						<ul class="attribute-list">
+							<li class="attribute-item downloads">
+								<span class="attribute-value">
+									#set($downloads = 0)
+									#set($downloads = $media.Downloads)
+									#if ($downloads == 1)
+										$core_v2_language.FormatString($core_v2_language.GetResource('Downloads_Singular'), $core_v2_language.FormatNumber($downloads))
+									#else
+										$core_v2_language.FormatString($core_v2_language.GetResource('Downloads_Plural'), $core_v2_language.FormatNumber($downloads))
+									#end
+								</span>
+							</li>
+							<li class="attribute-item rating">
+								<span class="attribute-value">$core_v2_ui.Rate($media.ContentId, $core_v2_media.ContentTypeId, "%{ReadOnly='true',CssClass='small'}")</span>
+							</li>
+							#if ($mediaType != 'Empty')
+								<li class="attribute-item view-attachment"><span class="attribute-value"><a href="#" data-messagename="hideShowMedia" data-mediaid="$media.Id">$core_v2_language.GetResource('View')</a></span></li>
+								<li class="attribute-item hide-attachment hidden" style="display: none;"><span class="attribute-value"><a href="#" data-messagename="hideShowMedia" data-mediaid="$media.Id">$core_v2_language.GetResource('Hide')</a></span></li>
+							#end
+						</ul>
+					</div>
+					<div class="content preview"></div>					
+				</div>
+				<div class="attributes">
+					<ul class="attribute-list">
+						<li class="attribute-item">
+							<span class="attribute-value">$core_v2_language.FormatDate($media.Date)</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</li>
+	#nodata
+		<div class="message norecords">
+			#if ($core_v2_gallery.Current)
+				#set ($addUrl = $core_v2_mediaUrls.AddMedia($core_v2_gallery.Current.Id, true))
+				#if ($core_v2_gallery.Current && $addUrl)
+					$core_v2_language.FormatString($core_v2_language.GetResource("NoRecords_Link"), $addUrl)
+				#else
+					$core_v2_language.GetResource("NoRecords")
+				#end
+			#else
+				$core_v2_language.GetResource("NoRecords")
+			#end
+		</div>
+
+	#afterall
+		</ul>
+	#end
+
+#if ($medias)
+	$core_v2_ui.Pager($medias.PageIndex, $medias.PageSize, $medias.TotalCount, "%{ ShowIndividualPages = 'true', ShowPrevious = 'true', ShowNext = 'true', PagedContentFile = 'list-detail.vm', LoadOnAnyHashChange = 'true', LoadingIndicator = 'true' }")
+#end

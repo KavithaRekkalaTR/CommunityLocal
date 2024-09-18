@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WikiPagesManagement_Name}" version="12.0.0.0" description="${resource:WikiPagesManagement_Description}" instanceIdentifier="f680a074e52348ceae3fd081c7d5e83c" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-wikisettings with-header-filter" lastModified="2022-01-21 19:34:08Z" provider="a15be3ae4a274ecea7f2f393f7b9e494">
+    <contentScript language="Velocity"><![CDATA[
+#set ($pagesListId = $core_v2_widget.UniqueId('pagesListId'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+<div>
+	$core_v2_widget.ExecuteFile('paged-pages.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.wikiPagesManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.wikiPagesManagement.register({
+			applicationId: '$context.ApplicationId',
+			applicationTypeId: '$context.ApplicationTypeId',
+			pagesListId: '#$core_v2_encoding.JavascriptEncode($pagesListId)',
+			urls: {
+				pagedPages: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-pages.vm'))',
+				publishPage: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('publish-page.vm'))',
+				deletePage: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete-page.vm'))',
+				lockPage: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('lock-page.vm'))',
+				wiki: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_wikiUrls.ManageWikiPages($context.Wiki.Id)))',
+				addPage: '$core_v2_encoding.JavascriptEncode($!core_v2_wikiUrls.AddPage($context.Wiki.Id))'
+			},
+			resources: {
+				showonlydeleted: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('showonlydeleted'))',
+				showall: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('showall'))',
+				showhidden: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('showhidden'))',
+				confirmDelete: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ConfirmDelete'))',
+				unpublish: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Unpublish'))',
+				publish: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Publish'))',
+				published: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Published'))',
+				unpublished: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('NotPublished'))',
+				lock: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Lock'))',
+				unlock: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Unlock'))',
+				locked: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Locked'))',
+				unlocked: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Unlocked'))',
+				pageDeleted: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('PageDeleted'))',
+				addPage: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('AddPage'))',
+				noResults: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('NoResults'))'
+			}
+		});
+	});
+	</script>
+#end
+
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddPage">Add Page</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ConfirmDelete">Are you sure you want to delete this page?</resource>
+  <resource name="Default">Default</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="find">Find a page...</resource>
+  <resource name="Hidden">Hidden from TOC</resource>
+  <resource name="Lock">Lock</resource>
+  <resource name="Locked">Locked</resource>
+  <resource name="more">More</resource>
+  <resource name="no_pages">No matching pages have been found in '{0}' yet.</resource>
+  <resource name="NoResults">No results.</resource>
+  <resource name="NotPublished">Not Published</resource>
+  <resource name="PageDeleted">Page has been deleted.</resource>
+  <resource name="Publish">Publish</resource>
+  <resource name="Published">Published</resource>
+  <resource name="showall">All</resource>
+  <resource name="showhidden">Hidden from TOC</resource>
+  <resource name="showonlydeleted">Unpublished</resource>
+  <resource name="Unlock">Unlock</resource>
+  <resource name="Unlocked">Unlocked</resource>
+  <resource name="Unpublish">Unpublish</resource>
+  <resource name="View">View</resource>
+  <resource name="WikiPagesManagement_Description">Manage Wiki pages.</resource>
+  <resource name="WikiPagesManagement_Name">Pages</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

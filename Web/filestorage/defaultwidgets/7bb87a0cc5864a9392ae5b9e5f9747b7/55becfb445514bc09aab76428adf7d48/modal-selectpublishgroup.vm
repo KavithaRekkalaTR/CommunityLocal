@@ -1,0 +1,49 @@
+#set($collectionId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringvalue('w_collectionId')))
+
+<form><fieldset>
+    <p class="instructions">$core_v2_language.GetResource('OpenIn_Instructions')</p>
+    
+	<ul class="field-list">
+        <li class="field-item required publish-group">
+			<label for="$core_v2_widget.UniqueId('openinpublishgroup')" class="field-item-name">$core_v2_language.GetResource('OpenInPublishGroup')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('OpenInPublishGroup_Description')</span>
+			<span class="field-item-input">
+			    <input type="text" id="$core_v2_widget.UniqueId('openinpublishgroup')" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+	</ul>
+
+	<ul class="field-list buttons">
+		<li class="field-item">
+			<span class="field-item-input">
+				<a id="$core_v2_widget.UniqueId('opendraft')" href="#" class="button internal-link open-draft"><span></span>$core_v2_language.GetResource('Open')</a>
+				<a id="$core_v2_widget.UniqueId('cancelopen')" href="#" class="internal-link inline-button cancel-open">$core_v2_language.GetResource('Cancel')</a>
+			</span>
+		</li>
+	</ul>
+	
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.articleSelectPublishGroup')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('modal-selectpublishgroup.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.articleSelectPublishGroup.register({
+		    collectionId: '$collectionId.ToString()',
+			urls: {
+                getPublishGroups: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getpublishgroups.jsm'))'
+			},
+			fields: {
+			    publishGroup: jQuery('#$core_v2_widget.UniqueId('openinpublishgroup')'),
+    			open: jQuery('#$core_v2_widget.UniqueId('opendraft')'),
+    			cancel: jQuery('#$core_v2_widget.UniqueId('cancelopen')'),
+			},
+			text: {
+			}
+		});
+	});
+</script>
+#end

@@ -1,0 +1,80 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+
+#set($query = '')
+#set($query = $core_v2_page.GetQueryStringValue('w_query'))
+
+#set($messages = $core_v2_conversationMessage.Search("%{PageIndex = $pageIndex, PageSize = 20, Query = $query, SortBy = 'score', SortOrder = 'desc'}"))
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($messages.PageIndex + 1) * $messages.PageSize)
+#if ($messages.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#foreach ($message in $messages)
+#each
+	#set ($over = 0)
+	#set ($count = 0)
+	#set ($participantHtml = "")
+	#foreach($user in $message.Conversation.Participants)
+		#if ($user.Id != $message.Author.Id)
+			#set($count = $count + 1)
+			#if ($count > 5)
+				#set ($over = $over + 1)
+			#elseif ($count > 1)
+				#set ($participantHtml = "$participantHtml, $user.DisplayName")
+			#else
+				#set($participantHtml = $user.DisplayName)
+			#end
+		#end
+	#end
+	#if ($over > 0)
+		#set($over = $core_v2_language.FormatString($core_v2_language.GetResource('participants-more'), $core_v2_language.FormatNumber($over)))
+		#set($participantHtml = "$participantHtml, $over")
+	#end
+
+	<li class="content-item" data-contenturl="#ConversationID=$message.Conversation.Id.ToString()&ConversationMessageID=$message.Id.ToString()" data-hasmore="$hasMore">
+		<div class="content abbreviated rendered conversation messages">
+			<div class="summary">
+				<h2 class="name">
+					<a class="internal-link" title="$participantHtml" href="#ConversationID=$message.Conversation.Id.ToString()&ConversationMessageID=$message.Id.ToString()">
+						$core_v2_language.FormatString($core_v2_language.GetResource('search-conversationtitle'), $message.Author.DisplayName, $participantHtml)
+					</a>
+				</h2>
+				<div class="author">
+					<div class="avatar">
+						#if ($message.Author.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($message.Author.ProfileUrl)">
+								$core_v2_ui.GetResizedImageHtml($message.Author.AvatarUrl, 44, 44, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt='$message.Author.AvatarUrl'}")
+							</a>
+						#else
+							$core_v2_ui.GetResizedImageHtml($message.Author.AvatarUrl, 44, 44, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt='$message.Author.AvatarUrl'}")
+						#end
+					</div>
+					<span class="user-name">
+						#if ($message.Author.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($message.Author.ProfileUrl)">
+								$message.Author.DisplayName
+							</a>
+						#else
+							$message.Author.DisplayName
+						#end
+					</span>
+				</div>
+				<div class="content">
+					$core_v2_language.Truncate($message.RenderedBody, 250, '...')
+				</div>
+			</div>
+			<div class="attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item date">$core_v2_language.FormatAgoDate($message.CreatedDate)</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#nodata
+	<div class="message norecords">
+		$core_v2_language.GetResource('search-no-matches')
+	</div>
+#end

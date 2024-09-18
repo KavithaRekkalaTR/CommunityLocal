@@ -1,0 +1,161 @@
+#set ($showTitle = $core_v2_widget.GetBoolValue('showTitleColumn', true))
+#set ($showGroup = $core_v2_widget.GetBoolValue('showGroupColumn', false))
+#set ($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set ($showLastPost = $core_v2_widget.GetBoolValue('showLastPostColumn', true))
+#set ($showSubGroups = $core_v2_widget.GetBoolValue('groupAndSubGroups', false))
+
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 5))
+
+#set ($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'ApplicationName'))
+#set ($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#set ($sortOrder = 'Descending')
+#if ($sortBy == 'ApplicationName')
+	#set ($sortBy = 'Name')
+	#set ($sortOrder = 'Ascending')
+#elseif ($sortBy == 'Posts')
+	#set ($sortBy = 'TotalPosts')
+#elseif ($sortBy == 'ApplicationIdsOrder')
+	#set($sortOrder = 'Ascending')
+#end
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('sortOrder'))
+
+#set($query = "%{IncludeSubGroups = $showSubGroups, PageIndex = $pageIndex, PageSize = $pageSize, SortBy = $sortBy, SortOrder = $sortOrder}")
+#set($group = false)
+#set($group = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('group', '')).Value('Group')))
+#if ($group > 0)
+	$query.Add('GroupId', $group)
+#else
+	$query.Add('GroupId', $core_v2_group.Current.Id.ToString())
+#end
+
+#if($sortBy == 'ApplicationIdsOrder')
+	#set($gallerySelection = false)
+	#set ($gallerySelection = $core_v2_widget.GetCustomValue('gallerySelection', ''))
+	#if ($gallerySelection && $gallerySelection.Length > 0)
+		#set($gallerySelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($gallerySelection).Values('gallery')))
+		$query.Add('ApplicationIds', $gallerySelection)
+	#end
+#end
+
+#set ($galleries = $core_v2_gallery.List($query))
+
+#if ($galleries.TotalCount > $pageSize)
+	<div class="sort" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sort'))">
+		<form>
+		<span class="by">
+			<select class="ui-select" data-querykey="sortBy">
+				<option value="Name" #if($sortBy == 'Name') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_ApplicationName')</option>
+				<option value="TotalPosts" #if($sortBy == 'TotalPosts') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_Posts')</option>
+				<option value="LastPost" #if($sortBy == 'LastPost') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_LastPost')</option>
+			</select>
+		</span>
+		<span class="order">
+			<select class="ui-select" data-querykey="sortOrder">
+				<option value="Descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+				<option value="Ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+			</select>
+		</span>
+		</form>
+	</div>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery(function(j){
+			var sort = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort'))');
+			sort.on('change', 'select', function(e) {
+				var select = j(this), hashAdjustment = {};
+				hashAdjustment[select.data('querykey')] = select.val();
+				j.telligent.evolution.url.hashData(hashAdjustment, {
+					prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+				});
+			});
+		});
+		</script>
+	#end
+#end
+
+#foreach($gallery in $galleries)
+	#beforeall
+		<ul class="content-list content simple margin-bottom tabular">
+	#each
+		<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($gallery.Url)">
+			<div class="name cell">
+				<h2>
+					#if($showGroup)
+						<a $core_v2_ui.ContentPeek($gallery.Group.ContainerId, $core_v2_group.ContentTypeId, 'internal-link view-application view-container')
+						    href="$core_v2_encoding.HtmlAttributeEncode($gallery.Group.Url)">$gallery.Group.Name: </a>
+					#end
+					#if($showTitle)
+						<a
+						#if ($inSidebar)
+							$core_v2_ui.ContentPeek($gallery.ApplicationId, $core_v2_gallery.ContentTypeId, 'internal-link view-application')
+						#else
+							class="internal-link view-application"
+						#end
+						href="$core_v2_encoding.HtmlAttributeEncode($gallery.Url)">$gallery.Name</a>
+					#end
+				</h2>
+				#if(!$inSidebar && $gallery.Description)
+					<div class="content">$gallery.HtmlDescription('web')</div>
+				#end
+			</div>
+
+			#if(!$inSidebar)
+				#if($showPosts || $showLastPost)
+					#set($medias = $core_v2_media.List("%{GalleryId=$gallery.Id,PageIndex=0,PageSize=1,SortBy='PostDate',SortOrder='Descending'}"))
+				#end
+
+				#if($showPosts)
+					<div class="minimal cell nowrap metadata">
+						<span class="value">$core_v2_language.FormatNumber($medias.TotalCount)</span>
+						<span class="description">
+						#if ($medias.TotalCount == 1)
+							$core_v2_language.GetResource('post_singular')
+						#else
+							$core_v2_language.GetResource('post_plural')
+						#end
+						</span>
+					</div>
+				#end
+
+				#if ($showLastPost)
+					<div class="minimal cell nowrap metadata">
+						#if($medias.TotalCount > 0)
+							#set ($lastPost = $medias.get_Item(0))
+							<span class="thumbnail">
+								#if ($lastPost.Url)
+									<a $core_v2_ui.ContentPeek($lastPost.ContentId, $core_v2_media.ContentTypeId, 'internal-link view-user-profile')
+										href="$core_v2_encoding.HtmlAttributeEncode($lastPost.Url)">
+										$!core_v2_ui.GetPreviewHtml($lastPost.File.FileUrl, "%{Width=40, Height=40}")
+									</a>
+								#else
+									$!core_v2_ui.GetPreviewHtml($lastPost.File.FileUrl, "%{Width=40, Height=40}")
+								#end
+							</span>
+						#end
+					</div>
+
+					<div class="minimal cell nowrap latest metadata">
+						#if($medias.TotalCount > 0 && $gallery.LatestPostDate)
+							<span class="value">
+								<a $core_v2_ui.ContentPeek($lastPost.ContentId, $core_v2_media.ContentTypeId, 'internal-link')
+									href="$core_v2_encoding.HtmlAttributeEncode($lastPost.Url)">
+									$lastPost.Title
+								</a>
+							</span>
+							<span class="description">$core_v2_language.FormatAgoDate($gallery.LatestPostDate)</span>
+						#end
+					</div>
+				#end
+			#end
+		</li>
+		#set($hasResults = true)
+	#nodata
+		<div class="message norecords">$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_NoResults')</div>
+	#afterall
+		</ul>
+#end
+
+$core_v2_ui.Pager($galleries.PageIndex, $galleries.PageSize, $galleries.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

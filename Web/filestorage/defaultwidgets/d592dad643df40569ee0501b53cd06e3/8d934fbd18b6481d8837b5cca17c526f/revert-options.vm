@@ -1,0 +1,78 @@
+#set($properties = $context.GetRevertableThemeConfigurationProperties())
+#set($files = $context.GetRevertableThemeFiles())
+#set($scopedProperties = $context.GetRevertableScopedProperties())
+
+#if ($properties.Count == 0 && $files.Count == 0 && $scopedProperties.Count == 0)
+	<p>$core_v2_language.FormatString($core_v2_language.GetResource('no-revert-options'), $context.ThemeTypeName.ToLower())</p>
+#else
+	<p>$core_v2_language.GetResource('revert-options-instructions')</p>
+
+	<form><fieldset>
+
+		#foreach($property in $properties)
+			#beforeall
+				<h5 class="list-header">
+					$core_v2_language.GetResource('properties')
+				</h5>
+				<p class="list-description"><a href="#" class="select-all inline-button" data-type="property" data-select="all">$core_v2_language.GetResource('select-all')</a></p>
+				<ul class="field-list checkbox-list">
+			#each
+				<li class="field-item property">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($property.Id))" value="$core_v2_encoding.HtmlAttributeEncode($property.Id)" data-refresh="true" data-type="property" />
+						<label for="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($property.Id))">$property.Title</label>
+					</span>
+					<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('property_description'), $property.GroupTitle)</span>
+				</li>
+			#afterall
+				</ul>
+		#end
+
+		#foreach($file in $files)
+			#beforeall
+				<h5 class="list-header">
+					$core_v2_language.GetResource('files')
+				</h5>
+				<p class="list-description"><a href="#" class="select-all inline-button" data-type="file" data-select="all">$core_v2_language.GetResource('select-all')</a></p>
+				<ul class="field-list checkbox-list">
+			#each
+				<li class="field-item file">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($file.Id))" value="$core_v2_encoding.HtmlAttributeEncode($file.Id)" data-refresh="true" data-type="file" />
+						<label for="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($file.Id))">$file.FileName ($file.Title)</label>
+					</span>
+					<span class="field-item-description">
+						#if ($file.IsDeleted && $file.HasDefault)
+							$core_v2_language.GetResource('file-restore-original')
+						#elseif($file.IsContextual && $file.HasDefault)
+							$core_v2_language.GetResource('file-revert-to-original')
+						#else
+							$core_v2_language.GetResource('file-delete')
+						#end
+					</span>
+				</li>
+			#afterall
+				</ul>
+		#end
+
+		#foreach($property in $scopedProperties)
+			#beforeall
+				<h5 class="list-header">
+					$core_v2_language.GetResource('scoped-properties')
+				</h5>
+				<p class="list-description"><a href="#" class="select-all inline-button" data-type="scopedproperty" data-select="all">$core_v2_language.GetResource('select-all')</a></p>
+				<ul class="field-list checkbox-list">
+			#each
+				<li class="field-item property">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($property.Id))" value="$core_v2_encoding.HtmlAttributeEncode($property.Id)" data-refresh="true" data-type="scopedproperty" />
+						<label for="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($property.Id))">$property.Title</label>
+					</span>
+					<span class="field-item-description">$property.Description</span>
+				</li>
+			#afterall
+				</ul>
+		#end
+
+	</fieldset></form>
+#end

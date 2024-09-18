@@ -1,0 +1,15 @@
+<% if(State != 'NotPersisted') { %>
+	<h3>$core_v2_language.GetResource('Components')</h3>
+	<ul class="navigation-list managed-items">
+		<% if(Type == 'Template') { %>
+			<li class="navigation-list-item"><a class="email-component-link templatescript" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: (Id || '') %>&_et=templatescript">$core_v2_language.GetResource('Template')</a></li>
+		<% } else { %>
+			<li class="navigation-list-item"><a class="email-component-link subjectscript" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: Id %>&_et=subjectscript">$core_v2_language.GetResource('Subject')</a></li>
+			<li class="navigation-list-item"><a class="email-component-link headerscript" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: Id %>&_et=headerscript">$core_v2_language.GetResource('Header')</a></li>
+			<li class="navigation-list-item"><a class="email-component-link footerscript" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: Id %>&_et=footerscript">$core_v2_language.GetResource('Footer')</a></li>
+			<li class="navigation-list-item"><a class="email-component-link bodyscript" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: Id %>&_et=bodyscript">$core_v2_language.GetResource('Body')</a></li>
+		<% } %>
+		<li class="navigation-list-item"><a class="email-component-link configuration" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: (Id || '') %>&_et=configuration">$core_v2_language.GetResource('Configuration')</a></li>
+		<li class="navigation-list-item"><a class="email-component-link resources" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: (Id || '') %>&_et=resources">$core_v2_language.GetResource('Resources')</a></li>
+	</ul>
+<% } %>

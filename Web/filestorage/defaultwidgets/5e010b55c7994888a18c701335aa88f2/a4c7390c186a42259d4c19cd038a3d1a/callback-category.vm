@@ -1,0 +1,21 @@
+﻿#set ($rawCategoryId = false)
+#set ($rawCategoryId = $core_v2_page.GetQueryStringValue("_w_categoryId"))
+#if ($rawCategoryId)
+	#set ($categoryId = $core_v2_utility.ParseGuid($rawCategoryId))
+	#set ($selectedCategoryId = $categoryId)
+#end
+
+#set ($category = false)
+#set ($category = $core_v2_administrationPanels.GetCategory($categoryId))
+
+#set ($categoryMembers = false)
+#set ($categoryMembers = $core_v2_administrationPanels.GetMembersForCategory($categoryId))
+
+$core_v2_page.SetContentType('application/json')
+#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+{
+	"categoryId": "$core_v2_encoding.JavascriptEncode($categoryId.ToString())",
+	"categoryHtml": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('render-category.vm'))",
+	"firstPanelUrl": #if ($firstPanelUrl) "$core_v2_encoding.JavascriptEncode($firstPanelUrl)" #else false #end,
+	"categoryBadgeCount": #if ($category) $category.BadgeCount #else 0 #end
+}

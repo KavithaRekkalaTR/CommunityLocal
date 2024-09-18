@@ -1,0 +1,11 @@
+#set ($groupSelectionMode = false)
+#set ($groupSelectionMode = $core_v2_widget.GetStringValue('groupSelectionMode', ''))
+#if (!$groupSelectionMode || $groupSelectionMode.length == 0)
+	#if ($core_v2_urls.Current == 'Home')
+		#set ($groupSelectionMode = 'targetable')
+		$core_v2_widget.SetStringValue('groupSelectionMode', $groupSelectionMode)
+	#else
+		#set ($groupSelectionMode = 'current')
+		$core_v2_widget.SetStringValue('groupSelectionMode', $groupSelectionMode)
+	#end
+#end

@@ -1,0 +1,80 @@
+#foreach($group in $groups)
+#beforeall
+	<ul class="content-list content simple margin-bottom tabular">
+#each
+	#set($containerIds = "$group.ContainerId")
+	#set($activityStories = false)
+	#set($activityStories = $core_v2_activityStory.List("%{ContainerIds = $containerIds, PageIndex = 0, PageSize = 1, SortBy = 'Date', SortOrder = 'Descending'}"))
+
+	#if ($content == 'bookmark')
+		#set($bookmarkedGroup = $core_v2_group.Get($group.ContentId))
+		<li class="content-item" #if ($group.Content.Url) data-href="$core_v2_encoding.HtmlAttributeEncode($group.Content.Url)" #end>
+			<div class="cell avatar">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($group.Content.Url)">$core_v2_ui.GetResizedImageHtml($group.Content.AvatarUrl, 45, 45, "%{alt=$group.Content.HtmlName('Web'),border='0',ResizeMethod = 'ZoomAndCrop'}")</a>
+			</div>
+			<div class="name cell">
+				<h2>
+					<a class="internal-link" title="$group.Content.HtmlName('Web')" href="$core_v2_encoding.HtmlAttributeEncode($group.Content.Url)">$group.Content.HtmlName('Web')</a>
+				</h2>
+				<div class="content">$!group.Content.HtmlDescription('Web')</div>
+			</div>
+			<div class="minimal cell nowrap">
+				#foreach($story in $activityStories)
+					$story.PreviewHtml()
+				#end
+			</div>
+			<div class="minimal cell nowrap">
+				#foreach($story in $activityStories)
+					$core_v2_language.FormatString($core_v2_language.GetResource('Latest_Format'), $core_v2_language.FormatAgoDate($story.CreatedDate))
+				#end
+				#if($group.GroupType != 'Joinless' && $bookmarkedGroup)
+					#if ($bookmarkedGroup.TotalMembers() == 1)
+						#set ($membersFormat = $core_v2_language.GetResource("Members_SingleFormat"))
+					#else
+						#set ($membersFormat = $core_v2_language.GetResource("Members_PluralFormat"))
+					#end
+					$core_v2_language.FormatString($membersFormat, $bookmarkedGroup.TotalMembers().ToString())
+				#end
+			</div>
+		</li>
+	#else
+		<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($group.Url)">
+			<div class="cell avatar">
+				<a
+					#if ($inSidebar)
+						$core_v2_ui.ContentPeek($group.ContainerId, $core_v2_group.ContentTypeId)
+					#end
+					href="$core_v2_encoding.HtmlAttributeEncode($group.Url)">$core_v2_ui.GetResizedImageHtml($group.AvatarUrl, 45, 45, "%{alt=$group.Name,border='0',ResizeMethod = 'ZoomAndCrop'}")</a>
+			</div>
+			<div class="name cell">
+				<h2>
+					<a
+						#if ($inSidebar)
+							$core_v2_ui.ContentPeek($group.ContainerId, $core_v2_group.ContentTypeId, "internal-link")
+						#else
+							class="internal-link"
+						#end
+						title="$group.Name" href="$core_v2_encoding.HtmlAttributeEncode($group.Url)">$group.Name</a>
+				</h2>
+				<div class="content">$!group.Description</div>
+			</div>
+			<div class="minimal cell nowrap align-right">
+				#foreach($story in $activityStories)
+					$core_v2_language.FormatString($core_v2_language.GetResource('Latest_Format'), $core_v2_language.FormatAgoDate($story.LastUpdate))
+				#end
+				#if($group.GroupType != 'Joinless')
+					#if ($group.TotalMembers() == 1)
+						#set ($membersFormat = $core_v2_language.GetResource("Members_SingleFormat"))
+					#else
+						#set ($membersFormat = $core_v2_language.GetResource("Members_PluralFormat"))
+					#end
+					$core_v2_language.FormatString($membersFormat, $group.TotalMembers().ToString())
+				#end
+			</div>
+		</li>
+	#end
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('Groups_GroupList_NoGroups')</div>
+#end

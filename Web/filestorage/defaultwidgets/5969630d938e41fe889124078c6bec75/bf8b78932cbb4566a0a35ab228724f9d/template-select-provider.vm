@@ -1,0 +1,58 @@
+#set ($providers = $context.ListProviders("%{ DeveloperEnabledOnly = 'true' }"))
+#set ($hasProviders = false)
+#foreach ($provider in $providers)
+	#set ($hasProviders = true)
+#end
+<form>
+	<fieldset>
+		<ul class="field-list">
+
+			<li class="field-item fragment-id">
+				<label class="field-item-name">$core_v2_language.GetResource('WidgetID')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('WidgetIDDesc')</span>
+				<span class="field-item-input">
+					<input type="text" #if (!$hasProviders) disabled #end class="fragment-id" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item provider-select">
+				<label class="field-item-name">$core_v2_language.GetResource('FactoryDefaultProvider')</label>
+				#if ($hasProviders)
+					<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderDesc')</span>
+					<span class="field-item-input">
+						<select class="provider-select">
+							#set ($category = '')
+							#foreach ($provider in $providers)
+							#each
+								#if ($provider.CategoryName != $category)
+									#if ($category != '')
+										</optgroup>
+									#end
+									<optgroup label="$core_v2_encoding.HtmlAttributeEncode($provider.CategoryName)">
+								#end
+								<option value="$provider.Id" #if ($provider.Id == $context.CoreProvider) selected #end>
+									$core_v2_encoding.HtmlEncode($provider.Name)
+								</option>
+
+								#set ($category = $provider.CategoryName)
+							#afterall
+								</optgroup>
+							#end
+						</select>
+					</span>
+				#else
+					<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderNoneDesc')</span>
+				#end
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+				</span>
+				<span class="field-item-input">
+					<a href="#" class="button continue #if (!$hasProviders) disabled #end">$core_v2_language.GetResource('Continue')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</form>

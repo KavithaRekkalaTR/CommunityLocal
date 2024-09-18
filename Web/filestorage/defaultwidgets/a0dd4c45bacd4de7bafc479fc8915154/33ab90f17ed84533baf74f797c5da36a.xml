@@ -1,0 +1,523 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:StudioShell_Title}" version="11.0.0.0" description="${resource:StudioShell_Description}" instanceIdentifier="33ab90f17ed84533baf74f797c5da36a" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="" lastModified="2021-04-23 19:20:10Z" provider="a0dd4c45bacd4de7bafc479fc8915154">
+    <contentScript language="Velocity"><![CDATA[
+#if ($context.Component == 'Templates')
+	$core_v2_widget.ExecuteFile('style.vm')
+	$core_v2_widget.ExecuteFile('templates.vm')
+#elseif ($context.Component == 'ScriptModules')
+	$core_v2_widget.ExecuteFile('script.vm')
+#end
+]]></contentScript>
+	<languageResources>
+	  <language key="en-us">
+		<resource name="StudioShell_Title">Studio Shell Support</resource>
+		<resource name="StudioShell_Description">Studio Shell Support</resource>
+		<resource name="Close">Close</resource>
+		<resource name="View">View</resource>
+		<resource name="Pin">Pin</resource>
+		<resource name="PinClosed">Pin dock when opened</resource>
+		<resource name="PinDocked">Hide on Exit</resource>
+		<resource name="PinOverlaid">Keep Open</resource>
+		<resource name="More">More</resource>
+		<resource name="Cancel">Cancel</resource>
+		<resource name="ModifierAlt">Alt</resource>
+		<resource name="ModifierCommand">Command</resource>
+		<resource name="ModifierControl">Control</resource>
+		<resource name="ModifierMeta">Meta</resource>
+		<resource name="ModifierOption">Option</resource>
+		<resource name="ModifierShift">Shift</resource>
+		<resource name="ModifierWindows">Windows</resource>
+		<resource name="KeyComma">,</resource>
+		<resource name="KeyDown">Down</resource>
+		<resource name="KeyLeft">Left</resource>
+		<resource name="KeyPeriod">.</resource>
+		<resource name="KeyRight">Right</resource>
+		<resource name="KeySlash">/</resource>
+		<resource name="KeyTab">Tab</resource>
+		<resource name="KeyUp">Up</resource>
+		<resource name="ChangesQueued">Changed</resource>
+		<resource name="ChangesSavedAutomatically">Changes are automatically saved to Staging with no need to manually save.</resource>
+		<resource name="SavingChanges">Saving...</resource>
+		<resource name="AllSaved">Saved.</resource>
+		<resource name="EditorColorTheme">Editor color theme</resource>
+		<resource name="Light">Light</resource>
+		<resource name="Dark">Dark</resource>
+		<resource name="ShowLineNumbers">Show line numbers</resource>
+		<resource name="wordWrap">Wrap long lines</resource>
+		<resource name="completeFullMemberSignature">Complete full method signatures on autocomplete</resource>
+		<resource name="SyncTree">Synchronize tree to current tab</resource>
+		<resource name="Shortcuts">Shortcuts</resource>
+		<resource name="CloseTab">Close Tab</resource>
+		<resource name="CloseOtherTabs">Close Other Tabs</resource>
+		<resource name="Actions">Actions</resource>
+		<resource name="Staged">Staged</resource>
+		<resource name="StagedChanges">Staged Changes</resource>
+		<resource name="PublishAll">Publish All</resource>
+		<resource name="RevertAll">Revert All</resource>
+		<resource name="ToggleNav">Toggle Navigation</resource>
+		<resource name="Actions">Actions</resource>
+		<resource name="Search">Search</resource>
+		<resource name="NoResults">No Results</resource>
+		<resource name="SwitchDesc">Switch between open tabs</resource>
+		<resource name="SwitchLeftDesc">Switch one tab to the left</resource>
+		<resource name="SwitchRightDesc">Switch one tab to the right</resource>
+		<resource name="CloseTabDesc">Close the current tab</resource>
+		<resource name="CloseOtherTabsDesc">Close other tabs</resource>
+		<resource name="RepositionLeftDesc">Reposition current tab to the left</resource>
+		<resource name="RepositionRightDesc">Reposition current tab to the right</resource>
+		<resource name="RevealInTreeDesc">Reveal current tab in the tree</resource>
+		<resource name="SwitchTitle">Active Tabs</resource>
+		<resource name="ShortcutsTitle">Keyboard Shortcuts</resource>
+		<resource name="Rendered">Rendered</resource>
+		<resource name="ViewRendered">View Rendered</resource>
+		<resource name="ViewRaw">View Raw</resource>
+		<resource name="Raw">Raw</resource>
+		<resource name="ReRun">Re-Run</resource>
+		<resource name="Copy">Copy</resource>
+		<resource name="EvaluateTip">Evaluate entire script or current selection (CTRL+ENTER)</resource>
+		<resource name="Run">Run</resource>
+		<resource name="Clear">Clear</resource>
+		<resource name="PrivateExtension">Private API</resource>
+		<resource name="ViewDocShortcut">Shortcut: [right]</resource>
+		<resource name="Extension">API</resource>
+		<resource name="Function">API</resource>
+		<resource name="PropertyTemplate">Template</resource>
+		<resource name="PropertyRule">Rule</resource>
+		<resource name="Method">Method</resource>
+		<resource name="Property">Property</resource>
+		<resource name="GettingStarted">Getting Started</resource>
+		<resource name="ExtensionIndex">All APIs</resource>
+		<resource name="dynamic_configuration_title">Dynamic Configuration</resource>
+		<resource name="palette_definition_title">Palette Definition</resource>
+		<resource name="velocity_scripting_title">Velocity Scripting</resource>
+		<resource name="WidgetApis">Widget, Theme, and Automation APIs</resource>
+		<resource name="RestApis">REST APIs</resource>
+		<resource name="RestResourceOperations">Supports: {0}</resource>
+		<resource name="RestOperations">Operations</resource>
+		<resource name="Location">Location</resource>
+		<resource name="RestExample">Sample Request</resource>
+		<resource name="RestJsonResponse">Sample JSON Response</resource>
+		<resource name="RestXmlResponse">Sample XML Response</resource>
+		<resource name="Obsolete">Obsolete</resource>
+		<resource name="Uncategorized">Uncategorized</resource>
+		<resource name="Properties">Properties</resource>
+		<resource name="Methods">Methods</resource>
+		<resource name="RestScopes">Scopes</resource>
+		<resource name="ArrayOf">Array of</resource>
+		<resource name="of">of</resource>
+		<resource name="Type">Type</resource>
+		<resource name="Example">Velocity</resource>
+		<resource name="JsExample">JavaScript</resource>
+		<resource name="Overload">Overload</resource>
+		<resource name="Parameters">Parameters</resource>
+		<resource name="UndocumentedParamMessage">This method accepts optional parameters which have not been documented.</resource>
+		<resource name="Name">Name</resource>
+		<resource name="ViewDocumentation">View Documentation</resource>
+		<resource name="Description">Description</resource>
+		<resource name="Required">Required</resource>
+		<resource name="RequiredLower">required</resource>
+		<resource name="Default">Default</resource>
+		<resource name="Options">Options</resource>
+		<resource name="OptionsDescription">Set of optional parameters including:</resource>
+		<resource name="Optional">Optional</resource>
+		<resource name="OptionalLower">optional</resource>
+		<resource name="Returns">Returns</resource>
+		<resource name="Nothing">Nothing</resource>
+		<resource name="New">New</resource>
+		<resource name="Import">Import</resource>
+		<resource name="SelectMultiple">Select Multiple</resource>
+		<resource name="Settings">Settings</resource>
+		<resource name="SelectAll">Select All Visible</resource>
+		<resource name="DeselectAll">Deselect All</resource>
+		<resource name="Resize">Resize</resource>
+		<resource name="StagedItem">Staged Item</resource>
+		<resource name="SavedButNotPublished">Saved but not yet published</resource>
+		<resource name="Language">Language</resource>
+		<resource name="Value">Value</resource>
+		<resource name="Delete">Delete</resource>
+		<resource name="AddResource">Add Resource</resource>
+		<resource name="ResourceName">Resource Name</resource>
+		<resource name="OldValue">Old Value</resource>
+		<resource name="NewValue">New Value</resource>
+		<resource name="NewResource">New Resource</resource>
+		<resource name="RemovedResource">Removed Resource</resource>
+		<resource name="ChangedResource">Changed Resource</resource>
+		<resource name="LessFunctions">LESS Functions</resource>
+		<resource name="PropertyTemplates">Configuration Property Templates</resource>
+		<resource name="PropertyRules">Configuration Property Rules</resource>
+		<resource name="IsSelectable">Is Selectable</resource>
+		<resource name="DataTypes">Supported Data Types</resource>
+		<resource name="AutomationEvents">Automation Events</resource>
+		<resource name="AutomationEvent">Automation Event</resource>
+		<resource name="Read">Read</resource>
+		<resource name="Write">Write</resource>
+		<resource name="Access">Access</resource>
+		<resource name="Values">Values</resource>
+		<resource name="UploadingLabel">Uploading...</resource>
+		<resource name="MoreParameters">(+ {remainder} more parameters)</resource>
+		<resource name="OtherOverloads">+{other} other overload</resource>
+		<resource name="DynamicObjProperties">Object with properties</resource>
+		<resource name="palette_definition">&lt;h2 class="documentation_title"&gt;Palette Definition Syntax&lt;/h2&gt;
+&lt;p&gt;Palettes are selectable groupings of predefined values. A theme may define palette types for the theme's implementation as well as its widgets to consume. A theme may also define sets of palette definitions for each palette type. A palette type may define any number and type of values as necessary.&lt;/p&gt;
+&lt;h3&gt;XML Palette Type Definition&lt;/h3&gt;
+&lt;h5&gt;Notation&lt;/h5&gt;
+&lt;p class="code"&gt;[&lt;br/&gt;
+&amp;lt;paletteType&amp;gt;&lt;br/&gt;
+&amp;nbsp;&amp;nbsp;[&lt;br/&gt;
+&amp;nbsp;&amp;nbsp;&amp;lt;palette&amp;gt;&lt;br/&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;[&amp;lt;value /&amp;gt;]*&lt;br/&gt;
+&amp;nbsp;&amp;nbsp;&amp;lt;/palette&amp;gt;&lt;br/&gt;
+&amp;nbsp;&amp;nbsp;]*&lt;br&gt;
+&amp;lt;/paletteType&amp;gt;&lt;br/&gt;
+]*	&lt;/p&gt;
+&lt;p&gt;One or more palette types can contain one or more palettes each. Each palette can then contain one or more values, of any type.&lt;/p&gt;
+&lt;p&gt;Palette values can be retrieved within widgets and the theme using the &lt;span class="code"&gt;$core_v2_theme&lt;/span&gt; widget extension and &lt;span class="code"&gt;-evo-themepalette-*&lt;/span&gt; LESS functions.&lt;/p&gt;
+&lt;p&gt;The palettes of a given palette type can be selected in a theme or widget's configuration with a &lt;span class="code"&gt;themepalette&lt;/span&gt; configuration property template.&lt;/p&gt;
+&lt;div class="documentation-member"&gt;
+	&lt;h3 class="member_heading"&gt;&amp;lt;paletteType /&amp;gt;&lt;/h3&gt;
+	&lt;div class="documentation-member-body"&gt;
+		&lt;div class="MethodOverloads"&gt;
+		&lt;div class="MethodOverload"&gt;
+			&lt;h5&gt;Notation&lt;/h5&gt;
+			&lt;p class="code"&gt;&amp;lt;paletteType id="" name="" &amp;gt;...&amp;lt;/paletteType&amp;gt;&lt;/p&gt;
+			&lt;p&gt;Defines a grouping of palettes. The palettes of a given palette type can be selected in a theme or widget's configuration with a &lt;span class="code"&gt;themepalette&lt;/span&gt; configuration property template.&lt;/p&gt;
+			&lt;p&gt;Attributes:&lt;/p&gt;
+			&lt;ul class="parameters"&gt;
+				&lt;li&gt;&lt;span class="code"&gt;id&lt;/span&gt; is the identifier for the palette type.&lt;/li&gt;
+				&lt;li&gt;&lt;span class="code"&gt;name&lt;/span&gt; is the name of the palette type&lt;/li&gt;
+			&lt;/ul&gt;
+		&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="documentation-member"&gt;
+&lt;h3 class="member_heading"&gt;&amp;lt;palette /&amp;gt;&lt;/h3&gt;
+&lt;div class="documentation-member-body"&gt;
+	&lt;div class="MethodOverloads"&gt;
+	&lt;div class="MethodOverload"&gt;
+		&lt;h5&gt;Notation&lt;/h5&gt;
+		&lt;p class="code"&gt;&amp;lt;palette id="" name="" [cssClass=""] [previewCss=""] [default=""]  &amp;gt;...&amp;lt;/palette&amp;gt;&lt;/p&gt;
+		&lt;p&gt;Defines a grouping of selectable palettes. The palettes of a given palette type can be selected in a theme or widget's configuration with a &lt;span class="code"&gt;themepalette&lt;/span&gt; configuration property template.&lt;/p&gt;
+		&lt;p&gt;Attributes:
+		&lt;/p&gt;&lt;ul class="parameters"&gt;
+
+			&lt;li&gt;&lt;span class="code"&gt;id&lt;/span&gt; is the identifier for the palette.&lt;/li&gt;
+			&lt;li&gt;&lt;span class="code"&gt;name&lt;/span&gt; is the display name for the palette.&lt;/li&gt;
+			&lt;li&gt;&lt;span class="code"&gt;cssClass&lt;/span&gt; is the optional CSS class applied to the palette option when rendered in a &lt;span class="code"&gt;themepalette&lt;/span&gt; configuration property template.&lt;/li&gt;
+			&lt;li&gt;&lt;span class="code"&gt;previewCss&lt;/span&gt; is the optional inline styling applied to the palette option when rendered in a &lt;span class="code"&gt;themepalette&lt;/span&gt; configuration property template.&lt;/li&gt;
+			&lt;li&gt;&lt;span class="code"&gt;default&lt;/span&gt; is a boolean (&lt;span class="code"&gt;true&lt;/span&gt; or &lt;span class="code"&gt;false&lt;/span&gt;) identifying whether this palette should be the default selection within a palette type when no other palette has been selected.&lt;/li&gt;
+		&lt;/ul&gt;
+	&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="documentation-member"&gt;
+&lt;h3 class="member_heading"&gt;&amp;lt;value /&amp;gt;&lt;/h3&gt;
+&lt;div class="documentation-member-body"&gt;
+	&lt;div class="MethodOverloads"&gt;
+	&lt;div class="MethodOverload"&gt;
+		&lt;h5&gt;Notation&lt;/h5&gt;
+		&lt;p class="code"&gt;&amp;lt;value id="" dataType="" &amp;gt;value&amp;lt;/value&amp;gt;&lt;/p&gt;
+		&lt;p&gt;Defines a value within a palette.&lt;/p&gt;
+		&lt;p&gt;Attributes:
+		&lt;/p&gt;&lt;ul class="parameters"&gt;
+			&lt;li&gt;&lt;span class="code"&gt;id&lt;/span&gt; is the identifier for this value. This is the identifier used when retrieving selected palette values via the &lt;span class="code"&gt;$core_v2_theme&lt;/span&gt; extension methods within widgets and &lt;span class="code"&gt;-evo-themepalette-*&lt;/span&gt; LESS functions.&lt;/li&gt;
+			&lt;li&gt;&lt;span class="code"&gt;dataType&lt;/span&gt; is the data type of this value. Possible data types are:
+			&lt;ul class="parameters"&gt;
+				&lt;li&gt;&lt;span class="code"&gt;Int&lt;/span&gt; is an integer value.&lt;/li&gt;
+				&lt;li&gt;&lt;span class="code"&gt;String&lt;/span&gt; is as a string value.&lt;/li&gt;
+				&lt;li&gt;&lt;span class="code"&gt;Color&lt;/span&gt; is a CSS color value.&lt;/li&gt;
+				&lt;li&gt;&lt;span class="code"&gt;Unit&lt;/span&gt; is a CSS unit.&lt;/li&gt;
+				&lt;li&gt;&lt;span class="code"&gt;Double&lt;/span&gt; is a double-precision floating point value.&lt;/li&gt;
+			&lt;/ul&gt;
+			&lt;/li&gt;
+			&lt;li&gt;&lt;span class="code"&gt;value&lt;/span&gt; is the value&lt;/li&gt;
+		&lt;/ul&gt;
+		&lt;p&gt;When working with values on the server, note the data representation:
+			&lt;/p&gt;&lt;table&gt;
+				&lt;thead&gt;
+					&lt;tr&gt;
+						&lt;th&gt;Palette value data type&lt;/th&gt;&lt;th&gt;Server data type (.Net)&lt;/th&gt;&lt;th&gt;Client data type (Javascript)&lt;/th&gt;
+					&lt;/tr&gt;
+				&lt;/thead&gt;
+				&lt;tbody&gt;
+					&lt;tr&gt;
+						&lt;th&gt;Int&lt;/th&gt;&lt;td&gt;Int32&lt;/td&gt;&lt;td&gt;Number&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;th&gt;String&lt;/th&gt;&lt;td&gt;String&lt;/td&gt;&lt;td&gt;String&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;th&gt;Color&lt;/th&gt;&lt;td&gt;Telligent.Evolution.Extensibility.Configuration.Version1.Color&lt;/td&gt;&lt;td&gt;String representation of the color: #RRGGBB, #RRGGBBAA, rgb(1-255, 1-255, 1-255), rgba(1-255, 1-255, 1-255, 0-1), hsl(1-255, %, %), hsla(1-255, %, %, 0-1), or a named HTML color.&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;th&gt;Unit&lt;/th&gt;&lt;td&gt;Telligent.Evolution.Extensibility.Configuration.Version1.Unit&lt;/td&gt;&lt;td&gt;String representation of a CSS unit, a px, pt, pc, in, mm, cm, %, em, ex, ch, rem, v2, or vh value.&lt;/td&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;th&gt;Double&lt;/th&gt;&lt;td&gt;Double&lt;/td&gt;&lt;td&gt;Number&lt;/td&gt;
+					&lt;/tr&gt;
+				&lt;/tbody&gt;
+			&lt;/table&gt;
+	&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</resource>
+		<resource name="dynamic_configuration">&lt;h2 class=&quot;documentation_title&quot;&gt;Dynamic Configuration&lt;/h2&gt;
+
+	&lt;p&gt;Dynamic Configuration is meta-data-based dynamic form generation format used by widgets to define configuration values.&lt;/p&gt;
+	&lt;h3&gt;XML Configuration Definition&lt;/h3&gt;
+
+	&lt;h5&gt;Notation&lt;/h5&gt;
+
+	&lt;p class=&quot;code&quot;&gt;[&lt;br /&gt;
+&amp;lt;propertyGroup&amp;gt;&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;[&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;lt;propertySubGroup&amp;gt;&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;[&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;lt;property&amp;gt;&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;[&amp;lt;propertyValue /&amp;gt;]*&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;[&amp;lt;propertyRule /&amp;gt;]*&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;lt;/property&amp;gt;&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;]*&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;lt;/propertySubGroup&amp;gt;&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;]*&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;[&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;lt;property&amp;gt;&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;[&amp;lt;propertyValue /&amp;gt;]*&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;[&amp;lt;propertyRule /&amp;gt;]*&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;&amp;lt;/property&amp;gt;&lt;br /&gt;
+&amp;nbsp;&amp;nbsp;]*&lt;br /&gt;
+&amp;lt;/propertyGroup&amp;gt;&lt;br /&gt;
+]*	&lt;/p&gt;
+	&lt;p&gt;	One or more property groups can contain one or more properties each.  Each group is represented as a tab on the widget configuration window and each property stores a single value.  Each property can optionally define selectable values and rules.	&lt;/p&gt;
+	&lt;p&gt;	Property values can be retrieved within widgets using the get and set methods on the &lt;span class=&quot;code&quot;&gt;$core_v2_widget&lt;/span&gt; extension.	&lt;/p&gt;
+	&lt;div class=&quot;documentation-member&quot;&gt;
+	&lt;h3 class=&quot;member_heading&quot;&gt;&amp;lt;propertyGroup /&amp;gt;&lt;/h3&gt;
+	&lt;div class=&quot;documentation-member-body&quot;&gt;
+		&lt;div class=&quot;MethodOverloads&quot;&gt;
+		&lt;div class=&quot;MethodOverload&quot;&gt;
+			&lt;h5&gt;Notation&lt;/h5&gt;
+			&lt;p class=&quot;code&quot;&gt;&amp;lt;propertyGroup [id=&quot;&quot;] [labelResourceName=&quot;&quot;] [labelText=&quot;&quot;] [descriptionResourceName=&quot;&quot;] [descriptionText=&quot;&quot;] [orderNumber=&quot;&quot;] [visible=&quot;&quot;] &amp;gt;...&amp;lt;/propertyGroup&amp;gt;&lt;/p&gt;
+			&lt;p&gt;Defines a grouping of configuration properties.  Within the widget configuration window, each group is represented by a tab.&lt;/p&gt;
+			&lt;p&gt;Attributes:
+			&lt;ul class=&quot;parameters&quot;&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;id&lt;/span&gt; is the identifier for the group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; is the name of the language resource identifying the name of this group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; is the plain labelText name of this group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;descriptionResourceName&lt;/span&gt; is the name of the language resource identifying the description of this group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;descriptionText&lt;/span&gt; is the plain labelText description of this group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;orderNumber&lt;/span&gt; is the integer order number of this group (by default, groups are ordered as they are defined in the XML configuration).&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;visible&lt;/span&gt; is a boolean (&lt;span class=&quot;code&quot;&gt;true&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;false&lt;/span&gt;) identifying whether this group should be shown on the widget configuration window (by default, all groups with visible properties are shown).&lt;/li&gt;
+			&lt;/ul&gt;
+			&lt;/p&gt;
+			&lt;p&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; are required.&lt;/p&gt;
+		&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;div class=&quot;documentation-member&quot;&gt;
+	&lt;h3 class=&quot;member_heading&quot;&gt;&amp;lt;propertySubGroup /&amp;gt;&lt;/h3&gt;
+	&lt;div class=&quot;documentation-member-body&quot;&gt;
+		&lt;div class=&quot;MethodOverloads&quot;&gt;
+		&lt;div class=&quot;MethodOverload&quot;&gt;
+			&lt;h5&gt;Notation&lt;/h5&gt;
+			&lt;p class=&quot;code&quot;&gt;&amp;lt;propertySubGroup [id=&quot;&quot;] [labelResourceName=&quot;&quot;] [labelText=&quot;&quot;] [descriptionResourceName=&quot;&quot;] [descriptionText=&quot;&quot;] [orderNumber=&quot;&quot;] [visible=&quot;&quot;] &amp;gt;...&amp;lt;/propertySubGroup&amp;gt;&lt;/p&gt;
+			&lt;p&gt;Defines a sub-grouping of configuration properties.  Within the widget configuration window, each sub-group is represented with a heading.&lt;/p&gt;
+			&lt;p&gt;Attributes:
+			&lt;ul class=&quot;parameters&quot;&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;id&lt;/span&gt; is the identifier for the sub-group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; is the name of the language resource identifying the name of this sub-group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; is the plain labelText name of this sub-group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;descriptionResourceName&lt;/span&gt; is the name of the language resource identifying the description of this sub-group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;descriptionText&lt;/span&gt; is the plain labelText description of this sub-group.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;orderNumber&lt;/span&gt; is the integer order number of this sub-group (by default, sub-groups are ordered as they are defined in the XML configuration).&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;visible&lt;/span&gt; is a boolean (&lt;span class=&quot;code&quot;&gt;true&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;false&lt;/span&gt;) identifying whether this sub-group should be shown on the widget configuration window (by default, all sub-groups with visible properties are shown).&lt;/li&gt;
+			&lt;/ul&gt;
+			&lt;/p&gt;
+			&lt;p&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; are required.&lt;/p&gt;
+		&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;div class=&quot;documentation-member&quot;&gt;
+	&lt;h3 class=&quot;member_heading&quot;&gt;&amp;lt;property /&amp;gt;&lt;/h3&gt;
+	&lt;div class=&quot;documentation-member-body&quot;&gt;
+		&lt;div class=&quot;MethodOverloads&quot;&gt;
+		&lt;div class=&quot;MethodOverload&quot;&gt;
+			&lt;h5&gt;Notation&lt;/h5&gt;
+			&lt;p class=&quot;code&quot;&gt;&amp;lt;property id=&quot;&quot; dataType=&quot;&quot; [labelResourceName=&quot;&quot;] [labelText=&quot;&quot;] [descriptionResourceName=&quot;&quot;] [descriptionText=&quot;&quot;] [orderNumber=&quot;&quot;]  [defaultValue=&quot;&quot;] [editable=&quot;&quot;] [visible=&quot;&quot;] [template=&quot;&quot;] [scope=&quot;&quot;] [other attributes] /&amp;gt;&lt;/p&gt;
+			&lt;p&gt;Defines a configuration property within a configuration group.&lt;/p&gt;
+			&lt;p&gt;Attributes:
+			&lt;ul class=&quot;parameters&quot;&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;id&lt;/span&gt; is the identifier for this property.  This is the identifier used when retrieving values via the &lt;span class=&quot;code&quot;&gt;$core_v2_widget&lt;/span&gt; extension methods within widgets.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;dataType&lt;/span&gt; is the data type of this property.  Possible values are:
+				&lt;ul class=&quot;parameters&quot;&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Bool&lt;/span&gt; stores a &lt;span class=&quot;code&quot;&gt;true&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;false&lt;/span&gt; value.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Color&lt;/span&gt; stores a CSS color value.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Date&lt;/span&gt; stores a date.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;DateTime&lt;/span&gt; stores a date and a time.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Double&lt;/span&gt; stores a double-precision floating point value.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Guid&lt;/span&gt; stores a globally unique identifier value.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Html&lt;/span&gt; stores an HTML value.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Int&lt;/span&gt; stores an integer value.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;String&lt;/span&gt; stores as a string value.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Time&lt;/span&gt; stores a time.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Unit&lt;/span&gt; stores a CSS unit.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Url&lt;/span&gt; stores a URL.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;UrlList&lt;/span&gt; stores a list of zero or more URLs.&lt;/li&gt;
+					&lt;li&gt;&lt;span class=&quot;code&quot;&gt;Custom&lt;/span&gt; stores a custom string value suitable for use with custom property templates.&lt;/li&gt;
+				&lt;/ul&gt;
+				&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; is the name of the language resource identifying the name of this property.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; is the plain labelText name of this property.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;descriptionResourceName&lt;/span&gt; is the name of the language resource identifying the description of this property.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;descriptionText&lt;/span&gt; is the plain labelText description of this property.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;orderNumber&lt;/span&gt; is the integer order number of this property (by default, properties are ordered as they are defined in the XML configuration).&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;defaultValue&lt;/span&gt; is the default value for this property.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;editable&lt;/span&gt; is a boolean (&lt;span class=&quot;code&quot;&gt;true&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;false&lt;/span&gt;) identifying whether this property should be editable on the widget configuration window (by default, all properties are editable).&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;visible&lt;/span&gt; is a boolean (&lt;span class=&quot;code&quot;&gt;true&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;false&lt;/span&gt;) identifying whether this property should be shown on the widget configuration window (by default, all properties are shown).&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;template&lt;/span&gt; the name of a shared property template (an installed plugin implementing the &lt;span class=&quot;code&quot;&gt;Telligent.Evolution.Extensibility.Configuration.Version1.IPropertyTemplate&lt;/span&gt; interface) or a local &lt;span class=&quot;code&quot;&gt;.vm&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;.jsm&lt;/span&gt; file (the filename including the .vm or .jsm extension) containing an implementation of the user interface of this property. If not specified, the default template (named for the data type) will be used. Note that there is no default template for custom properties and an explicit template should always be provided.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;scope&lt;/span&gt; defines the non-standard scope in which this property&#39;s value should be stored.  Normally, a property&#39;s value is associated to a single instance of the widget, however, when &lt;span class=&quot;code&quot;&gt;scope&lt;/span&gt; is defined, the value will apply to all instances of the widget within the defined scope.  Possible values are:
+				&lt;ul class=&quot;parameters&quot;&gt;
+					{0}
+				&lt;/ul&gt;
+				When the user does not have the proper permission to edit themes within the property&#39;s defined scope, the property will not be shown within the widget&#39;s configuration form.			&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;[other attributes]&lt;/span&gt; are any additional attributes used by property rules or property templates for additional configuraiton.&lt;/li&gt;
+			&lt;/ul&gt;
+			&lt;/p&gt;
+			&lt;p&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; are required in addition to &lt;span class=&quot;code&quot;&gt;id&lt;/span&gt; and &lt;span class=&quot;code&quot;&gt;dataType&lt;/span&gt;.&lt;/p&gt;
+			&lt;p&gt;When working with property values on the server and client side via property rules or templates, note the data representation:
+				&lt;table&gt;
+					&lt;thead&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Configuration data type&lt;/th&gt;&lt;th&gt;Server data type (.Net)&lt;/th&gt;&lt;th&gt;Client data type (Javascript)&lt;/th&gt;
+						&lt;/tr&gt;
+					&lt;/thead&gt;
+					&lt;tbody&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Bool&lt;/th&gt;&lt;td&gt;Bool&lt;/td&gt;&lt;td&gt;Boolean&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Color&lt;/th&gt;&lt;td&gt;Telligent.Evolution.Extensibility.Configuration.Version1.Color&lt;/td&gt;&lt;td&gt;String representation of the color: #RRGGBB, #RRGGBBAA, rgb(1-255, 1-255, 1-255), rgba(1-255, 1-255, 1-255, 0-1), hsl(1-255, %, %), hsla(1-255, %, %, 0-1), or a named HTML color.&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Date&lt;/th&gt;&lt;td&gt;DateTime&lt;/td&gt;&lt;td&gt;Date&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;DateTime&lt;/th&gt;&lt;td&gt;DateTime&lt;/td&gt;&lt;td&gt;Date&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Double&lt;/th&gt;&lt;td&gt;Double&lt;/td&gt;&lt;td&gt;Number&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Guid&lt;/th&gt;&lt;td&gt;Guid&lt;/td&gt;&lt;td&gt;String representation of a GUID: FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF.&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Html&lt;/th&gt;&lt;td&gt;String&lt;/td&gt;&lt;td&gt;String&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Int&lt;/th&gt;&lt;td&gt;Int32&lt;/td&gt;&lt;td&gt;Number&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;String&lt;/th&gt;&lt;td&gt;String&lt;/td&gt;&lt;td&gt;String&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Time&lt;/th&gt;&lt;td&gt;DateTime&lt;/td&gt;&lt;td&gt;Date&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Unit&lt;/th&gt;&lt;td&gt;Telligent.Evolution.Extensibility.Configuration.Version1.Unit&lt;/td&gt;&lt;td&gt;String representation of a CSS unit, a px, pt, pc, in, mm, cm, %, em, ex, ch, rem, v2, or vh value.&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Url&lt;/th&gt;&lt;td&gt;Uri&lt;/td&gt;&lt;td&gt;String representation of a URL.&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;UrlList&lt;/th&gt;&lt;td&gt;Uri[]&lt;/td&gt;&lt;td&gt;Array of string representations of URL that, when converted to a string, represents the URLs in querystring format with the key Uri, for example, &lt;span class=&quot;code&quot;&gt;Uri=http://url.com/&amp;Uri=http://url2.com/&lt;/span&gt;.&lt;/td&gt;
+						&lt;/tr&gt;
+						&lt;tr&gt;
+							&lt;th&gt;Custom&lt;/th&gt;&lt;td&gt;String&lt;/td&gt;&lt;td&gt;String&lt;/td&gt;
+						&lt;/tr&gt;
+					&lt;/tbody&gt;
+				&lt;/table&gt;
+			&lt;/p&gt;
+			&lt;p&gt;When using a local custom property template (implemented using a VM file), the velocity script within that VM file is provided an additional API, &lt;span class=&quot;code&quot;&gt;$core_v2_propertyTemplate&lt;/span&gt;, which provides access to property rendering specific data.
+			&lt;/p&gt;
+			&lt;p&gt;HTML properties can be sanitized according to the global content filtering rules of the community by setting the &lt;span class=&quot;code&quot;&gt;sanitize&lt;/span&gt; attribute on the property to &lt;span class=&quot;code&quot;&gt;true&lt;/span&gt;.
+			&lt;/p&gt;
+			&lt;p&gt;String properties are always HTML encoded.&lt;/p&gt;
+			&lt;/p&gt;
+			&lt;p&gt;To support file storage within a property with a custom data type, set the &lt;span class=&quot;code&quot;&gt;trackEmbeddedFiles&lt;/span&gt; attribute on the &lt;span class=&quot;code&quot;&gt;&amp;lt;property /&amp;gt;&lt;/span&gt; node to &lt;span class=&quot;code&quot;&gt;true&lt;/span&gt;. By default, file detection within custom properties considers the value as plain text. By setting the &lt;span class=&quot;code&quot;&gt;encoding&lt;/span&gt; attribute on &lt;span class=&quot;code&quot;&gt;&amp;lt;property /&amp;gt;&lt;/span&gt; to &lt;span class=&quot;code&quot;&gt;Url&lt;/span&gt;, the custom value will be parsed as a URL encoded set of keys or key value pairs when detecting file URLs.
+			&lt;/p&gt;
+		&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;div class=&quot;documentation-member&quot;&gt;
+	&lt;h3 class=&quot;member_heading&quot;&gt;&amp;lt;propertyValue /&amp;gt;&lt;/h3&gt;
+	&lt;div class=&quot;documentation-member-body&quot;&gt;
+		&lt;div class=&quot;MethodOverloads&quot;&gt;
+		&lt;div class=&quot;MethodOverload&quot;&gt;
+			&lt;h5&gt;Notation&lt;/h5&gt;
+			&lt;p class=&quot;code&quot;&gt;&amp;lt;propertyValue value=&quot;&quot; [labelResourceName=&quot;&quot;] [labelText=&quot;&quot;] [orderNumber=&quot;&quot;] [other attributes] /&amp;gt;&lt;/p&gt;
+			&lt;p&gt;Defines a selectable value for a property.  When selectable values are defined for a property, the property, by default, is rendered using a drop-down list.&lt;/p&gt;
+			&lt;p&gt;Attributes:
+			&lt;ul class=&quot;parameters&quot;&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;value&lt;/span&gt; is the selectable value to which the the associated property should be set when selected.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; is the name of the language resource identifying the name of this selectable value.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; is the plain labelText name of this selectable value.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;orderNumber&lt;/span&gt; is the integer order number of this selectable value (by default, selectable values are ordered as they are defined in the XML configuration).&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;[other attributes]&lt;/span&gt; are any additional attributes used by property rules or property controls for additional configuraiton.&lt;/li&gt;
+			&lt;/ul&gt;
+			&lt;/p&gt;
+			&lt;p&gt;&lt;span class=&quot;code&quot;&gt;labelResourceName&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;labelText&lt;/span&gt; are required in addition to &lt;span class=&quot;code&quot;&gt;value&lt;/span&gt;.&lt;/p&gt;
+		&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;div class=&quot;documentation-member&quot;&gt;
+	&lt;h3 class=&quot;member_heading&quot;&gt;&amp;lt;propertyRule /&amp;gt;&lt;/h3&gt;
+	&lt;div class=&quot;documentation-member-body&quot;&gt;
+		&lt;div class=&quot;MethodOverloads&quot;&gt;
+		&lt;div class=&quot;MethodOverload&quot;&gt;
+			&lt;h5&gt;Notation&lt;/h5&gt;
+			&lt;p class=&quot;code&quot;&gt;&amp;lt;propertyRule name=&quot;&quot; [other attributes]/&amp;gt;&lt;/p&gt;
+			&lt;p&gt;Defines a rule to be applied to a property.&lt;/p&gt;
+			&lt;p&gt;Attributes:
+			&lt;ul class=&quot;parameters&quot;&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;name&lt;/span&gt; is the name of a shared property rule (an installed plugin implementing the &lt;span class=&quot;code&quot;&gt;Telligent.Evolution.Extensibility.Configuration.Version1.IPropertyRule&lt;/span&gt; interface) or a local &lt;span class=&quot;code&quot;&gt;.vm&lt;/span&gt; or &lt;span class=&quot;code&quot;&gt;.jsm&lt;/span&gt; file (the filename including the .vm or .jsm extension) containing an implementation of the user interface and server-side implementation of this rule.&lt;/li&gt;
+				&lt;li&gt;&lt;span class=&quot;code&quot;&gt;[other attributes]&lt;/span&gt; are any additional attributes used to configure the property rule.&lt;/li&gt;
+			&lt;/ul&gt;
+			&lt;/p&gt;
+		&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;/div&gt;</resource>
+		<resource name="dynamic_configuration_scope_description_site">shares the value of this property with all instances of this widget throughout the site.</resource>
+		<resource name="dynamic_configuration_scope_description">shares the value of this property with all instances of this widget within the context of the current {0}.</resource>
+		<resource name="velocity_scripting">					&lt;h2 class="documentation_title"&gt;Velocity Scripting&lt;/h2&gt;					&lt;p&gt;Velocity is the templating language used to interact and format data within Community Server.&lt;/p&gt;					&lt;h4 class="members_heading"&gt;Variables, Properties and Methods&lt;/h3&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;Variables and Extensions&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Notation&lt;/h5&gt;							&lt;p class="code"&gt;$[!][{][a-z,A-Z][a-z,A-Z,0-9,-,_]*[}]&lt;/p&gt;							&lt;p&gt;Variable and extension names must start with a dollar sign and an alphabetic letter.&lt;/p&gt;							&lt;p&gt;When the value of the variable is null, &lt;span class="code"&gt;$variable&lt;/span&gt; will render the name of the variable and &lt;span class="code"&gt;$!variable&lt;/span&gt; will render nothing.&lt;/p&gt;							&lt;p&gt;&lt;span class="code"&gt;${$variable}&lt;/span&gt; is the formal notation for variables and distinguishes variable references within text, for example &lt;span class="code"&gt;see${$variable}this&lt;/span&gt;.&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;Properties&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Notation&lt;/h5&gt;							&lt;p class="code"&gt;$[!][{][a-z,A-Z][a-z,A-Z,0-9,-,_]*.[a-z,A-Z][a-z,A-Z,0-9,-,_]*[}]&lt;/p&gt;							&lt;p&gt;Dot-syntax is used to reference properties on variables and extensions.&lt;/p&gt;							&lt;p&gt;When the value of the property is null, &lt;span class="code"&gt;$extension.Property&lt;/span&gt; will render the name of the extension and property and &lt;span class="code"&gt;$!extesion.Property&lt;/span&gt; will render nothing.&lt;/p&gt;							&lt;p&gt;&lt;span class="code"&gt;${$extension.Property}&lt;/span&gt; is the formal notation for properties and distinguishes property references within text, for example &lt;span class="code"&gt;see${$extension.Property}this&lt;/span&gt;.&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;Methods&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Notation&lt;/h5&gt;							&lt;p class="code"&gt;$[!][{][a-z,A-Z][a-z,A-Z,0-9,-,_]*.[a-z,A-Z][a-z,A-Z,0-9,-,_]*([optional_parameter_list])[}]&lt;/p&gt;							&lt;p&gt;Dot-syntax is used to reference methods on variables and extensions.&lt;/p&gt;							&lt;p&gt;When the return value of the method is null, &lt;span class="code"&gt;$extension.Method()&lt;/span&gt; will render the name of the extension and method and &lt;span class="code"&gt;$!extesion.Method()&lt;/span&gt; will render nothing.  If the return value is void, nothing will be rendered.&lt;/p&gt;							&lt;p&gt;&lt;span class="code"&gt;${$extension.Method()}&lt;/span&gt; is the formal notation for methods and distinguishes method references within text, for example &lt;span class="code"&gt;see${$extension.Method()}this&lt;/span&gt;.&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;h3&gt;Directives&lt;/h3&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#set&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;#set($reference = [argument])&lt;/p&gt;							&lt;p&gt;								Assigns a value to a variable or property where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;$reference&lt;/span&gt; is a variable or property reference.&lt;/li&gt;								&lt;li&gt;&lt;span class="code"&gt;[argument]&lt;/span&gt; is:									&lt;ul class="parameters"&gt;									&lt;li&gt;a method, variable, or property reference&lt;/li&gt;									&lt;li&gt;a literal boolean (&lt;span class="code"&gt;true&lt;/span&gt; or &lt;span class="code"&gt;false&lt;/span&gt;)&lt;/li&gt;									&lt;li&gt;a literal number (&lt;span class="code"&gt;[0-9]*.[0-9]*&lt;/span&gt;)&lt;/li&gt;									&lt;li&gt;a literal string in single or double quotes&lt;/li&gt;									&lt;li&gt;an array definition (&lt;span class="code"&gt;[$item1, $item2, $item3,... $itemN]&lt;/span&gt;)&lt;/li&gt;									&lt;li&gt;a mathematic expression:										&lt;ul class="parameters"&gt;										&lt;li&gt;Addition: &lt;span class="code"&gt;#set($n = $n + 1)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Subtraction: &lt;span class="code"&gt;#set($n = $n - 1)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Multiplication: &lt;span class="code"&gt;#set($n = $n * $x)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Division: &lt;span class="code"&gt;#set($n = $n / $x)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Modulus: &lt;span class="code"&gt;#set($n = $n % $x)&lt;/span&gt;&lt;/li&gt;										&lt;/ul&gt;									&lt;/li&gt;									&lt;/ul&gt;								&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;p&gt;								When &lt;span class="code"&gt;[argument]&lt;/span&gt; is a literal string, strings in double quotes will be parsed whereas strings in single quotes will not be parsed.							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#store&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;					#store($reference)&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script resulting in the value assigned to the variable]&lt;br /&gt;					#end							&lt;/p&gt;							&lt;p&gt;								Assigns the result of executing a block of script to a variable where								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;$reference&lt;/span&gt; is a variable reference.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;p class="code"&gt;					#store($result)&lt;br /&gt;					&amp;nbsp;&amp;nbsp;&amp;lt;a href=&amp;quot;$user.ProfileUrl&amp;quot;&amp;gt;$user.DisplayName&amp;lt;/a&amp;gt;&lt;br /&gt;					#end							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#if&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;					#if([condition])&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute when if condition is true]&lt;br/&gt;					[&lt;br /&gt;					#elseif([condition])&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute when elseif condition is true]&lt;br /&gt;					]*&lt;br /&gt;					[&lt;br/&gt;					#else&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute if no conditions are true]&lt;br /&gt;					]&lt;br/&gt;					#end							&lt;/p&gt;							&lt;p&gt;								Conditionally renders templates where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;[condition]&lt;/span&gt; is:									&lt;ul class="parameters"&gt;									&lt;li&gt;a boolean expression:										&lt;ul class="parameters"&gt;										&lt;li&gt;Equal: &lt;span class="code"&gt;#if($x == $y)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Greater: &lt;span class="code"&gt;#if($x &gt; $y)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Less: &lt;span class="code"&gt;#if($x &lt; 100)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Greater or Equal: &lt;span class="code"&gt;#if($x &gt;= 100)&lt;/span&gt;&lt;/li&gt;										&lt;li&gt;Less or Equal: &lt;span class="code"&gt;#if($x &lt;= 100)&lt;/span&gt;&lt;/li&gt;										&lt;/ul&gt;									&lt;/li&gt;									&lt;li&gt;a non-boolean variable, property, method, or literal reference (true if not null, otherwise false)&lt;/li&gt;									&lt;/ul&gt;								&lt;/li&gt;								&lt;li&gt;&lt;span class="code"&gt;[script...]&lt;/span&gt; is any Velocity or literal text.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#foreach&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;					#foreach($item in $items)&lt;br /&gt;					[#each]&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute for each item]&lt;br /&gt;					[&lt;br /&gt;					#before&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute before each item]&lt;br /&gt;					]&lt;br /&gt;					[&lt;br /&gt;					#after&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute after each item]&lt;br /&gt;					]&lt;br /&gt;					[&lt;br /&gt;					#between&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute betwee each item]&lt;br /&gt;					]&lt;br /&gt;					[&lt;br /&gt;					#odd&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute for every other item, including the first]&lt;br /&gt;					]&lt;br /&gt;					[&lt;br /&gt;					#even&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute for every other item, starting with the second]&lt;br /&gt;					]&lt;br /&gt;					[&lt;br /&gt;					#nodata&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute if $items is null or empty]&lt;br /&gt;					]&lt;br /&gt;					[&lt;br /&gt;					#beforeall&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute before all items, if there are items]&lt;br /&gt;					]&lt;br /&gt;					[&lt;br /&gt;					#afterall&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to execute after all items, if there are items]&lt;br /&gt;					]&lt;br /&gt;					#end							&lt;/p&gt;							&lt;p&gt;								Renders templates for each item within a collection of items where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;$item&lt;/span&gt; is the variable containing each item in the &lt;span class="code"&gt;$items&lt;/span&gt; collection when executing &lt;span class="code"&gt;#each&lt;/span&gt;, &lt;span class="code"&gt;#odd&lt;/span&gt;, and &lt;span class="code"&gt;#even&lt;/span&gt; scripts.&lt;/li&gt;								&lt;li&gt;&lt;span class="code"&gt;$items&lt;/span&gt; is a variable, property, or method resulting in a collection of items.&lt;/li&gt;								&lt;li&gt;&lt;span class="code"&gt;[script...]&lt;/span&gt; is any Velocity or literal text.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;p&gt;&lt;span class="code"&gt;#each&lt;/span&gt; is the default template, so, &lt;/p&gt;							&lt;p class="code"&gt;					#foreach($item in $items)&lt;br /&gt;					&amp;nbsp;&amp;nbsp;$item.Name&lt;br /&gt;					#end							&lt;/p&gt;							&lt;p&gt;is equivalent to&lt;/p&gt;							&lt;p class="code"&gt;					#foreach ($item in $items)&lt;br /&gt;					#each&lt;br /&gt;					&amp;nbsp;&amp;nbsp;$item.Name&lt;br /&gt;					#end							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#format&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;					#format($formatString)&lt;br /&gt;					[#token()]&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script resulting in the numeric token's value]&lt;br /&gt;					[#token($parameterName)]&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script resulting in the named token's value]&lt;br /&gt;					#end							&lt;/p&gt;							&lt;p&gt;								Inserts token values into a tokenized format string where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;$formatString&lt;/span&gt; is the expression resulting in a string containing zero-based numeric (&lt;code&gt;{0}&lt;/code&gt;) or named (&lt;code&gt;{name}&lt;/code&gt;) tokens. The format string cannot mix numeric and named tokens.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;p&gt;Token values are defined using one or more &lt;code&gt;#token&lt;/code&gt; directives within the &lt;code&gt;#format&lt;/code&gt; block. Each &lt;code&gt;#token&lt;/code&gt; can optionally identify a token name.&lt;/p&gt;							&lt;p class="code"&gt;					#format('{0}, {1}, and {2}')&lt;br /&gt;					&amp;nbsp;&amp;nbsp;#token()&lt;br /&gt;					&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;One&lt;br /&gt;					&amp;nbsp;&amp;nbsp;#token()&lt;br /&gt;					&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Two&lt;br /&gt;					&amp;nbsp;&amp;nbsp;#token()&lt;br /&gt;					&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Three&lt;br /&gt;					#end							&lt;/p&gt;							&lt;p class="code"&gt;					#format('{a}, {b}, and {c}')&lt;br /&gt;					&amp;nbsp;&amp;nbsp;#token('a')&lt;br /&gt;					&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;One&lt;br /&gt;					&amp;nbsp;&amp;nbsp;#token('b')&lt;br /&gt;					&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Two&lt;br /&gt;					&amp;nbsp;&amp;nbsp;#token('c')&lt;br /&gt;					&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Three&lt;br /&gt;					#end							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#registerEndOfPageHtml&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;					#registerEndOfPageHtml([key])&lt;br /&gt;					&amp;nbsp;&amp;nbsp;[script to render at the bottom of the completed HTML page]&lt;br /&gt;					#end					&lt;/p&gt;							&lt;p&gt;								Registers a block of HTML at the end of the completed HTML page where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;[key]&lt;/span&gt; is an optional variable, property, or literal string value identifying the unique key with which the contained markup should be registered.&lt;/li&gt;								&lt;li&gt;&lt;span class="code"&gt;[script...]&lt;/span&gt; is any Velocity or literal text.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;p&gt;								If the &lt;span class="code"&gt;[key]&lt;/span&gt; is not supplied, the contained script will always be added to the bottom of the completed HTML page.  If the &lt;span class="code"&gt;[key]&lt;/span&gt; is supplied, the first &lt;span class="code"&gt;#registerEndOfPageHtml&lt;/span&gt; directive executed will have its contained script added to the bottom of the completed page.							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#evaluate&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;#evaluate($script)&lt;/p&gt;							&lt;p&gt;								Execute a string as a Velocity script where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;$script&lt;/span&gt; is a variable, property, or literal string containing Velocity script.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#stop&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;#stop&lt;/p&gt;							&lt;p&gt;Stops execution of the widget immediately.&lt;/p&gt;							&lt;p&gt;&lt;span class="code"&gt;#stop&lt;/span&gt; should only be used for debugging purposes.  To hide a widget, use &lt;span class="code"&gt;$core_v2_widget.Hide()&lt;/span&gt; instead.&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;##&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;## [comment]&lt;/p&gt;							&lt;p&gt;								Identifies a comment where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;[comment]&lt;/span&gt; is a single line of unexecuted text.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;					&lt;div class="documentation-member"&gt;						&lt;h3 class="member_heading"&gt;#*&lt;/h3&gt;						&lt;div class="documentation-member-body"&gt;						&lt;div class="MethodOverloads"&gt;							&lt;div class="MethodOverload"&gt;							&lt;h5&gt;Usage&lt;/h5&gt;							&lt;p class="code"&gt;#* [comment lines] *#&lt;/p&gt;							&lt;p&gt;								Identifies a multi-line comment where:								&lt;ul class="parameters"&gt;								&lt;li&gt;&lt;span class="code"&gt;[comment]&lt;/span&gt; is one or more lines of unexecuted text.&lt;/li&gt;								&lt;/ul&gt;							&lt;/p&gt;							&lt;/div&gt;						&lt;/div&gt;						&lt;/div&gt;					&lt;/div&gt;
+&lt;div class="documentation-member"&gt;
+&lt;h3 class="member_heading"&gt;#registerClientTemplate&lt;/h3&gt;
+&lt;div class="documentation-member-body"&gt;
+&lt;div class="MethodOverloads"&gt;
+&lt;div class="MethodOverload"&gt;
+&lt;h5&gt;Usage&lt;/h5&gt;
+&lt;p class="code"&gt;
+#registerClientTemplate(key)&lt;br&gt;
+&amp;nbsp;&amp;nbsp;[client-side template to pre-compile]&lt;br&gt;
+#end
+&lt;/p&gt;
+&lt;p&gt;
+Registers a client template in a pre-compiled format.
+&lt;/p&gt;&lt;ul class="parameters"&gt;
+&lt;li&gt;&lt;span class="code"&gt;key&lt;/span&gt; is the name of the client template.&lt;/li&gt;
+&lt;li&gt;&lt;span class="code"&gt;[client-side template...]&lt;/span&gt; is a client-side template which will be available from &lt;span class="code"&gt;jQuery.telligent.evolution.template(key)&lt;/span&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</resource>
+	  </language>
+	</languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

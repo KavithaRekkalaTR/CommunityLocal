@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:UserSearchResult_Name}" cssClass="" description="${resource:UserSearchResult_Description}"
+		instanceIdentifier="be2ee09b8a054c29914a662e48d646d2" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+
+#set ($content = $context.Content)
+
+#if ($content)
+
+	#set ($avatarSize = 100)
+	#set ($target = $context.Target)
+	#set ($title = $content.HtmlName($target))
+	#set ($body = $content.HtmlDescription($target))
+
+	#set ($typeCssClass = "user")
+	#set ($id = $core_v2_widget.UniqueId("searchresult"))
+
+	#set($user = $core_v2_user.Get("%{ContentId = $content.ContentId}"))
+
+	<div class="content abbreviated rendered $typeCssClass" id="$id">
+		#if($user)
+			<div class="avatar round">
+			#if (!$user.IsSystemAccount && $user.Url)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)" class="internal-link view-user-profile">
+					$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, $avatarSize, $avatarSize, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$user.DisplayName' }")
+				</a>
+			#else
+				$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, $avatarSize, $avatarSize, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$user.DisplayName' }")
+			#end
+			</div>
+		#end
+
+		<div class="summary">
+			<h3 class="name">
+			#if (!$user.IsSystemAccount && $user.Url)
+				<a class="internal-link" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 250, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 250, '...')
+				</a>
+			#else
+				$core_v2_language.Truncate($title, 250, '...')
+			#end
+			</h3>
+
+			#if ($body && $body != '')
+				<div class="content">$core_v2_language.Truncate($body, 250, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'true' }")</div>
+			#else
+				<div class = "content empty"></div>
+			#end			
+		</div>
+	</div>
+#else
+	$core_v2_widget.Hide()
+#end
+
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="UserSearchResult_Name">Rendered User</resource>
+	<resource name="UserSearchResult_Description">Displays default rendering for user.</resource>
+</language>
+</languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

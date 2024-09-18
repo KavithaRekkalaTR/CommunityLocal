@@ -1,0 +1,43 @@
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+	#set ($messageId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('id')))
+	#set ($messageBody = $core_v2_page.GetFormValue('message'))
+
+	#set ($fileName = false)
+	#set ($fileName = $core_v2_page.GetFormValue('fileName'))
+
+	#set ($contextId = false)
+	#set ($contextId = $core_v2_page.GetFormValue('contextId'))
+
+	#set ($removeAttachment = false)
+	#set ($removeAttachmentQuery = $core_v2_page.GetFormValue("removeAttachment"))
+	#if ($removeAttachmentQuery)
+		#set ($removeAttachment = $core_v2_utility.ParseBool($removeAttachmentQuery))
+	#end
+
+	#set ($existingStatusMessage = $core_v2_statusMessage.Get($messageId))
+	#set ($options = "%{ GroupId = $existingStatusMessage.Group.Id }")
+
+	#if ($fileName && $fileName.length > 0 && $contextId)
+		#set ($attachedFile = $core_v2_uploadedFile.Get($contextId, $fileName))
+		#if ($attachedFile)
+			$options.Add('AttachedUrl', $attachedFile.Url)
+		#end
+	#elseif ($removeAttachment)
+		$options.Add('AttachedUrl', '')
+	#end
+
+	#set ($statusMessage = $core_v2_statusMessage.Update($messageId, $messageBody, $options))
+	#set ($statusMessageStory = $core_v2_activityStory.Get($messageId))
+
+	#if ($statusMessage.HasErrors())
+		$core_v2_page.SendJsonError($statusMessage.Errors)
+	#else
+		$core_v2_page.SetContentType('application/json')
+		{
+			"body": "$core_v2_encoding.JavascriptEncode($statusMessage.RenderedBody)" ,
+			"storyViwHtml": "$core_v2_encoding.JavascriptEncode($statusMessageStory.ViewHtml())"
+		}
+	#end
+#end

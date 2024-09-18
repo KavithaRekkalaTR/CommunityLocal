@@ -1,0 +1,293 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:BlogPostOptionsApplicationPanel_Name}" version="11.0.0.0" description="${resource:BlogPostOptionsApplicationPanel_Description}" instanceIdentifier="a932e6b72aec423e9f860b6ab16169a3" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="blog-postoptions" lastModified="2019-09-06 15:04:04Z" provider="5f511fdcbe9f44189eaa6527f8678854">
+    <contentScript language="Velocity"><![CDATA[#set ($blog = false)
+#set ($blog = $context.Blog)
+#if (!$blog)
+	$core_v2_widget.Hide()
+#end
+
+#set ($saveButtonTemplateId = $core_v2_widget.UniqueId('saveButtonTemplate'))
+#set ($enableComments = $core_v2_widget.UniqueId('enableComments'))
+#set ($commentModeration = $core_v2_widget.UniqueId('commentModeration'))
+#set ($enableRating = $core_v2_widget.UniqueId('enableRating'))
+#set ($displayTrackbacks = $core_v2_widget.UniqueId('displayTrackbacks'))
+#set ($commentExpirationDays = $core_v2_widget.UniqueId('commentExpirationDays'))
+#set ($aggregatePosts = $core_v2_widget.UniqueId('aggregatePosts'))
+#set ($enableExcerpts = $core_v2_widget.UniqueId('enableExcerpts'))
+#set ($excerptLength = $core_v2_widget.UniqueId('excerptLength'))
+#set ($enableAutoName = $core_v2_widget.UniqueId('enableAutoName'))
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+#set($attachmentUrl = $blog.DefaultPostImageUrl)
+#set($attachmentFileName = $context.GetFileNameFromImageUrl($attachmentUrl))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.EnableCommentsOverride) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableComments)" name="$core_v2_encoding.HtmlAttributeEncode($enableComments)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableComments)">$core_v2_language.GetResource('EnableCommentsLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableCommentsLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('CommentModerationLabel') </label>
+			<span class="field-item-description">$core_v2_language.GetResource('CommentModerationLabel_Desc')</span>
+			<span class="field-item-input">
+				<select id="$core_v2_encoding.HtmlAttributeEncode($commentModeration)" name="$core_v2_encoding.HtmlAttributeEncode($commentModeration)">
+				    <option value="None" #if($blog.ModerationTypeOverride == 'None') selected #end>$core_v2_language.GetResource('CommentModeration_None')</option>
+				    <option value="Anonymous" #if($blog.ModerationTypeOverride == 'Anonymous') selected #end>$core_v2_language.GetResource('CommentModeration_Anonymous')</option>
+				    <option value="All" #if($blog.ModerationTypeOverride == 'All') selected #end>$core_v2_language.GetResource('CommentModeration_All')</option>
+				</select>
+			</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.EnableRatingsDefault) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableRating)" name="$core_v2_encoding.HtmlAttributeEncode($enableRating)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableRating)">$core_v2_language.GetResource('EnableRatingLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableRatingLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.EnableTrackbacksOverride) checked #end id="$core_v2_encoding.HtmlAttributeEncode($displayTrackbacks)" name="$core_v2_encoding.HtmlAttributeEncode($displayTrackbacks)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($displayTrackbacks)">$core_v2_language.GetResource('DisplayTrackbacksLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('DisplayTrackbacksLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('CommentExpirationDaysLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('CommentExpirationDaysLabel_Desc')</span>
+			<span class="field-item-input">
+				<select id="$core_v2_encoding.HtmlAttributeEncode($commentExpirationDays)" name="$core_v2_encoding.HtmlAttributeEncode($commentExpirationDays)">
+					<option value="999999" #if ($blog.CommentExpirationDays == 999999) selected #end>$core_v2_language.GetResource('Never')</option>
+					<option value="90" #if ($blog.CommentExpirationDays == 90) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '90')
+					</option>
+					<option value="60" #if ($blog.CommentExpirationDays == 60) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '60')
+					</option>
+					<option value="30" #if ($blog.CommentExpirationDays == 30) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '30')
+					</option>
+					<option value="14" #if ($blog.CommentExpirationDays == 14) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '14')
+					</option>
+					<option value="7" #if ($blog.CommentExpirationDays == 7) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '7')
+					</option>
+					<option value="6" #if ($blog.CommentExpirationDays == 6) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '6')
+					</option>
+					<option value="5" #if ($blog.CommentExpirationDays == 5) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '5')
+					</option>
+					<option value="4" #if ($blog.CommentExpirationDays == 4) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '4')
+					</option>
+					<option value="3" #if ($blog.CommentExpirationDays == 3) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '3')
+					</option>
+					<option value="2" #if ($blog.CommentExpirationDays == 2) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysPlural'), '2')
+					</option>
+					<option value="1" #if ($blog.CommentExpirationDays == 1) selected #end>
+						$core_v2_language.FormatString($core_v2_language.GetResource('DaysSingular'), '1')
+					</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.EnablePostAggregationDefault) checked #end id="$core_v2_encoding.HtmlAttributeEncode($aggregatePosts)" name="$core_v2_encoding.HtmlAttributeEncode($aggregatePosts)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($aggregatePosts)">$core_v2_language.GetResource('AggregatePostsLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('AggregatePostsLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.SyndicateExcerptDefault) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableExcerpts)" name="$core_v2_encoding.HtmlAttributeEncode($enableExcerpts)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableExcerpts)">$core_v2_language.GetResource('EnableExcerptsLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableExcerptsLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('ExcerptLengthLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ExcerptLengthLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($excerptLength)" name="$core_v2_encoding.HtmlAttributeEncode($excerptLength)" value="$core_v2_encoding.HtmlAttributeEncode($blog.PostSummaryLengthDefault.ToString())" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.AutoNamePosts) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableAutoName)" name="$core_v2_encoding.HtmlAttributeEncode($enableAutoName)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableAutoName)">$core_v2_language.GetResource('EnableAutoNameLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableAutoNameLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false">
+			<label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('AttachmentLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AttachmentLabel_Desc')</span>
+			<span class="field-item-input preview"></span>
+			<span class="field-item-input upload">
+				<a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+				<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+        #set($revieWorkflowId = false)
+    	#set($reviewWorkflowId = $context.ReviewWorkflowId)
+    	#set($reviewWorkflowIsEditable = $context.CanEditReviewWorkflow)
+    	
+    	#if ($reviewWorkflowIsEditable || $reviewWorkflowId)
+            #set($reviewWorkflows = false)
+    		#set($reviewWorkflows = $context.ListReviewWorkflows())
+    		#if ($reviewWorkflows.Count > 0)
+        		<li class="field-item reviewworkflow">
+        		    <label for="$core_v2_widget.UniqueId('ReviewWorkflow')" class="field-item-name">$core_v2_language.GetResource('ReviewWorkflow')</label>
+        			<span class="field-item-description">$core_v2_language.GetResource('ReviewWorkflow_Desc')</span>
+        			<span class="field-item-input">
+        			    #if ($reviewWorkflowIsEditable)
+            			    <select id="$core_v2_widget.UniqueId('ReviewWorkflow')" name="$core_v2_widget.UniqueId('ReviewWorkflow')"> 
+            			        <option value="">$core_v2_language.GetResource('Value_ReviewWorkflow_NotSelected')</option>
+            			        #foreach ($reviewWorkflow in $reviewWorkflows)
+            			            <option value="$reviewWorkflow.Id.ToString()" #if($reviewWorkflowId == $reviewWorkflow.Id) selected #end>$reviewWorkflow.Name</option>
+            			        #end
+            			    </select>
+            			#else
+            			    #foreach ($reviewWorkflow in $reviewWorkflows)
+            			      #if($reviewWorkflowId == $reviewWorkflow.Id)
+            			        <span id="$core_v2_widget.UniqueId('ReviewWorkflow')">$reviewWorkflow.Name</span>
+            			      #end
+            			    #end
+            			#end
+        			</span>
+        			<span class="field-item-validation" style="display:none;"></span>
+        		</li>
+        		
+        		$core_v2_widget.ExecuteFile('render-reviewworkflowconfigurationform.vm')
+    		#end
+    	#end
+	</ul>
+</fieldset></form>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveButtonTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogPostOptionsApplicationPanel.register({
+		saveTemplateId: '$core_v2_encoding.JavascriptEncode($saveButtonTemplateId)',
+		updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update.vm'))',
+		updateReviewWorkflowConfigurationFormUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-reviewworkflowconfigurationform.vm'))',
+		inputs: {
+			enableComments: '#$core_v2_encoding.JavascriptEncode($enableComments)',
+			enableRating: '#$core_v2_encoding.JavascriptEncode($enableRating)',
+			displayTrackbacks: '#$core_v2_encoding.JavascriptEncode($displayTrackbacks)',
+			commentExpirationDays: '#$core_v2_encoding.JavascriptEncode($commentExpirationDays)',
+			aggregatePosts: '#$core_v2_encoding.JavascriptEncode($aggregatePosts)',
+			enableExcerpts: '#$core_v2_encoding.JavascriptEncode($enableExcerpts)',
+			excerptLength: '#$core_v2_encoding.JavascriptEncode($excerptLength)',
+			enableAutoName: '#$core_v2_encoding.JavascriptEncode($enableAutoName)',
+			commentModeration: '#$core_v2_encoding.JavascriptEncode($commentModeration)',
+			reviewWorkflow: '#$core_v2_widget.UniqueId('ReviewWorkflow')'
+		},
+		reviewWorkflowConfiguration: {
+		    getValues: function() { 
+		        try {
+		            return ($core_v2_dynamicForm.GetValuesScript($core_v2_widget.UniqueId('ReviewWorkflowConfiguration')));
+		        } catch (e) {
+		            return null;
+		        }
+		    }
+		},
+		file: {
+			fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+			url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+			isRemote:#if($attachmentIsRemote) true#else false#end,
+			isNew:#if($attachmentIsNew) true#else false#end
+		},
+		attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+		reviewWorkflowIsEditable: #if($reviewWorkflowIsEditable) true#else false#end,
+		text: {
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UpdateSuccess'))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AggregatePostsLabel">Display posts on blog's homepage</resource>
+  <resource name="AggregatePostsLabel_Desc">Should new posts be displayed on the blog home page</resource>
+  <resource name="AttachmentLabel">Default post image</resource>
+  <resource name="AttachmentLabel_Desc">Select a file that will be used as the default image for all posts in this blog.</resource>
+  <resource name="BlogPostOptionsApplicationPanel_Description">Manage blog post options.</resource>
+  <resource name="BlogPostOptionsApplicationPanel_Name">Post Options</resource>
+  <resource name="ChangeFile">Change File</resource>
+  <resource name="CommentExpirationDaysLabel">Disable comments</resource>
+  <resource name="CommentExpirationDaysLabel_Desc">After a post is older than selected days automatically disable new comments</resource>
+  <resource name="CommentModeration_All">For all comments</resource>
+  <resource name="CommentModeration_Anonymous">For unauthenticated comments</resource>
+  <resource name="CommentModeration_None">Off</resource>
+  <resource name="CommentModerationLabel">Comment moderation</resource>
+  <resource name="CommentModerationLabel_Desc">Require new comments to be approved before being displayed.</resource>
+  <resource name="DaysPlural">{0} Days</resource>
+  <resource name="DaysSingular">{0} Day</resource>
+  <resource name="DisplayTrackbacksLabel">Collect trackbacks</resource>
+  <resource name="DisplayTrackbacksLabel_Desc">When people link to your post should trackbacks be created</resource>
+  <resource name="EnableAutoNameLabel">Automatic post names</resource>
+  <resource name="EnableAutoNameLabel_Desc">Posts automatically use the title of the post in the URL</resource>
+  <resource name="EnableCommentsLabel">Can readers comment</resource>
+  <resource name="EnableCommentsLabel_Desc">Comments enable people to share feedback. This applies to new blog posts only.</resource>
+  <resource name="EnableExcerptsLabel">Use post summary</resource>
+  <resource name="EnableExcerptsLabel_Desc">Enable to show an excerpt of each blog post rather than the full blog post within RSS feeds, activity streams, email, and blog post lists. Blog authors can override when creating a blog post.</resource>
+  <resource name="EnableRatingLabel">Can readers rate posts</resource>
+  <resource name="EnableRatingLabel_Desc">Rating enables reader to use stars to rate the value of a post</resource>
+  <resource name="ExcerptLengthLabel">Post summary length</resource>
+  <resource name="ExcerptLengthLabel_Desc">Specify the number of characters of the blog post that are included in the post summary by default. Blog authors can override when creating a blog post.</resource>
+  <resource name="Never">Never</resource>
+  <resource name="RemoveFile">Remove File</resource>
+  <resource name="ReviewWorkflow">Review Workflow</resource>
+  <resource name="ReviewWorkflow_Desc">When a review workflow is selected, new and edited posts enter the workflow to approval before being published.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="UpdateSuccess">Success</resource>
+  <resource name="UploadFile">Upload File</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="Value_ReviewWorkflow_NotSelected">(Posts are not subject to a review workflow)</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

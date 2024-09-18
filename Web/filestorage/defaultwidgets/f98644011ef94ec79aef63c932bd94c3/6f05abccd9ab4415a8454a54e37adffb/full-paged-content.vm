@@ -1,0 +1,71 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($contents = $context.GetDetail($options))
+
+#foreach($content in $contents)
+#beforeall
+<div class="responsive-wrapper">
+	<table>
+	<thead>
+		<tr>
+            $reporting_ui.SortableTableHeader("", "Name", "ascending", $core_v2_language.GetResource('Title'), $sortBy, $sortOrder)
+			<th>$core_v2_language.GetResource('User')</th>
+            $reporting_ui.SortableTableHeader("", "LastViewed", "descending", $core_v2_language.GetResource('LastViewed'), $sortBy, $sortOrder)
+			<th>$core_v2_language.GetResource('ContentType')</th>
+            $reporting_ui.SortableTableHeader("number", "ViewCount", "descending", $core_v2_language.GetResource('ViewCount'), $sortBy, $sortOrder)
+			<th>$core_v2_language.GetResource('Location')</th>
+		</tr>
+	</thead>
+	<tbody>
+#each
+        #set ($apiContent = false)
+		#set ($apiContent = $core_v2_content.Get($content.ContentId, $content.ContentType.ContentTypeId))
+
+		<tr data-id="$content.ContentId">
+                #set($title = '')
+
+				#if ($apiContent && !$apiContent.HasErrors())
+					#set($title = $apiContent.HtmlName('web'))
+				#end
+				#if (!$title || $title.Length == 0)
+					#if ($content.Subject && $content.Subject.Length > 0)
+						#set ($title = $content.Subject)
+					#else
+						#set ($title = $core_v2_language.GetResource('Unknown'))
+					#end
+				#end
+			$reporting_ui.ContentNameTableCellWithActions($content.ContentId, $title, $apiContent.Url)
+			<td data-title="$core_v2_language.GetResource('User')">$!content.User.ExpandedName</td>
+			<td data-title="$core_v2_language.GetResource('LastViewed')">#if ($content.LastViewDate)$core_v2_language.FormatDateAndTime($content.LastViewDate, "%{AdjustTimeZone = 'false'}")#end</td>
+			<td data-title="$core_v2_language.GetResource('ContentType')">$!content.ContentTypeName</td>
+            <td class="number" data-title="$core_v2_language.GetResource('ViewCount')">
+                #if ($content.ViewCount > 0)
+                    <a href="#" class="report-drilldown" data-report-id="$reporting_reports.ViewsReport" data-localfiltertype="content" data-localfilterid="$content.ContentId" data-localfiltertypeid="$content.ContentTypeId" data-localfiltername="$core_v2_encoding.HtmlAttributeEncode($title)"
+                    #if ($localStartDate.length > 0) data-localStartDate="$!localStartDate" #else data-localStartDate="$core_v2_utility.ParseDate($startDate).ToString("yyyy-MM-dd")" #end #if ($localEndDate.length > 0) data-localEndDate="$!localEndDate" #else data-localEndDate="$core_v2_utility.ParseDate($endDate).ToString("yyyy-MM-dd")" #end>$content.ViewCount.ToString("N0")</a>
+                #else
+                    $content.ViewCount.ToString("N0")
+                #end
+            </td>
+			<td data-title="$core_v2_language.GetResource('Location')">
+				$!content.Application.Name #if($content.Application.Name && $content.Application.Container.Name) - #end $!content.Application.Container.Name
+			</td>
+		</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$contents.PageSize" data-totalitems="$contents.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

@@ -1,0 +1,73 @@
+<div class="editor-header">
+	<form class="template-editor-header"></form>
+	<div class="editor-state template-editor-state"></div>
+	<span class="field-description ui-tip" data-tip="<%= description %>"><%= description %></span>
+</div>
+<div class="editor-content overview">
+	<div class="components">
+		<div class="email-components">
+			$core_v2_widget.ExecuteFile('template-email-overview-components.vm')
+		</div>
+		<div class="email-files">
+			$core_v2_widget.ExecuteFile('template-email-overview-files.vm')
+		</div>
+	</div>
+	<% if (Type == 'Email') { %>
+		<div class="metadata">
+			<form>
+				<fieldset>
+					<ul class="field-list">
+						<li class="field-item name">
+							<label class="field-item-name">$core_v2_language.GetResource('Name')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('NameDesc')</span>
+							<span class="field-item-input name">
+								<div class="token-editor">
+									<span class="processed"><%: ProcessedName %></span>
+									<input type="text" tabindex="0" class="raw name" size="40" class="name" value="<%: Name %>" />
+								</div>
+							</span>
+							<span class="field-item-description was"></span>
+						</li>
+
+						<li class="field-item description">
+							<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('DescriptionDesc')</span>
+							<span class="field-item-input description">
+								<div class="token-editor">
+									<span class="processed"><%: ProcessedDescription %></span>
+									<input type="text" tabindex="1" class="raw description" value="<%: Description %>" />
+								</div>
+							</span>
+							<span class="field-item-description was"></span>
+						</li>
+					</ul>
+				</fieldset>
+
+			</form>
+
+			<% if(Id || FilePath || AttachmentFilePath) { %>
+				<p></p>
+				<div class="content full details">
+					<div class="attributes" style="display:block">
+						$core_v2_widget.ExecuteFile('template-email-overview-details.vm')
+					</div>
+				</div>
+			<% } %>
+		</div>
+	<% } else { %>
+
+		<div class="metadata">
+			<form>
+				<fieldset>
+					<ul class="field-list">
+						<li class="field-item name">
+							<label class="field-item-name">$core_v2_language.GetResource('EmailTemplateOverview')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('EmailTemplateOverviewDesc')</span>
+						</li>
+					</ul>
+				</fieldset>
+			</form>
+		</div>
+
+	<% } %>
+</div>

@@ -1,0 +1,138 @@
+#set($commentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('commentId')))
+#set($comment = $core_v2_comments.Get($commentId))
+#set($isApprovedId = $core_v2_widget.UniqueId('IsApproved'))
+
+#if ($comment)
+	<ul class="content-list content simple margin-bottom">
+		<li class="content-item with-avatar">
+			<div class="content comment" data-commentid="$comment.CommentId">
+				<div class="author">
+					#if ($comment.User)
+						<div class="avatar">
+							#if ($comment.User.ProfileUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)" class="internal-link view-user-profile">
+									$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 44, 44, "%{border='0px', alt=$comment.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+								</a>
+							#else
+								$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 44, 44, "%{border='0px', alt=$comment.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+							#end
+						</div>
+						<span class="user-name">
+							#set ($userLink = $comment.User.DisplayName)
+							#if ($comment.User.ProfileUrl)
+								#set ($userLink = "<a href='${core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)}'>${comment.User.DisplayName}</a>")
+							#end
+
+							#set ($contentLink = $comment.Content.HtmlName('Web'))
+							#if ($comment.Content.Url)
+								#set ($contentLink = "<a href='${core_v2_encoding.HtmlAttributeEncode($comment.Content.Url)}'>${comment.Content.HtmlName('Web')}</a>")
+							#end
+
+							$core_v2_language.FormatString($core_v2_language.GetResource('On'), $userLink, $contentLink)
+						</span>
+					#end
+				</div>
+			</div>
+		</li>
+	</ul>
+
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item body">
+				<span class="field-item-description"></span>
+				<span class="field-item-input">
+					#set ($body = $!comment.Body('raw'))
+					$core_v2_editor.Render('commentBody',"%{Width='100%', Height='25%', Value='$!body', ContentTypeId=$core_v2_comments.ContentTypeId}")
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item post-subscribe">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_encoding.HtmlAttributeEncode($isApprovedId)" name="$core_v2_encoding.HtmlAttributeEncode($isApprovedId)" #if ($comment.IsApproved) checked="checked" #end />
+					<label for="$core_v2_encoding.HtmlAttributeEncode($isApprovedId)">$core_v2_language.GetResource('IsApproved')</label>
+				</span>
+			</li>
+			<li class="field-item submit">
+				<span class="field-item-input"><a href="#" class="button delete" data-messagename="contextual-delete-comment" data-commentid="$comment.CommentId">$core_v2_language.GetResource('delete')</a></span>
+			</li>
+		</ul>
+	</fieldset></form>
+
+	#set ($saveTemplateId = $core_v2_widget.UniqueId('saveTemplate'))
+
+	<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveTemplateId)">
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button internal-link save">$core_v2_language.GetResource('Save')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</script>
+
+	<script type="text/javascript">
+	(function(j) {
+
+		j.telligent.evolution.administration.on('panel.loaded', function(){
+
+			j.telligent.evolution.administration.size('wide');
+
+			var saveTemplate = j.telligent.evolution.template.compile('$core_v2_encoding.JavascriptEncode($saveTemplateId)');
+			var saveHeaderContent = j(saveTemplate({}));
+			var saveButton = saveHeaderContent.find('a.button');
+
+			j.telligent.evolution.administration.header(saveHeaderContent)
+
+			saveButton.evolutionValidation({
+				onValidated: function(isValid, buttonClicked, c) {
+					if (isValid) {
+						saveButton.removeClass('disabled');
+					} else {
+						saveButton.addClass('disabled');
+					}
+				},
+				onSuccessfulClick: function(e) {
+					e.preventDefault();
+					j(e.target).addClass('disabled').prop('disabled', true);
+					var commentId = '$commentId';
+					var newBody = ${core_v2_editor.GetContentScript('commentBody')};
+					var isApproved = j('#${isApprovedId}').is(':checked');
+
+					j.telligent.evolution.put({
+						url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/comments/{CommentID}.json',
+						data: {
+							CommentID: commentId,
+							Body: newBody,
+							IsApproved: isApproved
+						},
+						success: function(response) {
+							j.telligent.evolution.messaging.publish('contextual.comments.edited', {
+								commentId: commentId,
+								newBody: newBody,
+								approved: isApproved
+							});
+							j.telligent.evolution.administration.close();
+						}
+					});
+				}
+			});
+
+			var f = saveButton.evolutionValidation('addCustomValidation', 'commentBody',
+				function() { 
+				    var text = ${core_v2_editor.GetContentScript('commentBody')}
+				    return text.length > 0; 
+				},
+				'$core_v2_language.GetResource('RequiredField')',
+				'.field-item.body .field-item-validation');
+
+			$core_v2_editor.GetAttachOnChangeScript('commentBody', 'f');
+
+		});
+
+	})(jQuery);
+	</script>
+#else
+	<div class="message norecords">$core_v2_language.GetResource('CommentNotFound')</div>
+#end

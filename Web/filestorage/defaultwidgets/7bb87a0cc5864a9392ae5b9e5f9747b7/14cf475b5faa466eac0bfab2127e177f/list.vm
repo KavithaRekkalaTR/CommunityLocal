@@ -1,0 +1,157 @@
+#set ($showTitle = $core_v2_widget.GetBoolValue('showTitleColumn', true))
+#set ($showGroup = $core_v2_widget.GetBoolValue('showGroupColumn', false))
+#set ($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set ($showLastPost = $core_v2_widget.GetBoolValue('showLastPostColumn', true))
+#set ($showSubGroups = $core_v2_widget.GetBoolValue('groupAndSubGroups', false))
+
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 5))
+
+#set ($sortOrder = 'Descending')
+#set ($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'Name'))
+#set ($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#if ($sortBy == 'ApplicationName')
+	#set ($sortBy = 'Name')
+	#set ($sortOrder = 'Ascending')
+#elseif ($sortBy == 'Posts')
+	#set ($sortBy = 'Thread')
+#elseif ($sortBy == 'ApplicationIdsOrder')
+	#set($sortOrder = 'Ascending')
+#end
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('sortOrder'))
+
+#set($query = "%{IncludeSubGroups = $showSubGroups, PageIndex = $pageIndex, PageSize = $pageSize, SortBy = $sortBy, SortOrder = $sortOrder}")
+#set($group = false)
+#set($group = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('group', '')).Value('Group')))
+#if ($group > 0)
+	$query.Add('GroupId', $group)
+#else
+	$query.Add('GroupId', $core_v2_group.Current.Id.ToString())
+#end
+
+#if($sortBy == 'ApplicationIdsOrder')
+	#set($blogSelection = false)
+	#set ($blogSelection = $core_v2_widget.GetCustomValue('blogSelection', ''))
+	#if ($blogSelection && $blogSelection.Length > 0)
+		#set($blogSelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($blogSelection).Values('blog')))
+		$query.Add('ApplicationIds', $blogSelection)
+	#end
+#end
+
+#set ($blogs = $core_v2_blog.List($query))
+
+#if ($blogs.TotalCount > $pageSize)
+	<div class="sort" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sort'))">
+		<form>
+		<span class="by">
+			<select class="ui-select" data-querykey="sortBy">
+				<option value="Name" #if($sortBy == 'Name') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_ApplicationName')</option>
+				<option value="Thread" #if($sortBy == 'Thread') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_Posts')</option>
+				<option value="LastPost" #if($sortBy == 'LastPost') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_LastPost')</option>
+			</select>
+		</span>
+		<span class="order">
+			<select class="ui-select" data-querykey="sortOrder">
+				<option value="Descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+				<option value="Ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+			</select>
+		</span>
+		</form>
+	</div>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery(function(j){
+			var sort = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort'))');
+			sort.on('change', 'select', function(e) {
+				var select = j(this), hashAdjustment = {};
+				hashAdjustment[select.data('querykey')] = select.val();
+				j.telligent.evolution.url.hashData(hashAdjustment, {
+					prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+				});
+			});
+		});
+		</script>
+	#end
+#end
+
+#foreach($blog in $blogs)
+#beforeall
+	<ul class="content-list content simple margin-bottom tabular">
+#each
+	<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($blog.Url)">
+
+		<div class="name cell">
+			<h2>
+				#if($showGroup)
+					<a $core_v2_ui.ContentPeek($blog.Group.ContainerId, $core_v2_group.ContentTypeId, 'internal-link view-application')
+					    href="$core_v2_encoding.HtmlAttributeEncode($blog.Group.Url)">$blog.Group.Name: </a>
+				#end
+				#if($showTitle)
+					<a
+						#if ($inSidebar)
+							$core_v2_ui.ContentPeek($blog.ApplicationId, $core_v2_blog.ContentTypeId, "internal-link view-application")
+						#else
+							class="internal-link view-application"
+						#end
+						href="$core_v2_encoding.HtmlAttributeEncode($blog.Url)">$blog.Name</a>
+				#end
+			</h2>
+			#if(!$inSidebar && $blog.Description)
+				<div class="content">$!blog.HtmlDescription('web')</div>
+			#end
+		</div>
+
+		#if(!$inSidebar)
+			#set($posts = false)
+			#set($posts = $core_v2_blogPost.List("%{BlogId=$blog.Id,PageIndex=0,PageSize=1,SortBy='MostRecent',SortOrder='Descending'}"))
+
+			#if($showPosts)
+				<div class="minimal cell nowrap metadata">
+					<span class="value">$core_v2_language.FormatNumber($posts.TotalCount)</span>
+					<span class="description">
+						#if ($posts.TotalCount == 1)
+							$core_v2_language.GetResource('post_singular')
+						#else
+							$core_v2_language.GetResource('post_plural')
+						#end
+					</span>
+				</div>
+			#end
+
+			#if ($showLastPost)
+				<div class="minimal cell nowrap metadata">
+					#if($posts.TotalCount > 0 && $blog.LatestPostDate)
+						#set ($lastPost = $posts.get_Item(0))
+						<span class="thumbnail">
+							#if ($lastPost.Author.ProfileUrl)
+								<a class="internal-link view-user-profile" href="$core_v2_encoding.HtmlAttributeEncode($lastPost.Author.ProfileUrl)">
+									$core_v2_ui.GetResizedImageHtml($lastPost.Author.AvatarUrl, 40, 40, "%{border='0px', alt=$lastPost.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+								</a>
+							#else
+								$core_v2_ui.GetResizedImageHtml($lastPost.Author.AvatarUrl, 40, 40, "%{border='0px', alt=$lastPost.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+							#end
+						</span>
+					#end
+				</div>
+
+				<div class="minimal cell nowrap latest metadata">
+					#if($posts.TotalCount > 0 && $blog.LatestPostDate)
+						<span class="value">
+							<a $core_v2_ui.ContentPeek($lastPost.ContentId, $core_v2_blogPost.ContentTypeId, "internal-link") href="$core_v2_encoding.HtmlAttributeEncode($lastPost.Url)">$lastPost.Title</a>
+						</span>
+						<span class="description">$core_v2_language.FormatAgoDate($blog.LatestPostDate)</span>
+					#end
+				</div>
+			#end
+		#end
+	</li>
+
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_NoResults')</div>
+#end
+
+$core_v2_ui.Pager($blogs.PageIndex, $blogs.PageSize, $blogs.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

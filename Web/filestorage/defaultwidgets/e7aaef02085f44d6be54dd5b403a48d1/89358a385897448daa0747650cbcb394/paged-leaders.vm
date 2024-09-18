@@ -1,0 +1,46 @@
+﻿#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 25)
+
+#set($leaderboardIdString = $core_v2_page.GetQueryStringValue('w_leaderboardid'))
+#set($leaderboardId = $core_v2_utility.ParseInt($leaderboardIdString))
+
+#set($leaders = $core_v2_leader.List($leaderboardId, "%{PageSize = $pageSize, PageIndex = $pageIndex}"))
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($leaders.PageIndex + 1) * $leaders.PageSize)
+#if ($leaders.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$leaders.TotalCount" id="$core_v2_encoding.HtmlAttributeEncode($leadersListId)">
+
+#foreach($leader in $leaders)
+#each
+	<li class="content-item leader">
+	<h4 class="name">$leader.User.DisplayName</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item leader-rank">
+				<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('RankFormat'), $leader.Rank.ToString())</span>
+			</li>
+			<li class="attribute-item leader-points">
+				<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('PointsFormat'), $core_v2_language.FormatNumber($leader.Value))</span>
+			</li>
+		</ul>
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				#if ($leader.User.ProfileUrl)
+					<li class="navigation-list-item view-user">
+						<a href="$core_v2_page.AbsoluteUrl($leader.User.ProfileUrl)">$core_v2_language.GetResource('ViewUser')</a>
+					</li>
+				#end
+			</ul>
+		</div>
+	</div>
+	</li>
+#end
+
+</ul>

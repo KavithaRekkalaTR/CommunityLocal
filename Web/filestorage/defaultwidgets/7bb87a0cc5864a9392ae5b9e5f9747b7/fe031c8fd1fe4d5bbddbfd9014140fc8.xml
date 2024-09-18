@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Groups_GroupContact_Name}" version="11.0.0.0" description="${resource:Groups_GroupContact_Description}" instanceIdentifier="fe031c8fd1fe4d5bbddbfd9014140fc8" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="group-contact" lastModified="2020-01-14 16:09:21Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set ($group = $core_v2_group.Current)
+#if (!$group || !$group.EnableContact)
+	$core_v2_widget.Hide()
+#end
+
+#set ($subjectId = $core_v2_widget.UniqueId('subject'))
+#set ($nameId = $core_v2_widget.UniqueId('name'))
+#set ($emailId = $core_v2_widget.UniqueId('email'))
+#set ($messageId = $core_v2_widget.UniqueId('message'))
+#set ($submitId = $core_v2_widget.UniqueId('submit'))
+#set ($successId = $core_v2_widget.UniqueId('success'))
+#set ($user = false)
+#set ($user = $core_v2_user.Accessing)
+#if ($user && !$core_v2_user.IsRegistered($user.Id))
+	#set($user = false)
+#end
+
+<form><fieldset>
+	<h2>$core_v2_language.GetResource('Core_GroupContact_Title_ContactGroup')</h2>
+		<ul class="field-list">
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($nameId)" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+				<span class="field-item-input"><input name="$core_v2_encoding.HtmlAttributeEncode($nameId)" type="text" size="40" id="$core_v2_encoding.HtmlAttributeEncode($nameId)" #if ($user) value="$user.DisplayName" #end></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($emailId)" class="field-item-name">$core_v2_language.GetResource('Hubs_EmailAddress')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Hubs_Contact_Email_Desc')</span>
+				<span class="field-item-input"><input name="$core_v2_encoding.HtmlAttributeEncode($emailId)" type="text" size="40" id="$core_v2_encoding.HtmlAttributeEncode($emailId)" #if ($user) value="$core_v2_encoding.HtmlAttributeEncode($user.PrivateEmail)" #end></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($subjectId)" class="field-item-name">$core_v2_language.GetResource('Subject')</label>
+				<span class="field-item-input"><input name="$core_v2_encoding.HtmlAttributeEncode($subjectId)" type="text" size="40" id="$core_v2_encoding.HtmlAttributeEncode($subjectId)"></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($messageId)" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_Body')</label>
+				<span class="field-item-input"><textarea name="$core_v2_encoding.HtmlAttributeEncode($messageId)" rows="10" cols="20" id="$core_v2_encoding.HtmlAttributeEncode($messageId)" style="width: 80%;"></textarea></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button" id="$core_v2_encoding.HtmlAttributeEncode($submitId)">$core_v2_language.GetResource('Send')</a>
+				</span>
+			</li>
+		</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.groupContact')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	#set($lastPageIndex = $core_v2_ui.GetLastPageIndex($conversationMessages.PageSize, $conversationMessages.TotalCount))
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.groupContact.register({
+				wrapperId : '$core_v2_encoding.JavascriptEncode($core_v2_widget.WrapperElementId)',
+				subject: '#$core_v2_encoding.JavascriptEncode($subjectId)',
+				subjectRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Subject_Required'))',
+				name: '#$core_v2_encoding.JavascriptEncode($nameId)',
+				nameRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Name_Required'))',
+				email: '#$core_v2_encoding.JavascriptEncode($emailId)',
+				emailRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Hubs_EmailAddress_Required'))',
+				message: '#$core_v2_encoding.JavascriptEncode($messageId)',
+				messageRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_Body_Required'))',
+				submit: '#$core_v2_encoding.JavascriptEncode($submitId)',
+				groupId: $group.Id,
+				successMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Hubs_MessageSent'))'
+			});
+		});
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Groups_GroupContact_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Groups_GroupContact_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_GroupContact_Title_ContactGroup">Contact Group</resource>
+  <resource name="CreateEditPost_Body">Message</resource>
+  <resource name="CreateEditPost_Body_Required">Please provide a message</resource>
+  <resource name="Groups_GroupContact_Description">Displays a form for a user to contact a group.</resource>
+  <resource name="Groups_GroupContact_Name">Group - Contact</resource>
+  <resource name="Hubs_Contact_Email_Desc">This will be shared with group owners only, so they can reply.</resource>
+  <resource name="Hubs_EmailAddress">Your Email Address</resource>
+  <resource name="Hubs_EmailAddress_Required">Please provide your email address</resource>
+  <resource name="Hubs_MessageSent">Your message has been sent successfully.</resource>
+  <resource name="Name">Your Name</resource>
+  <resource name="Name_Required">Please provide your name</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Send">Send</resource>
+  <resource name="Subject">Subject</resource>
+  <resource name="Subject_Required">Please provide a subject for your message</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="groups.contactrequests.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

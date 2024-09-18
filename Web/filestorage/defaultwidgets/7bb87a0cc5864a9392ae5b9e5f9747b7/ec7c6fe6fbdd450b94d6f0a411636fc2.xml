@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_AboutBlog_Name}" version="11.0.0.0" description="${resource:Blogs_AboutBlog_Description}" instanceIdentifier="ec7c6fe6fbdd450b94d6f0a411636fc2" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="about-blog" lastModified="2020-01-14 16:09:08Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set ($blog = $core_v2_blog.Current)
+#if ($blog && $blog.EnableAbout)
+	<div class="content full">
+		<h1 class="name">$blog.AboutTitle</h1>
+		<div class="content">$core_v2_ui.Render($blog.AboutDescription)</div>
+	</div>
+#else
+	$core_v2_widget.Hide()
+#end
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Blogs_AboutBlog_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blogs_AboutBlog_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Blogs_AboutBlog_Description">Displays the about blog page.</resource>
+  <resource name="Blogs_AboutBlog_Name">Blog - About</resource>
+  <resource name="Blogs_AboutBlog_Title_About">About</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="94b4a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

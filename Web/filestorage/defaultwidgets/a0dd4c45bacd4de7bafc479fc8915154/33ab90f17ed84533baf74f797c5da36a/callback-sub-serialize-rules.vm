@@ -1,0 +1,21 @@
+##
+## Renders a list of property rules as JSON
+##
+## Requires in scope:
+##   $propertyRules
+##
+[
+	#foreach ($propertyRule in $propertyRules)
+	#between
+		,
+	#each
+		{
+			"Name": #if ($propertyRule.Name) "$core_v2_encoding.JavascriptEncode($propertyRule.Name)" #else "" #end,
+			"Description": #if ($propertyRule.Description) "$core_v2_encoding.JavascriptEncode($propertyRule.Description)" #else "" #end,
+			"RenderedDoc": "$core_v2_encoding.JavascriptEncode($core_v2_utility.Trim($core_v2_widget.ExecuteFile('callback-sub-serialize-rule-rendered-doc.vm')))",
+			"Category": #if ($propertyRule.Category) "$core_v2_encoding.JavascriptEncode($propertyRule.Category)" #else "" #end,
+			"Type": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PropertyTemplate'))",
+			"Signature": "$core_v2_encoding.JavascriptEncode($core_v2_utility.Trim($core_v2_widget.ExecuteFile('callback-sub-serialize-rule-signature-doc.vm')))"
+		}
+	#end
+]

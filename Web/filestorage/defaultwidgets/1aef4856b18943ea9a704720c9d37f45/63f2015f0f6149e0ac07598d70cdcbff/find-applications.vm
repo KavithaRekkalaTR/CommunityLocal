@@ -1,0 +1,44 @@
+#set($query = '')
+#set($query = $core_v2_page.GetQueryStringValue('_w_query'))
+#set($targetContentTypeId = false)
+#set($targetContentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_targetContentTypeId')))
+#set($targetContainerId = false)
+#set($targetContainerId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_targetContainerId')))
+
+$core_v2_page.SetContentType('application/json')
+
+{"Applications":[
+	#foreach($application in $core_v2_contentConversion.ListTargetApplications($context.Content.ContentTypeId, $context.Content.ContentId, $targetContentTypeId, $targetContainerId, $query))
+		#each
+			#set ($container = false)
+			#if ($application.Container)
+				#set ($container = $application.Container)
+			#end
+			{
+				"ApplicationId": "$application.ApplicationId.ToString()",
+				"ApplicationTypeId": "$application.ApplicationTypeId.ToString()",
+				#if ($container)
+                    #store($formattedName)
+                        #format($core_v2_language.GetResource('ApplicationInGroup'))
+                            #token('application')
+                                $application.HtmlName('Web')
+                            #token('group')
+                                $container.HtmlName('Web')
+                        #end
+                    #end
+					"Name": "$core_v2_encoding.JavascriptEncode($formattedName)",
+				#else
+					"Name": "$core_v2_encoding.JavascriptEncode($application.HtmlName('Web'))",
+				#end
+				"Container": {
+					#if ($container)
+						"ContainerId": "$container.ContainerId.ToString()",
+						"ContainerTypeId": "$container.ContainerTypeId.ToString()",
+						"Name": "$core_v2_encoding.JavascriptEncode($container.HtmlName('Web'))"
+					#end
+				}
+			}
+		#between
+			,
+	#end
+]}

@@ -1,0 +1,13 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($response = $context.ResetReporting())
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"reset": "true"
+	}
+#end

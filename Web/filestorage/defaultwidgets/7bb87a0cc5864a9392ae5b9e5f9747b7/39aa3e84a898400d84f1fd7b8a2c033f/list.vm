@@ -1,0 +1,117 @@
+#set ($ncid = false)
+#set ($ncid = $core_v2_page.GetQueryStringValue('w_ncid'))
+#set ($isRead = '')
+#set ($isRead = $core_v2_page.GetQueryStringValue('w_nr'))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($pageSize = 10)
+#set ($includeMarkAction = true)
+
+#set($inSidebar = true)
+#if ($core_v2_widget.RegionName == 'content' || $core_v2_widget.RegionName == 'header' || $core_v2_widget.RegionName == 'footer')
+	#set($inSidebar = false)
+	#set($pageSize = 20)
+#end
+
+#set ($options = "%{ PageIndex = $pageIndex, PageSize = $pageSize }")
+#if ($ncid)
+	$options.Add('NotificationCategoryId', $ncid)
+#end
+
+#if ($isRead.Length > 0)
+	$options.Add('IsRead', $isRead)
+	#if ($core_v2_language.Lowercase($isRead) == 'true')
+		#set ($includeMarkAction = false)
+	#end
+#end
+#set($notifications = $core_v2_notification.List($options))
+
+#if ($includeMarkAction)
+	#set ($unreadNotificationOptions = "%{ PageIndex = 0, PageSize = 1, IsRead = 'false' }")
+	#if ($ncid)
+		$unreadNotificationOptions.Add('NotificationCategoryId', $ncid)
+	#end
+	#set ($unreadNotifications = $core_v2_notification.List($unreadNotificationOptions))
+	#if ($unreadNotifications && $unreadNotifications.TotalCount == 0)
+		#set ($includeMarkAction = false)
+	#end
+#end
+
+#if ($notifications.PageIndex != $pageIndex)
+	$core_v2_widget.Hide()
+#end
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($notifications.PageIndex + 1) * $notifications.PageSize)
+#if ($notifications.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = true)
+#end
+
+#set ($replacementOptions = $core_v2_utility.MakeList('IgnoreCase', 'Singleline'))
+#foreach($notification in $notifications)
+#beforeall
+	<ul class="content-list content margin-bottom" #if ($includeMarkAction) data-markall="true" #else data-markall="false" #end>
+#each
+	#set ($lastActor = false)
+	#set ($actors = $notification.Actors)
+	#set ($lastIndex = $actors.Count - 1)
+	#set ($lastActor = $actors.get_item($lastIndex).User)
+	#set ($notificationType = $core_v2_notificationType.Get($notification.NotificationTypeId))
+
+	#if ($notificationType.NotificationTypeId == $core_v2_ratedItem.NotificationTypeId)
+		#set ($lastActor = false)
+	#end
+
+	#set ($notificationMessage = false)
+	#set ($notificationMessage = $notification.Message('Html'))
+	#if ($notificationMessage)
+		<li class="content-item notification#if (!$lastActor) no-author #end#if(!$notification.IsRead) unread#end"
+		data-notificationid="$notification.NotificationId"
+		data-notificationtypeid="$notification.NotificationTypeId"
+			data-targeturl="$core_v2_encoding.HtmlAttributeEncode($notification.TargetUrl)"
+			#if($hasMore) data-hasmore="true" #end
+			>
+		#if ($lastActor)
+			<div class="post-author">
+				<span class="avatar">
+					#if ($lastActor.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($lastActor.ProfileUrl)" class="internal-link view-user-profile">
+							$core_v2_ui.GetResizedImageHtml($lastActor.AvatarUrl, 40, 40, "%{border='0px', alt=$lastActor.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($lastActor.AvatarUrl, 40, 40, "%{border='0px', alt=$lastActor.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+					#end
+				</span>
+				<span class="user-name">
+					#if ($lastActor.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($lastActor.ProfileUrl)" class="internal-link view-user-profile">
+							$lastActor.DisplayName
+						</a>
+					#else
+						$lastActor.DisplayName
+					#end
+				</span>
+			</div>
+		#end
+		<div class="content">
+				#if ($inSidebar)
+					$core_v2_utility.Replace($notificationMessage, '<(\/)?a(?=\s|>)[^>]*>', '<$1b>', "%{ RegexOptions = $replacementOptions }")
+				#else
+					$notificationMessage
+				#end
+		</div>
+		<div class="post-date">
+			$core_v2_ui.AgoDate($notification.LastUpdatedDate)
+		</div>
+		<div class="notification-category">
+			$notification.NotificationCategory.Name
+		</div>
+			#if(!$notification.IsRead)
+				<div class="mark">
+					<a href="#" class="ui-tip replace-with-icon check" data-messagename="telligent.evolution.widgets.thread.hideattachment">$core_v2_language.GetResource('mark')</a>
+				</div>
+			#end
+	</li>
+	#end
+#afterall
+	</ul>
+#end

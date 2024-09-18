@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:BlogActivityStory_Name}" version="12.0.0.0" description="${resource:BlogActivityStory_Description}" instanceIdentifier="d83c68905d554318bf62eaaa9920d091" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2022-10-03 20:45:15Z" provider="2cb69735572548278695ab36af432b23">
+    <contentScript language="Velocity"><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content)
+	$core_v2_widget.Hide()
+#else
+		#format($core_v2_language.GetResource('Created_Blog'))
+				#token('user')
+					<span class="user-name">
+						#if ($context.Story.PrimaryUser.ProfileUrl)
+							<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($context.Story.PrimaryUser.ProfileUrl)">$context.Story.PrimaryUser.DisplayName</a>
+						#else
+							$context.Story.PrimaryUser.DisplayName
+						#end
+					</span>
+				#token('blog')
+						<a $core_v2_ui.ContentPeek($content.ContentId, $content.ContentTypeId)
+							href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">$content.HtmlName('Web')</a>
+				#token('group')
+						<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+							href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+		#end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="BlogActivityStory_Description">Story for new blogs.</resource>
+  <resource name="BlogActivityStory_Name">Blog Activity Story</resource>
+  <resource name="Created_Blog">{user} created {blog} in {group}.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

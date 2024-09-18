@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Conversation Message" version="13.0.0.0" description="Raises notifications on conversation messages." id="e9f2523d27c14316ada5c11bde779690" lastModified="2023-05-09 19:06:37Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('participant_names')
+    $context_v1_email.Context.ConversationMessage.Subject
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('participant_names')
+    $context_v1_email.Context.ConversationMessage.Subject
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('participant_names')
+    $context_v1_email.Context.ConversationMessage.Subject
+#end
+</p>
+
+#foreach($message in $context_v1_email.Context.ConversationNewMessages)
+#each
+	<table style="vertical-align: top;" border="0" cellpadding="0" cellspacing="0" height="32">
+	<tbody style="vertical-align: top;">
+	<tr style="vertical-align: top;">
+	<td style="margin: 0; padding: 0; padding-right: 10px; vertical-align: top;">
+ 	<div style="border-radius: 16px; height: 32px; margin: 0; overflow: hidden; padding: 0; vertical-align: top; width: 32px;">
+	#if ($message.Author.Url)
+		<a href="$core_v2_encoding.HtmlAttributeEncode($message.Author.Url)">
+		$core_v2_ui.GetResizedImageHtml($message.Author.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+		</a>
+	#else
+	    $core_v2_ui.GetResizedImageHtml($message.Author.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+	#end
+	</div>
+	</td>
+	<td>
+	<table style="vertical-align: top;" border="0" cellpadding="0" cellspacing="0">
+	<tbody>
+	<tr style="vertical-align: top;">
+	<td>
+	#if ($message.Author.Url)
+		<a href="$core_v2_encoding.HtmlAttributeEncode($message.Author.Url)">$message.Author.DisplayName</a>
+	#else
+	    $message.Author.DisplayName
+	#end
+	</td>
+	</tr>
+	<tr>
+	<td>
+	$message.Body
+	</td>
+	</tr>
+	</tbody>
+	</table>
+	</td>
+	</tr>
+	</tbody>
+	</table>
+#end
+<p>
+#format($core_v2_language.GetResource('Body_ViewConversation'))
+#token('conversation_link')
+    <a href="$context_v1_email.Context.Conversation.Url">$core_v2_language.GetResource('Conversation')</a>
+#end
+</p>
+
+
+
+]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">New messages have been sent within your conversation with {participant_names}:</resource>
+  <resource name="Body_ViewConversation">{conversation_link}.</resource>
+  <resource name="Conversation">View the full conversation</resource>
+  <resource name="Subject">Conversation with {participant_names}</resource>
+  <resource name="Header">Conversation with {participant_names}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

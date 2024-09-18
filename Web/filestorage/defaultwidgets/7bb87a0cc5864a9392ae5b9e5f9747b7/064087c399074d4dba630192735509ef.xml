@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:User_Notifications_Name}" version="9.0.0.0" description="${resource:User_Notifications_Description}" instanceIdentifier="064087c399074d4dba630192735509ef" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="user-notifications" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+	<contentScript><![CDATA[
+#set ($user = false)
+#set ($user = $core_v2_user.Accessing)
+
+## user must be regisetered to receive notifications
+#if (!$user || !$core_v2_user.IsRegistered($user.Id))
+	$core_v2_widget.Hide()
+#end
+
+#set ($duration = $core_v2_widget.GetIntValue('duration', 10))
+#set ($native = $core_v2_widget.GetBoolValue('native', true))
+#set ($mode = $core_v2_widget.GetStringValue('mode', 'alert'))
+
+#registerEndOfPageHtml('telligent.evolution.widgets.userNotifications')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.userNotifications.register({
+				duration: ($duration * 1000),
+				native: #if($native) true #else false #end,
+				mode: "$core_v2_encoding.JavascriptEncode($mode)"
+			})
+		});
+	</script>
+#end
+		]]></contentScript>
+	<headerScript><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:User_Notifications_Name}'))
+		]]></headerScript>
+	<configuration><![CDATA[
+<propertyGroup id="options" labelResourceName="Options">
+	<property id="duration" labelResourceName="Duration" descriptionResourceName="Duration_Description" dataType="int" defaultValue="10">
+		<propertyRule name="minmax" min="1" max="3600" />
+	</property>
+	<property id="mode" labelResourceName="Mode" descriptionResourceName="Mode_Description" dataType="string" defaultValue="alert">
+		<propertyValue value="alert" labelResourceName="Mode_Alert" />
+		<propertyValue value="banner" labelResourceName="Mode_Banner" />
+	</property>
+	<property id="native" labelResourceName="Native" descriptionResourceName="Native_Description" dataType="bool" defaultValue="true" />
+</propertyGroup>
+		]]></configuration>
+	<languageResources><language key="en-us">
+  <resource name="User_Notifications_Name">User - Notifications</resource>
+  <resource name="User_Notifications_Description">Displays user notifications as alerts or banners</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Duration">Duration</resource>
+  <resource name="Duration_Description">Seconds to display notification</resource>
+  <resource name="Native">Desktop Notifications</resource>
+  <resource name="Native_Description">When available, attempt to display desktop notifications.</resource>
+  <resource name="Mode">Display Mode</resource>
+  <resource name="Mode_Description">Notifications can render as alert popups or window banners. By default, notifications use the less intrusive alert mode.</resource>
+  <resource name="Mode_Alert">Alert</resource>
+  <resource name="Mode_Banner">Banner</resource>
+</language></languageResources>
+		<restScopes>
+			<scope id="notifications.notifications.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

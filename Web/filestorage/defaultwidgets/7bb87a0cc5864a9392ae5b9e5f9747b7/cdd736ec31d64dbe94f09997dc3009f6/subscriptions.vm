@@ -1,0 +1,95 @@
+<div class="article-subscriptions-modal">
+	#set($group = $core_v2_group.Current)
+	#set($article = $articles_v1_articles.Current)
+	#set($collection = $articles_v1_articleCollections.Current)
+
+	#set ($collectionSubscription = $core_v2_applicationSubscription.Get($collection.Id, "%{ TypeId='$articles_v1_subscriptionTypes.AllArticles' }"))
+	#set ($articleSubscription = $core_v2_contentSubscription.Get($article.Id, "%{IncludeApplicationSubscriptions='false', TypeId='$articles_v1_subscriptionTypes.ArticleUpdates'}"))
+	#set ($commentsSubscription = $core_v2_contentSubscription.Get($article.Id, "%{IncludeApplicationSubscriptions='false', TypeId='$articles_v1_subscriptionTypes.ArticleComments'}"))
+
+	<fieldset>
+
+		$core_v2_language.GetResource('NotifyMeWhen')
+
+		<ul class="field-list article-notifications">
+			#if ($collection)
+				<li class="field-item sub-collection-item">
+					<span class="field-item-input">
+						<input type="checkbox" class="sub-collection" #if($collectionSubscription.IsSubscribed)checked="checked"#end id="$core_v2_widget.UniqueId('sub-collection')" name="$core_v2_widget.UniqueId('sub-collection')">
+						<label class="field-item-name" for="$core_v2_widget.UniqueId('sub-collection')">$core_v2_language.FormatString($core_v2_language.GetResource('Subscription_Collection'), $core_v2_language.Truncate($collection.HtmlName('Web'), 200, "..."))</label>
+					</span>
+				</li>
+			#end
+			#if ($article)
+				<li class="field-item sub-article-item" #if($collectionSubscription.IsSubscribed) style="display:none;" #end>
+					<span class="field-item-input">
+						<input type="checkbox" class="sub-article" #if($articleSubscription.IsSubscribed)checked="checked"#end id="$core_v2_widget.UniqueId('sub-article')" name="$core_v2_widget.UniqueId('sub-article')">
+						<label class="field-item-name" for="$core_v2_widget.UniqueId('sub-article')">$core_v2_language.FormatString($core_v2_language.GetResource('Subscription_Article'), $core_v2_language.Truncate($article.HtmlName('Web'), 200, "..."))</label>
+					</span>
+				</li>
+
+				<li class="field-item mute-article-item" #if(!$collectionSubscription.IsSubscribed) style="display:none;" #end>
+					<span class="field-item-input">
+						<input type="checkbox" class="mute-article" #if($articleSubscription.IsMuted)checked="checked"#end id="$core_v2_widget.UniqueId('mute-article')" name="$core_v2_widget.UniqueId('mute-article')">
+						<label class="field-item-name" for="$core_v2_widget.UniqueId('mute-article')">$core_v2_language.FormatString($core_v2_language.GetResource('Mute_Article'), $core_v2_language.Truncate($article.HtmlName('Web'), 200, "..."))</label>
+					</span>
+				</li>
+
+				<li class="field-item sub-article-comments-item">
+					<span class="field-item-input">
+						<input type="checkbox" class="sub-articlecomments" #if($commentsSubscription.IsSubscribed)checked="checked"#end id="$core_v2_widget.UniqueId('sub-articlecomments')" name="$core_v2_widget.UniqueId('sub-articlecomments')">
+						<label class="field-item-name" for="$core_v2_widget.UniqueId('sub-articlecomments')">$core_v2_language.FormatString($core_v2_language.GetResource('Subscription_ArticleComments'), $core_v2_language.Truncate($article.HtmlName('Web'), 200, "..."))</label>
+					</span>
+				</li>
+			#end
+			#if ($collection || $article)
+				<li class="field-item">
+					<span class="field-item-input">
+						<a href="#" class="button submit">$core_v2_language.GetResource('Save')</a>
+					</span>
+				</li>
+			#end
+		</ul>
+	</fieldset>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(j) {
+
+				j('input.sub-collection').on('change', function() {
+					if (j(this).prop( "checked" )) {
+						j('input.sub-article').closest('li').hide();
+						j('input.mute-article').closest('li').show();
+					}
+					else {
+						j('input.sub-article').closest('li').show();
+						j('input.mute-article').closest('li').hide();
+					}
+				});
+
+				j('a.submit').on('click', function() {
+					j.telligent.evolution.post({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscription-update.vm'))',
+						data: {
+							articleId : '$article.Id',
+							collectionId: '$collection.Id',
+							subCollection:  j('input.sub-collection').prop( "checked" ),
+							subArticle:  j('input.sub-article').prop( "checked" ),
+							muteArticle:  j('input.mute-article').prop( "checked" ),
+							subArticleComments:  j('input.sub-articlecomments').prop( "checked" )
+						},
+						success: function(d) {
+							if (d.warnings && d.warnings.length > 0) {
+								jQuery.glowModal.opener(window).jQuery.telligent.evolution.notifications.show(d.warnings[0], {type: 'warning', duration: 5000});
+							} else if (d.message)  {
+								jQuery.glowModal.opener(window).jQuery.telligent.evolution.notifications.show(d.message, {type: 'success', duration: 5000});
+							}
+							jQuery.glowModal.close();
+						}
+					});
+				});
+			});
+		</script>
+	#end
+
+</div>

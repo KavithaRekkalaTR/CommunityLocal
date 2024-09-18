@@ -1,0 +1,59 @@
+##
+## Adds a Reply
+##
+## Paramters
+##
+##   _w_contentId
+##   _w_contentTypeId
+##   _w_parentId
+##   _w_body
+##
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	$core_v2_widget.ExecuteFile('common-config.vm')
+
+	##
+	## Parse Parameters
+	##
+	#set ($contentId = false)
+	#set ($contentIdQuery = false)
+	#set ($contentIdQuery = $core_v2_page.GetFormValue('_w_contentId'))
+	#if ($contentIdQuery && $contentIdQuery.length > 0)
+		#set ($contentId = $core_v2_utility.ParseGuid($contentIdQuery))
+	#end
+
+	#set ($contentTypeId = false)
+	#set ($contentTypeIdQuery = false)
+	#set ($contentTypeIdQuery = $core_v2_page.GetFormValue('_w_contentTypeId'))
+	#if ($contentTypeIdQuery && $contentTypeIdQuery.length > 0)
+		#set ($contentTypeId = $core_v2_utility.ParseGuid($contentTypeIdQuery))
+	#end
+
+	#set ($body = false)
+	#set ($bodyQuery = false)
+	#set ($bodyQuery = $core_v2_page.GetFormValue('_w_body'))
+	#if ($bodyQuery)
+		#set ($body = $bodyQuery)
+	#end
+
+	#set ($options = "%{}")
+	#set ($parentIdQuery = false)
+	#set ($parentIdQuery = $core_v2_page.GetFormValue('_w_parentId'))
+	#if ($parentIdQuery && $parentIdQuery.length > 0)
+		$options.Add("ParentCommentId", $core_v2_utility.ParseGuid($parentIdQuery))
+	#end
+	
+	#set ($commentTypeIdQuery = false)
+	#set ($commentTypeIdQuery = $core_v2_page.GetFormValue('_w_commentTypeId'))
+	#if ($commentTypeIdQuery && $commentTypeIdQuery.length > 0)
+	    $options.Add("CommentType", $core_v2_utility.ParseGuid($commentTypeIdQuery))
+	#end
+
+	#set ($comment = $core_v2_comments.Create($contentId, $contentTypeId, $body, $options))
+
+	#set ($excludeContainer = false)
+	$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+
+#end

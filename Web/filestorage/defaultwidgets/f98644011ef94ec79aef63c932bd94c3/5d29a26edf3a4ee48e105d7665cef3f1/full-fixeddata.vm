@@ -1,0 +1,69 @@
+#set($options = "%{}")
+
+#set ($id = $core_v2_page.GetQueryStringValue('fr_id'))
+#if($id)
+    $options.Add('selectedApplications', $id)
+#end
+
+#set ($calendar = $context.GetCalendarSummaryDetailReport($options))
+#if($calendar && !$calendar.HasErrors())
+    #set ($apiCalendars = false)
+    #set ($apiCalendar = false)
+    #set ($apiCalendars = $calendar_v1_calendars.List("%{ApplicationIds = '$calendar.ApplicationId'}"))
+    #if($apiCalendars.TotalCount > 0)
+        #set ($apiCalendar = $apiCalendars.get_item(0))
+    #end
+
+    <div class="data">
+        <ul class="report-details">
+            <li class="report-name">
+                #if ($apiCalendar.Url) <a href="$apiCalendar.Url">$calendar.Name</a> #else $calendar.Name #end
+            </li>
+            <li class="report-info">
+                    $core_v2_language.GetResource('in')
+                    #if ($apiCalendar.Container.Url) <a href="$apiCalendar.Container.Url">$calendar.Container.Name</a> #else $calendar.Container.Name #end
+            </li>
+        </ul>
+
+        <table class="calendar-data large-data">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>$core_v2_language.GetResource('Last1Day')</th>
+                    <th>$core_v2_language.GetResource('Last3Day')</th>
+                    <th>$core_v2_language.GetResource('Last7Day')</th>
+                    <th>$core_v2_language.GetResource('Last30Day')</th>
+                    <th>$core_v2_language.GetResource('Last90Day')</th>
+                    <th>$core_v2_language.GetResource('Last180Day')</th>
+                </tr>
+            </thead>
+            </tbody>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewEvents'), $core_v2_language.GetResource('NewEvents_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $calendar.NewEventCountLast1Day, $calendar.NewEventCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $calendar.NewEventCountLast3Days, $calendar.NewEventCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $calendar.NewEventCountLast7Days, $calendar.NewEventCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $calendar.NewEventCountLast30Days, $calendar.NewEventCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $calendar.NewEventCountLast90Days, $calendar.NewEventCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $calendar.NewEventCountLast180Days, $calendar.NewEventCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewComments'), $core_v2_language.GetResource('NewComments_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $calendar.NewCommentCountLast1Day, $calendar.NewCommentCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $calendar.NewCommentCountLast3Days, $calendar.NewCommentCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $calendar.NewCommentCountLast7Days, $calendar.NewCommentCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $calendar.NewCommentCountLast30Days, $calendar.NewCommentCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $calendar.NewCommentCountLast90Days, $calendar.NewCommentCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $calendar.NewCommentCountLast180Days, $calendar.NewCommentCount180DayTrend)
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

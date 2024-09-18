@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PanelName}" version="12.0.0.0" description="${resource:PanelDescription}" instanceIdentifier="ef69c8c2de0d4997af98119510489a1f" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-01-03 21:11:15Z" provider="4cf26b105e8847ef800a21b45625e76a">
+    <contentScript language="Velocity"><![CDATA[#set ($collection = false)
+#set ($collection = $context.ArticleCollection)
+#if (!$collection)
+	$core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+#set ($nameId = $core_v2_widget.UniqueId('name'))
+#set ($addressId = $core_v2_widget.UniqueId('address'))
+#set ($enableId = $core_v2_widget.UniqueId('enable'))
+#set ($groupId = $core_v2_widget.UniqueId('group'))
+#set ($defaultArticleId = $core_v2_widget.UniqueId('defaultarticle'))
+
+#set($redirect = false)
+#if($articles_v1_articleCollections.Current && $articles_v1_articleCollections.Current.Id == $collection.Id)
+	#set($redirect = true)
+#end
+
+#set ($canDelete = $core_v3_permission.CheckPermission($articles_v1_permissions.DeleteArticleCollections, $core_v2_user.Accessing.Id, "%{ ApplicationId = $collection.Group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<label for="$nameId" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Name_Description')</span>
+			<span class="field-item-input">
+				<input type="text" value="$collection.Name" id="$nameId" name="$nameId" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item web-address">
+			<label for="$addressId" class="field-item-name">$core_v2_language.GetResource('UrlKey')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('UrlKey_Description')</span>
+			<span class="field-item-input">
+				<input type="text" maxlength="256" value="$collection.UrlKey" id="$addressId" name="$addressId" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item group">
+			<label for="$groupId" class="field-item-name">$core_v2_language.GetResource('Group')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Group_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$groupId" name="$groupId" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item description">
+			<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Description')</span>
+			<span class="field-item-input">
+				#set($description = $collection.HtmlDescription('raw'))
+				$core_v2_editor.Render('Description',"%{Width='100%', Height='25%', Value='$description', ContentTypeId=$articles_v1_articleCollections.ContentTypeId }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item default-article">
+			<label for="$defaultArticleId" class="field-item-name">$core_v2_language.GetResource('DefaultArticle')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DefaultArticle_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$defaultArticleId" name="$defaultArticleId" #if($collection.DefaultArticle) value="$collection.DefaultArticle.Id" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($collection.IsEnabled) checked #end id="$enableId" name="$enableId" />
+				<label class="field-item-name" for="$enableId">$core_v2_language.GetResource('IsEnabled')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('IsEnabled_Description')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item identifiers">
+			<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+		</li>
+		<li class="field-item identifiers entityid" style="display: none;">
+			<label class="field-item-name">$core_v2_language.GetResource('EntityId')</label>
+			<span class="field-item-input">$collection.Id</span>
+		</li>
+		<li class="field-item identifiers contentid" style="display: none;">
+			<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+			<span class="field-item-input">$collection.Id</span>
+		</li>
+		<li class="field-item identifiers contenttypeid" style="display: none;">
+			<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+			<span class="field-item-input">$articles_v1_articleCollections.ApplicationTypeId</span>
+		</li>
+
+		#if ($canDelete)
+			<li class="field-item">
+				<li class="field-item">
+					<span class="field-item-input">
+						<a href="#" class="button delete" data-messagename="contextual-delete">$core_v2_language.GetResource('Delete')</a>
+					</span>
+				</li>
+			</li>
+		#end
+	</ul>
+</fieldset></form>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+	jQuery.telligent.evolution.widgets.articleCollectionOptionsApplicationPanel.register({
+		articleCollectionId: '$collection.Id',
+		urlKey: '$collection.UrlKey',
+		groupId: #if ($collection.Group) '$collection.Group.Id' #else null #end,
+		groupName: #if ($collection.Group) '$collection.Group.Name' #else null #end,
+		redirect: #if ($redirect) true #else false #end,
+		getDescription: function() { return $core_v2_editor.GetContentScript('Description'); },
+	    templates: {
+	        header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+	    },
+	    values: {
+		    defaultArticleName: #if ($collection.DefaultArticle) '$core_v2_encoding.JavascriptEncode($collection.DefaultArticle.Title)' #else null #end
+		},
+	    urls: {
+	        getArticles: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getarticles.jsm'))',
+		    updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update.vm'))',
+		    group: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($collection.Group.Id)))',
+	    },
+		fields: {
+			name: jQuery('#$core_v2_encoding.JavascriptEncode($nameId)'),
+			urlKey: jQuery('#$core_v2_encoding.JavascriptEncode($addressId)'),
+			enable: jQuery('#$core_v2_encoding.JavascriptEncode($enableId)'),
+			group: jQuery('#$core_v2_encoding.JavascriptEncode($groupId)'),
+			defaultArticle: jQuery('#$core_v2_encoding.JavascriptEncode($defaultArticleId)')
+		},
+		text: {
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UpdateSuccess'))',
+			noGroupsMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupLookUp_NoMatches'))',
+			moveWarning: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ValidateMove'))',
+			deleteConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteConfirm'))',
+			addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))",
+			noMatchingArticles: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ArticleLookUp_NoMatches'))',
+			requiredText: "$core_v2_language.GetResource('RequiredText')"
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource>
+  <resource name="ApplicationId">Application Identifier</resource>
+  <resource name="ApplicationTypeId">Application Type Identifier</resource>
+  <resource name="ArticleLookUp_NoMatches">No matching articles were found.</resource>
+  <resource name="DefaultArticle">Default Article</resource>
+  <resource name="DefaultArticle_Description">This article will be identified as the default article for this collection and can be used to render default content for the collection.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteConfirm">Are you sure you want to delete this article collection?</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Description_Description">The purpose of this article collection.</resource>
+  <resource name="EntityId">Identifier</resource>
+  <resource name="Group">Group</resource>
+  <resource name="Group_Description">The group that this article collection exists within.</resource>
+  <resource name="GroupLookUp_NoMatches">No matching groups were found.</resource>
+  <resource name="IsEnabled">Enabled</resource>
+  <resource name="IsEnabled_Description">When disabled, the article collection is inaccessible.</resource>
+  <resource name="Name">Name</resource>
+  <resource name="Name_Description">The name to identify this article collection.</resource>
+  <resource name="PanelDescription">Manage article collection options.</resource>
+  <resource name="PanelName">Article Collection Options</resource>
+  <resource name="RequiredText">This field is required</resource>
+  <resource name="Save">Save</resource>
+  <resource name="UpdateSuccess">The article collection has been updated successfully.</resource>
+  <resource name="UrlKey">URL</resource>
+  <resource name="UrlKey_Description">The name of this article collection as you wish to see it within the URL for this article collection.</resource>
+  <resource name="ValidateMove">You have selected to move the article collection to another ${group_lowercase}. There are permission overrides on this article collection that will be removed if you choose to continue.</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+    <restScopes>
+      <scope id="groups.groups.readonly" />
+      <scope id="articlecollections.collections.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,10 @@
+#macro(appendTrackingParams $url)
+    #set($trackingParams = "utm_source=newsletter&utm_medium=email&utm_campaign=newsletter_test&utm_id=newsletter_test_1")
+    #set($urlWithTrackingParams = $url)
+    #if ($url.indexOf("?") == -1)
+        #set($urlWithTrackingParams = "$url?$trackingParams")
+    #else
+        #set($urlWithTrackingParams = "$url&$trackingParams")
+    #end
+    $urlWithTrackingParams
+#end

@@ -1,0 +1,18 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_query'))
+
+#set($matchingContent = false)
+#set($matchingContent = $context.LookupContent($searchText))
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+	#if ($matchingContent)
+		#foreach($content in $matchingContent)
+		    {
+		        "id":"$content.ContentId.ToString(),$content.ContentTypeId.ToString()",
+		        "title":"$core_v2_encoding.JavascriptEncode($content.HtmlName('Web'))",
+		        "preview":"$core_v2_encoding.JavascriptEncode($content.HtmlName('Web'))"
+		    },
+		#end
+	#end
+null]}

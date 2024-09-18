@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Account Locked" version="13.0.0.0" description="Sends an email when a user's account becomes locked" id="5463572382804a189282410c25308aae" lastModified="2023-04-18 14:41:28Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Body'))
+#token('site_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Home(false))">$core_v2_infoResult.Get().SiteName</a>
+#end]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Your account has been locked on {site_link} due to too many failed login attempts. If you didn't try to login, contact the site administrator.</resource>
+  <resource name="Subject">Account locked: {site_name}</resource>
+  <resource name="Header">Account locked: {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

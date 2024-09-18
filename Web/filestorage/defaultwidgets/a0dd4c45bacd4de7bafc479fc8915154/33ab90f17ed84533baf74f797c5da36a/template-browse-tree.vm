@@ -1,0 +1,12 @@
+##
+## Multiple Tree Nodes
+##
+<% if(nodes && nodes.length > 0) { %>
+	<% foreach(nodes, function(node){ %>
+		$core_v2_widget.ExecuteFile('template-browse-tree-node.vm')
+	<% }); %>
+<% } else { %>
+	<li class="navigation-item no-results">
+		<span class="message no-results">$core_v2_language.GetResource('NoResults')</span>
+	</li>
+<% } %>

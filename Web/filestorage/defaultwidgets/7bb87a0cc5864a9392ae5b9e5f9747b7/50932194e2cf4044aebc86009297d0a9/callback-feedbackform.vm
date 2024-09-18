@@ -1,0 +1,85 @@
+#set ($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_articleId')))
+#set ($article = $articles_v1_articles.Get("%{ Id = $articleId }"))
+#set ($pageSize = 3)
+#set ($PageIndex = 0)
+#set ($isRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+
+
+#set ($hasResponseTypes = false)
+#set ($hasMultipleResponseTypes = false)
+#set ($responseTypes = $articles_v1_helpfulnessResponseTypes.List($article.ArticleCollection.Id))
+#if ($responseTypes && $responseTypes.Count > 1)
+	#set ($hasMultipleResponseTypes = true)
+#end
+#foreach ($responseType in $responseTypes)
+	#set ($hasResponseTypes = true)
+#end
+
+<div class="articles-helpfulness">
+
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				## Registered users can see and remove previous unhelpful feedback
+				#if ($isRegistered)
+					#set ($existingUnhelpfulRating = false)
+					#set ($existingRatings = $articles_v1_helpfulness.List("%{ ArticleId = $article.Id, AuthorId = $core_v2_user.Accessing.Id, IsHelpful = 'false', State = 'Unresolved', PageIndex = 0, PageSize = 1 }"))
+					#if ($existingRatings.TotalCount > 0)
+						#foreach ($rating in $existingRatings)
+							#set ($existingUnhelpfulRating = true)
+						#end
+					#end
+					#if ($existingUnhelpfulRating)
+						<li class="field-item previous-feedback">
+							<label class="field-item-name">$core_v2_language.GetResource('PreviousFeedback')</label>
+							<ul class="content-list unhelpful-ratings">
+							</ul>
+						</li>
+					#end
+				#end
+
+				#if ($hasResponseTypes)
+					#if ($hasMultipleResponseTypes)
+						<li class="field-item response-type-select">
+							<label class="field-item-name">$core_v2_language.GetResource('UnhelpfulReason')</label>
+							<span class="field-item-input">
+								<select class="response-type-select">
+									#foreach ($responseType in $responseTypes)
+										<option value="$responseType.Id"
+											#if ($responseType.RequireMessage) class="message-required" #end>
+											$core_v2_encoding.HtmlEncode($responseType.Name)
+										</option>
+									#end
+								</select>
+							</span>
+							<span class="field-item-validation" style="display:none;"></span>
+						</li>
+					#else
+						#foreach ($responseType in $responseTypes)
+							<li class="field-item response-type"
+								data-singleresponsetype="true"
+								data-responsetypeid="$responseType.Id"
+								#if ($responseType.RequireMessage) data-messagerequired="true" #end>
+								<label class="field-item-name">$responseType.Name</label>
+							</li>
+						#end
+					#end
+				#end
+				<li class="field-item response-message">
+					<label class="field-item-name">$core_v2_language.GetResource('UnhelpfulMessage')</label>
+					<span class="field-item-input">
+						<textarea class="response-message" maxlength="1024"></textarea>
+					</span>
+					<span class="field-item-validation" style="display:none;">$core_v2_language.GetResource('Required')</span>
+				</li>
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+						<a href="#" class="button submit">$core_v2_language.GetResource('Submit')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+</div>

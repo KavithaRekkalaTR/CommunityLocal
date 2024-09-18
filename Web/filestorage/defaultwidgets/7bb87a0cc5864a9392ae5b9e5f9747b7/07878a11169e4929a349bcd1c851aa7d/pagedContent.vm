@@ -1,0 +1,54 @@
+﻿#set($queryType = $core_v2_widget.GetStringValue('queryType',''))
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize',10))
+#set($viewType = $core_v2_widget.GetStringValue('viewType','list'))
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#if ($queryType == '')
+	#if($core_v2_urls.Current == 'Home')
+		$core_v2_widget.SetStringValue('queryType','accessingUser')
+		$core_v2_widget.SetStringValue('sortOrder','descending')
+		$core_v2_widget.SetStringValue('sortBy','createddate')
+	#elseif($core_v2_user.Current)
+		$core_v2_widget.SetStringValue('queryType','currentUser')
+		$core_v2_widget.SetStringValue('sortOrder','descending')
+		$core_v2_widget.SetStringValue('sortBy','createddate')
+	#else
+		$core_v2_widget.SetStringValue('queryType','achievements')
+		$core_v2_widget.SetStringValue('sortOrder','ascending')
+		$core_v2_widget.SetStringValue('sortBy','title')
+	#end
+	#set($queryType = $core_v2_widget.GetStringValue('queryType',''))
+#end
+#set($sortBy = $core_v2_widget.GetStringValue('sortBy','alphabetical'))
+#set($sortOrder = $core_v2_widget.GetStringValue('sortOrder','ascending'))
+#if ($sortOrder == 'descending')
+	#set($sortOrder = 'Descending')
+#else
+	#set($sortOrder = 'Ascending')
+#end
+#if ($sortBy == 'createddate')
+	#set($sortBy = 'DateCreated')
+#else
+	#set($sortBy = 'Title')
+#end
+
+#set($content = 'achievement')
+#if($queryType=='achievements')
+	#set($achievements = $core_v2_achievement.List("%{Enabled='True',PageSize=$pageSize,PageIndex=$pageIndex,SortBy='$sortBy',SortOrder='$sortOrder'}"))
+#elseif($queryType=='currentUser')
+	#set($content = 'userachievement')
+	#set($achievements = $core_v2_userAchievement.List( "%{PageSize=$pageSize,PageIndex=$pageIndex,SortBy='$sortBy',SortOrder='$sortOrder',Enabled='True',UserId=$core_v2_user.Current.Id}"))
+#else
+	#set($content = 'userachievement')
+	#set($achievements = $core_v2_userAchievement.List("%{PageSize=$pageSize,PageIndex=$pageIndex,SortBy='$sortBy',SortOrder='$sortOrder',Enabled='True',UserId=$core_v2_user.Current.Id}"))
+#end
+
+#if($viewType=='thumbnails')
+	#set ($hasMore = false)
+	#set ($currentPagedQuantity = ($achievements.PageIndex + 1) * $achievements.PageSize)
+	#if ($achievements.TotalCount > $currentPagedQuantity)
+	    #set ($hasMore = true)
+	#end
+	$core_v2_widget.ExecuteFile('thumbnails.vm')
+#else
+	$core_v2_widget.ExecuteFile('list.vm')
+#end

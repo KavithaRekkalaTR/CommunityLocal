@@ -1,0 +1,15 @@
+#if ($core_v2_page.IsPost)
+    $core_v2_page.SetContentType('application/json')
+    
+    #set($uploadContextId = $core_v2_page.GetFormValue('uploadContextId'))
+    #set($fileName = $core_v2_page.GetFormValue('fileName'))
+    
+    #set($result = $context.Import($uploadContextId, $fileName))
+    #if($result.HasErrors())
+		$core_v2_page.SendJsonError($result.Errors)
+	#else
+	    {
+	        "synonyms": "$core_v2_encoding.JavascriptEncode($context.GetSynonyms())"
+	    }
+	#end
+#end

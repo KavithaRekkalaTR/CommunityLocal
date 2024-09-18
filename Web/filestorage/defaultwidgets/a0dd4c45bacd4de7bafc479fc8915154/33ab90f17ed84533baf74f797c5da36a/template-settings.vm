@@ -1,0 +1,51 @@
+<div class="studio-shell editor-settings">
+	<form>
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<label class="field-item-name">$core_v2_language.GetResource('EditorColorTheme')</label>
+					<span class="field-item-input">
+						<select class="theme">
+							<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Light'))">
+								<option value="chrome" <% if(editorSettings.theme == 'chrome') { %> selected <% } %>>Chrome</option>
+								<option value="clouds" <% if(editorSettings.theme == 'clouds') { %> selected <% } %>>Clouds</option>
+								<option value="eclipse" <% if(editorSettings.theme == 'eclipse') { %> selected <% } %>>Eclipse</option>
+								<option value="github" <% if(editorSettings.theme == 'github') { %> selected <% } %>>Github</option>
+								<option value="solarized_light" <% if(editorSettings.theme == 'solarized_light') { %> selected <% } %>>Solarized Light</option>
+								<option value="sqlserver" <% if(editorSettings.theme == 'sqlserver') { %> selected <% } %>>SQL Server</option>
+								<option value="xcode" <% if(editorSettings.theme == 'xcode') { %> selected <% } %>>XCode</option>
+							</optgroup>
+							<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Dark'))">
+								<option value="cobalt" <% if(editorSettings.theme == 'cobalt') { %> selected <% } %>>Cobalt</option>
+								<option value="fusion" <% if(editorSettings.theme == 'fusion') { %> selected <% } %>>Fusion (Default)</option>
+								<option value="monokai" <% if(editorSettings.theme == 'monokai') { %> selected <% } %>>Monokai</option>
+								<option value="mono_industrial" <% if(editorSettings.theme == 'mono_industrial') { %> selected <% } %>>Mono Industrial</option>
+								<option value="solarized_dark" <% if(editorSettings.theme == 'solarized_dark') { %> selected <% } %>>Solarized Dark</option>
+								<option value="twilight" <% if(editorSettings.theme == 'twilight') { %> selected <% } %>>Twilight</option>
+								<option value="vibrant_ink" <% if(editorSettings.theme == 'vibrant_ink') { %> selected <% } %>>Vibrant Ink</option>
+							</optgroup>
+						</select>
+					</span>
+				</li>
+				<li class="field-item editor-toggles">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('gutter'))" class="gutter" <% if(editorSettings.gutter === true) { %> checked <% } %> />
+						<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('gutter'))">$core_v2_language.GetResource('ShowLineNumbers')</label>
+					</span>
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('wordWrap'))" class="wordWrap" <% if(editorSettings.wordWrap === true) { %> checked <% } %> />
+						<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('wordWrap'))">$core_v2_language.GetResource('wordWrap')</label>
+					</span>
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('completeFullMemberSignature'))" class="completeFullMemberSignature" <% if(editorSettings.completeFullMemberSignature === true) { %> checked <% } %> />
+						<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('completeFullMemberSignature'))">$core_v2_language.GetResource('completeFullMemberSignature')</label>
+					</span>
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('syncTree'))" class="syncTree" <% if(editorSettings.syncTree === true) { %> checked <% } %> />
+						<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('syncTree'))">$core_v2_language.GetResource('SyncTree')</label>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+</div>

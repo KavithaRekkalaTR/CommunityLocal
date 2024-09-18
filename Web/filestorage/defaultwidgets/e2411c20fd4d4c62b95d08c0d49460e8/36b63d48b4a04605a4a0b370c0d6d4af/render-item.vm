@@ -1,0 +1,44 @@
+##
+## Expects in scope: $event
+##
+
+<div class="content event">
+	<h4 class="name">$core_v2_language.Truncate($event.Message, 100, '...')</h4>
+
+	<div class="attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item">
+				<span class="attribute-name pill $event.EventType">$event.EventType</span>
+			</li>
+            <li class="attribute-item">
+                <span class="attribute-name">$event.Category</span>
+            </li>
+			<li class="attribute-item">
+				<span class="attribute-value">$core_v2_ui.AgoDate($event.EventDate)</span>
+			</li>
+            <li class="attribute-item">
+                <span class="attribute-name">$event.MachineName</span>
+            </li>
+		</ul>
+	</div>
+
+	<div class="content description expandable">
+	    <pre>$core_v2_encoding.HtmlEnsureEncoded($event.Message)</pre>
+	</div>
+
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="events-export" data-eventId="$event.EntryID">$core_v2_language.GetResource('Export')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>

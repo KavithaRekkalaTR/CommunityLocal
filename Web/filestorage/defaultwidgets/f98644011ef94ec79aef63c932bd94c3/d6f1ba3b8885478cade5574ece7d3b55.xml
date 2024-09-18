@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:NewGroupsReport_Name}"
+                           version="10.0.0.0"
+                           description="${resource:NewGroupsReport_Description}"
+                           instanceIdentifier="d6f1ba3b8885478cade5574ece7d3b55"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+#set ($containerId = $core_v2_widget.UniqueId('container'))
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id))
+
+    #if ($context.Target.Contains('tile'))
+        <div id="$containerId" class="tile new-groups"></div>
+
+        #registerEndOfPageHtml()
+        <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('tile-ui.js'))"></script>
+        <script type="text/javascript">
+            jQuery.telligent.evolution.post({
+                target: '$context.Target',
+                url: '$core_v2_widget.GetExecutedFileUrl('tile-content.vm')',
+                success: function(response){
+                    jQuery('#$containerId').html(response);
+                }
+            });
+        </script>
+        #end
+    #elseif ($context.Target.Contains('card'))
+        $core_v2_widget.ExecuteFile('card-content.vm')
+    #else
+        $core_v2_widget.ExecuteFile('full-content.vm')
+    #end
+#else
+    <div id="$containerId" #if ($context.Target.Contains('tile'))class="tile new-groups" #end>
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+#end
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="NewGroupsReport_Name">New ${groups_propercase}</resource>
+        <resource name="NewGroupsReport_Description">Displays summary of new ${groups_lowercase}</resource>
+        <resource name="Report_Title">New ${groups_propercase}</resource>
+        <resource name="Report_Description">${groups_propercase} that were created during the selected filter range</resource>
+        <resource name="Groups">${groups_propercase}</resource>
+        <resource name="TotalGroups">Total ${groups_propercase}</resource>
+        <resource name="Name">Name</resource>
+        <resource name="CreatedDate">Created</resource>
+        <resource name="GroupType">${group_propercase} Type</resource>
+        <resource name="ParentGroup">Parent ${group_propercase}</resource>
+        <resource name="TotalMembers">Total Members</resource>
+        <resource name="Filter">Showing results for </resource>
+        <resource name="ClearFilter">Show All</resource>
+        <resource name="NoData">No new groups match the current filters.</resource>
+        <resource name="NoApplicationOrGroupSelected">Select one or more ${groups_lowercase} or applications to view report.</resource>
+        <resource name="Error">Error retrieving report. The selected ${groups_lowercase} or applications may no longer exist or you may no longer have access to view reports for the selected items.</resource>
+        <resource name="PermissionDenied">You do not have permission to view this report.</resource>
+        <resource name="Cancel">Cancel</resource>
+        <resource name="Export">Export</resource>
+        <resource name="ExportChartasCSV">Export Chart as CSV</resource>
+        <resource name="ExportChartasPNG">Export Chart as PNG</resource>
+        <resource name="ExportListasCSV">Export List as CSV</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

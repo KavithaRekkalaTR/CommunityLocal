@@ -1,0 +1,60 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#if ($core_v2_page.GetQueryStringValue('w_startdate'))
+	#set($startDate = $core_v2_utility.ParseDate($core_v2_page.GetQueryStringValue('w_startdate')))
+#else
+	#set($startDate = $context.DefaultStartDate)
+#end
+
+#if ($core_v2_page.GetQueryStringValue('w_enddate'))
+	#set($endDate = $core_v2_utility.ParseDate($core_v2_page.GetQueryStringValue('w_enddate')))
+#else
+	#set($endDate = $context.DefaultEndDate)
+#end
+
+#set($fileIdString = $core_v2_page.GetQueryStringValue('w_fileid'))
+#set($fileId = $core_v2_utility.ParseInt($fileIdString))
+
+#set($userDownloads = $context.GetUserDownloads($fileId, $startDate, $endDate, $pageIndex, $pageSize))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($userDownloads.PageIndex + 1) * $userDownloads.PageSize)
+#if ($userDownloads.TotalItems > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$userDownloads.TotalItems" id="$core_v2_encoding.HtmlAttributeEncode($downloadsListId)">
+
+#foreach($download in $userDownloads)
+#each
+  <li class="content-item file">
+	<h4 class="name">$download.User.Username</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item downloads">
+				#if($download.TotalDownloads == 1)
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('DownloadFormat'), $download.TotalDownloads.ToString())</span>
+				#else
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('DownloadsFormat'), $download.TotalDownloads.ToString())</span>
+				#end
+			</li>
+			<li class="attribute-item last-download">
+				<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('LatestDownload'), $core_v2_language.FormatDateAndTime($download.LatestDownloadDate))</span>
+			</li>
+		</ul>
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				<li class="navigation-list-item view-file">
+					<a href="$core_v2_page.AbsoluteUrl($core_v2_urls.User($download.User.UserID))">$core_v2_language.GetResource('ViewUser')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+  </li>
+#end
+
+</ul>
+

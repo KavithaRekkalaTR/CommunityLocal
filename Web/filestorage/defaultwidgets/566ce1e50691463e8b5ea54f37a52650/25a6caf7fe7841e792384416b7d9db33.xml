@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GroupActivityStory_Name}" version="10.0.0.0" description="${resource:GroupActivityStory_Description}" instanceIdentifier="25a6caf7fe7841e792384416b7d9db33" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="566ce1e50691463e8b5ea54f37a52650">
+		<contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+	#set($group = $core_v2_group.Get("%{ ContainerId = $context.Story.ContentId }"))
+	#set($parentGroup = false)
+	#if ($group && $group.ParentGroupId)
+			#set($parentGroup = $core_v2_group.Get("%{ Id = $group.ParentGroupId }"))
+			## Don't include if this is the root group.
+			#if (!$parentGroup.ParentGroupId || $parentGroup.ParentGroupId < 0)
+					#set($parentGroup = false)
+				#end
+	#end
+
+	#if ($isPreview)
+			#if ($parentGroup)
+					#format($core_v2_language.GetResource('Created_Group_WithParent'))
+							#token('user')
+									<span class="user-name">
+										#if ($context.Story.PrimaryUser.ProfileUrl)
+											<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($context.Story.PrimaryUser.ProfileUrl)">$context.Story.PrimaryUser.DisplayName</a>
+										#else
+											$context.Story.PrimaryUser.DisplayName
+										#end
+									</span>
+							#token('group')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">$content.HtmlName('Web')</a>
+							#token('parentgroup')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($parentGroup.Url)">$parentGroup.Name</a>
+						#end
+				#else
+						#format($core_v2_language.GetResource('Created_Group'))
+							#token('user')
+									<span class="user-name">
+										#if ($context.Story.PrimaryUser.ProfileUrl)
+											<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($context.Story.PrimaryUser.ProfileUrl)">$context.Story.PrimaryUser.DisplayName</a>
+										#else
+											$context.Story.PrimaryUser.DisplayName
+										#end
+									</span>
+							#token('group')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">$content.HtmlName('Web')</a>
+						#end
+				#end
+	#else
+		<div class="activity-summary">
+				#if ($parentGroup)
+						#format($core_v2_language.GetResource('CreatedANewGroup_WithParent'))
+								#token('user')
+									<span class="user-name">
+										#if ($context.Story.PrimaryUser.ProfileUrl)
+											<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($context.Story.PrimaryUser.ProfileUrl)">$context.Story.PrimaryUser.DisplayName</a>
+										#else
+											$context.Story.PrimaryUser.DisplayName
+										#end
+									</span>
+							#token('parentgroup')
+											<a href="$core_v2_encoding.HtmlAttributeEncode($parentGroup.Url)">$parentGroup.Name</a>
+								#end
+						#else
+								#format($core_v2_language.GetResource('CreatedANewGroup'))
+								#token('user')
+									<span class="user-name">
+										#if ($context.Story.PrimaryUser.ProfileUrl)
+											<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($context.Story.PrimaryUser.ProfileUrl)">$context.Story.PrimaryUser.DisplayName</a>
+										#else
+											$context.Story.PrimaryUser.DisplayName
+										#end
+									</span>
+								#end
+						#end
+		</div>
+
+		#if ($group.AvatarUrl && $group.AvatarUrl != '')
+			<div class="activity-avatar">
+				#if ($group.Url && $group.Url != '')
+				<a class="internal-link view-post" href="$core_v2_encoding.HtmlAttributeEncode($group.Url)" title="$group.Name">
+					$!core_v2_ui.GetResizedImageHtml($group.AvatarUrl, 180, 180, "%{border='0px', alt='$group.Name'}")
+				</a>
+				#else
+					$!core_v2_ui.GetResizedImageHtml($group.AvatarUrl, 180, 180, "%{border='0px', alt='$group.Name'}")
+				#end
+			</div>
+		#end
+
+		<span class="activity-title">
+			#if ($group.Url && $group.Url != '')
+				<a class="internal-link view-group" href="$core_v2_encoding.HtmlAttributeEncode($group.Url)" title="$core_v2_encoding.HtmlAttributeEncode($group.Name)">$group.Name</a>
+			#else
+				<span>$group.Name</span>
+			#end
+		</span>
+
+		<div class="activity-description">$group.Description</div>
+
+		#set($groupOwners = $core_v2_groupUserMember.List($group.Id, "%{MembershipType = 'Owner,Manager', PageSize = 20, IncludeRoleMembers = 'true' }"))
+
+		#if($groupOwners)
+			#foreach($owner in $groupOwners)
+			#beforeall
+				<div class="content-list-header user">$core_v2_language.GetResource('ManagedBy')</div>
+				<ul class="content-list user">
+			#each
+					<li class="content-list-item user">
+						<div class="avatar">
+							#if ($owner.User.ProfileUrl)
+								<a class="internal-link view-user-profile" href="$core_v2_encoding.HtmlAttributeEncode($owner.User.ProfileUrl)">$!core_v2_ui.GetResizedImageHtml($owner.User.AvatarUrl, 32, 32, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$owner.User.DisplayName'}")</a>
+							#else
+								$!core_v2_ui.GetResizedImageHtml($owner.User.AvatarUrl, 32, 32, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$owner.User.DisplayName'}")
+							#end
+						</div>
+					</li>
+			#afterall
+				</ul>
+				<div class="content-list-footer user"></div>
+			#end
+		#end
+	#end
+#end
+]]></contentScript>
+		<languageResources><language key="en-us"><resource name="GroupActivityStory_Name">Group Activity Story</resource><resource name="GroupActivityStory_Description">Story for new groups.</resource><resource name="Created_Group">{user} created {group}.</resource><resource name="CreatedANewGroup">{user} created a new group:</resource><resource name="ManagedBy">Managed by</resource><resource name="Created_Group_WithParent">{user} created {group} in {parentgroup}.</resource><resource name="CreatedANewGroup_WithParent">{user} created a new group in {parentgroup}:</resource></language></languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

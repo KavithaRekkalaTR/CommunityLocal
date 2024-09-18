@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="e81b0b73b111478797e48906d6587c02" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2019-12-23 21:00:51Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="comment.aftercreate" />
+      <event key="comment.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var contentTypeIds = core_v2_widget.GetCustomValue('contentTypeIds', 'all');
+var valid = false;
+
+if (contentTypeIds == 'all') {
+    contentTypeIds = null;
+    valid = true;
+} else {
+    var contentTypeIdList = core_v2_page.ParseQueryString(contentTypeIds).Values('ContentTypeId');
+    if (contentTypeIdList !== null && contentTypeIdList.Count > 0) {
+        var i;
+        for (i = 0; i < contentTypeIdList.Count; i++) {
+            var contentTypeId = core_v2_utility.ParseGuid(contentTypeIdList[i]);
+            if (contentTypeId && contentTypeId == context_v2_automationTrigger.Arguments.ContentTypeId) {
+                valid = true;
+                break;
+            }
+        }
+    }
+}
+
+if (!valid) {
+    // not a valid content type
+    return;
+}
+
+if (core_v2_widget.GetBoolValue('ignoreIfOriginalAuthor', true) && context_v2_automationTrigger.Arguments.UserId == context_v2_automationTrigger.Arguments.Content.CreatedByUserId) {
+    // commenter is the content author
+    return;
+}
+
+var userId = context_v2_automationTrigger.Arguments.UserId;
+if (core_v2_widget.GetStringValue('awardTo', 'parent') == 'parent') {
+    userId = context_v2_automationTrigger.Arguments.Content.CreatedByUserId;
+}
+
+var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(userId, context_v2_automationTrigger.Arguments.CommentId, core_v2_comments.ContentTypeId);
+if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.IsApproved && !awardedPoints) {
+    context_v1_pointsAutomation.AwardPoints(userId, context_v2_automationTrigger.Arguments.CommentId, core_v2_comments.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (context_v2_automationTrigger.Arguments.IsApproved) {
+        // ensure points awarded
+        if (!awardedPoints) {
+            context_v1_pointsAutomation.AwardPoints(userId, context_v2_automationTrigger.Arguments.CommentId, core_v2_comments.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (awardedPoints) {
+            context_v1_pointsAutomation.RevokePoints(userId, context_v2_automationTrigger.Arguments.CommentId, core_v2_comments.ContentTypeId);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="contentTypeIds" labelResourceName="ContentToReview" descriptionResourceName="ContentToReview_Description" dataType="Custom" template="core_v2_contentTypeList" strictContentTypes="true" isCommentable="true" />
+    <property id="awardTo" labelResourceName="AwardTo" descriptionResourceName="AwardTo_Description" dataType="string" defaultValue="parent">
+        <propertyValue labelResourceName="AwardTo_Parent" value="parent" />
+        <propertyValue labelResourceName="AwardTo_Child" value="child" />
+    </property>
+    <property id="ignoreIfOriginalAuthor" labelResourceName="IgnoreIfOriginalAuthor" descriptionResourceName="IgnoreIfOriginalAuthor_Description" dataType="bool" defaultValue="true" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AwardTo">Award points to</resource>
+  <resource name="AwardTo_Child">Comment author</resource>
+  <resource name="AwardTo_Description">Select which member should receive points.</resource>
+  <resource name="AwardTo_Parent">Content author</resource>
+  <resource name="ContentToReview">Types of content</resource>
+  <resource name="ContentToReview_Description">Optionally select the types of content on which comments can be made to receive points.</resource>
+  <resource name="Description">Awards points when comments are made on content.</resource>
+  <resource name="IgnoreIfOriginalAuthor">Ignore comments created by the content author</resource>
+  <resource name="IgnoreIfOriginalAuthor_Description">If enabled, comments made by the author of the content being commented on will not cause points to be awarded.</resource>
+  <resource name="Title">When a comment is made</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

@@ -1,0 +1,58 @@
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<![CDATA[
+	jQuery(function() {
+		var save = function(success, failure)
+		{
+		    var padZero = function(v, length) {
+		      v = (v + '') || '';
+		      while (v.length < length) {
+		          v = '0' + v;
+		      }
+		      return v;
+		    };
+
+		    var originalValues = {
+		        $originalValues
+		    };
+
+			var data = $core_v2_dynamicForm.GetValuesScript($formId);
+			var postData = {};
+			var savedValues = {};
+			var hasData = false;
+			for (var n in data) {
+			    var value = data[n];
+			    if (value === true) {
+			        value = 'True';
+			    } else if (value === false) {
+			        value = 'False';
+			    } else if (value && value.toGMTString) {
+			        value = [padZero(value.getFullYear(), 4),'-',padZero(value.getMonth() + 1, 2),'-',padZero(value.getDate(), 2),' ',padZero(value.getHours(), 2),':',padZero(value.getMinutes(), 2),':',padZero(value.getSeconds(), 2)].join('');
+			    }
+			    if (originalValues[n] != value) {
+			        hasData = true;
+                    postData['_ProfileFields_' + n] = value != null ? (value + '') : '';
+                    savedValues[n] = value;
+			    }
+			}
+
+			if (hasData) {
+			    postData.UserId = $user.Id;
+				jQuery.telligent.evolution.put({
+					url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/users/{UserId}.json?IncludeFields=Id',
+					data: postData,
+					success: function(response) {
+					    originalValues = jQuery.extend({}, originalValues, savedValues);
+					    success();
+					},
+					error: function(xhr, desc, ex) { jQuery.telligent.evolution.notifications.show(desc,{type:'error'});failure(); }
+				});
+			} else {
+                success();
+            }
+		}
+		$core_v2_editableGroup.GetRegistrationScript('User', 'save')
+	});
+	//]]>
+	</script>
+#end

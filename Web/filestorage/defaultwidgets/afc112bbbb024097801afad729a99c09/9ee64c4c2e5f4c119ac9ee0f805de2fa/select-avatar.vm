@@ -1,0 +1,29 @@
+#set($avatarUrls = $context.GetSelectableAvatarUrls())
+
+<fieldset>
+	<ul style="display: flex; flex-wrap: wrap; justify-content: center;">
+    #foreach($avatarUrl in $avatarUrls)
+    	<li style="width:64px; margin: 10px;">
+    		<a href="#" data-url="$core_v2_encoding.HtmlAttributeEncode($avatarUrl)">
+    	        $core_v2_ui.GetResizedImageHtml($avatarUrl, 64, 64, "%{border='0px', alt=$avatar.FileName, ResizeMethod = 'ZoomAndCrop' }")
+    		</a>
+    	</li>
+    #end
+	</ul>
+</fieldset>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.administration.panelWrapper().on('click', 'a', function(e) {
+	    var url = jQuery(this).data('url');
+	    if (url) {
+	        jQuery.telligent.evolution.messaging.publish('groupoptions.avatarselected', {
+	            url: url
+	        });
+	        jQuery.telligent.evolution.administration.close();
+	    }
+	    return false;
+	});
+			
+});
+</script>

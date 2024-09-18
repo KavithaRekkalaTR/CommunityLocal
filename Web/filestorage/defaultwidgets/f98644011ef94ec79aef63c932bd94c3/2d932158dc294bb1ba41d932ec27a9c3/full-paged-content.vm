@@ -1,0 +1,68 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($contents = $context.GetDetail($options))
+
+#foreach($content in $contents)
+#beforeall
+<div class="responsive-wrapper">
+	<table>
+    <thead>
+		<tr>
+            $reporting_ui.SortableTableHeader("", "Name", "ascending", $core_v2_language.GetResource('Title'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("", "CreatedDate", "descending", $core_v2_language.GetResource('CreatedDate'), $sortBy, $sortOrder)
+			<th>$core_v2_language.GetResource('ContentType')</th>
+			<th>$core_v2_language.GetResource('User')</th>
+			<th>$core_v2_language.GetResource('UserCreated')</th>
+			<th>$core_v2_language.GetResource('Location')</th>
+		</tr>
+	</thead>
+	<tbody>
+#each
+        #set ($apiContent = false)
+		#set ($apiContent = $core_v2_content.Get($content.ContentId, $content.ContentType.ContentTypeId))
+
+		<tr data-id="$content.ContentId">
+                #set($title = '')
+
+				#if ($apiContent && !$apiContent.HasErrors())
+					#set($title = $apiContent.HtmlName('web'))
+				#end
+				#if (!$title || $title.Length == 0)
+					#if ($content.Subject && $content.Subject.Length > 0)
+						#set ($title = $content.Subject)
+					#else
+						#set ($title = $core_v2_language.GetResource('Unknown'))
+					#end
+				#end
+			$reporting_ui.ContentNameTableCellWithActions($content.ContentId, $title, $apiContent.Url)
+			<td data-title="$core_v2_language.GetResource('CreatedDate')">#if ($content.CreatedDate)$core_v2_language.FormatDateAndTime($content.CreatedDate, "%{AdjustTimeZone = 'false'}")#end</td>
+			<td data-title="$core_v2_language.GetResource('ContentType')">$!content.ContentType.ContentTypeName</td>
+			<td data-title="$core_v2_language.GetResource('User')">$!content.User.ExpandedName</td>
+			<td data-title="$core_v2_language.GetResource('UserCreated')">#if($content.User.CreatedDate)$reporting_ui.FormatAgoDate($content.User.CreatedDate)#end</td>
+			<td data-title="$core_v2_language.GetResource('Location')">
+				$!content.Application.Name #if($content.Application.Name && $content.Application.Container.Name) - #end $!content.Application.Container.Name
+			</td>
+		</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$contents.PageSize" data-totalitems="$contents.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end
+
+
+
+

@@ -1,0 +1,49 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($statusKey = $core_v2_page.GetFormValue('StatusKey'))
+	#set($name = false)
+	#set($name = $core_v2_page.GetFormValue('Name'))
+	#set($score = false)
+	#set($score = $core_v2_utility.ParseInt( $core_v2_page.GetFormValue('Score')))
+	#set($sortOrder = false)
+	#set($sortOrder = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('SortOrder')))
+	#set($isDefault = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('IsDefault')))
+	#set($isClosed = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('IsClosed')))
+	#set($releasesVotes = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('ReleasesVotes')))
+
+	#set($action = "save")
+	#set($options = "%{}")
+
+	#if ($name && $name.length > 0)
+		$options.Add('Name', $name)
+	#end
+
+	#if ($score && $score > 0)
+		$options.Add('ScoreValue', $score)
+	#end
+
+	#if ($sortOrder && $sortOrder > 0)
+		$options.Add('SortOrder', $sortOrder)
+	#end
+
+	#if ($isDefault)
+		$options.Add('IsDefault', true)
+	#end
+
+	$options.Add('IsClosed', $isClosed)
+	$options.Add('ReleasesVotes', $releasesVotes)
+
+	#if ($statusKey.length > 0)
+		#set($response = $telligentIdeas_v1_statuses.Update($statusKey, $options))
+		#set($action = "update")
+	#else
+		#set($response = $telligentIdeas_v1_statuses.Create($options))
+	#end
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "statusKey": "$response.Key", "action" : "$action", "isDefault" : $core_v2_language.Lowercase($isDefault.ToString())}
+#end

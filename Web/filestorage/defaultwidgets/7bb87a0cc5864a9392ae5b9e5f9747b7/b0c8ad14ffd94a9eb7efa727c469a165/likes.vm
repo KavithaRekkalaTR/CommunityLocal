@@ -1,0 +1,54 @@
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 15))
+
+#set($filterType = false)
+#set($filterType = $core_v2_widget.GetStringValue('filterType', ''))
+#set($user = false)
+#if ($filterType == 'Current')
+    #set($user = $core_v2_user.Current)
+#else
+    #set($user = $core_v2_user.Accessing)
+#end
+
+#set($userId = $user.Id)
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+
+#set($likes = $core_v2_like.List("%{UserId=$userId,PageSize=$pageSize,PageIndex=$pageIndex,SortBy='Date',SortOrder='Descending'}"))
+#foreach($like in $likes)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+	<li class="content-item" #if ($like.Content.Url) data-href="$core_v2_encoding.HtmlAttributeEncode($like.Content.Url)" #end>
+		#set ($resultHtml = false)
+		#set ($resultHtml = $like.Content.ViewHtml())
+		#if ($resultHtml)
+			$resultHtml
+		#end
+		#set($userLikes = $core_v2_like.List("%{ContentId=$like.ContentId,PageSize=6,PageIndex=0,SortOrder='Descending'}"))
+		#if ($userLikes.TotalCount > 1)
+			<div class="content-like-details">
+				<ul class="content-list thumbnails">
+					
+					#set($userCount = 0)
+					#foreach ($userLike in $userLikes)
+						#if ($userLike.UserId != $userId && $userCount < 10)
+							<li class="content-item">
+								#if ($userLike.User.ProfileUrl)
+									<a href="$core_v2_encoding.HtmlAttributeEncode($userLike.User.ProfileUrl)" class="internal-link view-user-profile">$core_v2_ui.GetResizedImageHtml($userLike.User.AvatarUrl, 42, 42, "%{ ResizeMethod='ZoomAndCrop', border='0', alt=$userLike.User.DisplayName }")</a>
+								#else
+									$core_v2_ui.GetResizedImageHtml($userLike.User.AvatarUrl, 42, 42, "%{ ResizeMethod='ZoomAndCrop', border='0', alt=$userLike.User.DisplayName }")
+								#end
+							</li>
+							#set($userCount = $userCount + 1)
+						#end
+					#end
+				</ul>
+				$core_v2_ui.Like($like.ContentId, $like.Content.ContentTypeId, "%{ Format = '{message}' }")
+			</div>
+		#end
+	</li>
+#afterall
+        </ul>
+        <div class="content-list-footer"></div>
+#nodata
+	<div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource("No_Likes_Message"), $user.DisplayName)</div>
+#end

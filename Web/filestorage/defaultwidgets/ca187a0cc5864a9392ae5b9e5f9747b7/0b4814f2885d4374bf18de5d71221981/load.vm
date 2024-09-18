@@ -1,0 +1,141 @@
+#if ($core_v2_page.IsPost)
+
+	#set ($eventId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('eventId')))
+	#set ($event = $calendar_v1_events.Show($eventId))
+	#set ($calendar = $calendar_v1_calendars.Show("%{Id = $event.CalendarId}"))
+
+#else
+
+	#set ($calendar = $calendar_v1_calendars.Current)
+
+	#if (!$calendar_v1_calendars.HasPermission($calendar.Id,$calendar_v1_permissions.ViewRegistrations))
+		$core_v2_widget.Hide()
+	#end
+
+	#set ($event = $calendar_v1_events.Current)
+
+#end
+
+#set($sortBy = $core_v2_page.GetQueryStringValue('SortBy'))
+#if (!$sortBy || $sortBy == '')
+	#set($sortBy = 'User')
+#end
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize',5))
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($sortOrder = $core_v2_page.GetQueryStringValue('SortOrder'))
+#if (!$sortOrder || $sortOrder == '')
+	#set($sortOrder = 'Ascending')
+#end
+
+#set($status = $core_v2_page.GetQueryStringValue('Show'))
+#if (!$status)
+	#set($status = '')
+#end
+#set($anonymous =  $core_v2_user.Get("%{Username = $core_v2_user.AnonymousUserName }"))
+#set($canManageRegistrations = false)
+#set($canManageRegistrations = $calendar_v1_calendars.HasPermission($calendar.Id,$calendar_v1_permissions.ManageRegistrations))
+
+#set($registrations = false)
+#set($registrations = $calendar_v1_registrations.List($event.Id, "%{PageSize=$pageSize,PageIndex=$pageIndex,SortOrder=$sortOrder,SortBy=$sortBy,Status=$status}"))
+
+<fieldset>
+	<h1>
+		$event.EventTitle $core_v2_language.GetResource('Registrations')
+	</h1>
+
+	#if ($registrations.TotalCount == 0)
+		<div class="message success">$core_v2_language.GetResource('No_Registrations')</div>
+	#end
+
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				#foreach ($registration in $registrations)
+				#beforeall
+				<div class="table-list-header"></div>
+				<table class="form">
+					<thead>
+						<tr>
+							<th style="width:50px;">
+								&nbsp;
+							</th>
+							<th>
+								$core_v2_language.GetResource('RegisteredName')
+							</th>
+							<th style="width:115px;">
+								$core_v2_language.GetResource('Status')
+							</th>
+							<th>
+								$core_v2_language.GetResource('Email')
+							</th>
+							<th>
+								&nbsp;
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+				#each
+					<tr class="table-item">
+						<td>
+							<span class="avatar">
+						    	#if($registration.User)
+									$core_v2_ui.GetResizedImageHtml($registration.User.AvatarUrl, 29, 29, "%{border='1', alt=$registration.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+								#else
+									$core_v2_ui.GetResizedImageHtml($anonymous.AvatarUrl, 29, 29, "%{border='1', alt=$registration.EmailAddress, ResizeMethod='ZoomAndCrop'}")
+								#end
+									</span>
+						</td>
+						<td class="table-column user-info">
+
+							#set($nameSeparator = ", ")
+							#set($displayName = "")
+							#if ($registration.LastName != '' && $registration.FirstName != '')
+								#set($displayName = "${registration.LastName}${nameSeparator}${registration.FirstName}")
+							#else
+								#set($displayName = $registration.EmailAddress)
+							#end
+
+							#if (!$registration.User || !$core_v2_user.IsRegistered($registration.User.Id))
+								<span class="user-name">$displayName</span>
+							#else
+								<span class="user-name">
+									#if ($registration.User)
+										#if ($registration.User.ProfileUrl)
+											<a class="internal-link view-user-profile" href="$core_v2_encoding.HtmlAttributeEncode($registration.User.ProfileUrl)">
+												<span></span> #if ($registration.User.DisplayName != '') $registration.User.DisplayName #else $registration.User.Username #end
+											</a>
+										#else
+											<span></span> #if ($registration.User.DisplayName != '') $registration.User.DisplayName #else $registration.User.Username #end
+										#end
+									#else
+															<span></span>$displayName
+									#end
+								</span>
+							#end
+						</td>
+						<td class="table-column membership-status">$core_v2_language.GetResource("RegistrationStatus_$registration.Status")</td>
+						<td class="table-column">
+									$registration.EmailAddress
+						</td>
+						<td class="table-column registration-actions">
+						#if (!$event.IsCancelled && $canManageRegistrations)
+							#if ($registration.Status != "Cancelled")
+								<a class="cancel-registration ui-tip" href="#" token="$registration.Token" title="$core_v2_language.GetResource('Cancel')">$core_v2_language.GetResource('Cancel')</a>
+							#end
+							#if ($registration.Status != "Confirmed")
+								<a class="confirm-registration ui-tip" href="#" token="$registration.Token" title="$core_v2_language.GetResource('Confirm_Registration')">$core_v2_language.GetResource('Confirm_Registration')</a>
+							#end
+						#end
+						</td>
+					</tr>
+				#afterall
+					</tbody>
+				</table>
+				<div class="table-list-footer"></div>
+				#end
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+$core_v2_ui.Pager($registrations.PageIndex, $registrations.PageSize, $registrations.TotalCount)

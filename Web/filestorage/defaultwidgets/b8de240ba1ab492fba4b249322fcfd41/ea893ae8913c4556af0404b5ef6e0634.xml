@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SystemNotificationsPanel_Name}" version="11.0.0.0" description="${resource:SystemNotificationsPanel_Description}" instanceIdentifier="ea893ae8913c4556af0404b5ef6e0634" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="system-notifications" lastModified="2020-03-18 21:02:13Z" provider="b8de240ba1ab492fba4b249322fcfd41">
+    <contentScript language="Velocity"><![CDATA[<div id="$core_v2_widget.UniqueId('tab')" class="system-notifications">
+#set ($notificationsListId = $core_v2_widget.UniqueId('notificationsList'))
+#set ($filterId = $core_v2_widget.UniqueId('filter'))
+#set ($deleteSelectedId = $core_v2_widget.UniqueId('deleteSelected'))
+#set ($deleteAllId = $core_v2_widget.UniqueId('deleteAll'))
+#set ($deselectAllId = $core_v2_widget.UniqueId('deselectAll'))
+
+
+#set ($options = "%{ SortBy = 'LastOccurredDate', IsResolved = 'false', PluginType = $context.PluginType }")
+#set ($notifications = $context.List($options))
+
+#if($notifications.Count == 0)
+		$core_v2_widget.Hide()
+#end
+
+<form><fieldset id="$core_v2_encoding.HtmlAttributeEncode($filterId)" style="float: right;">
+	<div class="filter-selector">
+			<select class="resolved">
+			<option value="notresolved" selected>$core_v2_language.GetResource('Resolved_NotResolved')</option>
+			<option value="resolved">$core_v2_language.GetResource('Resolved_Resolved')</option>
+		</select>
+
+		<select class="sortBy">
+			<option value="Count">$core_v2_language.GetResource('SortBy_Frequency')</option>
+			<option value="LastOccurredDate" selected>$core_v2_language.GetResource('SortBy_LastOccurred')</option>
+		</select>
+	</div>
+</fieldset></form>
+
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($deleteSelectedId)">$core_v2_language.GetResource('MarkSelectedResolved')</a>
+				<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($deselectAllId)">$core_v2_language.GetResource('DeselectAll')</a>
+					<a href="#" class="inline-button" data-messagename="notifications-refresh">$core_v2_language.GetResource('Refresh')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+<form>
+<ul id="$core_v2_encoding.HtmlAttributeEncode($notificationsListId)" class="content-list expandable">
+	#if ($notifications && $notifications.Count > 0)
+		$core_v2_widget.ExecuteFile('notifications-render.vm')
+	#end
+</ul>
+</form>
+<div class="message no-matches" style="#if ($notifications && $notifications.Count > 0) display: none; #else display: block; #end">$core_v2_language.GetResource('NoNotifications')</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.pluginSystemNotifications')
+		<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script>
+		(function(){
+				var api = $context.JsonApi;
+				api.registerContent({
+						name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SystemNotifications'))',
+						orderNumber: 1000200,
+						selected: function() {
+								jQuery('#$core_v2_widget.UniqueId('tab')').css({
+										visibility: 'visible',
+										height: 'auto',
+										width: 'auto',
+										left: '0',
+										position: 'static'
+								});
+						},
+						unselected: function() {
+								jQuery('#$core_v2_widget.UniqueId('tab')').css({
+										visibility: 'hidden',
+										height: '100px',
+										width: '800px',
+										left: '-1000px',
+										position: 'absolute'
+								});
+						}
+				});
+
+
+	jQuery.telligent.evolution.widgets.systemNotificationsPanel.register({
+		list: '#$core_v2_encoding.JavascriptEncode($notificationsListId)',
+		filter: '#$core_v2_encoding.JavascriptEncode($filterId)',
+		pluginType: '$context.PluginType',
+		deleteSelectedButton: '#$core_v2_encoding.JavascriptEncode($deleteSelectedId)',
+		deSelectAllButton: '#$core_v2_encoding.JavascriptEncode($deselectAllId)',
+		deleteSelectedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MarkSelectedResolved'))',
+		deleteSelectedConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ResolveSelectedConfirm'))',
+		deleteConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ResolveConfirm'))',
+		getNotificationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('notifications-query.vm'))',
+		deleteNotificationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('notifications-delete.vm'))'
+	});
+})();
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="DeselectAll">Deselect All</resource>
+  <resource name="FirstOccurred">First Occurred</resource>
+  <resource name="LastOccurred">Last Occurred</resource>
+  <resource name="MarkResolved">Mark Resolved</resource>
+  <resource name="MarkSelectedResolved">Mark Selected Resolved</resource>
+  <resource name="more">More</resource>
+  <resource name="NoNotifications">No notifications match the filter.</resource>
+  <resource name="NotDefined">Not Defined</resource>
+  <resource name="Occurrences">{0} occurrences</resource>
+  <resource name="PluginType">Plugin Type</resource>
+  <resource name="Refresh">Refresh</resource>
+  <resource name="ResolveConfirm">Are you sure you want to mark this notification resolved?</resource>
+  <resource name="Resolved_NotResolved">Current</resource>
+  <resource name="Resolved_Resolved">Previous</resource>
+  <resource name="ResolveSelectedConfirm">Are you sure you want to mark the selected notifications resolved?</resource>
+  <resource name="SortBy_Frequency">By total occurrences</resource>
+  <resource name="SortBy_LastOccurred">By last occurred date</resource>
+  <resource name="SystemNotifications">System Notifications</resource>
+  <resource name="SystemNotificationsPanel_Description">View system notifications.</resource>
+  <resource name="SystemNotificationsPanel_Name">System Notifications</resource>
+  <resource name="TotalOccurrences">Total Occurrences</resource>
+  <resource name="Type_All">All notifications</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

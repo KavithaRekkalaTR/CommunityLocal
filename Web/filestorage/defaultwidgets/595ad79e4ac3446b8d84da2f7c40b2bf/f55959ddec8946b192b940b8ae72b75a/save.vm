@@ -1,0 +1,79 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($o = $core_v2_page.GetFormValue('AllowLogin'))
+	$options.Add('AllowLogin', $o)
+
+	#set($o = $core_v2_page.GetFormValue('AllowNewUserRegistration'))
+	$options.Add('AllowNewUserRegistration', $o)
+
+	#set($o = $core_v2_page.GetFormValue('ShowContactCheckboxes'))
+	$options.Add('ShowContactCheckboxes', $o)
+
+	#set($o = $core_v2_page.GetFormValue('UsernameRegex'))
+	$options.Add('UsernameRegex', $o)
+
+	#set($o = $core_v2_page.GetFormValue('UsernameMinLength'))
+	$options.Add('UsernameMinLength', $o)
+
+	#set($o = $core_v2_page.GetFormValue('UsernameMaxLength'))
+	$options.Add('UsernameMaxLength', $o)
+
+	#set($o = $core_v2_page.GetFormValue('EmailRegex'))
+	$options.Add('EmailRegex', $o)
+
+	#set($o = $core_v2_page.GetFormValue('AccountActivationMode'))
+	$options.Add('AccountActivationMode', $o)
+
+	#set($o = $core_v2_page.GetFormValue('PasswordRecovery'))
+	$options.Add('PasswordRecovery', $o)
+
+	#set($o = $core_v2_page.GetFormValue('AuthCookieTimeout'))
+	$options.Add('AuthCookieTimeout', $o)
+
+	#set($o = $core_v2_page.GetFormValue('EnableSlidingAuth'))
+	$options.Add('EnableSlidingAuth', $o)
+
+	#set($o = $core_v2_page.GetFormValue('LogoutOnBrowserClose'))
+	$options.Add('LogoutOnBrowserClose', $o)
+
+	#set($o = $core_v2_page.GetFormValue('Throttling'))
+	$options.Add('Throttling', $o)
+
+	#set($o = $core_v2_page.GetFormValue('ThrottlingAttempts'))
+	$options.Add('ThrottlingAttempts', $o)
+
+	#set($o = $core_v2_page.GetFormValue('ThrottlingDuration'))
+	$options.Add('ThrottlingDuration', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('PasswordLength'))
+	$options.Add('PasswordLength', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('PasswordMinLowercase'))
+	$options.Add('PasswordMinLowercase', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('PasswordMinUppercase'))
+	$options.Add('PasswordMinUppercase', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('PasswordMinNumbers'))
+	$options.Add('PasswordMinNumbers', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('PasswordMinSpecial'))
+	$options.Add('PasswordMinSpecial', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('PasswordFailAttempts'))
+	$options.Add('PasswordFailAttempts', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('PasswordFailWindow'))
+	$options.Add('PasswordFailWindow', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('LockoutTime'))
+	$options.Add('LockoutTime', $o)
+
+	$context.Save($options)
+
+	{"success":true}
+
+#end

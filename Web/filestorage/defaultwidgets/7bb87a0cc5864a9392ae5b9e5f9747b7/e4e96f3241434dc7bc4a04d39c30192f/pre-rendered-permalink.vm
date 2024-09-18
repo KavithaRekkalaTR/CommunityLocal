@@ -1,0 +1,85 @@
+##
+## Server-rendered permalinked comment + contextual comments
+##
+## Expects in scope: $commentId, $sortBy, $sortOrder, $content
+##
+
+## Load comment
+#set ($comment = $core_v2_comments.Get($commentId))
+#set ($permalinkedComment = $comment)
+
+#if ($comment && !$comment.IsApproved)
+    $core_v2_page.Redirect($core_v2_urls.Message('PostPendingModeration'))
+#end
+
+## Load comments parents
+#set ($parents = [])
+#set ($child = $comment)
+$core_v2_widget.ExecuteFile('common-load-parents.vm')
+
+## Load Children
+#set ($flattenAt = $flattenedDepth - $parents.Count - 1)
+#if ($flattenAt < 0)
+	#set ($flattenAt = 0)
+#end
+
+#set ($listThreadedOptions = "%{}")
+$listThreadedOptions.add('ContentId', $content.ContentId)
+$listThreadedOptions.add('ContentTypeId', $content.ContentTypeId)
+$listThreadedOptions.add('ParentCommentId', $commentId)
+$listThreadedOptions.add('FlattenedDepth', $flattenAt)
+$listThreadedOptions.add('RootPageSize', $pageSize)
+$listThreadedOptions.add('ChildPageSize', $pageSize)
+#if ($sortBy)
+	$listThreadedOptions.add('ThreadedSortBy', $sortBy)
+#end
+#if ($sortOrder)
+	$listThreadedOptions.add('ThreadedSortOrder', $sortOrder)
+#end
+#if ($flattenedSortBy)
+	$listThreadedOptions.add('FlattenedSortBy', $flattenedSortBy)
+#end
+#if ($flattenedSortOrder)
+	$listThreadedOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+#end
+
+#set ($children = false)
+#set ($children = $core_v2_comments.ListThreaded($listThreadedOptions))
+
+
+## Render comments parents
+
+<strong>$core_v2_language.GetResource('parents')</strong>
+#foreach ($comment in $parents)
+#beforeall
+	<ul>
+#each
+	$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+#afterall
+	</ul>
+#nodata
+	<div>$core_v2_language.GetResource('no_data')</div>
+#end
+
+
+## Render Requested Comment
+
+<strong>$core_v2_language.GetResource('comment')</strong>
+#set ($comment = $permalinkedComment)
+<ul>
+$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+</ul>
+
+## Render Children
+
+<strong>$core_v2_language.GetResource('children')</strong>
+#foreach ($comment in $children)
+#beforeall
+	<ul>
+#each
+	$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+#afterall
+	</ul>
+#nodata
+	<div>$core_v2_language.GetResource('no_data')</div>
+#end

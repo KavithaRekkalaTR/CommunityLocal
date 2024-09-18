@@ -1,0 +1,60 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GallerySyndicationPanel_Name}" cssClass="contextual-gallerysyndication" description="${resource:GallerySyndicationPanel_Description}" instanceIdentifier="de50f6e6e68d4df08d1b154b84a70e82" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<contentScript>
+<![CDATA[
+#set($gallery = $context.Gallery)
+
+<div id="$core_v2_widget.WrapperElementId">
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item enable-rss-syndication">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableRssSyndication')" #if($gallery.EnableRssSyndication)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('EnableRssSyndication')" class="field-item-name">$core_v2_language.GetResource('EnableRssSyndication')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableRssSyndication_Detail')</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.gallerySyndicationPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.gallerySyndicationPanel.register({
+			wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+			applicationId: '$context.ApplicationId',
+			applicationTypeId: '$context.ApplicationTypeId',
+			inputs: {
+				enableRssSyndicationId: "#$core_v2_widget.UniqueId('EnableRssSyndication')"
+			},
+			resources: {
+				save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+				galleryUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GalleryUpdated'))"
+			},
+			urls: {
+				save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))'
+			}
+		});
+	});
+	</script>
+#end
+]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+	<resource name="GallerySyndicationPanel_Name">Syndication</resource>
+	<resource name="GallerySyndicationPanel_Description">Manage gallery syndication options.</resource>
+	<resource name="EnableRssSyndication">Publish RSS for files</resource>
+	<resource name="EnableRssSyndication_Detail">Syndicate the media gallery content using RSS</resource>
+	<resource name="Save">Save</resource>
+	<resource name="GalleryUpdated">Gallery options were successfully saved.</resource>
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

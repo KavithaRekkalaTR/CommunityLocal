@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SEO_Name}" version="12.0.0.0" description="${resource:SEO_Description}" instanceIdentifier="a679da92904d45d3b0dff14da84a35cb" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="" lastModified="2022-09-12 19:42:02Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[      #set($enableCanonicalUrlQueryStringRegistrations = $core_v2_utility.ParseBool($core_v2_widget.GetStringValue('enableCanonicalUrlQueryStringRegistrations', 'true')))
+      #if(!$enableCanonicalUrlQueryStringRegistrations)
+        $core_v2_page.SetCanonicalLink('', "%{ EnableQueryStringRegistrations=$enableCanonicalUrlQueryStringRegistrations }")
+      #end
+      
+      #set($canonicalUrlQueryStringKeysToIgnore = $core_v2_widget.GetStringValue('canonicalUrlQueryStringKeysToIgnore', ''))
+      #if ($enableCanonicalUrlQueryStringRegistrations && $canonicalUrlQueryStringKeysToIgnore != '')
+        #foreach($key in $core_v2_utility.Split($core_v2_utility.NewLine, $canonicalUrlQueryStringKeysToIgnore))
+            $core_v2_page.IgnoreRegisteredCanonicalQueryStringKey($key)
+        #end
+      #end]]></contentScript>
+    <headerScript language="Unknown" />
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="Title" defaultValue="${resource:Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="enableCanonicalUrlQueryStringRegistrations" labelResourceName="EnableCanonicalUrlQueryStringRegistrations" descriptionResourceName="EnableCanonicalUrlQueryStringRegistrations_Description" dataType="string" defaultValue="true">
+	        <propertyValue labelText="Enable" value="true" propertiesToShow="canonicalUrlQueryStringKeysToIgnore" />
+	        <propertyValue labelText="Disable" value="false" propertiesToHide="canonicalUrlQueryStringKeysToIgnore" />
+    </property>
+	<property id="canonicalUrlQueryStringKeysToIgnore" labelResourceName="CanonicalUrlQueryStringKeysToIgnore" descriptionResourceName="CanonicalUrlQueryStringKeysToIgnore_Description" dataType="String" rows="10" defaultValue="" />
+</propertyGroup>
+]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CanonicalUrl">Canonical URL</resource>
+  <resource name="CanonicalUrl_Description">If specified this will set the URL used in the canonical link tag.</resource>
+  <resource name="CanonicalUrlQueryStringKeysToIgnore">Query Key Canonical URL Registrations to Ignore</resource>
+  <resource name="CanonicalUrlQueryStringKeysToIgnore_Description">Identify query string keys, one per line, to ignore when generating the canonical URL.</resource>
+  <resource name="EnableCanonicalUrlQueryStringRegistrations">Query Key Canonical URL Registrations</resource>
+  <resource name="EnableCanonicalUrlQueryStringRegistrations_Description">When enabled, widgets on the page can register query string keys to be added to the canonical URL (for example, page indexes).</resource>
+  <resource name="If specified this will override the default url used in the canonical link tag.  By default the canonical url is the page's current base url."></resource>
+  <resource name="Options">Options</resource>
+  <resource name="SEO_Description">Enables adjustment of SEO metadata</resource>
+  <resource name="SEO_Name">SEO Meta Data</resource>
+  <resource name="Title">SEO Meta Data</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

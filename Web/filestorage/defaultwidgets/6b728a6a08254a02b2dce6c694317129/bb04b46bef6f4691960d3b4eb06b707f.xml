@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="bb04b46bef6f4691960d3b4eb06b707f" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-reporting" lastModified="2022-07-15 19:44:16Z" provider="6b728a6a08254a02b2dce6c694317129">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.AbuseExemptedStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('exemptedmembercount')
+	    #set($d = false)
+	    #set($d = $context.Status.ExemptedMemberCount)
+	    #if ($d)
+	        <strong>$core_v2_language.FormatNumber($d)</strong>
+	    #else
+	        <strong>$core_v2_language.GetResource('Count_Unknown')</strong>
+	    #end
+	#token('recentmembercount')
+	    #set($d = false)
+	    #set($d = $context.Status.RecentMemberCount)
+	    #if ($d)
+	        <strong>$core_v2_language.FormatNumber($d)</strong>
+	    #else
+	        <strong>$core_v2_language.GetResource('Count_Unknown')</strong>
+	    #end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AboveThreshold">Exempted member count is above the normal threshold. There are {exemptedmembercount} abuse exempted members and only {recentmembercount} members have visited the community recently.</resource>
+  <resource name="Count_Unknown">Unknown</resource>
+  <resource name="Disabled">Moderation is healthy. Abuse exemption percentile is currently disabled. </resource>
+  <resource name="Unknown">The status of moderation is not yet known.</resource>
+  <resource name="Widget-Description">Moderation Indicator</resource>
+  <resource name="Widget-Title">Moderation</resource>
+  <resource name="WithinThreshold">Moderation is healthy. There are {exemptedmembercount} abuse exempted members and {recentmembercount} members have visited the community recently.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,16 @@
+﻿#foreach ($panel in $category.Panels)
+#beforeall
+	<ul class="navigation-list contextual-administration-links contextual-panels">
+#each
+	<li class="navigation-list-item">
+		<a href="$core_v2_encoding.HtmlAttributeEncode($panel.Url)">
+			<div>
+				<span class="name">$panel.Name</span>
+				<span class="description">$panel.Description</span>
+				<span class="badge" data-type="$category.PanelType" data-panelid="$panel.Id" data-count="$panel.BadgeCount">$panel.BadgeCount</span>
+			</div>
+		</a>
+	</li>
+#afterall
+	</ul>
+#end

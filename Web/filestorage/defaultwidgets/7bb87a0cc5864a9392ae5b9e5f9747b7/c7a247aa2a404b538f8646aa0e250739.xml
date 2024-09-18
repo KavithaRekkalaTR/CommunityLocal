@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:System_Notifications_Name}" version="11.0.0.0" description="${resource:System_Notifications_Description}" instanceIdentifier="c7a247aa2a404b538f8646aa0e250739" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="system-notifications" lastModified="2020-02-05 21:38:28Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($user = false)
+#set ($user = $core_v2_user.Accessing)
+
+## user must be regisetered to receive notifications
+#if (!$user || !$core_v2_user.IsRegistered($user.Id))
+	$core_v2_widget.Hide()
+#end
+
+#set ($native = $core_v2_widget.GetBoolValue('native', true))
+#set ($bannerNotificationsContainerId = 'banner-notifications-container')
+#set ($postponeDelay = $core_v2_widget.GetIntValue('postponeDelay', 600))
+#set ($mode = $core_v2_widget.GetStringValue('mode', 'alert'))
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($bannerNotificationsContainerId)"></div>
+
+#set ($modalTemplateId = $core_v2_widget.UniqueId('modalTemplate'))
+#registerClientTemplate($modalTemplateId)
+	<div class="content">
+		<p>
+			<%= Message %>
+		</p>
+	</div>
+	<% if(IsResolvable) { %>
+		<fieldset class="margin-top">
+			<ul>
+				<li class="field-item">
+					<span class="field-item-input">
+						<a href="#" class="button submit">$core_v2_language.GetResource('Mark')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	<% } %>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.systemNotifications')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+	<script type="text/javascript">
+	    // suppress native rendering
+	    jQuery.telligent.evolution.systemNotifications.suppressRendering(true);
+	    // configure to use widget as banner container insted of fixed over the body
+		jQuery.telligent.evolution.notifications.defaults.bannerContainer = '#$core_v2_encoding.JavascriptEncode($bannerNotificationsContainerId)';
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.systemNotifications.register({
+				native: #if($native) true #else false #end,
+				postponeDelay: $postponeDelay,
+				mode: "$core_v2_encoding.JavascriptEncode($mode)",
+				getUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get.jsm'))",
+				resolveUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-resolve.jsm'))",
+				modalTemplate: "${core_v2_encoding.JavascriptEncode($modalTemplateId)}"
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:User_Notifications_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" resourceName="Options">
+	<property id="postponeDelay" labelResourceName="PostponeDelay" descriptionResourceName="PostponeDelay_Description" dataType="int" defaultValue="600">
+		<propertyRule name="minmax" min="1" max="100000" />
+	</property>
+	<property id="mode" labelResourceName="Mode" descriptionResourceName="Mode_Description" dataType="string" defaultValue="banner">
+		<propertyValue value="alert" labelResourceName="Mode_Alert" />
+		<propertyValue value="banner" labelResourceName="Mode_Banner" />
+	</property>
+	<property id="native" resourceName="Native" descriptionResourceName="Native_Description" dataType="bool" defaultValue="false" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Mark">Mark as Resolved</resource>
+  <resource name="Mode">Display Mode</resource>
+  <resource name="Mode_Alert">Alert</resource>
+  <resource name="Mode_Banner">Banner</resource>
+  <resource name="Mode_Description">System notifications can render as alert popups or window banners. By default, system notifications use the more intrusive banner mode.</resource>
+  <resource name="Native">Desktop Notifications</resource>
+  <resource name="Native_Description">When available, attempt to display desktop notifications.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="PostponeDelay">Postpone Delay</resource>
+  <resource name="PostponeDelay_Description">Seconds after which dismissed, non-resolved, notifications will redisplay</resource>
+  <resource name="System_Notifications_Description">Displays system notifications as banners or alerts, overriding default system notification alert rendering</resource>
+  <resource name="System_Notifications_Name">System - Notifications</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

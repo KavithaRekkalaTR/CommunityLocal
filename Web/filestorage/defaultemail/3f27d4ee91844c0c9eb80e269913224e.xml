@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Account Created with Generated Password" version="13.0.0.0" description="Sends an email when a user account is created, including the system-created password" id="3f27d4ee91844c0c9eb80e269913224e" lastModified="2023-04-18 17:53:22Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+$core_v2_language.GetResource('Body_Introduction')
+</p>
+<blockquote>
+    <p>
+    #format($core_v2_language.GetResource('Body_Username'))
+    #token('username')
+        $context_v1_email.Context.User.Username
+    #end
+    </p>
+    <p>
+    #format($core_v2_language.GetResource('Body_Password'))
+    #token('password')
+        $context_v1_email.Context.User.Password
+    #end
+    </p>
+</blockquote>
+<p>
+#format($core_v2_language.GetResource('Body_Login'))
+#token('username_login_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.LogIn(false))">$context_v1_email.Context.User.Username</a>
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode()">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>
+]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Introduction">Your account has been created and a password has been automatically generated for you.</resource>
+  <resource name="Body_Login">It is recommended that you change this password after you login to the site through the {settings_link} page. Log in as {username_login_link} to start participating.</resource>
+  <resource name="Body_Password">Password: {password}</resource>
+  <resource name="Body_Username">Username: {username}</resource>
+  <resource name="Settings">account settings</resource>
+  <resource name="Subject">Welcome to {site_name}</resource>
+  <resource name="Header">Welcome to {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

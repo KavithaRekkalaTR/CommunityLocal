@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:name}" version="11.0.0.0" description="${resource:description}" instanceIdentifier="50932194e2cf4044aebc86009297d0a9" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="articles-helpfulness" lastModified="2020-11-03 15:58:02Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+	<contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($article = false)
+
+#set ($selectedArticleType = $core_v2_widget.GetStringValue('selectedArticleType', 'article'))
+#set ($titleVisible = $core_v2_widget.GetBoolValue('titleVisible', true))
+#set ($iconVisible = $core_v2_widget.GetBoolValue('iconVisible', false))
+#set ($loadingTemplate = $core_v2_widget.UniqueId('loadingTemplate'))
+#set ($user = $core_v2_user.Accessing)
+#set ($isRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+
+## Specific or current article
+#if ($selectedArticleType == 'article')
+	#set ($emptyArticleId = $core_v2_utility.ParseGuid('00000000-0000-0000-0000-000000000000'))
+	#set ($selectedArticleQuery = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue("selectedArticle", "")))
+	#set ($selectedArticleId = $core_v2_utility.ParseGuid($selectedArticleQuery.Value('Article')))
+
+	## Current article
+	#if ($selectedArticleId == $emptyArticleId)
+		#set($article = $articles_v1_articles.Current)
+	## Specific article
+	#else
+		#set($article = $articles_v1_articles.Get("%{ Id = $selectedArticleId }"))
+	#end
+
+## Current collection's default article
+#elseif ($selectedArticleType == 'collection')
+	#set($collection = $articles_v1_articleCollections.Current)
+	#if (!$collection)
+		$core_v2_widget.Hide()
+	#end
+	#set ($article = $collection.DefaultArticle)
+
+## Current cagegory's default article
+#elseif ($selectedArticleType == 'category')
+	#set($category = $articles_v1_categories.Current)
+	#if (!$category)
+		$core_v2_widget.Hide()
+	#end
+
+	#set ($article = $category.DefaultArticle)
+#end
+
+#if (!$article)
+	$core_v2_widget.Hide()
+#end
+
+#if (!$article.ArticleCollection.EnableHelpfulness)
+	$core_v2_widget.Hide()
+#end
+
+#set($canReportHelpfulness = false)
+#set($canReportHelpfulness = $core_v2_permission.Get($articles_v1_permissions.ReportHelpfulness, $core_v2_user.Accessing.Id, $article.Id, $articles_v1_articles.ContentTypeId).IsAllowed)
+
+#if (!$canReportHelpfulness)
+	$core_v2_widget.Hide()
+#end
+
+#set ($existingHelpfulRating = false)
+#set ($existingUnhelpfulRating = false)
+#if ($isRegistered)
+	#set ($existingRatings = false)
+	#set ($existingRatings = $articles_v1_helpfulness.List("%{ ArticleId = $article.Id, AuthorId = $user.Id, IsHelpful = 'true', State = 'Unresolved', PageIndex = 0, PageSize = 1 }"))
+	#if ($existingRatings)
+		#foreach ($rating in $existingRatings)
+			#set ($existingHelpfulRating = true)
+		#end
+	#end
+	#set ($existingRatings = false)
+	#set ($existingRatings = $articles_v1_helpfulness.List("%{ ArticleId = $article.Id, AuthorId = $user.Id, IsHelpful = 'false', State = 'Unresolved', PageIndex = 0, PageSize = 1 }"))
+	#if ($existingRatings)
+		#foreach ($rating in $existingRatings)
+			#set ($existingUnhelpfulRating = true)
+		#end
+	#end
+#end
+
+<div class="actions helpfulness">
+	<div class="prompt">
+		Was this helpful?
+	</div>
+	<ul class="navigation-list">
+		<li class="navigation-list-item helpful">
+			<a href="#" class="helpful #if ($existingHelpfulRating) selected  #end" data-messagename="widget.${core_v2_widget.WrapperElementId}.helpful">
+				$core_v2_language.GetResource('Yes')
+				<span class="count totalhelpful">#if ($article.TotalHelpful > 0) $article.TotalHelpful #end</span>
+			</a>
+		</li>
+		<li class="navigation-list-item unhelpful">
+			<a href="#" class="unhelpful #if ($existingUnhelpfulRating) selected #end" data-messagename="widget.${core_v2_widget.WrapperElementId}.unhelpful">$core_v2_language.GetResource('No')</a>
+		</li>
+	</ul>
+</div>
+
+#registerClientTemplate($loadingTemplate)
+	<div class="ui-loading"></div>
+#end
+#registerEndOfPageHtml('telligent.evolution.widgets.articleHelpfulness')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.articleHelpfulness.register({
+			foo: 'bar',
+			articleId: '$article.Id',
+			wrapper: '$core_v2_encoding.JavascriptEncode($core_v2_widget.WrapperElementId)',
+			callbackHelpful: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-helpful.jsm'))',
+			callbackUnhelpful: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-unhelpful.jsm'))',
+			callbackDeleteRating: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-deleterating.jsm'))',
+			callbackFeedbackForm: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-feedbackform.vm'))',
+			callbackListUnhelpful: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-listunhelpful.vm'))',
+			loadingTemplate: '$core_v2_encoding.JavascriptEncode($loadingTemplate)',
+			modalTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Feedback'))'
+		});
+	});
+	</script>
+#end
+
+]]></contentScript>
+	<headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:WasHelpful}'))
+	]]></headerScript>
+	<configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="title" defaultValue="${resource:WasHelpful}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="selectedArticleType" labelResourceName="ArticleType" defaultValue="article" dataType="String">
+		<propertyValue value="article" labelResourceName="SpecificArticle" propertiesToShow="selectedArticle" propertiesToHide="" />
+		<propertyValue value="collection" labelResourceName="CollectionDefault" propertiesToShow="" propertiesToHide="selectedArticle" />
+		<propertyValue value="category" labelResourceName="CategoryDefault" propertiesToShow="" propertiesToHide="selectedArticle" />
+	</property>
+	<property id="selectedArticle" labelResourceName="Select" defaultValue="Article=00000000-0000-0000-0000-000000000000" dataType="Custom" template="articles_v1_articleLookup" enableCurrent="true" maxSelections="1" format="query" />
+</propertyGroup>]]></configuration>
+<languageResources><![CDATA[<language key="en-us">
+  <resource name="name">Articles - Helpfulness</resource>
+  <resource name="description">Articles - Helpfulness Description</resource>
+  <resource name="ArticleType">Article</resource>
+  <resource name="CategoryDefault">Current article category default</resource>
+  <resource name="CollectionDefault">Current article collection default</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Select">Article</resource>
+  <resource name="SpecificArticle">Specific article</resource>
+  <resource name="title">Title</resource>
+  <resource name="Yes">Yes</resource>
+  <resource name="No">No</resource>
+  <resource name="WasHelpful">Was this helpful?</resource>
+  <resource name="Feedback">Feedback</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="PreviousFeedback">Previous feedback</resource>
+  <resource name="UnhelpfulReason">This was unhelpful because:</resource>
+  <resource name="UnhelpfulMessage">Additional feedback</resource>
+  <resource name="Required">Required</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="Submit">Submit</resource>
+  <resource name="UnknownReason">Unknown Reason</resource>
+</language>]]></languageResources>
+	<additionalCssScript language="Velocity" />
+	<requiredContext>
+	  <context id="459387784fe24dd7a7b67e122f9f3945" />
+	</requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

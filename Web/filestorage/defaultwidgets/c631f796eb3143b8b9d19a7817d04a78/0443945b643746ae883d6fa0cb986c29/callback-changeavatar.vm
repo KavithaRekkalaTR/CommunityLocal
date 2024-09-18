@@ -1,0 +1,29 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+	#set($change = false)
+	#set($change = $core_v2_page.GetFormValue('Change'))
+	
+	#set($result = false)
+	
+	#if ($change == 'default')
+	    #set($result = $context.RemoveAvatar())
+	#elseif ($change == 'url')
+	    #set($url = false)
+	    #set($url = $core_v2_page.GetFormValue('Url'))
+	    #set($result = $context.SetAvatar($url))
+	#elseif ($change == 'file')
+	    #set($filename = false)
+	    #set($filename = $core_v2_page.GetFormValue('Filename'))
+	    #set($uploadContextId = false)
+	    #set($uploadContextId = $core_v2_page.GetFormValue('UploadContextId'))
+	    #set($result = $context.UploadAvatar($uploadContextId, $filename))
+	#end
+
+
+	#if (!$result || $result.Errors.Count > 0)
+		$core_v2_page.SendJsonError($result.Errors)
+	#else
+		{"success":true}
+	#end
+#end

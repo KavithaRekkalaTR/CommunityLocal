@@ -1,0 +1,69 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+#if (!$roleId)
+	#set($roleIdString = $core_v2_page.GetQueryStringValue('w_roleid'))
+	#set($roleId = $core_v2_utility.ParseInt($roleIdString))
+#end
+
+#set($isADMapped = false)
+
+#if($roleId > 0)
+	#set($role = $core_v2_role.Get($roleId))
+	#if ($role)
+		#set($isADMapped = $context.HasAssociatedGroupForADRole($roleId))
+	#end
+#end
+
+#set($options = "%{PageSize = $pageSize, PageIndex = $pageIndex}")
+#set($queryText = $core_v2_page.GetQueryStringValue('w_querytext'))
+#if ($queryText)
+	$options.Add('SearchFilter', $queryText)
+#end
+
+#set($members = $context.GetMembers($roleId, $options))
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($members.PageIndex + 1) * $members.PageSize)
+#if ($members.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#set ($serviceUser = false)
+#set ($serviceUser = $core_v2_user.Get("%{Username = '__CommunityServer__Service__'}"))
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$members.TotalCount" id="$core_v2_encoding.HtmlAttributeEncode($membersListId)">
+
+	#foreach($member in $members)
+	#each
+	  <li class="content-item user" data-userid="$member.Id">
+		<div class="avatar">
+			#if ($member.AvatarUrl != '')
+				$core_v2_ui.GetResizedImageHtml($member.AvatarUrl, 44, 44, "%{border='0px', alt=$member.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+			#end
+		</div>
+		<h4 class="name">$member.DisplayName #if($member.DisplayName != $member.UserName)($member.UserName)#end</h4>
+		<div class="post-attributes expandable">
+			$!core_v2_language.Truncate($!member.Bio(), 75, '...')
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					#if($role && $role.Id > 0 && !$isADMapped && (!$serviceUser || $user.Id != $serviceUser.Id))
+					<li class="navigation-list-item view-user">
+						<a href="#" data-messagename="administerroles.removefromrole" data-userid="$member.Id" data-username="$core_v2_encoding.HtmlAttributeEncode($member.UserName)">$core_v2_language.GetResource('RemoveMemberFromRole')</a>
+					</li>
+					#end
+					#set ($editUrl = $context.EditUserUrl($member.Id))
+					#if ($editUrl)
+					<li class="navigation-list-item view-user">
+						<a href="$editUrl">$core_v2_language.GetResource('EditMember')</a>
+					</li>
+					#end
+				</ul>
+			</div>
+		</div>
+	  </li>
+	#end
+
+</ul>

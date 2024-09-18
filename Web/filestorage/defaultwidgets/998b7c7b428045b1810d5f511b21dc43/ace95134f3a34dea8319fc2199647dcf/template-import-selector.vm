@@ -1,0 +1,91 @@
+<div class="managed-item-import-dialog">
+
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				<% if((!updatedEmails || updatedEmails.length == 0) && (!emailTemplate) && (!updatedEmailConfigurations || updatedEmailConfigurations.length == 0)) { %>
+
+					<p class="message">$core_v2_language.GetResource('NoImportMessage')</p>
+
+				<% } else { %>
+
+					<span>$core_v2_language.GetResource('ImportInstruction')</span>
+
+					<% if(emailTemplate && emailTemplateState == 'Updated') { %>
+						<li class="field-item updated-email-template">
+							<label class="field-item-name heading"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('UpdatedEmailTemplate') <% } else { %> $core_v2_language.GetResource('UpdatedEmailTemplateResources') <% } %></strong></label>
+							<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+
+							<span class="field-item-input managed-item">
+								<input type="checkbox" id="cb_t" class="importable-email" data-request="_eid=&_et=overview" checked />
+								<label for="cb_t" class="field-item-name">
+									$core_v2_language.GetResource('Template')
+								</label>
+							</span>
+							<% if(emailTemplate.ProcessedDescription) { %>
+								<span class="field-item-description"><%: emailTemplate.ProcessedDescription %></span>
+							<% } %>
+
+						</li>
+					<% } %>
+
+					<% if(updatedEmails && updatedEmails.length > 0) { %>
+						<li class="field-item updated-emails">
+							<label class="field-item-name heading"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('UpdatedEmails') <% } else { %> $core_v2_language.GetResource('UpdatedEmailResources') <% } %></strong></label>
+							<span class="field-item-description">$core_v2_language.GetResource('UpdatedEmailDesc')</span>
+							<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+							<% foreach(updatedEmails, function(email) { %>
+								<span class="field-item-input managed-item">
+									<input type="checkbox" id="cb<%: email.Id %>" class="importable-email" data-request="_eid=<%: email.Id %>&_et=overview" checked />
+									<label for="cb<%: email.Id %>" class="field-item-name">
+										<%: email.ProcessedName %>
+									</label>
+								</span>
+								<% if(email.ProcessedDescription) { %>
+									<span class="field-item-description"><%: email.ProcessedDescription %></span>
+								<% } %>
+							<% }); %>
+						</li>
+					<% } %>
+
+					<% if(updatedEmailConfigurations && updatedEmailConfigurations.length > 0) { %>
+						<li class="field-item updated-configured-emails">
+							<label class="field-item-name heading"><strong>$core_v2_language.GetResource('UpdatedEmailConfigurations')</strong></label>
+							<span class="field-item-description">$core_v2_language.GetResource('UpdatedEmailConfigurationDesc')</span>
+							<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+							<% foreach(updatedEmailConfigurations, function(configuredEmail) { %>
+								<span class="field-item-input managed-item">
+									<input type="checkbox" id="cb:config:<%: configuredEmail.Id %>" class="importable-email" data-emailid="<%: configuredEmail.Id %>" data-request="_eid=<%: configuredEmail.Id %>&_et=overview&_em=emailconfiguration" checked />
+									<label  for="cb:config:<%: configuredEmail.Id %>" class="field-item-name ui-tip" data-tip="<%: configuredEmail.Description %>">
+										<%: configuredEmail.Name %>
+									</label>
+								</span>
+								<% if(configuredEmail.Description) { %>
+									<span class="field-item-description"><%: (configuredEmail.Description || '').replace(/(<([^>]+)>)/ig,"") %></span>
+								<% } %>
+							<% }); %>
+						</li>
+					<% } %>
+
+					<% if((matchingEmails && matchingEmails > 0) || (matchingEmailConfigurations && matchingEmailConfigurations > 0)) { %>
+						<li class="field-item importable-emails updated-configured-emails">
+							<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+						</li>
+					<% } %>
+
+					<li class="field-item submit">
+						<span class="field-item-input">
+							<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+						</span>
+						<span class="field-item-input">
+							<a href="#" class="button continue">$core_v2_language.GetResource('Import')</a>
+						</span>
+					</li>
+
+				<% } %>
+
+			</ul>
+		</fieldset>
+	</form>
+</div>

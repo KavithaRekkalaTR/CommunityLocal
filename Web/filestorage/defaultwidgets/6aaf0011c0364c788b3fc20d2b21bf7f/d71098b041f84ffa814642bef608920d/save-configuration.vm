@@ -1,0 +1,55 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#if ($core_v2_page.GetFormValue('indexPerRun'))
+		$core_v2_widget.SetIntValue('IndexPerRun', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('indexPerRun')))
+	#end
+	
+	#if ($core_v2_page.GetFormValue('editCommentAgeLimit'))
+	    $core_v2_widget.SetIntValue('EditCommentAgeLimit', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('editCommentAgeLimit')))
+	#end
+
+	#set($options = "%{}")
+	#if ($core_v2_page.GetFormValue('EnableThemes'))
+		#set($EnableThemes = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableThemes')))
+		$options.Add('EnableThemes', $EnableThemes)
+	#end
+	#if ($core_v2_page.GetFormValue('EnableThemeConfig'))
+		#set($EnableThemeConfig = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableThemeConfig')))
+		$options.Add('EnableThemeConfig', $EnableThemeConfig)
+	#end
+	#if ($core_v2_page.GetFormValue('DefaultGroupTheme'))
+		#set($DefaultGroupTheme = $core_v2_page.GetFormValue('DefaultGroupTheme'))
+		$options.Add('DefaultGroupTheme', $DefaultGroupTheme)
+	#end
+	#if ($core_v2_page.GetFormValue('GroupAvatarWidth'))
+		#set($GroupAvatarWidth = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupAvatarWidth')))
+		$options.Add('GroupAvatarWidth', $GroupAvatarWidth)
+	#end
+	#if ($core_v2_page.GetFormValue('GroupAvatarHeight'))
+		#set($GroupAvatarHeight = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupAvatarHeight')))
+		$options.Add('GroupAvatarHeight', $GroupAvatarHeight)
+	#end
+	#if ($core_v2_page.GetFormValue('EnableGroupUploadedAvatars'))
+		#set($EnableGroupUploadedAvatars = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableGroupUploadedAvatars')))
+		$options.Add('EnableGroupUploadedAvatars', $EnableGroupUploadedAvatars)
+	#end
+	#if ($core_v2_page.GetFormValue('EnableGroupSelectableAvatars'))
+		#set($EnableGroupSelectableAvatars = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableGroupSelectableAvatars')))
+		$options.Add('EnableGroupSelectableAvatars', $EnableGroupSelectableAvatars)
+	#end
+	#if ($core_v2_page.GetFormValue('DefaultGroupAvatarUrl'))
+		#set($DefaultGroupAvatarUrl = $core_v2_page.GetFormValue('DefaultGroupAvatarUrl'))
+		$options.Add('DefaultGroupAvatarUrl', $DefaultGroupAvatarUrl)
+	#end
+
+	#set($response = $context.UpdateSettings($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"indexPerRun": "$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('IndexPerRun', 2).ToString())"
+	}
+#end

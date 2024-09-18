@@ -1,0 +1,102 @@
+##
+## Renders an individual blog post
+## Expects in context: $post
+##
+
+#set ($blog = $core_v2_blog.Get("%{ Id = $post.BlogId }"))
+#if ($blog && $blog.Id > 0)
+
+	#set ($postImage = '')
+	#if ($post.PostImageUrl && $post.PostImageUrl != '')
+		#set ($postImage = $post.PostImageUrl)
+	#elseif ($blog.DefaultPostImageUrl)
+		#set ($postImage = $blog.DefaultPostImageUrl)
+	#end
+
+	#set ($showthumbnail = false)
+	#if ($displayPostImage && $postImage && $postImage != '')
+		#set ($showthumbnail = true)
+	#end
+
+    #if($post.PostImageAlternateText && $post.PostImageAlternateText.length > 0)
+        #set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($post.PostImageAlternateText))
+    #else
+        #set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($post.HtmlName('web')))
+    #end
+
+<li class="content-item ${viewLayout}" data-href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">
+
+	<div class="content ${viewLayout} abbreviated">
+		#if ($showthumbnail)
+			<div class="avatar">
+				#if ($viewLayout == 'grid')
+					#set ($imageWidth = 512)
+					#set ($imageHeight = 256)
+				#else
+					#set ($imageWidth = 100)
+					#set ($imageHeight = 100)
+				#end
+				<a href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">
+					$core_v2_ui.GetResizedImageHtml($postImage, $imageWidth, $imageHeight, "%{border='0px', alt=$postImageAltText, ResizeMethod = 'ZoomAndCrop' }")
+				</a>
+			</div>
+		#end
+
+		<div class="summary">
+			<h2 class="name">
+				#if($blog && !$oneBlog)
+					<a class="internal-link view-application" href="$core_v2_encoding.HtmlAttributeEncode($blog.Url)">
+						$blog.Name:
+					</a>
+				#end
+				<a href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">$post.Title</a>
+			</h2>
+			<div class="author">
+				<div class="avatar">
+					#if ($post.Author.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($post.Author.ProfileUrl)">
+							$core_v2_ui.GetResizedImageHtml($post.Author.AvatarUrl, 44, 44, "%{border='0px', alt=$post.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($post.Author.AvatarUrl, 44, 44, "%{border='0px', alt=$post.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+					#end
+				</div>
+				<span class="user-name">
+					#if ($post.Author.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($post.Author.ProfileUrl)" class="internal-link view-user-profile">
+							$post.Author.DisplayName
+						</a>
+					#else
+						$post.Author.DisplayName
+					#end
+				</span>
+			</div>
+			<div class="content">
+				#set ($viewDetail = $core_v2_widget.GetStringValue("viewDetail", "list"))
+				#if ($viewDetail == 'list')
+					<div class="post-summary">
+						#if($post.Excerpt && $post.Excerpt.Length > 0)
+							$core_v2_language.Truncate($post.Excerpt, $excerptSize, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'True' }")
+						#else
+							$core_v2_language.Truncate($post.Body('WebQuote'), $excerptSize, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'True' }")
+						#end
+					</div>
+				#elseif ($viewDetail == 'detail')
+					$core_v2_blogPost.IncrementViewCount($post.Id)
+					$post.Body()
+				#end
+			</div>
+		</div>
+
+		<div class="attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<span class="attribute-value">$core_v2_language.FormatDate($post.PublishedDate)</span>
+				</li>
+			</ul>
+		</div>
+
+	</div>
+
+</li>
+#end

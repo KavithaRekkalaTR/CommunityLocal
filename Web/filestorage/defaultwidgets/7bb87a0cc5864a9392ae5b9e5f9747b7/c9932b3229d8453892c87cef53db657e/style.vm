@@ -1,0 +1,95 @@
+#set ($paletteId = $core_v2_widget.GetCustomValue('paletteId', ''))
+#set ($backgroundColor = $core_v2_theme.GetPaletteColorValue('siteBanner', $paletteId, 'background-color', '#263238', 10))
+#set ($searchColor = $core_v2_theme.GetPaletteColorValue('siteBanner', $paletteId, 'search-color', '#3b4d56', 10))
+#set ($foregroundColor = $core_v2_theme.GetPaletteColorValue('siteBanner', $paletteId, 'foreground-color', '#90A4AE', 10))
+#set ($activeColor = $core_v2_theme.GetPaletteColorValue('siteBanner', $paletteId, 'active-color', '#ffffff', 10))
+#set ($borderColor = $core_v2_theme.GetPaletteColorValue('siteBanner', $paletteId, 'border-color', '#CFD8DC', 10))
+#set ($includeBorder = false)
+#set ($includeBorderValue = $core_v2_theme.GetPaletteIntValue('siteBanner', $paletteId, 'include-border', 0, 10))
+#if ($includeBorderValue == 1)
+	#set ($includeBorder = true)
+#end
+
+<style>
+.header-fragments .layout .header-top-content .layout-region.header {
+	background-color: $backgroundColor;
+}
+
+.banner.site fieldset ul.field-list li.field-item .field-item-input input {
+	background-color: $searchColor;
+}
+
+
+.header-fragments .header-top-content .layout-region.header .banner.site .navigation-list ul a,
+.header-fragments .header-top-content .layout-region.header .banner.site .navigation-list ul a.active,
+.header-fragments .header-top-content .layout-region.header .banner.site fieldset ul li .field-item-input input,
+.header-fragments .header-top-content .layout-region.header .banner.site fieldset ul li .field-item-input input.active,
+.header-fragments .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input:after,
+.header-fragments .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input.active,
+.header-fragments .header-top-content .layout-region.header .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a {
+	color: $foregroundColor;
+}
+.header-fragments .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input::placeholder {
+	color: $foregroundColor;
+}
+.header-fragments .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input:-ms-input-placeholder {
+	color: $foregroundColor;
+}
+.header-fragments .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input::-ms-input-placeholder {
+	color: $foregroundColor;
+}
+
+.header-fragments:hover .header-top-content .layout-region.header .banner.site .navigation-list ul a,
+.header-fragments:hover .header-top-content .layout-region.header .banner.site .navigation-list ul a.active,
+.header-fragments .header-top-content .layout-region.header .banner.site .navigation-list ul a.active,
+.header-fragments:hover .header-top-content .layout-region.header .banner.site fieldset ul li .field-item-input input,
+.header-fragments:hover .header-top-content .layout-region.header .banner.site fieldset ul li .field-item-input input.active,
+.header-fragments:hover .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input:after,
+.header-fragments:hover .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input.active,
+.header-fragments .header-top-content .layout-region.header .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.subnav-open,
+.header-fragments .header-top-content .layout-region.header .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.links-expanded,
+.header-fragments:hover .header-top-content .layout-region.header .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a {
+	color: $activeColor;
+}
+.header-fragments:hover .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input::placeholder {
+	color: $activeColor;
+}
+.header-fragments:hover .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input:-ms-input-placeholder {
+	color: $activeColor;
+}
+.header-fragments:hover .header-top-content .layout-region.header .banner.site fieldset ul.field-list li.field-item .field-item-input input::-ms-input-placeholder {
+	color: $activeColor;
+}
+.header-fragments .header-top-content .layout-region.header .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.selected:after {
+	background-color: $activeColor;
+}
+
+
+
+#if ($includeBorder)
+	.banner.site.with-site-navigation fieldset.search {
+		border-left: 1px solid $borderColor;
+		border-right: 1px solid $borderColor;
+	}
+	.header-fragments .layout .header-top-content .layout-region.header {
+		border-bottom: 1px solid $borderColor;
+	}
+#end
+
+.single-column .banner.site {
+	background-color: $backgroundColor;
+}
+.single-column .banner.site > .navigation-list.handheld ul a,
+.single-column .banner.site .container.handheld .user-links ul a {
+	color: $foregroundColor;
+}
+.single-column .banner.site > .navigation-list.handheld ul a.active,
+.single-column .banner.site .container.handheld .user-links ul a.active {
+	color: $activeColor;
+}
+#if ($includeBorder)
+	.single-column .content-fragment.site-banner  {
+		border-bottom: 1px solid $borderColor;
+	}
+#end
+</style>

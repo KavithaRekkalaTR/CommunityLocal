@@ -1,0 +1,13 @@
+##
+## Renders an api property as JSON
+##
+## Requires in scope:
+##   $apiProperty
+##
+{
+	"Name": #if ($apiProperty.Name) "$core_v2_encoding.JavascriptEncode($apiProperty.Name)" #else "" #end,
+	"Description": #if ($apiProperty.Description) "$core_v2_encoding.JavascriptEncode($apiProperty.Description)" #else "" #end,
+	"RenderedDoc": "$core_v2_encoding.JavascriptEncode($core_v2_utility.Trim($core_v2_widget.ExecuteFile('callback-sub-serialize-api-property-rendered-doc.vm')))",
+	"Signature": null,
+	"Type": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Property'))"
+}

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="b685d5a5ece74165b38f8c5e3cff7c17" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-08-17 21:05:35Z" provider="006c93e3ddbd417cad6518499bee59f0">
+    <contentScript language="Velocity"><![CDATA[<p>$core_v2_language.GetResource('Account_Banned')</p>
+
+#if ($context.BanReason)
+	<div class="message">
+		$core_v2_language.GetResource("Reason"): $core_v2_encoding.HtmlEncode($core_v2_language.GetResource($core_v2_language.FormatString('Utility_UserBanReason_{0}', $context.BanReason)))
+	</div>
+#end
+#if ($context.BannedUntil)
+	<div class="message">
+		$core_v2_language.GetResource("EditProfile_BanedUntilDate"): $core_v2_language.FormatDate($context.BannedUntil)
+	</div>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Account_Banned">You are temporarily banned from accessing this community.</resource>
+  <resource name="Description">User Message to inform user account has been banned.</resource>
+  <resource name="EditProfile_BanedUntilDate">Expiration Date</resource>
+  <resource name="Name">User Account Banned</resource>
+  <resource name="Reason">Reason</resource>
+  <resource name="Utility_UserBanReason_Advertising">Advertising</resource>
+  <resource name="Utility_UserBanReason_Aggresive">Attacking other members</resource>
+  <resource name="Utility_UserBanReason_BadSignature">Inappropriate Links or Signature</resource>
+  <resource name="Utility_UserBanReason_BadUsername">Inappropriate username</resource>
+  <resource name="Utility_UserBanReason_BanDodging">Ban Dodging</resource>
+  <resource name="Utility_UserBanReason_Other">Other</resource>
+  <resource name="Utility_UserBanReason_Profanity">Profanity</resource>
+  <resource name="Utility_UserBanReason_Spam">Spam</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

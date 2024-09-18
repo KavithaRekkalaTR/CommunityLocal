@@ -1,0 +1,529 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ContentFiltering_Title}" version="11.0.0.0" description="${resource:ContentFiltering_Description}" instanceIdentifier="b4b149fde2e542c98720663edcef9a3d" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-08-10 15:48:51Z" provider="937beff9f2ef4e2aa8c5e226b2790f2b">
+    <contentScript language="Velocity"><![CDATA[#set($headerTemplate = $core_v2_widget.UniqueId('header'))
+
+#set($config = $context.GetConfiguration())
+
+<p>$core_v2_language.GetResource('Instructions')</p>
+
+<form><fieldset>
+<h3>$core_v2_language.GetResource('PlatformFeatures_Header')</h3>
+<ul class="field-list">
+
+    <li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Mentions')" name="$core_v2_widget.UniqueId('Mentions')" #if($config.Mentions) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Mentions')" class="field-item-name">$core_v2_language.GetResource('Field_Mentions')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Mentions_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Hashtags')" name="$core_v2_widget.UniqueId('Hashtags')" #if($config.Hashtags) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Hashtags')" class="field-item-name">$core_v2_language.GetResource('Field_Hashtags')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Hashtags_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Emoticons')" name="$core_v2_widget.UniqueId('Emoticons')" #if($config.Emoticons) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Emoticons')" class="field-item-name">$core_v2_language.GetResource('Field_Emoticons')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Emoticons_Desc')
+		</span>
+	</li>
+
+</ul>
+
+<h3>$core_v2_language.GetResource('FileAndUrlEmbedding_Header')</h3>
+<ul class="field-list">
+
+    <li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('UrlEmbedding')" name="$core_v2_widget.UniqueId('UrlEmbedding')" #if($config.UrlEmbedding) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('UrlEmbedding')" class="field-item-name">$core_v2_language.GetResource('Field_UrlEmbedding')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_UrlEmbedding_Desc')
+		</span>
+	</li>
+
+    <li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('FileEmbedding')" name="$core_v2_widget.UniqueId('FileEmbedding')" #if($config.FileEmbedding) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('FileEmbedding')" class="field-item-name">$core_v2_language.GetResource('Field_FileEmbedding')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_FileEmbedding_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Links')" name="$core_v2_widget.UniqueId('Links')" #if($config.Links) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Links')" class="field-item-name">$core_v2_language.GetResource('Field_Links')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Links_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Frames')" name="$core_v2_widget.UniqueId('Frames')" #if($config.Frames) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Frames')" class="field-item-name">$core_v2_language.GetResource('Field_Frames')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Frames_Desc')
+		</span>
+	</li>
+
+</ul>
+
+<h3>$core_v2_language.GetResource('FileValidation_Header')</h3>
+<ul class="field-list">	
+	
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('AllowedFileExtensions')" class="field-item-name">$core_v2_language.GetResource('Field_AllowedFileExtensions')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_AllowedFileExtensions_Desc')</span>
+        <span class="field-item-input">
+            <textarea id="$core_v2_widget.UniqueId('AllowedFileExtensions')" rows="10">$core_v2_utility.Join($core_v2_utility.NewLine, $config.AllowedFileExtensions)</textarea>
+        </span>
+    </li>
+    
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('DisallowedFileExtensions')" class="field-item-name">$core_v2_language.GetResource('Field_DisallowedFileExtensions')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_DisallowedFileExtensions_Desc')</span>
+        <span class="field-item-input">
+            #set($addedFileExtensions = '')
+            #foreach($extension in $config.DisallowedFileExtensions)
+                #if($context.SystemDisallowedFileExtensions.Contains($extension))
+                    <p><code>$core_v2_encoding.HtmlEncode($extension)</code></p>
+                #else
+                    #set($addedFileExtensions = "${addedFileExtensions}${core_v2_utility.NewLine}${extension}")
+                #end
+    		#end
+            <textarea id="$core_v2_widget.UniqueId('DisallowedFileExtensions')" rows="10">$addedFileExtensions</textarea>
+        </span>
+    </li>
+
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('MaxFileSizeMegaBytes')" class="field-item-name">$core_v2_language.GetResource('Field_MaxFileSizeMegaBytes')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_MaxFileSizeMegaBytes_Desc')</span>
+        <span class="field-item-input">
+            <input type="number" id="$core_v2_widget.UniqueId('MaxFileSizeMegaBytes')" value="$config.MaxFileSizeMegaBytes" min="1" />
+        </span>
+    </li>
+	
+</ul>
+
+<h3>$core_v2_language.GetResource('UrlValidation_Header')</h3>
+<ul class="field-list">	
+
+	<li class="field-item">
+        <label for="$core_v2_widget.UniqueId('AllowedProtocols')" class="field-item-name">$core_v2_language.GetResource('Field_AllowedProtocols')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_AllowedProtocols_Desc')</span>
+        <span class="field-item-input">
+            <textarea id="$core_v2_widget.UniqueId('AllowedProtocols')" rows="10">$core_v2_utility.Join($core_v2_utility.NewLine, $config.AllowedProtocols)</textarea>
+        </span>
+    </li>
+    
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('HostlessProtocols')" class="field-item-name">$core_v2_language.GetResource('Field_HostlessProtocols')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_HostlessProtocols_Desc')</span>
+        <span class="field-item-input">
+            <textarea id="$core_v2_widget.UniqueId('HostlessProtocols')" rows="10">$core_v2_utility.Join($core_v2_utility.NewLine, $config.HostlessProtocols)</textarea>
+        </span>
+    </li>
+    
+    <li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('AllowIpHosts')" name="$core_v2_widget.UniqueId('AllowIpHosts')" #if($config.AllowIpHosts) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('AllowIpHosts')" class="field-item-name">$core_v2_language.GetResource('Field_AllowIpHosts')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_AllowIpHosts_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('AllowLocalNetworkHosts')" name="$core_v2_widget.UniqueId('AllowLocalNetworkHosts')" #if($config.AllowLocalNetworkHosts) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('AllowLocalNetworkHosts')" class="field-item-name">$core_v2_language.GetResource('Field_AllowLocalNetworkHosts')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_AllowLocalNetworkHosts_Desc')
+		</span>
+	</li>
+    
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('AllowedHosts')" class="field-item-name">$core_v2_language.GetResource('Field_AllowedHosts')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_AllowedHosts_Desc')</span>
+        <span class="field-item-input">
+            <textarea id="$core_v2_widget.UniqueId('AllowedHosts')" rows="10">$core_v2_utility.Join($core_v2_utility.NewLine, $config.AllowedHosts)</textarea>
+        </span>
+    </li>
+    
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('DisallowedHosts')" class="field-item-name">$core_v2_language.GetResource('Field_DisallowedHosts')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_DisallowedHosts_Desc')</span>
+        <span class="field-item-input">
+            <textarea id="$core_v2_widget.UniqueId('DisallowedHosts')" rows="10">$core_v2_utility.Join($core_v2_utility.NewLine, $config.DisallowedHosts)</textarea>
+        </span>
+    </li>
+
+</ul>
+
+#foreach($embedType in $context.GetEmbeddableContentTypes())
+#beforeall
+    <h3>$core_v2_language.GetResource('ContentEmbedding_Header')</h3>
+    <ul class="field-list" id="$core_v2_widget.UniqueId('EmbeddableContent')">
+#each
+	#set($selected = true)
+    #if($config.DisallowedEmbeddableContentTypeIds.Contains($embedType.EmbeddedContentFragmentTypeId))
+        #set($selected = false)
+    #end
+    #set($id = $core_v2_widget.UniqueId($embedType.EmbeddedContentFragmentTypeId.ToString()))
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$id" value="$embedType.EmbeddedContentFragmentTypeId.ToString()" name="$id" #if($selected) checked="checked"#end />
+		    <label for="$id" class="field-item-name">$embedType.ContentFragmentName</label>
+		</span>
+        <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Field_ConentEmbedding_Desc'), $embedType.ContentFragmentName.ToLowerInvariant())</span>
+    </li>
+#afterall
+    </ul>
+#end
+
+<h3>$core_v2_language.GetResource('Html_Header')</h3>
+<ul class="field-list">
+
+    <li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Font')" name="$core_v2_widget.UniqueId('Font')" #if($config.Font) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Font')" class="field-item-name">$core_v2_language.GetResource('Field_Font')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Font_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('FontDecoration')" name="$core_v2_widget.UniqueId('FontDecoration')" #if($config.FontDecoration) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('FontDecoration')" class="field-item-name">$core_v2_language.GetResource('Field_FontDecoration')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_FontDecoration_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('FontSize')" name="$core_v2_widget.UniqueId('FontSize')" #if($config.FontSize) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('FontSize')" class="field-item-name">$core_v2_language.GetResource('Field_FontSize')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_FontSize_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('ForegroundColor')" name="$core_v2_widget.UniqueId('ForegroundColor')" #if($config.ForegroundColor) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('ForegroundColor')" class="field-item-name">$core_v2_language.GetResource('Field_ForegroundColor')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_ForegroundColor_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Background')" name="$core_v2_widget.UniqueId('Background')" #if($config.Background) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Background')" class="field-item-name">$core_v2_language.GetResource('Field_Background')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Background_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('BordersAndLines')" name="$core_v2_widget.UniqueId('BordersAndLines')" #if($config.BordersAndLines) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('BordersAndLines')" class="field-item-name">$core_v2_language.GetResource('Field_BordersAndLines')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_BordersAndLines_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Lists')" name="$core_v2_widget.UniqueId('Lists')" #if($config.Lists) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Lists')" class="field-item-name">$core_v2_language.GetResource('Field_Lists')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Lists_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Paragraphs')" name="$core_v2_widget.UniqueId('Paragraphs')" #if($config.Paragraphs) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Paragraphs')" class="field-item-name">$core_v2_language.GetResource('Field_Paragraphs')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Paragraphs_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Tables')" name="$core_v2_widget.UniqueId('Tables')" #if($config.Tables) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Tables')" class="field-item-name">$core_v2_language.GetResource('Field_Tables')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Tables_Desc')
+		</span>
+	</li>
+
+    <li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('CustomStyles')" name="$core_v2_widget.UniqueId('CustomStyles')" #if($config.CustomStyles) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('CustomStyles')" class="field-item-name">$core_v2_language.GetResource('Field_CustomStyles')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_CustomStyles_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('SemanticMarkup')" name="$core_v2_widget.UniqueId('SemanticMarkup')" #if($config.SemanticMarkup) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('SemanticMarkup')" class="field-item-name">$core_v2_language.GetResource('Field_SemanticMarkup')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_SemanticMarkup_Desc')
+		</span>
+	</li>
+
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Microformats')" name="$core_v2_widget.UniqueId('Microformats')" #if($config.Microformats) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Microformats')" class="field-item-name">$core_v2_language.GetResource('Field_Microformats')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Microformats_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Data')" name="$core_v2_widget.UniqueId('Data')" #if($config.Data) checked="checked"#end />
+		    <label for="$core_v2_widget.UniqueId('Data')" class="field-item-name">$core_v2_language.GetResource('Field_Data')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Data_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item">
+	    <label class="field-item-name" for="$core_v2_widget.UniqueId('AllowedClassNames')">$core_v2_language.GetResource('Field_AllowedClassNames')</label>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_AllowedClassNames_Desc')
+		</span>
+		<span class="field-item-input">
+		    <select id="$core_v2_widget.UniqueId('AllowedClassNames')" name="$core_v2_widget.UniqueId('AllowedClassNames')">
+		        <option value="all" #if(!$config.AllowedClassNames) selected #end>$core_v2_language.GetResource('Field_AllowedClassNames_All')</option>
+		        <option value="none" #if($config.AllowedClassNames.Length == 0) selected #end>$core_v2_language.GetResource('Field_AllowedClassNames_None')</option>
+		        <option value="selection" #if($config.AllowedClassNames.Length > 0) selected #end>$core_v2_language.GetResource('Field_AllowedClassNames_Selection')</option>
+		    </select>
+		</span>
+		<span class="field-item-input">
+		    <textarea id="$core_v2_widget.UniqueId('AllowedClassNames_Selection')" rows="10" #if($config.AllowedClassNames.Length > 0) #else style="display: none;" #end>#if($config.AllowedClassNames)$core_v2_utility.Join($core_v2_utility.NewLine, $config.AllowedClassNames)#end</textarea>
+		</span>
+	</li>
+	
+	<li class="field-item">
+	    <label class="field-item-name" for="$core_v2_widget.UniqueId('AllowedIdPrefixes')">$core_v2_language.GetResource('Field_AllowedIdPrefixes')</label>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_AllowedIdPrefixes_Desc')
+		</span>
+		<span class="field-item-input">
+		    <select id="$core_v2_widget.UniqueId('AllowedIdPrefixes')" name="$core_v2_widget.UniqueId('AllowedIdPrefixes')">
+		        <option value="all" #if(!$config.AllowedIdPrefixes) selected #end>$core_v2_language.GetResource('Field_AllowedIdPrefixes_All')</option>
+		        <option value="none" #if($config.AllowedIdPrefixes.Length == 0) selected #end>$core_v2_language.GetResource('Field_AllowedIdPrefixes_None')</option>
+		        <option value="selection" #if($config.AllowedIdPrefixes.Length > 0) selected #end>$core_v2_language.GetResource('Field_AllowedIdPrefixes_Selection')</option>
+		    </select>
+	    </span>
+		<span class="field-item-input">
+		    <textarea id="$core_v2_widget.UniqueId('AllowedIdPrefixes_Selection')" rows="10" #if($config.AllowedIdPrefixes.Length > 0) #else style="display: none;" #end>#if($config.AllowedIdPrefixes)$core_v2_utility.Join($core_v2_utility.NewLine, $config.AllowedIdPrefixes)#end</textarea>
+		</span>
+	</li>
+
+</ul>
+</fieldset></form>
+
+
+<script type="text/html" id="$headerTemplate">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.contentFiltering')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.contentFiltering.register({
+			headerTemplateId: '$headerTemplate',
+			text: {
+			    saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save_Successful'))'
+			},
+			fieldIds: {
+			    AllowedFileExtensions: '#$core_v2_widget.UniqueId('AllowedFileExtensions')',
+			    AllowedHosts: '#$core_v2_widget.UniqueId('AllowedHosts')',
+			    AllowedProtocols: '#$core_v2_widget.UniqueId('AllowedProtocols')',
+			    HostlessProtocols: '#$core_v2_widget.UniqueId('HostlessProtocols')',
+			    AllowIpHosts: '#$core_v2_widget.UniqueId('AllowIpHosts')',
+			    AllowLocalNetworkHosts: '#$core_v2_widget.UniqueId('AllowLocalNetworkHosts')',
+			    DisallowedFileExtensions: '#$core_v2_widget.UniqueId('DisallowedFileExtensions')',
+			    DisallowedHosts: '#$core_v2_widget.UniqueId('DisallowedHosts')',
+			    Mentions: '#$core_v2_widget.UniqueId('Mentions')',
+            	Hashtags: '#$core_v2_widget.UniqueId('Hashtags')',
+            	UrlEmbedding: '#$core_v2_widget.UniqueId('UrlEmbedding')',
+            	EmbeddableContent: '#$core_v2_widget.UniqueId('EmbeddableContent')',
+            	FileEmbedding: '#$core_v2_widget.UniqueId('FileEmbedding')',
+            	Emoticons: '#$core_v2_widget.UniqueId('Emoticons')',
+            	Font: '#$core_v2_widget.UniqueId('Font')',
+            	FontDecoration: '#$core_v2_widget.UniqueId('FontDecoration')',
+            	FontSize: '#$core_v2_widget.UniqueId('FontSize')',
+            	ForegroundColor: '#$core_v2_widget.UniqueId('ForegroundColor')',
+            	Background: '#$core_v2_widget.UniqueId('Background')',
+            	BordersAndLines: '#$core_v2_widget.UniqueId('BordersAndLines')',
+            	Lists: '#$core_v2_widget.UniqueId('Lists')',
+            	Paragraphs: '#$core_v2_widget.UniqueId('Paragraphs')',
+            	Tables: '#$core_v2_widget.UniqueId('Tables')',
+            	Links: '#$core_v2_widget.UniqueId('Links')',
+            	MaxFileSizeMegaBytes: '#$core_v2_widget.UniqueId('MaxFileSizeMegaBytes')',
+            	Microformats: '#$core_v2_widget.UniqueId('Microformats')',
+            	SemanticMarkup: '#$core_v2_widget.UniqueId('SemanticMarkup')',
+            	CustomStyles: '#$core_v2_widget.UniqueId('CustomStyles')',
+            	Frames: '#$core_v2_widget.UniqueId('Frames')',
+            	Data: '#$core_v2_widget.UniqueId('Data')',
+            	AllowedClassNames:  '#$core_v2_widget.UniqueId('AllowedClassNames')',
+            	AllowedClassNamesSelection:  '#$core_v2_widget.UniqueId('AllowedClassNames_Selection')',
+            	AllowedIdPrefixes:  '#$core_v2_widget.UniqueId('AllowedIdPrefixes')',
+            	AllowedIdPrefixesSelection:  '#$core_v2_widget.UniqueId('AllowedIdPrefixes_Selection')'
+			},
+			urls: {
+			    save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ContentEmbedding_Header">Embedding</resource>
+  <resource name="ContentFiltering_Description">Manage global content filtering options.</resource>
+  <resource name="ContentFiltering_Tab">Filtering</resource>
+  <resource name="ContentFiltering_Title">Filtering</resource>
+  <resource name="Field_AllowedClassNames">Classes</resource>
+  <resource name="Field_AllowedClassNames_All">Allow all classes</resource>
+  <resource name="Field_AllowedClassNames_Desc">Enable, disable, or allow only specific class names on HTML tags.</resource>
+  <resource name="Field_AllowedClassNames_None">Do not allow classes</resource>
+  <resource name="Field_AllowedClassNames_Selection">Allow only the following classes (one per line)</resource>
+  <resource name="Field_AllowedFileExtensions">Allowed File Extensions</resource>
+  <resource name="Field_AllowedFileExtensions_Desc">File extensions that are allowed to be uploaded (note that embedded and linked URLs are not required to include an allowed file extension). One per line without a preceding period.</resource>
+  <resource name="Field_AllowedHosts">Allowed hosts</resource>
+  <resource name="Field_AllowedHosts_Desc">Hosts identified here (one per line) are always allowed regardless of other URL host validation. For the URL &lt;code&gt;http://telligent.com/&lt;/code&gt;, the host would be &lt;code&gt;telligent.com&lt;/code&gt;</resource>
+  <resource name="Field_AllowedIdPrefixes">IDs</resource>
+  <resource name="Field_AllowedIdPrefixes_All">Allow all IDs</resource>
+  <resource name="Field_AllowedIdPrefixes_Desc">Allow all IDs, no IDs, or only IDs with specific prefixes on HTML tags. To allow the inline table of contents (&lt;b&gt;Insert &amp;gt; Table of Contents&lt;/b&gt;), &lt;code&gt;mcetoc&lt;/code&gt; must be allowed as a prefix. To enable anchors (&lt;b&gt;Insert &amp;gt; Anchor&lt;/b&gt;), all IDs must be allowed.</resource>
+  <resource name="Field_AllowedIdPrefixes_None">Do not allow IDs</resource>
+  <resource name="Field_AllowedIdPrefixes_Selection">Allow only IDs with the following prefixes (one per line)</resource>
+  <resource name="Field_AllowedProtocols">Allowed protocols</resource>
+  <resource name="Field_AllowedProtocols_Desc">When referencing files and URLs, only the following internet protocols are allowed. Please enter one per line and omit the colon and leading forward slashes. For example, &lt;code&gt;HTTP://&lt;/code&gt; should be entered as &lt;code&gt;http&lt;/code&gt;.</resource>
+  <resource name="Field_AllowIpHosts">Allow IP addresses</resource>
+  <resource name="Field_AllowIpHosts_Desc">When enabled, URLs identifying hosts by IP address are allowed.</resource>
+  <resource name="Field_AllowLocalNetworkHosts">Allow local network addresses</resource>
+  <resource name="Field_AllowLocalNetworkHosts_Desc">When enabled, local network resources referenced by their internal (LAN) hostnames are allowed.</resource>
+  <resource name="Field_Background">Backgrounds</resource>
+  <resource name="Field_Background_Desc">Enables content to specify alternative background colors, images, and gradients.</resource>
+  <resource name="Field_BordersAndLines">Borders and lines</resource>
+  <resource name="Field_BordersAndLines_Desc">Enables border styling and horizontal rules.</resource>
+  <resource name="Field_ConentEmbedding_Desc">Enables embedding of {0} content.</resource>
+  <resource name="Field_CustomStyles">Custom styles</resource>
+  <resource name="Field_CustomStyles_Desc">Enables content to define custom styling using inline cascading stylesheet syntax.</resource>
+  <resource name="Field_Data">Data</resource>
+  <resource name="Field_Data_Desc">Enables content to use &lt;code&gt;data-&lt;/code&gt; prefixed attributes on HTML to enable embedding information that can be used to interact with or style the content.</resource>
+  <resource name="Field_DisallowedFileExtensions">Disallowed File Extensions</resource>
+  <resource name="Field_DisallowedFileExtensions_Desc">File extensions that are not allowed to be uploaded or linked (disallowed file extensions affects both uploaded files and URLs). One per line without a preceding period.</resource>
+  <resource name="Field_DisallowedHosts">Disallowed hosts</resource>
+  <resource name="Field_DisallowedHosts_Desc">Hosts identified here (one per line) are always blocked from being referenced in the community. For the URL &lt;code&gt;http://telligent.com/&lt;/code&gt;, the host would be &lt;code&gt;telligent.com&lt;/code&gt;</resource>
+  <resource name="Field_Emoticons">Emoticons</resource>
+  <resource name="Field_Emoticons_Desc">Enables emoji and emoticons to be included in content.</resource>
+  <resource name="Field_FileEmbedding">File embedding</resource>
+  <resource name="Field_FileEmbedding_Desc">Enables embedding of files stored within the community within content.</resource>
+  <resource name="Field_Font">Fonts</resource>
+  <resource name="Field_Font_Desc">Enables content to select alternative font faces.</resource>
+  <resource name="Field_FontDecoration">Font decoration</resource>
+  <resource name="Field_FontDecoration_Desc">Enables content to use bold, italic, underline and other font decorations.</resource>
+  <resource name="Field_FontSize">Font sizes</resource>
+  <resource name="Field_FontSize_Desc">Enables content to select alternative font sizes.</resource>
+  <resource name="Field_ForegroundColor">Foreground colors</resource>
+  <resource name="Field_ForegroundColor_Desc">Enables content to select alternative foreground colors.</resource>
+  <resource name="Field_Frames">Frames</resource>
+  <resource name="Field_Frames_Desc">Enables embedding of other web accessible content using the &amp;lt;iframe /&amp;gt; tag.</resource>
+  <resource name="Field_Hashtags">Hashtags</resource>
+  <resource name="Field_Hashtags_Desc">Enables tags to be placed within supporting content using the # prefix.</resource>
+  <resource name="Field_HostlessProtocols">Protocols without hosts</resource>
+  <resource name="Field_HostlessProtocols_Desc">When validating hosts in URLs, the following internet protocols will be considered exempt from host validation. Please enter one per line and omit the colon and leading forward slashes. For example, &lt;code&gt;SKYPE:&lt;/code&gt; should be entered as &lt;code&gt;skype&lt;/code&gt;. </resource>
+  <resource name="Field_Links">Links</resource>
+  <resource name="Field_Links_Desc">Enables content to include links to other internet resources.</resource>
+  <resource name="Field_Lists">Lists</resource>
+  <resource name="Field_Lists_Desc">Enables content to make use of ordered, unordered, and definition lists.</resource>
+  <resource name="Field_MaxFileSizeMegaBytes">Maximum File Size (in MB)</resource>
+  <resource name="Field_MaxFileSizeMegaBytes_Desc">The maximum file size, in megabytes, allowed for uploaded files.</resource>
+  <resource name="Field_Mentions">Mentions</resource>
+  <resource name="Field_Mentions_Desc">Enables referencing another user, group, or application within supporting content.</resource>
+  <resource name="Field_Microformats">Microformats</resource>
+  <resource name="Field_Microformats_Desc">Enables content to include machine-readable attributes on HTML such as those defined by &lt;a href="http://schema.org/" target="_blank"&gt;schema.org&lt;/a&gt;.</resource>
+  <resource name="Field_Paragraphs">Paragraphs and line breaks</resource>
+  <resource name="Field_Paragraphs_Desc">Enables content to make use of paragraph breaks, indents, and line breaks.</resource>
+  <resource name="Field_SemanticMarkup">Semantic markup</resource>
+  <resource name="Field_SemanticMarkup_Desc">Enables content to make use of HTML tags that have semantic meaning, such as &amp;lt;abbr /&amp;gt;, &amp;lt;acronym /&amp;gt;, &amp;lt;time /&amp;gt;.</resource>
+  <resource name="Field_Tables">Tables</resource>
+  <resource name="Field_Tables_Desc">Enables content to include tabular data.</resource>
+  <resource name="Field_UrlEmbedding">URL embedding</resource>
+  <resource name="Field_UrlEmbedding_Desc">Enables embedding of URLs and external files within content.</resource>
+  <resource name="FileAndUrlEmbedding_Header">Files and URL Embedding</resource>
+  <resource name="FileValidation_Header">File Validation</resource>
+  <resource name="Html_Header">Formatting</resource>
+  <resource name="Instructions">Filtering enables HTML content to be limited to specific features and styling options. The following options apply globally to all content created within the community and can be further limited using the "Filtering" tab when configuring or enabling specific content types. Disabled options cannot be used and will not be exposed through the HTML editor when creating or editing content. &lt;strong&gt;Note that changes only apply to new or newly edited content.&lt;/strong&gt;</resource>
+  <resource name="PlatformFeatures_Header">Community interactions</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Save_Successful">HTML filtering options have been saved successfully.</resource>
+  <resource name="UrlValidation_Header">URL Validation</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

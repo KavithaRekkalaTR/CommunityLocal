@@ -1,0 +1,211 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ContextualPanelShell_Name}" version="12.0.0.0" description="${resource:ContextualPanelShell_Description}" instanceIdentifier="63df45f4dd4647c7821531bc63994672" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-panel-shell" lastModified="2022-10-06 19:45:22Z" provider="fd266454714b4b3c9b7194d8b1bf9741">
+    <contentScript language="Velocity"><![CDATA[#set ($iconUrl = $core_v2_widget.GetFileUrl('edit.svg'))
+#set ($glassIconUrl = $core_v2_widget.GetFileUrl('glass.svg'))
+#set ($crossIconUrl = $core_v2_widget.GetFileUrl('cross.svg'))
+#set ($backIconUrl = $core_v2_widget.GetFileUrl('back.svg'))
+#if ($core_v2_language.IsRightToLeft)
+	#set($backIconUrl = $core_v2_widget.GetFileUrl('back-rtl.svg'))
+#end
+#set ($hasCategories = false)
+<style>
+.contextual-administration-handle::after {
+	width: 80%;
+	height: 80%;
+	top: 10%;
+	left: 10%;
+	background-image: url('$iconUrl');
+}
+#_tc_ap.contextual-administration-panel-container .contextual-administration-panel-wrapper .contextual-panel .contextual-panel-heading .navigation-list .search a {
+	background-image: url('$glassIconUrl');
+	background-repeat: no-repeat;
+}
+#_tc_ap.contextual-administration-panel-container .contextual-administration-panel-wrapper .contextual-panel .contextual-panel-heading .navigation-list .close a {
+	background-image: url('$crossIconUrl');
+	background-repeat: no-repeat;
+}
+}
+#_tc_ap.contextual-administration-panel-container .contextual-administration-panel-wrapper .contextual-panel .contextual-panel-heading-search a.exit-search {
+	background-image: url('$crossIconUrl');
+	background-repeat: no-repeat;
+}
+#_tc_ap.contextual-administration-panel-container .contextual-administration-panel-wrapper .contextual-panel .contextual-panel-heading .navigation-list .back a .icon {
+	background-image: url('$backIconUrl');
+	background-repeat: no-repeat;
+}
+</style>
+
+$core_v2_widget.ExecuteFile('shared.vm')
+
+#set ($categoriesTemplateId = $core_v2_widget.UniqueId('categoriesTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($categoriesTemplateId)">
+	#set ($hasCategories = $core_v2_contextualPanels.HasPanelCategories())
+	#if ($hasCategories)
+		<a href="#" $core_v2_tourTip.Render($core_v2_language.GetResource('Tip'), "%{ CssClass = 'contextual-administration-handle do-not-print', Index = 100 }")>
+			<div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div>
+		</a>
+		<span $core_v2_servicePresence.RenderAttributes($core_v2_contextualPanels.BadgeableServicePresenceId, "%{ CssClass = 'contextual-administration-total badge do-not-print' }") data-count="<%= (count || 0) %>"><%= (count || 0) %></span>
+	#end
+</script>
+
+#set ($panelContainerTemplateId = $core_v2_widget.UniqueId('panelContainerTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($panelContainerTemplateId)">
+	<div id="_tc_ap" ${core_v2_servicePresence.RenderAttributes($core_v2_contextualPanels.BadgeableServicePresenceId, "%{ CssClass = 'contextual-administration-panel-container' }")}>
+	</div>
+</script>
+
+#set ($panelLoadingIndicatorTemplateId = $core_v2_widget.UniqueId('panelLoadingIndicatorTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($panelLoadingIndicatorTemplateId)">
+	<div class="contextual-administration-panel-loading">
+		<div class="spinner">
+			<div class="bounce1"></div>
+			<div class="bounce2"></div>
+			<div class="bounce3"></div>
+		</div>
+	</div>
+</script>
+
+#set ($panelTemplateId = $core_v2_widget.UniqueId('panelTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($panelTemplateId)">
+	<div class="contextual-administration-panel-wrapper" data-panelid="<%= panelId %>" data-namespace="<%: namespace %>">
+		<div class="contextual-panel <%= type %> <%= cssClass %>">
+			<div class="contextual-panel-heading">
+				<ul class="navigation-list">
+					<% if(backUrl && backLabel) { %>
+						<li class="navigation-list-item <%= (backUrl == '$core_v2_encoding.JavascriptEncode($rootPanelUrl)' ? type : type) %> back">
+							<a href="<%: backUrl %>" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('BackTip'))">
+								<span class="icon">&lt;</span> <span class="label ui-squeezetext" data-minsize="11"><%= backLabel %></span>
+							</a>
+						</li>
+					<% } else if (backLabel) { %>
+						<li class="navigation-list-item <%= (backUrl == '$core_v2_encoding.JavascriptEncode($rootPanelUrl)' ? type : type) %> back">
+							<a href="#" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('BackTip'))" onclick="window.history.back(); return false;">
+								<span class="icon">&lt;</span> <span class="label ui-squeezetext" data-minsize="11"><%= backLabel %></span>
+							</a>
+						</li>
+					<% } %>
+					<li class="navigation-list-item search"><a href="#" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SearchTip'))">$core_v2_language.GetResource('Search')</a></li>
+					<li class="navigation-list-item close"><a href="#" data-messagename="contextual.shell.close" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CloseTip'))">$core_v2_language.GetResource('Close')</a></li>
+				</ul>
+				<h3 class="name ui-squeezetext ui-tip" data-minsize="11"><%= (name || '') %></h3>
+				<div class="custom-panel-heading-content"></div>
+				<div class="contextual-panel-heading-search">
+					<form>
+					<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SearchOptions'))" />
+					<a href="#" class="exit-search ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ExitSearchTip'))">$core_v2_language.GetResource('ExitSearch')</a>
+					</form>
+				</div>
+			</div>
+			<div class="contextual-panel-content glow-scrollable <%= contentClass %>">
+				<%= (typeof content === "string" ? content : "") %>
+			</div>
+			<div class="contextual-panel-content-search-results glow-scrollable">
+			</div>
+		</div>
+	</div>
+</script>
+
+#set ($customPanelTemplateId = $core_v2_widget.UniqueId('customPanelTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($customPanelTemplateId)">
+	<div class="contextual-administration-panel-wrapper" data-panelid="<%= panelId %>" data-namespace="<%: namespace %>" data-rootpanelid="<%= (rootPanelId || '') %>">
+		<div class="contextual-panel <%= cssClass %>">
+			<div class="contextual-panel-heading">
+				<ul class="navigation-list">
+					<% if(backUrl && backLabel) { %>
+						<li class="navigation-list-item back">
+							<a href="<%: backUrl %>" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('BackTip'))">
+								<span class="icon">&lt;</span> <span class="label ui-squeezetext" data-minsize="11"><%= backLabel %></span>
+							</a>
+						</li>
+					<% } %>
+					<li class="navigation-list-item close"><a href="#" data-messagename="contextual.shell.close" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CloseTip'))">$core_v2_language.GetResource('Close')</a></li>
+				</ul>
+				<h3 class="name ui-squeezetext ui-tip" data-minsize="11"><%= (name || '') %></h3>
+				<div class="custom-panel-heading-content"></div>
+			</div>
+			<div class="contextual-panel-content <%= contentClass %>">
+				<%= (typeof content === "string" ? content : "") %>
+			</div>
+		</div>
+	</div>
+</script>
+
+#set($explicitOnly = $core_v2_contextualPanels.SupportsExplicitOnly)
+#if ($explicitOnly)
+	#set($hasSystemNotifications = false)
+	#set($hasSystemNotifications = $core_v2_contextualPanelsAdministrationContext.SystemNotificationUrl)
+	#if ($hasSystemNotifications)
+		#set($explicitOnly = false)
+	#end
+#end
+
+#store($manageCommunityLabel)
+	#format($core_v2_language.GetResource('Manage_Community'))
+		#token('community')
+			$core_v2_configuration.SiteName
+	#end
+#end
+
+
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+// only show contextual shell in top-most window
+if (window === window.top) {
+	jQuery(function(j){
+		jQuery.telligent.evolution.widgets.contextualPanelShell.register({
+			rootCategoriesTemplateId: '$core_v2_encoding.JavascriptEncode($categoriesTemplateId)',
+			panelContainerTemplateId: '$core_v2_encoding.JavascriptEncode($panelContainerTemplateId)',
+			panelTemplateId: '$core_v2_encoding.JavascriptEncode($panelTemplateId)',
+			panelLoadingIndicatorTemplateId: '$core_v2_encoding.JavascriptEncode($panelLoadingIndicatorTemplateId)',
+			loadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('load.vm'))',
+			searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+			rootPanelUrl: '$core_v2_encoding.JavascriptEncode($rootPanelUrl)',
+			previewPanelUrl: '$core_v2_encoding.JavascriptEncode($previewPanelUrl)',
+			customPanelTemplateId: '$core_v2_encoding.JavascriptEncode($customPanelTemplateId)',
+			hasCategories: #if ($hasCategories) true #else false #end,
+			supportsExplicitOnly: #if ($explicitOnly) true #else false #end,
+			manageCommunityText: '$core_v2_encoding.JavascriptEncode($manageCommunityLabel)',
+			navigationConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('navigationConfirmation'))',
+			totalBadgeCount: #if ($hasCategories) $core_v2_contextualPanels.TotalBadgeCount #else 0 #end
+		});
+	});
+}
+</script>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:ContextualPanelShell_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:ContextualPanelShell_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Administration">Administration</resource>
+  <resource name="AllCategories">Manage</resource>
+  <resource name="Back">Back</resource>
+  <resource name="BackTip">Back</resource>
+  <resource name="CategoryName">Manage {0}</resource>
+  <resource name="Close">&amp;times;</resource>
+  <resource name="CloseTip">Close</resource>
+  <resource name="ContextualPanelShell_Description">Supports rendering contextual control panels.</resource>
+  <resource name="ContextualPanelShell_Name">Contextual Panel Shell</resource>
+  <resource name="DefaultThemeCategoryName">Manage Default {0} Theme</resource>
+  <resource name="ExitSearch">&amp;times;</resource>
+  <resource name="ExitSearchTip">Close Search</resource>
+  <resource name="Manage">Manage</resource>
+  <resource name="Manage_Community">Manage {community}</resource>
+  <resource name="navigationConfirmation">Are you sure you want to leave? Changes you made may not be saved.</resource>
+  <resource name="NoResults">No Results</resource>
+  <resource name="Search">Search</resource>
+  <resource name="SearchOptions">Search</resource>
+  <resource name="SearchResults">Search Results</resource>
+  <resource name="SearchTip">Search</resource>
+  <resource name="SystemNotifications">System Notifications</resource>
+  <resource name="ThemeCategoryName">Manage {0} Theme</resource>
+  <resource name="Tip">Manage your community</resource>
+  <resource name="Unresolved_Plural">{0} unresolved</resource>
+  <resource name="Unresolved_Singular">{0} unresolved</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

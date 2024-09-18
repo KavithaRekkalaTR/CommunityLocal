@@ -1,0 +1,38 @@
+#set ($viewType = $core_v2_widget.GetStringValue('viewType', 'standard'))
+#set ($queryType = $core_v2_widget.GetStringValue('queryType', 'currentUser'))
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 21))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())	
+
+#set ($targetUser = false)
+#if ($queryType == "accessingUser")
+	#set ($targetUser = $core_v2_user.Accessing)
+#elseif ($queryType == "currentUser")
+	#set ($targetUser = $core_v2_user.Current)
+#end
+
+#set ($isUserAccessing = false)
+#if ($targetUser.Id == $core_v2_user.Accessing.Id)
+	#set ($isUserAccessing = true)
+#end
+
+#set ($viewType = "Friends")
+#set ($viewType = $core_v2_page.GetQueryStringValue('Show'))
+
+#set ($accessingUser = $core_v2_user.Accessing)
+#if ($isUserAccessing)
+	#if ($viewType == 'Following')
+		$core_v2_widget.ExecuteFile('following.vm')
+	#elseif ($viewType == 'Followers')
+		$core_v2_widget.ExecuteFile('followers.vm')
+	#elseif ($viewType == 'Pending')
+		$core_v2_widget.ExecuteFile('pending.vm')
+	#elseif ($viewType == 'Review')
+		$core_v2_widget.ExecuteFile('review.vm')
+	#elseif ($viewType == 'Recommendations')
+		$core_v2_widget.ExecuteFile('recommendations.vm')
+	#else
+		$core_v2_widget.ExecuteFile('friends.vm')
+	#end
+#else
+	$core_v2_widget.ExecuteFile('friends.vm')
+#end

@@ -1,0 +1,116 @@
+## load pending friendships
+#set ($friendshipsToReview = $core_v2_friendship.List("%{ FriendshipState = 'Pending', RecipientId = $targetUser.Id, PageIndex = $pageIndex, PageSize = $pageSize, SortBy = 'LastModifiedDate', SortOrder = 'Descending' }"))
+#set($total = $friendships.TotalCount)
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($friendshipsToReview.PageIndex + 1) * $friendshipsToReview.PageSize)
+#if ($friendshipsToReview.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = true)
+#end
+
+#set($acceptUserId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('Accept')))
+#if ($acceptUserId > 0)
+	#set($acceptUser = $core_v2_user.Get("%{ Id = $acceptUserId }"))
+	#if ($acceptUser)
+		<script type="text/javascript">
+		jQuery.telligent.evolution.notifications.show('$core_v2_language.FormatString($core_v2_language.GetResource("FriendRequest_Accepted_Notification"), $acceptUser.DisplayName)', {type: 'success', duration: 10000});
+		</script>
+	#end
+#end
+#set($rejectUserId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('Reject')))
+#if ($rejectUserId > 0)
+	#set($rejectUser = $core_v2_user.Get("%{ Id = $rejectUserId }"))
+	#if ($rejectUser)
+		<script type="text/javascript">
+		jQuery.telligent.evolution.notifications.show('$core_v2_language.FormatString($core_v2_language.GetResource("FriendRequest_Rejected_Notification"), $rejectUser.DisplayName)', {type: 'success', duration: 10000});
+		</script>
+	#end
+#end
+
+## find recently-added friends, and display messages for each.
+
+#set ($friendships = $core_v2_friendship.List("%{ FriendshipState = 'Approved', RequestorId = $user.Id, PageSize = 10, SortBy = 'LastModifiedDate', SortOrder = 'Descending' }"))
+#set ($recentFriendships = [])
+#set ($dq = '"')
+#if ($friendships && $friendships.Count > 0)
+	#set ($cutoffDate = $core_v2_utility.CurrentDate.AddMinutes(-1))
+	#foreach ($friend in $friendships)
+		#if ($friend.LastModifiedDate >= $cutoffDate)
+			#set ($addIndex = $recentFriendships.Add($friend))
+		#end
+	#end
+#end
+
+#foreach ($friendship in $recentFriendships)
+#beforeall
+	<div class="message warning">
+		<ul class="content-list">
+#each
+	#set ($friend = false)
+	#if ($friendship.Recipient && $friendship.Recipient.Id == $targetUser.Id)
+		#set ($friend = $friendship.Requestor)
+	#else
+		#set ($friend = $friendship.Recipient)
+	#end
+	#if ($friend)
+		<li class="content-item">
+			#set ($friendLink = "<a class=${dq}internal-link view-user-profile${dq} href=${dq}$core_v2_encoding.HtmlAttributeEncode(${friend.ProfileUrl})${dq}><span>${friend.DisplayName}</span></a>")
+			$core_v2_language.FormatString($core_v2_language.GetResource('FriendRequest_Accepted_Confirmation'), $friendLink)
+		</li>
+	#end
+#afterall
+		</ul>
+	</div>
+#end
+
+## show all pending review
+
+#foreach ($friendship in $friendshipsToReview)
+#beforeall
+	<ul class="content-list content margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))">
+#each
+	#set ($user = false)
+	#if ($friendship.Recipient && $friendship.Recipient.Id == $targetUser.Id)
+		#set ($user = $friendship.Requestor)
+	#else
+		#set ($user = $friendship.Recipient)
+	#end
+	#if ($user)
+		<li class="content-item content " data-hasmore="$hasMore" data-userid="$user.Id" style="cursor: pointer;" data-url="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)">
+			<div class="content abbreviated">
+				<div class="avatar">
+					$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 100, 100, "%{alt=$user.DisplayName,border='0',ResizeMethod = 'ZoomAndCrop'}")
+				</div>
+				<div class="summary">
+					<h2 class="name">
+						$user.DisplayName
+					</h2>
+					<div class="content">
+						$friendship.RequestMessage
+					</div>
+				</div>
+				<div class="actions">
+					<div class=" navigation-list ui-links" data-minlinks="0" data-maxlinks="0" data-direction="horizontal">
+						<ul>
+							#foreach($action in $core_v2_user.ListActionLinks($user.Id))
+								<li class="navigation-list-item">$action.Html</li>
+							#end
+							<li class="navigation-list-item">
+								<a href="#" data-more>$core_v2_language.GetResource('ApproveDeny')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</li>
+	#end
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">
+		$core_v2_language.GetResource('FriendRequest_NoneToReview')
+	</div>
+#end

@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="10.2.0.0" description="${resource:Description}" id="d89ec45389f3430d82f85de3b2519581" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-02-22 22:41:33Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="pointtransaction.aftercreate" />
+      <event key="pointtransaction.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[
+var pointRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('pointRange', ''));
+var minPoints= core_v2_utility.ParseInt(pointRangeQuery.Value('Minimum'));
+var maxPoints = core_v2_utility.ParseInt(pointRangeQuery.Value('Maximum'));
+
+var userId = context_v2_automationTrigger.Arguments.UserId;
+if (!userId) {
+    return;
+}
+
+var user = core_v2_user.Get({
+    Id: userId
+});
+if (!user || user.HasErrors()) {
+    return;
+}
+
+var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+
+if (user.Points >= minPoints && (maxPoints <= 0 || user.Points <= maxPoints)) {
+    if (!hasAchievement) {
+        context_v1_achievementAutomation.Award(userId);
+    }
+} else {
+    if (hasAchievement) {
+        context_v1_achievementAutomation.Revoke(userId);
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="pointRange" labelResourceName="PointRange" descriptionResourceName="PointRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Grants or revokes an achievement based on a member's point total.</resource>
+  <resource name="PointRange">Point range</resource>
+  <resource name="PointRange_Description">The minimum and maximum number of points required to award the achievement.  Maximum value is optional, if set the achievement will be removed once the maximum value is exceeded.</resource>
+  <resource name="Title">Award to members by their point total</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

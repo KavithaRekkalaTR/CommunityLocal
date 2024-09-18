@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PermissionsContextualPanel_Name}" version="11.0.0.0" description="${resource:PermissionsContextualPanel_Description}" instanceIdentifier="e6701613a9dd4fa58b8ca0b43cc79c2a" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-permissions with-header-filter" lastModified="2020-06-07 02:54:33Z" provider="da3af79f2abc4328919ee440eb1aae6e">
+    <contentScript language="Velocity"><![CDATA[#set($canManage = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+#set ($permissionSelectId = $core_v2_widget.UniqueId('permissionSelect'))
+#set ($allowedRolesId = $core_v2_widget.UniqueId('allowedRoles'))
+
+<div class="tab by-permissions">
+    $core_v2_widget.ExecuteFile('tab-bypermissions.vm')
+</div>
+
+<div class="tab group-roles" style="display: none;">
+   $core_v2_widget.ExecuteFile('tab-membershiptypes.vm')
+</div>
+
+<div class="tab site-roles" style="display: none;">
+    $core_v2_widget.ExecuteFile('tab-siteroles.vm')
+</div>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.contextualPermissions.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+        permissionSelect:'#$permissionSelectId',
+        allowedRoles:'#$allowedRolesId',
+        urls: {
+            edit: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('edit.vm'))',
+            editPermission: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('edit-permission.vm'))',
+            tabSiteRoles: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('tab-siteroles.vm'))',
+            tabMembershipTypes: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('tab-membershiptypes.vm'))',
+            tabByPermissions: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('tab-bypermissions.vm'))'
+        },
+		text:  {
+			save: '$core_v2_language.GetResource('Save')',
+			revert: '$core_v2_language.GetResource('Revert')',
+			find: '$core_v2_language.GetResource('Find')',
+			siteroles: '$core_v2_language.GetResource('site_roles')',
+			grouproles: '$core_v2_language.GetResource('group_roles')',
+			byPermissions: '$core_v2_language.GetResource('ByPermission')',
+			panelInstructions: '$core_v2_language.GetResource('PermissionsContextualPanel_Instructions')'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:PermissionsContextualPanel_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:PermissionsContextualPanel_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Allowed">Allowed {0}</resource>
+  <resource name="AllowedPermissions">Permissions that will be Allowed</resource>
+  <resource name="ByPermission">By Permission</resource>
+  <resource name="DeniedPermissions">Permissions that will be Denied</resource>
+  <resource name="Find">Find a permission...</resource>
+  <resource name="FindRole">Find a role...</resource>
+  <resource name="group_roles">Membership Types</resource>
+  <resource name="ItemPermissions">{0} Permissions</resource>
+  <resource name="None">None</resource>
+  <resource name="NoPermissionsFound">No matching permissions found.</resource>
+  <resource name="NoResults">No matching roles found.</resource>
+  <resource name="NoRolesAllowed">No roles allow this permission.</resource>
+  <resource name="Permissions">Permissions</resource>
+  <resource name="PermissionsContextualPanel_Description">Manage permissions.</resource>
+  <resource name="PermissionsContextualPanel_Instructions">Permissions are granted to individual roles. Use the tabs below to adjust permissions.</resource>
+  <resource name="PermissionsContextualPanel_Name">Permissions</resource>
+  <resource name="PermissionsReverted">Permissions have been reverted.</resource>
+  <resource name="PermissionsUpdated">Permissions have been updated.</resource>
+  <resource name="Revert">Revert</resource>
+  <resource name="RevertChanges">The following permissions changes will be made if the revert is confirmed:</resource>
+  <resource name="RevertConfirm">Confirm Revert</resource>
+  <resource name="RevertTitle">Revert {0}</resource>
+  <resource name="RoleRemovalMessage">Role permissions for {0} have been updated.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="SelectAPermission">Select a permission...</resource>
+  <resource name="SelectNone">Select None</resource>
+  <resource name="ShowAllowedRoles">Show roles with allowed permissions</resource>
+  <resource name="ShowAllowedMembershipTypes">Show membership types with allowed permissions</resource>
+  <resource name="ShowAllRoles">Show all roles</resource>
+  <resource name="ShowAllMembershipTypes">Show all membership types</resource>
+  <resource name="site_roles">Site Roles</resource>
+  <resource name="UnsavedCustomization">Unsaved Customization</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

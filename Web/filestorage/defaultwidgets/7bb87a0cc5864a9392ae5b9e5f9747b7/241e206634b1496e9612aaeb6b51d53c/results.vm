@@ -1,0 +1,43 @@
+#set ($resultsContainerId = $core_v2_widget.UniqueId('resultsContainerId'))
+
+## support for parsing initial query
+#set ($initialProfileSearchName = false)
+#set ($initialProfileSearchValue = false)
+#set ($legacyQuery = false)
+#set ($legacyQuery = $core_v2_page.GetQueryStringValue('q'))
+#if ($legacyQuery && $legacyQuery.length > 0 && $legacyQuery.IndexOf(':') > 0)
+	#set ($legacyQueryParts = $core_v2_utility.Split(":", $legacyQuery, 2).ToArray())
+	#set ($initialProfileSearchName = $legacyQueryParts.get(0))
+	#set ($initialProfileSearchValue = $legacyQueryParts.get(1))
+#end
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($resultsContainerId)"></div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.peopleSearch')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function(){
+		jQuery.telligent.evolution.widgets.peopleSearch.register({
+			mode: 'results',
+			wrapper: "#$core_v2_widget.WrapperElementId",
+			resultContainer: '#$core_v2_encoding.JavascriptEncode($resultsContainerId)',
+			thumbnailsContainer: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))',
+			queryKey: '$core_v2_encoding.JavascriptEncode($queryKey)',
+			formId: '$core_v2_encoding.JavascriptEncode($filterFormId)',
+			searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+			initialProfileSearchName: #if ($initialProfileSearchName) '$core_v2_encoding.JavascriptEncode($initialProfileSearchName)' #else null #end,
+			initialProfileSearchValue: #if ($initialProfileSearchValue) '$core_v2_encoding.JavascriptEncode($initialProfileSearchValue)' #else null #end,
+			fields: [
+				#foreach($profileField in $core_v2_userProfileField.List("%{ IsSearchable = 'true' }"))
+				#each
+					{'fieldName':'$core_v2_encoding.JavascriptEncode($profileField.Name)', 'searchFieldName':'$core_v2_encoding.JavascriptEncode($profileField.SearchFieldName)'}
+				#between
+					,
+				#end
+			]
+		});
+	});
+	</script>
+#end

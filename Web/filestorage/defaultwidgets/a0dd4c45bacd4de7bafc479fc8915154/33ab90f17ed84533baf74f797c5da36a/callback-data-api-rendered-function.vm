@@ -1,0 +1,25 @@
+##
+## Rendered LESS Function Callback
+##
+
+#set ($name = $core_v2_page.GetQueryStringValue("_w_name"))
+
+#set ($fragmentId = false)
+#set ($fragmentIdQuery = $core_v2_page.GetQueryStringValue("_w_fragmentId"))
+#if ($fragmentIdQuery && $fragmentIdQuery.length > 0)
+	#set ($fragmentId = $core_v2_utility.ParseGuid($fragmentIdQuery))
+#end
+
+#if ($fragmentId)
+	#set ($lessFunction = $shellApi.GetFunction($name, "Widget"))
+	#set ($lessFunctions = $shellApi.ListAllFunctions("Widget"))
+#else
+	#set ($lessFunction = $shellApi.GetFunction($name, "Theme"))
+	#set ($lessFunctions = $shellApi.ListAllFunctions("Theme"))
+#end
+
+$core_v2_page.SetContentType('application/json')
+{
+	"index": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-function-index.vm'))",
+	"member": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-function.vm'))"
+}

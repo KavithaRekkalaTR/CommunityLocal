@@ -1,0 +1,10 @@
+﻿#set($blogId = false)
+#set($rawBlogId = $core_v2_page.GetQueryStringValue('blogId'))
+#if ($rawBlogId)
+	#set($blogId = $core_v2_utility.ParseInt($rawBlogId))
+#end
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('pageIndex')))
+
+$core_v2_widget.ExecuteFile('list.vm')

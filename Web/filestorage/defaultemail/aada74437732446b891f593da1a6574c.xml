@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Site Invitation" version="13.0.0.0" description="Sends an email when a user is invited to the site" id="aada74437732446b891f593da1a6574c" lastModified="2023-04-18 20:30:03Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $core_v2_user.Accessing.DisplayName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $core_v2_user.Accessing.DisplayName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body_Introduction'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $core_v2_user.Accessing.DisplayName
+#end
+</p>
+
+#set($message = false)
+#set($message = $context_v1_email.Context.UserInvitation.Message)
+#if($message && $message.Length > 0)
+    <p>
+	$context_v1_email.Context.UserInvitation.Message
+	</p>
+#end
+
+<p>
+#format($core_v2_language.GetResource('Body_Accept'))
+#token('accept_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.UserInvitation.Url)">$core_v2_language.GetResource('Accept')</a>
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $core_v2_user.Accessing.DisplayName
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Accept">Accept this invitation</resource>
+  <resource name="Body_Accept">{accept_link} to join the community and connect with {user_name} and others on {site-Name}.</resource>
+  <resource name="Body_Introduction">{user_name} invites you to join {site_name}.</resource>
+  <resource name="Subject">{user_name} invites you to join {site_name}</resource>
+  <resource name="Header">{user_name} invites you to join {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

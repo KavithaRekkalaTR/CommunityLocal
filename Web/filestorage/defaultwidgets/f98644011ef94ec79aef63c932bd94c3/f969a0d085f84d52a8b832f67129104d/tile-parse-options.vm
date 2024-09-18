@@ -1,0 +1,16 @@
+#set($options = "%{}")
+
+#set ($endDate = $core_v2_page.GetQueryStringValue('endDate'))
+#if($endDate)
+    $options.Add('endDate', $endDate)
+#end
+
+#set ($startDate = $core_v2_page.GetQueryStringValue('startDate'))
+#if($startDate)
+    $options.Add('startDate', $startDate)
+#end
+
+#set ($datePeriod = $core_v2_page.GetQueryStringValue('datePeriod'))
+#if($datePeriod)
+    $options.Add('datePeriod', $datePeriod)
+#end

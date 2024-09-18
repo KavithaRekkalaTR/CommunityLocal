@@ -1,0 +1,86 @@
+@socket-state-background: #fff;
+@socket-state-foreground: #000;
+@socket-state-opacity: .4;
+@socket-state-size: 32px;
+@socket-state-border: 2px;
+@socket-state-spacing: 10px;
+@socket-state-speed: 1.5s;
+@socket-state-depth: 1000;
+@socket-state-online-url: -evo-widgetfile-dataurl('online.svg');
+@socket-state-offline-url: -evo-widgetfile-dataurl('offline.svg');
+
+@keyframes rotate {
+	from { transform: rotate(0deg) }
+	to { transform: rotate(360deg) }
+}
+
+.socket-state {
+	position: fixed;
+	bottom: @socket-state-spacing;
+	right: @socket-state-spacing;
+	opacity: @socket-state-opacity;
+	width: @socket-state-size;
+	height: @socket-state-size;
+	z-index: @socket-state-depth;
+	cursor: default;
+	overflow: hidden;
+	border-radius: @socket-state-size;
+	background-color: @socket-state-background;
+	.socket-state-border {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		background: @socket-state-foreground;
+		display: inline-block;
+		height: @socket-state-size;
+		width: @socket-state-size;
+	}
+	.socket-state-indicator-wrapper {
+		z-index: @socket-state-depth + 1;
+		position: absolute;
+		top: @socket-state-border;
+		left: @socket-state-border;
+		width: @socket-state-size - (@socket-state-border * 2);
+		height: @socket-state-size - (@socket-state-border * 2);
+		background-color: @socket-state-background;
+		border-radius: @socket-state-size;
+	}
+	.socket-state-indicator {
+		z-index: @socket-state-depth + 2;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: @socket-state-size - (@socket-state-border * 2);
+		height: @socket-state-size - (@socket-state-border * 2);
+		border-radius: @socket-state-size;
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-evenly;
+		-webkit-mask-repeat: no-repeat;
+		-webkit-mask-size: 65%;
+		-webkit-mask-position: center center;
+		mask-repeat: no-repeat;
+		mask-size: 65%;
+		mask-position: center center;
+	}
+	&.online {
+		.socket-state-indicator {
+			-webkit-mask-image: url(@socket-state-online-url);
+			mask-image: url(@socket-state-online-url);
+		}
+	}
+	&.offline {
+		.socket-state-border {
+			height: @socket-state-size / 2;
+			border-top-left-radius: @socket-state-size;
+			border-top-right-radius: @socket-state-size;
+			animation: @socket-state-speed linear infinite rotate;
+			transform-origin: 50% 100%;
+		}
+		.socket-state-indicator {
+			-webkit-mask-image: url(@socket-state-offline-url);
+			mask-image: url(@socket-state-offline-url);
+		}
+	}
+}

@@ -1,0 +1,160 @@
+﻿$core_v2_page.SetContentType('application/json')
+
+#set($forumId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('forumId')))
+#set($forum = false)
+#set($forum = $core_v2_forum.Get($forumId))
+#if(!$forum)
+	$core_v2_page.SendJsonError('The specified forum could not be retrieved')
+#end
+
+#set($body = $core_v2_page.GetFormValue('Body'))
+#set($options = "%{Body=$body}")
+
+#set($isQuestion = '-1')
+#set($isQuestion = $core_v2_page.GetFormValue('IsQuestion'))
+
+#if ($core_v2_forumConfiguration.EnableThreadStatus && $forum.AllowedThreadTypes.Count > 1)
+	#if ($isQuestion == '1')
+		$options.Add('IsQuestion', 'True')
+	#elseif ($isQuestion == '0')
+		$options.Add('IsQuestion', 'False')
+	#else
+		#if ($forum.DefaultThreadType == 'QuestionAndAnswer')
+			#set($isQuestion = '1')
+			$options.Add('IsQuestion', 'True')
+		#else
+			#set($isQuestion = '0')
+			$options.Add('IsQuestion', 'False')
+		#end
+	#end
+#elseif ($forum.DefaultThreadType == 'QuestionAndAnswer')
+	#set($isQuestion = '1')
+	$options.Add('IsQuestion', 'True')
+#else
+	#set($isQuestion = '0')
+	$options.Add('IsQuestion', 'False')
+#end
+
+#set($subject = false)
+#set($subject = $core_v2_page.GetFormValue('Subject'))
+#if($subject)
+	$options.Add('Subject', $subject)
+#end
+
+#set($editNotes = false)
+#set($editNotes = $core_v2_page.GetFormValue('EditNotes'))
+#if($editNotes)
+	$options.Add('EditNotes', $editNotes)
+#end
+
+#set($tags = false)
+#set($tags = $core_v2_page.GetFormValue('Tags'))
+#if ($tags)
+	$options.Add('Tags', $tags)
+#end
+
+#set($subscribe = '-1')
+#set($subscribe = $core_v2_page.GetFormValue('Subscribe')) ## 1/0/-1
+#if ($subscribe == '0')
+	$options.Add('SubscribeToThread', 'False')
+#elseif ($subscribe == '1')
+	$options.Add('SubscribeToThread', 'True')
+#end
+
+#set($attachmentChanged = $core_v2_page.GetFormValue('AttachmentChanged')) ## 1/0
+#set($removeAttachment = $core_v2_page.GetFormValue('RemoveAttachment')) ## 1/0
+#set($attachmentName = false)
+#set($attachmentName = $core_v2_page.GetFormValue('AttachmentName')) ## set if file is updated
+#set($attachmentUrl = false)
+#set($attachmentUrl = $core_v2_page.GetFormValue('AttachmentUrl')) ## set if file is updated and remote
+#set($attachmentIsRemote = false)
+#set($attachmentIsRemote = $core_v2_page.GetFormValue('AttachmentIsRemote')) ## set if file is updated
+#set($attachmentContextId = false)
+#set($attachmentContextId = $core_v2_page.GetFormValue('AttachmentContextId')) ## set if file is updated and not remote
+#if ($attachmentChanged == '1')
+	#set($contentType = false)
+	#if ($attachmentIsRemote == '1')
+		#set($contentType = $core_v2_ui.GetMimeType($attachmentUrl))
+		$options.Add('FileUrl', $attachmentUrl)
+		$options.Add('ContentType', $contentType)
+	#else
+		#set($file = false)
+		#set($file = $core_v2_uploadedFile.Get($attachmentContextId, $attachmentName))
+		#if ($file)
+			#set($contentType = $core_v2_ui.GetMimeType($attachmentName))
+			$options.Add('FileUploadContext',$attachmentContextId)
+			$options.Add('FileName',$file.Name)
+			$options.Add('ContentType', $contentType)
+		#end
+	#end
+#elseif ($removeAttachment == '1')
+	$options.Add('RemoveAttachment', true)
+#end
+
+#set($locked = '-1')
+#set($locked = $core_v2_page.GetFormValue('IsLocked')) ## 1/0/-1
+#if ($locked == '0')
+	$options.Add('IsLocked', 'False')
+#elseif ($locked == '1')
+	$options.Add('IsLocked', 'True')
+#end
+
+#set($isSuggestedAnswer = '-1')
+#set($isSuggestedAnswer = $core_v2_page.GetFormValue('IsSuggestedAnswer')) ## 1/0/-1
+#if ($isSuggestedAnswer == '0')
+	$options.Add('IsSuggestedAnswer','False')
+#elseif ($isSuggestedAnswer == '1')
+	$options.Add('IsSuggestedAnswer','True')
+#end
+
+#set($isAnonymous = '-1')
+#set($isAnonymous = $core_v2_page.GetFormValue('IsAnonymous')) ## 1/0/-1
+#if ($isAnonymous == '0')
+	$options.Add('IsAnonymous','False')
+#elseif ($isAnonymousPost == '1')
+	$options.Add('IsAnonymous','True')
+#end
+
+#set($hasStickyDate = '-1')
+#set($hasStickyDate = $core_v2_page.GetFormValue('HasStickyDate')) ## 1/0/-1
+#if ($hasStickyDate == '1')
+	$options.Add('StickyDate', $core_v2_utility.ParseDate($core_v2_page.GetFormValue('StickyDate')))
+	$options.Add('IsSticky', 'True')
+#elseif ($hasStickyDate == '0')
+	$options.Add('StickyDate', $core_v2_utility.CurrentDate)
+	$options.Add('IsSticky', 'False')
+#end
+
+#set($replyToReplyId = false)
+#set($replyToReplyId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ReplyToReplyId')))
+#if ($replyToReplyId && $replyToReplyId > 0)
+	$options.Add('ForumReplyId', $replyToReplyId)
+#end
+
+#set($threadOrReply = false)
+#set($replyId = false)
+#set($replyId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ReplyId')))
+#set($threadId = false)
+#set($threadId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ThreadId')))
+#set($replyToThreadId = false)
+#set($replyToThreadId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ReplyToThreadId')))
+#if ($replyId && $replyId > 0)
+	#set($threadOrReply = $core_v2_forumReply.Update($replyId, $replyToThreadId, $forumId, $options))
+#elseif ($threadId && $threadId > 0)
+	#set($threadOrReply = $core_v2_forumThread.Update($forumId, $threadId, $options))
+#elseif ($replyToThreadId && $replyToThreadId > 0)
+	#set($threadOrReply = $core_v2_forumReply.Create($replyToThreadId, $body, $options))
+#else
+	#set($threadOrReply = $core_v2_forumThread.Create($forumId, $subject, $body, $options))
+	#set($threadId = $threadOrReply.Id)
+#end
+
+#if($threadOrReply.HasErrors())
+	$core_v2_page.SendJsonError($threadOrReply.Errors)
+#end
+
+#if (!$threadOrReply.Approved)
+	{"redirectUrl":"$core_v2_encoding.JavascriptEncode($core_v2_forumUrls.PendingModeration($forumId))"}
+#else		
+	{"redirectUrl":"$core_v2_encoding.JavascriptEncode($threadOrReply.Url)"}
+#end

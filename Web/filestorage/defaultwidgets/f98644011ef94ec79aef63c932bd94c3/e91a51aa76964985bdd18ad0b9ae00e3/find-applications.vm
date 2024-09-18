@@ -1,0 +1,18 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_SearchText'))
+#set($selectedApplicationTypes = $core_v2_page.GetQueryStringValue('w_selectedApplicationTypes'))
+#set($includeApplicationTypes = $core_v2_page.GetQueryStringValue('w_includeApplicationTypes'))
+#set($options = "%{applicationTypeIds = $selectedApplicationTypes, includeApplicationTypes = $includeApplicationTypes }")
+
+#set($applications = $reporting.FindApplications($searchText, $options))
+
+$core_v2_page.SetContentType('application/json')
+
+{"Applications":[
+    #foreach($application in $applications)
+        {
+            "id":"$application.ApplicationId.ToString()",
+            "title":"$application.Name",
+            "preview":"$core_v2_encoding.JavascriptEncode($application.Name)#if ($application.Container && $application.Container.ContainerId != $application.ApplicationId) ($core_v2_language.GetResource('In') $application.Container.Name)#end"
+        },
+    #end
+null]}

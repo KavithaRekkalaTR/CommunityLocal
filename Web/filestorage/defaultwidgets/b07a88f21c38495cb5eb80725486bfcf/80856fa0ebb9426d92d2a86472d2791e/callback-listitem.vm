@@ -1,0 +1,6 @@
+#set ($fileStoreKey = $core_v2_page.GetQueryStringValue('w_fileStoreKey'))
+#set ($path = $core_v2_page.GetQueryStringValue('w_path'))
+#set ($fileName = $core_v2_page.GetQueryStringValue('w_fileName'))
+
+#set ($document = $context.Get($fileStoreKey, $path, $fileName))
+$core_v2_widget.ExecuteFile('listitem.vm')

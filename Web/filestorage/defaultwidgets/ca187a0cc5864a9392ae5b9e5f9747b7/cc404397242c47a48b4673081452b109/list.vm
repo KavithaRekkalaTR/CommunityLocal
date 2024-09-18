@@ -1,0 +1,60 @@
+#foreach ($event in $events)
+#beforeall
+	<ul class="content-list content">
+#each
+	#set ($hasEditPermission = $calendar_v1_calendars.HasPermission($event.CalendarId,$calendar_v1_permissions.EditEvent))
+	#set ($viewUrl = $calendar_v1_urls.Event($event.Id))
+	#set ($editUrl = $calendar_v1_urls.EditEvent($event.Id))
+	#set ($eventDate = $core_v2_language.FormatDateAndTime($event.EventStartDate, "%{AdjustTimeZone = 'false'}"))
+	#set ($eventEndDate = $core_v2_language.FormatDateAndTime($event.EventEndDate, "%{AdjustTimeZone = 'false'}"))
+
+	<li class="content-item" data-href="$viewUrl">
+		<div class="content abbreviated">
+			<div class="summary">
+				<h2 class="name">
+					<a href="$viewUrl" class="internal-link event-title">$event.EventTitle</a>
+					#if ($hasEditPermission)
+						<a href="$editUrl" class="internal-link edit ui-tip replace-with-icon pencil" data-tip="$core_v2_language.GetResource('calendar_Edit')">$core_v2_language.GetResource('calendar_Edit')</a>
+					#end
+				</h2>
+				<div class="content">
+					<span class="startdate">$eventDate</span>
+					<span class="enddate">$core_v2_language.GetResource('to') $eventEndDate</span>
+					<span class="event-timezone">
+						$!core_v2_configuration.GetTimeZone($core_v2_user.Accessing.TimeZoneId, $event.EventStartDate).NameWithoutOffset
+					</span><br />
+				</div>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#nodata
+	#if ($core_v2_ui.GetCurrentPageIndex() == 0)
+		<div class="message norecords">
+			#set ($addUrl = false)
+			#set ($addUrl = $calendar_v1_urls.AddEvent($calendar_v1_calendars.Current.Id))
+			#if ($addUrl  && $addUrl != '')
+				#if ($startDate && $isSpecificDay)
+					#set($newDate = $core_v2_utility.ParseDate("$startDate.Year", "$startDate.Month", "$startDate.Day", '12', '0'))
+					   #set($addUrl = $core_v2_page.AdjustQueryString($addUrl, "startDate=$core_v2_encoding.UrlEncode($calendar_v1_UI.ToCultureSafeString($newDate))"))
+				#end
+				#if ($isSpecificDay)
+					$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Date_Link"), $core_v2_language.FormatDate($startDate), $addUrl)
+				#elseif ($startDate)
+					$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Upcoming_Link"), $core_v2_language.FormatDate($startDate), $addUrl)
+				#else
+					$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Link"), $addUrl)
+				#end
+			#else
+				#if ($isSpecificDay)
+					$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Date"), $core_v2_language.FormatDate($startDate))
+				#elseif ($startDate)
+					$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Upcoming"), $core_v2_language.FormatDate($startDate))
+				#else
+					$core_v2_language.GetResource("NoData")
+				#end
+			#end
+		</div>
+	#end
+#end

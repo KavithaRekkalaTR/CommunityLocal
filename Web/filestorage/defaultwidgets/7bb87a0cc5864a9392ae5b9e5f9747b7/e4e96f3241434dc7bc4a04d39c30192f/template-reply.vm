@@ -1,0 +1,17 @@
+<li class="threaded content-item <% if(isDeleted) { %> deleted <% } %>"
+	data-id="<%: id %>"
+	data-parentid="<%: parentId %>"
+	data-createddate="<%: createdDate %>"
+	data-yesvotes="<%: yesVotes %>"
+	data-novotes="<%: noVotes %>">
+
+	<div class="rendered-content">
+		<%= body %>
+		<div class="typing-status-wrapper"></div>
+		<div class="new-replies-wrapper"></div>
+	</div>
+
+	<div class="newreply"></div>
+
+	$core_v2_widget.ExecuteFile('template-reply-list.vm')
+</li>

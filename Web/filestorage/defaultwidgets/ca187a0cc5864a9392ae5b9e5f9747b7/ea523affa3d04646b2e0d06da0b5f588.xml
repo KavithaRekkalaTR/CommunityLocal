@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_Map_Name}" version="11.0.0.0" description="${resource:Calendar_Map_Description}" instanceIdentifier="ea523affa3d04646b2e0d06da0b5f588" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="calendar-map" lastModified="2021-06-14 20:53:09Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($event = false)
+#set ($event = $calendar_v1_events.Current)
+    		
+#if ($event == false)
+    $core_v2_widget.hide()
+#end
+
+#if (!$geocoding_v1_core.IsEnabled)
+    $core_v2_widget.hide()
+#end
+
+#set ($latitude = $event.Latitude)
+#set ($longitude = $event.Longitude)
+
+#if ($latitude < -90 || $longitude < -180)
+    $core_v2_widget.hide()
+#end
+
+#set ($height = $core_v2_widget.GetIntValue("mapHeight",225))
+#set ($width = $core_v2_widget.GetIntValue("mapWidth",225))
+#set ($zoom = $core_v2_widget.GetIntValue("mapZoom",15))
+
+#set ($imgUrl = $geocoding_v1_core.GetMapUrl($latitude, $longitude, $zoom, $height, $width))
+#set ($mapUrl = $geocoding_v1_core.GetServiceRedirectUrl($event.AddressString))
+
+<div class="geocoded_map_content">
+    <div class="map loader">
+        <img src="$imgUrl" alt="">
+        <a href="$mapUrl" class="map_view_service_link">$core_v2_language.GetResource('CalendarMap_GoToMap')</a>
+    </div>
+</div>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Calendar_Map_Title}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="linkArea" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_Map_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="mapZoom" labelResourceName="CalendarMap_MapZoom" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="9999" />
+	</property>
+	<property id="mapHeight" labelResourceName="CalendarMap_MapHeight" defaultValue="225" dataType="Int">
+		<propertyRule name="minmax" min="1" max="9999" />
+	</property>
+	<property id="mapWidth" labelResourceName="CalendarMap_MapWidth" defaultValue="225" dataType="Int">
+		<propertyRule name="minmax" min="1" max="9999" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Calendar_Map_Description">Displays map of location for a calendar event.</resource>
+  <resource name="Calendar_Map_Name">Event Calendar - Map</resource>
+  <resource name="Calendar_Map_Title">Map</resource>
+  <resource name="CalendarMap_GoToMap">Go To Map</resource>
+  <resource name="CalendarMap_MapHeight">Height</resource>
+  <resource name="CalendarMap_MapWidth">Width</resource>
+  <resource name="CalendarMap_MapZoom">Zoom</resource>
+  <resource name="CalendarMap_ViewMap">View Map</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="ca14a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

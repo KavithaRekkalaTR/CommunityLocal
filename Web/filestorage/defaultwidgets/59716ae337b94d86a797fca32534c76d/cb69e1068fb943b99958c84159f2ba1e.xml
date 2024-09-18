@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ForumReplySearchResult_Name}" version="12.0.0.0" description="${resource:ForumReplySearchResult_Description}" instanceIdentifier="cb69e1068fb943b99958c84159f2ba1e" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2021-09-14 20:21:02Z" provider="59716ae337b94d86a797fca32534c76d">
+    <contentScript language="Velocity"><![CDATA[#set ($content = $context.Content)
+
+#if ($content)
+
+	#set ($typeCssClass = "forum forum-reply")
+	#set ($avatarSize = 24)
+	#set ($id = $core_v2_widget.UniqueId("searchresult"))
+
+	#set ($target = $context.Target)
+	#set ($title = $content.HtmlName($target))
+	#set ($body = $content.HtmlDescription($target))
+
+	#if($content.CreatedByUserId)
+		#set($user = $core_v2_user.Get("%{Id = $context.Content.CreatedByUserId}"))
+	#end
+
+	#if ($content.CreatedDate)
+		#set ($date = $content.CreatedDate)
+	#end
+
+	#if($content.Application)
+		#set($applicationName = $content.Application.HtmlName($target))
+		#set($applicationUrl = $content.Application.Url)
+
+		#if($applicationName != '' && $applicationUrl != '')
+			#set($hasApplication = true)
+		#end
+	#end
+
+	#if($content.Application && $content.Application.Container)
+		#set ($containerName = $content.Application.Container.HtmlName($target))
+		#set ($containerUrl = $content.Application.Container.Url)
+		#set ($containerAvatarUrl = $content.Application.Container.AvatarUrl)
+
+		#if($containerName != '' && $containerUrl != '')
+			#set($hasContainer = true)
+		#end
+	#end
+
+	#set($post = $core_v2_forumReply.Get($content.ContentId))
+	#if ($post && $post.File && $post.File.FileUrl)
+		#set ($attachmentUrl = $post.File.FileUrl)
+		#set ($attachmentName = $post.File.FileName)
+	#end
+
+	<div class="content abbreviated rendered $typeCssClass" id="$id">
+		<div class="summary">
+
+			<h3 class="name">
+				<a class="internal-link" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 250, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 250, '...')
+				</a>
+			</h3>
+
+			#if($user)
+				<div class="author">
+					<div class="avatar">
+					#if (!$user.IsSystemAccount && $user.Url)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)" class="internal-link view-user-profile">
+							$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, $avatarSize, $avatarSize, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$user.DisplayName' }")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, $avatarSize, $avatarSize, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$user.DisplayName' }")
+					#end
+					</div>
+
+					<span class="username">
+					#if (!$user.IsSystemAccount && $user.Url)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)" class="internal-link view-user-profile activity-summary-user">$user.DisplayName</a>
+					#else
+						$user.DisplayName
+					#end
+					</span>
+				</div>
+			#elseif ($containerAvatarUrl && $containerAvatarUrl != '')
+				<div class="author">
+					<div class="avatar">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+							$core_v2_ui.GetResizedImageHtml($containerAvatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$containerName' }")
+						</a>
+					</div>
+				</div>
+			#end
+
+			#if ($body && $body != '')
+				<div class="content">$core_v2_language.Truncate($body, 250, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'false' }")</div>
+			#else
+				<div class = "content empty"></div>
+			#end
+
+			#if ($attachmentUrl && $attachmentUrl != '')
+				#set ($mediaType = $core_v2_ui.GetMediaType($attachmentUrl, "%{ ViewType = 'View', OutputIsPersisted = 'False' }"))
+
+				#if ($mediaType != "Empty" && $target == 'Web')
+					#set ($viewable = true)
+				#else
+					#set ($viewable = false)
+				#end
+
+				<div class="attachment">
+					<ul class="navigation-list">
+						<li class="navigation-list-item">
+							#if($attachmentName) $attachmentName #else $core_v2_encoding.HtmlEncode($attachmentUrl) #end
+						</li>
+						#if($viewable)
+							<li class="navigation-list-item view-attachment" style ="display: list-item;">
+								<a href="#">$core_v2_language.GetResource("ShowAttachment")</a>
+							</li>
+							<li class="navigation-list-item hide-attachment hidden" style ="display: none;">
+								<a href="#">$core_v2_language.GetResource("HideAttachment")</a>
+							</li>
+						#end
+					</ul>
+				</div>
+
+				#if($viewable)
+					<div class="viewer hidden" style="display: none;">
+						$core_v2_ui.GetViewHtml($attachmentUrl, "%{ AdjustToContainer = 'true', OutputIsPersisted = 'false' }")
+					</div>
+
+					<script type="text/javascript">
+						(function($) {{
+							$('#$id .view-attachment a').on('click', function() {{
+								$('#$id .viewer, #$id .hide-attachment').removeClass('hidden').show();
+								$(this).parent().addClass('hidden').hide();
+								return false;
+							}});
+							$('#$id .hide-attachment a').on('click', function() {{
+								$('#$id .viewer').addClass('hidden').hide();
+								$('#$id .view-attachment').removeClass('hidden').show();
+								$(this).parent().addClass('hidden').hide();
+								return false;
+							}});
+						}})(jQuery);
+					</script>
+				#end
+			#end
+		</div>
+
+		#if ($date || $hasApplication || $hasContainer)
+			<div class="attributes">
+				<ul class="attribute-list">
+					#if ($date)
+						<li class="attribute-item date">$core_v2_language.FormatAgoDate($date, true)</li>
+					#end
+					#if ($hasContainer)
+						<li class="attribute-item container">
+							<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+							    href="$core_v2_encoding.HtmlAttributeEncode($containerUrl)">$containerName</a>
+						</li>
+					#end
+					#if ($hasApplication)
+						<li class="attribute-item application">
+							<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+							    href="$core_v2_encoding.HtmlAttributeEncode($applicationUrl)">$applicationName</a>
+						</li>
+					#end
+				</ul>
+			</div>
+		#end
+
+	</div>
+#else
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ForumReplySearchResult_Description">Displays default rendering for forum reply.</resource>
+  <resource name="ForumReplySearchResult_Name">Rendered Forum Reply</resource>
+  <resource name="HideAttachment">Hide</resource>
+  <resource name="ShowAttachment">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

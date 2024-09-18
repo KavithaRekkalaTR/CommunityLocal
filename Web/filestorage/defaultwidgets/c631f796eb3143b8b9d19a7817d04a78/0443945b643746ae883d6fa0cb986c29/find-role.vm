@@ -1,0 +1,22 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_query'))
+
+#set($matchingRoles = false)
+#set($matchingRoles = $core_v2_role.Find($searchText))
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+	#if ($matchingRoles)
+		#foreach($role in $matchingRoles)
+		    {
+		        "roleId":"$role.Id",
+		        "title":"$core_v2_encoding.JavascriptEncode($role.Name)",
+		        "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 16, 16, "%{border='0px', ResizeMethod = 'ZoomAndCrop', alt='$role.Name' }")) $core_v2_encoding.JavascriptEncode($role.Name)",
+		        "alreadySelected":#if ($core_v2_roleUsers.IsUserInRoles($user.Username, $core_v2_utility.MakeList($role.Name))) true #else false #end
+		    },
+		#end
+	#end
+null]}

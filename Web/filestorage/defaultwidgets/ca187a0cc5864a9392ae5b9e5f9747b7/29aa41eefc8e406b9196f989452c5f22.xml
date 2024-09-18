@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_Title_Name}" version="11.0.0.0" description="${resource:Calendar_Title_Description}" instanceIdentifier="29aa41eefc8e406b9196f989452c5f22" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="true" cssClass="group-title calendar-title" lastModified="2020-01-14 16:09:29Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($currentCalendar = false)
+#set ($currentCalendar = $calendar_v1_calendars.Current)
+
+#set ($currentGroup = false)
+#set ($currentGroup = $core_v2_group.Current)
+
+#set ($currentEvent = false)
+#set ($currentEvent = $calendar_v1_events.Current)
+
+#set($page = $calendar_v1_urls.Current)
+#if ($page == 'Tags' || $page == 'GroupAggregateTags')
+	#set($title = $core_v2_language.GetResource('TagBrowser_Title'))
+#elseif ($page == 'ViewGroup')
+	#set($title = "$currentGroup.Name $core_v2_language.GetResource('calendar_Url_AllCalendars')")
+#elseif ($page == 'Application')
+  #set($title = "")
+#elseif ($page == 'EditCalendar')
+	#set($title = "$core_v2_language.GetResource('calendar_Url_EditCalendar')")
+#elseif ($page == 'AddCalendar')
+	#set($title = "$core_v2_language.GetResource('calendar_Url_AddCalendar')")
+#elseif ($page == 'AddEvent')
+	#set($title = $core_v2_language.GetResource('calendar_Url_AddEvent'))
+#elseif($page == 'EditEvent')
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('calendar_Url_EditEvent'), $currentEvent.EventTitle))
+#elseif($page == 'ViewEvent')
+	#set($title = $currentEvent.EventTitle)
+#elseif($page == 'Registrations')
+	#set($title = $core_v2_language.GetResource('calendar_Url_Registration'))
+#else
+	#set($title = $core_v2_language.GetResource('calendar_Url_AllCalendars'))
+#end
+
+$core_v2_page.SetTitle($title, true, true)
+      ]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Calendar_Title_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_Title_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="BreadCrumb_Seperator"> &amp;raquo; </resource>
+  <resource name="Calendar_Title_Description">Sets and Displays Title for calendar pages</resource>
+  <resource name="Calendar_Title_Name">Event Calendar - Calendar Title</resource>
+  <resource name="Calendar_Title_Title">Title</resource>
+  <resource name="calendar_Url_AddCalendar">Add Calendar</resource>
+  <resource name="calendar_Url_AddEvent">Add Event</resource>
+  <resource name="calendar_Url_AllCalendars">Calendars</resource>
+  <resource name="calendar_Url_EditCalendar">Edit Calendar</resource>
+  <resource name="calendar_Url_EditEvent">Edit '{0}'</resource>
+  <resource name="calendar_Url_Registration">Registrations</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Home">Home</resource>
+  <resource name="Options">Options</resource>
+  <resource name="TagBreadCrumb_Root">All Tags</resource>
+  <resource name="TagBrowser_Title">Browse by Tags</resource>
+  <resource name="ViewMore">...</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

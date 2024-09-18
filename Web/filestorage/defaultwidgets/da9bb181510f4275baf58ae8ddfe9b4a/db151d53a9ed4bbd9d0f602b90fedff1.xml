@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ThemeManagementTitle}" version="12.0.0.0" description="${resource:ThemeManagementDesc}" instanceIdentifier="db151d53a9ed4bbd9d0f602b90fedff1" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="themes" lastModified="2022-10-06 18:51:55Z" provider="da9bb181510f4275baf58ae8ddfe9b4a">
+    <contentScript language="Velocity"><![CDATA[
+
+<link rel="stylesheet" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('style.less'))" type="text/css" />
+
+#set ($typeSelectId = $core_v2_widget.UniqueId('typeSelect'))
+#set ($stateSelectId = $core_v2_widget.UniqueId('stateSelect'))
+#set ($publishSelectId = $core_v2_widget.UniqueId('publishSelect'))
+#set ($searchInputId = $core_v2_widget.UniqueId('searchInput'))
+#set ($stagingMessageId = $core_v2_widget.UniqueId('stagingMessage'))
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('listHeaderTemplate'))
+#set ($multiSelectorTemplateId = $core_v2_widget.UniqueId('multiSelectorTemplate'))
+#set ($headerRevertChildrenTemplateId = $core_v2_widget.UniqueId('headerRevertChildrenTemplate'))
+#set ($revertChildrenTemplateId = $core_v2_widget.UniqueId('revertChildrenTemplate'))
+
+#set ($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#set ($uploadUrl = $core_v2_uploadedFile.GetUploadUrl($uploadContextId))
+
+#set ($types = $context.ListThemeTypes("%{ ExcludeUnusedTypes = 'true' }"))
+#set ($themes = $context.ListThemes())
+
+#set ($themeListId = $core_v2_widget.UniqueId('themeList'))
+
+#set ($pageSize = 100)
+#set ($pageIndex = 0)
+
+#set ($stagedThemes = $context.ListThemes("%{ PageSize = 1, PageIndex = 0, Staged = 'true' }"))
+<div id="$core_v2_encoding.HtmlAttributeEncode($stagingMessageId)" class="message information" #if (!$stagedThemes || $stagedThemes.TotalCount == 0) style="display:none" #end>
+	#format ($core_v2_language.GetResource('StagedChangesMessage'))
+		#token ('begin-review-link')
+			<a href="#" class="inline-button" data-messagename="theme-reviewstaging">
+		#token ('end-review-link')
+			</a>
+		#token ('begin-publish-all-link')
+			<a href="#" class="inline-button" data-messagename="theme-publish-all">
+		#token ('end-publish-all-link')
+			</a>
+		#token ('begin-revert-all-link')
+			<a href="#" class="inline-button" data-messagename="theme-revert-all">
+		#token ('end-revert-all-link')
+			</a>
+	#end
+</div>
+
+<form>
+	<fieldset>
+		<div class="filter-selector">
+			<div>
+				<select class="type-select" id="$core_v2_encoding.HtmlAttributeEncode($typeSelectId)">
+					<option value="all">$core_v2_language.GetResource('AllThemeTypes')</option>
+					#foreach ($type in $types)
+						<option value="$type.Id">$core_v2_encoding.HtmlEncode($type.Name)</option>
+					#end
+				</select>
+
+				<select class="state-select" id="$core_v2_encoding.HtmlAttributeEncode($stateSelectId)">
+					<option value="all">$core_v2_language.GetResource('InAnyState')</option>
+					<option value="Custom">$core_v2_language.GetResource('UserInstalled')</option>
+					<option value="FactoryDefault">$core_v2_language.GetResource('Default')</option>
+					<option value="CustomizedDefault">$core_v2_language.GetResource('EditedDefault')</option>
+				</select>
+
+				<select class="publish-select" id="$core_v2_encoding.HtmlAttributeEncode($publishSelectId)">
+					<option value="all">$core_v2_language.GetResource('RegardlessOfPublish')</option>
+					<option value="published">$core_v2_language.GetResource('Published')</option>
+					<option value="staged">$core_v2_language.GetResource('Staged')</option>
+				</select>
+
+				<input type="search" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)" style="max-width:25%" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SearchFor'))" />
+			</div>
+		</div>
+	</fieldset>
+</form>
+
+<ul class="content-list content simple margin-bottom expandable themes" id="$core_v2_encoding.HtmlAttributeEncode($themeListId)">
+	#set ($inProcess = true)
+	#set ($themes = $context.ListThemes("%{ PageSize = $pageSize, PageIndex = $pageIndex }"))
+	$core_v2_widget.ExecuteFile('render-list.vm')
+</ul>
+
+#registerClientTemplate($multiSelectorTemplateId)
+	$core_v2_widget.ExecuteFile('template-multi-selector.vm')
+#end
+#registerClientTemplate($headerTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-list.vm')
+#end
+#registerClientTemplate($headerRevertChildrenTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-revert-children.vm')
+#end
+#registerClientTemplate($revertChildrenTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-revert-children.vm')
+#end
+#registerEndOfPageHtml('themesPanel')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.themes.themeAdministration.register({
+				pageSize: $pageSize,
+
+				headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+				multiSelectorTemplateId: '$core_v2_encoding.JavascriptEncode($multiSelectorTemplateId)',
+				headerRevertChildrenTemplateId: '$core_v2_encoding.JavascriptEncode($headerRevertChildrenTemplateId)',
+				revertChildrenTemplateId: '$core_v2_encoding.JavascriptEncode($revertChildrenTemplateId)',
+
+				uploadContextId: '$uploadContextId',
+				uploadUrl: '$core_v2_encoding.JavascriptEncode($uploadUrl)',
+
+				importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+				importPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-import.vm'))',
+				previewPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-preview.vm'))',
+				revertOptionsPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-revert-options.vm'))',
+
+				listCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+				exportCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export.jsm'))',
+				exportStoreCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-store.jsm'))',
+				revertCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revert.jsm'))',
+				revertMultiCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-revert.jsm'))',
+				publishCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-publish.jsm'))',
+				publishMultiCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-publish.jsm'))',
+				deleteCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.jsm'))',
+				defaultCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-setdefault.jsm'))',
+
+				themesListId: '#$core_v2_encoding.JavascriptEncode($themeListId)',
+
+				typeSelectId: '#$core_v2_encoding.JavascriptEncode($typeSelectId)',
+				stateSelectId: '#$core_v2_encoding.JavascriptEncode($stateSelectId)',
+				publishSelectId: '#$core_v2_encoding.JavascriptEncode($publishSelectId)',
+				searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+				stagingMessageId: '#$core_v2_encoding.JavascriptEncode($stagingMessageId)',
+
+				noThemesText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+				importThemesText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportThemes'))',
+				revertChildrenText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertStagedChanges'))',
+				exportText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Export'))',
+				exportResourcesText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportResources'))',
+				publishConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishConfirm'))',
+				revertConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertConfirm'))',
+				publishAllConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishConfirmAll'))',
+				revertAllConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertConfirmAll'))',
+				importCompleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertConfirmAll'))',
+				revertLayoutAndOptionsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertLayoutAndOptions'))'
+			});
+		});
+	</script>
+#end
+
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">Add</resource>
+  <resource name="All">All theme page themes</resource>
+  <resource name="AllThemeTypes">All theme types</resource>
+  <resource name="AlreadyInstalled">The import also contains other components already installed in your community.</resource>
+  <resource name="Any">Any</resource>
+  <resource name="AnyTheme">For any theme</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="Changed">Updated</resource>
+  <resource name="Custom">Custom</resource>
+  <resource name="CustomDescription">User-installed</resource>
+  <resource name="CustomizedDefault">Customized Default</resource>
+  <resource name="CustomizedDefaultDescription">Customized version of the default</resource>
+  <resource name="Default">Default</resource>
+  <resource name="default-state">Default theme for new {theme-type-name}.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Deleted">Deletion</resource>
+  <resource name="DeletedDesc">When published, this theme will be deleted.</resource>
+  <resource name="DeselectAll">Deselect All</resource>
+  <resource name="EditedDefault">Edited default</resource>
+  <resource name="EditTheme">Edit Theme</resource>
+  <resource name="Export">Export</resource>
+  <resource name="ExportAll">Export All</resource>
+  <resource name="ExportAllResources">Export All Language Resources</resource>
+  <resource name="ExportResources">Export Resources</resource>
+  <resource name="FactoryDefault">Default</resource>
+  <resource name="FactoryDefaultDescription">Unmodified default version</resource>
+  <resource name="Import">Import</resource>
+  <resource name="ImportComplete">Import Complete</resource>
+  <resource name="ImportDevMode">With Developer Mode enabled, {studio} should be used instead for importing.</resource>
+  <resource name="ImportEmpty">The import contains no changes from current themes.</resource>
+  <resource name="ImportThemes">Import Themes</resource>
+  <resource name="ImportThemeStudio">Import through Theme Studio</resource>
+  <resource name="InAnyState">In any state</resource>
+  <resource name="more">More</resource>
+  <resource name="NewThemeResources">New Theme Resources</resource>
+  <resource name="NewThemes">New Themes</resource>
+  <resource name="NoResults">No themes.</resource>
+  <resource name="Preview">Preview</resource>
+  <resource name="preview-desc-app">Staged changes to the '{theme-name}' {type-name} theme are available for review. Select the {type-name} in which to preview these changes and click 'Start Preview' to review the changes.</resource>
+  <resource name="preview-desc-site">Staged changes to the '{theme-name}' {type-name} theme are available for review. Click 'Start Preview' to review these changes.</resource>
+  <resource name="previewIn">Preview in</resource>
+  <resource name="previewInDesc">Select the {type-name} in which to preview. If the {type-name} has a different theme, it will be staged to use '{theme-name}'.</resource>
+  <resource name="preview-note">Within preview mode, you (and you alone) will view the {type-name} with the staged changes. These changes are not yet published for all users to see. Review the items listed in the preview list and then choose which items should be published.</resource>
+  <resource name="PreviewReversion">Preview Reversion</resource>
+  <resource name="PublishConfirm">Publishing will make staged changes to this theme public. Are you sure?</resource>
+  <resource name="PublishConfirmAll">Publishing all will make all changes to all staged themes public. Are you sure?</resource>
+  <resource name="Published">Published</resource>
+  <resource name="PublishStagedChanges">Publish Staged Changes</resource>
+  <resource name="RegardlessOfPublish">Regardless of publish state</resource>
+  <resource name="RevertAndPublish">Revert and Publish</resource>
+  <resource name="RevertComponentsDesc">Select any related staged components of the theme you would like to revert in addition to the theme.</resource>
+  <resource name="RevertConfirm">Reverting will erase staged changes to this theme. Are you sure?</resource>
+  <resource name="RevertConfirmAll">Reverting all will erase all changes to all staged themes. Are you sure?</resource>
+  <resource name="revert-confirmation">Are you sure you want to revert this theme immediately? This action will result in the loss of customizations. Previewing is strongly recommended.</resource>
+  <resource name="Reverted">Reversion</resource>
+  <resource name="RevertedDesc">When published, this theme will return to its default version.</resource>
+  <resource name="revert-footers">Revert footers</resource>
+  <resource name="revert-footers-description-1">Revert all customizations of footers within this theme to</resource>
+  <resource name="revert-footers-description-2">.</resource>
+  <resource name="revert-headers">Revert headers</resource>
+  <resource name="revert-headers-description-1">Revert all customizations of headers within this theme to</resource>
+  <resource name="revert-headers-description-2">.</resource>
+  <resource name="revert-instructions">Select the options from this theme that you would like to revert. When previewing the reversion, you will be able to use the site and preview the changes before publishing the changes for all users.</resource>
+  <resource name="RevertLayoutAndOptions">Revert Layouts and Options</resource>
+  <resource name="revert-pages">Revert pages</resource>
+  <resource name="revert-pages-description-1">Revert all customizations of</resource>
+  <resource name="revert-pages-description-2">pages within this theme to</resource>
+  <resource name="revert-pages-description-3">.</resource>
+  <resource name="revert-platform-and-custom-pages">platform-defined and custom</resource>
+  <resource name="revert-platform-pages">platform-defined</resource>
+  <resource name="revert-scoped-properties">Revert shared widget options</resource>
+  <resource name="revert-scoped-properties-description">Revert all shared widget options to the default values defined by this theme.</resource>
+  <resource name="RevertStagedChanges">Revert Staged Changes</resource>
+  <resource name="revert-theme-configuration">Revert configuration options</resource>
+  <resource name="revert-theme-configuration-description">Revert all configuration options to the defaults defined by this theme.</resource>
+  <resource name="revert-to-configured-default">configured defaults</resource>
+  <resource name="revert-to-default">theme defaults</resource>
+  <resource name="RevertToDefault">Revert to Factory Default</resource>
+  <resource name="SearchFor">Search</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="SelectMultiple">Select Multiple</resource>
+  <resource name="SetDefault">Set as Default</resource>
+  <resource name="SetDefaultTip">Set as default theme for new {theme-type-name}.</resource>
+  <resource name="Staged">Staged</resource>
+  <resource name="StagedChangesMessage">You have staged theme changes. You can {begin-review-link}review staged changes{end-review-link}, {begin-publish-all-link}publish all changes {end-publish-all-link}, or {begin-revert-all-link}revert all changes {end-revert-all-link}.</resource>
+  <resource name="startPreview">Start Preview</resource>
+  <resource name="Studio">Theme Studio</resource>
+  <resource name="TheFollowingThemesAreNew">The following themes are new.</resource>
+  <resource name="Theme">Theme</resource>
+  <resource name="ThemeFooters">Theme Footer Layouts</resource>
+  <resource name="ThemeFragments">Theme Widgets</resource>
+  <resource name="ThemeHeaders">Theme Header Layouts</resource>
+  <resource name="ThemeManagementDesc">Manage themes.</resource>
+  <resource name="ThemeManagementTitle">Themes</resource>
+  <resource name="ThemePages">Theme Page Layouts</resource>
+  <resource name="Translated">Translated</resource>
+  <resource name="UpdatedThemeDesc">The following updated themes will overwrite existing. To stage and compare detailed implementation differences, {studio-begin-link}import in Theme Studio{studio-end-link}.</resource>
+  <resource name="UpdatedThemeResources">Updated Theme Resources</resource>
+  <resource name="UpdatedThemes">Updated Themes</resource>
+  <resource name="UserInstalled">User installed</resource>
+  <resource name="view-desc-app">The '{theme-name}' {type-name} theme has no staged changes available for review, but it can still be previewed. Select the {type-name} in which to preview and click 'Start Preview'.</resource>
+  <resource name="view-desc-site">The '{theme-name}' {type-name} theme has no staged changes available for review, but it can still be previewed. If the site has a different theme, it will be staged to use '{theme-name}'. Click 'Start Preview' to preview.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

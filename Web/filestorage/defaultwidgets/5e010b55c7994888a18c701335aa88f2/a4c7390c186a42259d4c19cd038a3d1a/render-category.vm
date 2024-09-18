@@ -1,0 +1,108 @@
+#*
+Renders a single category
+
+Expects In Scope:
+	$categoryMembers
+*#
+
+#set ($firstPanelUrl = false)
+#set ($hasPanels = false)
+
+#set ($hasOnePanelExclusively = ($categoryMembers.Count == 1 && $categoryMembers.ToArray().get(0).CategoryMemberType == 'Panel'))
+#set ($hasOnePanelCategoryExclusively = ($categoryMembers.Count == 1 && $categoryMembers.ToArray().get(0).CategoryMemberType == 'PluginTypes'))
+#set ($hasOnePluginExclusively = false)
+#if ($hasOnePanelCategoryExclusively)
+	#set ($categoryMember = $categoryMembers.ToArray().get(0))
+	#if ($categoryMember.PluginPanels.count == 1)
+		#set ($hasOnePluginExclusively = true)
+	#end
+#end
+
+## Only render if it's effectively not just a single non-plugin types panel
+#set ($shouldEffectivelyHideCategory = true)
+#if (!$hasOnePanelExclusively && !$hasOnePluginExclusively)
+	#set ($shouldEffectivelyHideCategory = false)
+#end
+
+#foreach ($categoryMember in $categoryMembers)
+#beforeall
+	<ul class="navigation-list category-members" #if ($shouldEffectivelyHideCategory) data-category-hidden="true" #end>
+#each
+	#if ($categoryMember.CategoryMemberType == 'Panel')
+
+		#set ($hasPanels = true)
+		#if (!$firstPanelUrl)
+			#set ($firstPanelUrl = $categoryMember.Url)
+		#end
+
+		<li class="navigation-list-item panel" data-id="$categoryMember.Id">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($categoryMember.Url)">
+				<div>
+					<span class="name">$categoryMember.Name</span>
+					<span class="description">$categoryMember.Description</span>
+					<span class="badge" data-panelid="$categoryMember.Id" data-count="$categoryMember.BadgeCount">$categoryMember.BadgeCount</span>
+				</div>
+			</a>
+		</li>
+	#elseif ($categoryMember.CategoryMemberType == 'PluginTypes')
+		<li class="navigation-list-item plugins #if($categoryMember.PluginPanels.count == 1) expanded single #end" data-typename="$core_v2_encoding.HtmlAttributeEncode($categoryMember.TypeName)">
+			#if (!$hasOnePanelCategoryExclusively && $categoryMember.PluginPanels.Count > 1)
+				<div class="plugin-type-category">
+					<a href="#" class="expand" data-messagename="plugintypespanel-expand"
+						#if ($hasOnePanelCategoryExclusively) style="display:none" #end
+						data-typename="$core_v2_encoding.HtmlAttributeEncode($categoryMember.TypeName)">&#9654;</a>
+					<a href="#" class="collapse" data-messagename="plugintypespanel-collapse"
+						#if (!$hasOnePanelCategoryExclusively) style="display:none" #end
+						data-typename="$core_v2_encoding.HtmlAttributeEncode($categoryMember.TypeName)">&#9660;</a>
+					$categoryMember.Name
+				</div>
+			#end
+
+			<div class="panel-type-content"
+				#if (!$hasOnePanelCategoryExclusively && $categoryMember.PluginPanels.Count > 1) style="display:none" #end
+				>
+				#if ($categoryMember.PluginPanels.count > 5)
+					<div class="plugin-types-search" data-typename="$core_v2_encoding.HtmlAttributeEncode($categoryMember.TypeName)">
+						<div class="search-wrapper">
+							<form>
+								<input type="search" class="panel-search" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Filter'))" />
+							</form>
+						</div>
+						<div class="results"></div>
+					</div>
+				#end
+
+				#foreach ($pluginPanel in $categoryMember.PluginPanels)
+				#beforeall
+					<ul class="navigation-list administration-links plugin-types unfiltered">
+				#each
+						#set ($url = $core_v2_language.FormatString($pluginPanel.Url, $core_v2_encoding.UrlEncode($categoryMember.TypeName)))
+						#if (!$firstPanelUrl)
+							#set ($firstPanelUrl = $url)
+						#end
+						<li class="navigation-list-item plugin-type #if ($categoryMember.PluginPanels.Count == 1) exclusive #end ${core_v2_language.Lowercase($pluginPanel.State.ToString())}" data-typename="$core_v2_encoding.HtmlAttributeEncode($pluginPanel.TypeName)">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)"
+								class="ui-tip"
+								#if ($pluginPanel.State == 'Enabled')
+									data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Enabled'))"
+								#elseif ($pluginPanel.State == 'Disabled')
+									data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Disabled'))"
+								#elseif ($pluginPanel.State == 'Misconfigured')
+									data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Misconfigured'))"
+								#end>
+								<div>
+									<span class="name">$pluginPanel.Name</span>
+									<span class="description">$pluginPanel.Description</span>
+								</div>
+							</a>
+						</li>
+				#afterall
+					</ul>
+				#nodata
+				#end
+			</div>
+		</li>
+	#end
+#afterall
+	</ul>
+#end

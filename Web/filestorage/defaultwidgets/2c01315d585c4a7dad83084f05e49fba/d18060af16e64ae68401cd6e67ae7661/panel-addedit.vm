@@ -1,0 +1,238 @@
+#set($apiKey = false)
+
+#set($id = false)
+#set($id = $core_v2_page.GetQueryStringValue('w_id'))
+#if ($id)
+    #set($id = $core_v2_utility.ParseInt($id))
+    #set($apiKey = $context.GetApiKey($id))
+    #if ($apiKey && $apiKey.HasErrors())
+        $core_v2_page.SendJsonError($apiKey.Errors)
+    #end
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('createEditHeaderTemplateId'))
+#if ($apiKey) 
+    #set($headerTemplateId = "$headerTemplateId_$apiKey.Id")
+#end
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input user-options">
+	                <a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+    #if ($apiKey)
+        <ul class="filter">
+    		<li class="filter-option selected"><a href="#" data-tab="key">$core_v2_language.GetResource('tab-key')</a></li>
+    		<li class="filter-option"><a href="#" data-tab="scopes">$core_v2_language.GetResource('tab-scopes')</a></li>
+    	</ul>
+    #end
+</script>
+
+<div class="tab key">
+    <form><fieldset class="field-list">
+    <ul class="field-list">
+        #if ($apiKey)
+            <li class="field-item clientsecret">
+                <span class="field-item-header">$core_v2_language.GetResource('Secret')</span>
+                <span class="field-item-description">$core_v2_language.GetResource('Secret_Description')</span>
+                <span class="field-item-input" id="$core_v2_widget.UniqueId('secret')" #if (!$apiKey.Secret) style="display: none;" #end><code style="word-break:break-all">$!apiKey.Secret</code></span>
+                <span class="field-item-input" id="$core_v2_widget.UniqueId('secret_warning')" #if($apiKey.Secret) style="display: none;" #end><div class="message warning">$core_v2_language.GetResource('Secret_Hashed')</div></span>
+                <span class="field-item-input"><a href="#" data-messagename="apikey.regeneratesecret" data-id="$apiKey.Id.ToString()" data-name="$core_v2_encoding.HtmlEncode($apiKey.Name)" class="inline-button">$core_v2_language.GetResource('regenerate-secret')</a></span>
+            </li>
+        #end
+        <li class="field-item">
+            <label for="$core_v2_widget.UniqueId('name')" class="field-item-header">$core_v2_language.GetResource('Name')</label>
+            <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('name')" name="name" value="$!core_v2_encoding.HtmlEncode($!apiKey.Name)">
+            </span>
+            <span id="$core_v2_widget.UniqueId('name_validation')" class="field-item-validation" style="display:none;"></span>
+        </li>
+        #if ($apiKey)
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="button delete" data-messagename="apikey.delete" data-id="$apiKey.Id.ToString()" data-name="$core_v2_encoding.HtmlEncode($apiKey.Name)">
+        				$core_v2_language.GetResource('delete')
+        			</a>
+                </span>
+            </li>
+        #end
+    </ul>
+    </fieldset></form>
+</div>
+
+#if ($apiKey)
+    #set($index = 0)
+    <div class="tab scopes">
+        
+        <p>$core_v2_language.GetResource('scopes-instructions')</p>
+        
+        #set($allowedScopes = "%{}")
+        #foreach($scope in $apiKey.AllowedScopeIds)
+            $allowedScopes.Add($scope, true)
+        #end
+        
+        <form><fieldset>
+        	<ul class="field-list">
+        		<li class="field-item permission-filter">
+        			<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('findScope')" placeholder="$core_v2_language.GetResource('Find')"></input></span>
+        		</li>
+        	</ul>
+        </fieldset></form>
+
+        <form><fieldset>
+        <ul class="field-list">
+        #set($hasScopes = false)
+        #set($defaultReadId = false)
+        #set($defaultModifyId = false)
+        #foreach($scopeGroup in $context.ListRestScopeGroups())
+            #if ($scopeGroup.IsDefault)
+                #foreach($entity in $scopeGroup.Entities)
+                    #if ($entity.IsDefault)
+                        #set($defaultReadId = $entity.ReadId)
+                        #set($defaultModifyId = $entity.ModifyId)
+                    #end
+                #end
+            #else
+                #set($hasScopes = true)
+                #set($index = $index + 1)
+                <li class="field-item scope-group" data-text="$core_v2_encoding.HtmlAttributeEncode($scopeGroup.Name.ToLower())">
+                    #if ($scopeGroup.IsDefault)
+                        <span class="field-item-input">
+                		    <h2 style="margin: 10px 0 10px 0; font-size: 24px;">$scopeGroup.Name</h2>
+                		</span>
+            			<span class="field-item-description">$!scopeGroup.Description</span>
+                    #else
+                        <span class="field-item-input">
+            		        <h2 style="margin: 10px 0 10px 0; font-size: 24px;">$scopeGroup.Name</h2>
+                		</span>
+            			<span class="field-item-description">$!scopeGroup.Description</span>
+            			<span class="field-item-input scope-entities">
+            			    <table>
+            			        <thead>
+            			            <tr>
+            			                <th style="width: 50%;">$core_v2_language.GetResource('Entity')</th>
+            			                <th style="width: 25%">$core_v2_language.GetResource('Read')</th>
+            			                <th style="width: 25%">$core_v2_language.GetResource('Modify')</th>
+            			            </tr>
+            			        </thead>
+            			        <tbody>
+                                    #foreach($entity in $scopeGroup.Entities)
+                            	        #set($index = $index + 1)
+                            	        <tr class="scope-entity" data-text="$core_v2_encoding.HtmlAttributeEncode($entity.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($scopeGroup.Name.ToLower())">
+                            	            <td>$entity.Name</td>
+                            	            <td>
+                                		    #if ($entity.ReadId)  
+                                		        #set($inputId = "${core_v2_widget.UniqueId('scope')}_${index}_view")
+                                			    <input class="ui-tip" type="checkbox" name="$inputId" id="$inputId" value="$core_v2_encoding.HtmlAttributeEncode($entity.ReadId)" #if($allowedScopes.Contains($entity.ReadId))checked="checked"#end aria-label="$core_v2_language.FormatString($core_v2_language.GetResource('Read_Label'), $entity.Name)" title="$core_v2_language.FormatString($core_v2_language.GetResource('Read_Label'), $entity.Name) ($core_v2_encoding.HtmlAttributeEncode($entity.ReadId))" />
+                                			#end
+                                			</td>
+                                    		<td>
+                                		    #if ($entity.ModifyId)
+                                    		    #set($inputId = "${core_v2_widget.UniqueId('scope')}_${index}_modify")
+                                    			<input class="ui-tip" type="checkbox" name="$inputId" id="$inputId" value="$core_v2_encoding.HtmlAttributeEncode($entity.ModifyId)" #if($allowedScopes.Contains($entity.ModifyId))checked="checked"#end aria-label="$core_v2_language.FormatString($core_v2_language.GetResource('Modify_Label'), $entity.Name)" title="$core_v2_language.FormatString($core_v2_language.GetResource('Modify_Label'), $entity.Name) ($core_v2_encoding.HtmlAttributeEncode($entity.ModifyId))" />
+                                    		#end
+                                    		</td>
+                                    	</tr>
+                            	    #end
+            	                </tbody>
+            			    </table>
+            			</span>
+            		#end
+        		</li>
+        	#end
+        #end
+        #if ($defaultReadId)
+            #set($hasScopes = true)
+            #set($index = $index + 1)
+            <li class="field-item scope-group" data-text="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('DefaultRead').ToLower())">
+                <span class="field-item-input">
+        		    #set($inputId = "${core_v2_widget.UniqueId('scope')}_${index}_group")
+        	        <input type="checkbox" class="scope-group ui-tip" style="float: left; line-height: 24px; position: relative !important; top: 18px;" name="$inputId" id="$inputId" value="$core_v2_encoding.HtmlAttributeEncode($defaultReadId)" #if($allowedScopes.Contains($defaultReadId))checked="checked"#end title="$core_v2_language.GetResource('DefaultRead') ($core_v2_encoding.HtmlAttributeEncode($defaultReadId))" />
+        	        <label for="$inputId"><h2 style="margin: 10px 0 10px 0; font-size: 24px;">$core_v2_language.GetResource('DefaultRead')</h2></label>
+        		</span>
+        		<span class="field-item-description">
+        		    $core_v2_language.GetResource('DefaultRead_Description')
+        		    <div style="margin: 10px 0; border: solid 1px #333; padding: 10px; overflow: auto; width: 100%; max-height: 200px;">
+        			    <ul style="line-height: 14px; font-size: 10px;">
+                		    #foreach($endpoint in $context.GetEndpoints($defaultReadId))
+                		        #foreach ($url in $endpoint.Urls)
+                		            <li>$endpoint.Action $endpoint.Resource: <code style="word-break: break-all">$endpoint.Method $url</code></li>
+                		        #end
+            	    	    #end
+            		    </ul>
+            		</div>
+        		</span>
+        	</li>
+        #end
+        #if ($defaultModifyId)
+            #set($hasScopes = true)
+            #set($index = $index + 1)
+            <li class="field-item scope-group" data-text="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('DefaultModify').ToLower())">
+                <span class="field-item-input">
+        		    #set($inputId = "${core_v2_widget.UniqueId('scope')}_${index}_group")
+        	        <input type="checkbox" class="scope-group ui-tip" style="float: left; line-height: 24px; position: relative !important; top: 18px;" name="$inputId" id="$inputId" value="$core_v2_encoding.HtmlAttributeEncode($defaultModifyId)" #if($allowedScopes.Contains($defaultModifyId))checked="checked"#end title="$core_v2_language.GetResource('DefaultModify') ($core_v2_encoding.HtmlAttributeEncode($defaultModifyId))" />
+        	        <label for="$inputId"><h2 style="margin: 10px 0 10px 0; font-size: 24px;">$core_v2_language.GetResource('DefaultModify')</h2></label>
+        		</span>
+        		<span class="field-item-description">
+        		    $core_v2_language.GetResource('DefaultModify_Description')
+        		    <div style="margin: 10px 0; border: solid 1px #333; padding: 10px; overflow: auto; width: 100%; max-height: 200px;">
+        			    <ul style="line-height: 14px; font-size: 10px;">
+                		    #foreach($endpoint in $context.GetEndpoints($defaultModifyId))
+                		        #foreach ($url in $endpoint.Urls)
+                		            <li>$endpoint.Action $endpoint.Resource: <code style="word-break: break-all">$endpoint.Method $url</code></li>
+                		        #end
+            	    	    #end
+            		    </ul>
+            		</div>
+        		</span>
+        	</li>
+        #end
+        
+        </ul>
+        
+        <div class="message norecords" #if ($hasScopes) style="display: none;" #end>$core_v2_language.GetResource("no-scopes-found")</div>
+        
+        </fieldset></form>
+    </div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.apiKeyAddEdit')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('addedit-ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+      jQuery(function(j){
+          jQuery.telligent.evolution.widgets.apiKeyAddEdit.register({
+            id: #if ($apiKey) $apiKey.Id #else null #end,
+            wrapperId: '#$core_v2_widget.WrapperElementId',
+            headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+            fieldIds: {
+                name: '#$core_v2_widget.UniqueId('name')',
+                nameValidation: '#$core_v2_widget.UniqueId('name_validation')',
+                secret: '#$core_v2_widget.UniqueId('secret')',
+                secretWarning: '#$core_v2_widget.UniqueId('secret_warning')'
+            },
+            fields: {
+                findScopes: jQuery('#$core_v2_widget.UniqueId('findScope')')
+            },
+            urls: {
+                save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.jsm'))',
+                del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.jsm'))',
+                regenerateSecret: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-regeneratesecret.jsm'))'
+            },
+            text: {
+                verifyDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('verify-delete'))',
+                deletedSuccessfully: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleted-successfully'))',
+                verifyRegenerateSecret: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('verify-regenerate-secret'))',
+                secretRegeneratedSuccessfully: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('secret-regenerated-successfully'))',
+                noteSecret: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('note-secret'))',
+                savedSuccessfully: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('saved-successfully'))'
+            }
+          });
+      });
+	</script>
+#end

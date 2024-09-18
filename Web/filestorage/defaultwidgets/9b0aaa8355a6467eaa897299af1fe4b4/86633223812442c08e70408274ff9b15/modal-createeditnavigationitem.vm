@@ -1,0 +1,61 @@
+<form>
+    <fieldset class="field-list">
+        <ul class="field-list">
+            <li class="field-item type">
+                <label class="field-item-header">$core_v2_language.GetResource('NavigationType')</label>
+                <span class="field-item-description">$core_v2_language.GetResource('NavigationType_Description')</span>
+                <span class="field-item-input">
+                    <select id="$core_v2_widget.UniqueId('type')">
+                        #foreach($type in $context.NavigationPlugins)
+                            <option value="$core_v2_encoding.HtmlAttributeEncode($type.id)" data-showlabel="$type.ShowLabel.ToString().ToLower()">$type.Name</option>
+                        #end
+                    </select>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+    <div class="configuration-form">
+        <span class="ui-loading"></span>
+    </div>
+    <fieldset class="field-list">
+        <ul class="field-list">
+            <li class="field-item label">
+                <label class="field-item-header" for="$core_v2_widget.UniqueId('label')">$core_v2_language.GetResource('Field_Label')</label>
+                <span class="field-item-description">$core_v2_language.GetResource('Field_Label_Description')</span>
+                <span class="field-item-input">
+                    <input id="$core_v2_widget.UniqueId('label')" type="text" />
+                </span>
+            </li>
+            #if ($context.EnableDescriptions)
+                <li class="field-item description">
+                    <label class="field-item-header" for="$core_v2_widget.UniqueId('description')">$core_v2_language.GetResource('Field_Description')</label>
+                    <span class="field-item-description">$core_v2_language.GetResource('Field_Description_Description')</span>
+                    <span class="field-item-input">
+                        <input id="$core_v2_widget.UniqueId('description')" type="text" />
+                    </span>
+                </li>
+            #end
+            #if ($context.EnableAvatars)
+                <li class="field-item avatar upload-with-preview">
+        			<label class="field-item-name">$core_v2_language.GetResource('Avatar')</label>
+        			<span class="field-item-description">$core_v2_language.GetResource('Avatar_Description')</span>
+        			<span class="field-item-input preview"></span>
+        			<span class="field-item-input upload">
+        			    <a href="#" style="margin-right: 1em;" class="upload add">$core_v2_language.GetResource('Avatar_Upload')</a>
+        				<a href="#" class="remove">$core_v2_language.GetResource('Avatar_Remove')</a>
+        			</span>
+        		</li>
+            #end
+        </ul>
+    </fieldset>
+    <fieldset class="field-list">
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="internal-link save-form">$core_v2_language.GetResource('Save')</a>
+                    <span class="processing" style="visibility: hidden;"></span>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+</form>

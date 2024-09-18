@@ -1,0 +1,49 @@
+<div class="select-theme">
+	<form>
+		<fieldset>
+			<ul class="field-list">
+				<% if(themes.length > 0) { %>
+					<li class="field-item select-theme">
+						<label class="field-item-name">$core_v2_language.GetResource('selectTheme')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('selectThemeDesc')</span>
+						<span class="field-item-input">
+							<select class="theme">
+								<% foreach(themes, function(theme) { %>
+									<option value="<%: theme.Id %>"><%: theme.Name %> - <%: theme.TypeName %> $core_v2_language.GetResource('Theme')</option>
+								<% }); %>
+								<option value="">$core_v2_language.GetResource('none')</option>
+							</select>
+						</span>
+					</li>
+				<% } %>
+				<li class="field-item theme-id">
+
+					<label class="field-item-name">$core_v2_language.GetResource('Id')</label>
+
+					<% if(themes.length > 0) { %>
+						<span class="field-item-description none">$core_v2_language.GetResource('selectThemeNoneDesc')</span>
+					<% } else { %>
+						<span class="field-item-description new">$core_v2_language.GetResource('selectThemeNewDesc')</span>
+					<% } %>
+
+					<span class="field-item-input">
+						<% if(themes.length > 0) { %>
+							<span class="selected-theme-id"></span>
+						<% } %>
+						<input type="text" class="new-theme-id" />
+						<span class="field-item-validation new-theme-id-valid">$core_v2_language.GetResource('newThemeIdInvalid')</span>
+					</span>
+
+				</li>
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+					</span>
+					<span class="field-item-input">
+						<a href="#" class="button continue">$core_v2_language.GetResource('continue')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+</div>

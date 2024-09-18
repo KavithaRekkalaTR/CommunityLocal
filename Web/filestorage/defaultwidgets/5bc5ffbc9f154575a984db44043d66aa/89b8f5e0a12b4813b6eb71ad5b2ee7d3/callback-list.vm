@@ -1,0 +1,72 @@
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set($pageSize = 20)
+#set($query = "%{SortBy='Title',SortOrder='Ascending',PageSize=$pageSize,PageIndex=$pageIndex}")
+
+#set($pointFactors = $context.ListPointFactors($query))
+#if ($pointFactors && $pointFactors.HasErrors())
+    $core_v2_page.SendJsonError($pointFactors.Errors)
+#end
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($pointFactors.PageIndex + 1) * $pointFactors.PageSize)
+#if ($pointFactors.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$pointFactors.TotalCount">
+#foreach($pointFactor in $pointFactors)
+    <li class="content-item pointfactor" data-userid="$pointFactor.Id.ToString()">
+    	<div class="content-container">
+        	<h4 class="name">
+        	    $pointFactor.Title
+        	</h4>
+            <div class="attributes">
+        		<ul class="attribute-list">
+        			<li class="attribute-item">
+        				<span class="attribute-value">
+        				    #if ($pointFactor.Enabled)
+        				        <span class="pill positive">$core_v2_language.GetResource('Status_Enabled')</span>
+        				    #else
+        				        <span class="pill negative">$core_v2_language.GetResource('Status_Disabled')</span>
+        				    #end
+        				</span>
+        			</li>
+        			<li class="attribute-item">
+  				        <span class="pill point-value">$core_v2_language.FormatString($core_v2_language.GetResource('PointsFormat'), $pointFactor.Points.ToString("N0"))</span>
+        			</li>
+        		</ul>
+        	</div>
+
+        	<div class="content expandable">
+        	    #set($description = false)
+        		#set($description = $!core_v2_language.Truncate($pointFactor.Description, 200, '...'))
+        		#if ($description && $description.Length > 0)
+        		    $description
+        		#end
+        	</div>
+        	<div class="actions expandable">
+        		<div class="navigation-list ui-links" data-direction="horizontal">
+        			<ul>
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="pointFactors.edit" data-id="$pointFactor.Id.ToString()" data-title="$core_v2_encoding.HtmlAttributeEncode($pointFactor.Title)">
+        						$core_v2_language.GetResource('Action_Edit')
+        					</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="pointFactors.delete" data-id="$pointFactor.Id.ToString()" data-title="$core_v2_encoding.HtmlAttributeEncode($pointFactor.Title)">
+        						$core_v2_language.GetResource('Action_Delete')
+        					</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+        				</li>
+        			</ul>
+        		</div>
+        	</div>
+        </div>
+    </li>
+#end
+</ul>

@@ -1,0 +1,141 @@
+##
+## Import selection form.
+## Expects in scope: $importResult, $uploadContext, $fileName
+##
+<form>
+	<fieldset>
+		<ul class="field-list">
+		#if ($importResult.UpdatedEmails.Count == 0 && $importResult.UpdatedConfiguredEmails.Count == 0)
+			<p class="message error">$core_v2_language.GetResource('ImportEmpty')</p>
+		#elseif ($context.IsDeveloperModeEnabled("%{}") && ($importResult.UpdatedEmails.Count > 0))
+			<p class="message error">
+				#format($core_v2_language.GetResource('ImportDevMode'))
+					#token('studio')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">$core_v2_language.GetResource('EmailStudio')</a>
+				#end
+			</p>
+		#else
+
+			#if ($importResult.EmailTemplate && $importResult.EmailTemplateState == 'Updated')
+				<li class="field-item importable-emails updated-email-templates">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('UpdatedEmailTemplateResources')
+						#else
+							$core_v2_language.GetResource('UpdatedEmailTemplate')
+						#end
+					</label>
+					<span class="field-item-description">
+						#format ($core_v2_language.GetResource('UpdatedEmailTemplateDesc'))
+							#token ('studio-begin-link')
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">
+							#token ('studio-end-link')
+								</a>
+						#end
+					</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+
+					<span class="field-item-input managed-item">
+						<input type="checkbox" id="cb_t" class="importable-email" data-id="" data-model="email" />
+						<label  for="cb_t" class="field-item-name">
+							$core_v2_encoding.HtmlEncode($importResult.EmailTemplate.ProcessedName)
+						</label>
+					</span>
+					#if ($importResult.EmailTemplate.ProcessedDescription)
+						<span class="field-item-description">$core_v2_encoding.HtmlEncode($importResult.EmailTemplate.ProcessedDescription)</span>
+					#end
+				</li>
+			#end
+
+			#if ($importResult.UpdatedEmails.Count > 0)
+				<li class="field-item importable-emails updated-emails">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('UpdatedEmailResources')
+						#else
+							$core_v2_language.GetResource('UpdatedEmails')
+						#end
+					</label>
+					<span class="field-item-description">
+						#format ($core_v2_language.GetResource('UpdatedEmailDesc'))
+							#token ('studio-begin-link')
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">
+							#token ('studio-end-link')
+								</a>
+						#end
+					</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($email in $importResult.UpdatedEmails)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${email.Id}" class="importable-email" data-id="$email.Id" data-model="email" />
+							<label  for="cb${email.Id}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($email.ProcessedName)
+							</label>
+						</span>
+						#if ($email.ProcessedDescription)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($email.ProcessedDescription)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.UpdatedEmailConfigurations.Count > 0)
+				<li class="field-item importable-emails updated-configured-emails">
+					<label class="field-item-name heading">
+						$core_v2_language.GetResource('UpdatedConfiguredEmails')
+					</label>
+					<span class="field-item-description">$core_v2_language.GetResource('UpdatedConfiguredEmailDesc')</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($configuredEmail in $importResult.UpdatedEmailConfigurations)
+						#set ($description = $core_v2_language.Truncate($configuredEmail.Description, 280, '…'))
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb:config:${configuredEmail.ScriptedEmail.Id}" class="importable-email" data-emailid="$configuredEmail.ScriptedEmail.Id"  data-id="$configuredEmail.ScriptedEmail.Id" data-model="configuration" />
+							<label  for="cb:config:${configuredEmail.ScriptedEmail.Id}" class="field-item-name">
+								<span class="name">$configuredEmail.ScriptedEmail.Name</span>
+							</label>
+							#if ($description)
+								<span class="field-item-description">$description</span>
+							#end
+						</span>
+					#end
+				</li>
+			#end
+
+			#if ($importResult.MatchingEmails.Count > 0 || $importResult.MatchingConfiguredEmails.Count > 0)
+				<li class="field-item importable-emails updated-configured-emails">
+					<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+				</li>
+			#end
+		#end
+		</ul>
+	</fieldset>
+</form>
+#set ($importTemplateId = $core_v2_widget.UniqueId('importTemplate'))
+#registerClientTemplate($importTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-import.vm')
+#end
+#registerEndOfPageHtml('configuredEmailsPanel.import')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-import.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.widgets.scriptedEmailPlugin.import.register({
+			importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+			importTemplateId: '$core_v2_encoding.JavascriptEncode($importTemplateId)',
+			uploadContext: '$core_v2_encoding.JavascriptEncode($uploadContext)',
+			fileName: '$core_v2_encoding.JavascriptEncode($fileName)',
+			importCompleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportComplete'))'
+		});
+	});
+	</script>
+#end

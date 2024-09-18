@@ -1,0 +1,156 @@
+##
+## Displays a form allowing the user to post a question to a forum
+##
+
+$core_v2_page.SetTitle("$core_v2_language.GetResource('AskAQuestion')", false, false)
+
+<!DOCTYPE html>
+<html lang="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Code)" #if($core_v2_language.IsRightToLeft) class="direction-rtl" style="direction: rtl;" #else class="direction-ltr" style="direction: ltr;" #end>
+<head>
+	$core_v2_page.RenderThemeHeaders("%{IsModal = 'True'}")
+</head>
+<body>
+<form>
+
+$core_v2_widget.ExecuteFile('query.jsm')
+
+## needs to first get a list of related forums
+## does this by re-searching the parent search page's query, minus any chosen category, + a forumapp category
+
+## combine the categoryless field filters with a forum category
+#if ($categorylessFilters.length > 0)
+	#set ($categorylessFilters = "${categorylessFilters}||")
+#end
+#set ($categorylessFilters = "${categorylessFilters}99,category,forum")
+## also grab the facet counts for sections,
+## which would then be usable as the list of related forum ids since
+## all results are of forum category
+#set ($fieldFacets = "section,count,5,0,1")
+
+## ...and query for top 5 related forums
+#set ($relatedForumsQuery = "%{}")
+$relatedForumsQuery.Add("Query", $query)
+$relatedForumsQuery.Add("PageSize", 1)
+$relatedForumsQuery.Add("PageIndex", 0)
+$relatedForumsQuery.Add("FieldFilters", $categorylessFilters)
+$relatedForumsQuery.Add("FieldFacets", $fieldFacets)
+$relatedForumsQuery.Add("DateRangeFilters", $dateFilters)
+#set ($relatedForumSearchResults = $core_v2_searchResult.List($relatedForumsQuery))
+
+## get the default forum
+#set ($defaultForum = false)
+#if ($defaultAskForumId > 0)
+	#set ($defaultForum = $core_v2_forum.Get($defaultAskForumId))
+#end
+
+## if there were no related forums or default forum specified, don't show this form
+#if ($defaultForum && $defaultForum.Enabled && $core_v2_forumConfiguration.IsEnabled)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askTitle'))" class="field-item-header">$core_v2_language.GetResource('Core_SearchResults_Ask_Title')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Core_SearchResults_Ask_TitleLegend')</span>
+				<span class="field-item-input">
+					<textarea id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askTitle'))" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askTitle'))"></textarea>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askBody'))" class="field-item-header">$core_v2_language.GetResource('Core_SearchResults_Ask_Body')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Core_SearchResults_Ask_BodyLegend')</span>
+				<span class="field-item-input">
+				    <textarea id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askBody'))" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askBody'))" rows="4"></textarea>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askForum'))" class="field-item-header">$core_v2_language.GetResource('Core_SearchResults_Ask_Forum')</label>
+				<span class="field-item-description"></span>
+				<span class="field-item-input">
+					<select id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askForum'))" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askForum'))">
+						## display all related forums
+						#set ($relatedForumsCount = 0)
+						#foreach ($relatedForumFacet in $relatedForumSearchResults.FieldFacets)
+							#set ($relatedForum = false)
+							#set ($relatedForum = $core_v2_forum.Get($core_v2_utility.ParseInt($relatedForumFacet.FieldValue)))
+							#if ($relatedForum)
+								#set ($relatedForumsCount = $relatedForumsCount + 1)
+								<option value="$relatedForum.Id">$relatedForum.Name ($relatedForum.Group.Name)</option>
+							#end
+						#end
+						## add in the default forum if there were no other related forums
+						#if ($relatedForumsCount == 0)
+							<option value="$defaultForum.Id">$defaultForum.Name ($defaultForum.Group.Name)</option>
+						#end
+					</select>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('askSubmit'))" href="#" class="internal-link add-post button disabled">
+						$core_v2_language.GetResource('Core_SearchResults_Ask_Submit')
+					</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+</form>
+
+<script type="text/javascript">
+
+jQuery(function(j) {
+	j('#$core_v2_widget.UniqueId('askBody')').one('focus', function(){
+		j(this).evolutionComposer({
+			plugins: ['mentions','hashtags'],
+			contentTypeId: '$core_v2_forumThread.ContentTypeId.ToString()'
+		});
+	});
+	j('#$core_v2_widget.UniqueId('askTitle')').one('focus', function(){
+		j(this).evolutionComposer({
+			plugins: ['hashtags'],
+			contentTypeId: '$core_v2_forumThread.ContentTypeId.ToString()'
+		});
+	});
+	j('#$core_v2_widget.UniqueId('askSubmit')')
+		.evolutionValidation({
+			onValidated: function(isValid, buttonClicked, c) {
+				if (isValid) {
+					j('#$core_v2_widget.UniqueId('askSubmit')').removeClass('disabled');
+				} else {
+					j('#$core_v2_widget.UniqueId('askSubmit')').addClass('disabled');
+				}
+			},
+			onSuccessfulClick: function(e) {
+				e.preventDefault();
+				j(e.target).addClass('disabled').prop('disabled', true);
+
+				j.telligent.evolution.post({
+					url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/forums/{ForumId}/threads.json',
+					data: {
+						ForumId: j('#$core_v2_widget.UniqueId('askForum')').val(),
+						Subject: j('#$core_v2_widget.UniqueId('askTitle')').evolutionComposer('val'),
+						Body: j('#$core_v2_widget.UniqueId('askBody')').evolutionComposer('val'),
+						IsQuestion: true
+					},
+					success: function(response) {
+						jQuery.glowModal.opener(window).location = response.Thread.Url;
+					}
+				});
+			}
+		})
+		.evolutionValidation('addField',
+			'#$core_v2_widget.UniqueId('askBody')', { required: true },
+			j('#$core_v2_widget.UniqueId('askBody')').closest('.field-item').find('.field-item-validation'), null)
+		.evolutionValidation('addField',
+			'#$core_v2_widget.UniqueId('askTitle')', { required: true },
+			j('#$core_v2_widget.UniqueId('askTitle')').closest('.field-item').find('.field-item-validation'), null);
+
+});
+
+</script>
+
+</body>
+</html>

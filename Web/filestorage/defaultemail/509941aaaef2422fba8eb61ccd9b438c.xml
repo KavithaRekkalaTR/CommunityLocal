@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Media Comment" version="13.0.0.0" description="Raises notifications to users when a comment is made on a media file to which you are subscribed." id="509941aaaef2422fba8eb61ccd9b438c" lastModified="2023-08-30 16:29:34Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('gallery_name')
+    #set($gallery = false)
+    #set($gallery = $core_v2_gallery.Get("%{ Id = $context_v1_email.Context.Media.MediaGalleryId }"))
+    #if ($gallery && !$gallery.HasErrors())
+        $gallery.Name
+    #else
+        $context_v1_email.Context.Media.MediaGalleryId
+    #end
+#token('media_name')
+    $context_v1_email.Context.Media.Title
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#set($commentAuthorUrl = false)
+#set($commentAuthorUrl = $context_v1_email.Context.Comment.User.Url)
+#format($core_v2_language.GetResource('Body_NewComment'))
+#token('media_name_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Media.Url)">$context_v1_email.Context.Media.Title</a>
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#set($commentAuthorUrl = false)
+#set($commentAuthorUrl = $context_v1_email.Context.Comment.User.Url)
+<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+#if ($commentAuthorUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($commentAuthorUrl)">
+	<div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Comment.User.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+	</div>
+	</a>
+#else
+    <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Comment.User.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+	</div>
+#end
+</td>
+<td style="padding-left: 10px;">
+#if ($commentAuthorUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($commentAuthorUrl)">
+	$context_v1_email.Context.Comment.User.DisplayName
+	</a>
+#else
+    $context_v1_email.Context.Comment.User.DisplayName
+#end
+</td>
+</tr>
+</tbody>
+</table>
+<p>
+$context_v1_email.Context.Comment.Body('Email')
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('unsubscribe_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Media.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+#end
+</p>
+#set($flagAsAbuseUrl = false)
+#set($flagAsAbuseUrl = $core_v2_urls.ReportAbuse($context_v1_email.Context.Comment.Url, $context_v1_email.Context.Comment.ContentId, $core_v2_comments.ContentTypeId))
+#if ($flagAsAbuseUrl)
+    <p>
+    #format($core_v2_language.GetResource('Footer_FlagAsAbuse'))
+    #token('flag_as_abuse_link')
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($flagAsAbuseUrl)">$core_v2_language.GetResource('FlagAsAbuse')</a>
+    #end
+    </p>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_NewComment">New comment on {media_name_link}</resource>
+  <resource name="FlagAsAbuse">Flag as spam/abuse</resource>
+  <resource name="Footer">You received this notification because you subscribed to comments on the media file. To unsubscribe, {unsubscribe_link}.</resource>
+  <resource name="Footer_FlagAsAbuse">{flag_as_abuse_link}.</resource>
+  <resource name="Subject">{gallery_name}: New Comment on {media_name}</resource>
+  <resource name="Unsubscribe">go here</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

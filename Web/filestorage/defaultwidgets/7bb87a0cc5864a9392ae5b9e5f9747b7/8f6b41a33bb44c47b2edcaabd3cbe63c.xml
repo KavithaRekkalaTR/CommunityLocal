@@ -1,0 +1,347 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_NavigationCustom_Name}" version="12.0.0.0" description="${resource:Core_NavigationCustom_Description}" instanceIdentifier="8f6b41a33bb44c47b2edcaabd3cbe63c" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="navigation-custom" lastModified="2022-11-07 20:00:54Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.vm'), "%{ Position = 'AfterTheme' }")
+
+#set ($layout = $core_v2_widget.GetStringValue('layout', 'vertical'))
+#set ($synchronizedLinksTemplateId = $core_v2_widget.UniqueId('synchronizedLinksTemplate'))
+#set ($moreLabel = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('moreLabel', '${resource:more}')))
+#set ($links = $core_v2_widget.GetStringValue('links','custom'))
+#set ($includeSubGroups = $core_v2_widget.GetBoolValue('includeSubGroups', true))
+
+#if ($links == 'custom')
+	#set ($navigationItems = $core_v2_customNavigation.Deserialize($core_v2_widget.GetCustomValue('navigation', '')))
+	#if (!$navigationItems || $navigationItems.Count == 0)
+		$core_v2_widget.Hide()
+	#end
+	#set ($linksToShow = $navigationItems.Count)
+#elseif($links =='groups')
+	#set ($groups = $core_v2_group.List("%{ PageIndex = $pageIndex, PageSize = 20, SortBy = 'Name', SortOrder = 'Ascending', ParentGroupId=$core_v2_group.Root.Id }"))
+	#if ($groups.TotalCount == 0)
+		$core_v2_widget.Hide()
+	#end
+	## leave space for a 'more groups' link if there's more to show
+	#if ($groups.Count < $groups.TotalCount)
+		#set ($linksToShow = $groups.Count + 1)
+	#else
+		#set ($linksToShow = $groups.Count)
+	#end
+#elseif($links == 'sync')
+	#set ($linksToShow = 100)
+#end
+
+#set ($display = $core_v2_widget.GetStringValue('display', 'expanded'))
+#if ($display == 'collapsed')
+	#set ($linksToShow = 0)
+#end
+
+#set ($containerId = $core_v2_widget.UniqueId('container'))
+
+#if($links == 'sync')
+	## stub content so still renders
+	<span></span>
+	#registerEndOfPageHtml()
+		<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($synchronizedLinksTemplateId)">
+			<div class="ui-links navigation-list links"
+				data-minlinks="0"
+				data-direction="$core_v2_encoding.HtmlAttributeEncode($layout)"
+				data-maxlinks="$linksToShow">
+				<ul class="navigation-list">
+					<% foreach(links, function(link) { %>
+						<li class="navigation-list-item">
+							<a href="<%: link.url %>"><%= link.label %></a>
+						</li>
+					<% }); %>
+					<li class="navigation-list-item">
+						<a href="#" class="prepend-icon down-open-mini" data-more>$moreLabel</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</script>
+		<script type="text/javascript">
+			jQuery(function(j){
+				var template;
+				var wrapper = j('#$core_v2_widget.WrapperElementId .content-fragment-content');
+				j.telligent.evolution.messaging.subscribe('navigation.siteNavigationContent', function(data){
+					template = template || j.telligent.evolution.template.compile('$synchronizedLinksTemplateId');
+					wrapper.html(template({
+						links: data.items
+					}));
+				});
+			});
+		</script>
+	#end
+#elseif($links == 'custom')
+	#foreach ($link in $navigationItems)
+	#beforeall
+		<div class="ui-links navigation-list links"
+			id="$core_v2_encoding.HtmlAttributeEncode($containerId)"
+			data-minlinks="0"
+			data-direction="$core_v2_encoding.HtmlAttributeEncode($layout)"
+			data-maxlinks="$linksToShow">
+			<ul class="navigation-list">
+	#each
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($link.Url)" #if($link.IsSelected) class="selected" #end>$link.Label</a>
+					#if ($link.Children)
+						#foreach ($subLink in $link.Children)
+						#beforeall
+							<ul class="children" style="display:none">
+						#each
+							<li>
+								<a href="$core_v2_encoding.HtmlAttributeEncode($subLink.Url)" #if($subLink.IsSelected) class="selected" #end>$subLink.Label</a>
+							</li>
+						#afterall
+							</ul>
+						#end
+					#end
+
+				</li>
+	#afterall
+				<li class="navigation-list-item">
+					<a href="#" class="prepend-icon down-open-mini" data-more>$moreLabel</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+#elseif($links == 'groups')
+	#set ($currentGroup = $core_v2_group.Current)
+	#set ($currentGroupPath = $core_v2_group.CurrentGroupPath)
+	#foreach ($group in $groups)
+	#beforeall
+		<div class="ui-links navigation-list links"
+			id="$core_v2_encoding.HtmlAttributeEncode($containerId)"
+			data-minlinks="0"
+			data-direction="$core_v2_encoding.HtmlAttributeEncode($layout)"
+			data-maxlinks="$linksToShow">
+			<ul class="navigation-list">
+	#each
+				<li class="navigation-list-item">
+					#set ($selected = false)
+					#foreach ($groupPathComponent in $currentGroupPath)
+						#if ($groupPathComponent.Id == $group.Id)
+							#set ($selected = true)
+						#end
+					#end
+					<a data-groupid="$group.Id" href="$core_v2_encoding.HtmlAttributeEncode($group.Url)" #if($selected) class="selected" #end>
+						$group.Name
+					</a>
+
+					#if ($includeSubGroups)
+						#set ($subGroups = $core_v2_group.List("%{ PageIndex = $pageIndex, PageSize = 15, SortBy = 'SortOrder', SortOrder = 'Ascending', ParentGroupId=$group.Id }"))
+						#foreach ($subGroup in $subGroups)
+						#beforeall
+							<ul class="children" style="display:none">
+						#each
+							<li>
+								#set ($selected = false)
+								#foreach ($groupPathComponent in $currentGroupPath)
+									#if ($groupPathComponent.Id == $subGroup.Id)
+										#set ($selected = true)
+									#end
+								#end
+								<a href="$core_v2_encoding.HtmlAttributeEncode($subGroup.Url)" #if($selected) class="selected" #end>$subGroup.Name</a>
+							</li>
+						#afterall
+							#if ($subGroups.TotalCount > $subGroups.Count)
+								#set ($difference = $subGroups.TotalCount - $subGroups.Count)
+								#set ($groupListUrl = false)
+								#set ($groupListUrl = $core_v2_groupUrls.SubGroupList($group.Id))
+								#if ($groupListUrl)
+									<li>
+										<a href="$core_v2_encoding.HtmlAttributeEncode($groupListUrl)">
+											$core_v2_language.FormatString($core_v2_language.GetResource('MoreGroupsCount'), $difference.ToString())
+										</a>
+									</li>
+								#end
+							#end
+							</ul>
+						#end
+					#end
+
+				</li>
+	#afterall
+				#if ($groups.Count < $groups.TotalCount) *#
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_groupUrls.Home())">$core_v2_language.GetResource('MoreGroups')</a>
+					</li>
+				#end
+				<li class="navigation-list-item">
+					<a href="#" class="prepend-icon down-open-mini" data-more>$moreLabel</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+#end
+#if ($layout == 'horizontal')
+	#registerEndOfPageHtml()
+		<script>
+		jQuery(function(j){
+			// no sub-nav on touch
+			if(j('body').hasClass('touch'))
+				return;
+
+			var container = j('#$containerId');
+			var popup;
+			var currentParent;
+			var hideTimeoutHandle;
+
+			function hideLinksPopup() {
+				if(popup) {
+					popup.glowPopUpPanel('hide', true);
+					$(currentParent).removeClass('subnav-open');
+					currentParent = null;
+				}
+			}
+
+			function mouseOut() {
+				window.clearTimeout(hideTimeoutHandle);
+				hideTimeoutHandle = window.setTimeout(function() {
+					hideLinksPopup();
+				}, 300);
+			}
+
+			function mouseOver() {
+				window.clearTimeout(hideTimeoutHandle);
+			}
+
+			function showLinksPopUp(parent, children) {
+				parent.addClass('subnav-open');
+				if(currentParent == parent.get(0)) {
+					return;
+				}
+
+				var links = j('<ul></ul>').append(children);
+
+				if(popup) {
+					hideLinksPopup();
+					popup.glowPopUpPanel('empty', '')
+						.glowPopUpPanel('append', links)
+						.glowPopUpPanel('show', parent);
+				} else {
+					popup = j('<div></div>')
+						.glowPopUpPanel({
+							cssClass: 'links-popup-panel',
+							zIndex: 1500,
+							hideOnDocumentClick: true
+						})
+						.on('glowPopUpPanelMouseOut', function() {
+							mouseOut();
+						})
+						.on('glowPopUpPanelMouseOver', function() {
+							mouseOver();
+						})
+						.glowPopUpPanel('append', links)
+						.glowPopUpPanel('show', parent)
+				}
+				currentParent = parent.get(0);
+			}
+
+			container.on('mouseenter', '.navigation-list-item a', function(e){
+				var elm = j(e.target);
+				var children = elm.data('_link_children');
+				if(!children) {
+					children = elm.closest('li').find('ul.children > li');
+					elm.data('_link_children', children);
+				}
+				if(children && children.length > 0) {
+					mouseOver();
+					showLinksPopUp(elm, children);
+				}
+			});
+
+			container.on('mouseleave', '.navigation-list-item a', function(e){
+				mouseOut();
+			});
+		});
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_NavigationCustom_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_NavigationCustom_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="links" labelResourceName="links" descriptionResourceName="links_description" defaultValue="custom" dataType="String">
+		<propertyValue value="custom" labelResourceName="linksCustom" orderNumber="1000000" propertiesToShow="navigation" propertiesToHide="includeSubGroups" />
+		<propertyValue value="groups" labelResourceName="linksGroups" orderNumber="1000001" propertiesToShow="includeSubGroups" propertiesToHide="navigation" />
+		<propertyValue value="sync" labelResourceName="linksSync" orderNumber="1000002" propertiesToHide="includeSubGroups,navigation" />
+	</property>
+	<property id="includeSubGroups" labelResourceName="includeSubGroups" defaultValue="true" dataType="Bool" />
+	<property id="navigation" labelResourceName="customNavigation" descriptionResourceName="customNavigation_description" dataType="Custom" template="core_v2_siteCustomNavigation" navigationType="site" maxDepth="2" />
+	<property id="layout" labelResourceName="layout" defaultValue="vertical" dataType="String">
+		<propertyValue value="vertical" labelResourceName="layoutVertical" />
+		<propertyValue value="horizontal" labelResourceName="layoutHorizontal" />
+	</property>
+	<property id="display" labelResourceName="display" descriptionResourceName="display_description" defaultValue="expanded" dataType="String">
+		<propertyValue value="expanded" labelResourceName="displayExpanded" orderNumber="1000000" propertiesToHide="moreLabel" />
+		<propertyValue value="collapsed" labelResourceName="displayCollapsed" orderNumber="1000001" propertiesToShow="moreLabel" />
+	</property>
+	<property id="moreLabel" labelResourceName="moreLabel" descriptionResourceName="moreLabel_Description" defaultValue="${resource:more}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" defaultValue="color" dataType="String">
+		<propertyValue value="inherit" labelResourceName="inherit" orderNumber="1000000" propertiesToHide="palette,border,borderColor" />
+		<propertyValue value="color" labelResourceName="color" orderNumber="1000001" propertiesToShow="palette,border,borderColor" />
+	</property>
+	<property id="paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="border" labelResourceName="border" defaultValue="bottom" dataType="String">
+		<propertyValue value="none" labelResourceName="borderNone" orderNumber="1000000" propertiesToShow="" propertiesToHide="borderColor" />
+		<propertyValue value="top" labelResourceName="borderTop" orderNumber="1000001" propertiesToShow="borderColor" propertiesToHide="" />
+		<propertyValue value="bottom" labelResourceName="borderBottom" orderNumber="1000002" propertiesToShow="borderColor" propertiesToHide="" />
+		<propertyValue value="both" labelResourceName="borderBoth" orderNumber="1000003" propertiesToShow="borderColor" propertiesToHide="" />
+	</property>
+	<property id="borderColor" labelResourceName="borderColor" defaultValue="#ffffff33" dataType="Color" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="border">Border</resource>
+  <resource name="borderBoth">Top and Bottom Border</resource>
+  <resource name="borderBottom">Bottom Border</resource>
+  <resource name="borderColor">Border Color</resource>
+  <resource name="borderNone">No Border</resource>
+  <resource name="borderTop">Top Border</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="color">Use Color</resource>
+  <resource name="colorMode">Color Type</resource>
+  <resource name="Core_NavigationCustom_Description">Renders navigation links based on groups, custom navigation list, or site banner links</resource>
+  <resource name="Core_NavigationCustom_Name">Navigation</resource>
+  <resource name="custom">Custom</resource>
+  <resource name="customNavigation">Custom Navigation Items</resource>
+  <resource name="customNavigation_description">Add, edit, delete, and reorder custom navigation items.</resource>
+  <resource name="designMode">Design</resource>
+  <resource name="designMode_desc">Inherit or specify preset or custom colors and gradients</resource>
+  <resource name="display">Display</resource>
+  <resource name="display_description">When collapsed, links are hidden by default behind an expansion link which displays them</resource>
+  <resource name="displayCollapsed">Collapsed</resource>
+  <resource name="displayExpanded">Expanded</resource>
+  <resource name="includeSubGroups">Include Sub Groups</resource>
+  <resource name="inherit">Inherit from Site, Group, or Blog Banner</resource>
+  <resource name="layout">Layout</resource>
+  <resource name="layoutHorizontal">Horizontal</resource>
+  <resource name="layoutVertical">Vertical</resource>
+  <resource name="links">Links</resource>
+  <resource name="links_description">Links can be defined by this widget instance or synchronized with custom links configured in the Site Banner</resource>
+  <resource name="linksCustom">Custom</resource>
+  <resource name="linksGroups">Groups</resource>
+  <resource name="linksSync">Synchronized</resource>
+  <resource name="more">More</resource>
+  <resource name="MoreGroups">All Groups</resource>
+  <resource name="MoreGroupsCount">{0} More</resource>
+  <resource name="moreLabel">Expand Link Label</resource>
+  <resource name="moreLabel_Description">Labels the link to expand collapsed links</resource>
+  <resource name="Options">Options</resource>
+  <resource name="palette">Color Palette</resource>
+  <resource name="palette_desc">Select a color palette. These are defined by the theme and can be adjusted.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

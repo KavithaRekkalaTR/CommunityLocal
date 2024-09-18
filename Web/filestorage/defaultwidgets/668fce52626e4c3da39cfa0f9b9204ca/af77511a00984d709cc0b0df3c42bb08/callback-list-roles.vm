@@ -1,0 +1,18 @@
+#set($groupType = $core_v2_page.GetQueryStringValue('w_grouptype'))
+
+#set($siteRoles = $context.GetSiteRoles())
+
+$core_v2_page.SetContentType('application/json')
+
+{"roles":[
+	#if($siteRoles)
+        #foreach($role in $siteRoles)
+            #if (!$role.IsAdministratorRole)
+            {
+                "id":"$role.id",
+                "name":"$core_v2_encoding.JavascriptEncode($role.Name)"
+            },
+            #end
+        #end
+	#end
+null]}

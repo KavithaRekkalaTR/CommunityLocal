@@ -1,0 +1,32 @@
+<div class="reply-form <% if (editingReplyId) { %> edit <% } else { %> create <% } %>" <% if (editingReplyId) { %> data-editing="<%= editingReplyId %>" <% } %>>
+	<% if(!editingReplyId) { %>
+		#set ($user = $core_v2_user.Accessing)
+
+		<div class="author" #if ($user.ProfileUrl) data-authorprofileurl="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" #else data-authorprofileurl="" #end>
+			<div class="avatar">
+				#if ($user.ProfileUrl)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="internal-link view-user-profile">
+						$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 44, 44, "%{border='0px', alt=$user.DisplayName, ResizeMethod='ZoomAndCrop'}")
+					</a>
+				#else
+					$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 44, 44, "%{border='0px', alt=$user.DisplayName, ResizeMethod='ZoomAndCrop'}")
+				#end
+			</div>
+			<div class="meta">
+				<span class="user-name">
+					$core_v2_ui.UserPresence($user.Id)
+					#if ($user.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="internal-link view-user-profile">
+							$user.DisplayName
+						</a>
+					#else
+						$user.DisplayName
+					#end
+				</span>
+			</div>
+		</div>
+	<% } %>
+
+	<div class="editor"></div>
+
+</div>

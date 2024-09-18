@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Cookie Information Banner" version="12.0.0.0" description="" instanceIdentifier="77a16f73f306488cad3694943666f104" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2023-09-26 18:23:48Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('cookiebanner.js'))"></script>
+<link rel="stylesheet" type="text/css" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('cookiebanner.css'))" />
+
+<script>
+window.addEventListener("load", function(){
+window.cookieconsent.initialise({
+  "palette": {
+    "popup": {
+      "background": "$core_v2_widget.GetStringValue('CookieBanner_BackgroundColor', '#2196F3')",
+      "text": "$core_v2_widget.GetStringValue('CookieBanner_TextColor', '#FFF')"
+    },
+    "button": {
+      "background": "$core_v2_widget.GetStringValue('CookieBanner_ButtonColor', '#FFF')",
+      "text": "$core_v2_widget.GetStringValue('CookieBanner_ButtonTextColor', '#2196F3')"
+    }
+  },
+  "position": "$core_v2_widget.GetStringValue('CookieBanner_Position', 'bottom')",
+  "content": {
+    "message": "$core_v2_widget.GetStringValue('CookieBanner_Message', 'This website uses cookies to make your browsing experience better.  By using our site you agree to our use of cookies.')",
+    "dismiss": "$core_v2_widget.GetStringValue('CookieBanner_ButtonText', 'Accept!')",
+    "link": "$core_v2_widget.GetStringValue('CookieBanner_LearnMoreLinkText', 'Learn More')",
+    "href": "$core_v2_widget.GetStringValue('CookieBanner_LearnMoreLinkHref', 'https://en.wikipedia.org/wiki/HTTP_cookie')"
+  }
+})});
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <configuration><![CDATA[<propertyGroup id="bannerOptions" resourceName="Options">
+	<property id="CookieBanner_Title" resourceName="CookieBanner_Title" dataType="string" defaultValue="${resource:CookieBanner_TitleValue}" controlType="Telligent.Evolution.Controls.ContentFragmentTokenStringControl, Telligent.Evolution.Platform" />
+	<property id="CookieBanner_BackgroundColor" resourceName="CookieBanner_BackgroundColor" dataType="string" defaultValue="#2196F3" />
+	<property id="CookieBanner_TextColor" resourceName="CookieBanner_TextColor" dataType="string" defaultValue="#FFF" />
+	<property id="CookieBanner_ButtonColor" resourceName="CookieBanner_ButtonColor" dataType="string" defaultValue="#FFF" />
+	<property id="CookieBanner_ButtonTextColor" resourceName="CookieBanner_ButtonTextColor" dataType="string" defaultValue="#2196F3" />
+	<property id="CookieBanner_Message" resourceName="CookieBanner_Message" dataType="string" defaultValue="This website uses cookies to make your browsing experience better.  By using our site you agree to our use of cookies." />
+	<property id="CookieBanner_ButtonText" resourceName="CookieBanner_ButtonText" dataType="string" defaultValue="Accept" />
+	<property id="CookieBanner_LearnMoreLinkText" resourceName="CookieBanner_LearnMoreLinkText" dataType="string" defaultValue="Learn More!" />
+	<property id="CookieBanner_LearnMoreLinkHref" resourceName="CookieBanner_LearnMoreLinkHref" dataType="string" defaultValue="https://en.wikipedia.org/wiki/HTTP_cookie" />
+	<property id="CookieBanner_Position" resourceName="CookieBanner_Position" dataType="string" defaultValue="bottom">
+		<propertyValue value="bottom" resourceName="Position_Bottom" />
+		<propertyValue value="top" resourceName="Position_Top" />
+		<propertyValue value="bottom-left" resourceName="Position_BottomLeft" />
+		<propertyValue value="bottom-right" resourceName="Position_BottomRight" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CookieBanner_BackgroundColor">Banner Background Color (Hex Code - Ex. #2196F3)</resource>
+  <resource name="CookieBanner_ButtonColor">Banner Button Color (Hex Code - Ex. #FFFFFF)</resource>
+  <resource name="CookieBanner_ButtonText">Banner Button Text</resource>
+  <resource name="CookieBanner_ButtonTextColor">Banner Button Text Color (Hex Code - Ex. #2196F3)</resource>
+  <resource name="CookieBanner_LearnMoreLinkHref">Learn More Link URL</resource>
+  <resource name="CookieBanner_LearnMoreLinkText">Learn More Link Text</resource>
+  <resource name="CookieBanner_Message">Banner Text</resource>
+  <resource name="CookieBanner_Name">Cookie Banner</resource>
+  <resource name="CookieBanner_Position">Location of the banner.</resource>
+  <resource name="CookieBanner_TextColor">Banner Text Color (Hex Code - Ex. #FFFFFF)</resource>
+  <resource name="CookieBanner_Title">Title of the Widget</resource>
+  <resource name="CookieBanner_TitleValue">Cookie Banner</resource>
+  <resource name="Position_Bottom">Bottom</resource>
+  <resource name="Position_BottomLeft">Bottom Left</resource>
+  <resource name="Position_BottomRight">Bottom Right</resource>
+  <resource name="Position_Top">Top</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

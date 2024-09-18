@@ -1,0 +1,107 @@
+<form><fieldset class="filter-form">
+	<ul class="field-list">
+        <li class="field-item filters">
+            <span class="field-item-input">
+                <span class="field-item-component">
+                    <input type="text" id="$core_v2_widget.UniqueId('query')" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('containing'))" class="search">
+               </span>
+            </span>
+        </li>
+	</ul>
+</fieldset></form>
+
+<div id="$core_v2_widget.UniqueId('no-categories')" class="message norecords" style="display: none;">$core_v2_language.GetResource('no-deleted-categories-found')</div>
+
+<ul class="content-list content expandable simple" id="$core_v2_widget.UniqueId('categories')">
+#set($categories = $context.ListDeletedCategories())
+#foreach($category in $categories)
+    <li class="content-item category" data-categoryid="$category.Id.ToString()" data-name="$category.Name">
+    	<h4 class="name">$category.Name</h4>
+    	<div class="post-attributes">
+    		<ul class="attribute-list">
+    			<li class="attribute-item">
+    			   <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Date_Deleted'), $core_v2_language.FormatDate($category.DeleteDate))</span>
+    			</li>
+    		</ul>
+    	</div>
+    	<div class="content expandable">
+    		$!category.Description
+    	</div>
+    	<div class="actions expandable">
+    		<div class="navigation-list ui-links" data-direction="horizontal">
+    			<ul>
+        			<li class="navigation-list-item undelete">
+        				<a href="#" data-messagename="categorymanagement.undelete" data-categoryid="$category.Id.ToString()" data-name="$category.Name" #if($category.Parent) data-parentcategoryid="$category.Parent.Id" #else data-parentcategoryid="" #end>$core_v2_language.GetResource('undelete')</a>
+        			</li>
+    				<li class="navigation-list-item">
+    					<a href="#" class="more" data-more>$core_v2_language.GetResource('More')</a>
+    				</li>
+    				<li class="navigation-list-item">
+    					<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+    				</li>
+    			</ul>
+    		</div>
+    	</div>
+    </li>
+#end
+</ul>
+
+#set ($deletedCategoryTemplateId = $core_v2_widget.UniqueId('deletedcategorytemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($deletedCategoryTemplateId)">
+    <li class="content-item category" data-categoryid="<%= category.id %>" data-name="<%= category.name %>">
+    	<h4 class="name"><%= category.name %></h4>
+    	<div class="post-attributes">
+    		<ul class="attribute-list">
+    			<li class="attribute-item">
+    			   <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Date_Deleted'), $core_v2_language.FormatDate($core_v2_utility.CurrentDate))</span>
+    			</li>
+    		</ul>
+    	</div>
+    	<div class="content expandable">
+    		<%= category.description %>
+    	</div>
+    	<div class="actions expandable">
+    		<div class="navigation-list ui-links" data-direction="horizontal">
+    			<ul>
+        			<li class="navigation-list-item undelete">
+        				<a href="#" data-messagename="categorymanagement.undelete" data-categoryid="<%= category.id %>" data-name="<%= category.name %>" data-parentcategoryid="<%= category.parentId %>">$core_v2_language.GetResource('undelete')</a>
+        			</li>
+    				<li class="navigation-list-item">
+    					<a href="#" class="more" data-more>$core_v2_language.GetResource('More')</a>
+    				</li>
+    				<li class="navigation-list-item">
+    					<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+    				</li>
+    			</ul>
+    		</div>
+    	</div>
+    </li>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.undeleteCategoryPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui-undeletecategory.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.undeleteCategoryPanel.register({
+			articleCollectionId: '$context.ArticleCollection.Id',
+			templates: {
+				deletedCategory: '$core_v2_encoding.JavascriptEncode($deletedCategoryTemplateId)'
+			},
+			inputs: {
+			    list: jQuery('#$core_v2_widget.UniqueId('categories')'),
+			    query: jQuery('#$core_v2_widget.UniqueId('query')'),
+			    noItems: jQuery('#$core_v2_widget.UniqueId('no-categories')')
+			},
+			urls: {
+			    undeleteCategory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-undeletecategory.jsm'))'
+			},
+			text: {
+			    undeleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('undelete-confirmation'))',
+			    parentIsDeleted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('parent-is-deleted'))'
+			}
+		});
+	});
+	</script>
+#end

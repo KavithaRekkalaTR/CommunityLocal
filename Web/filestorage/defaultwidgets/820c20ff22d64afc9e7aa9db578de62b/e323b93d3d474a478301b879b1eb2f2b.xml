@@ -1,0 +1,74 @@
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:JoinForumThread_Name}" cssClass="join-forum-thread" description="${resource:JoinForumThread_Description}" instanceIdentifier="e323b93d3d474a478301b879b1eb2f2b" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+		<![CDATA[
+#set($thread = false)
+#set($thread = $core_v2_forumThread.Get($context.ForumThreadId))
+
+<p>
+	$core_v2_language.GetResource('instructions')
+</p>
+
+<form><fieldset>
+	<ul class="field-list">
+    <li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('label_join')</label>
+			<span class="field-item-input">$core_v2_language.FormatString($core_v2_language.GetResource('join_thread'), $thread.Subject, $thread.Author.DisplayName)</span>
+		</li>
+    <li class="field-item" id="$core_v2_widget.UniqueId('threadidcontainer')">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('threadid')">$core_v2_language.GetResource('label_jointo')</label>
+			<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('threadid')" /></span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('sendemail')" checked="checked" />
+				<label for="$core_v2_widget.UniqueId('sendemail')">$core_v2_language.GetResource('sendemail')</label>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.joinForumThread')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.joinForumThread.register({
+        threadSelectorWrapperId: '$core_v2_widget.UniqueId('threadidcontainer')',
+        threadSelector: jQuery('#$core_v2_widget.UniqueId('threadid')'),
+        threadId: '$thread.Id',
+        sendEmail: jQuery('#$core_v2_widget.UniqueId('sendemail')'),
+        joinUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('join.vm'))',
+        findThreadsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-threads.vm'))',
+        text: {
+          noMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noMatches'))',
+          lookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('lookupPlaceholder'))',
+          required: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('required'))',
+          join: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('join'))'
+        }
+			});
+		});
+	</script>
+#end
+		]]>
+	</contentScript>
+	<languageResources>
+		<language key="en-us">
+			<resource name="JoinForumThread_Name">Join Discussions/Questions</resource>
+			<resource name="JoinForumThread_Description">Enables two discussions/questions to be joined into one.</resource>
+			<resource name="instructions">Join a discussion/question with another discussion/question.</resource>
+			<resource name="label_join">Join</resource>
+			<resource name="join_thread">{0} by {1}</resource>
+			<resource name="label_jointo">Join to discussion/question</resource>
+			<resource name="noMatches">No matching discussions/questions were found</resource>
+			<resource name="lookupPlaceholder">Name, ID, or URL...</resource>
+			<resource name="joinedSuccessfully">'{0}' was joined to '{1}' successfully.</resource>
+			<resource name="sendemail">Notify author by email</resource>
+			<resource name="join">Join</resource>
+			<resource name="required">Required</resource>
+		</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

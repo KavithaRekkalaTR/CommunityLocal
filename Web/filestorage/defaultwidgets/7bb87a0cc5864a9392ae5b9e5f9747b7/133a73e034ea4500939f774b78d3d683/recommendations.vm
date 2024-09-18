@@ -1,0 +1,49 @@
+#set($userRecommendations = $core_v2_userRecommendation.List("%{PageSize=$pageSize,PageIndex=$pageIndex}"))
+#set($total = $userRecommendations.TotalCount)
+
+#foreach ($userRecommendation in $userRecommendations)
+#beforeall
+	<form>
+	<div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+#each
+	#set ($user = false)
+	#set ($user = $userRecommendation.User)
+	#if ($user)
+		<div class="content-item content thumbnail" data-hasmore="$hasMore" data-userid="$user.Id" style="cursor: pointer;" data-url="$!core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 140, 140, "%{alt=$user.DisplayName,border='0',ResizeMethod = 'ZoomAndCrop'}")
+						</div>
+						<h2 class="name">
+								$user.DisplayName
+						</h2>
+			<div class="actions">
+				<div class=" navigation-list ui-links" data-minlinks="0" data-maxlinks="0" data-direction="horizontal">
+					<ul>
+						<li class="navigation-item">
+							<a href="#" class="internal-link ignore-suggestion" data-messagename="ignoreUserRecommendation" data-userid="$userRecommendation.User.Id">$core_v2_language.GetResource('ignore_user_recommendation')</a>
+						</li>
+						#foreach($action in $core_v2_user.ListActionLinks($user.Id))
+							<li class="navigation-list-item">$action.Html</li>
+						#end
+						<li class="navigation-list-item">
+											<a href="#" data-more>$core_v2_language.GetResource('Connect')</a>
+									</li>
+						<li class="navigation-list-item">
+																<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+														</li>
+					</ul>
+				</div>
+			</div>
+			<div class="edit-mode" style="display: none;">
+				<input type="checkbox" />
+			</div>
+		</div>
+	#end
+#afterall
+	</div>
+	</form>
+#nodata
+	<div class="message norecords">
+		$core_v2_language.GetResource('Recommendations_None')
+	</div>
+#end

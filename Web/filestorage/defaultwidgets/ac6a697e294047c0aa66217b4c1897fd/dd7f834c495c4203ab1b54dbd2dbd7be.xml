@@ -1,0 +1,71 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GenerateGuid_Name}" cssClass="generate-guid" description="${resource:GenerateGuid_Description}" instanceIdentifier="dd7f834c495c4203ab1b54dbd2dbd7be" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('guid')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('guid-description')</span>
+			<span class="field-item-input">
+				<input type="text" readonly="readonly" value="$context.NewGuid().ToString()" />
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery('input[type="text"]', jQuery.telligent.evolution.administration.panelWrapper()).on('click focus', function(){
+		this.select();
+	})
+
+	jQuery.telligent.evolution.administration.header(
+		jQuery('<fieldset></fieldset>')
+			.append(
+				jQuery('<ul class="field-list"></ul>')
+					.append(
+						jQuery('<li class="field-item"></li>')
+							.append(
+								jQuery('<span class="field-item-input"></span>')
+									.append(
+										jQuery('<a href="#"></a>')
+											.addClass('button stop-preview')
+											.text('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('regenerate'))')
+											.on('click', function(e) {
+												var b = $(this);
+												if (!b.hasClass('disabled')) {
+													b.addClass('disabled');
+													jQuery.telligent.evolution.get({
+														url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('newguid.vm'))'
+													})
+														.then(function(d) {
+															jQuery('input[type="text"]', jQuery.telligent.evolution.administration.panelWrapper()).val(d.guid);
+														})
+														.always(function() {
+															b.removeClass('disabled');
+														});
+												}
+												return false;
+											})
+									)
+							)
+					)
+			)
+		);
+});
+</script>
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="GenerateGuid_Name">Generate GUID</resource>
+	<resource name="GenerateGuid_Description">Generate a unique identifier.</resource>
+	<resource name="guid">GUID</resource>
+	<resource name="guid-description">This GUID can be used as a unique identifier for plugins, widgets, or other platform development.</resource>
+	<resource name="regenerate">Regenerate</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

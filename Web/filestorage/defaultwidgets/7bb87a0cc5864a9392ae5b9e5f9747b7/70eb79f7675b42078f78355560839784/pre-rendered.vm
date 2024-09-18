@@ -1,0 +1,34 @@
+##
+## Flattened rendering of thread or individual permalink for crawlable, server-side-rendered, paging of all content
+##
+## Supported query string parameters: ReplyId, ReplySortBy, and SortOrder
+## Expects in scope: $thread
+##
+
+#set ($currentForumReply = false)
+#set ($currentForumReply = $core_v2_forumReply.Current)
+#if ($currentForumReply)
+	#set ($replyId = $currentForumReply.Id)
+#end
+
+#set ($forumReplySortByQuery = false)
+#set ($forumReplySortByQuery = $core_v2_page.GetQueryStringValue('ReplySortBy'))
+#if ($forumReplySortByQuery)
+	#set ($sortBy = $forumReplySortByQuery)
+#end
+
+#set ($forumReplySortOrderQuery = false)
+#set ($forumReplySortOrderQuery = $core_v2_page.GetQueryStringValue('ReplySortOrder'))
+#if ($forumReplySortOrderQuery)
+	#set ($sortOrder = $forumReplySortOrderQuery)
+#end
+
+## Render either a permalink's set of relevant forum replies
+#if (!$core_v2_page.SupportsJavaScript)
+	#if ($replyId)
+		$core_v2_widget.ExecuteFile('pre-rendered-permalink.vm')
+	## Or a full page
+	#else
+		$core_v2_widget.ExecuteFile('pre-rendered-thread.vm')
+	#end
+#end

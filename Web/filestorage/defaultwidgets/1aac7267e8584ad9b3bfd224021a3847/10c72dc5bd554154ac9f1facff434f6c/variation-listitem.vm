@@ -1,0 +1,9 @@
+﻿#set($emoticonId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_variationId')))
+#set($emoticon = $context.GetEmoticon($emoticonId))
+
+<li class="emoticon-item #if(!$emoticon.Enabled) disabled #end" data-id="$emoticon.Id" data-order="$emoticon.OrderNumber" data-tip="$core_v2_encoding.HtmlAttributeEncode($emoticon.Name)">
+	<a href="#" data-messagename="administration.emoticonvariation.edit" data-emoticonid="$emoticon.Id" data-emoticonname="$core_v2_encoding.HtmlAttributeEncode($emoticon.Name)">
+		$!core_v2_ui.GetPreviewHtml($emoticon.Url, "%{Width=50, Height=50, OutputIsPersisted='False'}")
+	</a>
+	#if(!$emoticon.Enabled)<span class="disabled">$core_v2_language.GetResource('Disabled')</span>#end
+</li>

@@ -1,0 +1,35 @@
+##
+## Renders an api extension as JSON
+##
+## Requires in scope:
+##   $apiExtension
+##
+{
+	"InstanceIdentifier": #if ($apiExtension.InstanceIdentifier) "$apiExtension.InstanceIdentifier" #else "" #end,
+	"Name": #if ($apiExtension.Name) "$core_v2_encoding.JavascriptEncode($apiExtension.Name)" #else "" #end,
+	"Description": #if ($apiExtension.Description) "$core_v2_encoding.JavascriptEncode($core_v2_language.Truncate($apiExtension.Description, 250, '…'))" #else "" #end,
+	"RenderedDoc": "$core_v2_encoding.JavascriptEncode($core_v2_utility.Trim($core_v2_widget.ExecuteFile('callback-sub-serialize-api-extension-rendered-doc.vm')))",
+	"Category": #if ($apiExtension.Category) "$core_v2_encoding.JavascriptEncode($apiExtension.Category)" #else "" #end,
+	"MetadataType": "$core_v2_encoding.JavascriptEncode($apiExtension.MetadataType)",
+	#if ($apiExtension.IsPrivate)
+		"Type": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PrivateExtension'))",
+	#else
+		"Type": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Extension'))",
+	#end
+
+	#set ($existingApiMethods = false)
+	#if ($apiMethods)
+		#set ($existingApiMethods = $apiMethods)
+	#end
+	#set ($apiMethods = $apiExtension.Methods)
+	"Methods": $core_v2_widget.ExecuteFile('callback-sub-serialize-api-methods.vm'),
+	#set ($apiMethods = $existingApiMethods)
+
+	#set ($existingApiProperties = false)
+	#if ($apiProperties)
+		#set ($existingApiProperties = $apiProperties)
+	#end
+	#set ($apiProperties = $apiExtension.Properties)
+	"Properties": $core_v2_widget.ExecuteFile('callback-sub-serialize-api-properties.vm')
+	#set ($apiProperties = $existingApiProperties)
+}

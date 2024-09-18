@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Ideas_Title_Name}" version="11.0.0.0" description="${resource:Ideas_Title_Description}" instanceIdentifier="679decf2a911416fa4cc50e5b84cbe64" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="group-title ideas-title" lastModified="2020-01-14 16:06:26Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[#set ($group = false)
+#set ($group = $core_v2_group.Current)
+
+#if(!$group)
+  $core_v2_widget.Hide()
+#end
+
+#set($idea = false)
+#set($idea = $telligentIdeas_v1_ideas.Current)
+
+#set($page = $telligentIdeas_v1_urls.Current)
+#if ($page == 'Ideas')
+	#set($title = $challenge.Name)
+#elseif ($page == 'AddIdea')
+	#set($title = $core_v2_language.GetResource('Ideas_Url_AddIdea'))
+#elseif($page == 'EditIdea')
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Ideas_Url_EditIdea'), $idea.Name))
+#elseif($page == 'Idea')
+	#set($title = $idea.Name)
+#elseif($page == 'GroupHome')
+	#set($title = $core_v2_language.GetResource('Ideas_Url_ChallenegeList'))
+#elseif($page == 'AddChallenge')
+	#set($title = $core_v2_language.GetResource('Ideas_Url_AddChallenge'))
+#elseif($page == 'EditChallenge')
+	#set($title = $core_v2_language.GetResource('Ideas_Url_EditChallenge'))
+#elseif($page == 'AddIdeaStatus')
+    #set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Ideas_Url_AddIdeaStatus'), $idea.Name))
+#elseif($page == 'EditIdeaStatus')
+    #set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Ideas_Url_EditIdeaStatus'), $idea.Name))
+#elseif($page == 'IdeaStatusHistory')
+    #set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Ideas_Url_IdeaStatusHistory'), $idea.Name))
+#else
+	#set($title = $core_v2_language.GetResource('Ideas_Url_AllIdeas'))
+#end
+
+$core_v2_page.SetTitle($title, true, true)]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Ideas_Title_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Ideas_Title_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="BreadCrumb_Seperator"> &amp;raquo; </resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Home">Home</resource>
+  <resource name="Ideas_Title_Description">Sets and displays title for idea pages</resource>
+  <resource name="Ideas_Title_Name">Ideas - Title</resource>
+  <resource name="Ideas_Title_Title">Title</resource>
+  <resource name="Ideas_Url_AddChallenge">Create Ideation</resource>
+  <resource name="Ideas_Url_AddIdea">Add Idea</resource>
+  <resource name="Ideas_Url_AddIdeaStatus">Update Status for '{0}'</resource>
+  <resource name="Ideas_Url_AllIdeas">Ideas</resource>
+  <resource name="Ideas_Url_ChallenegeList">Ideations</resource>
+  <resource name="Ideas_Url_EditChallenge">Edit Ideation</resource>
+  <resource name="Ideas_Url_EditIdea">Edit '{0}'</resource>
+  <resource name="Ideas_Url_EditIdeaStatus">Edit Status of '{0}'</resource>
+  <resource name="Ideas_Url_IdeaStatusHistory">'{0}' Status History</resource>
+  <resource name="Options">Options</resource>
+  <resource name="ViewMore">...</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="4daabcc42846400e95f4990266d3e3c9" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

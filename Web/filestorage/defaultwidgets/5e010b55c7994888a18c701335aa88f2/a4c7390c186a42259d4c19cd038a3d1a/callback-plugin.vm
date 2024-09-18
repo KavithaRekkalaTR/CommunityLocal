@@ -1,0 +1,42 @@
+﻿#set ($pluginTypesPanelTypeName = $core_v2_page.GetQueryStringValue("_w_pluginTypesPanelTypeName"))
+#set ($pluginTypeName = $core_v2_page.GetQueryStringValue("_w_pluginTypeName"))
+
+$core_v2_page.SetContentType('application/json')
+
+#set ($pluginPanel = false)
+#set ($pluginPanel = $core_v2_administrationPanels.GetPluginPanel($pluginTypeName))
+#if (!$pluginPanel)
+	$core_v2_page.SetStatusCode(500)
+	{
+		"error": true,
+		"loggedIn": #if($core_v2_user.IsRegistered($core_v2_user.Accessing.Id)) true #else false #end
+	}
+#else
+	#set ($pluginTypesPanel = false)
+	#set ($pluginTypesPanel = $core_v2_administrationPanels.GetPluginTypesPanel($pluginTypesPanelTypeName))
+	#if (!$pluginTypesPanel)
+		$core_v2_page.SetStatusCode(500)
+		{
+			"error": true,
+			"loggedIn": #if($core_v2_user.IsRegistered($core_v2_user.Accessing.Id)) true #else false #end
+		}
+	#else
+		## a root load is a panel load that is not the result of a child panel sub-navigation
+		#set ($rootLoad = $core_v2_utility.ParseBool($core_v2_page.GetQueryStringValue("_w_pluginRootLoad")))
+
+		#set ($selectedPluginTypesPanelTypeName = $pluginTypesPanelTypeName)
+		#set ($selectedPluginTypePanelTypeName = $pluginTypeName)
+
+		$core_v2_page.SetContentType('application/json')
+		#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+		{
+			"pluginCategoryTypeName": "$core_v2_encoding.JavascriptEncode($pluginTypesPanelTypeName)",
+			"pluginPanelTypeName": "$core_v2_encoding.JavascriptEncode($pluginTypeName)",
+			"categoryId": "$core_v2_encoding.JavascriptEncode($pluginTypesPanel.AdministrativeCategoryId.ToString())",
+			"pluginHtml": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('render-plugin.vm'))",
+			"pluginName": "$core_v2_encoding.JavascriptEncode($pluginPanel.Name)",
+			"pluginDescription": "$core_v2_encoding.JavascriptEncode($pluginPanel.Description)",
+			"pluginState": "$pluginPanel.State"
+		}
+	#end
+#end

@@ -1,0 +1,35 @@
+##
+## Expects in scope: $automationId
+## Optional in scope: $automationConfigurationData, $configuredAutomation, $configuredAutomationId
+##
+#if ($automationId)
+	#set ($automationId = $core_v2_utility.ParseGuid($automationId))
+#end
+#if ($configuredAutomationId)
+	#set ($configuredAutomationId = $core_v2_utility.ParseGuid($configuredAutomationId))
+#end
+#if ($automationConfigurationData)
+	#set ($automationConfigurationData = $core_v2_utility.ParseQueryString($automationConfigurationData))
+#end
+#if ($automationId)
+	#if (!$automationConfigurationData)
+		#set ($automationConfigurationData = $core_v2_page.ParseQueryString(''))
+	#end
+
+	#set ($fieldHeader = '<li class="field-item" id="{PropertyWrapperId}"><label for="{PropertyUniqueId}" class="field-item-name">{PropertyName}</label><span class="field-item-description">{PropertyDescription}</span><span class="field-item-input">')
+	#set ($fieldFooter = '</span></li>')
+
+	#set ($options = "%{ PropertyHeaderHtmlFormat = $fieldHeader, PropertyFooterHtmlFormat = $fieldFooter, GroupFooterHtmlFormat = '', GroupHeaderHtmlFormat = '', SubGroupFooterHtmlFormat = '', SubGroupHeaderHtmlFormat = '' }")
+	#if ($configuredAutomation)
+		$options.Add('ConfiguredAutomationId', $configuredAutomation.Id)
+	#elseif ($configuredAutomationId)
+		$options.Add('ConfiguredAutomationId', $configuredAutomationId)
+	#end
+
+	<div>
+		#set ($result = $context.RenderConfigurationForm($core_v2_widget.UniqueId('AutomationConfiguration'), $automationId, $automationConfigurationData, $options))
+		#if ($result && !$result.HasErrors())
+			$result.Model
+		#end
+	</div>
+#end

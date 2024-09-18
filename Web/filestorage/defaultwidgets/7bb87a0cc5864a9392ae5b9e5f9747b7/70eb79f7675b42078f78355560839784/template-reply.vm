@@ -1,0 +1,19 @@
+<li class="threaded content-item <% if(typeof(isDeleted) !== 'undefined' && isDeleted) { %> deleted <% } %> <% if( typeof(isNew)!=='undefined' && isNew) { %> new <% } %>"
+	data-id="<%: id || '' %>"
+	data-parentid="<%: parentId || '' %>"
+	data-createddate="<%: createdDate || '' %>"
+	data-yesvotes="<%: yesVotes || '' %>"
+	data-novotes="<%: noVotes || '' %>">
+
+	<div class="rendered-content <%= status %>">
+		<%= body %>
+		<div class="typing-status-wrapper"></div>
+		<div class="new-replies-wrapper"></div>
+	</div>
+
+	<div class="newreply"></div>
+
+	#if (!$isFlat)
+		$core_v2_widget.ExecuteFile('template-reply-list.vm')
+	#end
+</li>

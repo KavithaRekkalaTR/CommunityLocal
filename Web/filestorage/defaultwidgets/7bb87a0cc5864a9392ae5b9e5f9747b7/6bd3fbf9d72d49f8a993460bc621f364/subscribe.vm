@@ -1,0 +1,20 @@
+﻿#if ($core_v2_page.IsPost)
+	#set($type = $core_v2_page.GetFormValue('type'))
+	#set($subscribe = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscribe')))
+	$core_v2_page.SetContentType('application/json')
+	#set($response = false)
+
+	#if ($type == 'wikiPage')
+		#set($response = $core_v2_wikiPage.SetSubscribed($core_v2_utility.ParseInt($core_v2_page.GetFormValue('wikiPageId')), $subscribe))
+		{"subscribe":#if($subscribe) true#else false#end,"warnings":[
+			#foreach ($warning in $response.Warnings)
+				#each
+					"$core_v2_encoding.JavascriptEncode($warning.Message)"
+				#between
+					,
+			#end
+		]}
+	#else
+		$core_v2_page.SendJsonError('Unrecognized subscription type.')
+	#end
+#end

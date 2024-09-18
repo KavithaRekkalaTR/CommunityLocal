@@ -1,0 +1,119 @@
+#set ($embeddableId = false)
+#set ($embeddableIdQuery = $core_v2_page.GetQueryStringValue('id'))
+#if ($embeddableIdQuery)
+	#set ($embeddableId = $core_v2_utility.ParseGuid($embeddableIdQuery))
+#end
+
+#set ($embeddable = false)
+#if ($embeddableId)
+	#set ($embeddable = $context.GetEmbeddable("%{ Id = $embeddableId }"))
+#end
+
+#set ($contentTypesId = "${core_v2_widget.UniqueId('contentTypes')}-${embeddableId}")
+#set ($rolesId = "${core_v2_widget.UniqueId('roles')}-${embeddableId}")
+#set ($rolesTypeID = "${core_v2_widget.UniqueId('rolesType')}-${embeddableId}")
+#set ($selectAllId = $core_v2_widget.UniqueId('selectAll'))
+#set ($deselectAllId = $core_v2_widget.UniqueId('deselectAll'))
+
+<form>
+	<fieldset>
+		<ul class="field-list">
+
+			<li class="field-item supported-roles">
+				<label class="field-item-name">$core_v2_language.GetResource('EmbeddableBy')</label>
+				<span class="field-item-description">
+					#format($core_v2_language.GetResource('EmbeddableByDesc'))
+						#token('name')
+							$embeddable.ProcessedName
+					#end
+				</span>
+				<span class="field-item-input supported-roles">
+					<select id="$core_v2_encoding.HtmlAttributeEncode($rolesTypeID)">
+						<option value="all" #if (!$embeddable.EnabledRoles) selected #end>$core_v2_language.GetResource('Anyone')</option>
+						<option value="custom" #if ($embeddable.EnabledRoles) selected #end>$core_v2_language.GetResource('CustomMembers')</option>
+					</select>
+				</span>
+				<span class="field-item-input supported-roles-lookup">
+					<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SearchRoles'))" class="supported-roles" size="40" id="$core_v2_encoding.HtmlAttributeEncode($rolesId)" />
+				</span>
+			</li>
+
+			<li class="field-item supported-content-types" id="$core_v2_encoding.HtmlAttributeEncode($contentTypesId)">
+				<label class="field-item-name">$core_v2_language.GetResource('EmbeddableWithin')</label>
+				<span class="field-item-description">
+					#format($core_v2_language.GetResource('EmbeddableWithinDesc'))
+						#token('name')
+							$embeddable.ProcessedName
+					#end
+				</span>
+
+				<div class="actions">
+					<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="2">
+						<ul>
+							<li class="navigation-list-item">
+								<a class="inline-button" href="#" id="$core_v2_encoding.HtmlAttributeEncode($selectAllId)">$core_v2_language.GetResource('SelectAll')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a class="inline-button" href="#" id="$core_v2_encoding.HtmlAttributeEncode($deselectAllId)">$core_v2_language.GetResource('DeselectAll')</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				#set ($supportedCount = 0)
+				#foreach ($contentType in $embeddable.EnabledContentTypes)
+					#if ($contentType.Supported)
+						#set ($supportedCount = $supportedCount + 1)
+						<span class="field-item-input supported-content-types">
+							<input class="supported-content-types" type="checkbox" id="contentType-${embeddableId}-${contentType.TypeId}" value="${contentType.TypeId}" #if ($contentType.Enabled) checked #end />
+							<label for="contentType-${embeddableId}-${contentType.TypeId}">${contentType.Name}</label>
+						</span>
+					#end
+				#end
+				#if ($supportedCount == 0)
+					<div class="message error">$core_v2_language.GetResource('NoTypesDefined')</div>
+				#end
+			</li>
+
+		</ul>
+	</fieldset>
+</form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('itemHeaderTemplate'))
+#registerClientTemplate($headerTemplateId)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button internal-link save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+#registerEndOfPageHtml('embeddablesPanel.addEdit')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-embeddable.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.embeddables.embeddableAdministration.edit.register({
+			embeddableId: #if ($embeddable) '$embeddable.Id' #else null #end,
+			saveCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.jsm'))',
+			headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			contentTypesId: '#$core_v2_encoding.JavascriptEncode($contentTypesId)',
+			selectAll: '#$core_v2_encoding.JavascriptEncode($selectAllId)',
+			deselectAll: '#$core_v2_encoding.JavascriptEncode($deselectAllId)',
+			rolesId: '#$core_v2_encoding.JavascriptEncode($rolesId)',
+			rolesTypeID: '#$core_v2_encoding.JavascriptEncode($rolesTypeID)',
+			searchRolesCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-roles.jsm'))',
+			#if ($embeddable.EnabledRoles)
+				roles: $core_v2_utility.ToJson($embeddable.EnabledRoles)
+			#else
+				roles: []
+			#end
+		});
+	});
+	</script>
+#end

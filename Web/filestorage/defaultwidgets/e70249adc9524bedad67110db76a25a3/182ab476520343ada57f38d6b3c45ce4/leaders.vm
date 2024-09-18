@@ -1,0 +1,28 @@
+﻿#set ($leadersListId = $core_v2_widget.UniqueId('leadersListId'))
+#set($leaderboardIdString = $core_v2_page.GetQueryStringValue('w_leaderboardid'))
+#set($leaderboardId = $core_v2_utility.ParseInt($leaderboardIdString))
+
+#set($leaders = $core_v2_leader.List($leaderboardId, "%{PageSize = 25, PageIndex = 0}"))
+
+$core_v2_widget.ExecuteFile('paged-leaders.vm')
+			
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.leaderboardPanelLeaders.register({
+		leaderboardId: '$leaderboardId',
+		totalLeaders: $leaders.TotalCount,
+		inputs: {
+			leadersListId: '#$core_v2_encoding.JavascriptEncode($leadersListId)'
+		},
+		urls: {
+			pagedLeaders: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-leaders.vm'))',
+			leaderscsv: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('leaders-csv.vm'))',
+		},
+		resources: {
+			downloadCSV: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('DownloadCSV'))',
+			recordFormat: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('RecordFormat'))',
+			recordsFormat: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('RecordsFormat'))',
+		}
+	});
+});
+</script>	

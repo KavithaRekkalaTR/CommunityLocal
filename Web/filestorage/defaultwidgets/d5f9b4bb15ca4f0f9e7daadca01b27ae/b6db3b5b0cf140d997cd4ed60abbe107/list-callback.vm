@@ -1,0 +1,22 @@
+﻿#set($contentId = false)
+#set($rawContentId = $core_v2_page.GetQueryStringValue('contentId'))
+#if ($rawContentId)
+	#set($contentId = $core_v2_utility.ParseGuid($rawContentId))
+#end
+
+#set($contentTypeId = false)
+#set($rawContentTypeId = $core_v2_page.GetQueryStringValue('contentTypeId'))
+#if ($rawContentTypeId)
+	#set($contentTypeId = $core_v2_utility.ParseGuid($rawContentTypeId))
+#end
+
+#set($applicationId = false)
+#set($rawApplicationId = $core_v2_page.GetQueryStringValue('applicationId'))
+#if ($rawApplicationId)
+	#set($applicationId = $core_v2_utility.ParseGuid($rawApplicationId))
+#end
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('pageIndex')))
+
+$core_v2_widget.ExecuteFile('list.vm')

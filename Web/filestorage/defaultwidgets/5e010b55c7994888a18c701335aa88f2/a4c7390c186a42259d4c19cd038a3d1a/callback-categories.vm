@@ -1,0 +1,9 @@
+﻿#set ($categories = false)
+#set ($categories = $core_v2_administrationPanels.GetPanelCategories())
+
+$core_v2_page.SetContentType('application/json')
+#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+{
+	"categoriesHtml": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('render-categories.vm'))",
+	"firstCategoryUrl": "$core_v2_encoding.JavascriptEncode($firstCategoryUrl)"
+}

@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="156941918b3d49b480d426d14702247d" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-message-bus" lastModified="2022-02-24 16:12:57Z" provider="ee62acb58a194c81a6428d81ab4ad012">
+    <contentScript language="Velocity"><![CDATA[#set ($localNode = $context.Status.LocalConnection)
+#set($status = $context.Status.BusState)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#if ($context.Target == 'Web')
+
+	#format($core_v2_language.GetResource($format))
+		#token('bus')
+			<strong>${localNode.ServerName}</strong>
+	#end
+
+    #set($localVersion = '')
+    #set($localVersion = $core_v2_infoResult.Get().Platform)
+	#set ($remoteNotes = $context.Status.AllConnections)
+	#foreach ($node in $remoteNotes)
+	#beforeall
+		<table style="display:inline-block">
+		<thead>
+			<tr>
+				<th colspan="4">
+					Servers
+				</th>
+			</tr>
+		</thead>
+	#each
+		<tr>
+			<td>
+				#if ($node.ClientType == 'Web')
+					$core_v2_language.GetResource('WebServer')
+				#elseif ($node.ClientType == 'Job')
+					$core_v2_language.GetResource('JobServer')
+				#end
+			</td>
+			<td>
+				$node.MachineName
+				#if ($node.IsLocal)
+					<em>($core_v2_language.GetResource('ThisServer'))</em>
+				#end
+			</td>
+			<td>
+			    #if ($node.PlatformVersion)
+			        $node.PlatformVersion
+			    #else
+			        $core_v2_language.GetResource('UnknownVersion')
+			    #end
+			    #if ($node.PlatformVersion.ToString() != $localVersion)
+			        <em>($core_v2_language.GetResource('InvalidVersion'))</em>
+			    #end
+			</td>
+			<td>
+				#if ($node.Connected)
+					<span class="pill positive">$core_v2_language.GetResource('StatusConnected')</span>
+				#else
+					<span class="pill critical">$core_v2_language.GetResource('StatusNotConnected')</span>
+				#end
+			</td>
+		</tr>
+	#afterall
+		</table>
+	#end
+
+#else
+	#set ($remoteNotes = $context.Status.AllConnections)
+	#format($core_v2_language.GetResource($format))
+		#token('bus')
+			${localNode.ServerName}
+	#end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Connected">Both this server and the job server are connected to the message bus, {bus}. If there are other expected servers not listed, please review.</resource>
+  <resource name="ConnectedWithoutJobServer">This server is connected to the message bus, {bus}, but the job server is not connected. This may indicate the job server is not running or property configured. Additionally, it may suggest other servers are also not connected to the bus.</resource>
+  <resource name="DatabaseBusEnabled">The database message bus is enabled. While functional, this bus performs poorly in production environments.</resource>
+  <resource name="ExcessiveReconnects">The message bus, {bus}, is connected but has experienced excessive reconnects within the past hour. This could be a result of restarts and would result in poor performance.</resource>
+  <resource name="InvalidVersion">Mismatched Version</resource>
+  <resource name="JobServer">Job Server</resource>
+  <resource name="MemoryBusEnabled">While no message bus is currently enabled, an in-memory bus is being used since RunJobsInternally is set to true. This configuration should only be used for development and testing.</resource>
+  <resource name="NoBusEnabled">No message bus is currently enabled. A message bus must be enabled to support critical functionality.</resource>
+  <resource name="NodesWithInvalidPlatformVersion">There are servers connected to the message bus which are not running the same version of Community. All servers must be running the same version. This may be an indication that this or another site are misconfigured and unintentionally sharing a message bus.</resource>
+  <resource name="NotConnected">The message bus, {bus}, is not currently connected.</resource>
+  <resource name="StatusConnected">Connected</resource>
+  <resource name="StatusNotConnected">Not Connected</resource>
+  <resource name="ThisServer">This Server</resource>
+  <resource name="Unknown">The status of message bus is not yet known.</resource>
+  <resource name="UnknownVersion">Unknown</resource>
+  <resource name="WebServer">Web Server</resource>
+  <resource name="Widget-Description">Message Bus System Indicator</resource>
+  <resource name="Widget-Title">Message Bus</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

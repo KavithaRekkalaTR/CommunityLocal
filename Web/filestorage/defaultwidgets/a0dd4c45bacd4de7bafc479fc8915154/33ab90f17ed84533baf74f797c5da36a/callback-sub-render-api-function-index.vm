@@ -1,0 +1,29 @@
+##
+## Function Index Renderer
+##
+## Requires in scope:
+##   $lessFunction
+##   $lessFunctions
+##
+
+<div>
+
+#if ($lessFunctions)
+	#foreach ($function in $lessFunctions)
+	#beforeall
+		<h3>$core_v2_language.GetResource('LessFunctions')</h3>
+		<ul>
+	#each
+		<li>
+			<a href="#"
+				data-name="$core_v2_encoding.HtmlAttributeEncode($function.Name)"
+				data-type="extension"
+				data-mode="less"
+				class="documentation-link">$function.Name</a>
+		</li>
+	#afterall
+		</ul>
+	#end
+#end
+
+</div>

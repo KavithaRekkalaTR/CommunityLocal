@@ -1,0 +1,49 @@
+$core_v2_widget.ExecuteFile('common-config.vm')
+
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex)
+#if ($currentReply)
+	#set ($pageIndex = $core_v2_forumReply.GetForumReplyPageIndex($thread.Id, $currentReply.Id, "%{ IncludeThreadStarter = 'false', PageSize = $pageSize, SortBy = 0, SortOrder = 'false' }"))
+#end
+
+#set ($threadLastReadDateOnLoad = false)
+#set ($threadLastReadDateOnLoadQuery = $core_v2_page.GetQueryStringValue('_w_threadLastReadDateOnLoad'))
+#if ($threadLastReadDateOnLoadQuery && $threadLastReadDateOnLoadQuery.length > 0)
+	#set ($threadLastReadDateOnLoad = $core_v2_utility.ParseLong($threadLastReadDateOnLoadQuery))
+#end
+
+#set ($replies = $core_v2_forumReply.List($thread.Id, "%{ IncludeThreadStarter = 'false', PageIndex = $pageIndex, PageSize = $pageSize, SortBy = 'PostDate', SortOrder = 'Ascending' }"))
+
+<ul class="content-list threaded" data-sortby="CreatedDate" data-sortorder="Ascending" data-filter="">
+#foreach ($forumReply in $replies)
+
+	#set ($isNew = false)
+	#if ($threadLastReadDateOnLoad && $threadLastReadDateOnLoad <= $forumReply.Date.Ticks && $core_v2_user.Accessing.Id != $forumReply.Author.Id)
+		#set ($isNew = true)
+	#end
+
+	<li class="threaded content-item
+		#if ($forumReply.IsDeleted) deleted #end
+		#if ($isNew) new #end
+		#if ($currentReply && $currentReply.Id == $forumReply.Id)
+			permalinked
+		#end
+		"
+		data-id="$forumReply.Id"
+		data-parentid="$!forumReply.ParentId"
+		data-createddate="$core_v2_utility.GetTimestamp($forumReply.Date)"
+		data-yesvotes="$forumReply.QualityYesVotes"
+		data-novotes="$forumReply.QualityNoVotes">
+		<div class="rendered-content #if ($forumReply.IsAnswer)
+			verified
+		#elseif ($forumReply.IsSuggestedAnswer)
+			suggested
+		#end">
+			$core_v2_widget.ExecuteFile('common-rendered-reply-body.vm')
+			<div class="typing-status-wrapper"></div>
+			<div class="new-replies-wrapper"></div>
+		</div>
+
+		<div class="newreply"></div>
+	</li>
+#end
+</ul>

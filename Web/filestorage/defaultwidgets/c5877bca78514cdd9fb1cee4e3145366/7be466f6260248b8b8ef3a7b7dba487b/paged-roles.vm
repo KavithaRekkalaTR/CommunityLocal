@@ -1,0 +1,42 @@
+#set($query = "%{SortBy = 'RoleName', SortOrder = 'Ascending'}")
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$query.Add('PageIndex', $pageIndex)
+$query.Add('PageSize', 20)
+
+#set($membershipType = false)
+#set($membershipType = $core_v2_page.GetQueryStringValue('w_membershiptype'))
+#if ($membershipType)
+    $query.Add('MembershipType', $membershipType)
+#end
+
+#set($members = $core_v2_groupRoleMember.List($context.Group.Id, $query))
+#set ($hasMore = 'false')
+#if ($members.PageIndex == $pageIndex)
+    #set ($currentPagedQuantity = ($members.PageIndex + 1) * $members.PageSize)
+    #if ($members.TotalCount > $currentPagedQuantity)
+    	#set ($hasMore = 'true')
+    #end
+#else
+    #set($members = [])
+#end
+
+<div data-hasmore="$hasMore">
+    #if ($pageIndex == 0 && $members.TotalCount > 0) 
+        <div class="result-overview">
+            #if ($members.TotalCount == 1)
+                $core_v2_language.FormatString($core_v2_language.GetResource('role-count-singular'), $core_v2_language.FormatNumber($members.TotalCount))
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('role-count'), $core_v2_language.FormatNumber($members.TotalCount))
+            #end
+        </div>
+    #end
+
+    <ul class="content-list content expandable simple">
+    #foreach($member in $members)
+    #each
+      $core_v2_widget.ExecuteFile('format-rolemember.vm')
+    #end
+    </ul>
+</div>

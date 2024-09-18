@@ -1,0 +1,136 @@
+2024-06-03 18:47:26,334 WARN  [23] - Service shutdown request
+2024-06-03 19:05:20,048 WARN  [41] - Service shutdown request
+2024-06-03 19:07:05,847 WARN  [33] - Service shutdown request
+2024-06-04 18:57:32,112 WARN  [4] - Service shutdown request
+2024-06-04 19:04:03,076 WARN  [24] - Service shutdown request
+2024-06-04 19:34:45,191 WARN  [47] - Service shutdown request
+2024-06-06 14:42:33,642 ERROR [1] - A fatal error occurred: System.Data.SqlClient.SqlException (0x80131904): Connection Timeout Expired.  The timeout period elapsed while attempting to consume the pre-login handshake acknowledgement.  This could be because the pre-login handshake failed or the server was unable to respond back in time.  The duration spent while attempting to connect to this server was - [Pre-Login] initialization=591; handshake=250;  ---> System.ComponentModel.Win32Exception (0x80004005): The wait operation timed out
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.Open()
+   at Telligent.Evolution.Data.SqlDistributedLockDataProvider.RemoveLeasesForMachine(String machineName)
+   at Telligent.Evolution.Components.DistributedLockService.<ReleaseLocksForThisMachine>b__12_0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.DistributedLockService.ReleaseLocksForThisMachine()
+   at Telligent.Evolution.Components.App.Initalize(String appName)
+   at Telligent.Evolution.Components.App.<>c__DisplayClass3_0.<EnsureInitialized>b__0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.App.EnsureInitialized(String appName)
+   at Telligent.Jobs.Server.CommunityJobs.StartJobs(CancellationToken cancellationToken)
+   at Telligent.Jobs.Server.JobsService.OnStart(String[] args)
+   at System.ServiceProcess.ServiceBase.ServiceQueuedMainCallback(Object state)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase[] services)
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase service)
+   at Telligent.Jobs.Server.Program.Main(String[] args)
+ClientConnectionId:d825cc18-45b9-45e2-ac73-5f653fec64bc
+Error Number:-2,State:0,Class:11
+2024-07-17 18:24:36,971 ERROR [1] - A fatal error occurred: System.Data.SqlClient.SqlException (0x80131904): A connection was successfully established with the server, but then an error occurred during the pre-login handshake. (provider: SSL Provider, error: 0 - The wait operation timed out.) ---> System.ComponentModel.Win32Exception (0x80004005): The wait operation timed out
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.Open()
+   at Telligent.Evolution.Data.SqlDistributedLockDataProvider.RemoveLeasesForMachine(String machineName)
+   at Telligent.Evolution.Components.DistributedLockService.<ReleaseLocksForThisMachine>b__12_0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.DistributedLockService.ReleaseLocksForThisMachine()
+   at Telligent.Evolution.Components.App.Initalize(String appName)
+   at Telligent.Evolution.Components.App.<>c__DisplayClass3_0.<EnsureInitialized>b__0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.App.EnsureInitialized(String appName)
+   at Telligent.Jobs.Server.CommunityJobs.StartJobs(CancellationToken cancellationToken)
+   at Telligent.Jobs.Server.JobsService.OnStart(String[] args)
+   at System.ServiceProcess.ServiceBase.ServiceQueuedMainCallback(Object state)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase[] services)
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase service)
+   at Telligent.Jobs.Server.Program.Main(String[] args)
+ClientConnectionId:e813a9f5-904d-4427-b969-da3b95ecff9a
+Error Number:258,State:0,Class:20
+2024-07-19 12:38:52,102 ERROR [1] - A fatal error occurred: System.Data.SqlClient.SqlException (0x80131904): Connection Timeout Expired.  The timeout period elapsed while attempting to consume the pre-login handshake acknowledgement.  This could be because the pre-login handshake failed or the server was unable to respond back in time.  The duration spent while attempting to connect to this server was - [Pre-Login] initialization=4597; handshake=3843;  ---> System.ComponentModel.Win32Exception (0x80004005): The wait operation timed out
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.Open()
+   at Telligent.Evolution.Data.SqlDistributedLockDataProvider.RemoveLeasesForMachine(String machineName)
+   at Telligent.Evolution.Components.DistributedLockService.<ReleaseLocksForThisMachine>b__12_0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.DistributedLockService.ReleaseLocksForThisMachine()
+   at Telligent.Evolution.Components.App.Initalize(String appName)
+   at Telligent.Evolution.Components.App.<>c__DisplayClass3_0.<EnsureInitialized>b__0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.App.EnsureInitialized(String appName)
+   at Telligent.Jobs.Server.CommunityJobs.StartJobs(CancellationToken cancellationToken)
+   at Telligent.Jobs.Server.JobsService.OnStart(String[] args)
+   at System.ServiceProcess.ServiceBase.ServiceQueuedMainCallback(Object state)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase[] services)
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase service)
+   at Telligent.Jobs.Server.Program.Main(String[] args)
+ClientConnectionId:22d01041-b464-419d-a688-8d987e4957e1
+Error Number:-2,State:0,Class:11
+2024-08-21 18:35:11,565 ERROR [1] - A fatal error occurred: System.Data.SqlClient.SqlException (0x80131904): A connection was successfully established with the server, but then an error occurred during the pre-login handshake. (provider: Shared Memory Provider, error: 0 - No process is on the other end of the pipe.) ---> System.ComponentModel.Win32Exception (0x80004005): No process is on the other end of the pipe
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.Open()
+   at Telligent.Evolution.Data.SqlDistributedLockDataProvider.RemoveLeasesForMachine(String machineName)
+   at Telligent.Evolution.Components.DistributedLockService.<ReleaseLocksForThisMachine>b__12_0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.DistributedLockService.ReleaseLocksForThisMachine()
+   at Telligent.Evolution.Components.App.Initalize(String appName)
+   at Telligent.Evolution.Components.App.<>c__DisplayClass3_0.<EnsureInitialized>b__0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.App.EnsureInitialized(String appName)
+   at Telligent.Jobs.Server.CommunityJobs.StartJobs(CancellationToken cancellationToken)
+   at Telligent.Jobs.Server.JobsService.OnStart(String[] args)
+   at System.ServiceProcess.ServiceBase.ServiceQueuedMainCallback(Object state)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase[] services)
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase service)
+   at Telligent.Jobs.Server.Program.Main(String[] args)
+ClientConnectionId:7515425e-7e80-49af-8859-30ffe0354055
+Error Number:233,State:0,Class:20
+2024-09-15 09:05:46,783 ERROR [1] - A fatal error occurred: System.Data.SqlClient.SqlException (0x80131904): A connection was successfully established with the server, but then an error occurred during the pre-login handshake. (provider: TCP Provider, error: 0 - The specified network name is no longer available.) ---> System.ComponentModel.Win32Exception (0x80004005): The specified network name is no longer available
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at System.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at System.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry)
+   at System.Data.SqlClient.SqlConnection.Open()
+   at Telligent.Evolution.Data.SqlDistributedLockDataProvider.RemoveLeasesForMachine(String machineName)
+   at Telligent.Evolution.Components.DistributedLockService.<ReleaseLocksForThisMachine>b__12_0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.DistributedLockService.ReleaseLocksForThisMachine()
+   at Telligent.Evolution.Components.App.Initalize(String appName)
+   at Telligent.Evolution.Components.App.<>c__DisplayClass3_0.<EnsureInitialized>b__0()
+   at Telligent.Evolution.Components.Locking.Lock(String key, Action action, DeadlockBehavior deadlockBehavior, Nullable`1 deadlockTimeoutSeconds)
+   at Telligent.Evolution.Components.App.EnsureInitialized(String appName)
+   at Telligent.Jobs.Server.CommunityJobs.StartJobs(CancellationToken cancellationToken)
+   at Telligent.Jobs.Server.JobsService.OnStart(String[] args)
+   at System.ServiceProcess.ServiceBase.ServiceQueuedMainCallback(Object state)
+--- End of stack trace from previous location where exception was thrown ---
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase[] services)
+   at System.ServiceProcess.ServiceBase.Run(ServiceBase service)
+   at Telligent.Jobs.Server.Program.Main(String[] args)
+ClientConnectionId:b8bbe49f-78de-4f2e-bfe7-2f1364722179
+Error Number:64,State:0,Class:20

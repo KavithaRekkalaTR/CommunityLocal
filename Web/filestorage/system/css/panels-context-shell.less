@@ -1,0 +1,398 @@
+@panel-shade: #222;
+
+@transitionDuration: 300ms;
+
+// colors
+@panel-shade-color: fade(@panel-shade, 25%);
+
+@panel-heading-background: lighten(@panel-shade, 7%);
+@panel-heading-foreground: #fff;
+@panel-heading-accent: lighten(#3498db, 10%);
+
+@panel-content-background: @panel-shade;
+@panel-content-foreground: #fff;
+@panel-content-accent: lighten(#3498db, 10%);
+
+@color-attention: #f39c12;
+
+// font
+@panel-font-family: 'Helvetica Neueue',Helvetica,Arial,sans-serif;
+@panel-heading-font-weight-normal: 500;
+@panel-heading-font-weight-heavy: 600;
+
+// sizing
+@panel-handle-width: 32px;
+@panel-base-zindex: 900;
+@panel-width: 400px;
+@panel-width-normal: @panel-width;
+@panel-width-wide: 800px;
+@panel-width-full: 100%;
+@panel-spacing: 10px;
+@panel-font-weight: 400;
+@panel-font-size: 13px;
+@panel-header-height: 44px;
+
+// responsive
+@panel-mobile-breakpoint: 670px;
+
+@preview-indicator-background: yellow;
+@preview-indicator-foreground: black;
+@preview-indicator-throb: red;
+
+// button style
+.button-style {
+	line-height: 2.5em;
+	height: 2.5em;
+	padding: 0 (@panel-spacing * 3) 0 (@panel-spacing * 3);
+	border: 0px;
+	border-radius: 3px;
+	display: inline-block;
+	background-color: @panel-content-accent;
+	color: @panel-content-foreground;
+	font-family: @panel-font-family;
+	font-size: @panel-font-size * 1.1;
+	font-weight: 500;
+	margin: 0;
+	width: 100%;
+	text-align: center;
+	.transition(background-color (@transitionDuration / 2));
+	&:hover, &:focus {
+		background-color: lighten(@panel-content-accent, 5%);
+		color: @panel-content-foreground;
+	}
+	&:active {
+		background-color: darken(@panel-content-accent, 5%);
+		color: @panel-content-background;
+	}
+	&.delete {
+		background-color: #a91616;
+		color: @panel-content-foreground;
+		&:hover, &:focus {
+			background-color: lighten(#a91616, 5%);
+		}
+		&:active {
+			background-color: darken(#a91616, 5%);
+		}
+	}
+	&.disabled {
+		background-color: fade(@panel-content-foreground, 50%);
+		cursor: default;
+		&:hover, &:focus {
+			color: @panel-content-foreground;
+		}
+	}
+}
+
+// contextual administration handles
+.contextual-administration-handle {
+	overflow: hidden;
+	background-color: @panel-shade;
+	color: #fff;
+	z-index: @panel-base-zindex;
+	position: fixed;
+	width: @panel-handle-width;
+	padding: 0;
+	font-size: @panel-font-size * .9;
+	font-weight: normal;
+	top: @panel-spacing * .6;
+	left: @panel-spacing * .6;
+	border: 1px solid #fff;
+	box-shadow: rgba(255,255,255,.25) 0px 0px 1px 0px inset, rgba(255,255,255,.25) 0px 0px 1px 0px;
+	.transition(all @transitionDuration);
+	&:hover {
+		background-color: @panel-heading-accent;
+		color: @panel-content-background;
+		border: 1px solid @panel-heading-accent;
+	}
+	&::after {
+		background-size: 70% 70%;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-opacity: .5;
+		position: absolute;
+		bottom: 0;
+		content: "";
+		opacity: 1;
+		z-index: -1;
+		.transition(all @transitionDuration);
+	}
+
+	.spinner {
+		display: none;
+		margin: 7px 0 0 3px;
+		width: 25px;
+		text-align: center;
+	}
+
+	.spinner > div {
+		width: 8px;
+		height: 8px;
+		background-color: @panel-content-foreground;
+
+		border-radius: 100%;
+		display: inline-block;
+		-webkit-animation: bouncedelay 1.4s infinite ease-in-out;
+		animation: bouncedelay 1.4s infinite ease-in-out;
+		-webkit-animation-fill-mode: both;
+		animation-fill-mode: both;
+	}
+
+	.spinner .bounce1 {
+		-webkit-animation-delay: -0.32s;
+		animation-delay: -0.32s;
+	}
+
+	.spinner .bounce2 {
+		-webkit-animation-delay: -0.16s;
+		animation-delay: -0.16s;
+	}
+
+	@-webkit-keyframes bouncedelay {
+		0%, 80%, 100% { -webkit-transform: scale(0.0) }
+		40% { -webkit-transform: scale(1.0) }
+	}
+
+	@keyframes bouncedelay {
+		0%, 80%, 100% {
+			transform: scale(0.0);
+			-webkit-transform: scale(0.0);
+		} 40% {
+			transform: scale(1.0);
+			-webkit-transform: scale(1.0);
+		}
+	}
+
+	&.with-loader {
+		&::after {
+			opacity: .3;
+		}
+		.spinner {
+			display: block;
+		}
+	}
+}
+.contextual-administration-total.badge {
+	.badge-count;
+	position: fixed;
+	top: 5px;
+	left: 5px;
+	right: auto;
+	z-index: @panel-base-zindex + 1;
+}
+
+html.direction-rtl {
+	.contextual-administration-handle {
+		right: @panel-spacing * .6;
+		left: auto;
+	}
+}
+
+// background shade
+.contextual-administration-panel-shade {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: @panel-shade-color;
+	z-index: @panel-base-zindex + 1;
+}
+
+// panel shell
+#_tc_ap {
+	a:focus, [tabindex]:not([tabindex="-1"]):focus {
+	    outline: none;
+	}
+}
+
+body.keyboard-active #_tc_ap {
+	a:focus, [tabindex]:not([tabindex="-1"], input, textarea, select, .modal):focus {
+		outline: 1px dotted @panel-content-accent !important;
+		outline-offset: -1px !important;
+		color: @panel-content-accent !important;
+		background-color: @panel-content-foreground !important;
+		mix-blend-mode: difference !important;
+		background-blend-mode: difference !important;
+		img {
+				mix-blend-mode: difference !important;
+		}
+	}
+}
+
+#_tc_ap {
+	&.contextual-administration-panel-container {
+		.box-sizing(border-box);
+		@import "css/panels-context-normalize.less";
+		@import "css/panels-context-general.less";
+		@import "css/panels-context-shell-container.less";
+	}
+	@import "css/panels-context-shell-content.less";
+}
+
+html.direction-rtl #_tc_ap.contextual-administration-panel-container {
+	@import "css/panels-context-shell-rtl.less";
+}
+
+body.context-panel-frame {
+	padding: 0 !important;
+	margin: 0 !important;
+	background-color: @panel-content-background;
+	height: auto;
+
+	form {
+		height: auto;
+	}
+
+	#_tc_ap {
+		&.contextual-administration-panel-container {
+			display: block;
+			position: relative;
+			opacity: .99;
+			overflow: visible;
+			height: auto;
+			width: 100%;
+
+			.contextual-administration-panel-wrapper {
+				.contextual-panel {
+					position: relative;
+					.contextual-panel-content {
+						position: static;
+						top: 0;
+						overflow-y: visible;
+						padding: 0;
+					}
+				}
+			}
+		}
+	}
+}
+
+@keyframes previewpulse {
+	0%, 100% {
+		background-color: #f1c40f;
+	}
+	50% {
+		background-color: lighten(#f1c40f, 25%);
+	}
+}
+
+@keyframes previewscale {
+	0% {
+		transform: scale(0);
+	}
+	100% {
+		transform: scale(1.0);
+		opacity: 0;
+	}
+}
+
+.preview-indicator-wrapper {
+	position: fixed;
+	top: @panel-handle-width + (@panel-spacing * .65 * 3);
+	left: @panel-spacing * .6;
+	z-index: @panel-base-zindex - 2;
+	width: @panel-handle-width;
+	height: @panel-handle-width;
+	display: none;
+	&::after {
+		position: absolute;
+		top: -1 * @panel-handle-width;
+		left: -1 * @panel-handle-width;
+		content: " ";
+		z-index: @panel-base-zindex - 2;
+
+		width: @panel-handle-width * 3;
+		height: @panel-handle-width * 3;
+		margin: 0px auto;
+		background-color: #f1c40f;
+
+		border-radius: 100%;
+		animation: previewscale 1.5s infinite ease-in-out;
+	}
+	.preview-indicator {
+		overflow: hidden;
+		display: block;
+		position: absolute;
+		top: 0;
+		left: 0;
+		background-color: @preview-indicator-background;
+		color: @preview-indicator-foreground;
+		width: @panel-handle-width;
+		height: @panel-handle-width;
+		padding: 0;
+		font-size: @panel-font-size * .9;
+		font-weight: normal;
+		.transition(all @transitionDuration);
+		animation: previewpulse 1.5s infinite ease-in-out;
+		text-indent: 100%;
+		white-space: nowrap;
+		z-index: @panel-base-zindex;
+		.round;
+		&:hover {
+			background-color: @preview-indicator-throb;
+			color: @preview-indicator-foreground;
+		}
+		&::after {
+			background-size: 70% 70%;
+			background-repeat: no-repeat;
+			background-position: center;
+			background-opacity: .5;
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			content: "";
+			opacity: 1;
+			z-index: -1;
+			.transition(all @transitionDuration);
+		}
+	}
+}
+
+html.direction-rtl {
+	.preview-indicator-wrapper {
+		right: @panel-spacing * .6;
+		left: auto;
+	}
+}
+
+
+// Respnsive
+@media only screen and (max-width: 670px) {
+	.preview-indicator-wrapper,
+	.preview-indicator,
+	.contextual-administration-handle {
+		display: none;
+	}
+}
+
+body.administration,
+body.contextual-administration-active {
+	.preview-indicator-wrapper,
+	.preview-indicator {
+		display: none !important;
+	}
+}
+
+@media only screen and (max-width: @panel-mobile-breakpoint) {
+	body.contextual-administration-active {
+		overflow: hidden;
+		position: fixed;
+	}
+	#_tc_ap {
+		&.contextual-administration-panel-container {
+			width: 100%;
+			&.panel-container-normal {
+				width: 100% !important;
+			}
+			&.panel-container-wide {
+				width: 100% !important;
+			}
+			&.panel-container-full {
+				width: 100% !important;
+			}
+			.contextual-administration-panel-wrapper {
+				width: 100% !important;
+			}
+		}
+	}
+}

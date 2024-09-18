@@ -1,0 +1,102 @@
+﻿#set($id = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_id')))
+
+#if ($id > 0)
+    #set($webhook = $core_v2_webhook.Get($id))
+#end
+#set($events = $core_v2_webhookEvent.List("%{}"))
+
+#if($webhook)
+    #set($subscribedEvents = $webhook.WebhookEvents)
+#end
+
+<form><fieldset class="field-list">
+<ul class="field-list">
+    <li class="field-item required webhook-url">
+        <label for="$core_v2_widget.UniqueId('Url')" class="field-item-header">$core_v2_language.GetResource('WebhookUrl')</label>
+    	<span class="field-item-description">$core_v2_language.GetResource('WebhookUrl_Detail')</span>
+        <span class="field-item-input">
+            <input type="text" id="$core_v2_widget.UniqueId('Url')" name="callback-url" value="$!webhook.CallBackUrl">
+        </span>
+        <span class="field-item-validation" style="display:none;"></span>
+    </li>
+	<li class="field-item enabled">
+		<span class="field-item-input">
+			<input type="checkbox" id="$core_v2_widget.UniqueId('Enabled')" #if($webhook.IsEnabled)checked="checked"#end />
+			<label for="$core_v2_widget.UniqueId('Enabled')" class="field-item-name">$core_v2_language.GetResource('Enabled')</label>
+		</span>
+		<span class="field-item-description">$core_v2_language.GetResource('Enabled_Detail')</span>
+	</li>
+#if ($webhook)
+    <li class="field-item secret-token">
+        <label class="field-item-header">$core_v2_language.GetResource('SecretToken')</label>
+    	<span class="field-item-description">$core_v2_language.GetResource('SecretToken_Detail')</span>
+        <span class="field-item-input">
+            $!webhook.SecretToken
+        </span>
+        <a href="#" class="inline-button" data-id="$webhook.Id" data-messagename="webhook-regeneratesecret">$core_v2_language.GetResource('RegenerateSecret')</a>
+    </li>
+#end
+    <li class="field-item">
+        <label class="field-item-header">$core_v2_language.GetResource('Edit_Hooks')</label>
+
+        <fieldset>
+        	<ul class="field-list">
+        		<li class="field-item event-filter">
+        			<span class="field-item-input"><input type="text" name="search" placeholder="$core_v2_language.GetResource('Find')"></input></span>
+        		</li>
+        	</ul>
+        </fieldset>
+
+        #foreach($event in $events)
+            #beforeall
+            <ul class="field-list webhook-events">
+            #each
+                #set($selected = false)
+                #foreach ($subscribedEvent in $subscribedEvents)
+                    #if($subscribedEvent.Id == $event.Id)
+                        #set($selected = true)
+                    #end
+                #end
+                <li class="field-item webhook-event" data-text="$core_v2_encoding.HtmlAttributeEncode($event.Name.ToLower())">
+                    <span class="field-item-input">
+                        <input type="checkbox" id="webhook$event.Id" name="webhook" value='$event.Id' #if($selected) #then checked='checked' #end /> <label for="webhook$event.Id">$event.Name</label>
+                    </span>
+                    <span class="field-item-description">
+                        $event.Description
+                        <a class="sample" style="cursor:pointer;">$core_v2_language.GetResource('ShowSample')</a>
+                        <div class="documentation" style="display:none"><pre>$event.TypeSample</pre></div>
+                    </span>
+               </li>
+            #afterall
+            </ul>
+        #end
+    </li>
+</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+      jQuery(function(j){
+          jQuery.telligent.evolution.widgets.webhookManagementEditForm.register({
+            id: $id,
+            urls: {
+                saveWebhook: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+                regenSecret: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('regen-secret.vm'))',
+                deleteWebhook: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+            },
+            resources: {
+                save: '$core_v2_language.GetResource('Save')',
+				updateSuccess: '$core_v2_language.GetResource('UpdateSuccess')',
+				secretRegenerated: '$core_v2_language.GetResource('SecretRegenerated')',
+				saveSuccess: '$core_v2_language.GetResource('SaveSuccess')',
+                showSample: '$core_v2_language.GetResource('ShowSample')',
+                hideSample: '$core_v2_language.GetResource('HideSample')'
+            },
+            inputs: {
+                callbackUrlId: '#$core_v2_widget.UniqueId('Url')',
+                enabledId: '#$core_v2_widget.UniqueId('Enabled')'
+            }
+          });
+      });
+	</script>
+#end

@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WikiOptionsManagement_Name}" version="13.0.0.0" description="${resource:WikiOptionsManagement_Description}" instanceIdentifier="54b47229e25948d59c203cd51684159f" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-wikioptions" lastModified="2023-02-02 19:03:59Z" provider="2a0262fc90594830992dd59dc5ac5aee">
+    <contentScript language="Velocity"><![CDATA[#set($wiki = $context.Wiki)
+#set($group = false)
+#set($group = $context.Group)
+#set ($canDelete = $core_v3_permission.CheckPermission($core_v2_groupPermissions.DeleteWiki, $core_v2_user.Accessing.Id, "%{ ApplicationId = $context.Wiki.Group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+<div id="$core_v2_widget.WrapperElementId">
+	
+	<form><fieldset>
+		<ul class="field-list">
+			
+			<li class="field-item name">
+				<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('Name')" name="wiki-name" maxlength="256" value="$core_v2_encoding.HtmlDecode($!wiki.Name)" /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+	
+			<li class="field-item web-address">
+				<label for="$core_v2_widget.UniqueId('WebAddress')" class="field-item-name">$core_v2_language.GetResource('WebAddress')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('WebAddress_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('WebAddress')" name="webAddress" maxlength="256" value="$core_v2_encoding.HtmlDecode($!wiki.ApplicationKey)" /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item description">
+				<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+				<span class="field-item-input">
+					#set($description = $wiki.Description)
+					$core_v2_editor.Render('Description',"%{Width='100%', Height='25%', Value='$description', ContentTypeId=$core_v2_wikis.ContentTypeId }")
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>				
+
+			<li class="field-item group">
+				<label for="$core_v2_widget.UniqueId('Group')" class="field-item-name">$core_v2_language.GetResource('Group')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Group_Detail')</span>
+	
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('Group')" /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+	
+			<li class="field-item enabled">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('Enabled')" #if($wiki.Enabled)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('Enabled')" class="field-item-name">$core_v2_language.GetResource('Enabled')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('Enabled_Detail')</span>
+			</li>
+	
+			#if ($wiki)
+				<li class="field-item identifiers">
+					<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+				</li>			
+				<li class="field-item identifiers entityid" style="display: none;">
+					<label class="field-item-name">$core_v2_language.GetResource('EntityId')</label>
+					<span class="field-item-input">$wiki.ID</span>
+				</li>
+				<li class="field-item identifiers contentid" style="display: none;">
+					<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+					<span class="field-item-input">$!wiki.ApplicationId</span>
+				</li>
+				<li class="field-item identifiers contenttypeid" style="display: none;">
+					<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+					<span class="field-item-input">$!wiki.ApplicationTypeId</span>
+				</li>				
+			#end	
+		</ul>
+	</fieldset></form>
+	
+	#if($canDelete)
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item submit">
+					<span class="field-item-input"><a href="#" class="button delete">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))</a></span>
+				</li>
+			</ul>
+		</fieldset>
+	#end
+
+</div>
+
+#set($redirect = false)
+#if($core_v2_wiki.Current && $core_v2_wiki.Current.Id == $context.Wiki.Id)
+	#set($redirect = true)
+#end
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.wikiOptionsManagement.register({
+		wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		groupId: #if ($group) '$group.Id' #else null #end,
+		groupName: #if ($group) '$group.Name' #else null #end,
+		applicationKey: '$context.Wiki.ApplicationKey',
+		hasPermissionOverrides: '$context.HasCustomPermissions()',
+		wikiId: '$context.Wiki.Id',
+		redirect: '$redirect',
+		canDelete: '$canDelete',
+		getDescription: function() { return $core_v2_editor.GetContentScript('Description'); },
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			webAddressId: "#$core_v2_widget.UniqueId('WebAddress')",
+			groupId: "#$core_v2_widget.UniqueId('Group')",
+			enabledId: "#$core_v2_widget.UniqueId('Enabled')"
+		},
+		resources: {
+			noGroupsMatch: "$core_v2_language.GetResource('GroupLookUp_NoMatches')",
+			save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+			delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+			addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))",
+			moveWarning: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ValidateMove'))",
+			wikiUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('WikiUpdated'))",
+			deleteConfirmation: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteWikiWarning'))",
+			requiredText: "$core_v2_language.GetResource('RequiredText')"
+		},
+		urls: {
+			lookupGroups:  "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/groups.json')",
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			groupRedirect: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Wiki.Group.Id)))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource>
+  <resource name="ApplicationId">Application Identifier</resource>
+  <resource name="ApplicationTypeId">Application Type Identifier</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteWikiWarning">Are you sure you want to delete this wiki?</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Description_Detail">A brief description of the wiki.</resource>
+  <resource name="Enabled">Enable this Wiki</resource>
+  <resource name="Enabled_Detail">When disabled the wiki is not accessible.</resource>
+  <resource name="EntityId">Identifier</resource>
+  <resource name="Group">${group_propercase}</resource>
+  <resource name="Group_Detail">The ${group_lowercase} that contains this wiki.</resource>
+  <resource name="GroupLookUp_NoMatches">A matching ${group_lowercase} could not be found.</resource>
+  <resource name="Name">Wiki Name</resource>
+  <resource name="Name_Detail">The name of the wiki</resource>
+  <resource name="RequiredText">This field is required</resource>
+  <resource name="Save">Save</resource>
+  <resource name="ValidateMove">You have selected to move the wiki to another ${group_lowercase}. There are permission overrides on this wiki that will be removed if you choose to continue.</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+  <resource name="WebAddress">Web Address</resource>
+  <resource name="WebAddress_Detail">Unique value used to identify this wiki. This value should not be changed. White spaces are not available. Only numbers, letters, "-", and "_" are valid characters.</resource>
+  <resource name="WikiOptionsManagement_Description">Manage wiki options.</resource>
+  <resource name="WikiOptionsManagement_Name">Wiki Options</resource>
+  <resource name="WikiUpdated">Wiki options have been updated.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="groups.groups.readonly" />
+      <scope id="wikis.wikis.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

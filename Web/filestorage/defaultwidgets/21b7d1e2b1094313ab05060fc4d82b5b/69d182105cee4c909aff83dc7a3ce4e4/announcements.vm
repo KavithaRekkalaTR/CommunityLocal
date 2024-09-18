@@ -1,0 +1,12 @@
+﻿#foreach($announcement in $context.Announcements)
+#beforeall
+	<h2 style="margin-top: 3em;">$core_v2_language.GetResource('Announcements')</h2>
+	<ul class="content-list">
+#each
+	<li class="content-item">
+		<h4 class="name"><a href="$core_v2_encoding.HtmlAttributeEncode($announcement.Url)">$announcement.Title</a></h4>
+		<div class="content"><p>$announcement.Description</p></div>
+	</li>
+#afterall
+	</ul>
+#end

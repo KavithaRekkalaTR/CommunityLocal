@@ -1,0 +1,163 @@
+<form><fieldset>
+    <ul class="field-list">
+
+		<li class="field-item">
+			<label for="$core_v2_widget.UniqueId('AccountStatus')" class="field-item-name">$core_v2_language.GetResource('Field_AccountStatus')</label>
+			#if(!$user.IsSystemAccount)
+			    <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource("Field_AccountStatus_Desc"), " href='#'  data-messagename='administeruser.delete' data-userid='$context.UserId'")</span>
+			#else
+			    <span class="field-item-description">$core_v2_language.GetResource("Field_AccountStatus_Desc_Basic")</span>
+			#end
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('AccountStatus')" name="$core_v2_widget.UniqueId('AccountStatus')" #if($user.IsSystemAccount) disabled #end>
+				    <option value="ApprovalPending" #if($user.AccountStatus == 'ApprovalPending') selected#end>$core_v2_language.GetResource('AccountStatus_ApprovalPending')</option>
+				    <option value="Approved" #if($user.AccountStatus == 'Approved') selected#end>$core_v2_language.GetResource('AccountStatus_Approved')</option>
+				    <option value="Banned" #if($user.AccountStatus == 'Banned') selected#end>$core_v2_language.GetResource('AccountStatus_Banned')</option>
+				    <option value="Disapproved" #if($user.AccountStatus == 'Disapproved') selected#end>$core_v2_language.GetResource('AccountStatus_Disapproved')</option>
+				    <option value="PendingDeletion" #if($user.AccountStatus == 'PendingDeletion') selected#end>$core_v2_language.GetResource('AccountStatus_PendingDeletion')</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+		<li class="field-item banning" #if($user.AccountStatus != 'Banned') style="display: none;" #end>
+			<label for="$core_v2_widget.UniqueId('BannedUntil')" class="field-item-name">$core_v2_language.GetResource('Field_BannedUntil')</label>
+			<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource("Field_BannedUntil_Desc"), " href='#'  data-messagename='administeruser.delete' data-userid='$context.UserId'")</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('BannedUntil')" name="$core_v2_widget.UniqueId('BannedUntil')" #if($user.AccountStatus == 'Banned' && $user.BannedUntil > $core_v2_utility.CurrentUserDate) value="$core_v2_encoding.JavascriptEncode($user.BannedUntil)"#end />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+		<li class="field-item banning" #if($user.AccountStatus != 'Banned') style="display: none;" #end>
+			<label for="$core_v2_widget.UniqueId('BannedReason')" class="field-item-name">$core_v2_language.GetResource('Field_BanReason')</label>
+			<span class="field-item-description">$core_v2_language.GetResource("Field_BanReason_Desc")</span>
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('BannedReason')" name="$core_v2_widget.UniqueId('BanReason')">
+				    <option value="Profanity" #if($user.BanReason == 'Profanity') selected#end>$core_v2_language.GetResource('BanReason_Profanity')</option>
+				    <option value="Advertising" #if($user.BanReason == 'Advertising') selected#end>$core_v2_language.GetResource('BanReason_Advertising')</option>
+				    <option value="Spam" #if($user.BanReason == 'Spam') selected#end>$core_v2_language.GetResource('BanReason_Spam')</option>
+				    <option value="Aggressive" #if($user.BanReason == 'Aggressive') selected#end>$core_v2_language.GetResource('BanReason_Aggressive')</option>
+				    <option value="BadUsername" #if($user.BanReason == 'BadUsername') selected#end>$core_v2_language.GetResource('BanReason_BadUsername')</option>
+				    <option value="BadSignature" #if($user.BanReason == 'BadSignature') selected#end>$core_v2_language.GetResource('BanReason_BadSignature')</option>
+				    <option value="BanDodging" #if($user.BanReason == 'BanDodging') selected#end>$core_v2_language.GetResource('BanReason_BanDodging')</option>
+				    <option value="Other" #if($user.BanReason == 'Other') selected#end>$core_v2_language.GetResource('BanReason_Other')</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+		<li class="field-item">
+			<label for="$core_v2_widget.UniqueId('ModerationLevel')" class="field-item-name">$core_v2_language.GetResource('Field_ModerationLevel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource("Field_ModerationLevel_Desc")</span>
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('ModerationLevel')" name="$core_v2_widget.UniqueId('ModerationLevel')">
+				    <option value="Moderated" #if($user.ModerationLevel == 'Moderated') selected#end>$core_v2_language.GetResource('ModerationLevel_Moderated')</option>
+				    <option value="Unmoderated" #if($user.ModerationLevel == 'Unmoderated') selected#end>$core_v2_language.GetResource('ModerationLevel_Unmoderated')</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+		<li class="field-item">
+		    <span class="field-item-input">
+                <input type="checkbox" id="$core_v2_widget.UniqueId('IsIgnored')" name="$core_v2_widget.UniqueId('IsIgnored')" #if($user.IsIgnored) checked="checked"#end #if($user.IsSystemAccount) disabled #end />
+			    <label for="$core_v2_widget.UniqueId('IsIgnored')" class="field-item-name">$core_v2_language.GetResource('Field_IsIgnored')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource("Field_IsIgnored_Desc")</span>
+		</li>
+
+		<li class="field-item">
+			<span class="field-item-name">$core_v2_language.GetResource('Field_Posts')</label>
+			<span class="field-item-input">
+                #set ($postUrl = false)
+                #set ($postUrl = $core_v1_reportingUrls.Content("%{userIds = '$context.UserId', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+                
+                #if (!$postUrl)
+                    #set ($postUrl = $core_v2_urls.Search("%{QueryString = 'q=user:$context.UserId'}"))
+                #end                
+			    <a href="$core_v2_encoding.HtmlAttributeEncode($postUrl)" target="_blank">
+			        #if ($context.User.User.TotalPosts == 1)
+			            $core_v2_language.FormatString($core_v2_language.GetResource('PostCount'), $core_v2_language.FormatNumber($user.TotalPosts))
+			        #else
+			            $core_v2_language.FormatString($core_v2_language.GetResource('PostsCount'), $core_v2_language.FormatNumber($user.TotalPosts))
+			        #end
+    			</a>
+			</span>
+		</li>
+
+#if(!$user.IsSystemAccount)
+		<li class="field-item">
+			<span class="field-item-name">$core_v2_language.GetResource('Field_Points')</label>
+			<span class="field-item-input">
+			    <span class="user-points">
+    				#if ($user.Points == 1)
+    		            $core_v2_language.FormatString($core_v2_language.GetResource('PointCount'), $core_v2_language.FormatNumber($user.Points))
+    		        #else
+    		            $core_v2_language.FormatString($core_v2_language.GetResource('PointsCount'), $core_v2_language.FormatNumber($user.Points))
+    		        #end
+		        </span>
+
+		        <a href="#" data-messagename="administeruser.addremovepoints" data-userid="$context.UserId">$core_v2_language.GetResource('Options_AddRemovePoints')</a>
+			</span>
+		</li>
+#end
+
+		<li class="field-item">
+			<span class="field-item-name">$core_v2_language.GetResource('Field_Joined')</label>
+			<span class="field-item-input">
+				$core_v2_language.FormatDate($user.JoinDate)
+			</span>
+		</li>
+
+#if(!$user.IsSystemAccount)
+        <li class="field-item">
+			<span class="field-item-name">$core_v2_language.GetResource('Field_LastVisited')</label>
+			<span class="field-item-input">
+			    #set($lastVisited = false)
+			    #set($lastVisited = $user.LastVisitedDate)
+			    #if ($lastVisited)
+				    $core_v2_language.FormatDate($lastVisited)
+				#else
+				    $core_v2_language.GetResource('NeverVisited')
+				#end
+			</span>
+		</li>
+
+		#if ($core_v2_urls.TermsOfService())
+    		<li class="field-item">
+    			<span class="field-item-name">$core_v2_language.GetResource('Field_TermsOfServiceAccepted')</label>
+    			<span class="field-item-input">
+    			    #set($acceptedDate = false)
+    			    #set($acceptedDate = $user.TermsOfServiceAcceptanceDate)
+    			    #if ($acceptedDate)
+    				    $core_v2_language.FormatDate($acceptedDate)
+    				#else
+    				    $core_v2_language.GetResource('HasNotAccepted')
+    				#end
+    				#if ($user.RequiresTermsOfServiceAcceptance)
+    				    <strong>$core_v2_language.GetResource('OutOfDate')</strong>
+    				#end
+    			</span>
+    		</li>
+    	#end
+#end
+		<li class="field-item view-id">
+			<span class="field-item-input">
+				<a class="inline-button" href="#">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</span>
+		</li>
+		<li class="field-item id" style="display: none;">
+			<label class="field-item-name">$core_v2_language.GetResource('Field_Id')</label>
+			<span class="field-item-input">
+				$user.Id
+			</span>
+		</li>
+		<li class="field-item id" style="display: none;">
+			<label class="field-item-name">$core_v2_language.GetResource('Field_ContentId')</label>
+			<span class="field-item-input">
+				$user.ContentId.ToString()
+			</span>
+		</li>
+    </ul>
+</fieldset></form>

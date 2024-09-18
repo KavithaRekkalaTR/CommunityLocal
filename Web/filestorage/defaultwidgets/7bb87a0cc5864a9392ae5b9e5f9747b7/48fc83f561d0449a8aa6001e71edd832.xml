@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="48fc83f561d0449a8aa6001e71edd832" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="custom-title" lastModified="2021-08-19 17:15:38Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#if (!$core_v2_widget.IsInWidgetPreviewMode)
+    #set($statusCode = $core_v2_widget.GetIntValue('statusCode', 200))
+    $core_v2_page.SetStatusCode($statusCode)
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('title', '${resource:Core_CustomTitle_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="statusCode" labelResourceName="Options_StatusCode" defaultValue="200" dataType="int">
+	    <propertyValue labelResourceName="Options_StatusCode_200" value="200" />
+	    <propertyValue labelResourceName="Options_StatusCode_400" value="400" />
+	    <propertyValue labelResourceName="Options_StatusCode_401" value="401" />
+	    <propertyValue labelResourceName="Options_StatusCode_403" value="403" />
+	    <propertyValue labelResourceName="Options_StatusCode_404" value="404" />
+	    <propertyValue labelResourceName="Options_StatusCode_409" value="409" />
+	    <propertyValue labelResourceName="Options_StatusCode_410" value="410" />
+	    <propertyValue labelResourceName="Options_StatusCode_429" value="429" />
+	    <propertyValue labelResourceName="Options_StatusCode_500" value="500" />
+	    <propertyValue labelResourceName="Options_StatusCode_501" value="501" />
+	    <propertyValue labelResourceName="Options_StatusCode_502" value="502" />
+	    <propertyValue labelResourceName="Options_StatusCode_503" value="503" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enables setting the HTTP status code to a custom value.</resource>
+  <resource name="Name">Custom HTTP Status Code</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Options_StatusCode">HTTP Status Code</resource>
+  <resource name="Options_StatusCode_200">OK (200)</resource>
+  <resource name="Options_StatusCode_400">Bad Request (400)</resource>
+  <resource name="Options_StatusCode_401">Unauthorized (401)</resource>
+  <resource name="Options_StatusCode_403">Forbidden (403)</resource>
+  <resource name="Options_StatusCode_404">Not Found (404)</resource>
+  <resource name="Options_StatusCode_409">Conflict (409)</resource>
+  <resource name="Options_StatusCode_410">Gone (410)</resource>
+  <resource name="Options_StatusCode_429">Too Many Requests (429)</resource>
+  <resource name="Options_StatusCode_500">Internal Server Error (500)</resource>
+  <resource name="Options_StatusCode_501">Not Implemented (501)</resource>
+  <resource name="Options_StatusCode_502">Bad Gateway (502)</resource>
+  <resource name="Options_StatusCode_503">Service Unavailable (503)</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

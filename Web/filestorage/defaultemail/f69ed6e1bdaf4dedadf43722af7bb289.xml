@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Group Membership Request Rejected" version="13.0.0.0" description="Sends an email with the rejected status of the group membership request" id="f69ed6e1bdaf4dedadf43722af7bb289" lastModified="2023-05-05 20:35:16Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('group_name')
+    $context_v1_email.Context.GroupMembership.Group.Name
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('group_name')
+    $context_v1_email.Context.GroupMembership.Group.Name
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('group_name')
+    $context_v1_email.Context.GroupMembership.Group.Name
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Unfortunately, your membership request to {group_name} couldn't be approved at this time.</resource>
+  <resource name="Subject">{site_name}: {group_name} Membership Denied</resource>
+  <resource name="Header">{group_name} Membership Denied</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

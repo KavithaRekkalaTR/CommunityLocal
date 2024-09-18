@@ -1,0 +1,8 @@
+$core_v2_page.SetContentType('application/json')
+#set($imageUrl = false)
+#set($imageUrl = $core_v2_page.GetQueryStringValue('w_url'))
+#if($imageUrl)
+	{"url":"$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageUrl($imageUrl, 1000, 250, "%{ ResizeMethod='ZoomAndCrop' }"))"}
+#else
+	{"url": ""}
+#end

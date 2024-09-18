@@ -1,0 +1,40 @@
+#set($sourceApplicationTypeId = false)
+#set($sourceApplicationTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('_w_sourceApplicationTypeId')))
+#set($sourceApplicationId = false)
+#set($sourceApplicationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('_w_sourceApplicationId')))
+#set($targetApplicationTypeId = false)
+#set($targetApplicationTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('_w_targetApplicationTypeId')))
+#set($targetApplicationId = false)
+#set($targetApplicationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('_w_targetApplicationId')))
+#set($subscriptions = false)
+#set($subscriptions =$core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscriptions')))
+
+
+$core_v2_page.SetContentType('application/json')
+
+#set($application = false)
+#set($application = $core_v2_application.Get($targetApplicationId, $targetApplicationTypeId))
+
+#set($options= "%{}")
+    $options.Add('subscriptions', $subscriptions)
+
+#set($merge = false)
+#set($merge = $core_v2_applicationMerge.Merge($sourceApplicationTypeId, $sourceApplicationId, $targetApplicationTypeId, $targetApplicationId, $options))
+#if ($merge && $application)
+    {"Application":{ 
+    		        "ApplicationId": "$application.ApplicationId.ToString()", 
+    		        "ApplicationTypeId": "$application.ApplicationTypeId.ToString()",
+    		        "Name": "$core_v2_encoding.JavascriptEncode($application.HtmlName('Web'))",
+    		        "Url": "$application.Url",
+    		        "Container": {
+    		            #if ($application.Container)
+    		                "ContainerId": "$application.Container.ContainerId.ToString()",
+    		                "ContainerTypeId": "$application.Container.ContainerTypeId.ToString()",
+    		                "Name": "$core_v2_encoding.JavascriptEncode($application.Container.HtmlName('Web'))"
+    		            #end
+    		        }
+    		    }
+    }
+#end
+
+    

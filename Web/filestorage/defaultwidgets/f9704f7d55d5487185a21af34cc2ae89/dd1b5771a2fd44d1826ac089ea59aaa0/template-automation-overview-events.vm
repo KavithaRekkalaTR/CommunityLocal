@@ -1,0 +1,24 @@
+<% if(State != 'NotPersisted') { %>
+	<% if(Events && Events.length > 0) { %>
+		<ul class="navigation-list automation-events">
+			<% foreach(Events, function(event){ %>
+				<li class="navigation-list-item automation-event">
+					<span class="automation-event-name"><%: event.Entity %>.<%: event.Event %></span>
+
+					<a href="#" class="automation-event-doc"
+						data-type="extension"
+						data-name="<%: event.Entity %>.<%: event.Event %>"
+						data-displayname="<%: event.Entity %>.<%: event.Event %>"
+						data-target="">$core_v2_language.GetResource('ViewDocumentation')</a>
+
+					<a href="#" class="automation-event-delete"
+						data-key="<%: event.Key %>">$core_v2_language.GetResource('RemoveEvent')</a>
+
+					<% if (event.Description && event.Description.length > 0) { %>
+						<div class="automation-event-desc"><%: event.Description %></div>
+					<% } %>
+				</li>
+			<% }); %>
+		</ul>
+	<% } %>
+<% } %>

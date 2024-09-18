@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:CalendarOptionsManagement_Name}" version="13.0.0.0" description="${resource:CalendarOptionsManagement_Description}" instanceIdentifier="57cc47e171084c269e0377ee18e486e9" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-calendaroptions" lastModified="2023-03-23 07:22:21Z" provider="c00e837bbdbe4fd7b97b771ba087e2c0">
+    <contentScript language="Velocity"><![CDATA[#set($calendar = $context.Calendar)
+#set($canDelete = $calendar_v1_calendars.HasPermission($context.Calendar.Id, $calendar_v1_permissions.EditCalendar))
+#set($groupId = $core_v2_widget.UniqueId('groupId'))
+
+<form><fieldset>
+	<ul class="field-list">
+	
+		<li class="field-item name">
+			<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Name')" name="calendar-name" maxlength="256" value="$core_v2_encoding.HtmlDecode($!calendar.Name)" /> 
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item group">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($groupId)" class="field-item-name">$core_v2_language.GetResource('GroupLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('GroupLabel_Desc')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($groupId)" name="$core_v2_encoding.HtmlAttributeEncode($groupId)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item description">
+			<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+			<span class="field-item-input">
+				#set($description = $calendar.HtmlDescription('raw'))
+				$core_v2_editor.Render('Description',"%{Width='100%', Height='25%', Value='$description', ContentTypeId=$calendar_v1_calendars.ContentTypeId }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>				
+		
+		#if ($calendar)
+			<li class="field-item identifiers">
+				<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</li>		
+			<li class="field-item identifiers entityid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('EntityId')</label>
+				<span class="field-item-input">$calendar.Id</span>
+			</li>
+			<li class="field-item identifiers contentid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+				<span class="field-item-input">$!calendar.ApplicationId</span>
+			</li>
+			<li class="field-item identifiers contenttypeid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+				<span class="field-item-input">$!calendar.ApplicationTypeId</span>
+			</li>
+		#end		
+	</ul>
+</fieldset></form>
+
+#if($canDelete)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input"><a href="#" class="button delete">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))</a></span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.calendarOptionsManagement.register({
+		wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		calendarId: '$context.Calendar.Id',
+		canDelete: '$canDelete',
+		groupId: '$context.Calendar.Group.Id',
+		groupName: '$context.Calendar.Group.Name',
+		hasPermissionOverrides: #if ($context.HasCustomPermissions()) true #else false #end,
+		getDescription: function() { return $core_v2_editor.GetContentScript('Description'); },
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			group: '#$core_v2_encoding.JavascriptEncode($groupId)'
+		},
+		resources: {
+			save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+			delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+			calendarUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CalendarUpdated'))",
+			deleteConfirmation: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteCalendarWarning'))",
+			requiredText: "$core_v2_language.GetResource('RequiredText')",
+			noGroupsMatch: '$core_v2_language.GetResource('GroupLookUp_NoMatches')',
+			moveWarning: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ValidateMove'))',
+		},
+		urls: {
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			groupRedirect: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Calendar.Group.Id)))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ApplicationId">Application Identifier</resource>
+  <resource name="ApplicationTypeId">Application Type Identifier</resource>
+  <resource name="CalendarOptionsManagement_Description">Manage calendar options.</resource>
+  <resource name="CalendarOptionsManagement_Name">Calendar Options</resource>
+  <resource name="CalendarUpdated">Calendar options have been updated.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteCalendarWarning">Are you sure you want to delete this calendar?</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Description_Detail">A brief description of the calendar.</resource>
+  <resource name="EntityId">Identifier</resource>
+  <resource name="GroupLabel">Calendar Group</resource>
+  <resource name="GroupLabel_Desc">Select a group that this calendar is associated with</resource>
+  <resource name="GroupLookUp_NoMatches">A matching ${group_lowercase} could not be found.</resource>
+  <resource name="Name">Calendar Name</resource>
+  <resource name="Name_Detail">Enter a title for the calendar</resource>
+  <resource name="RequiredText">This field is required</resource>
+  <resource name="Save">Save</resource>
+  <resource name="ValidateMove">You have selected to move the calendar to another ${group_lowercase}. There are permission overrides on this calendar that will be removed if you choose to continue.</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="calendars.calendars.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

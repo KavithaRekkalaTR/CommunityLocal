@@ -1,0 +1,26 @@
+﻿##
+## Custom Group Searching callback to support also retrieving resized AvatarHtml over what's possible from REST
+##
+
+$core_v2_page.SetContentType('application/json')
+
+#set ($pageSize = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("pageSize")))
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("pageIndex")))
+#set ($query = $core_v2_page.GetQueryStringValue("query"))
+
+#set ($groups = $core_v2_group.List("%{ PageIndex = $pageIndex, PageSize = $pageSize, GroupNameFilter = $query, UserId = $core_v2_user.Accessing.Id, IncludeAllSubGroups = 'true' }"))
+
+{
+	"groups": [
+#foreach ($group in $groups)
+		{
+			"name": "$core_v2_encoding.JavascriptEncode($group.Name)",
+			"id": "$core_v2_encoding.JavascriptEncode($group.ContainerId.ToString())",
+            "avatarHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($group.AvatarUrl, 16, 16, "%{ ResizeMethod = 'ZoomAndCrop', alt='$group.Name' }"))",
+            "date": "$core_v2_encoding.JavascriptEncode($core_v2_language.FormatDate($group.CreatedDate, "%{ Format = 'yyyy-MM-ddTHH:mm:ss' }"))"
+		}
+#between
+,
+#end
+	]
+}

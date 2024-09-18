@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Forum Reply Suggested Answer" version="13.0.0.0" description="Defines the email sent to the thread author when a reply is marked as suggested." id="3eea2d7b7d2c41abb4105d6a74591f68" lastModified="2023-08-30 16:29:34Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#set($thread = $core_v2_forumThread.Get($context_v1_email.Context.ForumReply.ThreadId))
+#set($forum = $core_v2_forum.Get($thread.ForumId))
+#if ($forum.MailingListName && $forum.MailingListName.Length > 0)
+	#format($core_v2_language.GetResource('Subject_WithMailingList'))
+	#token('mailing_list_name')
+	    $forum.MailingListName
+    #token('thread_subject')
+        $thread.Subject
+    #end
+#else
+    #format($core_v2_language.GetResource('Subject'))
+    #token('thread_subject')
+        $thread.Subject
+    #end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#set($thread = $core_v2_forumThread.Get($context_v1_email.Context.ForumReply.ThreadId))
+#set($forum = $core_v2_forum.Get($thread.ForumId))
+#if ($forum.MailingListName && $forum.MailingListName.Length > 0)
+	#format($core_v2_language.GetResource('Header_WithMailingList'))
+	#token('mailing_list_name')
+	    $forum.MailingListName
+    #token('thread_subject')
+        $thread.Subject
+    #end
+#else
+    #format($core_v2_language.GetResource('Header'))
+    #token('thread_subject')
+        $thread.Subject
+    #end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('author_name_link')
+    #set($authorUrl = false)
+    #set($authorUrl = $context_v1_email.Context.ForumReply.Author.Url)
+    #if ($authorUrl)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($authorUrl)">$context_v1_email.Context.ForumReply.Author.DisplayName</a>
+    #else
+        $context_v1_email.Context.ForumReply.Author.DisplayName
+    #end
+#token('thread_subject_link')
+    #set($thread = false)
+    #set($thread = $core_v2_forumThread.Get($context_v1_email.Context.ForumReply.ThreadId))
+    #if ($thread && !$thread.HasErrors())
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)">$thread.Subject</a>
+    #else
+        $context_v1_email.Context.ForumReply.ThreadId
+    #end
+#end
+$context_v1_email.Context.ForumReply.Body('Email')
+
+#set($rejectUrl = false)
+#set($rejectUrl = $core_v2_forumUrls.RejectForumReply($context_v1_email.Context.ForumReply.Id, false))
+#set($acceptUrl = false)
+#set($acceptUrl = $core_v2_forumUrls.VerifyForumReply($context_v1_email.Context.ForumReply.Id, false))
+#if ($rejectUrl && $acceptUrl)
+    <p>
+    #format($core_v2_language.GetResource('Body_AcceptReject'))A
+    #token('reject_answer_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($rejectUrl)">$core_v2_language.GetResource('Reject')</a>
+	#token('accept_answer_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($acceptUrl)">$core_v2_language.GetResource('Accept')</a>
+	#end
+	</p>
+#end]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[#set($thread = $core_v2_forumThread.Get($context_v1_email.Context.ForumReply.ThreadId))
+#set($forum = $core_v2_forum.Get($thread.ForumId))
+#if ($forum.EmailFooter && $forum.EmailFooter.Length > 0)
+	$forum.EmailFooter
+#end
+<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('forum_name_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($forum.Url)">$forum.Name</a>
+#token('mute_thread_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_forumUrls.MuteThread($thread.Id, false))">$core_v2_language.GetResource('Mute')</a>
+#end
+</p>
+#set($reportAbuseUrl = $core_v2_urls.ReportAbuse($context_v1_email.Context.ForumReply.Url, $context_v1_email.Context.ForumReply.ContentId, $core_v2_forumReply.ContentTypeId))
+#if ($reportAbuseUrl)
+    <p>
+    #format($core_v2_language.GetResource('Footer_ReportAbuse'))
+    #token('report_abuse_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($reportAbuseUrl)">$core_v2_language.GetResource('ReportAbuse')</a>
+	#end
+	</p>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Accept">accept</resource>
+  <resource name="Body">The following reply by {author_name_link} was suggested as an answer to {thread_subject_link}:</resource>
+  <resource name="Body_AcceptReject">Did this answer your question? You can {accept_answer_link} or {reject_answer_link} it.</resource>
+  <resource name="Footer">You received this notification because you subscribed to {forum_name_link}. To unsubscribe from only this thread, {mute_thread_link}.</resource>
+  <resource name="Footer_ReportAbuse">{report_abuse_link}.</resource>
+  <resource name="Mute">go here</resource>
+  <resource name="Reject">reject</resource>
+  <resource name="ReportAbuse">Flag as spam/abuse</resource>
+  <resource name="Subject">Re: {thread_subject}: Suggested answer</resource>
+  <resource name="Subject_WithMailingList">Re: [{mailing_list_name}] {thread_subject}: Suggested answer</resource>
+  <resource name="Header">Re: {thread_subject}: Suggested answer</resource>
+  <resource name="Header_WithMailingList">Re: [{mailing_list_name}] {thread_subject}: Suggested answer</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

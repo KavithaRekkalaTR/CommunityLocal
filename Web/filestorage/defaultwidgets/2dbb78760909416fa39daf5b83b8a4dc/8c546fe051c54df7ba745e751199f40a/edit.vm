@@ -1,0 +1,184 @@
+#set($roleIdString = $core_v2_page.GetQueryStringValue('w_roleid'))
+#set($roleId = $core_v2_utility.ParseInt($roleIdString))
+#set($isADMapped = false)
+
+#if($roleId > 0)
+	#set($role = $core_v2_role.Get($roleId))
+
+	#if ($role)
+		#set($isADMapped = $context.HasAssociatedGroupForADRole($roleId))
+	#end
+
+	#if ($isADMapped)
+		#set($adGroup = $context.GetAssociatedGroupForADRole($roleId))
+	#end
+#end
+
+#set($cloneRoleIdString = $core_v2_page.GetQueryStringValue('w_cloneroleid'))
+#set($cloneRoleId = $core_v2_utility.ParseInt($cloneRoleIdString))
+#if($cloneRoleId > 0)
+	#set($cloneRole = $core_v2_role.Get($cloneRoleId))
+#end
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+#set($attachmentUrl = $role.AvatarUrl)
+#set($attachmentFileName = $context.GetFileNameFromImageUrl($attachmentUrl))
+
+#set($roleName = '')
+#if($role)
+	#set($roleName = $role.Name)
+#elseif($cloneRole)
+	#set($roleName = "$core_v2_language.GetResource('CloneOf') $cloneRole.Name")
+#end
+
+<div class="optionsTab">
+	#if ($isADMapped)
+		<p>$core_v2_language.FormatString($core_v2_language.GetResource('MappedFormat'), $adGroup.Name)</p>
+	#end
+
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item name">
+				<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+				<span class="field-item-input">
+					#if($role.IsSystemRole)
+						$core_v2_encoding.HtmlDecode($roleName)
+					#else
+						<input type="text" id="$core_v2_widget.UniqueId('Name')" name="RoleName" maxlength="256" value="$core_v2_encoding.HtmlAttributeEncode($roleName)" />
+					#end
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item description">
+				<label for="$core_v2_widget.UniqueId('Description')" class="field-item-name">$core_v2_language.GetResource('Description')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+				<span class="field-item-input">
+					<textarea name="Description" maxlength="1000" style="width: 90%" id="$core_v2_widget.UniqueId('Description')" #if($isADMapped) readonly #end>$!role.Description</textarea>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false">
+				<label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('RoleAvatar')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('RoleAvatar_Detail')</span>
+				<span class="field-item-input preview">
+				</span>
+				<span class="field-item-input upload">
+					<a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+					<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+			</li>
+		</ul>
+	</fieldset></form>
+</div>
+#if($cloneRoleId > 0)
+	#set($perms = $context.GetPermissions($cloneRoleId))
+#else
+	#set($perms = $context.GetPermissions($roleId))
+#end
+
+#set($appType = '')
+<div class="permissionsTab" style="display: none;">
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item permission-filter">
+				<span class="field-item-input"><input type="text" name="search" placeholder="$core_v2_language.GetResource('Find')"></input></span>
+			</li>
+		</ul>
+	</fieldset></form>
+
+	#set ($index = 0)
+	#foreach($perm in $perms)
+	#beforeall
+		<form><fieldset>
+	#each
+		#set ($index = $index + 1)
+		#set ($inputId = "${core_v2_widget.UniqueId('permissionInputId')}${index}")
+
+		#if($appType != $perm.Permission.ApplicationTypeId && $appType != '')
+			</ul>
+		</div>
+		#end
+
+		#if($appType != $perm.Permission.ApplicationTypeId)
+			<div class="permission-group">
+				<h4 class="permission-group-header">
+					$core_v2_language.FormatString($core_v2_language.GetResource('ItemPermissions'), $core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name)
+				</h4>
+				<div class="post-attributes">
+					<ul class="field-list">
+						<li class="field-item" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower())">
+							<span class="field-item-input">
+								<a href="#" class="inline-button checkall">$core_v2_language.GetResource('SelectAll')</a>
+								<a href="#" class="inline-button checknone">$core_v2_language.GetResource('SelectNone')</a>
+							</span>
+						</li>
+					</ul>
+				</div>
+				<ul class="field-list">
+		#end
+
+		<li class="field-item permission" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name).ToLower() $core_v2_encoding.HtmlAttributeEncode($perm.Permission.Description).ToLower()">
+			<span class="field-item-input">
+				<input type="checkbox" name="permissions" id="$inputId" value="$perm.Permission.Id" #if($perm.IsAllowed)checked="checked"#end />
+				<label for="$inputId">$perm.Permission.Name</label>
+			</span>
+			<span class="field-item-description">$perm.Permission.Description</span>
+		</li>
+
+		#set($appType = $perm.Permission.ApplicationTypeId)
+	#afterall
+			</ul>
+		</fieldset></form>
+	#end
+
+	<div class="message norecords" #if($perms.Count > 0) style="display: none;"#end>$core_v2_language.GetResource("NoPermissionsFound")</div>
+</div>
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.administrationRolesEdit.register({
+		roleId: $roleId,
+		roleName: '$core_v2_encoding.JavascriptEncode($role.Name)',
+		cloneRoleId: $cloneRoleId,
+		isSystemRole: '$role.IsSystemRole',
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			descriptionId: "#$core_v2_widget.UniqueId('Description')"
+		},
+		text: {
+			save: '$core_v2_language.GetResource('Save')',
+			find: '$core_v2_language.GetResource('Find')',
+			roleCreated: '$core_v2_language.GetResource('RoleCreated')',
+			roleUpdated: '$core_v2_language.GetResource('RoleUpdated')'
+		},
+		urls: {
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			roleslistitem: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('role-listitem.vm'))'
+		},
+		file: {
+			fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+			url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+			isRemote:#if($attachmentIsRemote) true#else false#end,
+			isNew:#if($attachmentIsNew) true#else false#end
+		},
+		attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))'
+	});
+});
+</script>

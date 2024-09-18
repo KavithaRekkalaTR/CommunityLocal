@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:StatusMessageActivityStory_Name}" version="11.0.0.0" description="${resource:StatusMessageActivityStory_Description}" instanceIdentifier="93a5307312ef453a9f8927ccc0cb2049" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2021-01-08 09:33:07Z" provider="0b4540af852b4663af7a470fec0ba1a4">
+    <contentScript language="Velocity"><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+#set($statusMessage = $context.StatusMessage)
+
+#if(!$content || !$statusMessage)
+	$core_v2_widget.Hide()
+#else
+	#set($actor = $context.Story.PrimaryUser)
+	#if ($actor.Url)
+		#set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+	#else
+		#set($profile0Html = $actor.DisplayName)
+	#end
+	#if ($context.IsPreview)
+		#if ($content.Application.Container.ParentContainer)
+			#format($core_v2_language.GetResource('StatusMessage_Preview_InGroup'))
+				#token('user')
+					$profile0Html
+				#token('message')
+					$core_v2_language.Truncate($context.StatusMessage.Message('web'), 100, '...')
+				#token('group')
+					<a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)" 
+					    $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)>$content.Application.Container.HtmlName('Web')</a>
+			#end
+		#else
+			#format($core_v2_language.GetResource('StatusMessage_Preview'))
+				#token('user')
+					$profile0Html
+				#token('message')
+					$core_v2_language.Truncate($context.StatusMessage.Message('web'), 100, '...')
+				#token('group')
+					<a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)" 
+					    $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)>$content.Application.Container.HtmlName('Web')</a>
+			#end
+		#end
+	#else
+		<div class="activity-summary">
+			#if ($content.Application.Container.ParentContainer)
+				#format($core_v2_language.GetResource('in_group'))
+					#token('user')
+						$profile0Html
+					#token('group')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)" 
+						    $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)>$content.Application.Container.HtmlName('Web')</a>
+				#end
+			#elseif ($core_v2_urls.Current != 'ActivityMessage')
+				#format($core_v2_language.GetResource('in'))
+					#token('user')
+						$profile0Html
+				#end
+			#end
+		</div>
+
+		<div class="activity-content user-defined-markup">
+			## Truncate the status message, maintaining formatting
+			#set ($renderedMessage = $context.StatusMessage.Message('web'))
+
+			## If exceeds length, add a "view more" link
+			#if ($core_v2_language.RemoveHtml($renderedMessage).Length > $context.TruncationLength)
+				#set($statusMessageWrapperId = $core_v2_widget.UniqueId("status-content-${context.StatusMessage.Id}"))
+				<span id="$core_v2_encoding.HtmlAttributeEncode($statusMessageWrapperId)">
+					$core_v2_language.Truncate($renderedMessage, $context.TruncationLength, "%{ Ellipsis = '...', MaintainHtmlFormatting = 'true' }")
+				</span>
+				## Use a message link with embedded data about the status message and wrapper element
+				<a href="#" data-messagename="expand-status-message"
+					data-userid="$context.StatusMessage.Author.Id"
+					data-messageid="$context.StatusMessage.Id"
+					data-wrapper="$core_v2_encoding.HtmlAttributeEncode($statusMessageWrapperId)">
+					$core_v2_language.GetResource('ViewMore')
+				</a>
+				## Register a global script for all status stories that handles expansions
+				#registerEndOfPageHtml('status-message-story')
+					<script>
+						jQuery(function(j){
+							j.telligent.evolution.messaging.subscribe('expand-status-message', function(e) {
+								var link = j(e.target);
+								var wrapper = j('#' + link.data('wrapper'));
+								var messageId = link.data('messageid');
+								var userId = link.data('userid');
+
+								// Load the full status message via REST
+								j.telligent.evolution.get({
+									url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/users/{userid}/statuses/{messageid}.json',
+									data: {
+										userid: userId,
+										messageid: messageId
+									}
+								}).then(function(r){
+									// Render the full status body and hide the view link
+									wrapper.html(r.StatusMessage.Body);
+									link.hide();
+								});
+							})
+						});
+					</script>
+				#end
+			#else
+				$renderedMessage
+			#end
+		</div>
+
+		#set($attachmentUrl = $context.AttachmentUrl)
+		#set($referencedUrl = $context.ReferencedUrl)
+		#set($attachmentIsExplicit = true)
+		#if (!$attachmentUrl || $attachmentUrl == '')
+			#set($attachmentUrl = $referencedUrl)
+			#set($attachmentIsExplicit = false)
+		#end
+		#if ($attachmentUrl && $attachmentUrl != '')
+			#set($hasAccess = $context.HasAccessToUrl($attachmentUrl))
+
+			#if ($attachmentIsExplicit && !$hasAccess)
+				<div class="post-attachment-viewer access-denied">$core_v2_language.GetResource('attachment_access_denied')</div>
+			#elseif($hasAccess)
+				#set ($mediaType = $core_v2_ui.GetMediaType($attachmentUrl, "%{ ViewType = 'View', OutputIsPersisted='False' }"))
+				#if($mediaType == 'Audio' || $mediaType == 'Video')
+					<div class="post-attachment-viewer">
+						$core_v2_ui.GetViewHtml($attachmentUrl, "%{ Width=320, Height=240, OutputIsPersisted = 'false' }")
+					</div>
+				#elseif ($mediaType == 'Image')
+					<div class="post-attachment-viewer">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($attachmentUrl)" class="internal-link" data-imagepreviewurl="$core_v2_encoding.HtmlAttributeEncode($attachmentUrl)">
+							$!core_v2_ui.GetPreviewHtml($attachmentUrl, "%{Width=320, Height=240, OutputIsPersisted='False'}")
+						</a>
+					</div>
+				#elseif ($mediaType != 'Empty')
+					#set ($theaterUrl = $context.TheaterUrl())
+					<div class="post-attachment-viewer">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($attachmentUrl)" class="internal-link ui-theater" data-theaterurl="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('theater-view.vm'))">
+							$!core_v2_ui.GetPreviewHtml($attachmentUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+						</a>
+					</div>
+				#else
+					<div class="post-attachment-viewer">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($attachmentUrl)" class="internal-link">
+							$!core_v2_ui.GetPreviewHtml($attachmentUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+						</a>
+					</div>
+				#end
+			#end
+		#end
+	#end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="attachment_access_denied">You do not have permission to view the attachment.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="discussed_by">Discussed by</resource>
+  <resource name="download">Download</resource>
+  <resource name="in">{user}:</resource>
+  <resource name="in_group">{user} in {group}:</resource>
+  <resource name="serp_type">status</resource>
+  <resource name="StatusMessage_Preview">{user}: {message}</resource>
+  <resource name="StatusMessage_Preview_InGroup">{user} in {group}: {message}</resource>
+  <resource name="StatusMessageActivityStory_Description">Story for status messages.</resource>
+  <resource name="StatusMessageActivityStory_Name">StatusMessage Activity Story</resource>
+  <resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource>
+  <resource name="view">View</resource>
+  <resource name="ViewMore">View More</resource>
+  <resource name="WriteComment">Write a comment...</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="statusmessages.users.readonly" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

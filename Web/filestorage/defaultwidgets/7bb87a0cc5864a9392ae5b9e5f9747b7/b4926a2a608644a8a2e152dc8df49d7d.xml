@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PointTransactionList_WidgetName}" version="11.0.0.0" description="${resource:PointTransactionList_WidgetDescription}" instanceIdentifier="b4926a2a608644a8a2e152dc8df49d7d" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="user-points-list" lastModified="2020-02-07 16:58:47Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($userSelection = $core_v2_widget.GetStringValue('userSelection', 'accessing'))
+
+#if($userSelection != "accessing")
+		#set($currentUser = false)
+		#set($currentUser = $core_v2_user.Current)
+
+		#set($canViewPoints = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+		#if(!$currentUser || !$core_v2_user.IsRegistered($core_v2_user.Current.Id) || (!$canViewPoints && $core_v2_user.Accessing.Id != $core_v2_user.Current.Id))
+				$core_v2_widget.Hide()
+		#end
+#else
+		#if(!$core_v2_user.IsRegistered($core_v2_user.Accessing.Id) || $core_v2_user.Accessing.IsSystemAccount)
+				 $core_v2_widget.Hide()
+		#end
+#end
+
+ $core_v2_ui.PagedContent('list.vm')
+
+
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[#set ($userSelection = $core_v2_widget.GetStringValue('userSelection', 'accessing'))
+#if($userSelection == 'contextual')
+	$core_v2_language.FormatString($core_v2_widget.ApplyTokens('${resource:PointTransactionList_Title_Someone}'), $core_v2_user.Current.DisplayName)
+#else
+	$core_v2_widget.ApplyTokens('${resource:PointTransactionList_Title_You}')
+#end]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="fragmentHeader" labelResourceName="Configuration_Title" defaultValue="${resource:PointTransactionList_WidgetName}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="userSelection" labelResourceName="Configuration_UserSelection" defaultValue="accessing" dataType="String">
+		<propertyValue value="accessing" labelResourceName="Configuration_UserSelection_Accessing" orderNumber="1000000" />
+		<propertyValue value="contextual" labelResourceName="Configuration_UserSelection_Contextual" orderNumber="1000001" />
+	</property>
+	<property id="filterSelection" labelResourceName="Configuration_FilterSelection" defaultValue="all" dataType="String">
+		<propertyValue value="all" labelResourceName="Configuration_FilterSelection_All" orderNumber="1000000" />
+		<propertyValue value="container" labelResourceName="Configuration_FilterSelection_Container" orderNumber="1000001" />
+		<propertyValue value="application" labelResourceName="Configuration_FilterSelection_Application" orderNumber="1000002" />
+	</property>
+	<property id="pageSize" labelResourceName="Configuration_PageSize" defaultValue="5" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_FilterSelection">Filter points to those earned...</resource>
+  <resource name="Configuration_FilterSelection_All">site-wide (no filtering)</resource>
+  <resource name="Configuration_FilterSelection_Application">in the contextual application</resource>
+  <resource name="Configuration_FilterSelection_Container">in the contextual group</resource>
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Configuration_PageSize">Number of items to show at a time</resource>
+  <resource name="Configuration_Title">Widget Name</resource>
+  <resource name="Configuration_UserSelection">Display points earned by...</resource>
+  <resource name="Configuration_UserSelection_Accessing">the user viewing the page</resource>
+  <resource name="Configuration_UserSelection_Contextual">the contextual user (for use on a profile page)</resource>
+  <resource name="Error_AccessDenied">You don't have permission to view this content.</resource>
+  <resource name="PointTransactionList_PointsList_NoResults">No points history was found for the current filters.</resource>
+  <resource name="PointTransactionList_Title_Someone">{0}'s Recent Points Activity</resource>
+  <resource name="PointTransactionList_Title_You">My Recent Points Activity</resource>
+  <resource name="PointTransactionList_WidgetDescription">Displays a history of points earned for a single user.</resource>
+  <resource name="PointTransactionList_WidgetName">User - Points Activity</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

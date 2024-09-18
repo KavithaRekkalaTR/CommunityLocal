@@ -1,0 +1,124 @@
+## Primary Options
+
+#set ($customFeatureStrategy = $core_v2_widget.GetStringValue('customFeatureStrategy', 'includeBefore'))
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 5))
+#set ($transition = $core_v2_widget.GetStringValue('transition', 'transitionAutomatic'))
+#set ($duration = $core_v2_widget.GetIntValue('duration', 5000))
+#set ($featureCount = 0)
+#set ($truncateLength = $core_v2_widget.GetIntValue('truncateLength', 100))
+
+## Layout Configuration
+
+#set ($scalingMode = $core_v2_widget.GetStringValue('scalingMode', 'fixed'))
+#if ($scalingMode == 'fixed')
+	#set ($width = false)
+	#set ($height = $core_v2_widget.GetIntValue('height', 315))
+	#set ($effectiveHeight = "${height}px")
+#elseif ($scalingMode == 'dynamic')
+	#set ($width = $core_v2_widget.GetDoubleValue('dynamicScalingWidth', 1500))
+	#set ($height = $core_v2_widget.GetDoubleValue('dynamicScalingHeight', 375))
+	#set ($heightRatio = 100 * $height / $width)
+	#set ($heightRatio = $core_v2_utility.Round($heightRatio))
+	#set ($width = $core_v2width_utility.Round($width))
+	#set ($height = $core_v2_utility.Round($height))
+	#set ($effectiveHeight = "${heightRatio}vw")
+#end
+
+#set ($fullWidth = false)
+#set ($layoutWidth = $core_v2_widget.GetStringValue('layoutWidth', 'window'))
+#if ($layoutWidth == 'window')
+	#set ($fullWidth = true)
+#end
+
+#set ($proportionalScaling = false)
+#set ($spacing = 10)
+#set ($proportionalWidth = $core_v2_theme.GetIntValue('maxWidth', 1060, 10) - ($spacing * 2))
+#if (!$fullWidth)
+	#set ($scaleMode = $core_v2_widget.GetStringValue('scaleMode', 'crop'))
+	#if ($scaleMode == 'scale')
+		#set ($proportionalScaling = true)
+	#end
+#end
+
+#set ($foregroundFullWidth = false)
+#if ($fullWidth)
+	#set ($foregroundWidth = $core_v2_widget.GetStringValue('foregroundWidth', 'page'))
+	#if ($foregroundWidth == 'window')
+		#set ($foregroundFullWidth = true)
+	#end
+#end
+
+#set ($backgroundAlignment = $core_v2_widget.GetStringValue('backgroundAlignment', 'center center'))
+#set ($alignment = $core_v2_widget.GetStringValue('alignment', 'center-center'))
+#if ($alignment == 'top-left')
+	#set ($verticalAlignment = 'top')
+	#set ($horizontalAlignment = 'left')
+#elseif ($alignment == 'top-center')
+	#set ($verticalAlignment = 'top')
+	#set ($horizontalAlignment = 'center')
+#elseif ($alignment == 'top-right')
+	#set ($verticalAlignment = 'top')
+	#set ($horizontalAlignment = 'right')
+#elseif ($alignment == 'center-left')
+	#set ($verticalAlignment = 'center')
+	#set ($horizontalAlignment = 'left')
+#elseif ($alignment == 'center-center')
+	#set ($verticalAlignment = 'center')
+	#set ($horizontalAlignment = 'center')
+#elseif ($alignment == 'center-right')
+	#set ($verticalAlignment = 'center')
+	#set ($horizontalAlignment = 'right')
+#elseif ($alignment == 'bottom-left')
+	#set ($verticalAlignment = 'bottom')
+	#set ($horizontalAlignment = 'left')
+#elseif ($alignment == 'bottom-center')
+	#set ($verticalAlignment = 'bottom')
+	#set ($horizontalAlignment = 'center')
+#elseif ($alignment == 'bottom-right')
+	#set ($verticalAlignment = 'bottom')
+	#set ($horizontalAlignment = 'right')
+#end
+
+## Design Options
+
+#set ($defaultFeatureBlur = true)
+#set ($defaultFeatureBlur = $core_v2_widget.GetBoolValue("blur", false))
+#if ($scalingMode == 'dynamic')
+	#set ($defaultFeatureBlur = false)
+#end
+#set ($defaultFeatureShadowText = true)
+#set ($defaultFeatureShadowText = $core_v2_widget.GetBoolValue("featureShadow", true))
+#set ($defaultFeatureImage = false)
+#set ($defaultFeatureImage = $core_v2_widget.GetUrlValue("image", ""))
+#set ($defaultFeatureDesignMode = false)
+#set ($defaultFeatureDesignMode = $core_v2_widget.GetStringValue("designMode", "color"))
+
+#set ($defaultFeatureBackground2 = false)
+#set ($defaultFeatureColorMode = false)
+
+## If no photo provided in photo mode, fall back to color
+#if ($defaultFeatureDesignMode == 'photo' && (!$defaultFeatureImage || $defaultFeatureImage.Length == 0))
+	#set ($defaultFeatureDesignMode = 'color')
+#end
+
+## Set colors based on palette or custom
+#if ($defaultFeatureDesignMode == 'photo')
+	#set ($defaultFeatureBackground = '#AAA')
+	#set ($defaultFeatureForeground = '#FFF')
+#elseif ($defaultFeatureDesignMode == 'color')
+	#set ($paletteId = $core_v2_widget.GetCustomValue('paletteId', ''))
+
+	#set ($defaultFeatureBackgroundFrom = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color', '#2196F3', 10))
+	#set ($defaultFeatureBackgroundTo = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color-to', '', 10))
+	#set ($foregroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'foreground-color', '#ffffff', 10))
+
+	#if ($defaultFeatureBackgroundFrom.Length > 0 && $defaultFeatureBackgroundTo.Length > 0)
+		#set ($defaultFeatureBackground = $defaultFeatureBackgroundFrom)
+		#set ($defaultFeatureBackground2 = $defaultFeatureBackgroundTo)
+		#set ($defaultFeatureColorMode = 'gradient')
+	#else
+		#set ($defaultFeatureBackground = $defaultFeatureBackgroundFrom)
+		#set ($defaultFeatureColorMode = 'solid')
+	#end
+	#set ($defaultFeatureForeground = $foregroundColor)
+#end

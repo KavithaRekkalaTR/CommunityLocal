@@ -1,0 +1,55 @@
+#set ($applicationsListId = $core_v2_widget.UniqueId('applicationsListId'))
+#set($scoreId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_scoreId')))
+#set($applications = $context.GetScoreApplications($scoreId, $context.ContainerTypeId, $context.ContainerId, $nameQuery))
+#set($defaultHalfLife = $context.GetScoreHalfLife($scoreId))
+#set($score = $context.GetScore($scoreId))
+
+<p class="panel-instructions">$core_v2_language.GetResource('Halflife_Detail')</p>
+
+#if ($applications.Count >= 5)
+	<p>$core_v2_language.GetResource('FiftyAppsMessage')</p>
+#end	
+
+<div>	
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="text" name="search" placeholder="$core_v2_language.GetResource('Find')"></input>
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+</div>
+<div id="$core_v2_widget.UniqueId('list')">
+	$core_v2_widget.ExecuteFile('list.vm')
+</div>
+<div id="$core_v2_widget.UniqueId('searchresultlist')" style="display: none;">
+</div>
+
+<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.applicationScoreConfiguration.register({
+			applicationId: '$context.ApplicationId',
+			applicationTypeId: '$context.ApplicationTypeId',
+			containerId: '$context.ContainerId',
+			containerTypeId: '$context.ContainerTypeId',
+			scoreId: '$scoreId',
+			listId: '#$core_v2_widget.UniqueId('list')',
+			defaultHalfLife: '$defaultHalfLife',
+			searchResultListId: '#$core_v2_widget.UniqueId('searchresultlist')',
+			resources: {
+				halfLifeResetToDefault: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('HalfLifeResetToDefault'))',
+				halfLifeUpdated: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('HalfLifeUpdated'))',
+				halflifeWarning: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('HalflifeWarning'))',
+				confirmSaveSingular: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ConfirmSaveSingular'))',
+				confirmSavePlural: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ConfirmSavePlural'))'
+			},
+			urls: {
+				search: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+				setDecay: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('set-decay.vm'))',
+				removeDecay: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('remove-decay.vm'))'
+			}
+		});
+	});
+</script>

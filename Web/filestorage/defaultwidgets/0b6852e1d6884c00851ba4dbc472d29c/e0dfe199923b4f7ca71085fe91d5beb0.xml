@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeCollection}" version="10.0.0.0" description="${resource:KnowledgeCollection_Description}" instanceIdentifier="e0dfe199923b4f7ca71085fe91d5beb0" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="0b6852e1d6884c00851ba4dbc472d29c">
+	<contentScript><![CDATA[#set ($content = $context.Content)
+
+#if ($content)
+
+	#set ($avatarSize = 100)
+	#set ($target = $context.Target)
+	#set ($title = $content.HtmlName($target))
+	#set ($body = $content.HtmlDescription($target))
+
+	#set ($typeCssClass = "knowledge-management application")
+	#set ($id = $core_v2_widget.UniqueId("searchresult"))
+
+	#if($content.Application && $content.Application.Container)
+		#set ($containerName = $content.Application.Container.HtmlName($target))
+		#set ($containerUrl = $content.Application.Container.Url)
+		#set ($containerAvatarUrl = $content.Application.Container.AvatarUrl)
+
+		#if($containerName != '' && $containerUrl != '')
+			#set($hasContainer = true)
+		#end
+	#end
+
+	<div class="content abbreviated rendered $typeCssClass" id="$id">
+		#if ($containerAvatarUrl && $containerAvatarUrl != '')
+			<div class="avatar round">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)" $core_v2_ui.ContentPeek($content.ContentId, $content.ContentTypeId)>
+					$core_v2_ui.GetResizedImageHtml($containerAvatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$containerName' }")
+				</a>
+			</div>
+		#end
+
+		<div class="summary">
+			<h3 class="name">
+				<a class="internal-link" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($title, 250, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'false' }"))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 250, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'false' }")
+				</a>
+			</h3>
+
+
+			#if ($body && $body != '')
+				<div class="content">$core_v2_language.Truncate($body, 250, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'true' }")</div>
+			#else
+				<div class = "content empty"></div>
+			#end
+		</div>
+
+		#if ($hasContainer)
+			<div class="attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item container">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($containerUrl)">$containerName</a>
+					</li>
+				</ul>
+			</div>
+		#end
+	</div>
+#else
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+	<languageResources><language key="en-us"><resource name="KnowledgeCollection">Knowledge Collection Rendering</resource><resource name="KnowledgeCollection_Description">The default rendering of a knowledge collection.</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

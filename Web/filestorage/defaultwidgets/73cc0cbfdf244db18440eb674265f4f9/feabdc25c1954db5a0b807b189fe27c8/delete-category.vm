@@ -1,0 +1,38 @@
+#set($categoryToDelete = $telligentIdeas_v1_ideaCategories.Get($context.Challenge.Id, $core_v2_utility.ParseInt($core_v2_page.GetFormValue('CategoryId'))))
+
+<fieldset>
+	<ul class="field-list">
+        <li class="field-item name">
+            <label class="field-item-name">$core_v2_language.GetResource('category-to-delete')</label>
+            <span class="field-item-input">$categoryToDelete.Name</span>
+        </li>
+        <li class="field-item replacement">
+            <label class="field-item-name">$core_v2_language.GetResource('replacement-category')</label>
+            <span class="field-item-description">
+                #if ($context.Challenge.RequiresCategory)
+                    $core_v2_language.GetResource('replacement-category-description-required')
+                #else
+                    $core_v2_language.GetResource('replacement-category-description-notrequired')
+                #end
+            </span>
+            <span class="field-item-input">
+                #set($hasReplacement = false)
+                <select id="$core_v2_widget.UniqueId('ReplacementCategory')">
+                    #if (!$context.Challenge.RequiresCategory)
+                        <option value="0">$core_v2_language.GetResource('replace-with-no-category')</option>
+                        #set($hasReplacement = true)
+                    #end
+                    #foreach ($category in $telligentIdeas_v1_ideaCategories.List($context.Challenge.Id))
+                        #if ($category.Id != $categoryToDelete.Id)
+                            <option value="$category.Id">$category.Name</option>
+                            #set($hasReplacement = true)
+                        #end
+                    #end
+                </select>
+            </span>
+            #if (!$hasReplacement)
+                <span class="field-item-validation">$core_v2_language.GetResource('no-replacement-category-available')</span>
+            #end
+        </li>
+    </ul>
+</fieldset>

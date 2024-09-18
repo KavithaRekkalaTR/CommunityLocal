@@ -1,0 +1,36 @@
+﻿#if ($core_v2_page.IsPost)
+	#set($type = $core_v2_page.GetFormValue('type'))
+	#set($subscribe = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscribe')))
+	$core_v2_page.SetContentType('application/json')
+	#set($response = false)
+
+	#if($type == 'ideation')
+		#set($challengeId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('challengeId')))
+		#set($contentTypeId = $telligentIdeas_v1_challenges.ContentTypeId)
+		#if ($subscribe)
+			#set($response = $core_v2_applicationSubscription.Create($challengeId, $contentTypeId, "%{}"))
+		#else
+			#set($response = $core_v2_applicationSubscription.Delete($challengeId, $contentTypeId, "%{}"))
+		#end
+	#elseif($type == 'idea')
+		#set($ideaId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ideaId')))
+		#set($contentTypeId = $telligentIdeas_v1_ideas.ContentTypeId)
+		#if ($subscribe)
+			#set($response = $core_v2_contentSubscription.Create($ideaId, $contentTypeId, "%{}"))
+		#else
+			#set($response = $core_v2_contentSubscription.Delete($ideaId, $contentTypeId, "%{}"))
+		#end
+	#end
+	
+	#if($response && $response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+	{"subscribe":#if($subscribe) true#else false#end,"warnings":[
+		#foreach ($warning in $response.Warnings)
+			#each
+				"$core_v2_encoding.JavascriptEncode($warning.Message)"
+			#between
+				,
+		#end
+	]}
+#end

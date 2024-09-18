@@ -1,0 +1,8 @@
+﻿#set($currentPage = false)
+#set($currentPage = $core_v2_utility.ParseBool($core_v2_page.GetQueryStringValue('_w_currentpage')))
+
+#if($currentPage)
+	$context.ExportPage($context.CurrentPage.Name, $context.CurrentPage.IsCustom)
+#else
+	$context.ExportAllPages()
+#end

@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="d8315e3a6462496ba68c7811ede5a32f" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-email" lastModified="2021-11-08 15:28:31Z" provider="246510cd216049c89bf4451aea8e3f16">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.EmailStatus)
+#set($message = 'Unknown')
+#if($status)
+  #set($message = $status.ToString())
+#end
+$core_v2_language.GetResource($message)
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Disabled">Email connectivity is currently disabled. Email cannot currently be sent from the community. Please enable email connectivity to restore email related functionality.</resource>
+  <resource name="FrequentSendExceptions">Multiple errors have occurred related to sending email. The email configuration should be verified.</resource>
+  <resource name="FrequentTemplateExceptions">Multiple errors have occurred related to formatting email. The specific exceptions should be reviewed to ensure email templates are properly configured.</resource>
+  <resource name="Healthy">Email is healthy.</resource>
+  <resource name="NotConfigured">Email connectivity is not configured. Email cannot currently be sent from the community. Please configure the SMTP server to use for email.</resource>
+  <resource name="Unknown">The status of email connectivity is not yet known.</resource>
+  <resource name="Widget-Description">Email System Indicator</resource>
+  <resource name="Widget-Title">Email</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

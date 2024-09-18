@@ -1,0 +1,3 @@
+#set($roleId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_roleId')))
+#set($member = $core_v2_groupRoleMember.Get($context.Group.Id, "%{RoleId = $roleId}"))
+$core_v2_widget.ExecuteFile('format-rolemember.vm')

@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:EditorOptions_Name}" version="11.0.0.0" description="${resource:EditorOptions_Description}" instanceIdentifier="17927d632cc94e11968ea196500e4260" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="editor-options" lastModified="2019-10-18 15:42:56Z" provider="e8a69b3343274672821ec6602c336b2e">
+    <contentScript language="Velocity"><![CDATA[<div id="$core_v2_widget.UniqueId('options')">
+    
+<form><fieldset>
+	<ul class="field-list">
+	    
+        <li class="field-item" id="$core_v2_widget.UniqueId('mobileUserAgentPatternWrapper')">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('mobileUserAgentPattern')">$core_v2_language.GetResource('mobileUserAgentPattern_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('mobileUserAgentPattern_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('mobileUserAgentPattern')" name="$core_v2_widget.UniqueId('mobileUserAgentPattern')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetStringValue('mobileUserAgentPattern', '').ToString())" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+	    
+	    <li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('fonts')">$core_v2_language.GetResource('fonts_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('fonts_description')</span>
+			<span class="field-item-input">
+			    #set($fonts = '')
+			    #set($fontConfig = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('fonts', '')))
+			    #foreach ($key in $fontConfig.Keys)
+			        #if ($fonts.Length > 0)
+			            #set($fonts = "${fonts}$core_v2_language.NewLine")
+			        #end
+			        #set($fonts = "${fonts}${key}=${fontConfig.Value($key)}")
+			    #end
+				<textarea id="$core_v2_widget.UniqueId('fonts')" name="$core_v2_widget.UniqueId('fonts')" rows="10" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">$core_v2_encoding.HtmlAttributeEncode($fonts)</textarea>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('fontSizes')">$core_v2_language.GetResource('fontSizes_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('fontSizes_description')</span>
+			<span class="field-item-input">
+			    #set($fontSizes = '')
+			    #set($fontSizeConfig = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('fontSizes', '')))
+			    #foreach ($key in $fontSizeConfig.Keys)
+			        #if ($fontSizes.Length > 0)
+			            #set($fontSizes = "${fontSizes}$core_v2_language.NewLine")
+			        #end
+			        #set($fontSizes = "${fontSizes}${key}=${fontSizeConfig.Value($key)}")
+			    #end
+				<textarea id="$core_v2_widget.UniqueId('fontSizes')" name="$core_v2_widget.UniqueId('fontSizes')" rows="10" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">$core_v2_encoding.HtmlAttributeEncode($fontSizes)</textarea>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		
+		<li class="field-item" id="$core_v2_widget.UniqueId('defaultMediaDimensionsWrapper')">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('defaultMediaWidth')">$core_v2_language.GetResource('defaultMediaDimensions_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('defaultMediaDimensions_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('defaultMediaWidth')" name="$core_v2_widget.UniqueId('defaultMediaWidth')" value="$core_v2_widget.GetIntValue('defaultMediaWidth', 320)" style="width: 100px;" />
+				x
+				<input type="text" id="$core_v2_widget.UniqueId('defaultMediaHeight')" name="$core_v2_widget.UniqueId('defaultMediaHeight')" value="$core_v2_widget.GetIntValue('defaultMediaHeight', 320)" style="width: 100px;" />
+				</html>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('enableEnterToSubmitToggle')" name="$core_v2_widget.UniqueId('enableEnterToSubmitToggle')" #if ($core_v2_widget.GetBoolValue('enableEnterToSubmitToggle', true)) checked="checked" #end />
+				<label for="$core_v2_widget.UniqueId('enableEnterToSubmitToggle')">$core_v2_language.GetResource('enableEnterToSubmitToggle_name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('enableEnterToSubmitToggle_description')</span>
+		</li>
+	
+    	<li class="field-item">
+    	    <label class="field-item-name">$core_v2_language.GetResource('configureFiltering')</label>
+    	    <span class="field-item-input">
+    	        $core_v2_language.FormatString($core_v2_language.GetResource('configureFiltering_description'), $core_v2_encoding.HtmlAttributeEncode($context.ContentFilteringUrl))
+    	    </span>
+    	</li>
+	</ul>
+</fieldset></form>
+
+</div>
+
+
+#registerEndOfPageHtml('telligent.evolution.widgets.editorOptions')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    (function() {
+		jQuery.telligent.evolution.widgets.editorOptions.register({
+		    configApi: $context.JsonApi,
+            saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+            mobileUserAgentPatternId: '#$core_v2_widget.UniqueId('mobileUserAgentPattern')',
+    		mobileUserAgentPatternWrapperId: '#$core_v2_widget.UniqueId('mobileUserAgentPatternWrapper')',
+    		enableEnterToSubmitToggle: jQuery('#$core_v2_widget.UniqueId('enableEnterToSubmitToggle')'),
+    		fonts: jQuery('#$core_v2_widget.UniqueId('fonts')'),
+    		fontSizes: jQuery('#$core_v2_widget.UniqueId('fontSizes')'),
+    		defaultMediaWidth: jQuery('#$core_v2_widget.UniqueId('defaultMediaWidth')'),
+    		defaultMediaHeight: jQuery('#$core_v2_widget.UniqueId('defaultMediaHeight')'),
+    		defaultMediaDimensionsWrapperId: '#$core_v2_widget.UniqueId('defaultMediaDimensionsWrapper')',
+    		tabs: [
+					{ name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('options'))', element: jQuery('#$core_v2_widget.UniqueId('options')') }
+				],
+            text: {
+    		    save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+                saveSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save_successful'))',
+    			mobileUserAgentPatternInvalid: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('mobile_useragent_pattern_invalid'))',
+    			defaultMediaDimensionsInvalid: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('defaultMediaDimensions_invalid'))'
+            }
+		});
+	})();
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="configureFiltering">Content Filtering</resource>
+  <resource name="configureFiltering_description">To configure content functionality which also affects which editor menu and toolbar options are exposed, see &lt;a href="{0}"&gt;Content Filtering&lt;/a&gt;.</resource>
+  <resource name="defaultMediaDimensions_description">Provide the default width and height, in pixels, to embed media within the editor when the author doesn't specify a manual width or height.</resource>
+  <resource name="defaultMediaDimensions_invalid">Dimensions must be valid numbers and greater than zero.</resource>
+  <resource name="defaultMediaDimensions_name">Default Media Dimensions</resource>
+  <resource name="EditorOptions_Description">Manage content editor options.</resource>
+  <resource name="EditorOptions_Name">Editor Options</resource>
+  <resource name="enableEnterToSubmitToggle_description">Inline editors can optionally enable toggling support for enter-to-submit where pressing the enter/return key will submit the content of the editor. This capability can be disabled accross the entire site here.</resource>
+  <resource name="enableEnterToSubmitToggle_name">Enable Enter-to-Submit</resource>
+  <resource name="fonts_description">List fonts that should be selectedable within the editor. One per line in the format [label]=[CSS font value]. Fonts will be listed in the editor in alphabetical order. Labels can be translated on the Translation tab after being saved here.</resource>
+  <resource name="fonts_name">Fonts</resource>
+  <resource name="fontSizes_description">List font sizes that should be selectable within the editor. One per line in the format [Label]=[CSS font-size value]. Font sizes will be listed in the editor in the order provided here. Labels can be translated on the Translation tab after being saved here.</resource>
+  <resource name="fontSizes_name">Font Sizes</resource>
+  <resource name="mobile_useragent_pattern_invalid">The pattern must be a valid regular expression.</resource>
+  <resource name="mobileUserAgentPattern_description">The regular expression pattern used to identify mobile browsers based on the browser's user agent value.</resource>
+  <resource name="mobileUserAgentPattern_name">Mobile Browser User Agent Pattern</resource>
+  <resource name="options">Options</resource>
+  <resource name="save">Save</resource>
+  <resource name="save_successful">Editor options have been saved.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

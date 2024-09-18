@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ContentReport_Name}"
+                           version="10.0.0.0"
+                           description="${resource:ContentReport_Description}"
+                           instanceIdentifier="2d932158dc294bb1ba41d932ec27a9c3"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+#set ($containerId = $core_v2_widget.UniqueId('container'))
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id) || $reporting.HasGroupReportingPermission($core_v2_user.Accessing.Id))
+    #if ($context.Target.Contains('large-tile'))
+        <div id="$containerId" class="tile new-content"></div>
+
+        #registerEndOfPageHtml()
+        <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('large-tile-ui.js'))"></script>
+        <script type="text/javascript">
+            jQuery.telligent.evolution.post({
+                target: '$context.Target',
+                url: '$core_v2_widget.GetExecutedFileUrl('large-tile-content.vm')',
+                success: function(response){
+                    jQuery('#$containerId').html(response);
+                }
+            });
+        </script>
+        #end
+    #elseif ($context.Target.Contains('tile'))
+        <div id="$containerId" class="tile new-content"></div>
+
+        #registerEndOfPageHtml()
+        <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('tile-ui.js'))"></script>
+        <script type="text/javascript">
+            jQuery.telligent.evolution.post({
+                target: '$context.Target',
+                url: '$core_v2_widget.GetExecutedFileUrl('tile-content.vm')',
+                success: function(response){
+                    jQuery('#$containerId').html(response);
+                }
+            });
+        </script>
+        #end
+    #elseif ($context.Target.Contains('card'))
+        $core_v2_widget.ExecuteFile('card-content.vm')
+    #else
+        $core_v2_widget.ExecuteFile('full-content.vm')
+    #end
+#else
+    <div id="$containerId">
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+#end
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="ContentReport_Name">Content</resource>
+        <resource name="ContentReport_Description">Displays summary of content</resource>
+        <resource name="Report_Title">Content</resource>
+        <resource name="Report_Description">Content that was created during the selected filter range</resource>
+        <resource name="Title">Title</resource>
+        <resource name="User">Author</resource>
+        <resource name="UserCreated">Author Joined</resource>
+        <resource name="CreatedDate">Created</resource>
+        <resource name="ContentType">Type</resource>
+        <resource name="Location">Location</resource>
+        <resource name="Unknown">{No Title}</resource>
+        <resource name="FilterByType">Showing {0} content for </resource>
+        <resource name="Filter">Showing results for </resource>
+        <resource name="ClearFilter">Show All</resource>
+        <resource name="NoData">No content match the current filters.</resource>
+        <resource name="Error">Error retrieving report. The selected ${groups_lowercase} or applications may no longer exist or you may no longer have access to view reports for the selected items.</resource>
+        <resource name="PermissionDenied">You do not have permission to view this report.</resource>
+        <resource name="Export">Export</resource>
+        <resource name="Cancel">Cancel</resource>
+        <resource name="ExportChartasCSV">Export Chart as CSV</resource>
+        <resource name="ExportChartasPNG">Export Chart as PNG</resource>
+        <resource name="ExportListasCSV">Export List as CSV</resource>
+        <resource name="Line">Line</resource>
+        <resource name="LineByType">Line by type</resource>
+        <resource name="BarByType">Bar by type</resource>
+        <resource name="NoApplicationOrGroupSelected">Select one or more groups or applications to view report.</resource>
+        <resource name="TotalContent">Total Content</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

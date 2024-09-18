@@ -1,0 +1,38 @@
+﻿#set ($query = $core_v2_page.GetQueryStringValue("_w_query"))
+
+#set ($scope = $core_v2_page.GetQueryStringValue("_w_scope"))
+
+#set ($limit = 10)
+#set ($rawLimit = false)
+#set ($rawLimit = $core_v2_page.GetQueryStringValue("_w_limit"))
+#if ($rawLimit)
+	#set ($limit = $core_v2_utility.ParseInt($rawLimit))
+#end
+
+#set ($results = $core_v2_administrationPanels.Filter($query, $scope, $limit))
+
+$core_v2_page.SetContentType('application/json')
+#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+{
+	"results": [
+		#foreach ($result in $results)
+		#between
+			,
+		#each
+			{
+				"Type": "$core_v2_encoding.JavascriptEncode($result.Type)",
+				"Name": "$core_v2_encoding.JavascriptEncode($result.Name)",
+				"Description": "$core_v2_encoding.JavascriptEncode($result.Description)",
+				"Url": "$core_v2_encoding.JavascriptEncode($result.Url)",
+				"UnescapedUrl": "$core_v2_encoding.JavascriptEncode($result.UnescapedUrl)",
+                "State": "$result.State.ToLowerInvariant()",
+				"BadgeCount": $result.BadgeCount,
+				#if ($result.AvatarUrl && $result.AvatarUrl.Length > 0)
+					"AvatarHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($result.AvatarUrl, 16, 16, "%{ border='0px', ResizeMethod = 'ZoomAndCrop', alt = $result.Name }"))"
+				#else
+					"AvatarHtml": null
+				#end
+			}
+		#end
+	]
+}

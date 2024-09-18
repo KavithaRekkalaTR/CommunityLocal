@@ -1,0 +1,75 @@
+##
+## Renders a tree of comments for a permalink as JSON
+## A specialized form of the replies serialization which also includes
+## the permalinked item as well all of the permalinked items parents
+##
+## Requires in scope:
+##   $permalinkedId - id of reply being permalinked
+##   $replyWithParents - flattened list of single-threaded parents of reply AND reply
+##   $replyChildren - (potentially nested) children of permalinked item
+##   $flattenedDepth
+##   $replySiblings - flattened siblings (optional)
+##
+
+#set ($rendredLevels = 0)
+
+
+## Can write the nested JSON non-recursively as the data is assumed to be single parent to child links
+#set ($depth = 0)
+#foreach ($comment in $replyWithParents)
+#beforeall
+	[{
+#between
+	#if ($depth > $flattenedDepth)
+		},{
+	#else
+		#set ($rendredLevels = $rendredLevels + 1)
+		,"children": [{
+	#end
+#each
+	#set ($depth = $depth + 1)
+	## Render each item without its own JSON container
+	#set ($excludeContainer = true)
+	$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+	#set ($excludeContainer = false)
+
+	## Render the reply's children if we're at deepest level and there are children to render
+	#if ($comment.CommentId == $permalinkedId && $replyChildren && $replyChildren.Count > 0)
+		#set ($comments = $replyChildren)
+		,"children": $core_v2_widget.ExecuteFile('callback-serialize-replies.vm')
+	#end
+#end
+
+## Write siblings, if included
+#foreach ($comment in $replySiblings)
+#beforeall
+	#if ($depth > $flattenedDepth)
+		},{
+	#elseif ($depth > 0)
+		,"children": [{
+	#else
+		[{
+	#end
+#between
+	},{
+#each
+	#set ($excludeContainer = true)
+	$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+	#set ($excludeContainer = false)
+
+	## Render the reply's children if we're at deepest level and there are children to render
+	#if ($comment.CommentId == $permalinkedId && $replyChildren && $replyChildren.Count > 0)
+		#set ($comments = $replyChildren)
+		,"children": $core_v2_widget.ExecuteFile('callback-serialize-replies.vm')
+	#end
+#afterall
+	#if ($depth <= $flattenedDepth)
+		}]
+	#end
+#end
+
+#if ($depth > 0)
+	#foreach ($number in [0..$rendredLevels])
+		}]
+	#end
+#end

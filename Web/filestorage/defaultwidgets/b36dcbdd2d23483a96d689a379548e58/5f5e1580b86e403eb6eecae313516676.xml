@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="5f5e1580b86e403eb6eecae313516676" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-12-16 18:57:17Z" provider="b36dcbdd2d23483a96d689a379548e58">
+    <contentScript language="Velocity"><![CDATA[#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input user-options">
+	                <a href="#" data-messagename="oauthclients.add" class="button">$core_v2_language.GetResource('Add')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<div id="$core_v2_widget.UniqueId('clientList')">
+    $core_v2_widget.ExecuteFile('list-clients.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.oauthClients')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.oauthClients.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		      clientList: jQuery('#$core_v2_widget.UniqueId('clientList')')  
+		    },
+		    urls: {
+		        list: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-clients.vm'))',
+		        addEdit: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('createedit-client.vm'))',
+                del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.jsm'))'
+		    },
+            text: {
+                addClient: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddClient'))',
+                editClient: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditClient'))',
+                verifyDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VerifyClientDelete'))',
+                clientDeletedSuccessfully: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ClientDeletedSuccessfully'))'
+            }
+    	});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">Add</resource>
+  <resource name="AddClient">Add Client</resource>
+  <resource name="AuthorizationCode">Authorization Code</resource>
+  <resource name="AuthorizationCode_Description">This client can request authorization from the user and get back a code that it can use to get an access token and refresh token.  This grant type also supports obtaining authorization codes using PKCE(Proof Key for Code Exchange).  When the client type is Public PKCE is required, but optional when it is Confidential.</resource>
+  <resource name="AuthorizationGrantType">Authorization Types</resource>
+  <resource name="AuthorizationGrantType_Description">Authorization types enabled for this client.</resource>
+  <resource name="CallbackUrl">Redirect URL(s)</resource>
+  <resource name="CallbackUrl_Description">The URL that the user will be redirected to after authorizing this client.  For multiple redirect urls, enter one per line.</resource>
+  <resource name="CallbackUrl_InvalidUrl">Must be a valid http://, https://, or custom/app URL scheme URL.</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ClientCredentials">Client Credentials</resource>
+  <resource name="ClientCredentials_Description">The client will use its credentials to authenticate and can impersonate any user. Only select this authorization type for fully trusted clients.</resource>
+  <resource name="ClientDeletedSuccessfully">'{0}' was deleted successfully.</resource>
+  <resource name="ClientDescription">Description</resource>
+  <resource name="ClientId">Client ID</resource>
+  <resource name="ClientId_Description">The identifier used to interact with the OAuth endpoint to authorize users. This identifier also serves as the application ID used to verify permissions against this OAuth client.</resource>
+  <resource name="ClientName">Name</resource>
+  <resource name="ClientSavedSuccessfully">The OAuth client has been saved successfully.</resource>
+  <resource name="ClientSecret">Client Secret</resource>
+  <resource name="ClientSecret_Description">The secret used to verify this client with the OAuth endpoint when authorizing users.</resource>
+  <resource name="ClientSecret_Hashed">The client secret is stored in a secure format that prevents it from being displayed here. To generate a new key and see its value, select 'Regenerate Secret.'</resource>
+  <resource name="ClientSecretRegeneratedSuccessfully">The client secret for '{0}' has been updated successfully.</resource>
+  <resource name="ClientType">Client Type</resource>
+  <resource name="ClientType_Description">The ability of this client to keep configuration data private and secure.</resource>
+  <resource name="Confidential">Confidential</resource>
+  <resource name="Confidential_Description">This client can store configuration data privately and securely.</resource>
+  <resource name="DefaultModify">Uncategorized Modify Endpoints</resource>
+  <resource name="DefaultModify_Description">The following endpoints do not define a specific categorization or scope and support modifying data.</resource>
+  <resource name="DefaultRead">Uncategorized Read Endpoints</resource>
+  <resource name="DefaultRead_Description">The following endpoints do not define a specific categorization or scope and support reading data.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Description">Manage OAuth clients.</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="EditClient">{0}</resource>
+  <resource name="EditPermissions">Edit Permissions</resource>
+  <resource name="EditPermissions_Instructions">Existing permissions granted to application types installed within Community (forums, blogs, etc) apply to content created by those application types even when interacted with through this OAuth client. External content created by this OAuth client is subject to the permissions defined here.</resource>
+  <resource name="EditRole">Permissions for {0}</resource>
+  <resource name="Entity">Entity</resource>
+  <resource name="FindScope">Find...</resource>
+  <resource name="MainUrl">Main URL</resource>
+  <resource name="MainUrl_Description">The URL of this client.</resource>
+  <resource name="MainUrl_InvalidUrl">Must be a valid http:// or https:// URL.</resource>
+  <resource name="Moderated">Moderate</resource>
+  <resource name="Moderated_Description">When enabled, comments on external content created via this OAuth client will be moderated.</resource>
+  <resource name="Modify">Modify</resource>
+  <resource name="Modify_Label">Modify {0}</resource>
+  <resource name="more">More</resource>
+  <resource name="no-scopes-found">No matching scopes were found.</resource>
+  <resource name="NoteClientSecret">Note the client secret for this client. This can only be read when generated. Store it in a secure location.</resource>
+  <resource name="Password">User Credentials</resource>
+  <resource name="Password_Description">This client will send the user's credentials to get back an access token.</resource>
+  <resource name="Permissions_Instructions">Existing permissions granted to application types installed within Community (forums, blogs, etc) apply to content created by those application types even when interacted with through this OAuth client. OAuth clients can also create references to external content. The external content created by this OAuth client is subject to the permissions and configuration defined here.</resource>
+  <resource name="PermissionsSavedSuccessfully">Permissions were saved successfully.</resource>
+  <resource name="Public">Public</resource>
+  <resource name="Public_Description">This client cannot keep configuration data private.</resource>
+  <resource name="Read">Read</resource>
+  <resource name="Read_Label">Read {0}</resource>
+  <resource name="RegenerateSecret">Regenerate secret</resource>
+  <resource name="RolePermissions">Role Permissions</resource>
+  <resource name="RolePermissions_Description">Define permissions for specific roles regarding external content created via this OAuth client.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="scopes-instructions">Scopes define which APIs this OAuth client has access to use. Data access within specific APIs is also subject to the granted permissions of the authenticated user making use of the OAuth client.</resource>
+  <resource name="Tab_AllowedScopes">Allowed Scopes</resource>
+  <resource name="Tab_Client">Client</resource>
+  <resource name="Tab_Permissions">Permissions</resource>
+  <resource name="Title">OAuth Clients</resource>
+  <resource name="Trusted">Trusted</resource>
+  <resource name="Trusted_Description">When using the authorization code process, trusted clients will not require users to authorize the client. Trusted clients are treated as integrated extensions of the community.</resource>
+  <resource name="VerifyClientDelete">Are you sure you want to permanently delete the client '{0}'?</resource>
+  <resource name="VerifyRegenerateSecret">Are you sure you want to regenerate the client's secret? Any applications using the existing secret will be immediately invalidated.</resource>
+  <resource name="View">View client website</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

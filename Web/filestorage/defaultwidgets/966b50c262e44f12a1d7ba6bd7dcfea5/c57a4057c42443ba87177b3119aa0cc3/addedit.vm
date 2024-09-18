@@ -1,0 +1,163 @@
+#set($achievement = false)
+#set($achievement = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_achievementId')))
+#if ($achievement)
+    #set($achievement = $core_v2_achievement.Get($achievement))
+    #if (!$achievement || $achievement.HasErrors())
+        #set($achievement = false)
+    #end
+#else
+    #set($achievement = false)
+#end
+
+#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId("addEditHeaderTemplateId_$!achievement.Id"))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input role-options">
+					<a href="#" class="button save-achievement">$core_v2_language.GetResource('Action_Save')</a>
+					#if ($achievement)
+    					<div style="float: left; width: 50%">
+    						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="3" data-direction="horizontal">
+    							<ul>
+    								<li class="navigation-list-item">
+                    					<a href="#" data-messagename="achievement.award" data-id="$achievement.Id.ToString()" data-title="$achievement.Title">
+                    						$core_v2_language.GetResource('Action_Award')
+                    					</a>
+                    				</li>
+                    				<li class="navigation-list-item">
+                    					<a href="#" data-messagename="achievement.revoke" data-id="$achievement.Id.ToString()" data-title="$achievement.Title">
+                    						$core_v2_language.GetResource('Action_Revoke')
+                    					</a>
+                    				</li>
+    							</ul>
+    						</div>
+    					</div>
+    				#end
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item title">
+			<label for="$core_v2_widget.UniqueId('Title')" class="field-item-name">$core_v2_language.GetResource('Field_Title')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Title_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Title')" name="$core_v2_widget.UniqueId('Title')" #if ($achievement) value="$achievement.Title" #end /> 
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item criteria">
+			<label for="$core_v2_widget.UniqueId('Criteria')" class="field-item-name">$core_v2_language.GetResource('Field_Criteria')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Criteria_Description')</span>
+			<span class="field-item-input">
+			    $core_v2_editor.Render('Criteria', "%{ Value = $!achievement.Criteria }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item icon upload-with-preview" id="$core_v2_widget.UniqueId('Icon')">
+			<label class="field-item-name">$core_v2_language.GetResource('Field_Icon')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Icon_Description')</span>
+			<span class="field-item-input preview">
+			</span>
+			<span class="field-item-input upload">
+				<a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('Action_UploadFile')</a>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		
+		<li class="field-item enabled">
+		    <span class="field-item-input">
+		        <input type="checkbox" #if (!$achievement || $achievement.Enabled) checked="checked" #end id="$core_v2_widget.UniqueId('Enabled')" />
+		        <label for="$core_v2_widget.UniqueId('Enabled')">$core_v2_language.GetResource('Field_Enabled')</label>
+		    </span>
+		    <span class="field-item-description">$core_v2_language.GetResource('Field_Enabled_Description')</span>
+		</li>
+		
+		#set($automations = false)
+		#set($automations = $context.ListAutomations())
+		#if ($automations.Count > 0)
+
+    		<li class="field-item automation">
+    		    <label for="$core_v2_widget.UniqueId('Automation')" class="field-item-name">$core_v2_language.GetResource('Field_Automation')</label>
+    			<span class="field-item-description">$core_v2_language.GetResource('Field_Automation_Description')</span>
+    			<span class="field-item-input">
+    			    <select id="$core_v2_widget.UniqueId('Automation')" name="$core_v2_widget.UniqueId('Automation')"> 
+    			        <option value="">$core_v2_language.GetResource('Value_Automation_NotSelected')</option>
+    			        #foreach ($automation in $automations)
+    			            <option value="$automation.Id.ToString()" #if($achievement && $achievement.AutomationId == $automation.Id) selected #end>$automation.Name</option>
+    			        #end
+    			    </select>
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+    		
+    		#set($selectedAutomationId = false)
+    		#set($selectedAutomationId = $achievement.AutomationId)
+    		
+    		#set($automationConfigurationData = false)
+    		#set($automationConfigurationData = $context.GetAutomationConfiguration($achievement.Id))
+    		
+    		$core_v2_widget.ExecuteFile('render-automationconfiguration.vm')
+		#end
+		
+	</ul>
+</fieldset></form>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('addedit.js'))"></script>
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.administrationAchievementsAddEdit.register({
+		headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		achievementId: #if($achievement) '$achievement.Id.ToString()' #else null #end,
+		uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		fieldIds: {
+			title: '#$core_v2_widget.UniqueId('Title')',
+			icon: '#$core_v2_widget.UniqueId('Icon')',
+			enable: '#$core_v2_widget.UniqueId('Enabled')',
+			automation: '#$core_v2_widget.UniqueId('Automation')'
+		},
+		criteria: {
+		    getValue: function() { return $core_v2_editor.GetContentScript('Criteria'); },
+		    attachChange: function(f) { $core_v2_editor.GetAttachOnChangeScript('Criteria', 'f') }
+		},
+		automationConfiguration: {
+		    getValues: function() { 
+		        try {
+		            return ($core_v2_dynamicForm.GetValuesScript($core_v2_widget.UniqueId('AutomationConfiguration')));
+		        } catch (e) {
+		            return null;
+		        }
+		    }
+		},
+		text: {
+		    uploadProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Status_UploadProgress'))',
+		    upload: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_UploadFile'))',
+		    achievementCreatedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_AchievementCreated'))',
+		    achievementEditedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_AchievementEdited'))',
+		    criteriaRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FieldRequired'))',
+		    iconRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FieldRequired'))'
+		},
+		urls: {
+		    previewFile: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-previewfile.vm'))',
+		    uploadFile: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+		    updateAutomationConfigurationForm: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-automationconfigurationform.vm'))'
+		},
+		file: 
+    		#if($achievement && $achievement.BadgeIconUrl)
+        		{
+        			url: '$core_v2_encoding.JavascriptEncode($achievement.BadgeIconUrl)'
+        		}
+    		#else
+    		    null
+    		#end
+	});
+});
+</script>

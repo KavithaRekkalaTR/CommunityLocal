@@ -1,0 +1,66 @@
+#set($value = 'PublishDate')
+#set($value = $context_v2_propertyTemplate.Value)
+
+<select id="${context_v2_propertyTemplate.UniqueId}">
+    <option value="SortOrder" #if($value=='SortOrder')selected="selected"#end>$core_v2_language.GetResource('CF_ArticlesListSortBy_SortOrder')</option>
+    <option value="PublishDate" #if($value=='PublishDate')selected="selected"#end>$core_v2_language.GetResource('CF_ArticlesListSortBy_PublishDate')</option>
+    <option value="LastUpdateDate" #if($value=='LastUpdateDate')selected="selected"#end>$core_v2_language.GetResource('CF_ArticlesListSortBy_LastUpdateDate')</option>
+    <option value="TotalHelpfulRatings" #if($value=='TotalHelpfulRatings')selected="selected"#end>$core_v2_language.GetResource('CF_ArticlesListSortBy_TotalHelpfulRatings')</option>
+
+    <option value="Title" #if($value=='Title')selected="selected"#end>$core_v2_language.GetResource('CF_ArticlesListSortBy_Title')</option>
+    <option value="ArticleIds" #if($value=='ArticleIds')selected="selected"#end>$core_v2_language.GetResource('CF_ArticlesListSortBy_CustomSort')</option>
+</select>
+
+<script type="text/javascript">
+$(function() {
+    var api = $context_v2_propertyTemplate.JsonApi;
+    var id = '#$context_v2_propertyTemplate.UniqueId';
+    var select = $(id);
+    var categoryPropertyId = '$context_v2_propertyTemplate.Property.Options.Get('categoryPropertyId')';
+    var defaultValue = '$context_v2_propertyTemplate.Property.DefaultValue';
+    if (!defaultValue || defaultValue == '') {
+        defaultValue = "PublishDate";
+    }
+
+    df = $('#$context_v2_propertyTemplate.FormId');
+    var categoryId = df.dynamicForm('val', categoryPropertyId);
+
+    api.register({
+       hasValue: function() { 
+           return true;
+       },
+       val: function(val) {
+           if (val === undefined) {
+               return select.val();
+           } else {
+               if (select.val() != val)
+                   select.val(val);
+           }
+       }
+    });
+    
+    select.on('change', function() {
+        api.changed(select.val());
+    });
+
+    df.dynamicForm('onChange', categoryPropertyId, function(o) {{
+        categoryId = o.val;
+        updateSelect();
+    }});
+
+    updateSelect = function() {
+        if (categoryId == '') {
+            if (select.val() == 'SortOrder') {
+                select.val(defaultValue);
+            }
+            $('option[Value="SortOrder"]', select).hide();
+        }
+        else {
+            $('option[Value="SortOrder"]', select).show();
+        }
+    }
+
+    updateSelect();
+
+});
+</script>

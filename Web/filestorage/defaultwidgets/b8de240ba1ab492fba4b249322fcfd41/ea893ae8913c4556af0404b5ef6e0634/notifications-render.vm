@@ -1,0 +1,59 @@
+﻿#*
+Renders notifications
+
+Expects In Scope:
+	$notifications
+*#
+#foreach ($notification in $notifications)
+
+	<li class="content-item" data-notificationid="$notification.Id">
+		#if($notification.IsResolvable && !$notification.IsResolved)
+			<input type="checkbox" id="$notification.Id" name="$notification.Id"></input>
+		#end
+
+		<h4 class="name">$notification.Subject</h4>
+
+		<div class="attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<span class="attribute-value">$core_v2_language.FormatDateAndTime($notification.LastOccurredDate)</span>
+				</li>
+				#if( $notification.TotalOccurrences > 1)
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('Occurrences'), $notification.TotalOccurrences.ToString())</span>
+					</li>
+				#end
+			</ul>
+		</div>
+
+		<div class="content expanded-hidden">
+			$core_v2_language.Truncate($notification.Message, 125, '...')
+		</div>
+
+		<div class="content expandable">
+			$notification.Message
+		</div>
+
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					#if($notification.IsResolvable && !$notification.IsResolved)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="delete-notification"
+								data-notificationid="$notification.Id">
+								$core_v2_language.GetResource('MarkResolved')
+							</a>
+						</li>
+					#end
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#end
+

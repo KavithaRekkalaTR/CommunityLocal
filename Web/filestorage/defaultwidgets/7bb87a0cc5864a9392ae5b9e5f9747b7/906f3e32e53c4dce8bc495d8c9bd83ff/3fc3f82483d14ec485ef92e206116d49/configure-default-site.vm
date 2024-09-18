@@ -1,0 +1,22 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+	#set($themeId = $core_v2_utility.ParseGuid($core_v2_page.ThemeName))
+
+	#set($response = false)
+	#set($response = $core_v2_themePage.Update($core_v2_user.ThemeTypeId, $themeId, $core_v2_configuration.DefaultThemeContextId, $core_v2_widget.RenderFile('template-user-home-default.xml'), false))
+
+	#if ($response && !$response.HasErrors())
+		#set($response = $core_v2_themePage.Delete($core_v2_user.ThemeTypeId, $themeId, $core_v2_user.Accessing.ContentId, 'common-home', false))
+	#end
+
+	#if ($response && !$response.HasErrors())
+		#set($response = $core_v2_themeHeader.Update($core_v2_configuration.SiteThemeTypeId, $themeId, $core_v2_configuration.SiteThemeContextId, $core_v2_widget.RenderFile('template-site-header-default.xml'), false))
+	#end
+
+	#if (!$response || ($response.Errors && $response.HasErrors()))
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+		{"success":"True"}
+	#end
+#end

@@ -1,0 +1,15 @@
+#set ($serializedResources = $core_v2_page.GetFormValue("serialized"))
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($response = $core_v2_administrationPanels.SaveResources($context.PluginType, $serializedResources))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success": true
+	}
+#end

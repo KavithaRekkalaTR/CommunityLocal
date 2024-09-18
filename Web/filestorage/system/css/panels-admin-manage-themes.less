@@ -1,0 +1,131 @@
+// Theme Studio specific Management Studio
+
+.studio-shell.browse.manage-themes {
+	.theme-name {
+
+	}
+	.theme-type-name {
+		.border-radius (2px, 2px, 2px, 2px);
+		background-color: rgba(0, 0, 0, 0.1);
+		text-transform: uppercase;
+		padding: 2px 4px 2px 4px;
+		color: #444;
+		font-size: @ap-font-size * .7;
+		font-weight: bold;
+	}
+}
+
+.administration-panel.manage-themes {
+	.child-items {
+		display: flex;
+		flex-wrap: wrap;
+		.child-item {
+			flex: 1 1 auto;
+			width: 20%;
+
+			margin: 0 @ap-spacing @ap-spacing 0;
+			padding: @ap-spacing;
+
+			border: 1px solid #DDD;
+			border-radius: 3px;
+
+			display: flex;
+			flex-direction: column;
+			.name {
+				font-weight: bold;
+			}
+			a.name {
+				font-weight: bold;
+				color: @ap-content-color-foreground;
+				&:hover {
+					color: @ap-content-color-accent;
+				}
+			}
+			.description {
+				color: #888;
+				display: block;
+				font-size: @ap-font-size * .9;
+			}
+			&[data-comparison="new"] {
+				background-color: lighten(#d1f5e0,0%);
+			}
+			&[data-comparison="changed"] {
+				background-color: lighten(#f1c40f,40%);
+			}
+			ul.actions {
+				margin-top: auto;
+				display: flex;
+				font-size: @ap-font-size * .9;
+				li {
+					margin-right: @ap-spacing;
+				}
+			}
+		}
+	}
+	.notthemed-indicator {
+		.border-radius (2px, 2px, 2px, 2px);
+		background-color: rgba(0, 0, 0, 0.3);
+		text-transform: uppercase;
+		padding: 2px 4px 2px 4px;
+		color: #fff;
+		font-size: @ap-font-size * .7;
+		margin-right: @ap-spacing;
+		margin-left: (@ap-spacing / 4);
+		font-weight: bold;
+	}
+	.staged-indicator {
+		width: 14px;
+		height: 14px;
+		background-color: @color-staged;
+		.icon(14px, 8px);
+		position: relative;
+		top: 2px;
+		display: inline-block;
+		.round;
+		&::after {
+			top: 3px;
+			left: 3px;
+		}
+	}
+}
+
+.modal .modal-content {
+	.select-theme-file-type {
+		.field-item.submit {
+			margin-top: 10px;
+		}
+		.field-item-description {
+			color: #555;
+			font-style: italic;
+		}
+	}
+}
+
+.revert-options {
+	.field-item.submit {
+		display: flex;
+		align-items: center;
+	}
+	.minimal-button {
+		line-height: 1.5em !important;
+		padding: 0 @ap-spacing 0 @ap-spacing !important;
+		font-size: 12px !important;
+		background-color: #F7F7F7 !important;
+		color: #555 !important;
+		font-weight: bold !important;
+	}
+	.minimal-button.disabled {
+		color: #999 !important;
+	}
+	.minimal-button:hover {
+		background-color: @ap-content-color-accent !important;
+		color: #fff !important;
+	}
+	.minimal-button.disabled:hover {
+		background-color: #F7F7F7 !important;
+		color: #999 !important;
+	}
+	.field-item:last-child {
+		margin-bottom: 0px !important;
+	}
+}

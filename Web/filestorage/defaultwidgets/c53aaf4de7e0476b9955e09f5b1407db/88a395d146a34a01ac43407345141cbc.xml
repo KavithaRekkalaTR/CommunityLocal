@@ -1,0 +1,92 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:BlogAboutApplicationPanel_Name}" cssClass="blog-about" description="${resource:BlogAboutApplicationPanel_Description}" instanceIdentifier="88a395d146a34a01ac43407345141cbc" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+
+#set ($blog = false)
+#set ($blog = $context.Blog)
+#if (!$blog)
+	$core_v2_widget.Hide()
+#end
+
+#set ($saveButtonTemplateId = $core_v2_widget.UniqueId('saveButtonTemplate'))
+#set ($enableAboutPage = $core_v2_widget.UniqueId('enableAboutPage'))
+#set ($aboutPageTitle = $core_v2_widget.UniqueId('aboutPageTitle'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item publish">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.EnableAbout) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableAboutPage)" name="$core_v2_encoding.HtmlAttributeEncode($enableAboutPage)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableAboutPage)">$core_v2_language.GetResource('PublishLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('PublishLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item title" #if (!$blog.EnableAbout) style="display: none;" #end>
+			<label class="field-item-name">$core_v2_language.GetResource('TitleLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('TitleLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" value="$core_v2_encoding.HtmlAttributeEncode($blog.AboutTitle)" id="$core_v2_encoding.HtmlAttributeEncode($aboutPageTitle)" name="$core_v2_encoding.HtmlAttributeEncode($aboutPageTitle)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item body" #if (!$blog.EnableAbout) style="display: none;" #end>
+			<label class="field-item-name">$core_v2_language.GetResource('BodyLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('BodyLabel_Desc')</span>
+			<span class="field-item-input">
+				$core_v2_editor.Render('aboutPageBody',"%{Width='100%', Height='25%', Value='$!blog.AboutDescription' }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+	</ul>
+</fieldset></form>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveButtonTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogAboutApplicationPanel.register({
+		saveTemplateId: '$core_v2_encoding.JavascriptEncode($saveButtonTemplateId)',
+		updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update.vm'))',
+		inputs: {
+			enableAboutPage: '#$core_v2_encoding.JavascriptEncode($enableAboutPage)',
+			aboutPageTitle: '#$core_v2_encoding.JavascriptEncode($aboutPageTitle)',
+			aboutPageBody: function() { return $core_v2_editor.GetContentScript('aboutPageBody'); }
+		},
+		text: {
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UpdateSuccess'))'
+		}
+	});
+});
+</script>
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="BlogAboutApplicationPanel_Name">About the Author</resource>
+	<resource name="BlogAboutApplicationPanel_Description">Manage the blog about page.</resource>
+	<resource name="Save">Save</resource>
+	<resource name="UpdateSuccess">Success</resource>
+	<resource name="PublishLabel">Publish the "About You" page</resource>
+	<resource name="PublishLabel_Desc">Would you like to make this page available to your readers?</resource>
+	<resource name="TitleLabel">Page title</resource>
+	<resource name="TitleLabel_Desc">Provide a concise title for this page. For example, "A little about me and this blog"</resource>
+	<resource name="BodyLabel">Body</resource>
+	<resource name="BodyLabel_Desc">Here you can add as much content you want for your visitors to learn more about you.</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>
+

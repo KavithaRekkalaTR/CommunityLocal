@@ -1,0 +1,28 @@
+##
+## Expects in scope: $fragments, $inProcess
+##
+
+#foreach ($fragment in $fragments)
+	#store($accessibilityTitle)
+		#format($core_v2_language.GetResource('AccessibilityTitle'))
+			#token('name')
+				$fragment.ProcessedName
+		#end
+	#end
+	#store($replacementTitle)
+		#format($core_v2_language.GetResource('ReplacementTitle'))
+			#token('name')
+				$fragment.ProcessedName
+		#end
+	#end
+	<li class="content-item fragment" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId"
+		data-fragmentname="$core_v2_encoding.HtmlAttributeEncode($fragment.ProcessedName)"
+		data-availabilitytitle="$core_v2_encoding.HtmlAttributeEncode($accessibilityTitle)"
+		data-replacementtitle="$core_v2_encoding.HtmlAttributeEncode($replacementTitle)">
+		$core_v2_widget.ExecuteFile('render-item.vm')
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end

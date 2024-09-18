@@ -1,0 +1,290 @@
+$core_v2_widget.ExecuteFile('setquery.vm')
+
+#set($excerptSize = $core_v2_widget.GetIntValue('excerptSize', 250))
+#set($accessingUser = $core_v2_user.Accessing)
+#if($telligentIdeas_v1_challenges.Current && $core_v2_user.IsRegistered($accessingUser.Id))
+	<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="0">
+		<ul>
+			#set($subscription = $core_v2_applicationSubscription.Get($challenge.Id, "%{}"))
+			<li class="navigation-list-item">
+				<a class="idea-subscribe challenge" data-messagename="widget.${core_v2_widget.WrapperElementId}.ideationSubscribe" data-challengeid="$telligentIdeas_v1_challenges.Current.Id" data-subscribed="true" href="#" #if(!$subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_IdeationUnsubscribe')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a class="idea-subscribe challenge" data-messagename="widget.${core_v2_widget.WrapperElementId}.ideationSubscribe" data-challengeid="$telligentIdeas_v1_challenges.Current.Id" data-subscribed="false" href="#" #if($subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_IdeationSubscribe')</a>
+			</li>
+			#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.ideationSubscribe")
+				<script type="text/javascript">
+				jQuery(function(j){
+					function update(value, link) {
+						j.telligent.evolution.post({
+							url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+							data: {
+								type: 'ideation',
+								subscribe: value,
+								challengeId: link.data('challengeid')
+							},
+							dataType: 'json'
+						}).then(function(){
+							if(value) {
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="false"]').hide();
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="true"]').show();
+							} else {
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="false"]').show();
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="true"]').hide();
+							}
+						});
+					}
+					j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.ideationSubscribe', function(data){
+						update(!j(data.target).data('subscribed'), j(data.target));
+					});
+				});
+				</script>
+			#end
+			<li class="navigation-list-item">
+				<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+			</li>
+		</ul>
+	</div>
+#end
+
+<form>
+<div class="sort">
+	<span class="by">
+		<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sortBy'))" data-querykey="sortBy">
+			<option value="score" #if($sortBy.ToLower() == 'score') selected #end>$core_v2_language.GetResource('SortBy_Score')</option>
+			<option value="date" #if($sortBy.ToLower() == 'date') selected #end>$core_v2_language.GetResource('SortBy_Date')</option>
+			<option value="statuslastupdateddate" #if($sortBy.ToLower() == 'statuslastupdateddate') selected #end>$core_v2_language.GetResource('SortBy_Status')</option>
+		</select>
+	</span>
+	<span class="order">
+		<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sortOrder'))" data-querykey="sortOrder">
+			<option value="descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+			<option value="ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+		</select>
+	</span>
+</div>
+
+<div class="view">
+	<span>
+		<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('filter'))" data-querykey="filter">
+			<option value="all" #if($filter.ToLower() == 'all') selected #end>$core_v2_language.GetResource('RecentIdeas')</option>
+			<option value="myideas" #if($filter.ToLower() == 'myideas') selected #end>$core_v2_language.GetResource('MyIdeas')</option>
+			<option value="myvotes" #if($filter.ToLower() == 'myvotes') selected #end>$core_v2_language.GetResource('MyVotes')</option>
+		</select>
+	</span>
+	<span>
+	    <select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('status'))" data-querykey="status">
+	        <option value="" #if ($isClosed == '' && $status == '') selected #end>$core_v2_language.GetResource('Status_All')</option>
+	        <option value="!open" #if ($isClosed == false) selected #end>$core_v2_language.GetResource('Status_Open')</option>
+	        <option value="!closed" #if ($isClosed == true) selected #end>$core_v2_language.GetResource('Status_Closed')</option>
+	        <option value="!held" #if ($releasesVotes == false) selected #end>$core_v2_language.GetResource('Status_HoldsVotes')</option>
+	        #set($statuses = $telligentIdeas_v1_statuses.List())
+			#foreach ($s in $statuses)
+			#each
+				<option value="$s.Key" #if($s.Key.ToLower()==$status.ToLower())selected="selected"#end>$core_v2_language.FormatString($core_v2_language.GetResource('Status_N'), $s.Name)</option>
+			#end
+	    </select>
+	</span>
+	#set($hasCategories = false)
+	#if ($telligentIdeas_v1_challenges.Current)
+    	#set($categories = $telligentIdeas_v1_ideaCategories.List($telligentIdeas_v1_challenges.Current.Id))
+    	#if ($categories.Count > 0)
+    	    #set($hasCategories = true)
+        	<span>
+        		<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('category'))" data-querykey="category">
+        		    <option value="" #if(!$categoryId) selected #end>$core_v2_language.GetResource('AnyCategory')</option>
+        			<option value="0" #if($categoryId == 0) selected #end>$core_v2_language.GetResource('NotCategorized')</option>
+
+        			#foreach ($category in $categories)
+        				<option value="$category.Id" #if($category.Id==$categoryId)selected="selected"#end>$core_v2_language.FormatString($core_v2_language.GetResource('IdeasInCategory'), $category.Name)</option>
+        			#end
+        		</select>
+        	</span>
+        #end
+	#end
+</div>
+</form>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function(j){
+		var filterSelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('filter'))'),
+			sortBySelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sortBy'))'),
+			sortOrderSelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sortOrder'))'),
+			categorySelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('category'))'),
+			statusSelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('status'))');
+
+		function adjustHash() {
+			var select = j(this);
+			var hashAdjustment = {};
+			hashAdjustment[select.data('querykey')] = select.val();
+			j.telligent.evolution.url.hashData(hashAdjustment, {
+				prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+			});
+		}
+
+		filterSelect.on('change', adjustHash);
+		sortBySelect.on('change', adjustHash);
+		sortOrderSelect.on('change', adjustHash);
+		categorySelect.on('change', adjustHash);
+		statusSelect.on('change', adjustHash);
+	});
+	</script>
+#end
+
+#if ($core_v2_user.IsRegistered($accessingUser.Id) && $challenge && !$challenge.HasErrors() && $challenge.MaximumVotesPerUser > 0)
+    #set($voteSummary = $telligentIdeas_v1_userVoteSummaries.Get($challenge.Id))
+    #if ($voteSummary && !$voteSummary.HasErrors())
+        <div class="message information" id="$core_v2_widget.UniqueId('votesummary')" data-challengeid="$challenge.Id" style="margin-bottom: 10px;">
+            #if ($voteSummary.TotalVotes == 1)
+                $core_v2_language.FormatString($core_v2_language.GetResource('TotalVotes_Singular'), '?filter=myvotes&amp;status=!held', $core_v2_language.FormatNumber($voteSummary.TotalVotes))
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('TotalVotes_Plural'), '?filter=myvotes&amp;status=!held', $core_v2_language.FormatNumber($voteSummary.TotalVotes))
+            #end
+            #if ($voteSummary.RemainingVotes == 1)
+                $core_v2_language.FormatString($core_v2_language.GetResource('AvailableVotes_Singular'), '?filter=all&amp;status=!open', $core_v2_language.FormatNumber($voteSummary.RemainingVotes))
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('AvailableVotes_Plural'), '?filter=all&amp;status=!open', $core_v2_language.FormatNumber($voteSummary.RemainingVotes))
+            #end
+        </div>
+        #registerEndOfPageHtml()
+        	<script type="text/javascript">
+        	jQuery(function(j){
+        	    var votesummary = jQuery('#$core_v2_widget.UniqueId('votesummary')');
+        	    var update = function() {
+        	        jQuery.telligent.evolution.post({
+        	            url: '$core_v2_widget.GetExecutedFileUrl('votesummary.vm')',
+        	            data: {
+        	                challengeid: votesummary.data('challengeid')
+        	            }
+        	        })
+        	            .then(function(response) {
+        	                votesummary.html(response);
+        	            });
+        	    }
+
+        		jQuery.telligent.evolution.messaging.subscribe('ideaVote.created', function(data) {
+				    update();
+    			});
+    			jQuery.telligent.evolution.messaging.subscribe('ideaVote.deleted', function(data) {
+    				update();
+    			});
+        	});
+        	</script>
+        #end
+    #end
+#end
+
+#set($ideas = false)
+#set($ideas = $telligentIdeas_v1_ideas.List($query))
+
+#foreach ($idea in $ideas)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+	<li class="content-item" data-ideaid="$idea.Id" data-href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)">
+
+		<div class="content abbreviated">
+			<div class="summary">
+				<h2 class="name">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)" class="internal-link view-post">$idea.Name</a>
+				</h2>
+
+				<div class="author">
+					#if ($idea.Author)
+						<div class="avatar">
+							#if ($idea.Author.ProfileUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Author.ProfileUrl)">
+									$core_v2_ui.GetResizedImageHtml($idea.Author.AvatarUrl, 24, 24, "%{border='0px', alt=$idea.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+								</a>
+							#else
+								$core_v2_ui.GetResizedImageHtml($idea.Author.AvatarUrl, 24, 24, "%{border='0px', alt=$idea.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+							#end
+						</div>
+						<span class="user-name">
+							#if ($idea.Author.ProfileUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Author.ProfileUrl)" class="internal-link view-user-profile">
+									$idea.Author.DisplayName
+								</a>
+							#else
+								$idea.Author.DisplayName
+							#end
+						</span>
+					#end
+				</div>
+
+				<div class="status">
+					<ul class="attribute-list">
+						#if(!$challenge)
+							<li class="attribute-item application">
+								<span class="attribute-value">$idea.Challenge.Name</span>
+							</li>
+						#end
+
+						<li class="attribute-item idea-status status-$idea.Status.Key">
+							<span class="attribute-value">
+                                $core_v2_language.FormatString($core_v2_language.GetResource('StatusAttributeFormat'), $idea.Status.Name, $core_v2_language.FormatDate($idea.StatusDate))
+                            </span>
+						</li>
+
+						#if ($hasCategories || $idea.Category)
+    						<li class="attribute-item idea-category">
+    						    <span class="attribute-value">
+    						        #if ($idea.Category && $idea.Category.Name)
+    						            $idea.Category.Name
+    						        #else
+    						            $core_v2_language.GetResource('NotCategorized')
+    						        #end
+    						    </span>
+    						</li>
+    					#end
+
+						#set ($comments = $core_v2_comments.List("%{ContentId=$idea.Id,ContentTypeId=$telligentIdeas_v1_ideas.ContentTypeId,PageSize=1, IncludeChildren = 'True'}"))
+						<li class="attribute-item replies">
+							<span class="attribute-value">
+								#if ($comments.TotalCount == 1)
+									$core_v2_language.FormatString($core_v2_language.GetResource('Comments_Singular'), $comments.TotalCount.ToString())
+								#else
+									$core_v2_language.FormatString($core_v2_language.GetResource('Comments_Plural'), $comments.TotalCount.ToString())
+								#end
+							</span>
+						</li>
+					</ul>
+				</div>
+
+				<div class="content">
+					<div class="post-summary">$core_v2_language.Truncate($idea.Description(), $excerptSize, "...")</div>
+				</div>
+			</div>
+
+			<div class="attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatDateAndTime($idea.CreatedDate)</span>
+					</li>
+				</ul>
+			</div>
+
+		</div>
+		$telligentIdeas_v1_ideas.UpDownVoteUI($idea.Id)
+	</li>
+
+#afterall
+	</ul>
+
+
+#nodata
+	<div class="message norecords">
+		#set ($addUrl = $telligentIdeas_v1_urls.AddIdea($challenge.Id, true))
+		#if ($challenge && $addUrl)
+			$core_v2_language.FormatString($core_v2_language.GetResource("CF_EmptyList_Link"), $addUrl)
+		#else
+			$core_v2_language.GetResource("CF_EmptyList")
+		#end
+	</div>
+#end
+
+$core_v2_ui.Pager($ideas.PageIndex, $ideas.PageSize, $ideas.TotalCount, "%{ PagedContentFile = 'standard.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

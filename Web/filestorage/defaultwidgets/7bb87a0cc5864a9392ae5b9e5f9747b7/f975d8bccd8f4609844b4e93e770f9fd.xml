@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Leaderboard_Name}" version="13.0.0.0" description="${resource:Leaderboard_Description}" instanceIdentifier="f975d8bccd8f4609844b4e93e770f9fd" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="leaderboard" lastModified="2023-11-29 07:41:17Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+$core_v2_ui.PagedContent('leaderboard.vm')]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Leaderboard_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Leaderboard_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="viewType" labelResourceName="View" defaultValue="full" dataType="String">
+		<propertyValue value="full" labelResourceName="View_Default" />
+		<propertyValue value="simple" labelResourceName="View_Simple" />
+	</property>
+	<property id="pageSize" labelResourceName="PageSize" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="showValue" labelResourceName="ShowValueColumn" defaultValue="true" dataType="Bool" />
+	<property id="showCurrentUser" labelResourceName="ShowCurrentUserPosition" defaultValue="true" dataType="Bool" />
+	<property id="selectedLeaderboard" labelResourceName="SelectedLeaderboard" dataType="Custom" template="core_v2_leaderboardLookup" width="95%" enableCurrent="false" maxSelections="1" format="csv" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="LastUpdated">Updated:</resource>
+  <resource name="Leaderboard_Description">Displays a leaderboard.</resource>
+  <resource name="Leaderboard_Name">Leaderboard</resource>
+  <resource name="LeaderboardNotCalculated">Leaderboard has not been calculated yet.</resource>
+  <resource name="more">More</resource>
+  <resource name="Name">Name</resource>
+  <resource name="NoLeaders">No leaders found.</resource>
+  <resource name="NotRanked">--</resource>
+  <resource name="Options">Options</resource>
+  <resource name="PageSize">Items per page</resource>
+  <resource name="Points">Points</resource>
+  <resource name="Rank">Rank</resource>
+  <resource name="SelectedLeaderboard">Leaderboard to display</resource>
+  <resource name="ShowCurrentUserPosition">Show current user's position on first page</resource>
+  <resource name="ShowValueColumn">Show points column</resource>
+  <resource name="View">View</resource>
+  <resource name="View_Default">Full</resource>
+  <resource name="View_Simple">Simple</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

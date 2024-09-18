@@ -1,0 +1,54 @@
+##
+## Form rendered when a new user is joining the site via an external authentication provider
+##
+
+#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#if (!$core_v2_widget.IsInWidgetPreviewMode)
+        #set ($returnUrl = $core_v2_page.ReturnUrl)
+        #if ($core_v2_page.Url.Contains($returnUrl))
+            #set ($returnUrl = false)
+        #end
+        #if ($returnUrl)
+            $core_v2_page.Redirect($returnUrl)
+        #else
+            $core_v2_page.Redirect($core_v2_urls.Home())
+        #end
+	#end
+	<div class="message warning">
+		$core_v2_language.GetResource('Login_AlreadyLoggedIn')
+	</div>
+#else
+
+	## Details
+	<form method="post" action="">
+		<fieldset class="join-details">
+        	## optionally round-trip an explicitly-collected email address in the case it was previously
+        	## collected when the external authentication provider  didn't provide it.	Will need to use
+        	## it when creating the account
+        	#if ($email && $email.Length > 0)
+        		<input type="hidden" name="$core_v2_encoding.HtmlAttributeEncode($emailInput)" id="$core_v2_encoding.HtmlAttributeEncode($emailInput)" value="$core_v2_encoding.HtmlAttributeEncode($email)" />
+        	#end
+
+			<h1>$core_v2_language.GetResource('CreateNewAccount_Welcome')</h1>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-description">
+						$core_v2_language.GetResource('CreateNewAccount_Join_Provider_Text')
+					</span>
+				</li>
+
+				$core_v2_widget.ExecuteFile('sub_form_join_details.vm')
+
+				<li class="field-item">
+					<span class="field-item-input">
+						<input type="hidden" name="$core_v2_encoding.HtmlAttributeEncode($actionInput)" id="$core_v2_encoding.HtmlAttributeEncode($actionInput)" value="join_external" />
+						<a href="#" class="internal-link create-account submit-button button" >
+							$core_v2_language.GetResource('CreateNewAccount_CreateAccount')
+						</a>
+						<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+#end

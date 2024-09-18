@@ -1,0 +1,124 @@
+.scale_prepended_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @margin: 2px) {
+	&:before {
+		width: @size;
+		height: @size;
+		font-size: @size;
+		line-height: @size;
+		margin-right: @margin;
+	}
+}
+.content-fragment.threaded-comments {
+	.comment-form {
+		position: relative;
+		padding-left: 54px !important;
+		margin-bottom: 10px;
+		margin-top: 10px * 2;
+		&.must-login {
+		 padding-left: 0 !important;   
+		}
+		.avatar {
+			position: absolute;
+			top: 0;
+			left: 0;
+			img {
+				border-radius: 3px;
+			}
+		}
+		.meta {
+			margin-bottom: 5px;
+		}
+		fieldset {
+			position: relative;
+			.processing {
+				display: none;
+				width: 100%;
+				z-index: 5000;
+				position: absolute;
+				top: 50px;
+				opacity: .6
+			}
+			.field-item {
+				margin-top: 0px;
+				margin-bottom: 0px;
+				padding-bottom: 0px;
+				.field-item-input {
+					margin: 0;
+				}
+			}
+			&.login {
+			    clear: none;
+			    .button {
+			        padding: 0 7px;
+			        font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .85;
+			        &:hover {
+			            box-shadow: none;
+			        }
+			    }
+			}
+		}
+	}
+	.comment-statistics {
+		overflow: hidden;
+		margin-top: 10px;
+		text-align: center;
+		.attribute-list {
+			display: inline-block;
+		}
+		.attribute-item {
+			display: inline-block;
+			margin-right: 10px / 2;
+			padding: 10px 10px 10px 0;
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .85;
+			color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #ffffff), 34%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			&:first-child {
+				padding-left: 0px;
+			}
+			&.count {
+				span {
+					.scale_prepended_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * .85);
+				}
+			}
+			&.users {
+				span {
+					.scale_prepended_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * .8);
+				}
+			}
+		}
+	}
+	.comment-form .comment-statistics {
+		float: right;
+		text-align: inherit;
+		margin-top: 0;
+		.attribute-item {
+			padding: 0 0 0 10px;
+		}
+	}
+	.comment-form fieldset {
+		clear: right;
+	}
+	.new-reply {
+		margin-left: 10px;
+	}
+	.ui-like {
+		.like-toggle {
+			.internal-link {
+				margin-right: 0;
+			}
+		}
+		.like-count {
+			margin-right: 10px / 2;
+		}
+	}
+}
+
+@media only screen and (max-width: -evo-themeconfig-unit('minWidth', 670px)) {
+	.content-fragment.threaded-comments {
+		.comment-statistics {
+			.attribute-item {
+				&.count {
+					display: none;
+				}
+			}
+		}
+	}
+}

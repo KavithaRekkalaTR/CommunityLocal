@@ -1,0 +1,52 @@
+$core_v2_page.SetContentType('application/javascript')
+
+(function(jQuery, global) {
+    $core_v2_widget.RenderFile('script-cache.js')
+    $core_v2_widget.RenderFile('script-model.js')
+	$core_v2_widget.RenderFile('script-layout.js')
+	$core_v2_widget.RenderFile('script-conversation-header.js')
+	$core_v2_widget.RenderFile('script-conversation-list.js')
+	$core_v2_widget.RenderFile('script-conversation.js')
+	$core_v2_widget.RenderFile('script-editor.js')
+	$core_v2_widget.RenderFile('script-sound.js')
+	$core_v2_widget.RenderFile('script-main.js')
+
+	jQuery.telligent = jQuery.telligent || {};
+    jQuery.telligent.evolution = jQuery.telligent.evolution || {};
+    jQuery.telligent.evolution.widgets = jQuery.telligent.evolution.widgets || {};
+
+    jQuery.telligent.evolution.widgets.conversations = {
+        register: function(context) {
+            context.model = new Model(context);
+            context.sound = new Sound(context);
+            context.view = 'conversation-list';
+            context.pageSize = 20;
+            
+            context.fields.editor.evolutionHtmlEditor({
+                width: '100%',
+                height: '100px',
+                contentTypeId: context.conversationMessageContentTypeId,
+                submittable: true,
+                enterToSubmitPrompt: context.text.enterToSubmit,
+                submitLabel: context.text.submit,
+                enableEnterToSubmitToggle: true,
+                onSubmit: function() {
+                    context.main.submit();
+                }
+            }).on('keydown', function(e) {
+                return context.main.keyDown(e);
+            }).on('evolutionHtmlEditorReady', function() {
+                context.subs = {
+                    layout: new Layout(context),
+                    conversationHeader: new ConversationHeader(context),
+                    conversationList: new ConversationList(context),
+                    conversation: new Conversation(context),
+                    editor: new Editor(context)
+                };
+
+                context.main = new Main(context);
+            });
+        }
+    };
+
+})(jQuery, window);

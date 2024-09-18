@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ScorePluginTypeEditor_Name}" version="12.0.0.0" description="${resource:ScorePluginTypeEditor_Description}" instanceIdentifier="6980e8a1a5ce42f1b75bb0f12c7c4ee7" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-10-29 20:20:27Z" provider="d12a7376f56740c7b0522fa63416387e">
+    <contentScript language="Velocity"><![CDATA[#if (!$context.HasAccess)
+    $core_v2_widget.Hide()
+#end
+<div class="scoreplugin">
+    <div id="$core_v2_widget.UniqueId('metrics')">
+        <p style="margin-bottom: 2em;">
+            $core_v2_language.FormatString($core_v2_language.GetResource('metric-instructions'), ' data-messagename="scoreplugin-addmetrics"')
+        </p>
+        <div id="$core_v2_widget.UniqueId('metrics-list-wrapper')">
+            $core_v2_widget.ExecuteFile('list-weightedmetrics.vm')
+        </div>
+
+        <fieldset style="margin-top: 2em;">
+            <ul class="field-list">
+        		<li class="field-item view-id">
+        			<span class="field-item-input">
+        				<a class="inline-button" href="#">$core_v2_language.GetResource('view-identifiers')</a>
+        			</span>
+        		</li>
+        		<li class="field-item id" style="display: none;">
+        			<label class="field-item-name">$core_v2_language.GetResource('score-id')</label>
+        			<span class="field-item-input">
+        				$context.Score.Id.ToString()
+        			</span>
+        		</li>
+            </ul>
+        </fieldset>
+
+    </div>
+
+    #if ($context.DecaySupported)
+        <div id="$core_v2_widget.UniqueId('decay')">
+            #set($config = $context.GetScoreConfiguration())
+    
+            <p>$core_v2_language.GetResource('decay-instructions')</p>
+    
+            <form><fieldset>
+            <ul class="field-list">
+    
+                <li class="field-item">
+        		    <span class="field-item-input">
+                        <input type="checkbox" id="$core_v2_widget.UniqueId('EnableDecay')" name="$core_v2_widget.UniqueId('EnableDecay')" #if($config.IsDecayEnabled) checked="checked"#end />
+        			    <label for="$core_v2_widget.UniqueId('EnableDecay')" class="field-item-name">$core_v2_language.GetResource('Field_EnableDecay')</label>
+        			</span>
+        			<span class="field-item-description">
+        			    $core_v2_language.GetResource('Field_EnableDecay_Desc')
+        			</span>
+        		</li>
+    
+        		<li class="field-item banning">
+        			<label for="$core_v2_widget.UniqueId('HalfLife')" class="field-item-name">$core_v2_language.GetResource('Field_HalfLife')</label>
+        			<span class="field-item-description">$core_v2_language.GetResource("Field_HalfLife_Desc")</span>
+        			<span class="field-item-input">
+        				<input type="text" id="$core_v2_widget.UniqueId('HalfLife')" name="$core_v2_widget.UniqueId('HalfLife')" value="$config.HalfLife" style="width: 60px;" />
+        				$core_v2_language.GetResource('Field_HalfLife_Days')
+        			</span>
+        			<span class="field-item-validation" style="display: none;">$core_v2_language.GetResource('Field_HalfLife_Validation')</span>
+        		</li>
+    
+        		<li class="field-item">
+        		    <span class="field-item-input">
+                        <input type="checkbox" id="$core_v2_widget.UniqueId('AllowHalfLifeOverrides')" name="$core_v2_widget.UniqueId('AllowHalfLifeOverrides')" #if($config.AreDecayOverridesEnabled) checked="checked"#end />
+        			    <label for="$core_v2_widget.UniqueId('AllowHalfLifeOverrides')" class="field-item-name">$core_v2_language.GetResource('Field_AllowHalfLifeOverrides')</label>
+        			</span>
+        			<span class="field-item-description">
+        			    $core_v2_language.FormatString($core_v2_language.GetResource('Field_AllowHalfLifeOverrides_Desc'), ' data-messagename="scoreplugin-applicationoverrides"')
+        			</span>
+        		</li>
+        	</ul>
+        	</fieldset></form>
+    
+        </div>
+    #end
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.scorePlugin')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+    jQuery(function(){
+        var api = $context.JsonApi;
+		jQuery.telligent.evolution.widgets.scorePlugin.register({
+			api: api,
+			metricsWrapper: jQuery('#$core_v2_widget.UniqueId('metrics')'),
+			metricsListWrapper: jQuery('#$core_v2_widget.UniqueId('metrics-list-wrapper')'),
+			decayWrapper: #if ($context.DecaySupported) jQuery('#$core_v2_widget.UniqueId('decay')') #else null #end,
+			text: {
+			    metrics: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('tab_metrics'))',
+			    decay: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('tab_decay'))',
+			    addMetrics: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title_addmetrics'))',
+			    revert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title_revert'))',
+			    scoreSamples: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title_scoresamples'))',
+			    applicationOverrides: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title_applicationoverrides'))',
+			    metricSamples: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title_metricsamples'))',
+			    removeMetricSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('metric-removesuccessful'))',
+			    removeMetricConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('metric-removeconfirmation'))',
+			    addMetricMenu: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Menu_AddMetrics'))',
+			    revertMenu: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Menu_Revert'))',
+			    viewScoresMenu: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Menu_ViewSampleScores'))',
+			    viewOverridesMenu: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Menu_ViewOverrides'))'
+			},
+			fieldIds: {
+			    enableDecay: '$core_v2_widget.UniqueId('EnableDecay')',
+			    halfLife: '$core_v2_widget.UniqueId('HalfLife')',
+			    allowHalfLifeOverrides: '$core_v2_widget.UniqueId('AllowHalfLifeOverrides')'
+			},
+			urls: {
+			    addMetrics: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('add-metrics.vm'))',
+			    revert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert.vm'))',
+			    scoreSamples: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('score-samples.vm'))',
+			    applicationOverrides: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('application-overrides.vm'))',
+			    metricSamples: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('metric-samples.vm'))',
+			    removeMetric: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-removemetric.vm'))',
+			    save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))',
+			    refresh: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-refresh.vm'))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="add-metrics">Add Metrics</resource>
+  <resource name="addmetrics_instructions">Select one or more metrics to be included in the calculation of this score.</resource>
+  <resource name="addmetrics-succesful">The selected metrics were added to this score successfully.</resource>
+  <resource name="applicationoverrides_instructions">Applications that have overridden this score's configuration for half-life are listed below. You can revert individual customizations from here.</resource>
+  <resource name="applicationoverrides_notapplicable">Note that this list is currently inapplicable as application overrides of half-life are currently disabled.</resource>
+  <resource name="applicationrevert-confirmation">Are you sure you want to revert the decay override for '{0}'? This action is immediate.</resource>
+  <resource name="applicationrevert-succesful">The decay override for '{0}' has been reverted successfully.</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="decay-instructions">Scores can optionally decay over time to enable newer content to be scored higher than older content.</resource>
+  <resource name="Field_AllowHalfLifeOverrides">Enable application-specific overrides</resource>
+  <resource name="Field_AllowHalfLifeOverrides_Desc">When enabled, the half-life can be &lt;a href="#"{0}&gt;customized for specific applications&lt;/a&gt; within group management. Enable this option when the decay rate may be different within specific areas of the community.</resource>
+  <resource name="Field_EnableDecay">Enable decay</resource>
+  <resource name="Field_EnableDecay_Desc">When enabled, this score's value will decay over time.</resource>
+  <resource name="Field_FindMetricContent">Find a metric</resource>
+  <resource name="Field_FindMetricContent_Desc">Search for the item for which to receive a metric for review. You can search by content ID, URL, or title/subject.</resource>
+  <resource name="Field_FindMetricContent_NoResults">No items could be found matching your query.</resource>
+  <resource name="Field_FindMetricContent_Placeholder">Find an item...</resource>
+  <resource name="Field_FindScoreContent">Find a score</resource>
+  <resource name="Field_FindScoreContent_Desc">Search for the item for which to receive a score for review. You can search by content ID, URL, or title/subject.</resource>
+  <resource name="Field_FindScoreContent_NoResults">No items could be found matching your query.</resource>
+  <resource name="Field_FindScoreContent_Placeholder">Find scored item...</resource>
+  <resource name="Field_HalfLife">Half-life</resource>
+  <resource name="Field_HalfLife_Days">days</resource>
+  <resource name="Field_HalfLife_Desc">The number of days before the score has dropped by half. For example, if the half-life is 30 days, content produced today will be twice as valuable as content published a month ago.</resource>
+  <resource name="Field_HalfLife_Validation">Half life must be a number greater than or equal to one.</resource>
+  <resource name="Field_RevertDecay">Revert decay</resource>
+  <resource name="Field_RevertDecay_Desc">Revert decay enablement and options to the default defined by this score.</resource>
+  <resource name="Field_RevertMetrics">Revert metrics and weights</resource>
+  <resource name="Field_RevertMetrics_Desc">Revert metric selection and weighting to the default defined by this score.</resource>
+  <resource name="Menu_AddMetrics">Add metrics</resource>
+  <resource name="Menu_Revert">Revert score options</resource>
+  <resource name="Menu_ViewOverrides">View applications with customized decay</resource>
+  <resource name="Menu_ViewSampleScores">View sample scores</resource>
+  <resource name="metric-instructions">Individual metrics are combined by this score with their selected weight to produce a score value. Metrics can be &lt;a href=#"{0}&gt;added&lt;/a&gt;, removed, and weighted below.</resource>
+  <resource name="metric-removeconfirmation">Are you sure you want to remove the '{0}' metric from being a component of this score? This action is immediate.</resource>
+  <resource name="metric-removesuccessful">The '{0}' metric has been removed from this score successfully.</resource>
+  <resource name="more">More</resource>
+  <resource name="most-weight">more weight</resource>
+  <resource name="no-application-overrides">No applications have overridden the decay configuration for this score.</resource>
+  <resource name="no-metric-sample-for-content">A metric value could not be loaded for the selected item. It may not be an applicable item or may not have been evaluated yet.</resource>
+  <resource name="no-metrics-selected">No metrics have been selected. Please add metrics to make this score functional.</resource>
+  <resource name="no-score-sample-for-content">A score could not be loaded for the selected item. It may not be an applicable item or may not have been scored yet.</resource>
+  <resource name="no-unweighted-metrics">No unweighted metrics are available to add.</resource>
+  <resource name="remove-metric">Remove</resource>
+  <resource name="revert">Revert</resource>
+  <resource name="revert-applicationoverride">Revert</resource>
+  <resource name="revert-instructions">Revert score options to the default defined by this score.</resource>
+  <resource name="revert-succesful">The selected options have been reverted.</resource>
+  <resource name="samplemetrics_instructions">The highest and lowest five metric values are shown below to enable review of real-world metric data.</resource>
+  <resource name="samplemetrics-caculated">Calculated {0}</resource>
+  <resource name="samplemetrics-highest">Highest</resource>
+  <resource name="samplemetrics-lowest">Lowest</resource>
+  <resource name="samplemetrics-search">Search</resource>
+  <resource name="samplescore-decay-plural">{0} days old ({1}% decayed)</resource>
+  <resource name="samplescore-decay-singular">{0} day old ({1}% decayed)</resource>
+  <resource name="samplescores_instructions">The highest and lowest five scores are shown below along with the component metrics to enable review of real-world score data. Within samples, metrics are highlighted from red (low) to green (high) values to help identify differences.</resource>
+  <resource name="samplescores-caculated">Calculated {0}</resource>
+  <resource name="samplescores-highest">Highest</resource>
+  <resource name="samplescores-lowest">Lowest</resource>
+  <resource name="samplescores-search">Search</resource>
+  <resource name="score-id">Identifier</resource>
+  <resource name="ScorePluginTypeEditor_Description">Enables editing of score metrics options and decay.</resource>
+  <resource name="ScorePluginTypeEditor_Name">Score Editor</resource>
+  <resource name="tab_decay">Decay</resource>
+  <resource name="tab_metrics">Score</resource>
+  <resource name="title_addmetrics">Add Metrics</resource>
+  <resource name="title_applicationoverrides">Application Half-life Overrides</resource>
+  <resource name="title_metricsamples">{0} Samples</resource>
+  <resource name="title_revert">Revert Score Options</resource>
+  <resource name="title_scoresamples">Sample Scores</resource>
+  <resource name="view-application">View</resource>
+  <resource name="view-identifiers">View identifiers</resource>
+  <resource name="view-metric-sample">View sample values</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

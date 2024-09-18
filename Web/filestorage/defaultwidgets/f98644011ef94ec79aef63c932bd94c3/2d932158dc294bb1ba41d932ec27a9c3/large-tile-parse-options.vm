@@ -1,0 +1,31 @@
+#set($options = "%{}")
+
+#set ($endDate = $core_v2_page.GetFormValue('fr_endDate'))
+#if($endDate)
+    $options.Add('endDate', $endDate)
+#end
+
+#set ($startDate = $core_v2_page.GetFormValue('fr_startDate'))
+#if($startDate)
+    $options.Add('startDate', $startDate)
+#end
+
+#set ($datePeriod = $core_v2_page.GetFormValue('fr_datePeriod'))
+#if($datePeriod)
+    $options.Add('datePeriod', $datePeriod)
+#end
+
+#set ($selectedGroups = $core_v2_page.GetFormValue('fr_selectedGroups'))
+#if($selectedGroups)
+    $options.Add('selectedGroups', $selectedGroups)
+#end
+
+#set ($selectedApplications = $core_v2_page.GetFormValue('fr_selectedApplications'))
+#if($selectedApplications)
+    $options.Add('selectedApplications', $selectedApplications)
+#end
+
+#set ($contentTypes = $core_v2_page.GetFormValue('fr_contentTypes'))
+#if($contentTypes)
+    $options.Add('contentTypes', $contentTypes)
+#end

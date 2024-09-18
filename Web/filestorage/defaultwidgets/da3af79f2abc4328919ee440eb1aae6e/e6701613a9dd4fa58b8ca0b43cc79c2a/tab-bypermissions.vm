@@ -1,0 +1,52 @@
+#set($perms = $context.GetPermissions())
+#set($appType = '')
+
+<form><fieldset>
+	<ul class="field-list expandable">
+		<li class="field-item permission-filter">
+			<span class="field-item-input"><input type="text" name="searchpermission" placeholder="$core_v2_language.GetResource('Find')"></input></span>
+		</li>
+	</ul>
+</fieldset>
+
+#set ($index = 0)
+#set ($appType = '')
+#foreach($perm in $perms)
+#beforeall
+	<fieldset>
+        <ul class="navigation-list contextual-administration-links ">
+#each
+	#set ($index = $index + 1)
+	#set ($inputId = "${core_v2_widget.UniqueId('permissionInputId')}${index}")
+
+    #set($applicationType = $core_v2_applicationType.Get($perm.ApplicationTypeId))
+
+	#if($appType != $perm.ApplicationTypeId && $appType != '')
+		</ul>
+	</div>
+	#end
+
+	#if($appType != $perm.ApplicationTypeId)
+        <div class="permission-group">
+            <div class="permission-group-header" data-nodeid="$perm.ApplicationTypeId">
+                $core_v2_language.FormatString($core_v2_language.GetResource('ItemPermissions'), $applicationType.Name)
+            </div>
+            <ul class="navigation-list contextual-administration-links">
+    #end
+
+	<li class="navigation-item permission" data-id="$perm.Id" data-nodeid="$perm.ApplicationTypeId" data-title="$core_v2_encoding.HtmlAttributeEncode($applicationType.Name) - $core_v2_encoding.HtmlAttributeEncode($perm.Name)" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($applicationType.Name).ToLower() $core_v2_encoding.HtmlAttributeEncode($perm.Description).ToLower()">
+		<a href="#" class="permission" data-messagename="contextualroles-edit-permission" data-id="$perm.Id" data-nodeid="$perm.ApplicationTypeId" data-title="$core_v2_encoding.HtmlAttributeEncode($applicationType.Name) - $core_v2_encoding.HtmlAttributeEncode($perm.Name)" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($applicationType.Name).ToLower() $core_v2_encoding.HtmlAttributeEncode($perm.Description).ToLower()">
+            <span class="name">$perm.Name</span>
+            <span class="description">$perm.Description</span>
+		</a>
+	</li>
+
+	#set($appType = $perm.ApplicationTypeId)
+#afterall
+   	    </ul>
+	</fieldset>
+#end
+</form>
+
+<div class="message norecords" #if($perms.Count > 0) style="display: none;"#end>$core_v2_language.GetResource("NoPermissionsFound")</div>
+

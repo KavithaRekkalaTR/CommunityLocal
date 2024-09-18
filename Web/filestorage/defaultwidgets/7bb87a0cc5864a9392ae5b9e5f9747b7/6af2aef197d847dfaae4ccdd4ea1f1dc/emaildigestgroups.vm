@@ -1,0 +1,91 @@
+﻿#set($groups = $core_v2_group.List("%{UserId=$core_v2_user.Accessing.Id,PageIndex=0,PageSize=1}"))
+#set($subscriptions = $core_v2_emailDigest.ListGroupSubscriptionsWithoutMembership(0, 1))
+
+<ul class="field-list">
+	<li class="field-item">
+		<h3>$core_v2_language.GetResource('EditProfile_EmailDigestTabs_MyGroupsTitle')</h3>
+		<span class="field-item-description">$core_v2_language.GetResource('EditProfile_EmailDigestTabs_MyGroupsDescription')</span>
+
+		#if($groups.TotalCount > 0)
+			<span class="field-item-input">
+				<table id="$core_v2_widget.UniqueId('emailDigestGroupTable')" class="form email-digests">
+					<thead>
+						<th>$core_v2_language.GetResource('EditProfile_EmailDigestTabs_GroupHeader')</th>
+						<th>$core_v2_language.GetResource('EditProfile_EmailDigestTabs_FrequencyHeader')</th>
+					</thead>
+					<tbody id="$core_v2_widget.UniqueId('emailDigestGroupTableBody')">
+					</tbody>
+					<tfoot>
+						<th colspan="2">
+							<a id="$core_v2_widget.UniqueId('moreGroupId')" href="javascript:void(0)">$core_v2_language.GetResource('More')</a>
+						</th>
+					</tfoot>
+				</table>
+			</span>
+			#registerEndOfPageHtml()
+				<script type="text/javascript">
+				//<![CDATA[
+				jQuery(function()
+				{
+					jQuery.telligent.evolution.widgets.editUser.emailDigest.register({
+						wrapperId : '$core_v2_widget.WrapperElementId',
+						userId: '$core_v2_user.Accessing.Id',
+						pageSize: 10,
+						tableId: '$core_v2_widget.UniqueId('emailDigestGroupTable')',
+						tableBodyId: '$core_v2_widget.UniqueId('emailDigestGroupTableBody')',
+						moreUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('emaildigestgroupsmore.vm'))',
+						moreId: '$core_v2_widget.UniqueId('moreGroupId')',
+						totalCount: $groups.TotalCount,
+						updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('emaildigestupdate.vm'))'
+					});
+				});
+				</script>
+			#end
+		#else
+			<span class="field-item-input">$core_v2_language.GetResource('EditProfile_EmailDigestTabs_NoData')</span>
+		#end
+	</li>
+	<li class="field-item">
+		<h3>$core_v2_language.GetResource('EditProfile_EmailDigestTabs_OtherGroupsTitle')</h3>
+		<span class="field-item-description">$core_v2_language.GetResource('EditProfile_EmailDigestTabs_OtherGroupsDescription')</span>
+		#if($subscriptions.TotalCount > 0)
+			<span class="field-item-input">
+				<table id="$core_v2_widget.UniqueId('emailDigestOtherGroupTable')" class="form">
+					<thead>
+						<th>$core_v2_language.GetResource('EditProfile_EmailDigestTabs_OtherGroupHeader')</th>
+						<th>$core_v2_language.GetResource('EditProfile_EmailDigestTabs_FrequencyHeader')</th>
+					</thead>
+					<tbody id="$core_v2_widget.UniqueId('emailDigestOtherGroupTableBody')">
+					</tbody>
+					<tfoot>
+						<th colspan="2" align="center">
+							<a id="$core_v2_widget.UniqueId('otherMoreGroupId')" href="javascript:void(0)">$core_v2_language.GetResource('More')</a>
+						</th>
+					</tfoot>
+				</table>
+
+				#registerEndOfPageHtml()
+					<script type="text/javascript">
+					//<![CDATA[
+					jQuery(function()
+					{
+						jQuery.telligent.evolution.widgets.editUser.emailDigest.register({
+							wrapperId : '$core_v2_widget.WrapperElementId',
+							userId: '$core_v2_user.Accessing.Id',
+							pageSize: 10,
+							tableId: '$core_v2_widget.UniqueId('emailDigestOtherGroupTable')',
+							tableBodyId: '$core_v2_widget.UniqueId('emailDigestOtherGroupTableBody')',
+							moreUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('emaildigestgroupsothermore.vm'))',
+							moreId: '$core_v2_widget.UniqueId('otherMoreGroupId')',
+							totalCount: $subscriptions.TotalCount,
+							updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('emaildigestupdate.vm'))'
+						});
+					});
+					</script>
+				#end
+			</span>
+		#else
+			<span class="field-item-input no-content">$core_v2_language.GetResource('EditProfile_EmailDigestTabs_NoData')</span>
+		#end
+	</li>
+</ul>

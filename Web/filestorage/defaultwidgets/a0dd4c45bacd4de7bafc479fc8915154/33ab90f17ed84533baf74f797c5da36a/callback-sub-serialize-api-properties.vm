@@ -1,0 +1,14 @@
+##
+## Renders a list of api properties as JSON
+##
+## Requires in scope:
+##   $apiProperties
+##
+[
+	#foreach ($apiProperty in $apiProperties)
+	#between
+		,
+	#each
+		$core_v2_widget.ExecuteFile('callback-sub-serialize-api-property.vm')
+	#end
+]

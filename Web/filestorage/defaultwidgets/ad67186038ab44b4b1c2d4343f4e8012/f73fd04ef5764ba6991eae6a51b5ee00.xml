@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Change User Avatar Modal" version="10.0.0.0" description="" instanceIdentifier="f73fd04ef5764ba6991eae6a51b5ee00" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="ad67186038ab44b4b1c2d4343f4e8012">
+    <contentScript><![CDATA[#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+<!DOCTYPE html>
+<html lang="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Code)" #if($core_v2_language.IsRightToLeft) class="direction-rtl" style="direction: rtl;" #else class="direction-ltr" style="direction: ltr;" #end>
+	<head>
+		<title>$core_v2_language.GetResource("ChangeAvatar")</title>
+		$core_v2_page.RenderThemeHeaders("%{ IsModal = 'True'}")
+	</head>
+	<body>
+	   <form id="$core_v2_widget.UniqueId('wrapper')">
+    		<div class="field-list-header"></div>
+    		<fieldset class="field-list">
+    			<ul class="field-list">
+    				<li class="field-item change-avatar post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('avatar')" data-upload="$context.EnableUploading" data-link="$context.EnableRemote">
+                    	#if ($context.EnableUploading && $context.EnableRemote && $context.EnableSelection)
+                    		<label for="$core_v2_widget.UniqueId('avatar_input')" class="field-item-name">$core_v2_language.GetResource('Avatar_FileOrUrlOrSelect')</label>
+                    	#elseif ($context.EnableUploading && $context.EnableRemote)
+                    		<label for="$core_v2_widget.UniqueId('avatar_input')" class="field-item-name">$core_v2_language.GetResource('Avatar_FileOrUrl')</label>
+                    	#elseif ($context.EnableRemote && $context.EnableSelection)
+                    		<label for="$core_v2_widget.UniqueId('avatar_input')" class="field-item-name">$core_v2_language.GetResource('Avatar_UrlOrSelect')</label>
+                    	#elseif ($context.EnableUploading && $context.EnableSelection)
+                    		<label for="$core_v2_widget.UniqueId('avatar_input')" class="field-item-name">$core_v2_language.GetResource('Avatar_FileOrSelect')</label>
+                    	#elseif ($context.EnableUploading)
+                    	    <label for="$core_v2_widget.UniqueId('avatar_input')" class="field-item-name">$core_v2_language.GetResource('Avatar_File')</label>
+                    	#elseif ($context.EnableRemote)
+                    	    <label for="$core_v2_widget.UniqueId('avatar_input')" class="field-item-name">$core_v2_language.GetResource('Avatar_Url')</label>
+                    	#elseif ($context.EnableSelection)
+                    	    <label for="$core_v2_widget.UniqueId('avatar_input')" class="field-item-name">$core_v2_language.GetResource('Avatar_Select')</label>
+                        #end
+                        <span class="field-item-input file">
+                       		<input type="text" columns="90" id="$core_v2_widget.UniqueId('avatar_input')" #if($context.EnableRemote) placeholder="$core_v2_language.GetResource('Url_Placeholder')" #end #if ($core_v2_user.Accessing.AvatarUrl != $context.DefaultUrl) value="$core_v2_encoding.HtmlAttributeEncode($core_v2_user.Accessing.AvatarUrl)" #end />
+                        </span>
+                        <span class="field-item-input preview">
+                            $!core_v2_ui.GetResizedImageHtml($core_v2_user.Accessing.AvatarUrl, 128, 128, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop'}")
+                        </span>
+                    	<span class="field-item-input">
+                    	    #if ($context.EnableUploading)
+        					    <a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')" style="margin-right: 1em;">$core_v2_language.GetResource('Upload')</a>
+        					#end
+        					#if ($context.EnableSelection)
+        					    <a href="#" class="select add" id="$core_v2_widget.UniqueId('select')" style="margin-right: 1em;">$core_v2_language.GetResource('Select')</a>
+        					#end
+        					<a href="#" class="remove">$core_v2_language.GetResource('Remove')</a>
+        				</span>
+                    	<span class="field-item-validation" style="display: none;"></span>
+                    </li>
+    				<li class="field-item submit-avatar change-avatar">
+    					<span class="field-item-input">
+    					    <a href="#" id="$core_v2_widget.UniqueId('submit')" class="internal-link button disabled save-avatar"><span></span>$core_v2_language.GetResource('Submit')</a>
+    					    <span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+    					</span>
+    				</li>
+    				#if ($context.EnableSelection)
+        				<li class="field-item selectable-avatars">
+        				    <ul style="display: flex; flex-wrap: wrap; justify-content: center;">
+            				    #foreach($avatarUrl in $context.GetSelectableUrls())
+                                	<li style="width:64px; margin: 10px;">
+                                		<a href="#" class="selectable-avatar" data-url="$core_v2_encoding.HtmlAttributeEncode($avatarUrl)">
+                                	        $core_v2_ui.GetResizedImageHtml($avatarUrl, 64, 64, "%{border='0px', alt=$avatar.FileName, ResizeMethod = 'ZoomAndCrop' }")
+                                		</a>
+                                	</li>
+                                #end
+                            </ul>
+        				</li>
+        				<li class="field-item selectable-avatars select-avatar">
+        					<span class="field-item-input">
+        					    <a href="#" class="cancel-selection">$core_v2_language.GetResource('Cancel')</a>
+        					</span>
+        				</li>
+        			#end
+    			</ul>
+    		</fieldset>
+    		<div class="field-list-footer"></div>
+    
+    		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+    		<script type="text/javascript">
+    			jQuery(function(j){
+    				j.telligent.evolution.widgets.changeUserAvatar.register({
+    				    wrapperId: '$core_v2_widget.UniqueId('wrapper')',
+    				    avatarId: '$core_v2_widget.UniqueId('avatar')',
+    				    titleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeAvatar'))',
+    				    selectTitleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectAvatar'))',
+        				progressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+        				changeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Change'))',
+        				addText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Upload'))',
+        				waitForUploadText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wait'))',
+                        uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+                        uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+    				    previewUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-preview.vm'))",
+    				    saveUrl:  "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))",
+    				    file: #if ($core_v2_user.Accessing.AvatarUrl == $context.DefaultUrl)
+    				        null
+    				    #else
+    				        {
+        				        name: null,
+        				        url: "$core_v2_encoding.JavascriptEncode($core_v2_user.Accessing.AvatarUrl)",
+        				        isRemote: #if($context.UrlIsLocal($core_v2_user.Accessing.AvatarUrl)) false#else true #end,
+        				        isNew: false
+    				        }
+    				    #end
+                    });
+    			});
+    		</script>
+		</form>
+	</body>
+</html>]]></contentScript>
+    <languageResources><language key="en-us"><resource name="Avatar_File">Upload an avatar</resource><resource name="Avatar_FileOrSelect">Upload or select an avatar</resource><resource name="Avatar_FileOrUrl">Upload or link an avatar</resource><resource name="Avatar_FileOrUrlOrSelect">Upload, select, or link an avatar</resource><resource name="Avatar_Select">Select an avatar</resource><resource name="Avatar_Url">Link an avatar</resource><resource name="Avatar_UrlOrSelect">Select or link an avatar</resource><resource name="Cancel">Cancel</resource><resource name="Change">Upload</resource><resource name="ChangeAvatar">Change Your Avatar</resource><resource name="Remove">Remove</resource><resource name="Select">Select</resource><resource name="SelectAvatar">Select Your Avatar</resource><resource name="Submit">Save</resource><resource name="Upload">Upload</resource><resource name="UploadProgress">Uploading ({0}%)...</resource><resource name="Url_Placeholder">Enter the URL of a remote avatar to link...</resource><resource name="Wait">Please wait for the upload to complete.</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

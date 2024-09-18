@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GallerySummaryReport_Name}"
+                           version="10.0.0.0"
+                           description="${resource:GallerySummaryReport_Description}"
+                           instanceIdentifier="f903efb99f7f400dac56ffadda6feaed"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+
+#set ($containerId = $core_v2_widget.UniqueId('container'))
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id) || $reporting.HasGroupReportingPermission($core_v2_user.Accessing.Id))
+    $core_v2_widget.ExecuteFile('full-content.vm')
+#else
+    <div id="$containerId">
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+#end
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="GallerySummaryReport_Name">Gallery Details</resource>
+        <resource name="GallerySummaryReport_Description">Summary of a single gallery</resource>
+        <resource name="PermissionDenied">You do not have permission to view this report.</resource>
+        <resource name="Day">Day</resource>
+        <resource name="Days">days</resource>
+        <resource name="NoGallerySelected">Please select a gallery to see summary.</resource>
+        <resource name="1Day">within 1 day</resource>
+        <resource name="3Day">within 3 days</resource>
+        <resource name="7Day">within 7 days</resource>
+        <resource name="Overall">within selected dates</resource>
+        <resource name="Last1Day">Yesterday</resource>
+        <resource name="Last3Day">Last 3</resource>
+        <resource name="Last7Day">Last 7</resource>
+        <resource name="Last30Day">Last 30</resource>
+        <resource name="Last90Day">Last 90</resource>
+        <resource name="Last180Day">Last 180</resource>
+        <resource name="NewFiles">New Files</resource>
+        <resource name="NewComments">New Comments</resource>
+        <resource name="NewFiles_Description"></resource>
+        <resource name="NewComments_Description"></resource>
+        <resource name="Downloads">Downloads</resource>
+        <resource name="Downloads_Description"></resource>
+        <resource name="in">in</resource>
+        <resource name="Export">Export</resource>
+        <resource name="ExportListasCSV">Export as CSV</resource>
+        <resource name="Cancel">Cancel</resource>
+        <resource name="NoData">No matching gallery found.</resource>
+        <resource name="Error">No gallery was found.  The gallery may no longer exist or you may no longer have access to view reports for this gallery.</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

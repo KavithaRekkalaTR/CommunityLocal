@@ -1,0 +1,55 @@
+#set ($totalFacets = 0)
+#foreach ($facet in $facets)
+    #set ($totalFacets = $totalFacets + $facet.DocumentCount )
+#end
+
+<ul>
+    #set($renderedWrapper = false)
+    #foreach ($facet in $facets)
+    #each
+    	#set ($application = false)
+		#set ($application = $core_v2_application.Get($core_v2_utility.ParseGuid($facet.FieldValue)))
+		#if ($application && !$application.HasErrorsOrWarnings() && $application.ApplicationId != $application.Container.ContainerId)
+		    #if (!$renderedWrapper)
+		        <li class="navigation-item">
+                #if ($facets.Count > 1)
+                    #if(!$applicationId || $applicationId == '')
+                        <a class="category internal-link selected" data-key="" href="#">$core_v2_language.GetResource('Search_Facet_All') ($totalFacets.ToString("N0"))</a>
+                    #else
+                        <a class="category internal-link" data-key="" href="#">$core_v2_language.GetResource('Search_Facet_All') ($totalFacets.ToString("N0"))</a>
+                    #end
+                #end
+                #set($renderedWrapper = true)
+		    #end
+		
+		    #set($applicationName = $core_v2_language.Truncate($application.HtmlName('Web'), 30, '...'))
+			#if (!$groupFiltered || ($includeSubGroups && $application.Container.ContainerId != $currentContainerId)) 
+			    #if($application.Container && !$application.Container.HasErrorsOrWarnings())
+			        #set($applicationName = $core_v2_language.FormatString($core_v2_language.GetResource('ApplicationInContainer'), $applicationName, $core_v2_language.Truncate($application.Container.HtmlName('Web'), 30, '...')))
+			    #end
+			#end
+			#if($facet.FieldValue == $applicationId || $facets.Count == 1)
+                <a class="application internal-link selected" data-key="$facet.FieldValue" href="#">$applicationName ($facet.DocumentCount.ToString("N0"))</a>
+            #else
+                <a class="application internal-link" data-key="$facet.FieldValue" href="#">$applicationName ($facet.DocumentCount.ToString("N0"))</a>
+            #end
+        #end
+    #afterall
+        #if ($renderedWrapper)
+            </li>
+        #end
+    #nodata
+    #end
+
+    #foreach ($searchResult in $searchResults)
+        #set ($resultHtml = false)
+        #set ($resultHtml = $searchResult.ViewHtml())
+        #if ($resultHtml)
+            <li class="content-item" data-contenturl="$core_v2_encoding.HtmlAttributeEncode($searchResult.Url)" #if($hasMore) data-hasmore="true" #end>
+                    $resultHtml
+            </li>
+        #end
+    #nodata
+        <div class="message norecords">$core_v2_language.GetResource('No_Results')</div>
+    #end
+</ul>

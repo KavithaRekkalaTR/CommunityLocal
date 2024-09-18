@@ -1,0 +1,84 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($calendars = $context.GetCalendarSummaryDetailReport($options))
+
+#foreach($calendar in $calendars)
+#beforeall
+<div class="responsive-wrapper">
+	<table class="scrollable-table">
+	<thead>
+		<tr>
+            $reporting_ui.SortableTableHeader("", "Name", "ascending", $core_v2_language.GetResource('Name'), $sortBy, $sortOrder, 2)
+            $reporting_ui.SortableTableHeader("", "Group", "ascending", $core_v2_language.GetResource('Group'), $sortBy, $sortOrder, 2)
+
+			<th colspan="3" class="center sup-header break">$core_v2_language.GetResource('NewEventCount')</th>
+			<th colspan="3" class="center sup-header">$core_v2_language.GetResource('NewCommentCount')</th>
+
+            $reporting_ui.SortableTableHeader("right sup-header break", "TotalEventCount", "descending", $core_v2_language.GetResource('TotalEventCount'), $sortBy, $sortOrder, 2)
+            $reporting_ui.SortableTableHeader("right sup-header", "TotalCommentCount", "descending", $core_v2_language.GetResource('TotalCommentCount'), $sortBy, $sortOrder, 2)
+		</tr>
+		<tr>
+            $reporting_ui.SortableTableHeader("sub-header break", "NewEventCountLast1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewEventCountLast7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewEventCountLast30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+
+            $reporting_ui.SortableTableHeader("sub-header break", "NewCommentCountLast1Day", "descending", $core_v2_language.GetResource('1Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewCommentCountLast7Days", "descending", $core_v2_language.GetResource('7Day'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sub-header", "NewCommentCountLast30Days", "descending", $core_v2_language.GetResource('30Day'), $sortBy, $sortOrder)
+		</tr>
+	</thead>
+	<tbody>
+#each
+        #set ($apiCalendars = false)
+        #set ($apiCalendar = false)
+		#set ($apiCalendars = $calendar_v1_calendars.List("%{ApplicationIds = '$calendar.ApplicationId'}"))
+        #if($apiCalendars.TotalCount > 0)
+            #set ($apiCalendar = $apiCalendars.get_item(0))
+        #end
+        #if($apiCalendar && !$apiCalendar.HasErrors() && $apiCalendar.Url)
+            #set ($url = $apiCalendar.Url)
+        #else
+            #set ($url = '')
+        #end
+
+		<tr data-id="$apiCalendar.ApplicationId">
+            $reporting_ui.CalendarNameTableCellWithActions($calendar.ApplicationId, $calendar.Name, $url)
+
+            <td data-title="$core_v2_language.GetResource('Group')" class="name">
+				$!calendar.Container.Name
+			</td>
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewEventCount'), $core_v2_language.GetResource('1Day'), "multi break", $calendar.NewEventCountLast1Day, $calendar.NewEventCount1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewEventCount'), $core_v2_language.GetResource('7Day'), "multi", $calendar.NewEventCountLast7Days, $calendar.NewEventCount7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewEventCount'), $core_v2_language.GetResource('30Day'), "multi", $calendar.NewEventCountLast30Days, $calendar.NewEventCount30DayTrend)
+
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewCommentCount'), $core_v2_language.GetResource('1Day'), "multi break", $calendar.NewCommentCountLast1Day, $calendar.NewCommentCount1DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewCommentCount'), $core_v2_language.GetResource('7Day'), "multi", $calendar.NewCommentCountLast7Days, $calendar.NewCommentCount7DayTrend)
+            $reporting_ui.TableCellHtml($core_v2_language.GetResource('NewCommentCount'), $core_v2_language.GetResource('30Day'), "multi", $calendar.NewCommentCountLast30Days, $calendar.NewCommentCount30DayTrend)
+
+			<td data-title="$core_v2_language.GetResource('TotalEventCount')" class="number break">
+				$!calendar.TotalEventCount.ToString("N0")
+			</td>
+			<td data-title="$core_v2_language.GetResource('TotalCommentCount')" class="number">
+				$!calendar.TotalCommentCount.ToString("N0")
+			</td>
+		</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$calendars.PageSize" data-totalitems="$calendars.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

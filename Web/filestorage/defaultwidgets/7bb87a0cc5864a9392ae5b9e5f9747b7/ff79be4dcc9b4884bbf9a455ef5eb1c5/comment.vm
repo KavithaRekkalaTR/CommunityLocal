@@ -1,0 +1,115 @@
+#set ($accessingUserCanDelete = $core_v2_comments.CanDeleteComment($comment.CommentId))
+
+#set ($supportsLikes = $core_v2_like.SupportsLikes($comment.CommentContentTypeId))
+#set ($commentHasLikes = false)
+#if ($core_v2_like.SupportsLikes($comment.CommentContentTypeId))
+	#set ($commentLikes = false)
+	#set ($commentLikes = $core_v2_like.List("%{ ContentId = $comment.CommentId, ContentTypeId = $comment.CommentContentTypeId, PageSize = 1 }"))
+	#if ($commentLikes && $commentLikes.TotalCount > 0)
+		#set ($commentHasLikes = true)
+	#end
+#end
+
+<li class="content-item comment #if ($commentHasLikes) with-likes #end" #if ($comment.ParentCommentId) data-parentcommentid="$!comment.ParentCommentId"#end data-commentid="$!comment.CommentId" data-contenttypeid="$!comment.CommentContentTypeId" data-commentdate="$!core_v2_utility.GetTimestamp($comment.CreatedDate)" #if ($comment) data-replycount="$comment.ReplyCount" #else data-replycount="0" #end>
+	<div class="full-post-header comment"></div>
+	<div class="full-post comment">
+
+		<div class="post-author">
+			<span class="avatar">
+				#if($comment.User.ProfileUrl)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)">
+						$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 32, 32, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$comment.User.DisplayName}")
+					</a>
+				#else
+					$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 32, 32, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$comment.User.DisplayName}")
+				#end
+			</span>
+			<span class="user-name">
+			    #set($author = '')
+				#if($comment.User.ProfileUrl)
+					#set($author = "<a href='$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)' class='internal-link view-user-profile'>$comment.User.DisplayName</a>")
+				#else
+					#set($author = $comment.User.DisplayName)
+				#end
+				
+				#set($parentComment = false)
+				#if ($comment.ParentCommentId)
+				    #set($parentComment = $core_v2_comments.Get($comment.ParentCommentId))
+				    #if($parentComment.HasErrors())
+				        #set($parentComment = false)
+				    #end
+				#end
+				
+				#if ($parentComment)
+    				#set($parentAuthor = "<a href='$core_v2_encoding.HtmlAttributeEncode($parentComment.Url)' class='internal-link view-comment'>$parentComment.User.DisplayName</a>")
+    				$core_v2_language.FormatString($core_v2_language.GetResource('in-reply-to'), $author, $parentAuthor)
+				#else
+				    $author
+				#end
+			</span>
+		</div>
+
+		<div class="post-content user-defined-markup">
+		    #if ($comment.IsDeleted)
+        		<span class="comment-deleted">$core_v2_language.GetResource('comment-deleted')</span>
+        	#elseif (!$comment.IsApproved)
+        		<span class="comment-underreview">$core_v2_language.GetResource('comment-underreview')</span>
+        	#else
+    		    #set($body = $comment.Body())
+    			#set($truncatedBody = $core_v2_language.Truncate($body, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+    			$truncatedBody
+    			#if ($truncatedBody.Length < $body.Length)
+    			    <a href="$core_v2_encoding.HtmlAttributeEncode($comment.Url)">$core_v2_language.GetResource('read-more')</a>
+    			#end    
+    		#end
+		</div>
+
+		<div class="post-actions">
+		    #set($maxLinks = 1)
+		    #if ($core_v2_like.SupportsLikes($comment.CommentContentTypeId))
+		        #set($maxLinks = $maxLinks + 1)
+		    #end
+		    #if ($accessingUserCanComment)
+		        #set($maxLinks = $maxLinks + 1)
+		    #end
+            <div class="navigation-list ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($comment.Url)" class="date">$core_v2_ui.AgoDate($comment.CreatedDate)</a>
+					</li>
+					#if ($core_v2_like.SupportsLikes($comment.CommentContentTypeId))
+						#set ($likeFormat = "{count}")
+						#if ($core_v2_like.CanLike($comment.CommentId, $comment.CommentContentTypeId))
+							#set ($likeFormat = "{toggle} {count}")
+						#end
+						<li class="navigation-list-item">
+							$core_v2_ui.Like($comment.CommentId, $comment.CommentContentTypeId, "%{ Format = $likeFormat, IncludeTip = 'true' }")
+						</li>
+					#end
+					#if ($accessingUserCanComment)
+					    <li class="navigation-list-item">
+					        <a href="#" data-commentid="$comment.CommentId" data-messagename="replytocomment">$core_v2_language.GetResource('reply')</a>
+					    </li>
+					#end
+					#if ($core_v2_comments.CanDeleteComment($comment.CommentId))
+						<li class="navigation-list-item">
+							<a href="#" data-commentid="$comment.CommentId" data-messagename="deletecomment">$core_v2_language.GetResource('delete')</a>
+						</li>
+					#end
+					#if ($accessingUserIsRegistered)
+						<li class="navigation-list-item">
+							$core_v2_ui.Moderate($comment.CommentId, $comment.CommentContentTypeId)
+						</li>
+					#end
+                    <li class="navigation-list-item">
+                    	<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+                    </li>
+                    <li class="navigation-list-item">
+                    	<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                    </li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="full-post-footer comment"></div>
+</li>

@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MediaGalleries_MediaGalleryTitle_Name}" version="12.0.0.0" description="${resource:MediaGalleries_MediaGalleryTitle_Description}" instanceIdentifier="67c5692c89014492ad521eaeb0bddc11" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="media-gallery-title" lastModified="2023-03-02 20:38:19Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($title = false)
+#set($seoTitle = false)
+#set($page = $core_v2_mediaUrls.Current)
+#if ($page == 'Tags' || $page == 'GroupAggregateTags')
+	#set($title = $core_v2_language.GetResource('TagBrowser_Title'))
+#elseif ($page == 'Slideshow')
+	#set($title = "$core_v2_gallery.Current.Name $core_v2_language.GetResource('Slideshow')")
+#elseif ($page == 'Media')
+	#set($media = $core_v2_media.Current)
+	#set($title = $media.Title)
+	#set($seoTitle = $media.MetaTitle)
+#elseif ($page == 'DownloadMedia')
+	#set($title = "$core_v2_media.Current.Title $core_v2_language.GetResource('MediaGalleries_Disclaimer_Title')")
+#elseif ($page == 'DeleteMedia')
+	#set($title = "$core_v2_language.GetResource('Delete') $core_v2_media.Current.Title")
+#elseif ($page == 'AddMedia')
+	#set($title = $core_v2_language.GetResource('MediaGalleries_UploadFile'))
+#elseif($page == 'EditMedia')
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('MediaGalleries_AddComment_EditFormatString'), $core_v2_media.Current.Title))
+#end
+#if ($page == 'Gallery')
+	$core_v2_page.SetTitle('', true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$core_v2_gallery.Current.Name</h1>
+	#end
+#elseif ($title)
+    #if (!$seoTitle || $seoTitle == '')
+        #set($seoTitle = $title)
+    #end
+	$core_v2_page.SetTitle($seoTitle, true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_page.SetTitle($core_v2_language.GetResource('files'), true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$core_v2_language.GetResource('files')</h1>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:MediaGalleries_MediaGalleryTitle_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:MediaGalleries_MediaGalleryTitle_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="files">Files</resource>
+  <resource name="MediaGalleries_AddComment_EditFormatString">Edit {0}</resource>
+  <resource name="MediaGalleries_Disclaimer_Title">Download Agreement</resource>
+  <resource name="MediaGalleries_MediaGalleryTitle_Description">Displays the title for media gallery pages.</resource>
+  <resource name="MediaGalleries_MediaGalleryTitle_Name">Media Gallery - Title</resource>
+  <resource name="MediaGalleries_UploadFile">Upload File</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Slideshow">Slideshow</resource>
+  <resource name="TagBrowser_Title">Browse by Tags</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="e3fab96c901442a2abdf5cca5dd68f73" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

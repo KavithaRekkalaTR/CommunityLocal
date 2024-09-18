@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" description="${resource:Widget-Description}" instanceIdentifier="433a68faa3f24a83a167dc6017809970" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="system-status" provider="73d2a59518d648fca59f151901fa41d5">
+	<contentScript language="Velocity"><![CDATA[
+
+#set ($wrapperId = $core_v2_widget.UniqueId('wrapper'))
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($wrapperId)"
+	$core_v2_servicePresence.RenderAttributes($context.ServicePresenceId)>
+  <span class="ui-loading"></span>
+</div>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.systemStatusPanel.register({
+		wrapper: '#$core_v2_encoding.JavascriptEncode($wrapperId)',
+		indicatorsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('indicators.vm'))'
+	});
+});
+</script>
+
+	  ]]></contentScript>
+	<languageResources><![CDATA[<language key="en-us">
+  <resource name="Widget-Title">System Status</resource>
+  <resource name="Widget-Description">View system health</resource>
+  <resource name="view-more">View More</resource>
+  <resource name="more">More</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="Good">Good</resource>
+  <resource name="Warning">Warning</resource>
+  <resource name="Critical">Critical</resource>
+  <resource name="Information">Information</resource>
+  <resource name="Unknown">Unknown</resource>
+  <resource name="SystemCritical">Please review these critical issues.</resource>
+  <resource name="SystemWarning">Please review these potential issues.</resource>
+  <resource name="SystemOperational">All systems are operational.</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,101 @@
+﻿## Load And Render a Contextual Category Panel
+## Expects $contextType in scope or available from query string
+## Expects $contextId in scope or available from query string
+
+#set ($rawContextType = false)
+#set ($rawContextType = $core_v2_page.GetQueryStringValue("contextType"))
+#if ($rawContextType)
+	#set ($contextType = $rawContextType)
+#end
+
+#set ($rawContextId = false)
+#set ($rawContextId = $core_v2_page.GetQueryStringValue("contextId"))
+#if ($rawContextId)
+	#set ($contextId = $core_v2_utility.ParseGuid($rawContextId))
+#end
+
+#set ($category = false)
+#set ($category = $core_v2_contextualPanels.GetPanelCategory($contextType, $contextId))
+#if ($category && $category.Panels)
+	## if the category effectively only represents one panel
+	## then render that panel directly
+	#if ($category.Panels.Count <= 1)
+
+		#set ($isCategorySingleton = true)
+
+		## get panel ID of the first panel in scope, availa to panel.vm
+		#set ($panelId = false)
+		#foreach ($panel in $category.Panels)
+			#set ($panelId = $panel.Id)
+		#end
+		$core_v2_widget.ExecuteFile("panel.vm")
+
+	## otherwise, render the category
+	#else
+
+		#set ($effectiveRootItemsCount = 0)
+
+		#set ($adminReturnUrl = $core_v2_contextualPanelsAdministrationContext.AdministrationReturnUrl)
+		#if ($adminReturnUrl)
+			#set ($effectiveRootItemsCount = $effectiveRootItemsCount + 1)
+		#end
+
+		#set ($systemNotificationsUrl = $core_v2_contextualPanelsAdministrationContext.SystemNotificationsUrl)
+		#if ($systemNotificationsUrl)
+			#set ($effectiveRootItemsCount = $effectiveRootItemsCount + 1)
+		#end
+
+		$core_v2_page.SetContentType('application/json')
+		#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+
+		{
+			"type": "category",
+			"contextType": "$core_v2_encoding.JavascriptEncode($contextType)",
+			"contextId": "$contextId.ToString()",
+
+			## Heading
+
+			#set ($allPanelCategories = $core_v2_contextualPanels.GetPanelCategories())
+
+			#if ($allPanelCategories)
+				#set ($effectiveRootItemsCount = $effectiveRootItemsCount + $allPanelCategories.Count)
+			#end
+
+			#set ($returnUrl = false)
+			#set ($returnUrl = $core_v2_page.GetQueryStringValue('_cpreturnurl'))
+			#if ($returnUrl)
+				"backUrl": "$core_v2_encoding.JavascriptEncode($returnUrl)",
+				"backLabel": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Back'))",
+			#elseif ($effectiveRootItemsCount > 1)
+				"backUrl": "$core_v2_encoding.JavascriptEncode($rootPanelUrl)",
+				"backLabel": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AllCategories'))",
+			#else
+				"backUrl": null,
+				"backLabel": null,
+			#end
+
+			#set ($name = $category.Name)
+			#if ($category.PanelType == 'Container' || $category.PanelType == 'Application')
+				#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('CategoryName'), $category.Name))
+			#elseif($category.PanelType == 'Theme')
+				#set ($forceDefault = false)
+				#set ($forceDefault = $core_v2_utility.ParseBool($core_v2_page.GetQueryStringValue('_cpdefault')))
+				#if ($forceDefault)
+					#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('DefaultThemeCategoryName'), $category.Name))
+				#else
+					#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('ThemeCategoryName'), $category.Name))
+				#end
+			#end
+
+			"name": "$core_v2_encoding.JavascriptEncode($name)",
+			"cssClass": "",
+
+			## Categories
+
+			"content": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('category-content.vm'))",
+			"contentClass": "root",
+			"badgeCount": $category.BadgeCount
+		}
+
+	#end
+#end

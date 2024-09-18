@@ -1,0 +1,121 @@
+$context.ValidateAccess()
+#set ($languages = $context.ListLanguages())
+#set ($selectedLanguage = $core_v2_language.Lowercase($core_v2_user.Accessing.Language))
+#set ($selectedLanguage = $core_v2_page.GetQueryStringValue("_lang"))
+#set ($previewUrl = $core_v2_widget.GetExecutedFileUrl('callback-preview.vm'))
+
+#set ($email = $context.Get())
+#set ($preview = $context.GetPreviewHtml($selectedLanguage))
+
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>$email.Name</title>
+	$core_v2_page.RenderPlatformHeaders()
+	<style>
+	body, html {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	}
+	.contextual-administration-handle,
+	.contextual-administration-total,
+	.preview-indicator-wrapper,
+	.push-notification {
+		display: none !important;
+	}
+	header {
+		display: flex;
+		background-color: #EEE;
+		color: #222;
+		align-items: center;
+		padding: 10px;
+		gap: 10px;
+		flex-wrap: wrap;
+	}
+	.staged {
+		background-color: #f39c12;
+		color: #fff;
+		padding: 5px;
+		font-size: .5em;
+		font-weight: 600;
+		text-transform: uppercase;
+		display: inline-block;
+		border-radius: 3px;
+	}
+	.subject-label {
+		padding: 5px;
+		background-color: #D7D7D7;
+		font-size: .5em;
+		font-weight: 600;
+		text-transform: uppercase;
+		display: inline-block;
+		border-radius: 3px;
+	}
+	.subject {
+		font-size: .9em;
+	}
+	.translation {
+		margin-left: auto;
+	}
+	.preview-frame {
+		border: 0px;
+		width: 100%;
+		height: calc(100% - 44px);
+	}
+	</style>
+</head>
+<body>
+	<header>
+		#if ($email.IsStaged)
+			<div class="staged">$core_v2_language.GetResource('Staged')</div>
+		#end
+		<span class="subject-label">Subject:</span>
+		<span class="subject">$preview.Subject</span>
+		#if ($languages.Count > 1)
+			<span class="translation">
+				<select>
+					#foreach ($language in $languages)
+						<option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)" #if ($selectedLanguage == $language.Key) selected #end>$core_v2_encoding.HtmlEncode($language.Name)</option>
+					#end
+				</select>
+			</span>
+		#end
+	</header>
+	<iframe class="preview-frame" srcdoc="$core_v2_encoding.HtmlAttributeEncode($preview.Body)"></iframe>
+
+	<script>
+		jQuery(function(j){
+			var reloadTimeout;
+			[
+				'me.model.email.updated',
+				'me.model.emails.updated',
+			    'me.model.emails.changed',
+				'me.model.email.staging.changed'
+			].forEach(function(e) {
+				j.telligent.evolution.messaging.subscribe(e, function() {
+					clearTimeout(reloadTimeout);
+					reloadTimeout = setTimeout(function(){
+						window.location.reload();
+						clearTimeout(reloadTimeout);
+					}, 300);
+				});
+			});
+
+			j('header .translation select').on('change', function(){
+				var url = new URL(location);
+				url.searchParams.set('_lang', j(this).val());
+				history.replaceState({}, '', url);
+				window.location.reload();
+			});
+
+			j('iframe').on('load', function() {
+				document.title = j('iframe').get(0).contentWindow.document.title;
+			});
+		});
+	</script>
+</body>
+</html>

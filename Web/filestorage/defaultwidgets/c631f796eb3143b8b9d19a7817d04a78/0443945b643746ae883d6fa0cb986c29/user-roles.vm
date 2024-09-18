@@ -1,0 +1,50 @@
+<div class="filter-selector roles">
+    <form><fieldset>
+        <input type="text" placeholder="$core_v2_language.GetResource('FindARole')" />
+    </fieldset></form>
+</div>
+
+#set ($serviceUser = false)
+#set ($serviceUser = $core_v2_user.Get("%{Username = '__CommunityServer__Service__'}"))
+
+#foreach($role in $context.Roles)
+#beforeall
+	<ul class="content-list expandable">
+#each
+	#set($isADMapped = false)
+
+	#if ($role)
+		#set($isADMapped = $context.HasAssociatedGroupForADRole($role.Id))
+	#end
+
+	<li class="content-item role with-avatar" data-roleid="$role.Id" data-text="$role.Name.ToLower()">
+		<div class="avatar">
+			$!core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 32, 32, "%{border='0px', ResizeMethod = 'ZoomAndCrop', alt='$role.Name' }")
+		</div>
+		<div class="content-container">
+			<h4 class="name">$role.Name</h4>
+			<div class="attributes">
+				<div class="content">$!role.Description</div>
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						#if(!$isADMapped && (!$serviceUser || $user.Id != $serviceUser.Id))
+							<li class="navigation-list-item edit">
+								<a href="#" data-messagename="administeruser.removefromrole" data-roleid="$role.Id" data-title="$role.Name">$core_v2_language.GetResource('RemoveMemberFromRole')</a>
+							</li>
+						#end
+                        #set ($editRoleUrl = $context.EditRoleUrl($role.Id))
+                        #if($editRoleUrl)
+                            <li class="navigation-list-item edit">
+                                <a href="$editRoleUrl">$core_v2_language.GetResource('EditRole')</a>
+                            </li>
+                        #end
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#end

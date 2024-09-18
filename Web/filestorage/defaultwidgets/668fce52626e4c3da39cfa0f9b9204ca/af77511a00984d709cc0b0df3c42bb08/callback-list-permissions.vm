@@ -1,0 +1,23 @@
+#set($groupType = $core_v2_page.GetQueryStringValue('w_grouptype'))
+#set($roleId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_roleid')))
+
+#set($perms = $context.GetPermissions($groupType, $roleId))
+#set($appType = '')
+
+$core_v2_page.SetContentType('application/json')
+
+{"permissions":[
+	#if($perms)
+        #foreach($perm in $perms)
+
+            #if($appType != $perm.Permission.ApplicationTypeId)
+                #set ($appName = $core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name)
+            #end
+
+            {
+                "id":"$perm.Permission.Id",
+                "name":"$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString('{0} - {1}', $appName, $perm.Permission.Name))"
+            },
+        #end
+	#end
+null]}

@@ -1,0 +1,13 @@
+﻿#set($query = $core_v2_page.GetQueryStringValue('w_query'))
+$core_v2_page.SetContentType('application/json')
+
+{
+	"matches": [
+		#foreach($forum in $context.FindForums($query))
+			#each
+				{ "label": "$core_v2_encoding.JavascriptEncode($forum.Name)#if($forum.Group) ($core_v2_encoding.JavascriptEncode($forum.Group.Name))#end", "id": "$forum.Id" }
+			#between
+			,
+		#end
+	]
+}

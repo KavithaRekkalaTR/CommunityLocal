@@ -1,0 +1,9 @@
+#if ($threadedReplies)
+	#foreach ($threadedReply in $threadedReplies)
+		#set ($addedAt = $replies.Add($threadedReply))
+		#if ($threadedReply.Children && $threadedReply.Children.Count > 0)
+			#set ($threadedReplies = $threadedReply.Children)
+			$core_v2_widget.ExecuteFile('recurse.vm')
+		#end
+	#end
+#end

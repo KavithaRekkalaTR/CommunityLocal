@@ -1,0 +1,107 @@
+#set ($developerModeEnabled = $context.IsDeveloperModeEnabled("%{}"))
+#set ($providers = false)
+#set ($hasProviders = false)
+#if ($developerModeEnabled)
+	#set ($providers = $context.ListProviders("%{ DeveloperEnabledOnly = 'true' }"))
+	#foreach ($provider in $providers)
+		#set ($hasProviders = true)
+	#end
+#end
+
+<div class="managed-item-import-dialog">
+
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				<% if((!newEmbeddables || newEmbeddables.length == 0) && (!updatedEmbeddables || updatedEmbeddables.length == 0)) { %>
+
+					<p class="message">$core_v2_language.GetResource('NoImportMessage')</p>
+
+				<% } else { %>
+
+					#if ($developerModeEnabled)
+						<li class="field-item provider-select">
+							<label class="field-item-name heading"><strong>$core_v2_language.GetResource('FactoryDefaultProvider')</strong></label>
+							#if ($hasProviders)
+								<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderDesc')</span>
+								<span class="field-item-input">
+									<select class="provider-select">
+										#foreach ($provider in $providers)
+											<option value="$provider.Id" #if ($provider.Id == $context.CoreProviderId) selected #end>
+												$core_v2_encoding.HtmlEncode($provider.Name)
+											</option>
+										#end
+									</select>
+								</span>
+							#else
+								<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderNoneDesc')</span>
+							#end
+						</li>
+					#end
+
+					#if (!$developerModeEnabled || $hasProviders)
+
+						<span>$core_v2_language.GetResource('ImportInstruction')</span>
+
+						<% if(newEmbeddables && newEmbeddables.length > 0) { %>
+							<li class="field-item new-embeddables">
+								<label class="field-item-name heading"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('NewEmbeddables') <% } else { %> $core_v2_language.GetResource('NewEmbeddableResources') <% } %></strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('TheFollowingEmbeddablesAreNew')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(newEmbeddables, function(embeddable) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb<%: embeddable.Id %>" class="importable-embeddable" data-request="_eid=<%: embeddable.Id %>&_et=overview" checked />
+										<label  for="cb<%: embeddable.Id %>" class="field-item-name">
+											<%: embeddable.ProcessedName %>
+										</label>
+									</span>
+									<% if(embeddable.ProcessedDescription) { %>
+										<span class="field-item-description"><%: embeddable.ProcessedDescription %></span>
+									<% } %>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if(updatedEmbeddables && updatedEmbeddables.length > 0) { %>
+							<li class="field-item updated-embeddables">
+								<label class="field-item-name heading"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('UpdatedEmbeddables') <% } else { %> $core_v2_language.GetResource('UpdatedEmbeddableResources') <% } %></strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('UpdatedEmbeddableDesc')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(updatedEmbeddables, function(embeddable) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb<%: embeddable.Id %>" class="importable-embeddable" data-request="_eid=<%: embeddable.Id %>&_et=overview" checked />
+										<label for="cb<%: embeddable.Id %>" class="field-item-name">
+											<%: embeddable.ProcessedName %>
+										</label>
+									</span>
+									<% if(embeddable.ProcessedDescription) { %>
+										<span class="field-item-description"><%: embeddable.ProcessedDescription %></span>
+									<% } %>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if((matchingEmbeddables && matchingEmbeddables > 0)) { %>
+							<li class="field-item importable-embeddables">
+								<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+							</li>
+						<% } %>
+
+						<li class="field-item submit">
+							<span class="field-item-input">
+								<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+							</span>
+							<span class="field-item-input">
+								<a href="#" class="button continue">$core_v2_language.GetResource('Import')</a>
+							</span>
+						</li>
+
+					#end
+
+				<% } %>
+
+			</ul>
+		</fieldset>
+	</form>
+</div>

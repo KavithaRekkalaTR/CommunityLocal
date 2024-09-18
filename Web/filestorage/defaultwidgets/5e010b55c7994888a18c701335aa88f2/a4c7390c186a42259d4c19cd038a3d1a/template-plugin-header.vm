@@ -1,0 +1,59 @@
+<div>
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item panel-instructions">
+				<span class="field-item-description">
+					<%: description %>
+				</span>
+			</li>
+			<% if(disableable || canSave) { %>
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button"
+							data-messagename="save-plugin"
+							data-pluginname="<%: name %>"
+							data-plugintypename="<%: pluginTypeName %>"
+							data-disableable="<%: disableable %>"
+							data-hasparents="<%= hasParents %>">
+							$core_v2_language.GetResource('Save')
+						</a>
+					</span>
+				</li>
+			<% } %>
+			<% if(disableable) { %>
+				<li class="field-item enabled">
+					<span class="field-item-input">
+						<input id="plugin-enabled" class="plugin-enablement" type="checkbox" <% if(enabled) { %> checked data-wasenabled="true"<% } %> />
+						<label for="plugin-enabled">
+							<span>$core_v2_language.GetResource('Enabled')</span>
+							<span class="misconfigured ui-tip <% if(!configured) { %> visible <% } %>" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('MisconfiguredDesc'))">$core_v2_language.GetResource('Misconfigured')</span>
+						</label>
+					</span>
+				</li>
+			<% } %>
+			<% if (actions && actions.length > 0) { %>
+				<li class="field-item actions">
+					<span class="field-item-input">
+						<div class="navigation-list ui-links" data-direction="horizontal">
+							<ul>
+								<li class="navigation-list-item">
+									<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+								</li>
+							</ul>
+						</div>
+					</span>
+				</li>
+			<% } %>
+		</ul>
+	</fieldset></form>
+	<ul class="filter" style="clear: both">
+		<% foreach(tabs, function(tab, i) { %>
+			<li class="filter-option<% if(selectedTabId == tab.id) { %> selected <% }%>" data-tabid="<%= tab.id %>">
+				<a href="#" data-messagename="plugin-tab" data-tabid="<%= tab.id %>"><%= tab.name %></a>
+			</li>
+		<% }); %>
+	</ul>
+</div>

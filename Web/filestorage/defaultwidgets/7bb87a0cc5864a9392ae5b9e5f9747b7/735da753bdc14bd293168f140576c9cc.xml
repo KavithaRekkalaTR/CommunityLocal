@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_ForumTitle_Name}" version="11.0.0.0" description="${resource:Forums_ForumTitle_Description}" instanceIdentifier="735da753bdc14bd293168f140576c9cc" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="forum-title" lastModified="2020-01-14 16:07:48Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set($page = $core_v2_forumUrls.Current)
+#if ($page == 'Tags' || $page == 'GroupTags')
+	#set($title = $core_v2_language.GetResource('TagBrowser_Title'))
+#elseif ($page == 'Subscriptions')
+	#set($title = $core_v2_language.GetResource('Utility_ForumAnchorType_ForumSubscriptions'))
+#elseif ($page == 'Thread' || $page == 'ForumReply')
+	#set($title = $core_v2_forumThread.Current.Subject)
+#elseif ($page == 'Forum')
+	#set($title = $core_v2_forum.Current.Name)
+#elseif ($page == 'ReplyToForumReply' && $core_v2_forumReply.CurrentParent)
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Reply'), $core_v2_forumReply.CurrentParent.Subject))
+#elseif ($page == 'ReplyToForumThread' && $core_v2_forumThread.CurrentParent)
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Reply'), $core_v2_forumThread.CurrentParent.Subject))
+#elseif ($page == 'AddThread')
+    #set($forum = $core_v2_forum.Current)
+    #if ($forum)
+    	#if ($forum.AllowedThreadTypes.Count > 1)
+    		#set($title = $core_v2_language.GetResource('NewQuestionOrDiscussion'))
+    	#elseif ($forum.AllowedThreadTypes.get_Item(0) == 'QuestionAndAnswer')
+    		#set($title = $core_v2_language.GetResource('NewQuestion'))
+    	#else
+    		#set($title = $core_v2_language.GetResource('NewDiscussion'))
+    	#end
+    #else
+	    #set($title = $core_v2_language.GetResource('NewQuestionOrDiscussion'))
+	#end
+#elseif($page == 'EditForumReply')
+    #set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Edit'), $core_v2_forumReply.Current.Subject))
+#elseif($page == 'EditThread')
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Edit'), $core_v2_forumThread.Current.Subject))
+#elseif($page == 'MuteThread')
+	#set($title = $core_v2_language.GetResource('Mute'))
+#end
+#if ($page == 'Forum')
+	$core_v2_page.SetTitle('', true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$core_v2_forum.Current.Name</h1>
+	#end
+#elseif ($title)
+	$core_v2_page.SetTitle($title, true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_page.SetTitle($core_v2_language.GetResource('forums'), true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$core_v2_language.GetResource('forums')</h1>
+	#end
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_ForumTitle_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_ForumTitle_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Edit">Edit '{0}'</resource>
+  <resource name="forums">Forums</resource>
+  <resource name="Forums_ForumTitle_Description">Displays the title of the current forum page.</resource>
+  <resource name="Forums_ForumTitle_Name">Forum - Title</resource>
+  <resource name="Mute">Mute</resource>
+  <resource name="NewDiscussion">Add Discussion</resource>
+  <resource name="NewQuestion">Add Question</resource>
+  <resource name="NewQuestionOrDiscussion">Add Question Or Discussion</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Reply">Reply to '{0}'</resource>
+  <resource name="Report">Report Abuse</resource>
+  <resource name="TagBrowser_Title">Browse by Tags</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+  <resource name="Utility_ForumAnchorType_ForumSubscriptions">Forum Subscriptions</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="4112947a2c1a4ac3b10b20fc86f3d8b7" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,61 @@
+#set ($blog = $context.Blog)
+#set ($anonymousUser = $context.AnonymousUser)
+#set ($blogFeedAuthorUserName = $feed.DefaultAuthorUsername)
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item title">
+			<label class="field-item-name">$core_v2_language.GetResource('TitleLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('TitleLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('feedTitle'))" #if ($feed) value="$core_v2_encoding.HtmlAttributeEncode($feed.Title)" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item url">
+			<label class="field-item-name">$core_v2_language.GetResource('UrlLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('UrlLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('feedUrl'))" #if ($feed) value="$core_v2_encoding.HtmlAttributeEncode($feed.Url)" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item defaultAuthorUsername">
+			<label class="field-item-name">$core_v2_language.GetResource('DefaultAuthorUsernameLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DefaultAuthorUsernameLabel_Desc')</span>
+			<span class="field-item-input">
+				<select name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('postAuthor'))">
+					<option value="$core_v2_encoding.HtmlAttributeEncode($anonymousUser.Username)" #if ($blogFeedAuthorUserName == $anonymousUser.Username) selected #end>$core_v2_language.GetResource('AnonymousDisplayName')</option>
+					#foreach ($owner in $blog.Owners)
+						<option value="$core_v2_encoding.HtmlAttributeEncode($owner.Username)" #if ($blogFeedAuthorUserName == $owner.Username) selected #end>$owner.DisplayName</option>
+					#end
+				</select>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item intervalMinutes">
+			<label class="field-item-name">$core_v2_language.GetResource('IntervalMinutesLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('IntervalMinutesLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('intervalMinutes'))" #if ($feed) value="$feed.IntervalMinutes" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item exerptSize">
+			<label class="field-item-name">$core_v2_language.GetResource('ExerptSizeLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ExerptSizeLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('excerptSize'))" #if ($feed) value="$feed.ExerptSize" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item postFullText">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('feedTitle'))" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('feedTitle'))" #if ($feed && $feed.PostFullText) checked #end />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('feedTitle'))">$core_v2_language.GetResource('PostFullTextLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('PostFullTextLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+	</ul>
+</fieldset></form>

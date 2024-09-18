@@ -1,0 +1,40 @@
+#set($url = false)
+#set ($url = $core_v2_page.GetFormValue('w_url'))
+#if (!$url)
+	#set ($fileName = false)
+	#set ($fileName = $core_v2_page.GetFormValue('w_filename'))
+	#set ($uploadContextId = false)
+	#set ($uploadContextId = $core_v2_page.GetFormValue('w_uploadContextId'))
+	#if ($fileName && $uploadContextId)
+		#set ($file = false)
+		#set ($file = $core_v2_uploadedFile.Get($uploadContextId, $fileName))
+		#if ($file)
+		   #set ($url = $file.Url)
+		#end
+	#end
+#end
+
+#set ($width = 64)
+#set ($widthParam = false)
+#set ($widthParam = $core_v2_page.GetFormValue('w_width'))
+#if ($widthParam)
+	#set ($width = $core_v2_utility.ParseInt($widthParam))
+#end
+
+#set ($height = 64)
+#set ($heightParam = false)
+#set ($heightParam = $core_v2_page.GetFormValue('w_height'))
+#if ($heightParam)
+	#set ($height = $core_v2_utility.ParseInt($heightParam))
+#end
+
+#set ($resizeMethod = 'ZoomAndCrop')
+#set ($resizeMethodParam = false)
+#set ($resizeMethodParam = $core_v2_page.GetFormValue('w_resizeMethod'))
+#if ($resizeMethodParam)
+	#set ($resizeMethod = $resizeMethodParam)
+#end
+
+#if ($url)
+	$!core_v2_ui.GetResizedImageHtml($url, $width, $height, "%{ OutputIsPersisted = 'False', ResizeMethod = $resizeMethod, alt='$fileName' }")
+#end

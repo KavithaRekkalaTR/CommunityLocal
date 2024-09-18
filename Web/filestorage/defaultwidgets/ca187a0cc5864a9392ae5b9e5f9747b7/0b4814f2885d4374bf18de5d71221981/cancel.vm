@@ -1,0 +1,10 @@
+﻿$core_v2_page.SetContentType('application/json')
+
+#set($guid = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('Token')))
+
+#set($report = $calendar_v1_registrations.Cancel($guid))
+#if ($report.Errors.Count == 0)
+    {"success":"true"}
+#else
+	$core_v2_page.SendJsonError($report.Errors)
+#end

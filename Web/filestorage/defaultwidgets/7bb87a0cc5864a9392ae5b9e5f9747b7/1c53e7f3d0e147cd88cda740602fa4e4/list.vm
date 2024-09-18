@@ -1,0 +1,98 @@
+#set($showTitle = $core_v2_widget.GetBoolValue('showTitleColumn', true))
+#set($showGroup = $core_v2_widget.GetBoolValue('showGroupColumn', false))
+#set($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set($showLastPost = $core_v2_widget.GetBoolValue('showLastPostColumn', true))
+#set($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 5))
+#set($showSubGroups = $core_v2_widget.GetBoolValue('groupAndSubGroups', false))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'ApplicationName'))
+
+#set($wikis = false)
+
+#set($query = "%{IncludeSubGroups=$showSubGroups,PageIndex=$pageIndex,PageSize=$pageSize,IncludeDisabled='false'}")
+#set($group = false)
+#set($group = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('group', '')).Value('Group')))
+#if ($group > 0)
+	$query.Add('GroupId', $group)
+#else
+	$query.Add('GroupId', $core_v2_group.Current.Id.ToString())
+#end
+
+#if($sortBy == 'ApplicationIdsOrder')
+	#set($wikiSelection = false)
+	#set ($wikiSelection = $core_v2_widget.GetCustomValue('wikiSelection', ''))
+	#if ($wikiSelection && $wikiSelection.Length > 0)
+		#set($wikiSelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($wikiSelection).Values('wiki')))
+		$query.Add('ApplicationIds', $wikiSelection)
+		$query.Add('SortBy', 'ApplicationIdsOrder')
+		$query.Add('SortOrder', 'Ascending')
+	#end
+#end
+
+#set($wikis = $core_v2_wiki.List($query))
+
+#foreach($wiki in $wikis)
+#beforeall
+	<ul class="content-list content simple margin-bottom tabular">
+#each
+	<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($wiki.Url)">
+		<div class="name cell">
+			<h2>
+				#if($showGroup)
+					<a $core_v2_ui.ContentPeek($wiki.Group.ContainerId, $core_v2_group.ContentTypeId, 'internal-link view-application view-container')
+					href="$core_v2_encoding.HtmlAttributeEncode($wiki.Group.Url)">$wiki.Group.Name: </a>
+				#end
+				#if($showTitle)
+					<a
+						#if ($inSidebar)
+							$core_v2_ui.ContentPeek($wiki.ApplicationId, $core_v2_wiki.ContentTypeId, "internal-link view-application" )
+						#else
+							class="internal-link view-application"
+						#end
+						href="$core_v2_encoding.HtmlAttributeEncode($wiki.Url)">$wiki.Name</a>
+				#end
+			</h2>
+			#if(!$inSidebar && $wiki.Description)
+				<div class="content">$wiki.HtmlDescription('web')</div>
+			#end
+		</div>
+
+		#if(!$inSidebar)
+			#set($pages = false)
+			#if($showPosts || $showLastPost)
+				#set($pages = $core_v2_wikiPage.List($wiki.Id, "%{PageIndex=0, PageSize=1 }"))
+			#end
+
+			#if($showPosts)
+				<div class="minimal cell nowrap metadata">
+					<span class="value">$core_v2_language.FormatNumber($pages.TotalCount)</span>
+					<span class="description">
+						#if ($pages.TotalCount == 1)
+							$core_v2_language.GetResource('post_singular')
+						#else
+							$core_v2_language.GetResource('post_plural')
+						#end
+					</span>
+				</div>
+			#end
+
+			#if ($showLastPost)
+				<div class="minimal cell nowrap metadata latest">
+					#if($pages.TotalCount > 0 && $wiki.LastModifiedDate)
+						#set ($lastPost = $pages.get_Item(0))
+						<span class="value">
+							<a $core_v2_ui.ContentPeek($lastPost.ContentId, $core_v2_wikiPage.ContentTypeId, "internal-link ui-tip") href="$core_v2_encoding.HtmlAttributeEncode($lastPost.Url)" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.FormatString($core_v2_language.GetResource('LastUpdated'), $lastPost.Title))">$lastPost.Title</a>
+						</span>
+						<span class="description">$core_v2_language.FormatAgoDate($wiki.LastModifiedDate)</span>
+					#end
+				</div>
+			#end
+		#end
+	</li>
+
+	#set($hasResults = true)
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_NoResults')</div>
+#afterall
+	</ul>
+#end

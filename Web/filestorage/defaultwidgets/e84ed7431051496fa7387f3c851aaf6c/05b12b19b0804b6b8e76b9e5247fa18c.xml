@@ -1,0 +1,82 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GroupScoreConfigurationPanel_Name}" cssClass="contextual-group-score-configuration" description="${resource:GroupScoreConfigurationPanel_Description}" instanceIdentifier="05b12b19b0804b6b8e76b9e5247fa18c" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<contentScript>
+<![CDATA[
+#set($group = $context.Group)
+
+#set($scores = $context.GetScores())
+
+<div id="$core_v2_widget.WrapperElementId">
+
+	<p class="panel-instructions">$core_v2_language.GetResource("GroupScoreConfigurationPanel_Help")</p>
+
+	#foreach($score in $scores)
+	#beforeall
+		<ul class="navigation-list contextual-administration-links" id="$core_v2_encoding.HtmlAttributeEncode($scoreListId)">
+	#each
+	  <li class="navigation-list-item score">
+		<a href="#" data-messagename="contextual-configure-score" data-scoreId="$score.Id.ToString()" data-scoreName="$score.Name">
+			<div>
+				<span class="name">$score.Name</span>
+				<span class="description">$score.Description</span>
+			</div>
+		</a>
+	  </li>
+	#afterall
+		</ul>
+	#end
+
+</div>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.groupScoreConfiguration.register({
+		wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+		containerId: '$context.ContainerId',
+		containerTypeId: '$context.ContainerTypeId',
+		groupId: '$context.Group.ID',
+		groupName: '$context.Group.Name',
+		listId: '#$core_v2_widget.UniqueId('list')',
+		searchResultListId: '#$core_v2_widget.UniqueId('searchresultlist')',
+		resources: {
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Save'))'
+		},
+		urls: {
+			configureScore: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('configure-score.vm'))',
+			setDecay: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('set-decay.vm'))',
+			removeDecay: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('remove-decay.vm'))',
+			search: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))'
+		}
+	});
+});
+</script>
+]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+	<resource name="GroupScoreConfigurationPanel_Name">Scoring Options</resource>
+	<resource name="GroupScoreConfigurationPanel_Description">Manage ${group_lowercase} scoring options.</resource>
+	<resource name="GroupScoreConfigurationPanel_Help">Some site scores enable ${groups_lowercase} to override the expiration of a score via customization of the half-life of scored content within groups' applications. Scores supporting this customization are listed below. Select a score to adjust the half-life of content scores associated to applications within this ${group_lowercase}.</resource>
+	<resource name="ScoreNotSupported">This application does not contain content supported by this score.</resource>
+	<resource name="UsingSitewideDefault">Using sitewide default half-life</resource>
+	<resource name="Override">Override default</resource>
+	<resource name="Reset">Revert to default</resource>
+	<resource name="Save">Save</resource>
+	<resource name="Days">Days. </resource>
+	<resource name="Halflife">Half-life</resource>
+	<resource name="HalfLifeResetToDefault">Half-life has been reverted for</resource>
+	<resource name="HalfLifeUpdated">Half-life has been updated for </resource>
+	<resource name="Halflife_Detail">The half-life setting determines the number of days before the score has dropped by half. This value can be customized for individual applications below.</resource>
+	<resource name="HalflifeWarning">Decay half-life must be an integer, greater than zero.</resource>
+	<resource name="Find">Find an application...</resource>
+	<resource name="FiftyAppsMessage">This ${group_lowercase} contains at least 50 applications, use the provided application filter to locate additional applications that may be supported by this score.</resource>
+	<resource name="ContentTypesAffected">Content types affected:</resource>
+	<resource name="ConfirmSaveSingular">There is 1 configuration change pending.  Click 'Ok' to save this change, click 'Cancel' to discard the change. </resource>
+	<resource name="ConfirmSavePlural">There are {0} configuration changes pending,  Click 'Ok' to save these changes before exiting. Click 'Cancel' to discard these changes.</resource>
+
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

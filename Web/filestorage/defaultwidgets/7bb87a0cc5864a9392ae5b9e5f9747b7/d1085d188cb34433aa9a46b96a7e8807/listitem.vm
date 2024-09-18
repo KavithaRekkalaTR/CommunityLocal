@@ -1,0 +1,29 @@
+##
+## Renders an individual article
+## Expects in context: $article
+##
+
+#set ($collection = $articles_v1_articleCollections.Get("%{ Id = $article.ArticleCollection.Id }"))
+#if ($collection && $collection.Id != "")
+<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">
+	<div class="content abbreviated">
+		#if ($displayTypeImage && $article.Type.ImageUrl)
+			<div class="avatar no-rounding">
+                <a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">
+				    $core_v2_ui.GetResizedImageHtml($article.Type.ImageUrl, 32, 32, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt=$article.Type.Name }")
+				</a>
+			</div>
+		#end
+		<div class="summary">
+			<h2 class="name">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">$article.Title</a>
+			</h2>
+			<div class="content">
+                <div class="post-summary">
+                    $core_v2_language.Truncate($article.Body('WebQuote'), $excerptSize, "%{ Ellipsis = '…' }")
+                </div>
+			</div>
+		</div>
+	</div>
+</li>
+#end

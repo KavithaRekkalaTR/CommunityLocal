@@ -1,0 +1,132 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($calendarId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('calendarId')))
+#set($calendar = false)
+#set($calendar = $calendar_v1_calendars.Show($calendarId))
+#if(!$calendar)
+    $core_v2_page.SendJsonError('The specified calendar not be retrieved')
+#end
+
+#set($eventId = false)
+#set($eventId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('EventId')))
+
+#set($body = $core_v2_page.GetFormValue('Body'))
+#set($options = "%{Body=$body}")
+
+#set($title = false)
+#set($title = $core_v2_page.GetFormValue('Title'))
+#if($title)
+	$options.Add('Title', $title)
+#end
+
+#set($location = false)
+#set($location = $core_v2_page.GetFormValue('Location'))
+#if($location)
+	$options.Add('Location', $location)
+#end
+
+#set($url = false)
+#set($url = $core_v2_page.GetFormValue('Url'))
+#if($url)
+	$options.Add('Url', $url)
+#end
+
+#set($timeZone = false)
+#set($timeZone = $core_v2_page.GetFormValue('TimeZone'))
+#if($timeZone)
+	$options.Add('TimeZoneId', $timeZone)
+#end
+
+#set($startDate = false)
+#set($startDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('StartDate')))
+#set($startDateHourOffset = false)
+#set($startDateHourOffset = $core_v2_utility.ParseDouble($core_v2_page.GetFormValue('StartDateHourOffset')))
+#if ($startDateHourOffset && $timeZone && $startDate)
+    #set($hourOffset = $core_v2_configuration.GetTimeZone($timeZone, $startDate).HourOffset)
+    #set($hourOffset = $startDateHourOffset - $hourOffset)
+    #set($startDate = $startDate.AddHours($hourOffset))
+#end
+#if($startDate)
+	$options.Add('StartDate', $startDate)
+#end
+
+#set($endDate = false)
+#set($endDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('EndDate')))
+#set($endDateHourOffset = false)
+#set($endDateHourOffset = $core_v2_utility.ParseDouble($core_v2_page.GetFormValue('EndDateHourOffset')))
+#if ($endDateHourOffset && $timeZone && $endDate)
+    #set($hourOffset = $core_v2_configuration.GetTimeZone($timeZone, $endDate).HourOffset)
+    #set($hourOffset = $endDateHourOffset - $hourOffset)
+    #set($endDate = $endDate.AddHours($hourOffset))
+#end
+#if($endDate)
+	$options.Add('EndDate', $endDate)
+#end
+
+#set($registrationType = false)
+#set($registrationType = $core_v2_page.GetFormValue('RegistrationType'))
+#if($registrationType)
+	$options.Add('RegistrationType', $registrationType)
+#end
+
+#set($allowAnonymous = '-1')
+#set($allowAnonymous = $core_v2_page.GetFormValue('AllowAnonymous')) ## 1/0/-1
+#if ($allowAnonymous == '0')
+	$options.Add('AllowAnonymous', 'False')
+#elseif ($allowAnonymous == '1')
+	$options.Add('AllowAnonymous', 'True')
+#end
+
+#set($maxRegistrations = false)
+#set($maxRegistrations = $core_v2_page.GetFormValue('MaxRegistrations'))
+#if($maxRegistrations)
+	$options.Add('MaxRegistrations', $maxRegistrations)
+#end
+
+#set($tags = false)
+#set($tags = $core_v2_page.GetFormValue('Tags'))
+#if ($tags)
+	$options.Add('Tags', $tags)
+#end
+
+#set($Address = false)
+#set($Address = $core_v2_page.GetFormValue('Address'))
+#if($Address)
+	$options.Add('Address', $Address)
+#else
+    $options.Add('Address','')
+#end
+
+
+#set($Latitude = false)
+#set($Latitude = $core_v2_page.GetFormValue('Latitude'))
+#if($Latitude)
+	$options.Add('Latitude', $Latitude)
+#else
+    $options.Add('Address','')    
+#end
+
+#set($Longitude = false)
+#set($Longitude = $core_v2_page.GetFormValue('Longitude'))
+#if($Longitude)
+	$options.Add('Longitude', $Longitude)
+#else
+    $options.Add('Address','')    
+#end
+
+#if($eventId && $eventId > 0)
+    #set($event = $calendar_v1_events.Update($calendarId, $eventId, $options))
+#else
+	#set($event = $calendar_v1_events.Create($calendarId, $options))
+	#set($eventId = $event.Id)
+#end
+
+#if($event.Errors.Count > 0)
+	$core_v2_page.SendJsonError($event.Errors)
+#end
+
+#if (!$event.Approved)
+	{"redirectUrl":"$core_v2_encoding.JavascriptEncode($calendar_v1_urls.Event($eventId))"}
+#else		
+	{"redirectUrl":"$core_v2_encoding.JavascriptEncode($event.Url)"}
+#end

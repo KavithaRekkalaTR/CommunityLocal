@@ -1,0 +1,15 @@
+##
+## Rendered Property Template Callback
+##
+
+#set ($name = $core_v2_page.GetQueryStringValue("_w_name"))
+
+#set ($propertyTemplate = $shellApi.GetPropertyTemplate($name))
+#set ($propertyTemplates = $shellApi.ListAllPropertyTemplates())
+#set ($propertyRules = $shellApi.ListAllPropertyRules())
+
+$core_v2_page.SetContentType('application/json')
+{
+	"index": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-config-index.vm'))",
+	"member": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-template.vm'))"
+}

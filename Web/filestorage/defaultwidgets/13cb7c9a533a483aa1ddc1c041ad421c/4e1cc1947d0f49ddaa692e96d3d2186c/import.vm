@@ -1,0 +1,25 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('filename'))
+
+	#set($uploadContextId = false)
+	#set($uploadContextId = $core_v2_page.GetFormValue('uploadContextId'))
+
+	#set($stage = true)
+	#set($stage = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('stage')))
+
+	#set($import = "%{}")
+	#foreach ($id in $core_v2_page.GetFormValues('import[]'))
+		$import.Add($id, 'true')
+	#end
+
+	#set($reponse = $context.Import($uploadContextId, $fileName, $stage, $import))
+
+	#if ($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+	 {"success":true}
+	#end
+#end

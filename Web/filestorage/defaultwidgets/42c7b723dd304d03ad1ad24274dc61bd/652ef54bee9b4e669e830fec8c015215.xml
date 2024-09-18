@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PageManagement_Name}" version="11.0.0.0" description="${resource:PageManagement_Description}" instanceIdentifier="652ef54bee9b4e669e830fec8c015215" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-page-list" lastModified="2021-01-29 19:13:05Z" provider="42c7b723dd304d03ad1ad24274dc61bd">
+    <contentScript language="Velocity"><![CDATA[#set($canCreate = $context.CanCreate(true))
+
+#foreach($page in $context.Pages)
+#beforeall
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+	<ul class="content-list content expandable simple">
+#each
+    #set($roleIds = '')
+    #set($roleNames = '')
+    
+    #if ($page.IsCustom && $page.RoleIds && $page.RoleIds.Length > 0)
+        #foreach($roleId in $page.RoleIds)
+            #if ($roleIds.Length > 0)
+                #set($roleIds = "${roleIds},")
+                #set($roleNames = "${roleNames}&")
+            #end
+            #set($roleIds = "${roleIds}${roleId}")
+        
+            #set($role = false)
+            #set($role = $core_v2_role.Get($roleId))
+            #if ($role && !$role.HasErrors())
+                #set($roleNames = "${roleNames}${core_v2_encoding.UrlEncode($role.Name)}")
+            #else
+                #set($roleNames = "${roleNames}${core_v2_encoding.UrlEncode($roleId.ToString())}")
+            #end
+        #end
+    #end
+
+	<li class="content-item page" data-pagename="$core_v2_encoding.HtmlAttributeEncode($page.Name)" data-iscustom="$page.IsCustom" data-title="$core_v2_encoding.HtmlAttributeEncode($page.Title)" data-text="$core_v2_encoding.HtmlAttributeEncode($page.Title.ToLower()) $core_v2_encoding.HtmlAttributeEncode($page.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($page.Description.ToLower())">
+		<div class="content page">
+		<h4 class="name">
+			$page.Title
+		</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					#if($page.IsCustom)
+						<span class="value highlight">$core_v2_language.GetResource('custom')</span>
+					#else
+						<span class="value">$core_v2_language.GetResource('platform')</span>
+					#end
+				</li>
+				#if ($context.SupportsDefault && !$context.ForceDefault)
+					<li class="attribute-item">
+						#if ($page.IsDefault)
+							<span class="value">$core_v2_language.GetResource('default')</span>
+						#elseif ($page.HasDefault)
+							<span class="value highlight">$core_v2_language.GetResource('edited')</span>
+						#else
+							<span class="value=">$core_v2_language.GetResource('contextual-only')</span>
+						#end
+					</li>
+				#end
+			</ul>
+		</div>
+		<div class="content expandable">
+			$page.Description
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					#set($url = false)
+					#set($url = $page.Url)
+					#if ($url)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.GetResource('view')</a>
+						</li>
+					#end
+					#set($canDelete = false)
+					#if ($page.IsCustom && $context.ForceDefault == $page.IsDefault && $context.CanDelete($page.IsDefault, $page.IsCustom)))
+						#set($canDelete = true)
+					#end
+					#if ($context.CanEdit($context.ForceDefault, $page.IsCustom))
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($page.EditUrl)">$core_v2_language.GetResource('edit-layout')</a>
+						</li>
+					#end
+					#if ($page.IsCustom && $context.ForceDefault == $page.IsDefault && $context.CanEdit($page.IsDefault, $page.IsCustom))
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="themepages.edit" data-pagetitle="$core_v2_encoding.HtmlAttributeEncode($page.Title)" data-pagename="$core_v2_encoding.HtmlAttributeEncode($page.Name)" data-iscustom="$page.IsCustom" data-candelete="#if($canDelete) true#else false#end" data-roleids="$core_v2_encoding.HtmlAttributeEncode($roleIds)" data-rolenames="$core_v2_encoding.HtmlAttributeEncode($roleNames)">$core_v2_language.GetResource('edit-page-details')</a>
+						</li>
+					#end
+					#if ($context.ForceDefault && $context.CanEdit(true, $page.IsCustom))
+					    <li class="navigation-list-item">
+					        <a href="#" data-messagename="themepages.revert" data-pagetitle="$core_v2_encoding.HtmlAttributeEncode($page.Title)" data-pagename="$core_v2_encoding.HtmlAttributeEncode($page.Name)" data-iscustom="$page.IsCustom">$core_v2_language.GetResource('revert-page')</a>
+					    </li>
+					#end
+					#if ($page.IsCustom && $canCreate)
+					    <li class="navigation-list-item">
+							<a href="#" data-messagename="themepages.clone" data-pagename="$core_v2_encoding.HtmlAttributeEncode($page.Name)">$core_v2_language.GetResource('copy-page')</a>
+						</li>
+					#end
+					#if ($canDelete)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="themepages.delete" data-pagetitle="$core_v2_encoding.HtmlAttributeEncode($page.Title)" data-pagename="$core_v2_encoding.HtmlAttributeEncode($page.Name)" data-iscustom="$page.IsCustom">$core_v2_language.GetResource('delete')</a>
+						</li>
+					#end
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.themePages')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.themePages.register({
+			canCreate: #if ($canCreate) true#else false#end,
+			canEdit: #if($context.CanEdit(true, false)) true#else false#end,
+			deletePageUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete-page.vm'))',
+			createPageUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('create-page.vm'))',
+			editPageUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('edit-page.vm'))',
+			revertPageUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('revert-page.vm'))',
+			revertHeaderUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('revert-header.vm'))',
+			revertFooterUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('revert-footer.vm'))',
+			lookupRolesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-lookuproles.jsm'))',
+			isDefault: #if($context.ForceDefault) true#else false#end,
+			hasHeadersAndFooters: #if($context.HasHeadersAndFooters) true #else false #end,
+			canSelectRoles: #if($context.CanSelectRoles) true #else false #end,
+			text: {
+				addPage: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('add-page'))',
+				save: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('save'))',
+				pageName: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('page-name'))',
+				pageNameDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('page-name-description'))',
+				pageTitle: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('page-title'))',
+				pageTitleDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('page-title-description'))',
+				pageNamePatternMessage: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('page-name-pattern-message'))',
+				delete: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete'))',
+				deleteConfirmation: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete-confirmation'))',
+				deleteSuccess: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete-success'))',
+				deleteDefaultConfirmation:  '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('delete-default-confirmation'), $context.ThemeTypeName.ToLower()))',
+				deleteDefaultSuccess: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('delete-default-success'), $context.ThemeTypeName.ToLower()))',
+				saveSuccess: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('save-success'))',
+				revertHeaderTitle: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('title-revert-header'))',
+				revertFooterTitle: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('title-revert-footer'))',
+				revertPageTitle: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('title-revert-page'))',
+				revertHeader: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('revert-header'))',
+				revertFooter: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('revert-footer'))',
+				copyFrom: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('copy-from'))',
+				copyFromDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('copy-from-description'))',
+				noRoleMatchesText: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-role-matches-text'))',
+				selectRole: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('select-role'))',
+				pageRolesDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('page-roles-description'))',
+				pageRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('page-roles'))',
+				cannotSelectRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('cannot-select-roles'))'
+				
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="add-page">Add Custom Page</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="cannot-select-roles">You must be able to manage roles to select roles.</resource>
+  <resource name="contextual-only">Not inherited</resource>
+  <resource name="copy-from">Copy layout from</resource>
+  <resource name="copy-from-description">Optionally select an existing custom page to copy the layout from.</resource>
+  <resource name="copy-page">Copy</resource>
+  <resource name="custom">Custom</resource>
+  <resource name="default">Default</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="delete-confirmation">Are you sure you want to delete this custom page?</resource>
+  <resource name="delete-default-confirmation">Are you sure you want to delete this custom page for every {0}? Any {0} that has customized this page will not be affected.</resource>
+  <resource name="delete-default-success">The page has been deleted.</resource>
+  <resource name="delete-success">The page has been deleted.</resource>
+  <resource name="edited">Customized</resource>
+  <resource name="edit-layout">Edit layout</resource>
+  <resource name="edit-page-details">Edit definition</resource>
+  <resource name="find">Find a page...</resource>
+  <resource name="more">More</resource>
+  <resource name="no-application-customizations">There are no customizations to this default.</resource>
+  <resource name="no-role-matches-text">No matching roles were found.</resource>
+  <resource name="PageManagement_Description">Manage and edit pages used in this theme.</resource>
+  <resource name="PageManagement_Name">Manage Pages</resource>
+  <resource name="page-name">URL key</resource>
+  <resource name="page-name-description">The text used to identify this page in URLs. It must contain only letters, numbers, hyphens, and underscores.</resource>
+  <resource name="page-name-pattern-message">Only letters, numbers, hyphens, and underscores are allowed.</resource>
+  <resource name="page-roles">Roles</resource>
+  <resource name="page-roles-description">Optionally identify one or more roles that should have access to this page. If no roles are defined, everyone has access to this page.</resource>
+  <resource name="page-title">Title</resource>
+  <resource name="page-title-description">The title of this page used for rendering and search indexing.</resource>
+  <resource name="platform">Platform-defined</resource>
+  <resource name="revert">Revert</resource>
+  <resource name="revert-all">Revert All</resource>
+  <resource name="revert-all-footer-confirmation">Are you sure you want to revert all customizations to this footer?</resource>
+  <resource name="revert-all-footer-success">All customizations to this footer have been reverted.</resource>
+  <resource name="revert-all-header-confirmation">Are you sure you want to revert all customizations to this header?</resource>
+  <resource name="revert-all-header-success">All customizations to this header have been reverted.</resource>
+  <resource name="revert-all-page-confirmation">Are you sure you want to revert all customizations to this page?</resource>
+  <resource name="revert-all-page-success">All customizations to this page have been reverted.</resource>
+  <resource name="revert-application-footer-confirmation">Are you sure you want to revert the customizations to this footer made by '{0}'?</resource>
+  <resource name="revert-application-footer-success">Customizations to this footer by '{0}' have been reverted.</resource>
+  <resource name="revert-application-header-confirmation">Are you sure you want to revert the customizations to this header made by '{0}'?</resource>
+  <resource name="revert-application-header-success">Customizations to this header by '{0}' have been reverted.</resource>
+  <resource name="revert-application-page-confirmation">Are you sure you want to revert the customizations to this page made by '{0}'?</resource>
+  <resource name="revert-application-page-success">Customizations to this page by '{0}' have been reverted.</resource>
+  <resource name="revert-footer">Revert footer customizations</resource>
+  <resource name="revert-footer-instructions">Each {0} below has customized this footer. Revert all above or select an individual {0} to revert selectively.</resource>
+  <resource name="revert-footer-instructions-nolist">Revert all customizations to this footer made by every {0} by clicking 'Revert All' above.</resource>
+  <resource name="revert-header">Revert header customizations</resource>
+  <resource name="revert-header-instructions">Each {0} below has customized this header. Revert all above or select an individual {0} to revert selectively.</resource>
+  <resource name="revert-header-instructions-nolist">Revert all customizations to this header made by every {0} by clicking 'Revert All' above.</resource>
+  <resource name="revert-page">Revert customizations</resource>
+  <resource name="revert-page-instructions">Each {0} below has customized this page. Revert all above or select an individual {0} to revert selectively.</resource>
+  <resource name="revert-page-instructions-nolist">Revert all customizations to this page made by every {0} by clicking 'Revert All' above.</resource>
+  <resource name="save">Save</resource>
+  <resource name="save-success">The page has been saved.</resource>
+  <resource name="select-role">Find a role...</resource>
+  <resource name="title-revert-footer">Revert Footer Customizations</resource>
+  <resource name="title-revert-header">Revert Header Customizations</resource>
+  <resource name="title-revert-page">Revert '{0}' Customizations</resource>
+  <resource name="view">View</resource>
+  <resource name="view-application">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

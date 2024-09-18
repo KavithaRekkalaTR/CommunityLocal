@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Account Created" version="13.0.0.0" description="Sends an email when a user account is created" id="9044d1e84ef14e80bf3a87fa402dc2dd" lastModified="2023-04-18 18:01:00Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('username_login_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.LogIn(false))">$context_v1_email.Context.User.Username</a>
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode()">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Log in as {username_login_link} to start participating.</resource>
+  <resource name="Subject">Welcome to {site_name}</resource>
+  <resource name="Header">Welcome to {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

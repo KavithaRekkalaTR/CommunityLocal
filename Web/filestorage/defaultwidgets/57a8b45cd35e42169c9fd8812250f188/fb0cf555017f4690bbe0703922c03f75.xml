@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:IdeaLinks_Name}" version="11.0.0.0" description="${resource:IdeaLinks_Description}" instanceIdentifier="fb0cf555017f4690bbe0703922c03f75" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="idea-links" lastModified="2020-01-14 16:06:32Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=editIdea&amp;Link=addIdea&amp;Link=deleteIdea&amp;Link=ideationSubscriptions&amp;Link=adminIdeas')))
+#set($hasLinks = false)
+#set($group = $core_v2_group.Current)
+
+#if(!$group)
+	$core_v2_widget.Hide()
+#end
+
+#set ($linksToShow = $links.Count * 2)
+
+#set($challenge = false)
+#set($challenge = $telligentIdeas_v1_challenges.Current)
+
+#set($idea = false)
+#set($idea = $telligentIdeas_v1_ideas.Current)
+
+#foreach($link in $links.Values('Link'))
+		#beforeall
+				<div class="ui-links navigation-list links" data-direction="vertical" data-minlinks="$linksToShow" data-maxlinks="$linksToShow">
+						<ul class="navigation-list">
+		#each
+		#set($url = false)
+
+		#if($link == 'addIdea' && $challenge && $telligentIdeas_v1_ideaPermissions.CanCreateIdeas($challenge.Id))
+				#set($url = $telligentIdeas_v1_urls.AddIdea($challenge.Id, true))
+				#if($url)
+						<li class="navigation-list-item">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="add-post idea">
+										<span></span>$core_v2_language.GetResource('IdeaLinks_AddIdea')
+								</a>
+						</li>
+				#set($hasLinks = true)
+				#end
+		#elseif($link == 'deleteIdea' && $idea && $telligentIdeas_v1_ideaPermissions.CanDeleteIdeas($challenge.Id))
+				<li class="navigation-list-item"><a href="#" id="$core_v2_widget.UniqueId('deleteidea')" class="delete-post idea"><span></span>$core_v2_language.GetResource('IdeaLinks_DeleteIdea')</a></li>
+				#registerEndOfPageHtml()
+					<script type="text/javascript">
+						jQuery(function(){
+							jQuery('#$core_v2_widget.UniqueId('deleteidea')').on('click', function() {
+								if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleteidea_confirmation'))'))
+								{
+									jQuery.telligent.evolution.del({
+										url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/ideas/idea.json?Id={Id}',
+										data: {
+											Id: '$idea.Id'
+										},
+										success: function(response) {
+											window.location = '$core_v2_encoding.JavascriptEncode($telligentIdeas_v1_urls.Ideas($challenge.Id))';
+										}
+									});
+								}
+								return false;
+							});
+						});
+					</script>
+				#end
+
+				#set($hasLinks = true)
+		#elseif($link == 'editIdea' && $idea && $telligentIdeas_v1_ideaPermissions.CanEditIdeas($challenge.Id))
+				#set($url = $telligentIdeas_v1_urls.EditIdea($idea.Id, true))
+				#if($url)
+						<li class="navigation-list-item">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="edit-post idea">
+										<span></span>$core_v2_language.GetResource('IdeaLinks_EditIdea')
+								</a>
+						</li>
+						#set($hasLinks = true)
+				#end
+
+		#elseif($link == 'ideafeature' && $core_v3_feature.CanFeature($idea.ContentId, $idea.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Feature($idea.ContentId, $idea.ContentTypeId)</li>
+				#set($hasLinks = true)
+
+		#elseif($link == 'challengeFavorite')
+			#if ($challenge && $core_v2_bookmark.SupportsBookmarks($telligentIdeas_v1_challenges.ContentTypeId) && $core_v2_bookmark.CanBookmark($challenge.ContentId, $telligentIdeas_v1_challenges.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($challenge.ContentId, $telligentIdeas_v1_challenges.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($challenge.ContentId, $telligentIdeas_v1_challenges.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'ideaFavorite')
+			#if ($idea && $core_v2_bookmark.SupportsBookmarks($telligentIdeas_v1_ideas.ContentTypeId) && $core_v2_bookmark.CanBookmark($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'addChallenge' && $telligentIdeas_v1_ideaPermissions.CanManageChallenges($group.Id))
+				#set($url = $telligentIdeas_v1_urls.AddChallenge($group.Id))
+				#if($url)
+						<li class="navigation-list-item">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="add-application challenge">
+										<span></span>$core_v2_language.GetResource('IdeaLinks_addChallenge')
+								</a>
+						</li>
+						#set($hasLinks = true)
+				#end
+		#elseif($link == 'editChallenge' && $telligentIdeas_v1_ideaPermissions.CanManageChallenges($group.Id))
+				#set($url = $telligentIdeas_v1_urls.EditChallenge($challenge.Id))
+				#if($url)
+						<li class="navigation-list-item">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="edit-application challenge">
+										<span></span>$core_v2_language.GetResource('IdeaLinks_editChallenge')
+								</a>
+						</li>
+						#set($hasLinks = true)
+				#end
+	#elseif($link == 'ideationSubscriptions' && $telligentIdeas_v1_ideaPermissions.CanReadIdeas($challenge.Id))
+		## Challenge Subscribing
+		#if ($challenge  &&  $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+		#set($subscription = $core_v2_applicationSubscription.Get($challenge.Id, "%{}"))
+		<li class="navigation-list-item">
+			<a class="idea-subscribe challenge" data-messagename="widget.${core_v2_widget.WrapperElementId}.ideationSubscribe" data-challengeid="$challenge.Id" data-subscribed="true" href="#" #if(!$subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_IdeationUnsubscribe')</a>
+		</li>
+		<li class="navigation-list-item">
+			<a class="idea-subscribe challenge" data-messagename="widget.${core_v2_widget.WrapperElementId}.ideationSubscribe" data-challengeid="$challenge.Id" data-subscribed="false" href="#" #if($subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_IdeationSubscribe')</a>
+		</li>
+		#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.ideationSubscribe")
+				<script type="text/javascript">
+				jQuery(function(j){
+					function update(value, link) {
+						j.telligent.evolution.post({
+							url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+							data: {
+								type: 'ideation',
+								subscribe: value,
+								challengeId: link.data('challengeid')
+							},
+							dataType: 'json'
+						}).then(function(){
+							if(value) {
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="false"]').hide();
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="true"]').show();
+							} else {
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="false"]').show();
+								link.closest('ul').find('a.idea-subscribe[data-subscribed="true"]').hide();
+							}
+						});
+					}
+					j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.ideationSubscribe', function(data){
+						update(!j(data.target).data('subscribed'), j(data.target));
+					});
+				});
+				</script>
+			#end
+
+			#set($hasLinks = true)
+		#end
+		#elseif($link == 'deleteChallenge' && $challenge && $telligentIdeas_v1_ideaPermissions.CanManageChallenges($group.Id))
+				<li class="navigation-list-item"><a href="#" id="$core_v2_widget.UniqueId('deleteChallenge')" class="delete-application challenge"><span></span>$core_v2_language.GetResource('IdeaLinks_DeleteChallenge')</a></li>
+				#registerEndOfPageHtml()
+					<script type="text/javascript">
+						jQuery(function(){
+							jQuery('#$core_v2_widget.UniqueId('deleteChallenge')').on('click', function() {
+								if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deletechallenge_confirmation'))'))
+								{
+									jQuery.telligent.evolution.del({
+										url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/ideas/challenge.json?Id={Id}',
+										data: {
+											Id: '$challenge.Id'
+										},
+										success: function(response) {
+											window.location = '$core_v2_encoding.JavascriptEncode($telligentIdeas_v1_urls.GroupHome($group.Id))';
+										}
+									});
+								}
+								return false;
+							});
+						});
+					</script>
+				#end
+
+				#set($hasLinks = true)
+		#elseif($link == 'commentSubscriptions')
+				#if ($idea && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+
+					#set($subscription = $core_v2_contentSubscription.Get($idea.Id, "%{IncludeApplicationSubscriptions='false'}"))
+
+					<li class="navigation-list-item">
+						<a class="idea-comment-subscribe challenge" data-messagename="widget.${core_v2_widget.WrapperElementId}.commentSubscribe" data-ideaid="$idea.Id" data-subscribed="true" href="#" #if(!$subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_IdeaUnsubscribe')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a class="idea-comment-subscribe challenge" data-messagename="widget.${core_v2_widget.WrapperElementId}.commentSubscribe" data-ideaid="$idea.Id" data-subscribed="false" href="#" #if($subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_IdeaSubscribe')</a>
+					</li>
+					#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.commentSubscribe")
+						<script type="text/javascript">
+						jQuery(function(j){
+							function update(value, link) {
+								j.telligent.evolution.post({
+									url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+									data: {
+										type: 'idea',
+										subscribe: value,
+										ideaId: link.data('ideaid')
+									},
+									dataType: 'json'
+								}).then(function(){
+									if(value) {
+										link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="false"]').hide();
+										link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="true"]').show();
+									} else {
+										link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="false"]').show();
+										link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="true"]').hide();
+									}
+								});
+							}
+							j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.commentSubscribe', function(data){
+								update(!j(data.target).data('subscribed'), j(data.target));
+							});
+						});
+						</script>
+					#end
+
+					#set($hasLinks = true)
+				#end
+	#elseif ($link == 'convert' && $idea)
+				#set($convert = false)
+		#set($convert = $core_v2_ui.ConvertContent($idea.ContentId, $idea.ContentTypeId))
+		#if ($convert)
+				<li class="navigation-list-item">
+						$convert
+				</li>
+				#set($hasLinks = true)
+		#end
+		#end
+#afterall
+		<li class="navigation-list-item">
+			<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+		</li>
+		<li class="navigation-list-item">
+			<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+		</li>
+	</ul>
+</div>
+#end
+
+#if($hasLinks == false)
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:IdeaLinks_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:IdeaLinks_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="links" labelResourceName="IdeaLinks_CF_Links" defaultValue="Link=editIdea&amp;Link=addIdea&amp;Link=featureIdea&amp;Link=deleteIdea&amp;Link=addChallenge&amp;Link=editChallenge&amp;Link=ideationSubscriptions&amp;Link=commentSubscriptions" dataType="Custom" template="core_v2_sortableList" height="300" key="Link">
+		<propertyValue value="editIdea" labelResourceName="IdeaLinks_EditIdea" orderNumber="1000000" />
+		<propertyValue value="addIdea" labelResourceName="IdeaLinks_AddIdea" orderNumber="1000001" />
+		<propertyValue value="deleteIdea" labelResourceName="IdeaLinks_DeleteIdea" orderNumber="1000002" />
+		<propertyValue value="addChallenge" labelResourceName="IdeaLinks_addChallenge" orderNumber="1000003" />
+		<propertyValue value="editChallenge" labelResourceName="IdeaLinks_editChallenge" orderNumber="1000004" />
+		<propertyValue value="deleteChallenge" labelResourceName="IdeaLinks_DeleteChallenge" orderNumber="1000005" />
+		<propertyValue value="challengeFavorite" labelResourceName="IdeaLinks_FavoriteChallenge" orderNumber="1000006" />
+		<propertyValue value="ideaFavorite" labelResourceName="IdeaLinks_FavoriteIdea" orderNumber="1000007" />
+		<propertyValue value="ideaFeature" labelResourceName="IdeaLinks_FeatureIdea" orderNumber="1000008" />
+		<propertyValue value="ideationSubscriptions" labelResourceName="IdeaLinks_IdeationSubscriptions" orderNumber="1000009" />
+		<propertyValue value="commentSubscriptions" labelResourceName="IdeaLinks_IdeaSubscriptions" orderNumber="1000010" />
+		<propertyValue value="convert" labelResourceName="Convert" orderNumber="1000011" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Administration">Administration</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Convert">Move Idea</resource>
+  <resource name="deletechallenge_confirmation">Are you sure you want to delete this ideation?</resource>
+  <resource name="deleteidea_confirmation">Are you sure you want to delete this idea?</resource>
+  <resource name="IdeaLinks_addChallenge">Create new ideation</resource>
+  <resource name="IdeaLinks_AddIdea">Submit an idea</resource>
+  <resource name="IdeaLinks_CF_Links">Links</resource>
+  <resource name="IdeaLinks_DeleteChallenge">Delete ideation</resource>
+  <resource name="IdeaLinks_DeleteIdea">Delete idea</resource>
+  <resource name="IdeaLinks_Description">Displays links for an idea</resource>
+  <resource name="IdeaLinks_editChallenge">Edit ideation</resource>
+  <resource name="IdeaLinks_EditIdea">Edit idea</resource>
+  <resource name="IdeaLinks_FavoriteChallenge">Bookmark ideation</resource>
+  <resource name="IdeaLinks_FavoriteIdea">Bookmark idea</resource>
+  <resource name="IdeaLinks_FeatureIdea">Feature idea</resource>
+  <resource name="IdeaLinks_IdeaSubscribe">Turn Idea status and comment notifications on</resource>
+  <resource name="IdeaLinks_IdeaSubscriptions">Idea Subscriptions</resource>
+  <resource name="IdeaLinks_IdeationSubscribe">Turn Ideation notifications on</resource>
+  <resource name="IdeaLinks_IdeationSubscriptions">Ideation Subscriptions</resource>
+  <resource name="IdeaLinks_IdeationUnsubscribe">Turn Ideation notifications off</resource>
+  <resource name="IdeaLinks_IdeaUnsubscribe">Turn Idea status and comment notifications off</resource>
+  <resource name="IdeaLinks_Name">Ideas - Idea Links</resource>
+  <resource name="IdeaLinks_Title">Options</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="ideas.ideas.modify" />
+			<scope id="ideas.ideations.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

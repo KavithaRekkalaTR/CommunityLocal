@@ -1,0 +1,145 @@
+#set ($developerModeEnabled = $context.IsDeveloperModeEnabled("%{}"))
+#set ($providers = false)
+#set ($hasProviders = false)
+#if ($developerModeEnabled)
+	#set ($providers = $context.ListProviders("%{ DeveloperEnabledOnly = 'true' }"))
+	#foreach ($provider in $providers)
+		#set ($hasProviders = true)
+	#end
+#end
+
+<div class="managed-item-import-dialog">
+
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				<% if((!newAutomations || newAutomations.length == 0) && (!updatedAutomations || updatedAutomations.length == 0) && (!newConfiguredAutomations || newConfiguredAutomations.length == 0) && (!updatedConfiguredAutomations || updatedConfiguredAutomations.length == 0)) { %>
+
+					<p class="message">$core_v2_language.GetResource('NoImportMessage')</p>
+
+				<% } else { %>
+
+					#if ($developerModeEnabled)
+						<li class="field-item provider-select">
+							<label class="field-item-name heading"><strong>$core_v2_language.GetResource('FactoryDefaultProvider')</strong></label>
+							#if ($hasProviders)
+								<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderDesc')</span>
+								<span class="field-item-input">
+									<select class="provider-select">
+										#foreach ($provider in $providers)
+											<option value="$provider.Id" #if ($provider.Id == $context.CoreProviderId) selected #end>
+												$core_v2_encoding.HtmlEncode($provider.Name)
+											</option>
+										#end
+									</select>
+								</span>
+							#else
+								<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderNoneDesc')</span>
+							#end
+						</li>
+					#end
+
+					#if (!$developerModeEnabled || $hasProviders)
+
+						<span>$core_v2_language.GetResource('ImportInstruction')</span>
+
+						<% if(newAutomations && newAutomations.length > 0) { %>
+							<li class="field-item new-automations">
+								<label class="field-item-name heading"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('NewAutomations') <% } else { %> $core_v2_language.GetResource('NewAutomationResources') <% } %></strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('TheFollowingAutomationsAreNew')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(newAutomations, function(automation) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb<%: automation.Id %>" class="importable-automation" data-request="_aid=<%: automation.Id %>&_at=overview" checked />
+										<label  for="cb<%: automation.Id %>" class="field-item-name">
+											<%: automation.ProcessedName %>
+										</label>
+									</span>
+									<% if(automation.ProcessedDescription) { %>
+										<span class="field-item-description"><%: automation.ProcessedDescription %></span>
+									<% } %>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if(updatedAutomations && updatedAutomations.length > 0) { %>
+							<li class="field-item updated-automations">
+								<label class="field-item-name heading"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('UpdatedAutomations') <% } else { %> $core_v2_language.GetResource('UpdatedAutomationResources') <% } %></strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('UpdatedAutomationDesc')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(updatedAutomations, function(automation) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb<%: automation.Id %>" class="importable-automation" data-request="_aid=<%: automation.Id %>&_at=overview" checked />
+										<label for="cb<%: automation.Id %>" class="field-item-name">
+											<%: automation.ProcessedName %>
+										</label>
+									</span>
+									<% if(automation.ProcessedDescription) { %>
+										<span class="field-item-description"><%: automation.ProcessedDescription %></span>
+									<% } %>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if(newConfiguredAutomations && newConfiguredAutomations.length > 0) { %>
+							<li class="field-item new-configured-automations">
+								<label class="field-item-name heading"><strong>$core_v2_language.GetResource('NewConfiguredAutomations')</strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('TheFollowingConfiguredAutomationsAreNew')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(newConfiguredAutomations, function(configuredAutomation) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb:config:<%: configuredAutomation.Id %>" class="importable-automation" data-automationid="<%: configuredAutomation.AutomationId %>" data-request="_aid=<%: configuredAutomation.Id %>&_at=overview&_am=configuration" checked />
+										<label  for="cb:config:<%: configuredAutomation.Id %>" class="field-item-name ui-tip" data-tip="<%: configuredAutomation.Description %>">
+											<%: configuredAutomation.Name %>
+										</label>
+									</span>
+									<% if(configuredAutomation.Description) { %>
+										<span class="field-item-description"><%: (configuredAutomation.Description || '').replace(/(<([^>]+)>)/ig,"") %></span>
+									<% } %>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if(updatedConfiguredAutomations && updatedConfiguredAutomations.length > 0) { %>
+							<li class="field-item updated-configured-automations">
+								<label class="field-item-name heading"><strong>$core_v2_language.GetResource('UpdatedConfiguredAutomations')</strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('UpdatedConfiguredAutomationDesc')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(updatedConfiguredAutomations, function(configuredAutomation) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb:config:<%: configuredAutomation.Id %>" class="importable-automation" data-automationid="<%: configuredAutomation.AutomationId %>" data-request="_aid=<%: configuredAutomation.Id %>&_at=overview&_am=configuration" checked />
+										<label  for="cb:config:<%: configuredAutomation.Id %>" class="field-item-name ui-tip" data-tip="<%: configuredAutomation.Description %>">
+											<%: configuredAutomation.Name %>
+										</label>
+									</span>
+									<% if(configuredAutomation.Description) { %>
+										<span class="field-item-description"><%: (configuredAutomation.Description || '').replace(/(<([^>]+)>)/ig,"") %></span>
+									<% } %>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if((matchingAutomations && matchingAutomations > 0) || (matchingConfiguredAutomations && matchingConfiguredAutomations > 0)) { %>
+							<li class="field-item importable-automations updated-configured-automations">
+								<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+							</li>
+						<% } %>
+
+						<li class="field-item submit">
+							<span class="field-item-input">
+								<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+							</span>
+							<span class="field-item-input">
+								<a href="#" class="button continue">$core_v2_language.GetResource('Import')</a>
+							</span>
+						</li>
+
+					#end
+
+				<% } %>
+
+			</ul>
+		</fieldset>
+	</form>
+</div>

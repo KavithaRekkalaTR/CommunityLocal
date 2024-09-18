@@ -1,0 +1,35 @@
+#set ($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentid')))
+#set ($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contenttypeid')))
+
+#set($contentTypeName = '')
+#set($contentType = false)
+#set($contentType = $core_v2_contentType.Get($contentTypeId))
+#if ($appeal.Content.ContentTypeId != $core_v2_utility.ParseGuid('') && $contentType && $contentType.Name)
+	#set($contentTypeName = $contentType.Name.ToLowerInvariant())
+#else
+	#set($contentTypeName = $core_v2_language.GetResource('missing-content-type-name').ToLowerInvariant())
+#end
+
+#set($textContent = $context.GetTextContent($contentId, $contentTypeId))
+#foreach($field in $textContent.Keys)
+#beforeall
+    <p>$core_v2_language.FormatString($core_v2_language.GetResource('TextContent_Instructions'), $contentTypeName)</p>
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<table class="form">
+#each
+						<tr>
+							<th>$field</th>
+							<td style="white-space: break-all;">$textContent.Value($field)</td>
+						</tr>
+#afterall
+					</table>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#nodata
+    <p>$core_v2_language.FormatString($core_v2_language.GetResource('NoTextContent'), $contentTypeName)</p>
+#end

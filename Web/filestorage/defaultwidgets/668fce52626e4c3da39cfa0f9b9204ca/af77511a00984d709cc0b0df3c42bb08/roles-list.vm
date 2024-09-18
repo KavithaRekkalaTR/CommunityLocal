@@ -1,0 +1,60 @@
+#set($grouptype = $core_v2_page.GetQueryStringValue('w_grouptype'))
+#set($grouptypeResource = "type_$grouptype.ToLower()")
+
+#set($siteRoles = $context.GetSiteRoles())
+
+<form><fieldset>
+	<div class="filter-selector">
+		<span class="field-item-input"><input type="text" name="searchrole" placeholder="$core_v2_language.GetResource('FindRole')" style="width:300px"></input></span>
+        <select name="allowed-filter">
+            <option value="allowed">$core_v2_language.GetResource('ShowAllowedRoles')</option>
+            <option value="">$core_v2_language.GetResource('ShowAllRoles')</option>
+        </select>
+	</div>
+</fieldset>
+
+#set ($anyAllowed = false)
+
+#foreach($role in $siteRoles)
+#beforeall
+	<ul class="content-list" style="margin-bottom: 1em;">
+#each
+    #set ($hasAllowed = $context.HasAllowedTemplatePermissions($grouptype, $role.Id))
+    #if ($hasAllowed == 'True')
+        #set ($anyAllowed = true)
+    #end
+	<li class="content-item role site-role" data-roleid="$role.Id" #if($hasAllowed != 'True') style="display: none;" #end
+        data-allowedpermissions='$hasAllowed' data-text="$core_v2_encoding.HtmlAttributeEncode($role.Name.ToLower())" data-title="$core_v2_encoding.HtmlAttributeEncode($role.Name)">
+		<div class="avatar">
+			$!core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 50, 50, "%{border='0px', ResizeMethod = 'ZoomAndCrop' }")
+		</div>
+		<div class="content-container">
+			<h4 class="name">$role.Name</h4>
+			<div class="attributes">
+				<div class="content">$!role.Description</div>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#end
+</form>
+
+<div class="message norecords" #if($anyAllowed) style="display: none;"#end>$core_v2_language.GetResource("NoRolesFound")</div>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.globalPermissionsRolesList.register({
+			groupType: '$core_v2_encoding.JavascriptEncode($grouptype)',
+			groupTypeResource: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource($grouptypeResource))',
+		    urls: {
+				permissionslist:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('permissions-list.vm'))',
+		    },
+            text: {
+				permissionsheadertext: '$core_v2_language.GetResource('PermissionsHeaderText')',
+            }
+    	});
+	});
+	</script>
+#end

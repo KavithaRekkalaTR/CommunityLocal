@@ -1,0 +1,68 @@
+##
+## Renders a theme summary with attachments as JSON
+##
+## Requires in scope:
+##   $theme
+## 	 $includeFileDigests - if included and true, includes file digests
+##
+
+#if ($theme)
+	{
+		"Id": #if ($theme.Id) "$theme.Id" #else "" #end,
+		"TypeId": #if ($theme.TypeId) "$theme.TypeId" #else "" #end,
+		"TypeName": #if ($theme.TypeName) "$core_v2_encoding.JavascriptEncode($theme.TypeName)" #else "" #end,
+		"Name": #if ($theme.Name) "$core_v2_encoding.JavascriptEncode($theme.Name)" #else "" #end,
+		"Description": #if ($theme.Description) "$core_v2_encoding.JavascriptEncode($theme.Description)" #else "" #end,
+
+		"IsFactoryDefault": #if ($theme.IsFactoryDefault) true #else false #end,
+		"IsStaged": #if ($theme.IsStaged) true #else false #end,
+		"IsReverted": #if ($theme.IsReverted) true #else false #end,
+		"IsDeleted": #if ($theme.IsDeleted) true #else false #end,
+		"IsTranslated": #if ($theme.IsTranslated) true #else false #end,
+		"IsEditable": #if ($theme.IsEditable) true #else false #end,
+
+		"State": "$core_v2_encoding.JavascriptEncode($theme.State.ToString())",
+
+		"Files": [
+			#foreach ($file in $theme.Files)
+			#between
+				,
+			#each
+				{
+					"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+					#if ($includeFileDigests)
+						,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+					#end
+				}
+			#end
+		],
+		"ScriptFiles": [
+			#foreach ($file in $theme.ScriptFiles)
+			#between
+				,
+			#each
+				{
+					"Name": "$!core_v2_encoding.JavascriptEncode($!file.Name)"
+					#if ($includeFileDigests)
+						,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+					#end
+				}
+			#end
+		],
+		"StyleFiles": [
+			#foreach ($file in $theme.StyleFiles)
+			#between
+				,
+			#each
+				{
+					"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+					#if ($includeFileDigests)
+						,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+					#end
+				}
+			#end
+		]
+	}
+#else
+	null
+#end

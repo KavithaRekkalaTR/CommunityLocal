@@ -1,0 +1,14 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($ideaId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('IdeaId')))
+
+	#set($response = $telligentIdeas_v1_ideas.Delete($ideaId))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

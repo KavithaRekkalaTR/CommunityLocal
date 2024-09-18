@@ -1,0 +1,144 @@
+#set($contentTypeId = $core_v2_page.GetQueryStringValue('w_contenttypeid'))
+#set($contentId = $core_v2_page.GetQueryStringValue('w_contentid'))
+
+#set($content = $core_v2_content.Get($core_v2_utility.ParseGuid($contentId), $core_v2_utility.ParseGuid($contentTypeId)))
+#set($contentType = $core_v2_contentType.Get($content.ContentTypeId))
+
+#set($supportsFeature = $core_v3_feature.SupportsFeatures($content.ContentTypeId))
+#set($hasFeaturePermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.FeatureContent, $core_v2_user.Accessing.Id).IsAllowed)
+
+#set ($feature = false)
+#set ($feature = $core_v3_feature.Get($content.ContentId, $content.ContentTypeId, "%{}"))
+
+#if(!$supportsFeature)
+	$core_v2_language.GetResource('ContentTypeNotFeaturable')
+#elseif (!$hasFeaturePermission)
+	$core_v2_language.GetResource('FeaturePermissionDenied')
+#elseif (!$feature)
+	$core_v2_language.GetResource('FeatureNotFound')
+#else
+	#set($attachmentFileName = false)
+	#set($attachmentContextId = false)
+	#set($attachmentUrl = false)
+
+	#if (!$attachmentContextId)
+		#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+	#end
+
+	#if ($feature)
+		#set($attachmentUrl = $feature.Image)
+		#set($attachmentFileName = $feature.ImageFileName)
+
+		<form><fieldset class="field-list">
+		  <ul class="field-list">
+			<li class="field-item required event-startdate">
+			  <label for="$core_v2_widget.UniqueId('StartDate')" class="field-item-header">$core_v2_language.GetResource('StartDate')</label>
+			  <span class="field-item-description">$core_v2_language.GetResource('StartDate_Detail')</span>
+			  <span class="field-item-input">
+				#if ($feature)
+				#set($startDateValue = $core_v2_encoding.JavascriptEncode($feature.StartDate))
+				#else
+				#set($startDateValue = $core_v2_encoding.JavascriptEncode($core_v2_utility.CurrentDate))
+				#end
+				<input type="text" id="$core_v2_widget.UniqueId('StartDate')" name="$core_v2_widget.UniqueId('startDate')" value="$core_v2_encoding.HtmlAttributeEncode($startDateValue)" style="width: 90%" />
+			  </span>
+			  <span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item event-enddate">
+			  <label for="$core_v2_widget.UniqueId('EndDate')" class="field-item-header">$core_v2_language.GetResource('EndDate')</label>
+			  <span class="field-item-description">$core_v2_language.GetResource('EndDate_Detail')</span>
+			  <span class="field-item-input">
+				#if ($feature)
+				#set($endDateValue = $core_v2_encoding.JavascriptEncode($feature.EndDate))
+				#else
+				#set($endDateValue = $core_v2_encoding.JavascriptEncode($core_v2_utility.CurrentDate.AddDays(30)))
+				#end
+				<input type="text" id="$core_v2_widget.UniqueId('EndDate')" name="$core_v2_widget.UniqueId('endDate')" value="$core_v2_encoding.HtmlAttributeEncode($endDateValue)" style="width: 90%"/>
+			  </span>
+			  <span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+
+			#set($targetSite = false)
+			#set($targetGroup = false)
+			#foreach($container in $feature.TargetContainers)
+			#if ($container.ContainerId == $core_v2_group.Root.ContainerId)
+			#set($targetSite = true)
+			#elseif ($container.ContainerId == $content.Application.Container.ContainerId)
+			#set($targetGroup = true)
+			#end
+			#end
+			<li class="field-item targets">
+			  <label class="field-item-header">$core_v2_language.GetResource("Feature_Target")</label>
+  			  <span class="field-item-description">$core_v2_language.GetResource('Feature_Target_Detail')</span>
+			  <select id="$core_v2_widget.UniqueId('FeatureTargets')">
+				<option value="site" #if($targetSite && !$targetGroup) selected="selected"#end>$core_v2_language.GetResource('Feature_Site')</option>
+				<option value="group" #if(!$targetSite && $targetGroup) selected="selected"#end>$core_v2_language.GetResource('Feature_Group')</option>
+				<option value="both" #if($targetSite && $targetGroup) selected="selected"#end>$core_v2_language.GetResource('Feature_Both')</option>
+			  </select>
+			</li>
+
+			<li class="field-item required post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false">
+			  <label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('Attachment_File')</label>
+			  <span class="field-item-description">$core_v2_language.GetResource('Attachment_File_Detail')</span>
+			  <span class="field-item-input preview">
+			  </span>
+			  <span class="field-item-input upload">
+				<a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+				<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+			  </span>
+			  <span class="field-item-validation" style="display: none;"></span>
+			</li>
+		  </ul>
+		</fieldset></form>
+
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button delete" data-messagename="contextual-delete-feature" data-contentid="$feature.Content.ContentId" data-contenttypeid="$feature.Content.ContentTypeId">$core_v2_language.GetResource('Delete')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+
+		#registerEndOfPageHtml()
+		<script type="text/javascript">
+		  jQuery(function(j){
+		  j.telligent.evolution.widgets.featuredManagementEdit.register({
+		  wrapperId: '$core_v2_widget.WrapperElementId',
+		  contentId: '$content.ContentId',
+		  contentTypeId: '$content.ContentTypeId',
+		  startDate: jQuery('#$core_v2_widget.UniqueId('StartDate')'),
+		  endDate: jQuery('#$core_v2_widget.UniqueId('EndDate')'),
+		  featureTargets: '$core_v2_widget.UniqueId('FeatureTargets')',
+		  saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('saveedit.vm'))',
+		  saveErrorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FeatureSaveError'))',
+		  deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete_Confirmation'))',
+		  rootGroupId: '$core_v2_group.Root.ContainerId',
+		  currentGroupId: '$content.Application.Container.ContainerId',
+		  groupContainerTypeId: '$core_v2_group.ContainerTypeId',
+		  file: {
+			  fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+			  url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+			  isRemote:#if($attachmentIsRemote) true#else false#end,
+			  isNew:#if($attachmentIsNew) true#else false#end
+		  },
+		  attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		  attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		  attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		  attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		  previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		  uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		  uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+		  featuredeleted : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Feature_Deleted'))',
+		  featuresaved : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Feature_Saved'))',
+		  toLabel: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('to'))',
+
+		  });
+		  });
+		</script>
+		#end
+
+	#end
+#end

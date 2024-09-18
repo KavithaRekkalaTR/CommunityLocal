@@ -1,0 +1,37 @@
+$core_v2_page.SetContentType('application/javascript')
+
+(function(){
+
+	$shell.RenderShellScriptModules()
+
+	$core_v2_widget.RenderFile('model-data.js')
+	$core_v2_widget.RenderFile('model-model.js')
+	$core_v2_widget.RenderFile('model-exporter.js')
+
+	$core_v2_widget.RenderFile('shell-edit-view-factory.js')
+	$core_v2_widget.RenderFile('shell-utility.js')
+	$core_v2_widget.RenderFile('shell-controller.js')
+	$core_v2_widget.RenderFile('shell-global-search.js')
+
+	$core_v2_widget.RenderFile('view-email-overview.js')
+	$core_v2_widget.RenderFile('view-import-selector.js')
+	$core_v2_widget.RenderFile('view-dock-search.js')
+
+#if ($context.RunTests)
+	$core_v2_widget.RenderFile('test.js')
+	$core_v2_widget.RenderFile('tests.js')
+	$core_v2_widget.RenderFile('main-test.js')
+#else
+	$core_v2_widget.RenderFile('main.js')
+#end
+
+	require(['main'], function(main, j, global, undef) {
+
+		j.telligent = j.telligent || {};
+		j.telligent.evolution = j.telligent.evolution || {};
+		j.telligent.evolution.widgets = j.telligent.evolution.widgets || {};
+		j.telligent.evolution.widgets.manageEmails = main;
+
+	}, jQuery, window);
+
+})();

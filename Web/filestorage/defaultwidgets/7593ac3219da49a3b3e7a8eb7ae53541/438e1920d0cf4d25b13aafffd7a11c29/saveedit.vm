@@ -1,0 +1,57 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ContentId')))
+	#set ($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ContentTypeId')))
+	#set ($startDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('StartDate')))
+	#set ($endDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('EndDate')))
+	#set ($targets = $core_v2_page.GetFormValue('Targets'))
+
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 1/0
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+
+	#set($fileRemoved = $core_v2_page.GetFormValue('FileRemoved')) ## 1/0
+
+	#set ($feature = false)
+	#set ($feature = $core_v3_feature.Get($contentId, $contentTypeId, "%{}"))
+
+	#set($contentType = $core_v2_contentType.Get($content.ContentTypeId))
+
+	#set($options = "%{}")
+
+	#if ($fileChanged == '1')
+		#set($file = false)
+		#set($file = $core_v2_uploadedFile.Get($fileContextId, $fileName))
+		#if ($file)
+			$options.Add('FileUploadContext',$fileContextId)
+			$options.Add('FileName',$file.Name)
+		#end
+	#elseif ($fileRemoved == '1')
+		$options.Add('RemoveFeatureImage', 'true')
+	#end
+
+	#if ($startDate)
+		$options.Add('StartDate', $startDate)
+	#end
+	#if ($endDate)
+		$options.Add('EndDate', $endDate)
+	#end
+	#if($targets)
+		$options.Add('FeatureTargets', $targets)
+	#end
+
+	#if ($feature)
+		#set($featureResponse = $core_v3_feature.Update($contentId, $contentTypeId, $options))
+	#else
+		#set($featureResponse = $core_v3_feature.Create($contentId, $contentTypeId, $options))
+	#end
+
+	#if($featureResponse.HasErrors())
+		$core_v2_page.SendJsonError($featureResponse.Errors)
+	#end
+	##close modal/redirect to content page
+
+#end

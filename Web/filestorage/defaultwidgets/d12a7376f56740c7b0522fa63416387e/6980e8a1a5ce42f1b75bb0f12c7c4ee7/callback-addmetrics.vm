@@ -1,0 +1,15 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+
+	#foreach($metricId in $core_v2_page.GetFormValues('metrics[]'))
+	    #set($metricId = $core_v2_utility.ParseGuid($metricId))
+        #set($result = false)
+        #set($result = $context.AddMetric($metricId))
+        #if ($result.Errors.Count > 0)
+            $core_v2_page.SendJsonError($result.Errors)
+        #end
+	#end
+	
+	{"success":true}
+#end

@@ -1,0 +1,83 @@
+#set ($firstAction = $context.ListActions("%{PageSize = 1, SortOrder='Ascending', SortBy= 'AuditDate' }"))
+#set ($lastAction = $context.ListActions("%{PageSize = 1, SortOrder='Descending', SortBy= 'AuditDate' }"))
+
+#if ($firstAction.Count > 0 && $lastAction.Count > 0)
+    <p>
+        $core_v2_language.FormatString($core_v2_language.GetResource("Instructions_WithAuditDateRange"), $core_v2_language.FormatDateAndTime($firstAction.get_item(0).Timestamp), $core_v2_language.FormatDateAndTime($lastAction.get_item(0).Timestamp))
+    </p>
+#else
+    <p>$core_v2_language.GetResource('Instructions')</p>
+#end
+
+<form>
+	<fieldset>
+		<div class="filter-selector">
+            <div class="search-filters">
+                #set ($auditActions = $context.ListActions())
+                #if($auditActions.Count >= 2)
+                    <select  id="$core_v2_encoding.HtmlAttributeEncode($auditActionsId)">
+                        <option value="">$core_v2_language.GetResource('Type_All')</option>
+                        #foreach ($auditAction in $auditActions)
+                            <option value="$auditAction">$core_v2_utility.Replace($auditAction, "([a-z])([A-Z])", "$1 $2")</option>
+                        #end
+                    </select>
+                #end
+
+                <input type="text" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)" style="width: 25%"
+                    placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('containing'))">
+
+                <input type="text" id="$core_v2_encoding.HtmlAttributeEncode($memberSearchInputId)" style="width: 25%;">
+
+            </div>
+            <div>
+                $core_v2_language.GetResource('between')
+                <input type="text" class="startDate" id="$core_v2_widget.UniqueId('startDate')" name="startDate" style="width: 20%"  />
+                $core_v2_language.GetResource('and')
+                <input type="text" class="endDate" id="$core_v2_widget.UniqueId('endDate')" name="endDate" style="width: 20%"  />
+
+                #set ($machineNames = $context.ListMachineNames())
+                #if($machineNames.Count >= 2)
+                    $core_v2_language.GetResource('on') 
+                    <select id="$core_v2_encoding.HtmlAttributeEncode($machineNamesId)">
+                        <option value="">$core_v2_language.GetResource('Node_Any')</option>
+                        #foreach ($machineName in $machineNames)
+                            <option value="$machineName">$machineName</option>
+                        #end
+                    </select>
+                #end
+                
+                #set ($auditSources = $context.ListOAuthSources())
+                #set ($apiKeysExist = $context.ApiKeysExist())
+                #if($auditSources.Count > 0 || $apiKeysExist)
+                $core_v2_language.GetResource('from')
+                    <select id="$core_v2_encoding.HtmlAttributeEncode($auditSourcesId)">
+                        <option value="">$core_v2_language.GetResource('Source_All')</option>
+                        <option value="Local">$core_v2_language.GetResource('Source_Local')</option>
+                        #if($apiKeysExist)
+                            <option value="ApiKey">$core_v2_language.GetResource('Source_ApiKey')</option>
+                        #end
+                        #if($auditSources.Count >= 0)
+                            <option value="OAuth">$core_v2_language.GetResource('Source_OAuth')</option>
+                            #foreach ($auditSource in $auditSources)
+                                <option value="$auditSource.Key">$core_v2_language.FormatString($core_v2_language.GetResource('Source_Individual'), $auditSource.Value)</option>
+                            #end
+                        #end
+                    </select>
+                #end
+                
+                <span class="field-item-input">
+                    <a href="#" class="inline-button" data-messagename="audits-refresh">$core_v2_language.GetResource('Refresh')</a>
+                </span>
+            </div>
+		</div>
+	</fieldset>
+</form>
+
+<h2 id="$core_v2_encoding.HtmlAttributeEncode($auditCountId)" ></h2>
+
+<ul class="content-list content simple margin-bottom expandable" id="$core_v2_encoding.HtmlAttributeEncode($auditListId)">
+	#set ($inProcess = true)
+    #set ($options = "%{ StartDate = '$initialStartDate', EndDate = '$initialEndDate', PageSize = 20, PageIndex = 0 }")
+    #set ($actions = $context.ListActions($options))
+	$core_v2_widget.ExecuteFile('render-list.vm')
+</ul>

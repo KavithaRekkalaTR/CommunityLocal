@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_TaggedContentList_Name}" version="11.0.0.0" description="${resource:Core_TaggedContentList_Description}" instanceIdentifier="ec913ce1a28f4602af498bf572f374e1" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="tagged-content-list" lastModified="2020-01-14 16:09:09Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+
+
+#set ($showSidebarList = false)
+#set ($region = $core_v2_widget.RegionName.ToLower())
+#set ($layout = $core_v2_page.Layout.ToLower())
+
+#if ($region == 'split-sidebar-left' || $region == 'split-sidebar-right' || $region == 'left-sidebar')
+		#set ($showSidebarList = true)
+#elseif ($region == 'right-sidebar' && !$layout.Contains('split-content') && !$layout.Contains('split-sidebar'))
+		#set ($showSidebarList = true)
+#end
+
+#if($showSidebarList)
+		$core_v2_widget.ExecuteFile('sidebar.vm')
+#else
+		$core_v2_ui.PagedContent('list.vm')
+#end
+
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+#if ($header && $header.Length > 0)
+	$core_v2_widget.ApplyTokens($header)
+#elseif ($core_v2_widget.GetStringValue('dataSource','context') == 'context')
+	#set($currentTags = $core_v2_tags.Current)
+	#if($currentTags && $currentTags.Count > 0)
+		$core_v2_language.FormatString($core_v2_language.GetResource('ResultsForTags'), $core_v2_utility.Join(', ', $currentTags))
+	#end
+#else
+	#set ($userTags = $core_v2_widget.GetStringValue('userDefinedTags',''))
+	#if ($userTags && $userTags.Length > 0)
+		$core_v2_language.FormatString($core_v2_language.GetResource('ResultsForTags'), $core_v2_utility.Join(', ', $core_v2_utility.Split(',', $userTags)))
+	#end
+#end
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageSize" labelResourceName="CF_Core_TaggedContentList_PageSize" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="dataSource" labelResourceName="CF_Core_TaggedContentList_DataSource" defaultValue="context" dataType="String">
+		<propertyValue value="context" labelResourceName="CF_Core_TaggedContentList_DataSource_Context" orderNumber="1000000" propertiesToHide="userDefinedTags,logicallyOrTags,searchType,groupApplicationTypes,groupLookup,groupSubGroup,applicationLookup" />
+		<propertyValue value="userDefined" labelResourceName="CF_Core_TaggedContentList_DataSource_UserDefined" orderNumber="1000001" propertiesToShow="userDefinedTags,logicallyOrTags,searchType,groupApplicationTypes,groupLookup,groupSubGroup,applicationLookup" />
+	</property>
+	<property id="logicallyOrTags" labelResourceName="CF_Core_TaggedContentList_MatchAnyTags" defaultValue="true" dataType="Bool" />
+	<property id="userDefinedTags" labelResourceName="CF_Core_TaggedContentList_Tags" dataType="String" />
+	<property id="searchType" labelResourceName="CF_Core_TaggedContentList_SelectGroup" defaultValue="group" dataType="String">
+		<propertyValue value="group" labelResourceName="group" propertiesToHide="applicationLookup" propertiesToShow="groupApplicationTypes,groupLookup,groupSubGroup" />
+		<propertyValue value="application" labelResourceName="application" propertiesToHide="groupApplicationTypes,groupLookup,groupSubGroup" propertiesToShow="applicationLookup" />
+	</property>
+	<property id="groupLookup" labelResourceName="groupLookupLabel" defaultValue="-1" dataType="Custom" template="core_v2_groupLookup" />
+	<property id="groupSubGroup" labelResourceName="groupSubGroupLabel" defaultValue="false" dataType="Bool" />
+	<property id="groupApplicationTypes" labelResourceName="groupApplicationTypesLabel" defaultValue="all" dataType="Custom" template="core_v2_applicationTypeList" />
+	<property id="applicationLookup" labelResourceName="applicationLookupLabel" dataType="Custom" template="core_v2_applicationLookup" maxSelections="5" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="application">Application</resource>
+  <resource name="applicationLookupLabel">Including</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Core_TaggedContentList_DataSource">Source</resource>
+  <resource name="CF_Core_TaggedContentList_DataSource_Context">Contextual tags</resource>
+  <resource name="CF_Core_TaggedContentList_DataSource_UserDefined">User-defined tags</resource>
+  <resource name="CF_Core_TaggedContentList_MatchAnyTags">Match ANY of these tags</resource>
+  <resource name="CF_Core_TaggedContentList_PageSize">Number of items to display</resource>
+  <resource name="CF_Core_TaggedContentList_SelectGroup">Within a</resource>
+  <resource name="CF_Core_TaggedContentList_Tags">Tags</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_TaggedContentList_Description">Displays a list of tagged content.</resource>
+  <resource name="Core_TaggedContentList_Name">Tagged Content List</resource>
+  <resource name="group">Group</resource>
+  <resource name="groupApplicationTypesLabel">Including application types</resource>
+  <resource name="groupLookupLabel">Group</resource>
+  <resource name="groupSubGroupLabel">With sub groups</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+  <resource name="ResultsForTags">Results for {0}</resource>
+  <resource name="Scope_Filter_Container">View related content throughout {0}</resource>
+  <resource name="Scope_Filter_Site">View related content from anywhere</resource>
+  <resource name="TaggedContent_NotFound">There are no posts with the requested tag.</resource>
+  <resource name="View">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

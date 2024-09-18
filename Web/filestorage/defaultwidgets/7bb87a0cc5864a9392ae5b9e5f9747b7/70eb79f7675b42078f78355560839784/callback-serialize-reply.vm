@@ -1,0 +1,41 @@
+##
+## Renders a forum reply as generic reply JSON object
+##
+## Requires in scope:
+##   $forumReply
+##
+## If $threadLastReadDateOnLoad in scope, uses it for comparing/setting isNew
+##
+
+#if ($forumReply)
+	#set ($isNew = false)
+	#if ($threadLastReadDateOnLoad && $threadLastReadDateOnLoad <= $forumReply.Date.Ticks && $core_v2_user.Accessing.Id != $forumReply.Author.Id)
+		#set ($isNew = true)
+	#end
+
+	#if (!$excludeContainer)
+		{
+	#end
+		"id": "$forumReply.Id",
+		"parentId": #if ($forumReply.ParentId) "$forumReply.ParentId" #else null #end,
+		"createdDate": #if ($forumReply.Date) "$core_v2_utility.GetTimestamp($forumReply.Date)" #else null #end,
+		"createdDateTicks": #if ($forumReply.Date && $forumReply.Date.Ticks > 0) $forumReply.Date.Ticks #else null #end,
+		"url": "$core_v2_encoding.JavascriptEncode($forumReply.Url)",
+		"body": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('common-rendered-reply-body.vm'))",
+		"rawBody": "$core_v2_encoding.JavascriptEncode($forumReply.Body('raw'))",
+		"yesVotes": $forumReply.QualityYesVotes,
+		"noVotes": $forumReply.QualityNoVotes,
+		"isDeleted": #if ($forumReply.IsDeleted) true #else false #end,
+		"status": #if ($forumReply.IsAnswer) "verified" #elseif ($forumReply.IsSuggestedAnswer) "suggested" #else "" #end,
+		"isApproved": #if ($forumReply.Approved) true #else false #end,
+		"EffectiveDepth": #if ($forumReply.EffectiveDepth) $forumReply.EffectiveDepth #else null #end,
+		"PreviousSiblingCount": #if ($forumReply.PreviousSiblingCount) $forumReply.PreviousSiblingCount #else null  #end,
+		"NextSiblingCount": #if ($forumReply.NextSiblingCount) $forumReply.NextSiblingCount #else null #end,
+		"ChildCount": #if ($forumReply.ChildCount) $forumReply.ChildCount #else null #end,
+		"isNew": #if ($isNew) true #else false #end
+	#if (!$excludeContainer)
+		}
+	#end
+#else
+	null
+#end

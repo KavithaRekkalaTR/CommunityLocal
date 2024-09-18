@@ -1,0 +1,125 @@
+##
+## Revert Multiple Themes Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+
+	#set ($hasRevertibleChildren = false)
+	#set ($hasStagingDirectives = false)
+	#set ($stagedPages = 0)
+	#set ($stagedHeaders = 0)
+	#set ($stagedFooters = 0)
+	#set ($stagedFragments = 0)
+
+	#set ($themeIds = $core_v2_page.GetFormValue('_w_themeIds'))
+	#set ($separatedThemeIds = $core_v2_utility.split(',', $themeIds))
+
+	#set ($revertStagedPagesQuery = $core_v2_page.GetFormValue("_w_revertStagedPages"))
+	#if ($revertStagedPagesQuery)
+		#set ($hasStagingDirectives = true)
+	#end
+
+	#set ($revertStagedHeadersQuery = $core_v2_page.GetFormValue("_w_revertStagedHeaders"))
+	#if ($revertStagedHeadersQuery)
+		#set ($hasStagingDirectives = true)
+	#end
+
+	#set ($revertStagedFootersQuery = $core_v2_page.GetFormValue("_w_revertStagedFooters"))
+	#if ($revertStagedFootersQuery)
+		#set ($hasStagingDirectives = true)
+	#end
+
+	#set ($revertStagedFragmentsQuery = $core_v2_page.GetFormValue("_w_revertStagedFragments"))
+	#if ($revertStagedFragmentsQuery)
+		#set ($hasStagingDirectives = true)
+	#end
+
+	## Count child components for all themes
+	#foreach ($themeId in $separatedThemeIds)
+		#set ($themeRequestComponents = $core_v2_utility.split(':', $themeId, 2).ToArray())
+
+		#set ($options = "%{}")
+		#if ($themeRequestComponents.length > 0)
+			$options.Add('Id', $themeRequestComponents.get(0))
+			#if ($themeRequestComponents.length > 1)
+				$options.Add('TypeId', $themeRequestComponents.get(1))
+			#end
+		#end
+
+		## Count revertible children
+		#set ($revertibleChildren = false)
+		#set ($revertibleChildren = $context.GetRevertibleChildState($options))
+		#if ($revertibleChildren && $revertibleChildren.HasErrors())
+			$core_v2_page.SendJsonError($revertibleChildren.Errors)
+		#end
+
+		#if ($revertibleChildren && $revertibleChildren.HasStagedChildren)
+			#set ($hasRevertibleChildren = true)
+			#set ($stagedPages = $stagedPages + $revertibleChildren.StagedPages)
+			#set ($stagedHeaders = $stagedHeaders + $revertibleChildren.StagedHeaders)
+			#set ($stagedFooters = $stagedFooters + $revertibleChildren.StagedFooters)
+			#set ($stagedFragments = $stagedFragments + $revertibleChildren.StagedFragments)
+		#end
+	#end
+
+	## Revert Themes
+	## Perform actual reversion if there are no child components or staging directives are included
+	#if (!$hasRevertibleChildren || $hasStagingDirectives)
+		#foreach ($themeId in $separatedThemeIds)
+			#set ($themeRequestComponents = $core_v2_utility.split(':', $themeId, 2).ToArray())
+
+			#set ($options = "%{}")
+			#if ($themeRequestComponents.length > 0)
+				$options.Add('Id', $themeRequestComponents.get(0))
+				#if ($themeRequestComponents.length > 1)
+					$options.Add('TypeId', $themeRequestComponents.get(1))
+				#end
+			#end
+
+			#if ($revertStagedPagesQuery)
+				$options.Add('RevertStagedPages', $core_v2_utility.ParseBool($revertStagedPagesQuery))
+			#end
+
+			#if ($revertStagedHeadersQuery)
+				$options.Add('RevertStagedHeaders', $core_v2_utility.ParseBool($revertStagedHeadersQuery))
+			#end
+
+			#if ($revertStagedFootersQuery)
+				$options.Add('RevertStagedFooters', $core_v2_utility.ParseBool($revertStagedFootersQuery))
+			#end
+
+			#if ($revertStagedFragmentsQuery)
+				$options.Add('RevertStagedFragments', $core_v2_utility.ParseBool($revertStagedFragmentsQuery))
+			#end
+
+			## If revertible children returned, then nothing was performed and more input is required
+			#set ($revertibleChildren = false)
+			#set ($revertibleChildren = $context.RevertTheme($options))
+			#if ($revertibleChildren && $revertibleChildren.HasErrors())
+				$core_v2_page.SendJsonError($revertibleChildren.Errors)
+			#end
+		#end
+	#end
+
+	## return list of staged themes
+	#set ($themes = $context.ListThemes("%{ Staged = 'true' }"))
+	#if ($themes && $themes.HasErrors())
+		$core_v2_page.SendJsonError($themes.Errors)
+	#end
+
+	{
+		#if ($hasRevertibleChildren && !$hasStagingDirectives)
+			"revertibleChildren": {
+				"StagedPages": $stagedPages,
+				"StagedHeaders": $stagedHeaders,
+				"StagedFooters": $stagedFooters,
+				"StagedFragments": $stagedFragments
+			},
+			"reverted": false,
+		#else
+			"reverted": true,
+		#end
+		"stagedThemes": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summaries.vm')
+	}
+#end

@@ -1,0 +1,13 @@
+#set($query = '')
+#set($query = $core_v2_page.GetQueryStringValue('_w_query'))
+
+$core_v2_page.SetContentType('application/json')
+
+{"Groups":[
+	#foreach($group in $context.FindGroup($query))
+		#each
+		    { "ContainerId": "$group.ContainerId.ToString()", "Name": "$core_v2_encoding.JavascriptEncode($group.Name)" }
+		#between
+		    ,
+	#end
+]}

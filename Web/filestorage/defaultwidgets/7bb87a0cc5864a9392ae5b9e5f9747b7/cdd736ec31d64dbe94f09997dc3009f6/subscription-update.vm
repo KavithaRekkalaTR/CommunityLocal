@@ -1,0 +1,52 @@
+﻿#if ($core_v2_page.IsPost)
+	#set ($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('articleId')))
+	#set ($collectionId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('collectionId')))
+	#set ($subCollection = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subCollection')))
+	#set ($subArticle = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subArticle')))
+	#set ($muteArticle = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('muteArticle')))
+	#set ($subArticleComments = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subArticleComments')))
+
+    #if ($subCollection == true)
+            #set($subArticle = false)
+    #end
+
+    #if ($subArticle == true)
+            #set($muteArticle = false)
+    #end
+
+	#set ($collectionSubscription = $core_v2_applicationSubscription.Get($collectionId, "%{  TypeId='$articles_v1_subscriptionTypes.AllArticles' }"))
+	#set ($articleSubscription = $core_v2_contentSubscription.Get($articleId, "%{IncludeApplicationSubscriptions='false',  TypeId='$articles_v1_subscriptionTypes.ArticleUpdates'}"))
+	#set ($commentsSubscription = $core_v2_contentSubscription.Get($articleId, "%{IncludeApplicationSubscriptions='false', TypeId='$articles_v1_subscriptionTypes.ArticleComments'}"))
+
+    #if ($collectionSubscription.IsSubscribed != $subCollection)
+        #if ($subCollection)
+            #set($subCollectionResponse = $core_v2_applicationSubscription.Create($collectionId, $articles_v1_articleCollections.ApplicationTypeId, "%{ TypeId='$articles_v1_subscriptionTypes.AllArticles'}"))
+        #else
+            #set($subCollectionResponse = $core_v2_applicationSubscription.Delete($collectionId, $articles_v1_articleCollections.ApplicationTypeId, "%{ TypeId='$articles_v1_subscriptionTypes.AllArticles' }"))
+        #end
+    #end
+
+    #if ($articleSubscription.IsSubscribed != $subArticle)
+        #if ($subArticle)
+            #set($subArticleResponse = $core_v2_contentSubscription.Create($articleId, $articles_v1_articles.ContentTypeId, "%{ TypeId='$articles_v1_subscriptionTypes.ArticleUpdates' }"))
+        #else
+            #set($subArticleResponse = $core_v2_contentSubscription.Delete($articleId, $articles_v1_articles.ContentTypeId, "%{ TypeId='$articles_v1_subscriptionTypes.ArticleUpdates' }"))
+        #end
+    #end
+
+    #if ($articleSubscription.IsMuted != $muteArticle)
+        #set($muteArticleResponse = $core_v2_contentSubscription.MuteSubscription($articleId, $articles_v1_articles.ContentTypeId, $muteArticle, "%{}"))
+    #end
+
+    #if ($commentsSubscription.IsSubscribed != $subArticleComments)
+        #if ($subArticleComments)
+            #set($subArticleCommentsResponse = $core_v2_contentSubscription.Create($articleId, $articles_v1_articles.ContentTypeId, "%{TypeId = $articles_v1_subscriptionTypes.ArticleComments}"))
+        #else
+            #set($subArticleCommentsResponse = $core_v2_contentSubscription.Delete($articleId, $articles_v1_articles.ContentTypeId, "%{TypeId = $articles_v1_subscriptionTypes.ArticleComments}"))
+        #end
+    #end
+
+    $core_v2_page.SetContentType('application/json')
+
+	{"success" : "true", "$subCollection" : "$collectionSubscription.IsSubscribed" }
+#end

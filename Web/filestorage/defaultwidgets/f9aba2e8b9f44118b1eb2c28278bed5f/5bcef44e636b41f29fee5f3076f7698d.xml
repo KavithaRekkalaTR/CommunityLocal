@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:AutomationManagementTitle}" version="10.2.0.0" description="${resource:AutomationManagementDesc}" instanceIdentifier="5bcef44e636b41f29fee5f3076f7698d" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="manage-automations" lastModified="2019-02-26 21:38:49Z" provider="f9aba2e8b9f44118b1eb2c28278bed5f">
+		<contentScript language="Velocity"><![CDATA[#set ($configuredAutomationListId = $core_v2_widget.UniqueId('configuredAutomationList'))
+#set ($searchInputId = $core_v2_widget.UniqueId('searchInput'))
+#set ($filterSelectId = $core_v2_widget.UniqueId('filterSelect'))
+#set ($automationSelectId = $core_v2_widget.UniqueId('automationSelect'))
+#set ($headerTemplateId = $core_v2_widget.UniqueId('listHeaderTemplate'))
+#set ($multiSelectorTemplateId = $core_v2_widget.UniqueId('multiSelectorTemplate'))
+
+#set ($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#set ($uploadUrl = $core_v2_uploadedFile.GetUploadUrl($uploadContextId))
+
+#set ($automations = $context.ListAutomations("%{ IsStaged = 'false', SpecifyHost = 'true' }"))
+
+<form>
+	<fieldset>
+		<div class="filter-selector">
+			#if ($automations && $automations.Count > 0)
+				<div>
+					#foreach ($automation in $automations)
+					#beforeall
+						<select id="$core_v2_encoding.HtmlAttributeEncode($automationSelectId)">
+							<option value="all">$core_v2_language.GetResource('AllTypes')</option>
+					#each
+							<option value="$automation.Id">$core_v2_encoding.HtmlEncode($automation.ProcessedName)</option>
+					#afterall
+						</select>
+					#end
+
+					<select id="$core_v2_encoding.HtmlAttributeEncode($filterSelectId)">
+						<option value="all">$core_v2_language.GetResource('AnyEnablement')</option>
+						<option value="enabled">$core_v2_language.GetResource('Enabled')</option>
+						<option value="disabled">$core_v2_language.GetResource('Disabled')</option>
+					</select>
+
+					<input type="search" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)" style="max-width:25%" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SearchFor'))">
+				</div>
+			#end
+		</div>
+	</fieldset>
+</form>
+
+#set ($pageSize = 20)
+#set ($pageIndex = 0)
+#set ($query = "")
+#set ($filter = 'All')
+
+<ul class="content-list content simple margin-bottom expandable automations" id="$core_v2_encoding.HtmlAttributeEncode($configuredAutomationListId)">
+	#set ($inProcess = true)
+	#set ($configuredAutomations = $context.ListConfiguredAutomations("%{ PageSize = $pageSize, PageIndex = $pageIndex, Query = $query, Type = $type }"))
+	$core_v2_widget.ExecuteFile('render-list.vm')
+</ul>
+
+#registerClientTemplate($multiSelectorTemplateId)
+	$core_v2_widget.ExecuteFile('template-multi-selector.vm')
+#end
+#registerClientTemplate($headerTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-list.vm')
+#end
+#registerEndOfPageHtml('configuredAutomationsPanel')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.automationAdministration.register({
+				listCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+				importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+				deleteCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.jsm'))',
+				saveCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.jsm'))',
+				addEditPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-add-edit.vm'))',
+				importPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-import.vm'))',
+				exportCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export.jsm'))',
+				exportStoreCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-store.jsm'))',
+				multiEnableCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-enablement.jsm'))',
+				headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+				multiSelectorTemplateId: '$core_v2_encoding.JavascriptEncode($multiSelectorTemplateId)',
+				configuredAutomationsListId: '#$core_v2_encoding.JavascriptEncode($configuredAutomationListId)',
+				filterSelectId: '#$core_v2_encoding.JavascriptEncode($filterSelectId)',
+				automationSelectId: '#$core_v2_encoding.JavascriptEncode($automationSelectId)',
+				searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+				noConfiguredAutomationsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+				confirmDeleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteConfirm'))',
+				confirmDeleteMultipleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteConfirmMultiple'))',
+				uploadContextId: '$uploadContextId',
+				uploadUrl: '$core_v2_encoding.JavascriptEncode($uploadUrl)',
+				importAutomationsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportAutomations'))',
+				exportText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Export'))',
+				exportResourcesText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportResources'))',
+				deleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))',
+				enableText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Enable'))',
+				disableText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Disable'))'
+			});
+		});
+	</script>
+#end]]></contentScript>
+		<languageResources><![CDATA[<language key="en-us">
+	<resource name="Add">Add</resource>
+	<resource name="AllTypes">All automation types</resource>
+	<resource name="AlreadyInstalled">The import also contains other components already installed in your community.</resource>
+	<resource name="AnyEnablement">Regardless of enablement</resource>
+	<resource name="AutomationManagementDesc">Enable and configure automations.</resource>
+	<resource name="AutomationManagementTitle">Automations</resource>
+	<resource name="AutomationStudio">Automation Studio</resource>
+	<resource name="AutomationType">Automation Type</resource>
+	<resource name="cancel">Cancel</resource>
+	<resource name="CreatedDate">Created</resource>
+	<resource name="CreateNew">Create New Automation</resource>
+	<resource name="delete">Delete</resource>
+	<resource name="Delete">Delete</resource>
+	<resource name="DeleteConfirm">Are you sure you want to delete this automation?</resource>
+	<resource name="DeleteConfirmMultiple">Are you sure you want to delete the selected automations?</resource>
+	<resource name="Description">Description</resource>
+	<resource name="DescriptionDesc">A description of this configured automation and its purpose</resource>
+	<resource name="DeselectAll">Deselect All</resource>
+	<resource name="Disable">Disable</resource>
+	<resource name="Disabled">Disabled</resource>
+	<resource name="edit">Configure</resource>
+	<resource name="edit-automation">Edit Automation Type</resource>
+	<resource name="Enable">Enable</resource>
+	<resource name="Enabled">Enabled</resource>
+	<resource name="EnabledDesc">Whether or not this configured automation is enabled</resource>
+	<resource name="Export">Export</resource>
+	<resource name="ExportAll">Export All</resource>
+	<resource name="ExportAllResources">Export All Language Resources</resource>
+	<resource name="ExportResources">Export Resources</resource>
+	<resource name="Import">Import</resource>
+	<resource name="ImportAutomations">Import Automations</resource>
+	<resource name="ImportAutomationStudio">Import through Automation Studio</resource>
+	<resource name="ImportComplete">Import Complete</resource>
+	<resource name="ImportDevMode">With Developer Mode enabled, {studio} should be used instead for importing.</resource>
+	<resource name="ImportEmpty">The import contains no changes from current automations.</resource>
+	<resource name="LastUpdate">Last Updated</resource>
+	<resource name="more">More</resource>
+	<resource name="Name">Name</resource>
+	<resource name="NameDesc">The name of this configured automation</resource>
+	<resource name="NewAutomationResources">New Automation Resources</resource>
+	<resource name="NewAutomations">New Automation Types</resource>
+	<resource name="NewConfiguredAutomations">New Configured Automations</resource>
+	<resource name="NoResults">No automations have been configured.</resource>
+	<resource name="NoResultsOrAutomationTypes">No automations have been configured and no automation types are available to be configured. Automation types can be imported or created in {studio}.</resource>
+	<resource name="Save">Save</resource>
+	<resource name="SearchFor">Search</resource>
+	<resource name="SelectAll">Select All</resource>
+	<resource name="SelectMultiple">Select Multiple</resource>
+	<resource name="Studio">Automation Studio</resource>
+	<resource name="TheFollowingAutomationsAreNew">The following automation types are new.</resource>
+	<resource name="TheFollowingConfiguredAutomationsAreNew">The following configured automations are new.</resource>
+	<resource name="Type">Type of automation</resource>
+	<resource name="TypeDesc">Automation types can be customized and extended with {studio}.</resource>
+	<resource name="UpdatedAutomationDesc">The following updated automation types will overwrite existing. To stage and compare detailed implementation differences, {studio-begin-link}import in Automatio Studio{studio-end-link}.</resource>
+	<resource name="UpdatedAutomationResources">Updated Automation Resources</resource>
+	<resource name="UpdatedAutomations">Updated Automation Types</resource>
+	<resource name="UpdatedConfiguredAutomationDesc">The following updated configured automations will overwrite existing.</resource>
+	<resource name="UpdatedConfiguredAutomations">Updated Configured Automations</resource>
+	<resource name="unavailable">Unavailable</resource>
+	<resource name="SingletonInUse">This automation type prevents multiple automations and it is already in use. Disable the existing automation or select a different automation type.</resource>
+</language>]]></languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

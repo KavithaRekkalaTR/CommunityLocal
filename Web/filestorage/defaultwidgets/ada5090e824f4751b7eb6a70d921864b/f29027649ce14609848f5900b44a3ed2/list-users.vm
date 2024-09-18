@@ -1,0 +1,30 @@
+$core_v2_widget.ExecuteFile('parse-query.vm')
+
+#set($exactUsers = false)
+#if ($pageIndex == 0)
+    #set($exactUsers = $context.ListExact($query))
+    #if ($exactUsers && $exactUsers.HasErrors())
+        $core_v2_page.SendJsonError($exactUsers.Errors)
+    #end
+#end    
+#set($users = $context.List($query))
+#if ($users && $users.HasErrors())
+    $core_v2_page.SendJsonError($users.Errors)
+#end
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($users.PageIndex + 1) * $users.PageSize)
+#if ($users.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="users.TotalCount">
+#set($isExact = true)
+#foreach($user in $exactUsers)
+    $core_v2_widget.ExecuteFile('render-user.vm')
+#end
+#set($isExact = false)
+#foreach($user in $users)
+    $core_v2_widget.ExecuteFile('render-user.vm')
+#end
+</ul>

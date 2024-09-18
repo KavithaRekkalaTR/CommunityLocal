@@ -1,0 +1,148 @@
+##
+## Expects in scope: $blogId, $pageIndex
+##
+
+#set ($pageSize = 10)
+#if ($blogId)
+	#set($options = "%{PageSize = $pageSize, PageIndex = $pageIndex}")
+	#if ($core_v2_page.GetQueryStringValue('filter') == "notpublished")
+		$options.Add('UnpublishedOnly', 'true')
+	#end
+
+	#set($queryText = '')
+	#set($queryText = $core_v2_page.GetQueryStringValue('query'))
+	#if ($queryText != '')
+		$options.Add('Query', $queryText)
+	#end
+
+	#set ($blogPosts = $context.ListPosts($options))
+	## Handle the "feature" of the blog post listing API where you can never request further than the last page of results
+	#if ($pageIndex > 0 && $blogPosts.TotalCount > 0 && $blogPosts.TotalCount <= ($pageSize * $pageIndex))
+		#set ($blogPosts = false)
+	#end
+#end
+
+#set ($currentPost = false)
+#set ($currentPost = $core_v2_blogPost.Current)
+
+#foreach ($blogPost in $blogPosts)
+	<li class="content-item post" data-postid="#if ($currentPost) $currentPost.Id #end">
+		<h4 class="name">$blogPost.Title</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item status">
+				    #if ($blogPost.HasPendingChanges && $blogPost.IsApproved)
+			            <span class="value">$core_v2_language.GetResource('PublishedEditPendingReview')</span>
+				    #elseif ($blogPost.HasPendingChanges)
+				        <span class="value">$core_v2_language.GetResource('CreatePendingReview')</span>
+					#elseif(!$blogPost.IsApproved)
+						<span class="value highlight">$core_v2_language.GetResource('Draft')</span>
+					#else
+						<span class="value">$core_v2_language.GetResource('Published')</span>
+					#end
+				</li>
+				#if ($core_v2_utility.CompareDates($blogPost.PublishedDate, 'LaterThan', $core_v2_utility.CurrentDate()))
+					<li class="attribute-item schedule">
+						<span class="value highlight">$core_v2_language.GetResource('Scheduled')</span>
+					</li>
+				#end
+				<li class="attribute-item date">
+					<span class="value">$core_v2_language.FormatDate($blogPost.PublishedDate)</span>
+				</li>
+				<li class="attribute-item views">
+					#if ($blogPost.Views == 1)
+						#set ($viewResource = $core_v2_language.GetResource('Views_Singular'))
+					#else
+						#set ($viewResource = $core_v2_language.GetResource('Views_Plural'))
+					#end
+					$core_v2_language.FormatString($viewResource, $blogPost.Views.ToString())
+				</li>
+				<li class="attribute-item comments">
+					#if ($blogPost.CommentCount == 1)
+						#set ($viewResource = $core_v2_language.GetResource('Comments_Singular'))
+					#else
+						#set ($viewResource = $core_v2_language.GetResource('Comments_Plural'))
+					#end
+					$core_v2_language.FormatString($viewResource, $blogPost.CommentCount.ToString())
+				</li>
+				#if ($blogPost.Author)
+					<li class="attribute-item author">
+						#if ($blogPost.CreatedUser && $blogPost.CreatedUser.Id != $blogPost.Author.Id)
+							#format ($core_v2_language.GetResource('OnBehalfOf'))
+								#token ('creator')
+									#if ($blogPost.CreatedUser.ProfileUrl)
+										<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.CreatedUser.ProfileUrl)">
+											$blogPost.CreatedUser.DisplayName
+										</a>
+									#else
+										$blogPost.CreatedUser.DisplayName
+									#end
+								#token ('author')
+									#if ($blogPost.Author.ProfileUrl)
+										<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.Author.ProfileUrl)">
+											$blogPost.Author.DisplayName
+										</a>
+									#else
+										$blogPost.Author.DisplayName
+									#end
+							#end
+						#else
+							#if ($blogPost.Author.ProfileUrl)
+								<span class="value">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.Author.ProfileUrl)">
+										$blogPost.Author.DisplayName
+									</a>
+								</span>
+							#else
+								<span class="value">$blogPost.Author.DisplayName</span>
+							#end
+						#end
+					</li>
+				#end
+			</ul>
+		</div>
+		<div class="content expanded-hidden">
+			$core_v2_language.Truncate($blogPost.Body(), 140, "...")
+		</div>
+		<div class="content expandable">
+			$core_v2_language.Truncate($blogPost.Body(), 500, "...")
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item view-post">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.Url)">$core_v2_language.GetResource('View')</a>
+					</li>
+					#set ($editUrl = false)
+					#set ($editUrl = $core_v2_blogUrls.EditBlogPost($blogPost.Id))
+					#if ($editUrl)
+						<li class="navigation-list-item edit">
+							<a href="$core_v2_blogUrls.EditBlogPost($blogPost.Id)">$core_v2_language.GetResource('Edit')</a>
+						</li>
+					#end
+					#set($convert = false)
+					#set($convert = $core_v2_ui.ConvertContent($blogPost.ContentId, $blogPost.ContentTypeId))
+					#if ($convert)
+						<li class="navigation-list-item">
+							$convert
+						</li>
+					#end
+					#if ($editUrl)
+						#if ($blogPost.IsApproved)
+							<li class="navigation-list-item publish">
+								<a href="#" data-messagename="blogpost.publish" data-publish="false" data-postid="$blogPost.Id">$core_v2_language.GetResource('Unpublish')</a>
+							</li>
+						#elseif (!$blogPost.IsApproved)
+							<li class="navigation-list-item publish">
+								<a href="#" data-messagename="blogpost.publish" data-publish="true" data-postid="$blogPost.Id">$core_v2_language.GetResource('Publish')</a>
+							</li>
+						#end
+						<li class="navigation-list-item delete">
+							<a href="#" data-messagename="contextual-delete-post" data-postid="$blogPost.Id">$core_v2_language.GetResource('Delete')</a>
+						</li>
+					#end
+				</ul>
+			</div>
+		</div>
+	</li>
+#end

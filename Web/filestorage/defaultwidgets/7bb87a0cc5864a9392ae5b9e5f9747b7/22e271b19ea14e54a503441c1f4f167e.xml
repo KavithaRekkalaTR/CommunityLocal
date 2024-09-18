@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:TourTips_Name}" version="11.0.0.0" description="${resource:TourTips_Description}" instanceIdentifier="22e271b19ea14e54a503441c1f4f167e" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="tour-tips" lastModified="2020-01-14 16:07:01Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($suppressDuration = $core_v2_widget.GetIntValue('SuppressDuration', 86400))
+#set ($tipTemplateId = $core_v2_widget.UniqueId('tip_template'))
+#if ($core_v2_widget.IsInWidgetPreviewMode)
+	$core_v2_widget.Hide()
+#end
+
+#set($currentPage = false)
+#set($currentPage = $core_v2_urls.Current)
+#if ($currentPage == 'LogIn' || $currentPage == 'LogOut' || $currentPage == 'Message' || $currentPage == 'AddUser')
+	$core_v2_widget.Hide()
+#end
+
+#set ($skipTitle = '')
+#if ($suppressDuration == 0)
+	#set ($skipTitle = $core_v2_language.GetResource('skip_title'))
+#elseif($suppressDuration < 60)
+	#set ($skipTitle = $core_v2_language.FormatString($core_v2_language.GetResource('skip_title_seconds'), $suppressDuration.ToString()))
+#elseif($suppressDuration < 7200)
+	#set ($minutes = $suppressDuration / 60)
+	#set ($skipTitle = $core_v2_language.FormatString($core_v2_language.GetResource('skip_title_minutes'), $minutes.ToString()))
+#else
+	#set ($hours = $suppressDuration / 3600)
+	#set ($skipTitle = $core_v2_language.FormatString($core_v2_language.GetResource('skip_title_hours'), $hours.ToString()))
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.tourTips')
+	<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($tipTemplateId)">
+		<div class="tourtip">
+			<div class="tourtip-message">
+				<%= message %>
+			</div>
+			<ul class="tourtip-actions">
+				<% if(state.index() > 0) { %>
+					<li>
+						<a href="#" class="tourtip-previous">$core_v2_language.GetResource('previous')</a>
+					</li>
+				<% } %>
+				<% if(state.index() < (state.count() - 1)) { %>
+					<li>
+						<a href="#" class="tourtip-next">$core_v2_language.GetResource('next')</a>
+					</li>
+				<% } %>
+				<% if(state.index() === (state.count() - 1)) { %>
+					<li>
+						<a href="#" class="tourtip-finish">$core_v2_language.GetResource('complete')</a>
+					</li>
+				<% } else { %>
+					<li>
+						<a href="#" class="ui-tip tourtip-skip" title="$core_v2_encoding.HtmlAttributeEncode($skipTitle)">$core_v2_language.GetResource('skip')</a>
+					</li>
+				<% } %>
+			</ul>
+		</div>
+	</script>
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function(){
+		jQuery.telligent.evolution.widgets.tourTips.register({
+			tipTemplate: '$core_v2_encoding.JavascriptEncode($tipTemplateId)',
+			minWidth: 750,
+			suppressDuration: $suppressDuration
+		});
+	});
+	</script>
+#end
+
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('Title', '${resource:TourTips_Name}'))
+]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="group1" labelResourceName="Property_Options">
+	<property id="Title" labelResourceName="Property_Title" defaultValue="${resource:TourTips_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="SuppressDuration" labelResourceName="Property_Suppress" descriptionResourceName="Property_Suppress_Description" defaultValue="86400" dataType="Int">
+		<propertyRule name="minmax" min="0" max="31536000" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="complete">Ok, got it!</resource>
+  <resource name="next">Next</resource>
+  <resource name="previous">Previous</resource>
+  <resource name="Property_Suppress">Suppress Duration</resource>
+  <resource name="Property_Suppress_Description">Time (in seconds) to suppress tour tips if 'Later' is selected</resource>
+  <resource name="Property_Title">Widget title</resource>
+  <resource name="skip">Later</resource>
+  <resource name="skip_title">Continue this tour later.</resource>
+  <resource name="skip_title_hours">Continue this tour in {0} hours.</resource>
+  <resource name="skip_title_minutes">Continue this tour in {0} minutes.</resource>
+  <resource name="skip_title_seconds">Continue this tour in {0} seconds.</resource>
+  <resource name="TourTips_Description">This widget renders tour tips defined by other widgets.</resource>
+  <resource name="TourTips_Name">Tour Tips</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

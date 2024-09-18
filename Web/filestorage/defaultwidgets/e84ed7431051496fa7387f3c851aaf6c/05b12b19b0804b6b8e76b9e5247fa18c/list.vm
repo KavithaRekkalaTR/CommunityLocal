@@ -1,0 +1,35 @@
+#set($defaultHalfLife = $context.GetScoreHalfLife($scoreId))
+
+#foreach($scoreApplication in $applications)
+#beforeall
+<form><fieldset>
+<ul class="field-list">
+#each
+	#if($scoreApplication.SupportsScore)
+		<li class="field-item score-application">
+			<label class="field-item-name">$scoreApplication.Application.HtmlName('Web') $core_v2_language.GetResource('Halflife')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ContentTypesAffected') $scoreApplication.SupportedContentTypes</span>
+
+			#if($scoreApplication.DecayOverride)
+				#set ($halflife = $scoreApplication.DecayOverride.HalfLife)
+			#else
+				#set ($halflife = $defaultHalfLife)
+			#end
+
+			<span class="field-item-input">
+				<input type="text" style="width: 50px;" class="halflifeOverride" value="$halflife" data-applicationId="$scoreApplication.Application.ApplicationId.ToString()" data-applicationName="$scoreApplication.Application.HtmlName("web")" data-scoreid="$scoreId.ToString()" #if(!$scoreApplication.DecayOverride)disabled="disabled"#end /> $core_v2_language.GetResource('Days')
+				<span name="override" #if($scoreApplication.DecayOverride)style="display: none;"#end>
+					<a href="#" data-messagename="contextual-default-override">$core_v2_language.GetResource('Override')</a>
+				</span>
+				<span name="reset" #if(!$scoreApplication.DecayOverride)style="display: none;"#end>
+					<a href="#" data-messagename="contextual-default-reset" data-applicationId="$scoreApplication.Application.ApplicationId.ToString()" data-applicationName="$scoreApplication.Application.HtmlName("web")" data-scoreid="$scoreId.ToString()">$core_v2_language.GetResource('Reset')</a>
+				</span>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>				
+	#end
+#afterall
+</ul>
+</fieldset></form>
+#end
+

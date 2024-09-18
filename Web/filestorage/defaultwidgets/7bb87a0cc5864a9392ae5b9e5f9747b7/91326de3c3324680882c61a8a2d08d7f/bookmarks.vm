@@ -1,0 +1,110 @@
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($queryType = $core_v2_widget.GetStringValue('queryType', 'context'))
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 15))
+
+#set ($user = false)
+#if ($queryType == 'accessing')
+	#set ($user = $core_v2_user.Accessing)
+#elseif($queryType == 'context')
+	#set ($user = $core_v2_user.Current)
+#end
+
+#set ($isTargetUser = false)
+#if ($user.Id == $core_v2_user.Accessing.Id)
+	#set ($isTargetUser = true)
+#end
+
+#set($query = "%{ UserId = $user.Id, PageSize = $pageSize, PageIndex = $pageIndex }")
+
+#set ($filter = false)
+#set ($filter = $core_v2_page.GetQueryStringValue('bookmark-filter'))
+
+#set ($allContentTypes = $core_v2_contentType.List())
+#set ($contentTypes = "")
+#set ($applicationContentTypes = "")
+#foreach ($type in $allContentTypes)
+	#if ($core_v2_bookmark.SupportsBookmarks($type.Id))
+		#set ($containerType = false)
+		#set ($containerType = $core_v2_containerType.Get($type.Id))
+		#if (!$containerType || !$containerType.Id)
+			#set ($applicationType = false)
+			#set ($applicationType = $core_v2_applicationType.Get($type.Id))
+			#if ($applicationType && $applicationType.Id)
+				#set ($applicationContentTypes = "${applicationContentTypes}${type.Id},")
+			#else
+				#set ($contentTypes = "${contentTypes}${type.Id},")
+			#end
+		#end
+	#end
+#end
+
+#if (!$filter || $filter == 'content')
+	$query.Add('ContentTypeIds', $contentTypes)
+#elseif ($filter == 'applications')
+	$query.Add('ContentTypeIds', $applicationContentTypes)
+#elseif ($filter == 'groups')
+	$query.Add('ContentTypeIds', $core_v2_group.ContentTypeId)
+#elseif ($filter == 'users')
+	$query.Add('ContentTypeIds', $core_v2_user.ContentTypeId)
+#end
+
+#set ($bookmarks = $core_v2_bookmark.List($query))
+#foreach ($bookmark in $bookmarks)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+	<li class="content-item" #if ($bookmark.Content.Url) data-href="$core_v2_encoding.HtmlAttributeEncode($bookmark.Content.Url)" #end>
+		#set ($resultHtml = false)
+		#set ($resultHtml = $bookmark.Content.ViewHtml())
+		#if ($resultHtml)
+			$resultHtml
+		#end
+		#if ($isTargetUser)
+			<div class="content-actions">
+				<div class="ui-links navigation-list" data-minlinks="1" data-direction="horizontal" data-maxlinks="1">
+					<ul class="navigation-list">
+						<li class="navigation-list-item">
+							<a href="#" class="internal-link favorite-on" data-contentid="$bookmark.Content.ContentId.ToString()">
+								$core_v2_language.GetResource('Favorites_RemoveToFavorites')
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		#end
+	</li>
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">
+		$core_v2_language.FormatString($core_v2_language.GetResource('Profile_NoFavoritePosts'), $user.DisplayName)
+	</div>
+#end
+
+#if ($isTargetUser)
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(j){
+				j(document).on('click', '#$core_v2_widget.WrapperElementId a.favorite-on', function(e,data){
+					var e = j(this);
+					var contentId = e.data('contentid');
+					var parent = e.parents('.content-item');
+
+					j.telligent.evolution.del({
+						url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/bookmark.json',
+						data: {
+							ContentId: contentId,
+						},
+						success: function(response) {
+							parent.fadeOut(200, function(){
+								parent.remove();
+							});
+						}
+					});
+
+					return false;
+				});
+			});
+		</script>
+	#end
+#end

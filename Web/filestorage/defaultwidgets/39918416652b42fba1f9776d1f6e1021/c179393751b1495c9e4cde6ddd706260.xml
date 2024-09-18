@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UserCoverPhotoActivityStory_Name}" version="10.0.0.0" description="${resource:UserCoverPhotoActivityStory_Description}" instanceIdentifier="c179393751b1495c9e4cde6ddd706260" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="39918416652b42fba1f9776d1f6e1021">
+    <contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+
+	#set($actor = $context.Story.PrimaryUser)
+	#if ($actor.Url)
+	    #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+	#else
+		#set($profile0Html = $actor.DisplayName)
+	#end
+	<div class="activity-summary">
+		$core_v2_language.FormatString($core_v2_language.GetResource('UserCoverPhoto_View'), $profile0Html)
+	</div>
+
+	#if(!$isPreview)
+	    #set ($coverphotoHtml = false)
+	    #set ($coverphotoHtml = $core_v2_ui.GetResizedImageHtml($actor.CoverPhotoUrl, 320, 320, "%{border='0px', alt=$actor.DisplayName}"))
+	    #if ($coverphotoHtml)
+    		<div class="activity-coverphoto">
+    			<span class="coverphoto">
+    				<a class="internal-link view-user-profile activity-summary-user" data-userhover="ignore" href="$core_v2_encoding.HtmlAttributeEncode($actor.ProfileUrl)">
+    					$coverphotoHtml
+    				</a>
+    			</span>
+    		</div>
+		#else
+		    $core_v2_widget.Hide()
+		#end
+	#end
+#end
+]]></contentScript>
+    <languageResources><language key="en-us"><resource name="UserCoverPhoto_Preview">{0} has a new cover photo.</resource><resource name="UserCoverPhoto_View">{0} updated their cover photo.</resource><resource name="UserCoverPhotoActivityStory_Description">Story for users changing their cover photo.</resource><resource name="UserCoverPhotoActivityStory_Name">User Cover Photo Activity Story</resource><resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

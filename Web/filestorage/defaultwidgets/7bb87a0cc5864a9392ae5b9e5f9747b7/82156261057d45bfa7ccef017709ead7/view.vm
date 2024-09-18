@@ -1,0 +1,50 @@
+#set($mediaId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_mediaId')))
+#set($height = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_height')))
+
+#set($media = false)
+#if ($mediaId > 0)
+	#set($media = $core_v2_media.Get($core_v2_gallery.Current.Id, $mediaId))
+#else
+	#foreach($m in $core_v2_media.List("%{GalleryId=$core_v2_gallery.Current.Id,SortBy='PostDate',SortOrder='Descending',PageSize=1,PageIndex=0}"))
+		#set($media = $m)
+	#end
+#end
+
+#if($media)
+	#if ($core_v2_ui.GetMediaType($media.File.FileUrl, "%{ViewType='View'}") != 'Empty')
+		<h2>
+			<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">$media.Title</a>
+		</h2>
+		<div style="height: ${height}px">
+			<table style="height: ${height}px" cellpadding="0" cellspacing="0" border="0">
+				<tr valign="middle">
+					<td align="center" width="100%" height="100%">
+						$!core_v2_ui.GetViewHtml($media.File.FileUrl, "%{ViewType='View', AdjustToContainer='True', OutputIsPersisted='False'}")
+					</td>
+				</tr>
+			</table>
+		</div>
+	#else
+		<h2><a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">$media.Title</a></h2>
+		<div style="height: ${height}px">
+			<table style="height: ${height}px" cellpadding="0" cellspacing="0" border="0">
+				<tr valign="middle">
+					<td align="center" width="100%" height="100%">
+						$core_v2_language.GetResource('MediaGallery_FileNotViewableNoDownload')
+					</td>
+				</tr>
+			</table>
+		</div>
+	#end
+#else
+	<h2>&nbsp;</h2>
+	<div style="height: ${height}px">
+		<table style="height: ${height}px" cellpadding="0" cellspacing="0" border="0">
+			<tr valign="middle">
+				<td align="center" width="100%" height="100%">
+					$core_v2_language.GetResource('MediaGallery_FileNotViewableNoDownload')
+				</td>
+			</tr>
+		</table>
+	</div>
+#end

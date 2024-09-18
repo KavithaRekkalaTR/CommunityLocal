@@ -1,0 +1,96 @@
+<div class="editor-header">
+	<form class="template-editor-header"></form>
+	<div class="editor-state template-editor-state"></div>
+	<span class="field-description ui-tip" data-tip="<%= description %>"><%= description %></span>
+</div>
+<div class="editor-content overview">
+	<div class="components">
+		<div class="theme-components">
+			$core_v2_widget.ExecuteFile('template-theme-overview-components.vm')
+		</div>
+		<div class="theme-stylefiles">
+			$core_v2_widget.ExecuteFile('template-theme-overview-stylefiles.vm')
+		</div>
+		<div class="theme-scripts">
+			$core_v2_widget.ExecuteFile('template-theme-overview-scriptfiles.vm')
+		</div>
+		<div class="theme-files">
+			$core_v2_widget.ExecuteFile('template-theme-overview-files.vm')
+		</div>
+	</div>
+	<div class="metadata">
+		<form>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item name">
+						<label class="field-item-name">$core_v2_language.GetResource('Name')</label>
+						<span class="field-item-input name">
+							<input type="text" tabindex="0" class="raw name" size="40" class="name" value="<%: Name %>" />
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item description">
+						<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+						<span class="field-item-input description">
+							<input type="text" tabindex="1" class="raw description" value="<%: Description %>" />
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item mediaMaxWidthPixels">
+						<label class="field-item-name">$core_v2_language.GetResource('MediaMaxWidthPixels')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('MediaMaxWidthPixelsDesc')</span>
+						<span class="field-item-input mediaMaxWidthPixels">
+							<input type="text" tabindex="2" class="raw mediaMaxWidthPixels" value="<%= (MediaMaxWidthPixels || '') %>" />
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item mediaMaxHeightPixels">
+						<label class="field-item-name">$core_v2_language.GetResource('MediaMaxHeightPixels')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('MediaMaxHeightPixelsDesc')</span>
+						<span class="field-item-input mediaMaxHeightPixels">
+							<input type="text" tabindex="3" class="raw mediaMaxHeightPixels" value="<%= (MediaMaxHeightPixels || '') %>" />
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item rest-scopes">
+						<label class="field-item-name">$core_v2_language.GetResource('RestScopes')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('RestScopesDesc')</span>
+						<span class="field-item-input">
+							<input type="text" class="rest-scopes" id="rest-scopes-<%= Id %>" />
+						</span>
+						<span class="field-item-validation" style="display:none;"></span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item preview">
+						<label class="field-item-name">$core_v2_language.GetResource('PreviewImage')</label>
+						<span class="field-item-input">
+							<% if(PreviewImageUrl) { %>
+								<div class="ui-viewhtml" data-width="120" data-height="120" data-url="<%: PreviewImageUrl %>"></div>
+							<% } else { %>
+								<div class="message">$core_v2_language.GetResource('NoPreview')</div>
+							<% } %>
+						</span>
+						<div class="field-item-description was"></div>
+						<span class="field-item-input">
+							<% if(PreviewImageUrl) { %>
+								<a href="#" class="button" data-messagename="mt.view.theme.remove-preview" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('Remove')</a>
+							<% } %>
+							<a href="#" class="button" data-messagename="mt.view.theme.upload-preview" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('Upload')</a>
+						</span>
+					</li>
+
+				</ul>
+			</fieldset>
+		</form>
+		<div class="content full details">
+			<div class="attributes" style="display:block">
+				$core_v2_widget.ExecuteFile('template-theme-overview-details.vm')
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:LeaderboardTitle_Name}" version="11.0.0.0" description="${resource:LeaderboardTitle_Description}" instanceIdentifier="e7f32628f5e24f59ad25cf309d9178bf" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="leaderboard-title" lastModified="2020-01-14 16:09:07Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set ($page = $core_v2_leaderboardUrls.Current)
+
+#if($page == 'Home')
+	#set($title = $core_v2_language.GetResource('Leaderboards'))
+#elseif ($page == 'Leaderboard')
+	#set ($leaderboard = $core_v2_leaderboard.Current)
+	#set($title = $leaderboard.Name)
+#end
+
+#if ($title)
+	$core_v2_page.SetTitle($title, false, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end
+
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Leaderboard_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Leaderboard_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Leaderboards">Leaderboards</resource>
+  <resource name="LeaderboardTitle_Description">Displays the title for leaderboard pages.</resource>
+  <resource name="LeaderboardTitle_Name">Leaderboard - Title</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="33635e930bcf4a03a4389a949cf31619" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

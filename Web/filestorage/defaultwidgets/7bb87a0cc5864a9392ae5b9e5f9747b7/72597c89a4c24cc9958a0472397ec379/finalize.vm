@@ -1,0 +1,27 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($fileName = $core_v2_page.GetFormValue('FileName'))
+	#set($galleryId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GalleryId')))
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId'))
+
+	#set($options = "%{}")
+	$options.Add('Name', $fileName)
+	#set($contentType = $core_v2_ui.GetMimeType($fileName))
+	$options.Add('FileUploadContext',$fileContextId)
+	$options.Add('FileName',$file.Name)
+	$options.Add('ContentType', $contentType)
+
+	#set($media = false)
+	#set($media = $core_v2_media.Create($galleryId, $fileName, $contentType, $fileName, $options))
+	#if($media.HasErrors())
+		$core_v2_page.SendJsonError($media.Errors)
+	#end
+	
+	#if ($media.IsApproved)
+		$core_v2_media.SetSubscribed($media.Id, true)
+	#end
+	
+	{"redirectUrl":"$core_v2_encoding.JavascriptEncode($media.Url)"}
+#end

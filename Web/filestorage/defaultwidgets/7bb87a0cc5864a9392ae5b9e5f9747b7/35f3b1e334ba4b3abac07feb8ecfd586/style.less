@@ -1,0 +1,102 @@
+.scale_prepended_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @margin: 2px) {
+	&:before {
+		width: @size;
+		height: @size;
+		font-size: @size;
+		line-height: @size;
+		margin-right: @margin;
+	}
+}
+.content-fragment.thread-details {
+	.content-details {
+		.attribute-list {
+			.attribute-item {
+				.ui-userpresence {
+					margin-right: 10px / 4;
+				}
+				&.author {
+					border-bottom: 0px;
+				}
+				&.vote {
+					a {
+						margin-right: 10px / 2;
+					}
+					&.vote,
+					&.unvote {
+						a {
+							font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .9;
+						}
+					}
+					.attribute-description.singular {
+						display: none;
+					}
+					&[data-count="0"] {
+						&[data-isAuthor="True"] {
+							padding: 0;
+							display: none;
+						}
+						&.vote {
+							a.add {
+								.scale_prepended_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.1);
+								color: -evo-themeconfig-color('linkFontColor', #2196F3);
+								&:before {
+									margin-left: 1px;
+								}
+							}
+						}
+					}
+					&[data-count="1"] {
+						.attribute-description.plural {
+							display: none;
+						}
+						.attribute-description.singular {
+							display: inline;
+						}
+					}
+					&.unvote {
+						a {
+							color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+							&:hover {
+								color: -evo-themeconfig-color('linkFontColor', #2196F3);
+							}
+						}
+					}
+				}
+				&.state {
+					.attribute-value {
+						font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2;
+						color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 28%, -evo-themeconfig-color('backgroundColor', #ffffff), -evo-themeconfig-double('contrast', 0));
+						font-weight: 600;
+						padding-left: 1px;
+					}
+					&.suggested {
+						.attribute-value {
+							a {
+								font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2;
+								color: -evo-themeconfig-color('statePending', #FFB300);
+								font-weight: 600;
+								padding-left: 1px;
+								&::after {
+									margin-left: 10px;
+								}
+							}
+						}
+					}
+					&.verified {
+						.attribute-value {
+							a {
+								font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2;
+								color: -evo-themeconfig-color('statePositive', #9CCC65);
+								font-weight: 600;
+								padding-left: 1px;
+								&::after {
+									margin-left: 10px;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,158 @@
+.box-sizing(@sizing: border-box) {
+	-ms-box-sizing: @sizing;
+	-moz-box-sizing: @sizing;
+	-webkit-box-sizing: @sizing;
+	box-sizing: @sizing;
+}
+
+.round(@radius: 500px) {
+	-webkit-border-radius: @radius;
+	-moz-border-radius: @radius;
+	border-radius: @radius;
+}
+
+.border-radius (@tl: 0, @tr: 0, @br: 0, @bl: 0) {
+	-webkit-border-radius: @tl @tr @br @bl;
+	-moz-border-radius: @tl @tr @br @bl;
+	border-radius: @tl @tr @br @bl;
+
+	-moz-background-clip:    padding;
+	-webkit-background-clip: padding-box;
+	background-clip:         padding-box;
+}
+
+.box-shadow(@arguments) {
+	-webkit-box-shadow: @arguments;
+	-moz-box-shadow: @arguments;
+	box-shadow: @arguments;
+}
+
+.transform(@arguments) {
+	transform: @arguments;
+	-webkit-transform: @arguments;
+	-moz-transform: @arguments;
+	-o-transform: @arguments;
+	-ms-transform: @arguments;
+}
+
+.transition(@arguments) {
+	-webkit-transition: @arguments;
+	-moz-transition: @arguments;
+	transition: @arguments;
+}
+
+.no-transition {
+	-moz-transition: none;
+	-webkit-transition: none;
+	transition: none;
+}
+
+.sticky {
+	position: -webkit-sticky;
+	position: -moz-sticky;
+	position: -ms-sticky;
+	position: -o-sticky;
+}
+
+.transform-origin (@arguments) {
+	-webkit-transform-origin: @arguments;
+	-moz-transform-origin: @arguments;
+	-ms-transform-origin: @arguments;
+	-o-transform-origin: @arguments;
+}
+
+.stroke (@strokecolor: @color-foreground, @fillcolor: @color-background) {
+	-webkit-text-fill-color: @fillcolor;
+	-webkit-text-stroke-width: 1px;
+	-webkit-text-stroke-color: @strokecolor;
+}
+
+.unselectable {
+	-webkit-touch-callout:none;
+	-webkit-user-select:none;
+	-khtml-user-select:none;
+	-moz-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+}
+
+.gradient (@direction: 'top', @startColor: '#fff', @endColor: '#000', @startOffset: 0, @endOffset: 100) {
+	background-color: @startColor;
+	background-image: -webkit-linear-gradient(@direction, @startColor @startOffset, @endColor @endOffset);
+	background-image: -moz-linear-gradient(@direction, @startColor @startOffset, @endColor @endOffset);
+	background-image: -ms-linear-gradient(@direction, @startColor @startOffset, @endColor @endOffset);
+	background-image: -o-linear-gradient(@direction, @startColor @startOffset, @endColor @endOffset);
+}
+
+.spin (@duration: '1000ms') {
+	-webkit-animation-name: spin;
+	-webkit-animation-duration: @duration;
+	-webkit-animation-iteration-count: infinite;
+	-webkit-animation-timing-function: linear;
+	-moz-animation-name: spin;
+	-moz-animation-duration: @duration;
+	-moz-animation-iteration-count: infinite;
+	-moz-animation-timing-function: linear;
+	-ms-animation-name: spin;
+	-ms-animation-duration: @duration;
+	-ms-animation-iteration-count: infinite;
+	-ms-animation-timing-function: linear;
+	animation-name: spin;
+	animation-duration: @duration;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+}
+@-ms-keyframes spin {
+	from { -ms-transform: rotate(360deg); }
+	to { -ms-transform: rotate(0deg); }
+}
+@-moz-keyframes spin {
+	from { -moz-transform: rotate(360deg); }
+	to { -moz-transform: rotate(0deg); }
+}
+@-webkit-keyframes spin {
+	from { -webkit-transform: rotate(360deg); }
+	to { -webkit-transform: rotate(0deg); }
+}
+@keyframes spin {
+	from {
+		transform:rotate(360deg);
+	}
+	to {
+		transform:rotate(0deg);
+	}
+}
+
+.hyphenate {
+	word-wrap: break-word;
+	-webkit-hyphens: auto;
+	-moz-hyphens: auto;
+	hyphens: auto;
+}
+
+.badge-count {
+	position: absolute;
+	top: 14px;
+	right: 7px;
+
+	display: block;
+	min-width: 14px;
+	min-height: 14px;
+	padding-left: 4px;
+	padding-right: 4px;
+	border-radius: 500px;
+
+	background-color: #FF5722;
+	color: #fff !important;
+
+	line-height: 14px;
+	text-align: center;
+	font-weight: 600;
+	font-size: 9px;
+
+	z-index: 9;
+	&[data-count="0"] {
+		display: none;
+	}
+}

@@ -1,0 +1,148 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('w_sortOrder'))
+#set ($filter = $core_v2_page.GetQueryStringValue('w_filter'))
+#set ($articleId = $core_v2_page.GetQueryStringValue('w_articleid'))
+#set ($responseTypeId = $core_v2_page.GetQueryStringValue('w_responsetypeid'))
+
+#set($canIgnore = false)
+#set($canIgnore = $core_v2_permission.Get($articles_v1_permissions.EditArticles, $core_v2_user.Accessing.Id, $context.ArticleCollection.Id, $articles_v1_articleCollections.ApplicationTypeId).IsAllowed)
+
+#set($options = "%{PageSize = $pageSize, PageIndex = $pageIndex, CollectionId = $context.ArticleCollection.Id, IsHelpful = 'False' }")
+
+#if ($sortOrder && $sortOrder != '')
+	$options.Add('SortOrder', $sortOrder)
+#else
+	$options.Add('SortOrder', 'Descending')
+#end
+
+#if ($articleId && $articleId != '')
+	$options.Add('ArticleId', $articleId)
+#end
+
+#if ($filter == 'Resolved')
+	$options.Add('State', 'Resolved')
+	$options.Add('IncludeIgnored', 'True')
+#elseif ($filter == 'All')
+	$options.Add('State', 'All')
+	$options.Add('IncludeIgnored', 'True')
+#else
+	$options.Add('State', 'Unresolved')
+	$options.Add('IncludeIgnored', 'False')
+#end
+
+#if ($responseTypeId && $responseTypeId != '')
+	$options.Add('HelpfulnessResponseTypeId', $responseTypeId)
+#end
+
+#set($helpfulnesses = $articles_v1_helpfulness.List($options))
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($helpfulnesses.PageIndex + 1) * $helpfulnesses.PageSize)
+#if ($helpfulnesses.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" id="$core_v2_widget.UniqueId('helpfulnesses')" data-totalcount="$helpfulnesses.TotalCount">
+
+#foreach($helpfulness in $helpfulnesses)
+	#set($canEdit = false)
+	#set($canEdit = $core_v2_permission.Get($articles_v1_permissions.EditArticles, $core_v2_user.Accessing.Id, $helpfulness.Article.Id, $articles_v1_articles.ContentTypeId).IsAllowed)
+
+  <li class="content-item helpfulness" data-id="$helfulness.Id.ToString()">
+	<h4 class="name">$helpfulness.HelpfulnessResponseType.Name</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item status">
+			   <span class="value">
+				   #if ($helpfulness.ResolvedDate)
+						<span class="status resolved">$core_v2_language.GetResource('Status_Resolved')</span>
+				   #elseif ($helpfulness.ResolvedByVersionIds.Count > 0)
+						<span class="status resolved-in-draft">$core_v2_language.GetResource('Status_ResolvedInDraft')</span>
+					#elseif ($helpfulness.IsIgnored)
+						<span class="status ignored">$core_v2_language.GetResource('Status_Ignored')</span>
+					#else
+						<span class="status unresolved">$core_v2_language.GetResource('Status_Unresolved')</span>
+					#end
+			   </span>
+			</li>
+			<li class="attribute-item identifier">
+				#if ($helpfulness.Article.IsPublished)
+					<span class="value"><a href="$core_v2_encoding.HtmlAttributeEncode($helpfulness.Article.Url)">$core_v2_language.Truncate($helpfulness.Article.Title, 35, '…')</a></span>
+				#else
+					<span class="value">$core_v2_language.Truncate($helpfulness.Article.Title, 35, '…')</span>
+				#end
+			</li>
+			<li class="attribute-item created">
+				#if (!$helpfulness.Author)
+					#set ($authorHtml = $core_v2_language.GetResource('anonymous'))
+				#else
+					#set($profileUrl = false)
+					#set($profileUrl = $helpfulness.Author.ProfileUrl)
+					#if ($profileUrl)
+						#store ($authorHtml)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$helpfulness.Author.DisplayName</a>
+						#end
+					#else
+						#set($authorHtml = $helpfulness.Author.DisplayName)
+					#end
+				#end
+				<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Helpfulness_ByLine'), $core_v2_language.FormatAgoDate($helpfulness.CreateDate), $authorHtml)</span>
+			</li>
+			#if ($helpfulness.ResolvedDate)
+				<li class="attribute-item resolved-date">
+				   <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Date_Resolved'), $core_v2_language.FormatDateAndTime($helpfulness.ResolvedDate))</span>
+				</li>
+			#end
+		</ul>
+	</div>
+	<div class="content expanded-hidden">
+		$!core_v2_language.Truncate($!helpfulness.Message, 140, "...")
+	</div>
+	<div class="content expandable">
+		$!helpfulness.Message
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				#if ($helpfulness.Article.IsPublished)
+					<li class="navigation-list-item">
+						<a href="$core_v2_page.AbsoluteUrl($helpfulness.Article.Url)">$core_v2_language.GetResource('Action_ViewArticle')</a>
+					</li>
+				#end
+				#if (!$helpfulness.Article.IsDeleted && $canEdit)
+					#set($editUrl = false)
+					#set($editUrl = $articles_v1_articleUrls.EditArticle($helpfulness.Article.Id))
+					#if ($editUrl)
+						<li class="navigation-list-item">
+							<a href="$core_v2_page.AbsoluteUrl($editUrl)">$core_v2_language.GetResource('Action_EditArticle')</a>
+						</li>
+					#end
+				#end
+				#if (!$helpfulness.ResolvedDate && $canIgnore)
+					#if ($helpfulness.IsIgnored)
+						<li class="navigation-list-item">
+							<a href="#" data-ignored="true" data-messagename="helpfulnessmanagement.ignore" data-id="$helpfulness.Id">$core_v2_language.GetResource('Action_Unignore')</a>
+						</li>
+					#else
+						<li class="navigation-list-item">
+							<a href="#" data-ignored="false" data-messagename="helpfulnessmanagement.ignore" data-id="$helpfulness.Id">$core_v2_language.GetResource('Action_Ignore')</a>
+						</li>
+					#end
+				#end
+
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('More')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+  </li>
+#end
+
+</ul>

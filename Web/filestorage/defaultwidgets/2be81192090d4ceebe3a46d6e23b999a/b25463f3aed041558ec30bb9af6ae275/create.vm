@@ -1,0 +1,72 @@
+#set ($groupNameId = $core_v2_widget.UniqueId('groupName'))
+#set ($groupDescriptionId = $core_v2_widget.UniqueId('groupDescription'))
+#set ($groupTypeId = $core_v2_widget.UniqueId('groupType'))
+#set ($groupTypeJoinlessId = $core_v2_widget.UniqueId('joinless'))
+#set ($groupTypePublicOpenId = $core_v2_widget.UniqueId('publicOpen'))
+#set ($groupTypePublicClosedId = $core_v2_widget.UniqueId('publicClosed'))
+#set ($groupTypePrivateListedId = $core_v2_widget.UniqueId('privateListed'))
+#set ($groupTypePrivateUnlistedId = $core_v2_widget.UniqueId('privateUnlisted'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item required group-name">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($groupNameId)" class="field-item-name">$core_v2_language.GetResource('newgroup_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('newgroup_name_description')</span>
+			<span class="field-item-input">
+				<input name="$core_v2_encoding.HtmlAttributeEncode($groupNameId)" type="text" maxlength="256" id="$core_v2_encoding.HtmlAttributeEncode($groupNameId)" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item group-description">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($groupDescriptionId)" class="field-item-name">$core_v2_language.GetResource('newgroup_description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('newgroup_description_description')</span>
+			<span class="field-item-input">
+				<textarea name="$core_v2_encoding.HtmlAttributeEncode($groupDescriptionId)" maxlength="256" id="$core_v2_encoding.HtmlAttributeEncode($groupDescriptionId)"></textarea>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item group-type">
+			<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($groupTypeJoinlessId)">$core_v2_language.GetResource('newgroup_type')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('newgroup_type_description')</span>
+			<span class="field-item-input">
+				<ul class="field-list">
+					<li class="field-item">
+						<span class="field-item-input">
+							<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypeJoinlessId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="Joinless" checked="checked" />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypeJoinlessId)">$core_v2_language.GetResource('type_joinless')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('type_joinless_description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicOpenId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="PublicOpen" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicOpenId)">$core_v2_language.GetResource('type_publicopen')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('type_publicopen_description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicClosedId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="PublicClosed" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicClosedId)">$core_v2_language.GetResource('type_publicclosed')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('type_publicclosed_description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateListedId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode$($groupTypeId)" value="PrivateListed" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateListedId)">$core_v2_language.GetResource('type_privatelisted')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('type_privatelisted_description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateUnlistedId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="PrivateUnlisted" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateUnlistedId)">$core_v2_language.GetResource('type_privateunlisted')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('type_privateunlisted_description')</span>
+					</li>
+				</ul>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>

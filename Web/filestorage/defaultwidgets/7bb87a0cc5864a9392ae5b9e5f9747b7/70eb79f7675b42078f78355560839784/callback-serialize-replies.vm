@@ -1,0 +1,26 @@
+##
+## Recursively renders a list of forum replies as generic replies serialized to JSON
+##
+## Requires in scope:
+##   $forumReplies
+##
+[
+	#foreach ($forumReply in $forumReplies)
+	#between
+		,
+	#each
+		{
+			#set ($excludeContainer = true)
+			$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+			#set ($excludeContainer = false)
+
+			## Render children recursively
+			#if ($forumReply.Children && $forumReply.Children.Count > 0)
+				#set ($originalForumReplies = $forumReplies)
+				#set ($forumReplies = $forumReply.Children)
+				,"children": $core_v2_widget.ExecuteFile('callback-serialize-replies.vm')
+				#set ($forumReplies = $originalForumReplies)
+			#end
+		}
+	#end
+]

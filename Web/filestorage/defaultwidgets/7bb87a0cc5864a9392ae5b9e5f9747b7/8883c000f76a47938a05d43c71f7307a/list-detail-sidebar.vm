@@ -1,0 +1,34 @@
+#if(!$medias)
+	$core_v2_widget.ExecuteFile('load.vm')
+#end
+
+#foreach($media in $medias)
+#beforeall
+	<div class="avatar-list">
+	<ul class="content-list">
+#each
+	#set($author = $media.Author)
+
+	<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">
+		<div class="author">
+			<div class="avatar">
+				$core_v2_ui.GetPreviewHtml($media.File.FileUrl, "%{ Width = 35, Height = 35 }")
+			</div>
+			<a $core_v2_ui.ContentPeek($media.ContentId, $core_v2_media.ContentTypeId, 'internal-link view-full-post')
+				href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">
+				<div class="content">$core_v2_language.Truncate($media.Title, 200, "...")</div>
+			</a>
+			<div class="meta">
+				<a $core_v2_ui.ContentPeek($media.ContentId, $core_v2_media.ContentTypeId, 'internal-link view-post navigable')
+					href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">
+					$core_v2_ui.AgoDate($media.CreatedDate)
+				</a>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+	</div>
+#nodata
+	$core_v2_widget.Hide()
+#end

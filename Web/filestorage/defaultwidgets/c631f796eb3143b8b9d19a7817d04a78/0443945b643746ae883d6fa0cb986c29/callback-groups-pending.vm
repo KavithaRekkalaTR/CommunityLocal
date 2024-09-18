@@ -1,0 +1,20 @@
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set($groupName = $core_v2_page.GetQueryStringValue('w_groupName'))
+
+#set($pageSize = 20)
+#set($query = "%{UserId = $context.UserId,SearchQuery = $groupName, PageSize=$pageSize,PageIndex=$pageIndex, SortBy='GroupName'}")
+
+#set($groupMemberships = $context.GetPendingGroupMemberships($query))
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($groupMemberships.PageIndex + 1) * $groupMemberships.PageSize)
+#if ($groupMemberships.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$groupMemberships.TotalCount">
+
+#foreach($member in $groupMemberships)
+    $core_v2_widget.ExecuteFile('format-groupmember.vm')
+#end
+</ul>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GroupSummaryReport_Name}"
+                           version="10.0.0.0"
+                           description="${resource:GroupSummaryReport_Description}"
+                           instanceIdentifier="258a42c6ec514027a8fbb59aecbc68e5"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+
+#set ($containerId = $core_v2_widget.UniqueId('container'))
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id) || $reporting.HasGroupReportingPermission($core_v2_user.Accessing.Id))
+    $core_v2_widget.ExecuteFile('full-content.vm')
+#else
+    <div id="$containerId">
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+#end
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="GroupSummaryReport_Name">${group_propercase}  Details</resource>
+        <resource name="GroupSummaryReport_Description">Overview of an individual ${group_lowercase}</resource>
+        <resource name="PermissionDenied">You do not have permission to view this report.</resource>
+        <resource name="Day">Day</resource>
+        <resource name="Days">days</resource>
+        <resource name="NoGroupSelected">Please select a group to see summary.</resource>
+        <resource name="NoData">No group matches the current filters.</resource>
+        <resource name="Error">Error retrieving report. The selected ${groups_lowercase} or applications may no longer exist or you may no longer have access to view reports for the selected items.</resource>
+        <resource name="NewContent">New Content</resource>
+        <resource name="ActiveContent">Active Content</resource>
+        <resource name="ViewedContent">Viewed Content</resource>
+        <resource name="ActiveUsers">Active Members</resource>
+        <resource name="NewMembers">New Members</resource>
+        <resource name="Viewers">Viewers</resource>
+        <resource name="Views">Views</resource>
+        <resource name="NewContent_Description"></resource>
+        <resource name="ActiveContent_Description"></resource>
+        <resource name="ViewedContent_Description">Number of content that was viewed</resource>
+        <resource name="ActiveUsers_Description"></resource>
+        <resource name="NewMembers_Description"></resource>
+        <resource name="Viewers_Description">Number of unique viewers</resource>
+        <resource name="Views_Description">Number of total views</resource>
+        <resource name="Content">Content</resource>
+        <resource name="Member">Member</resource>
+        <resource name="Members">Members</resource>
+        <resource name="TotalViewers">Total Registered Viewers</resource>
+        <resource name="TotalContent">total</resource>
+        <resource name="ContentPerDay">created per day</resource>
+        <resource name="TotalViews">total</resource>
+        <resource name="ViewsPerDay">per day</resource>
+        <resource name="in">in</resource>
+        <resource name="1Day">Yesterday</resource>
+        <resource name="3Day">Last 3</resource>
+        <resource name="7Day">Last 7</resource>
+        <resource name="30Day">Last 30</resource>
+        <resource name="90Day">Last 90</resource>
+        <resource name="180Day">Last 180</resource>
+        <resource name="Export">Export</resource>
+        <resource name="ExportListasCSV">Export List as CSV</resource>
+        <resource name="Cancel">Cancel</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

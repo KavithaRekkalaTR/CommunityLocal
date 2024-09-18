@@ -1,0 +1,106 @@
+.scale_replaced_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @padding: 0px) {
+	width: @size + (@padding * 2);
+	height: @size + (@padding * 2);
+	&:before {
+		width: @size + (@padding * 2);
+		height: @size + (@padding * 2);
+		top: @padding;
+		font-size: @size;
+		line-height: @size;
+	}
+}
+.content-fragment.notification-list {
+	.view {
+		display: flex;
+		justify-content: space-between;
+		.markall {
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .9;
+		}
+	}
+	.content-item {
+		padding: (10px / 2) (10px + 20px) 10px 55px !important;
+		border-top: 0px;
+		border-bottom: 1px solid -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 15%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		cursor: pointer;
+		position: relative;
+		min-height: 51px;
+		overflow: hidden;
+		&:last-child {
+			border-bottom: 0px;
+		}
+		&.no-author {
+			padding-left: 7px;
+		}
+		&.unread:after {
+			content: ' ';
+			display: block;
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			height: 100%;
+			border-left: solid 5px -evo-themeconfig-color('accentColor', #2196F3);
+		}
+		&:hover, &.selected {
+			background-color: -evo-themeconfig-color('accentColor', #2196F3);
+			color: fade(-evo-themeconfig-color('backgroundColor', #ffffff), 90%);
+			.description,
+			.post-date,
+			.notification-category,
+			.post-like {
+				color: fade(-evo-themeconfig-color('backgroundColor', #ffffff), 50%);
+			}
+			a {
+				color: -evo-themeconfig-color('backgroundColor', #ffffff) !important;
+			}
+		}
+		.user-name {
+			display: none;
+		}
+		.avatar {
+			position: absolute;
+			top: 5px;
+			left: 10px;
+			overflow: hidden;
+			border-radius: 500px;
+			img {
+				border-radius: 500px;
+			}
+		}
+		.post-date {
+			padding: 0px;
+			margin: 0px 10px 0px 0px;
+			float: left;
+			line-height: 1.3em;
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .8;
+			color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 31%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		}
+		.notification-category {
+			padding: 0px;
+			margin: 0px 10px 0px 0px;
+			float: left;
+			line-height: 1.3em;
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .8;
+			color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 31%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		}
+
+		.mark {
+			position: absolute;
+			height:100%;
+			padding: 10px / 2;
+			top: 0px;
+			right: 0px;
+			display: none;
+			a {
+				.scale_replaced_icon(20px);
+				height: 100%;
+			}
+		}
+		&:hover .mark {
+			display: block;
+		}
+	}
+}
+
+body.touch .content-fragment.notification-list .content-item .mark {
+	display: block;
+}

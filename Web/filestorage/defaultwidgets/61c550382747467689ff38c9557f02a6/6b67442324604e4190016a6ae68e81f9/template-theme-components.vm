@@ -1,0 +1,36 @@
+<div class="navigation-list managed-items">
+	<ul class="ui-links components" data-maxlinks="0">
+		<li data-type="overview" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=overview" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'overview') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'overview') { %> data-selected <% } %> class="component-link overview" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=overview">$core_v2_language.GetResource('Overview')</a>
+		</li>
+		<li data-type="configuration" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=configuration" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'configuration') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'configuration') { %> data-selected <% } %> class="component-link configuration" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=configuration">$core_v2_language.GetResource('Configuration')</a>
+		</li>
+		<li data-type="headscript" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=headscript" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'headscript') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'headscript') { %> data-selected <% } %> class="component-link headscript" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=headscript">$core_v2_language.GetResource('HeadScript')</a>
+		</li>
+		<li data-type="bodyscript" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=bodyscript" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'bodyscript') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'bodyscript') { %> data-selected <% } %> class="component-link bodyscript" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=bodyscript">$core_v2_language.GetResource('BodyScript')</a>
+		</li>
+		<li data-type="resources" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=resources" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'resources') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'resources') { %> data-selected <% } %> class="component-link resources" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=resources">$core_v2_language.GetResource('Resources')</a>
+		</li>
+		<li data-type="palettes" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=palettes" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'palettes') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'palettes') { %> data-selected <% } %> class="component-link palettes" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=palettes">$core_v2_language.GetResource('Palettes')</a>
+		</li>
+		<li data-type="layouts" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=layouts" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'layouts') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'layouts') { %> data-selected <% } %> class="component-link layouts" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=layouts">$core_v2_language.GetResource('Layouts')</a>
+		</li>
+		<li data-type="fragments" data-request="_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=fragments" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'fragments') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'fragments') { %> data-selected <% } %> class="component-link fragments" href="$context.PanelUrl&_tid=<%: Id %>&_ttid=<%: ( TypeId || '') %>&_tt=fragments">$core_v2_language.GetResource('Fragments')</a>
+		</li>
+		<li class="navigation-list-item">
+			<a href="#" data-more class="more ui-tip hierarchy type" data-tip="More components of this theme">
+				#if ($selectedTabName) $selectedTabName #else #end <% if(typeof(selectedTabName) !== 'undefined') { %> <%= selectedTabName %> <% } %>
+			</a>
+		</li>
+		<li class="navigation-list-item">
+			<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+		</li>
+	</ul>
+</div>

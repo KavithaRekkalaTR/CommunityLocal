@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" id="f9835275c64d49e882005ddf145de4e5" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2022-05-11 18:36:48Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="friendship.aftercreate" />
+      <event key="friendship.afterdelete" />
+      <event key="friendship.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var userId = context_v2_automationTrigger.Arguments.Requestor.Id;
+var contentId = context_v2_automationTrigger.Arguments.Recipient.ContentId;
+if (core_v2_widget.GetStringValue('awardTo', 'requestor') == 'accepter') {
+    userId = context_v2_automationTrigger.Arguments.Recipient.Id;
+    contentId = context_v2_automationTrigger.Arguments.Requestor.ContentId;
+}
+
+var pointsAwarded = context_v1_pointsAutomation.ArePointsAwarded(userId, contentId, core_v2_user.ContentTypeId);
+if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.FriendshipState == 'Approved' && !pointsAwarded) {
+    context_v1_pointsAutomation.AwardPoints(userId, contentId, core_v2_user.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (context_v2_automationTrigger.Arguments.FriendshipState == 'Approved') {
+        // ensure points awarded
+        if (!pointsAwarded) {
+            context_v1_pointsAutomation.AwardPoints(userId, contentId, core_v2_user.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (pointsAwarded) {
+            context_v1_pointsAutomation.AwardPoints(userId, contentId, core_v2_user.ContentTypeId, {
+                Description: core_v2_language.FormatString(core_v2_language.GetResource('Revoked'), context_v1_pointsAutomation.Description),
+                Points: context_v1_pointsAutomation.Points * -1
+            });
+        }
+    }
+} else if (context_v2_automationTrigger.Event == 'AfterDelete') {
+    // ensure points not awarded
+    if (pointsAwarded) {
+        context_v1_pointsAutomation.RevokePoints(userId, contentId, core_v2_user.ContentTypeId);
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="awardTo" labelResourceName="AwardTo" descriptionResourceName="AwardTo_Description" dataType="string" defaultValue="requestor">
+        <propertyValue labelResourceName="AwardTo_Requestor" value="requestor" />
+        <propertyValue labelResourceName="AwardTo_Accepter" value="accepter" />
+    </property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AwardTo">Award points to</resource>
+  <resource name="AwardTo_Accepter">Friendship accepter</resource>
+  <resource name="AwardTo_Description">Select which member should receive points.</resource>
+  <resource name="AwardTo_Requestor">Friendship requestor</resource>
+  <resource name="Description">Awards points when a friend request is accepted.</resource>
+  <resource name="Revoked">Revoked: {0}</resource>
+  <resource name="Title">When a friendship request is accepted</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

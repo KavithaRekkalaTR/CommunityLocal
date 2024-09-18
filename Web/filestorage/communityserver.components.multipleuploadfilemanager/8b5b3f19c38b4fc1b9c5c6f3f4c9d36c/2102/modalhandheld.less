@@ -1,0 +1,38 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS 
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+@import "-evo-themefile-url('variables.less')";
+@import "-evo-themefile-url('icons.less')";
+@import "-evo-themefile-url('mixins.less')";
+
+fieldset {
+	h1,h2,h3 {
+		font-size: @font-size * 2;
+		margin: 1em 0 1em 0;
+	}
+	input[type="password"],
+	input[type="text"],
+	input[type="input"],
+	textarea {
+		width: 100% !important;
+		&[size="15"] {
+			width: 75% !important;
+		}
+	}
+	.text-editor-wrapper {
+		.highlighter {
+			textarea {
+				height: 100% !important;
+				width: 100% !important;
+			}
+		}
+	}
+	.field-list .field-item .field-item-input table.form tr > td {
+		width: 50% !important;
+	}
+}

@@ -1,0 +1,540 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_EventWidget_Name}" version="12.0.0.0" description="${resource:Calendar_EventWidget_Description}" instanceIdentifier="e3edd58fe7234374ae00e52bcbad33c3" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="event-widget" lastModified="2021-09-02 18:55:25Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=eventSubscribe&amp;Link=eventEdit&amp;Link=viewRegistrations&amp;Link=cancelEvent&amp;Link=deleteEvent&amp;Link=download&amp;Link=rss')))
+#set($currentCalendar = $calendar_v1_calendars.Current)
+
+#set($userId = $core_v2_user.Accessing.Id)
+#set($userTimeZoneId = $core_v2_user.Accessing.TimeZoneId)
+#set($userTimeZone = false)
+#if ($core_v2_user.Accessing.TimeZoneInfo)
+		#set($userTimeZone = $core_v2_user.Accessing.TimeZoneInfo)
+#end
+
+#set($event = false)
+#set($event = $calendar_v1_events.Current)
+#if (!$event)
+		$core_v2_widget.Hide()
+#end
+
+$calendar_v1_events.IncrementViewCount($event.Id)
+
+#set ($hasModifyEventPermission =  $calendar_v1_events.HasPermission($event.Id,$calendar_v1_permissions.EditEvent))
+
+#set($currentDate =  $calendar_v1_UI.AdjustForUserTime($core_v2_utility.CurrentDate))
+#set($startDate = $event.EventStartDate)
+#set($endDate = $event.EventEndDate)
+
+#if ($core_v2_user.Accessing.DateFormat)
+		#set($eventDateTimeFormatString = "$core_v2_user.Accessing.DateFormat $core_v2_configuration.TimeFormat")
+#else
+		#set($eventDateTimeFormatString = "yyyy-M-d $core_v2_configuration.TimeFormat")
+#end
+
+#if($startDate.Date == $endDate.Date)
+	#set($eventEndTimeFormatString = $core_v2_configuration.TimeFormat)
+#else
+	#set($eventEndTimeFormatString = $eventDateTimeFormatString)
+#end
+
+#if($currentDate > $endDate)
+	<div class="message warning" role="alert">$core_v2_language.GetResource('calendar_event_past')</div>
+#end
+#if($currentDate >= $startDate && $currentDate <= $endDate)
+	<div class="message success" role="alert">$core_v2_language.GetResource('calendar_event_insession')</div>
+#end
+#if($event.IsCancelled)
+	<div class="message error" role="alert">$core_v2_language.GetResource('calendar_event_cancelled')</div>
+#end
+#if($event.RegistrationType != "NotSet" && $event.RegistrationType != "InvitationOnly")
+	#if(($event.TotalRegistrations >= $event.MaximumRegistrationsAllowed) &&  $event.MaximumRegistrationsAllowed > 0)
+		<div class="message error" role="alert">$core_v2_language.GetResource('calendar_registration_nospace')</div>
+	#end
+#end
+
+<div class="content full without-author">
+
+	#set($registration = false)
+	#set($registration = $calendar_v1_registrations.Current)
+	#if (!$registration)
+		#set($registration = $calendar_v1_registrations.Get($event.Id, $userId))
+	#end
+
+	#set($userIsRegistered = $core_v2_user.IsRegistered($userId))
+
+	#set($showRegistrationButton = true)
+
+	#if ($event.IsCancelled || $event.EventEndDate <= $core_v2_utility.CurrentUserDate)
+		#set($showRegistrationButton = false)
+	#end
+
+	#if($event.RegistrationType == 'NotSet' || (!$event.AllowAnonymousRegistrations && !$userIsRegistered) || ($event.RegistrationType == 'InvitationOnly' && !$registration))
+		#set($showRegistrationButton = false)
+	#end
+
+	#if(($event.TotalRegistrations >= $event.MaximumRegistrationsAllowed) &&  $event.MaximumRegistrationsAllowed > 0)
+		#set($showRegistrationButton = false)
+	#end
+
+    <div class="event-header">
+        <h2 class="name" id="$core_v2_widget.UniqueId('eventTitle')">
+            $event.EventTitle
+        </h2>
+        #if ($showRegistrationButton)
+            <div class="register">
+                <a id="$core_v2_widget.UniqueId('register')" href="#" class="button button-style-big">
+                    #if ($registration && $registration.Status == 'Confirmed')
+                        $core_v2_language.GetResource('ModifyRegistration')
+                    #else
+                        $core_v2_language.GetResource('Register')
+                    #end
+                </a>
+            </div>
+        #end
+    </div>
+
+		<div class="event-details">
+				#if($event.EventLocation.length > 0)
+						#set($imgUrl = false)
+						#set($mapUrl = false)
+						#if ($geocoding_v1_core.IsEnabled)
+								#set ($latitude = $event.Latitude)
+								#set ($longitude = $event.Longitude)
+
+								#if ($latitude > -90 && $longitude > -180)
+									#set ($imgUrl = $geocoding_v1_core.GetMapUrl($latitude, $longitude))
+									#set ($mapUrl = $geocoding_v1_core.GetServiceRedirectUrl($event.AddressString))
+								#end
+						#end
+				#end
+
+				#if ($mapUrl && $imgUrl)
+						<div class="geocoded-map-content">
+								<a href="$mapUrl" target="_blank" rel="nofollow" class="map_view_service_link"><img src="$imgUrl" alt="$core_v2_language.GetResource('CalendarMap_GoToMap')" /></a>
+						</div>
+				#end
+
+				<h3>$core_v2_language.GetResource('label_when')</h3>
+				<div class="event-date">
+						$core_v2_language.FormatDate($startDate, "%{Format = $eventDateTimeFormatString, TimeZoneId = $event.TimeZone.Id}")
+						$core_v2_language.GetResource("to")
+						$core_v2_language.FormatDate($endDate, "%{Format = $eventEndTimeFormatString, TimeZoneId = $event.TimeZone.Id}")
+
+						<span class="event-timezone">
+								$!core_v2_configuration.GetTimeZone($event.TimeZone.Id, $startDate).NameWithoutOffset
+						</span>
+				</div>
+				#if ($userIsRegistered && $userTimeZoneId != $event.TimeZone.Id && $userTimeZone)
+						<div class="event-date event-your-time">
+								$core_v2_language.FormatDate($startDate, "%{Format = $eventDateTimeFormatString}")
+								$core_v2_language.GetResource("to")
+								$core_v2_language.FormatDate($endDate, "%{Format = $eventEndTimeFormatString}")
+
+								<span class="event-timezone">
+										$!core_v2_configuration.GetTimeZone($userTimeZone.Id, $startDate).NameWithoutOffset
+								</span>
+						</div>
+				#end
+				#if($event.EventLocation.length > 0)
+						<h3>$core_v2_language.GetResource('label_where')</h3>
+						<div class="event-location">
+								#if ($mapUrl)
+										<a href="$core_v2_encoding.HtmlAttributeEncode($mapUrl)">$event.EventLocation</a>
+								#else
+										$event.EventLocation
+								#end
+						</div>
+				#end
+		</div>
+
+	#if ($event.IsExternal)
+		<div class="external-preview" data-url="$core_v2_encoding.HtmlAttributeEncode($event.EventReferenceUrl)">
+			<span class="ui-webpreview" data-configuration="url=$core_v2_encoding.HtmlAttributeEncode($core_v2_encoding.UrlEncode($event.EventReferenceUrl))">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($event.EventReferenceUrl)">$core_v2_encoding.HtmlAttributeEncode($event.EventReferenceUrl)</a>
+			</span>
+		</div>
+	#end
+	<div class="post-content content user-defined-markup margin-bottom">
+		$event.EventDescription
+	</div>
+
+	$core_v2_widget.ExecuteFile("subview-tags.vm")
+
+	<div class="actions">
+
+#foreach($link in $links.Values('Link'))
+#beforeall
+
+		<div class="ui-links navigation-list" data-minlinks="2" data-direction="horizontal" data-maxlinks="2">
+			<ul class="navigation-list">
+				#set($likeFormat = "{count}")
+				#if ($core_v2_like.CanLike($event.ContentId, $event.ContentTypeId))
+					#set($likeFormat = "{toggle} {count}")
+				#end
+				<li class="navigation-list-item like">
+					$core_v2_ui.Like($event.ContentId, $event.ContentTypeId, "%{ Format = $likeFormat, IncludeTip = 'true' }")
+				</li>
+				<li class="navigation-list-item rating">
+					#set ($readOnly = true)
+					#if ($userIsRegistered)
+						#set ($readOnly = false)
+					#end
+					$core_v2_ui.Rate($event.ContentId, $calendar_v1_events.ContentTypeId, "%{ ReadOnly = $readOnly }")
+				</li>
+
+#each
+
+				#if($link == 'eventEdit' && ($event.EventCreatorId == $userId || $calendar_v1_calendars.HasPermission($event.CalendarId,$calendar_v1_permissions.EditEvent)))
+					#set($url = $calendar_v1_urls.EditEvent($event.Id))
+					#if ($url)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.GetResource('edit')</a>
+						</li>
+					#end
+				#end
+
+				#if ($link == 'convert')
+					#set($convert = false)
+			#set($convert = $core_v2_ui.ConvertContent($event.ContentId, $event.ContentTypeId))
+			#if ($convert)
+					<li class="navigation-list-item">
+							$convert
+					</li>
+			#end
+		#end
+
+				#if($link == 'viewRegistrations' && $calendar_v1_calendars.HasPermission($event.CalendarId,$calendar_v1_permissions.ViewRegistrations))
+					#set($url = $calendar_v1_urls.RegisteredUsers($event.Id))
+					#if ($url)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-registrations">
+								$core_v2_language.GetResource('calendar_EventLinks_ViewRegistrations')
+							</a>
+						</li>
+					#end
+				#end
+
+				#if ($link == 'eventSubscribe' && $userIsRegistered && $calendar_v1_calendars.HasPermission($event.CalendarId,$calendar_v1_permissions.ViewCalendar))
+
+					<li class="navigation-list-item">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.eventSubscribe" data-eventid="$event.Id" data-subscribed="false" href="#" #if($calendar_v1_events.IsSubscribed($event.Id)) style="display:none" #end>$core_v2_language.GetResource('event_Subscribe_Off')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.eventSubscribe" data-eventid="$event.Id" data-subscribed="true" href="#" #if(!$calendar_v1_events.IsSubscribed($event.Id)) style="display:none" #end>$core_v2_language.GetResource('event_Subscribe_On')</a>
+					</li>
+
+					#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.eventSubscribe")
+						<script type="text/javascript">
+							jQuery(function(j){
+								updateSubscription = function(value, link) {
+									j.telligent.evolution.post({
+										url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+										data: {
+											subscribe: value,
+											eventId: link.data('eventid')
+										},
+										dataType: 'json'
+									}).then(function(response) {
+										if (response.subscribe) {
+											link.closest('ul').find('a[data-subscribed="false"]').hide();
+											link.closest('ul').find('a[data-subscribed="true"]').show();
+										} else {
+											link.closest('ul').find('a[data-subscribed="false"]').show();
+											link.closest('ul').find('a[data-subscribed="true"]').hide();
+										}
+
+										if (response.warnings && response.warnings.length > 0) {
+											j.telligent.evolution.notifications.show(response.warnings[0], { type: 'warning' });
+										}
+									});
+								};
+
+								j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.eventSubscribe', function(data){
+									updateSubscription(!j(data.target).data('subscribed'), j(data.target));
+								});
+							});
+						</script>
+					#end
+
+				#end
+
+				#if($link == 'cancelEvent' && $calendar_v1_calendars.HasPermission($currentCalendar.Id,$calendar_v1_permissions.EditEvent) && $event.IsCancelled == false)
+
+					<li class="navigation-list-item" id="$core_v2_widget.UniqueId('cancelEventItem')">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.eventCancel" data-eventid="$event.Id" href="#" class="internal-link delete-post">
+							$core_v2_language.GetResource('calendar_EventLinks_CancelEvent')
+						</a>
+					</li>
+
+					#registerEndOfPageHtml()
+						<script type="text/javascript">
+							jQuery(function(){
+								cancelEvent = function(link) {
+									if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_CancelEventConfirmation'))'))
+									{
+										jQuery.telligent.evolution.del({
+											url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/calendars/events/{Id}.json',
+											data: {Id: link.data('eventid'), CancelOnly: true},
+											defaultErrorMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_CancelEventError'))'
+										}).then(function(response) {
+											jQuery.telligent.evolution.notifications.show('$core_v2_language.GetResource('calendar_event_cancelled_confirmation')');
+											link.hide();
+										});
+									}
+								};
+
+								jQuery.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.eventCancel', function(data){
+									cancelEvent(jQuery(data.target));
+								});
+
+							});
+						</script>
+					#end
+
+					#set($hasLinks = true)
+
+				#end
+
+				#set($perm  = false)
+				#set($perm = $core_v2_permission.Get($calendar_v1_permissions.DeleteEvent,$userId,$event.ContentId,$calendar_v1_events.ContentTypeId))
+				#if ($link == 'deleteEvent' &&  $perm && $perm.IsAllowed)
+					<li class="navigation-list-item">
+						<a href="#" onclick="deleteEvent(event);">$core_v2_language.GetResource('delete')</a>
+					</li>
+
+					#registerEndOfPageHtml()
+						<script type="text/javascript">
+							jQuery(function(){
+								deleteEvent = function(e) {
+									e.preventDefault();
+									if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_DeleteEventConfirmation'))'))
+									{
+										jQuery.telligent.evolution.del({
+											url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/calendars/events/{Id}.json',
+											data: {Id: $event.Id},
+											defaultErrorMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_DeleteEventError'))'
+										}).then(function(response) {
+											alert((response.Calendar == 'deleted') ? '$core_v2_language.GetResource('calendar_event_deleted')' : '$core_v2_language.GetResource('calendar_event_cancelled_confirmation')');
+											window.location = '$core_v2_encoding.JavascriptEncode($calendar_v1_urls.HomePage($event.CalendarId))';
+										});
+									}
+								};
+							});
+						</script>
+					#end
+				#end
+
+				#if($link == 'rss' &&  $calendar_v1_calendars.HasPermission($currentCalendar.Id,$calendar_v1_permissions.ViewCalendar))
+					#set($url = $calendar_v1_urls.EventCommentRSS($event.Id))
+					#if($url)
+						<li class="navigation-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link rss"><span></span>$core_v2_language.GetResource('calendar_EventLinks_Rss')</a></li>
+						#set($hasLinks = true)
+					#end
+				#end
+
+				#if($link == 'download' &&  $calendar_v1_calendars.HasPermission($currentCalendar.Id,$calendar_v1_permissions.ViewCalendar))
+					#set($url = $calendar_v1_urls.DownloadEvent($event.Id))
+					#if($url)
+						<li class="navigation-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link download-event"><span></span>$core_v2_language.GetResource('calendar_EventLinks_Download')</a></li>
+						#set($hasLinks = true)
+					#end
+				#end
+
+				#if ($link == 'feature' &&  $core_v3_feature.CanFeature($event.ContentId, $event.ContentTypeId))
+					<li class="navigation-list-item">$core_v2_ui.Feature($event.ContentId, $event.ContentTypeId)</li>
+				#end
+
+				#if ($event && $link == 'abuse' && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+					<li class="navigation-item">
+						$core_v2_ui.Moderate($event.ContentId, $calendar_v1_events.ContentTypeId, "%{ }")
+					</li>
+					#set($hasLinks = true)
+				#end
+
+				#if($hasLinks)
+					<li class="navigation-list-item">
+						<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				#end
+
+#afterall
+
+			</ul>
+		</div>
+
+#end
+
+	</div>
+
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.calendarEvent')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(){
+				jQuery.telligent.evolution.Calendar.widgets.calendarEvent.register({
+					wrapper        : jQuery('#$core_v2_widget.WrapperElementId'),
+					allTags        : [#if($allTags)$allTags#end],
+					currentTags    : [#if($formattedTags)$formattedTags#end],
+					eventId        : $event.Id,
+					register       : '#$core_v2_widget.UniqueId('register')',
+					registerModal  : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('register-modal.vm'))',
+					selectTagsText : '$core_v2_language.GetResource('TagEditor_SelectTags')',
+					tagEditor      : jQuery("#$core_v2_widget.UniqueId('tagEditorButton')"),
+					tagList        : jQuery("#$core_v2_widget.UniqueId('taglist')"),
+					tagUrlTemplate :'$core_v2_page.AbsoluteUrl($calendar_v1_urls.TagBrowser($event.CalendarId, $core_v2_utility.MakeList("TAGNAME")))',
+					userId         : $core_v2_user.Accessing.Id
+				});
+
+				#set($invite = $core_v2_page.GetQueryStringValue("invite"))
+				#set($token = $core_v2_page.GetQueryStringValue("token"))
+				#set($registration = false)
+
+				#if ($token)
+					#set($registration = $calendar_v1_registrations.Get($core_v2_utility.ParseGuid($token)))
+					#set($token = $registration.Token)
+					#if (!$registration)
+						jQuery.telligent.evolution.notifications.show('$core_v2_language.GetResource('RegistrationUpdatingExpired')');
+					#end
+				#end
+
+				#if ($registration && $registration.Status == "Invited")
+					#if ($invite == "accept" && $token && $registration.Status != "Confirmed")
+						#set($response = $calendar_v1_registrations.Confirm($token))
+						jQuery.telligent.evolution.notifications.show('$core_v2_language.GetResource('Registration_AttendingEvent')');
+					#end
+
+					#if ($invite == "reject" && $token && $registration.Status != "Cancelled")
+						#set($response = $calendar_v1_registrations.Cancel($token))
+						jQuery.telligent.evolution.notifications.show('$core_v2_language.GetResource('Registration_Cancelled')');
+					#end
+				#end
+
+			});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Calendar_EventWidget_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_EventWidget_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="mapZoom" labelResourceName="CalendarMap_MapZoom" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="9999" />
+	</property>
+	<property id="mapHeight" labelResourceName="CalendarMap_MapHeight" defaultValue="300" dataType="Int">
+		<propertyRule name="minmax" min="1" max="9999" />
+	</property>
+	<property id="mapWidth" labelResourceName="CalendarMap_MapWidth" defaultValue="920" dataType="Int">
+		<propertyRule name="minmax" min="1" max="9999" />
+	</property>
+	<property id="links" labelResourceName="event_Links" defaultValue="Link=eventSubscribe&amp;Link=feature&amp;Link=eventEdit&amp;Link=viewRegistrations&amp;Link=cancelEvent&amp;Link=deleteEvent&amp;Link=convert&amp;Link=download&amp;Link=rss&amp;Link=abuse" dataType="Custom" template="core_v2_sortableList" height="300" key="Link">
+		<propertyValue value="eventSubscribe" labelResourceName="calendar_EventLinks_Subscribe" orderNumber="1000000" />
+		<propertyValue value="eventEdit" labelResourceName="calendar_EventLinks_EditLink" orderNumber="1000001" />
+		<propertyValue value="viewRegistrations" labelResourceName="calendar_EventLinks_ViewRegistrationsLink" orderNumber="1000002" />
+		<propertyValue value="cancelEvent" labelResourceName="calendar_EventLinks_CancelEventLink" orderNumber="1000003" />
+		<propertyValue value="deleteEvent" labelResourceName="calendar_EventLinks_DeleteEventLink" orderNumber="1000004" />
+		<propertyValue value="convert" labelResourceName="Convert" orderNumber="1000005" />
+		<propertyValue value="download" labelResourceName="calendar_EventLinks_DownloadLink" orderNumber="1000006" />
+		<propertyValue value="rss" labelResourceName="calendar_EventLinks_RssLink" orderNumber="1000007" />
+		<propertyValue value="feature" labelResourceName="CF_Feature" orderNumber="1000008" />
+		<propertyValue value="abuse" labelResourceName="calendar_EventLinks_AbuseLink" orderNumber="1000009" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AcceptInvitation">Accept</resource>
+  <resource name="AddRegistration">Register</resource>
+  <resource name="calendar_CancelEventConfirmation">Are you sure you wish to cancel this event? This cannot be undone.</resource>
+  <resource name="calendar_CancelEventError">An error occurred while canceling the event.</resource>
+  <resource name="calendar_DeleteEventConfirmation">Are you sure you wish to delete this event?  This will cause the event to first be cancelled along with any/all registrations.  This cannot be undone.</resource>
+  <resource name="calendar_DeleteEventError">An error occurred while deleting the event.</resource>
+  <resource name="calendar_event_cancelled">This event has been cancelled.</resource>
+  <resource name="calendar_event_cancelled_confirmation">This event has been cancelled</resource>
+  <resource name="calendar_event_deleted">This event has been deleted</resource>
+  <resource name="calendar_event_insession">This event is occurring now.</resource>
+  <resource name="calendar_event_past">This event occurred in the past.</resource>
+  <resource name="calendar_EventLinks_AbuseLink">Abuse</resource>
+  <resource name="calendar_EventLinks_CancelEvent">Cancel Event</resource>
+  <resource name="calendar_EventLinks_CancelEventLink">Cancel Event</resource>
+  <resource name="calendar_EventLinks_DeleteEventLink">Delete Event</resource>
+  <resource name="calendar_EventLinks_Download">Download to my calendar</resource>
+  <resource name="calendar_EventLinks_DownloadLink">Download to my calendar</resource>
+  <resource name="calendar_EventLinks_EditLink">Edit Event</resource>
+  <resource name="calendar_EventLinks_Rss">RSS</resource>
+  <resource name="calendar_EventLinks_RssLink">Rss</resource>
+  <resource name="calendar_EventLinks_Subscribe">Email Subscribe</resource>
+  <resource name="calendar_EventLinks_ViewRegistrations">Registrations</resource>
+  <resource name="calendar_EventLinks_ViewRegistrationsLink">Registrations</resource>
+  <resource name="Calendar_EventWidget_Description">Displays details of a single calendar event</resource>
+  <resource name="Calendar_EventWidget_Name">Event Calendar - Event</resource>
+  <resource name="Calendar_EventWidget_Title">Event Calendar - Event</resource>
+  <resource name="calendar_GenericError">An error occurred.</resource>
+  <resource name="calendar_preview_failed">Failed to load preview for redirect url.</resource>
+  <resource name="calendar_registration_nospace">This event is currently full or registration has been closed</resource>
+  <resource name="calendar_validator_emailFormat">Invalid Email Address</resource>
+  <resource name="calendar_validator_emailLength">Email Address Length should not exceed 256 characters</resource>
+  <resource name="calendar_validator_emailRequired">Email Address is required</resource>
+  <resource name="calendar_validator_firstNameLength">First Name should not exceed 128 characters</resource>
+  <resource name="calendar_validator_firstNameRequired">First Name is required</resource>
+  <resource name="calendar_validator_lastNameLength">Last Name should not exceed 128 characters</resource>
+  <resource name="calendar_validator_lastNameRequired">Last Name is required</resource>
+  <resource name="CalendarMap_GoToMap">Go To Map</resource>
+  <resource name="CalendarMap_MapHeight">Height</resource>
+  <resource name="CalendarMap_MapWidth">Width</resource>
+  <resource name="CalendarMap_MapZoom">Zoom</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CancelRegistration">Cancel Registration</resource>
+  <resource name="CF_Feature">Feature</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Convert">Move</resource>
+  <resource name="Date">Date: </resource>
+  <resource name="delete">Delete</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="EmailAddress">Email address</resource>
+  <resource name="event_Links">Links</resource>
+  <resource name="event_Subscribe_Off">Turn Event notifications on</resource>
+  <resource name="event_Subscribe_On">Turn Event notifications off</resource>
+  <resource name="FirstName">First name</resource>
+  <resource name="invalid_Guid">Registration code is not valid</resource>
+  <resource name="label_when">When</resource>
+  <resource name="label_where">Where</resource>
+  <resource name="LastName">Last name</resource>
+  <resource name="Location">Location: </resource>
+  <resource name="ModifyRegistration">Update/Cancel Registration</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Register">Register</resource>
+  <resource name="Registration_AttendingEvent">You are currently attending this event.</resource>
+  <resource name="Registration_Cancelled">Your registration has been cancelled.</resource>
+  <resource name="Registration_InvitationToClosedEventExpired">Your invitation to this event has expired.</resource>
+  <resource name="Registration_Invited">You have been invited to attend this event.</resource>
+  <resource name="Registration_RequestSuccessful">Your registration request has been received. You will receive further information soon.</resource>
+  <resource name="RegistrationCancelling">Cancelling Registration...</resource>
+  <resource name="RegistrationCancellingError">An error occurred cancelling Event Registration, it may have already been cancelled.</resource>
+  <resource name="RegistrationCancellingSuccess">Registration cancelled successfully</resource>
+  <resource name="RegistrationCode">Registration code</resource>
+  <resource name="RegistrationSaving">Saving Registration...</resource>
+  <resource name="RegistrationSavingError">An error occurred creating Event Registration</resource>
+  <resource name="RegistrationSavingSuccess">Registration created successfully</resource>
+  <resource name="RegistrationTitle">Registration for</resource>
+  <resource name="RegistrationUpdating">Updating Registration...</resource>
+  <resource name="RegistrationUpdatingError">An error occurred updating Event Registration</resource>
+  <resource name="RegistrationUpdatingExpired">A Registration error occurred, your invitation may have expired.</resource>
+  <resource name="RegistrationUpdatingSuccess">Registration updated successfully</resource>
+  <resource name="RejectInvitation">Reject</resource>
+  <resource name="TagEditor_EditTags">&lt;span&gt;&lt;/span&gt;Edit tags</resource>
+  <resource name="TagEditor_SelectTags">Select Tags...</resource>
+  <resource name="to">to</resource>
+  <resource name="UpdateRegistration">Update</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="calendars.events.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

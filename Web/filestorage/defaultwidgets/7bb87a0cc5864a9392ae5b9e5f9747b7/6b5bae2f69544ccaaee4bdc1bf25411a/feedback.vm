@@ -1,0 +1,59 @@
+#set($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentId')))
+
+<form>
+<fieldset>
+<ul class="field-list">
+
+    <li class="field-item required feedback">
+        <label for="$core_v2_widget.UniqueId('FeedbackText')" class="field-item-name">
+            $core_v2_language.GetResource('feedback-instructions')
+        </label>
+        <span class="field-item-input">
+			<textarea rows="10" size="90" id="$core_v2_widget.UniqueId('FeedbackText')" name="$core_v2_widget.UniqueId('FeedbackText')"></textarea>
+        </span>
+        <span class="field-item-validation" style="display: none;" id="$core_v2_widget.UniqueId('FeedbackValidation')"></span>
+    </li>
+     <li class="field-item submit-button">
+            <span class="field-item-input">
+                <a href="#" class="internal-link save-post button" id="$core_v2_widget.UniqueId('SendFeedback')">$core_v2_language.GetResource('feedback-send')</a>
+                <span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+            </span>
+        </li>
+    </ul>
+</fieldset>
+</form>
+
+<script type="text/javascript">
+jQuery(function() {
+    var saveButton = jQuery('#$core_v2_widget.UniqueId('SendFeedback')');
+    var feedback = jQuery('#$core_v2_widget.UniqueId('FeedbackText')');
+    saveButton.on('click', function() {
+        var text = jQuery.trim(feedback.val());
+        if (text.length > 0) {
+            saveButton.parent().addClass('processing');
+            saveButton.addClass('disabled');
+            jQuery.telligent.evolution.post({
+                url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-feedback.vm'))',
+                data: {
+                    contentId: '$contentId',
+                    feedback: text
+                }
+            })
+            .then(function() {
+                 jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('rating-successful'))', { type: 'success' });
+                 jQuery.glowModal.close();
+            })
+            .always(function() {
+               saveButton.parent().removeClass('processing');
+               saveButton.removeClass('disabled');
+            });
+        }
+	});
+	saveButton.evolutionValidation('addField', '#$core_v2_widget.UniqueId('FeedbackText')', {
+            required: true
+    	},
+    	'#$core_v2_widget.UniqueId('FeedbackValidation')',
+    	null
+	);
+});
+</script>

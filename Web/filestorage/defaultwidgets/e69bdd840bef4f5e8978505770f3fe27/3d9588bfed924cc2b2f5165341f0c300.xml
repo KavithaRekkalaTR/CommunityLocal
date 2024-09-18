@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WikiSearchResult_Name}" version="11.0.0.0" description="${resource:WikiSearchResult_Description}" instanceIdentifier="3d9588bfed924cc2b2f5165341f0c300" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="wiki-search-result" lastModified="2021-01-08 09:14:34Z" provider="e69bdd840bef4f5e8978505770f3fe27">
+    <contentScript language="Velocity"><![CDATA[#set ($content = $context.Content)
+
+#if ($content)
+
+	#set ($avatarSize = 100)
+	#set ($target = $context.Target)
+	#set ($title = $content.HtmlName($target))
+	#set ($body = $content.HtmlDescription($target))
+
+	#set ($typeCssClass = "wiki application")
+	#set ($id = $core_v2_widget.UniqueId("searchresult"))
+
+	#if($content.Application && $content.Application.Container)
+		#set ($containerName = $content.Application.Container.HtmlName($target))
+		#set ($containerUrl = $content.Application.Container.Url)
+		#set ($containerAvatarUrl = $content.Application.Container.AvatarUrl)
+
+		#if($containerName != '' && $containerUrl != '')
+			#set($hasContainer = true)
+		#end
+	#end
+
+	<div class="content abbreviated rendered $typeCssClass" id="$id">
+		#if ($containerAvatarUrl && $containerAvatarUrl != '')
+			<div class="avatar round">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_ui.GetResizedImageHtml($containerAvatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$containerName' }")
+				</a>
+			</div>
+		#end
+
+		<div class="summary">
+			<h3 class="name">
+				<a class="internal-link" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 250, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 250, '...')
+				</a>
+			</h3>
+
+			#if ($body && $body != '')
+				<div class="content">$core_v2_language.Truncate($body, 250, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'true' }")</div>
+			#else
+				<div class = "content empty"></div>
+			#end
+		</div>
+
+		#if ($hasContainer)
+			<div class="attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item container">
+						<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId) href="$core_v2_encoding.HtmlAttributeEncode($containerUrl)">$containerName</a>
+					</li>
+				</ul>
+			</div>
+		#end
+	</div>
+#else
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="WikiSearchResult_Description">Displays default rendering for wiki.</resource>
+  <resource name="WikiSearchResult_Name">Rendered Wiki</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

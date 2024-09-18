@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="86633223812442c08e70408274ff9b15" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-10-07 15:15:01Z" provider="9b0aaa8355a6467eaa897299af1fe4b4">
+    <contentScript language="Velocity"><![CDATA[#set($util = $core_v2_widget.ExecuteFile('utilities.jsm'))
+#if ($context.Editable)
+    $core_v2_widget.ExecuteFile('view-editable.vm')
+#else
+    $util.getReadOnlyRendering()
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">Add</resource>
+  <resource name="Avatar">Icon</resource>
+  <resource name="Avatar_Change">Change</resource>
+  <resource name="Avatar_Description">This icon can be used as a visual aid for this link. </resource>
+  <resource name="Avatar_Progress">Uploading ({0}%)...</resource>
+  <resource name="Avatar_Remove">Remove</resource>
+  <resource name="Avatar_Upload">Upload</resource>
+  <resource name="ConfirmDelete">Are you sure you want to delete this navigation link?</resource>
+  <resource name="Current_Application">Current Application</resource>
+  <resource name="Current_Group">Current Group</resource>
+  <resource name="Current_User">Current Member</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Description">Enables editing of custom navigation configuration.</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="Field_Description">Description</resource>
+  <resource name="Field_Description_Description">The description of this item when rendered. </resource>
+  <resource name="Field_Label">Label</resource>
+  <resource name="Field_Label_Description">The label for this item when rendered.</resource>
+  <resource name="Name">Custom Navigation Editor</resource>
+  <resource name="NavigationType">Type</resource>
+  <resource name="NavigationType_Description">Select a navigation link type.</resource>
+  <resource name="Save">Save</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

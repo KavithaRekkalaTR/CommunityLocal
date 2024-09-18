@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MediaGalleries_MediaGalleryPostList_Name}" version="11.0.0.0" description="${resource:MediaGalleries_MediaGalleryPostList_Description}" instanceIdentifier="8883c000f76a47938a05d43c71f7307a" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="media-gallery-post-list" lastModified="2020-01-14 16:08:03Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_widget.ExecuteFile('load.vm')
+
+#set ($showSidebarList = false)
+#set ($region = $core_v2_widget.RegionName.ToLower())
+#set ($layout = $core_v2_page.Layout.ToLower())
+
+#if ($region == 'split-sidebar-left' || $region == 'split-sidebar-right' || $region == 'left-sidebar') 
+    #set ($showSidebarList = true)
+#elseif ($region == 'right-sidebar' && !$layout.Contains('split-content') && !$layout.Contains('split-sidebar'))
+    #set ($showSidebarList = true)
+#end
+
+#if($showSidebarList == false)
+
+    <div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="0">
+        <ul>
+            #if($currentGallery)
+                #set($url = false)
+                #set($url = $core_v2_mediaUrls.Slideshow($currentGallery.Id))
+                #if($url)
+                    <li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-slideshow"><span></span>$core_v2_language.GetResource('MediaGallery_ViewSlideshow')</a></li>
+                    #set($hasLinks = true)
+                #end
+
+                #if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+                    <li class="navigation-list-item">
+                        <a data-messagename="widget.${core_v2_widget.WrapperElementId}.gallerySubscribe" data-galleryid="$currentGallery.ApplicationId" data-subscribed="true" href="#" #if(!$core_v2_applicationSubscription.Get($currentGallery.ApplicationId, "%{}").IsSubscribed) style="display:none" #end>
+                            $core_v2_language.GetResource('MediaGallery_Subscribed')
+                        </a>
+                    </li>
+                    <li class="navigation-list-item">
+                        <a data-messagename="widget.${core_v2_widget.WrapperElementId}.gallerySubscribe" data-galleryid="$currentGallery.ApplicationId" data-subscribed="false" href="#" #if($core_v2_applicationSubscription.Get($currentGallery.ApplicationId, "%{}").IsSubscribed) style="display:none" #end>
+                            $core_v2_language.GetResource('MediaGallery_Unsubscribed')
+                        </a>
+                    </li>
+                    #registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.gallerySubscribe")
+                        <script type="text/javascript">
+                        jQuery(function(j){
+                            function update(value, link) {
+                                j.telligent.evolution.post({
+                                    url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+                                    data: {
+                                        subscribe: value,
+                                        galleryId: link.data('galleryid')
+                                    },
+                                    dataType: 'json',
+                                    success: function(response) {
+                                        if (response.subscribe) {
+                                            link.closest('ul').find('a[data-subscribed="false"]').hide();
+                                            link.closest('ul').find('a[data-subscribed="true"]').show();
+                                        } else {
+                                            link.closest('ul').find('a[data-subscribed="false"]').show();
+                                            link.closest('ul').find('a[data-subscribed="true"]').hide();
+                                        }
+
+                                        if (response.warnings && response.warnings.length > 0) {
+                                            j.telligent.evolution.notifications.show(response.warnings[0], { type: 'warning' });
+                                        }
+                                    }
+                                });
+                            }
+                            j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.gallerySubscribe', function(data){
+                                update(!j(data.target).data('subscribed'), j(data.target));
+                            });
+                        });
+                        </script>
+                    #end
+                #end
+
+                #set($url = false)
+                #set($url = $core_v2_mediaUrls.Rss($currentGallery.Id))
+                #if ($url)
+                    <li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link rss"><span></span>$core_v2_language.GetResource('Rss')</a></li>
+                #end
+            #else
+                #set($url = false)
+                #set($url = $core_v2_mediaUrls.GroupAggregateRss($core_v2_group.Current.Id))
+                #if ($url)
+                    <li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link rss"><span></span>$core_v2_language.GetResource('Rss')</a></li>
+                #end
+            #end
+
+            <li class="navigation-list-item">
+                <a href="#" data-more>$core_v2_language.GetResource('more')</a>
+            </li>
+            <li class="navigation-list-item">
+                <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sort">
+        <form>
+        <span class="by">
+            <select class="ui-select" data-update="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($core_v2_page.Url, "GalleryPostSort=SORTBY&SortOrder=$sortOrder&PageIndex=1&GalleryViewType=$viewType"))">
+                <option #if($sortBy=='PostDate') selected#end value="PostDate">$core_v2_language.GetResource('Recent')</option>
+                <option #if($sortBy=='Subject') selected#end value="Subject">$core_v2_language.GetResource('Name')</option>
+                <option #if($sortBy=='Downloads') selected#end value="Downloads">$core_v2_language.GetResource('Downloads')</option>
+                <option #if($sortBy=='Views') selected#end value="Views">$core_v2_language.GetResource('ViewCount')</option>
+                <option #if($sortBy=='Comments') selected#end value="Comments">$core_v2_language.GetResource('CommentCount')</option>
+                #if($showSortByRating)<option #if($sortBy=='Rating') selected#end value="Rating">$core_v2_language.GetResource('Rating')</option>#end
+            </select>
+        </span>
+        <span class="order">
+            <select class="ui-select" data-update="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($core_v2_page.Url, "GalleryPostSort=$sortBy&SortOrder=SORTORDER&PageIndex=1&GalleryViewType=$viewType"))">
+                <option value="Descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+                <option value="Ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+            </select>
+        </span>
+        <form>
+    </div>
+#end
+
+#if($showSidebarList == true && !$medias && $medias.Count == 0)
+    $core_v2_widget.Hide()    
+#else
+
+    #if($viewType == 'Thumbnail')
+        #if ($medias && $medias.Count > 0)
+            <div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+                $core_v2_widget.ExecuteFile('list-thumbnail.vm')
+            </div>
+        #else
+            <div class="message norecords">
+                #if ($core_v2_gallery.Current)
+                    #set ($addUrl = $core_v2_mediaUrls.AddMedia($core_v2_gallery.Current.Id, true))
+                    #if ($core_v2_gallery.Current && $addUrl) 
+                        $core_v2_language.FormatString($core_v2_language.GetResource("NoRecords_Link"), $addUrl)
+                    #else
+                        $core_v2_language.GetResource("NoRecords")
+                    #end
+                #else
+                    $core_v2_language.GetResource("NoRecords")
+                #end
+            </div>
+        #end
+    #else
+    	#if($showSidebarList == false)
+        	$core_v2_ui.PagedContent('list-detail.vm')
+        #else
+        	$core_v2_ui.PagedContent('list-detail-sidebar.vm')
+        #end
+    #end
+
+    #if($showSidebarList == false)
+        #registerEndOfPageHtml('telligent.evolution.widgets.mediaGalleryPostList')
+            <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+        #end
+        #registerEndOfPageHtml()
+            <script type="text/javascript">
+            jQuery.telligent.evolution.widgets.mediaGalleryPostList.register({
+                wrapper: "#$core_v2_widget.WrapperElementId",
+                view: '$viewType',
+                hasMore:#if ($hasMore) true#else false#end,
+                pageIndexKey: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)',
+                loadNextPageUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-callback.vm'))',
+                thumbnailContainer: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))',
+                previewFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-files.vm'))'
+            });
+            </script>
+        #end
+    #end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:MediaGalleries_MediaGalleryPostList_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:MediaGalleries_MediaGalleryPostList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="sortBy" labelResourceName="CF_MediaGallery_PostList_SortBy" defaultValue="PostDate" dataType="String">
+		<propertyValue value="PostDate" labelResourceName="CF_MediaGallery_PostList_SortBy_Recent" />
+		<propertyValue value="Subject" labelResourceName="CF_MediaGallery_PostList_SortBy_Subject" />
+		<propertyValue value="Downloads" labelResourceName="CF_MediaGallery_PostList_SortBy_Downloads" />
+		<propertyValue value="Views" labelResourceName="CF_MediaGallery_PostList_SortBy_Views" />
+		<propertyValue value="Comments" labelResourceName="CF_MediaGallery_PostList_SortBy_Comments" />
+		<propertyValue value="Rating" labelResourceName="CF_MediaGallery_PostList_SortBy_Rating" />
+	</property>
+	<property id="viewType" labelResourceName="View" defaultValue="default" dataType="String">
+		<propertyValue value="default" labelResourceName="View_Default" />
+		<propertyValue value="List" labelResourceName="View_List" />
+		<propertyValue value="Thumbnail" labelResourceName="View_Thumbnails" />
+	</property>
+	<property id="selectedMediaGalleryOrGroup" labelResourceName="CF_MediaGallery_SelectGroupAndGallery" dataType="Custom" template="core_v2_galleryLookup" width="95%" maxGallerySelections="20" />
+	<property id="pageSize" labelResourceName="CF_MediaGallery_PostList_PageSize" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_MediaGallery_PostList_PageSize">Number of files to display per page</resource>
+  <resource name="CF_MediaGallery_PostList_SortBy">Sort By</resource>
+  <resource name="CF_MediaGallery_PostList_SortBy_Comments">Number of comments</resource>
+  <resource name="CF_MediaGallery_PostList_SortBy_Downloads">Number of downloads</resource>
+  <resource name="CF_MediaGallery_PostList_SortBy_Rating">Rating</resource>
+  <resource name="CF_MediaGallery_PostList_SortBy_Recent">Date/Time posted</resource>
+  <resource name="CF_MediaGallery_PostList_SortBy_Subject">Name (alphabetical)</resource>
+  <resource name="CF_MediaGallery_PostList_SortBy_Views">Number of views</resource>
+  <resource name="CF_MediaGallery_SelectGroupAndGallery">Select group/media gallery to pull content from</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Downloads">By download count</resource>
+  <resource name="Downloads_Plural">{0} downloads</resource>
+  <resource name="Downloads_Singular">{0} download</resource>
+  <resource name="Hide">Hide</resource>
+  <resource name="MediaGalleries_MediaGalleryPostList_Description">Displays a filterable list of media gallery files.</resource>
+  <resource name="MediaGalleries_MediaGalleryPostList_Name">Media Gallery - File List</resource>
+  <resource name="MediaGalleries_MediaGalleryPostList_Title_MediaGallery">Media Gallery</resource>
+  <resource name="MediaGallery_Subscribed">Turn Gallery notifications off</resource>
+  <resource name="MediaGallery_Unsubscribed">Turn Gallery notifications on</resource>
+  <resource name="MediaGallery_ViewSlideshow">View slideshow</resource>
+  <resource name="more">More</resource>
+  <resource name="Name">By name</resource>
+  <resource name="NoRecords">There are no files to show. This could be because there are no files in this gallery or due to a filter.</resource>
+  <resource name="NoRecords_Link">There are no files to show.  Be the first to &lt;a href="{0}"&gt;add a file&lt;/a&gt;.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Rating">By average rating</resource>
+  <resource name="Recent">By date</resource>
+  <resource name="ViewCount">By views</resource>
+  <resource name="CommentCount">By comments</resource>
+  <resource name="Rss">RSS</resource>
+  <resource name="Sort_Ascending">Ascending</resource>
+  <resource name="Sort_Descending">Descending</resource>
+  <resource name="View">View</resource>
+  <resource name="View_Default">According to configured defaults</resource>
+  <resource name="View_List">Detailed List</resource>
+  <resource name="View_Thumbnails">Thumbnails</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

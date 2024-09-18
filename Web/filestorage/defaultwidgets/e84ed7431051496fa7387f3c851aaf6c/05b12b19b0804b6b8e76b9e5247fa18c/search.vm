@@ -1,0 +1,16 @@
+﻿#set($searchText = '')
+#set($searchText = $core_v2_page.GetQueryStringValue('w_searchtext'))
+
+#set($wildcard = '%')
+#if(!$searchText.StartsWith($wildcard))
+	#set ($searchText = $core_v2_language.FormatString('{0}{1}', $wildcard, $searchText))
+#end
+
+#if(!$searchText.EndsWith($wildcard))
+	#set ($searchText = $core_v2_language.FormatString('{0}{1}', $searchText, $wildcard))
+#end
+
+#set($scoreId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_scoreId')))
+
+#set($applications = $context.GetScoreApplications($scoreId, $context.ContainerTypeId, $context.ContainerId, $searchText))
+$core_v2_widget.ExecuteFile('list.vm')

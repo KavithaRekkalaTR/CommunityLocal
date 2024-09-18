@@ -1,0 +1,20 @@
+##
+## Expects in scope: $embeddables, $inProcess
+##
+
+#foreach ($embeddable in $embeddables)
+	#store($accessibilityTitle)
+		#format($core_v2_language.GetResource('AccessibilityTitle'))
+			#token('name')
+				$embeddable.ProcessedName
+		#end
+	#end
+	<li class="content-item embeddable" data-id="$embeddable.Id"
+		data-embeddablename="$core_v2_encoding.HtmlAttributeEncode($accessibilityTitle)">
+		$core_v2_widget.ExecuteFile('render-item.vm')
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end

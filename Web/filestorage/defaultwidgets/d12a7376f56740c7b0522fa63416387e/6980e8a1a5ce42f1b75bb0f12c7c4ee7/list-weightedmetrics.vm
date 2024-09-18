@@ -1,0 +1,49 @@
+#foreach($weightedMetric in $context.GetWeightedMetrics())
+    #beforeall
+        <form>
+        <ul class="content-list content simple expandable weighted-metrics">
+    #each
+        <li class="content-item metric" data-metricid="$!weightedMetric.Metric.Id.ToString()" style="position:relative;">
+            <div class="metric-weight">
+                <input type="range" min="0" max="1" step=".1" value="$context.FormatForHtml($weightedMetric.Weight)" />
+                <div class="weight-label">$core_v2_language.GetResource('most-weight')</div>
+            </div>
+        	<div class="content-container">
+            	<h4 class="name">
+            	    $weightedMetric.Metric.MetricName
+            	</h4> 
+            	<div class="content expandable">
+            	    $!weightedMetric.Metric.MetricDescription
+            	</div>
+            	<div class="actions expandable">
+            		<div class="navigation-list ui-links" data-direction="horizontal">
+            			<ul>
+            				<li class="navigation-list-item">
+            					<a href="#" data-messagename="scoreplugin.removemetric" data-metricid="$!weightedMetric.Metric.Id.ToString()" data-metricname="$core_v2_encoding.HtmlAttributeEncode($weightedMetric.Metric.MetricName)">
+            						$core_v2_language.GetResource('remove-metric')
+            					</a>
+            				</li>
+            				<li class="navigation-list-item">
+            					<a href="#" data-messagename="scoreplugin.metricsample" data-metricid="$!weightedMetric.Metric.Id.ToString()" data-metricname="$core_v2_encoding.HtmlAttributeEncode($weightedMetric.Metric.MetricName)">
+            						$core_v2_language.GetResource('view-metric-sample')
+            					</a>
+            				</li>
+            				<li class="navigation-list-item">
+            					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+            				</li>
+            				<li class="navigation-list-item">
+            					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+            				</li>
+            			</ul>
+            		</div>
+            	</div>
+            </div>
+        </li>
+    #afterall
+        </ul>
+        </form>
+    #nodata
+        <div class="message norecords">
+            $core_v2_language.GetResource('no-metrics-selected')
+        </div>
+#end

@@ -1,0 +1,9 @@
+#if ($threadedComments)
+	#foreach ($threadedComment in $threadedComments)
+		#set ($addedAt = $comments.Add($threadedComment))
+		#if ($threadedComment.Children && $threadedComment.Children.Count > 0)
+			#set ($threadedComments = $threadedComment.Children)
+			$core_v2_widget.ExecuteFile('recurse.vm')
+		#end
+	#end
+#end

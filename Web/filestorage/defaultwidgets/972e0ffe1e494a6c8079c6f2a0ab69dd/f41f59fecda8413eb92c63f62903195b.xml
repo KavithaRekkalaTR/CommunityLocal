@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ContentFiltering_Title}" version="11.0.0.0" description="${resource:ContentFiltering_Description}" instanceIdentifier="f41f59fecda8413eb92c63f62903195b" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="content-f" lastModified="2021-08-10 15:33:34Z" provider="972e0ffe1e494a6c8079c6f2a0ab69dd">
+    <contentScript language="Velocity"><![CDATA[#if (!$context.HasAccess)
+    $core_v2_widget.Hide()
+#end
+<div class="content-filtering" id="$core_v2_widget.UniqueId('wrapper')">
+    $core_v2_widget.ExecuteFile('render-options.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.contentFilteringPlugin')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+    jQuery(function(){
+        var api = $context.JsonApi;
+		jQuery.telligent.evolution.widgets.contentFilteringPlugin.register({
+			api: api,
+            wrapper: jQuery('#$core_v2_widget.UniqueId('wrapper')'),
+			text: {
+			    contentFiltering: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ContentFiltering_Tab'))'
+			},
+			fieldIds: {
+			    AllowedFileExtensions: '#$core_v2_widget.UniqueId('AllowedFileExtensions')',
+			    AllowedHosts: '#$core_v2_widget.UniqueId('AllowedHosts')',
+			    AllowedProtocols: '#$core_v2_widget.UniqueId('AllowedProtocols')',
+			    AllowIpHosts: '#$core_v2_widget.UniqueId('AllowIpHosts')',
+			    AllowLocalNetworkHosts: '#$core_v2_widget.UniqueId('AllowLocalNetworkHosts')',
+			    DisallowedFileExtensions: '#$core_v2_widget.UniqueId('DisallowedFileExtensions')',
+			    DisallowedHosts: '#$core_v2_widget.UniqueId('DisallowedHosts')',
+			    Mentions: '#$core_v2_widget.UniqueId('Mentions')',
+            	Hashtags: '#$core_v2_widget.UniqueId('Hashtags')',
+            	UrlEmbedding: '#$core_v2_widget.UniqueId('UrlEmbedding')',
+            	EmbeddableContent: '#$core_v2_widget.UniqueId('EmbeddableContent')',
+            	FileEmbedding: '#$core_v2_widget.UniqueId('FileEmbedding')',
+            	Emoticons: '#$core_v2_widget.UniqueId('Emoticons')',
+            	Font: '#$core_v2_widget.UniqueId('Font')',
+            	FontDecoration: '#$core_v2_widget.UniqueId('FontDecoration')',
+            	FontSize: '#$core_v2_widget.UniqueId('FontSize')',
+            	ForegroundColor: '#$core_v2_widget.UniqueId('ForegroundColor')',
+            	Background: '#$core_v2_widget.UniqueId('Background')',
+            	BordersAndLines: '#$core_v2_widget.UniqueId('BordersAndLines')',
+            	Lists: '#$core_v2_widget.UniqueId('Lists')',
+            	Paragraphs: '#$core_v2_widget.UniqueId('Paragraphs')',
+            	Tables: '#$core_v2_widget.UniqueId('Tables')',
+            	Links: '#$core_v2_widget.UniqueId('Links')',
+            	MaxFileSizeMegaBytes: '#$core_v2_widget.UniqueId('MaxFileSizeMegaBytes')',
+            	Microformats: '#$core_v2_widget.UniqueId('Microformats')',
+            	SemanticMarkup: '#$core_v2_widget.UniqueId('SemanticMarkup')',
+            	CustomStyles: '#$core_v2_widget.UniqueId('CustomStyles')',
+            	Frames: '#$core_v2_widget.UniqueId('Frames')',
+            	Data: '#$core_v2_widget.UniqueId('Data')'
+			},
+			urls: {
+			    save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))',
+			    render: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('render-options.vm'))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ContentEmbedding_Header">Embedding</resource>
+  <resource name="ContentFiltering_Description">Allows filtering of HTML content.</resource>
+  <resource name="ContentFiltering_Tab">Filtering</resource>
+  <resource name="ContentFiltering_Title">Filtering</resource>
+  <resource name="Field_AllowedClassNames">Classes</resource>
+  <resource name="Field_AllowedClassNames_All">Classes are not filtered.</resource>
+  <resource name="Field_AllowedClassNames_None">All classes are removed from HTML.</resource>
+  <resource name="Field_AllowedClassNames_Selection">Only the following class names can be used in HTML: {0}</resource>
+  <resource name="Field_AllowedFileExtensions">Allowed File Extensions</resource>
+  <resource name="Field_AllowedFileExtensions_Desc">File extensions that are allowed to be uploaded (note that embedded and linked URLs are not required to include an allowed file extension). One per line without a preceding period.</resource>
+  <resource name="Field_AllowedHosts">Allowed hosts</resource>
+  <resource name="Field_AllowedHosts_Desc">The following checked hosts are always enabled to be referenced regardless of other URL host validation.</resource>
+  <resource name="Field_AllowedIdPrefixes">IDs</resource>
+  <resource name="Field_AllowedIdPrefixes_All">IDs are not filtered.</resource>
+  <resource name="Field_AllowedIdPrefixes_None">All IDs are removed from HTML.</resource>
+  <resource name="Field_AllowedIdPrefixes_Selection">Only IDs with the following prefixes are allowed: {0}</resource>
+  <resource name="Field_AllowedProtocols">Allowed protocols</resource>
+  <resource name="Field_AllowedProtocols_Desc">When referencing files and URLs, only the following internet protocols are allowed.</resource>
+  <resource name="Field_AllowIpHosts">Allow IP addresses</resource>
+  <resource name="Field_AllowIpHosts_Desc">When enabled, URLs identifying hosts by IP address are allowed.</resource>
+  <resource name="Field_AllowLocalNetworkHosts">Allow local network addresses</resource>
+  <resource name="Field_AllowLocalNetworkHosts_Desc">When enabled, local network resources referenced by their internal (LAN) hostnames are allowed.</resource>
+  <resource name="Field_Background">Backgrounds</resource>
+  <resource name="Field_Background_Desc">Enables content to specify alternative background colors, images, and gradients.</resource>
+  <resource name="Field_BordersAndLines">Borders and lines</resource>
+  <resource name="Field_BordersAndLines_Desc">Enables border styling and horizontal rules.</resource>
+  <resource name="Field_ConentEmbedding_Desc">Enables embedding of {0} content.</resource>
+  <resource name="Field_CustomStyles">Custom styles</resource>
+  <resource name="Field_CustomStyles_Desc">Enables content to define custom styling using inline cascading stylesheet syntax.</resource>
+  <resource name="Field_Data">Data</resource>
+  <resource name="Field_Data_Desc">Enables content to use &lt;code&gt;data-&lt;/code&gt; prefixed attributes on HTML to enable embedding information that can be used to interact with or style the content.</resource>
+  <resource name="Field_DisallowedFileExtensions">Disallowed File Extensions</resource>
+  <resource name="Field_DisallowedFileExtensions_Desc">File extensions that are not allowed to be uploaded or linked (disallowed file extensions affects both uploaded files and URLs). One per line without a preceding period.</resource>
+  <resource name="Field_DisallowedHosts">Disallowed hosts</resource>
+  <resource name="Field_DisallowedHosts_Desc">Hosts identified here (one per line) are always blocked from being referenced in the community. Hosts disallowed by the global filtering configuration cannot be removed or disabled. For the URL &lt;code&gt;http://telligent.com/&lt;/code&gt;, the host would be &lt;code&gt;telligent.com&lt;/code&gt;</resource>
+  <resource name="Field_Emoticons">Emoticons</resource>
+  <resource name="Field_Emoticons_Desc">Enables emoji and emoticons to be included in content.</resource>
+  <resource name="Field_FileEmbedding">File embedding</resource>
+  <resource name="Field_FileEmbedding_Desc">Enables embedding of files stored within the community within content.</resource>
+  <resource name="Field_FileEmbedding_Desc_WithCriteria">Enables embedding of files stored within the community within content. Note: {0}</resource>
+  <resource name="Field_Font">Fonts</resource>
+  <resource name="Field_Font_Desc">Enables content to select alternative font faces.</resource>
+  <resource name="Field_FontDecoration">Font decoration</resource>
+  <resource name="Field_FontDecoration_Desc">Enables content to use bold, italic, underline and other font decorations.</resource>
+  <resource name="Field_FontSize">Font sizes</resource>
+  <resource name="Field_FontSize_Desc">Enables content to select alternative font sizes.</resource>
+  <resource name="Field_ForegroundColor">Foreground colors</resource>
+  <resource name="Field_ForegroundColor_Desc">Enables content to select alternative foreground colors.</resource>
+  <resource name="Field_Frames">Frames</resource>
+  <resource name="Field_Frames_Desc">Enables embedding of other web accessible content using the &amp;lt;iframe /&amp;gt; tag.</resource>
+  <resource name="Field_Hashtags">Hashtags</resource>
+  <resource name="Field_Hashtags_Desc">Enables tags to be placed within content using the # prefix.</resource>
+  <resource name="Field_Links">Links</resource>
+  <resource name="Field_Links_Desc">Enables content to include links to other internet resources.</resource>
+  <resource name="Field_Lists">Lists</resource>
+  <resource name="Field_Lists_Desc">Enables content to make use of ordered, unordered, and definition lists.</resource>
+  <resource name="Field_MaxFileSizeMegaBytes">Maximum File Size (in MB)</resource>
+  <resource name="Field_MaxFileSizeMegaBytes_Desc">The maximum file size, in megabytes, allowed for uploaded files. The global configuration limits this to a maximum of {0}MB.</resource>
+  <resource name="Field_Mentions">Mentions</resource>
+  <resource name="Field_Mentions_Desc">Enables referencing another user, group, or application within content.</resource>
+  <resource name="Field_Microformats">Microformats</resource>
+  <resource name="Field_Microformats_Desc">Enables content to include machine-readable attributes on HTML such as those defined by &lt;a href="http://schema.org/" target="_blank"&gt;schema.org&lt;/a&gt;.</resource>
+  <resource name="Field_Paragraphs">Paragraphs and line breaks</resource>
+  <resource name="Field_Paragraphs_Desc">Enables content to make use of paragraph breaks, indents, and line breaks.</resource>
+  <resource name="Field_SemanticMarkup">Semantic markup</resource>
+  <resource name="Field_SemanticMarkup_Desc">Enables content to make use of HTML tags that have semantic meaning, such as &amp;lt;abbr /&amp;gt;, &amp;lt;acronym /&amp;gt;, &amp;lt;time /&amp;gt;.</resource>
+  <resource name="Field_Tables">Tables</resource>
+  <resource name="Field_Tables_Desc">Enables content to include tabular data.</resource>
+  <resource name="Field_UrlEmbedding">URL embedding</resource>
+  <resource name="Field_UrlEmbedding_Desc">Enables embedding of URLs and external files within content.</resource>
+  <resource name="Field_UrlEmbedding_Desc_WithCriteria">Enables embedding of URLs and external files within content. Note: {0}</resource>
+  <resource name="FileAndUrlEmbedding_Header">Files and URL Embedding</resource>
+  <resource name="FileValidation_Header">File Validation</resource>
+  <resource name="Html_Header">Formatting</resource>
+  <resource name="Instructions">Filtering enables HTML content in the definition of a {0} to be limited to specific features and styling options beyond the &lt;a href="{1}"&gt;global filtering configuration&lt;/a&gt;. Disabled options cannot be used and will not be exposed through the HTML editor when creating or editing a {0}. &lt;strong&gt;Note that changes only apply to new or newly edited content.&lt;/strong&gt;</resource>
+  <resource name="Option_Disabled">This option is disabled by the global filtering settings.</resource>
+  <resource name="Option_GlobalOnly">This option is only configurable by the global filtering settings.</resource>
+  <resource name="PlatformFeatures_Header">Community interactions</resource>
+  <resource name="UrlValidation_Header">URL Validation</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

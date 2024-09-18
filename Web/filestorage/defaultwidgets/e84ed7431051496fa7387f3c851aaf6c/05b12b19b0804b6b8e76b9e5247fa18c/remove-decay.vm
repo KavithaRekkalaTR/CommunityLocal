@@ -1,0 +1,16 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($scoreId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ScoreId')))
+	#set($applicationName = $core_v2_page.GetFormValue('ApplicationName'))
+	#set($applicationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ApplicationId')))
+
+	#set($response = $context.RemoveDecayOverride($scoreId, $applicationId))
+
+	#if($response.HasErrors())
+	##	$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "applicationName":"$applicationName"}
+
+#end

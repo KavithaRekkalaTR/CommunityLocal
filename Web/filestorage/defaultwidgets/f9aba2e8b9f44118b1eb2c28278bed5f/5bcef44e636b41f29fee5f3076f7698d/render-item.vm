@@ -1,0 +1,68 @@
+##
+## Expects in scope: $configuredAutomation
+##
+<div class="content configuredautomation">
+	<input type="checkbox" class="multiselect" data-configuredautomationid="$configuredAutomation.Id" />
+	<h4 class="name">$core_v2_encoding.HtmlEncode($configuredAutomation.Name)</h4>
+
+	<div class="attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item enablement">
+				<span class="attribute-value">
+					#if ($configuredAutomation.IsEnabled)
+						<span class="pill positive">$core_v2_language.GetResource('Enabled')</span>
+					#else
+						<span class="pill negative">$core_v2_language.GetResource('Disabled')</span>
+					#end
+				</span>
+			</li>
+			<li class="attribute-item automation-type">
+				<span class="attribute-value">
+					#set ($automation = $context.GetAutomation("%{ Id = $configuredAutomation.Automation.Id }"))
+					$core_v2_encoding.HtmlEncode($automation.ProcessedName)
+				</span>
+			</li>
+		</ul>
+	</div>
+
+	<div class="content description expandable">
+		$core_v2_language.Truncate($configuredAutomation.Description, 500, "…")
+	</div>
+
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="3">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredautomation-edit">$core_v2_language.GetResource('edit')</a>
+				</li>
+				#if ($configuredAutomation.IsEnabled)
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="configuredautomation-disable" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('Disable')</a>
+					</li>
+				#else
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="configuredautomation-enable" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('Enable')</a>
+					</li>
+				#end
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredautomation-export" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('Export')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredautomation-exportresources" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('ExportResources')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($context.EditAutomationUrl($configuredAutomation.Automation.Id))">$core_v2_language.GetResource('edit-automation')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredautomation-delete" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('delete')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>

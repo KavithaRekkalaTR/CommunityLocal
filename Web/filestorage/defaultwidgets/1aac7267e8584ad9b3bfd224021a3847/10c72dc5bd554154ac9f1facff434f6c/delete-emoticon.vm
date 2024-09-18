@@ -1,0 +1,14 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($emoticonIdString = $core_v2_page.GetQueryStringValue('w_emoticonId'))
+	#set($emoticonId = $core_v2_utility.ParseGuid($emoticonIdString))
+
+	#set($response = $context.DeleteEmoticon($emoticonId))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "emoticonId":"$emoticonId"}
+#end

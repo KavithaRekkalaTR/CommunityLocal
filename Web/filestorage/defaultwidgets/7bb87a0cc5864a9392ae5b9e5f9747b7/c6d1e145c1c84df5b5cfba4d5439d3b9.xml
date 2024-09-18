@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeDocumentList}" version="11.0.0.0" description="${resource:KnowledgeDocumentList_Description}" instanceIdentifier="c6d1e145c1c84df5b5cfba4d5439d3b9" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="knowledge-document-list" lastModified="2020-01-14 16:08:54Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 10))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($query = "%{ PageSize = $pageSize, PageIndex = $pageIndex }")
+
+#set($collection = false)
+#set($collectionId = $core_v2_utility.ParseGuid($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('knowledgeCollectionId', '')).Value('KnowledgeCollectionId')))
+#if ($collectionId && $collectionId.ToString('N') != '00000000000000000000000000000000')
+    #set($collection = $km_v1_knowledgeCollections.Get($collectionId))
+#else
+    #set ($collection = $km_v1_knowledgeCollections.Current)
+#end
+
+#if (!$collection || $collection.HasErrors())
+	$core_v2_widget.Hide()
+#end
+
+#set($queryStringAddition = '')
+
+#set($tag = false)
+#set($tag = $core_v2_widget.GetCustomValue('tags', ''))
+#if (!$tag || $tag.Length == 0)
+    #set($tag = $km_v1_tags.Current)
+    #if($tag)
+        #set($tag = $tag.Id)
+    	#set($queryStringAddition = "tag=$core_v2_encoding.UrlEncode($tag)")
+    #end
+#end
+#if($tag)
+	$query.Add('Tags', $tag)
+#end
+
+#set($category = false)
+#set($category = $core_v2_widget.GetCustomValue('categories', ''))
+#if ($category && $category != 'all')
+    $query.Add('Categories', $category)
+#end
+
+#set ($documents = $km_v1_documents.List($collection.Id, $query))
+#foreach ($document in $documents)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+    #set($url = $core_v2_page.AdjustQueryString($document.Url, $queryStringAddition))
+	<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($url)">
+		<div class="content abbreviated">
+			<div class="summary">
+				<h2 class="name">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$document.Title</a>
+				</h2>
+				<div class="content">
+					$core_v2_language.Truncate($document.Body('WebQuote'), 165, '...')
+				</div>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+	#if ($core_v2_widget.GetBoolValue('enablePaging', true))
+	    $core_v2_ui.Pager($pageIndex, $documents.PageSize, $documents.TotalCount)
+	#end
+#nodata
+	<div class="message norecords">
+		$core_v2_language.GetResource('Documents_NoneExist')
+	</div>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:KnowledgeDocumentList}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:KnowledgeDocumentList}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="knowledgeCollectionId" labelResourceName="KnowledgeCollection" defaultValue="KnowledgeCollectionId=00000000000000000000000000000000" dataType="Custom" template="km_v1_knowledgeCollectionLookup" enableCurrent="true" maxSelections="1" />
+	<property id="tags" labelResourceName="Tags" descriptionResourceName="Tags-Description" dataType="Custom" template="km_v1_tagLookup" maxSelections="20" knowledgeCollectionPropertyId="knowledgeCollectionId" format="csv" />
+	<property id="categories" labelResourceName="Categories" descriptionResourceName="Categories-Description" defaultValue="all" dataType="Custom" template="km_v1_categoryLookup" knowledgeCollectionPropertyId="knowledgeCollectionId" />
+	<property id="pageSize" labelResourceName="PageSize" defaultValue="10" dataType="Int" />
+	<property id="enablePaging" labelResourceName="EnablePaging" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Categories">Categories</resource>
+  <resource name="Categories-Description">Select one or more categories to filter documents. If none is specified, all categories of documents will be listed.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Documents_NoneExist">No documents have yet been defined matching the filter criteria.</resource>
+  <resource name="EnablePaging">Enable paging</resource>
+  <resource name="KnowledgeCollection">Knowledge Collection</resource>
+  <resource name="KnowledgeCollection-Description">Select the knowledge collection to list documents form. If none is specified, the contextual knowledge collection is used.</resource>
+  <resource name="KnowledgeDocumentList">Knowledge Management - Document List</resource>
+  <resource name="KnowledgeDocumentList_Description">Lists knowledge documents.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="PageSize">Number of documents to display</resource>
+  <resource name="Tags">Tags</resource>
+  <resource name="Tags-Description">Select one or more tags to filter documents. If none is specified, the contextual tag will be used.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

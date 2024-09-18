@@ -1,0 +1,77 @@
+﻿#set ($config = $context.Settings)
+
+#set($defaultAvatarUrl = "~/cfs-file.ashx/__key/system/images/defaulthub.gif")
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+<fieldset>
+	<legend>$core_v2_language.GetResource('UploadAnAvatar')</legend>
+	<ul class="field-list">
+		<li class="field-item upload-avatar" id="$core_v2_widget.UniqueId('setattachment')" data-upload="true" data-link="false">
+			<span class="field-item-input upload2">
+				<a href="#" class="inline-button upload2 add">$core_v2_language.GetResource('Upload')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+#if($config.DefaultGroupAvatarUrl != $defaultAvatarUrl)
+<fieldset>
+	<legend>$core_v2_language.GetResource('RevertToDefaultAvatar')</legend>
+	<ul class="field-list">
+		<li class="field-item revert-avatar">
+			$core_v2_ui.GetResizedImageHtml($defaultAvatarUrl, $config.GroupAvatarWidth, $config.GroupAvatarHeight, "%{border='0px', ResizeMethod = 'ZoomAndCrop', alt = '' }")
+			<span class="field-item-input revert">
+				<a href="#" class="inline-button revert-avatar">$core_v2_language.GetResource('RevertAvatar')</a>
+			</span>
+		</li>
+	</ul>
+	</ul>
+</fieldset>
+#end
+#set($avatars = $context.GetAvatars())
+
+#foreach($avatar in $avatars)
+#beforeall
+<fieldset>
+	<legend>$core_v2_language.GetResource('SelectAnAvatar')</legend>
+	<ul class="content-list selectable-avatars">
+#each
+		<li class="content-item selectable-avatar">
+			<a href="#" data-messagename="set-group-default-avatar" data-url="$core_v2_encoding.HtmlAttributeEncode($avatar.GetDownloadUrl)">
+		        $core_v2_ui.GetResizedImageHtml($avatar.GetDownloadUrl(), $config.GroupAvatarWidth, $config.GroupAvatarHeight, "%{border='0px', alt=$avatar.FileName, ResizeMethod = 'ZoomAndCrop' }")
+			</a>
+		</li>
+	#afterall
+	</ul>
+</fieldset>
+#end
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.groupAvatarOptionsSetAvatar.register({
+		  defaultGroupAvatarUrl: '$defaultAvatarUrl',
+		  avatarHeight: $config.GroupAvatarHeight,
+		  avatarWidth: $config.GroupAvatarWidth,
+		  attachmentId: '$core_v2_widget.UniqueId('setattachment')',
+		  attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		  attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Upload'))',
+		  uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		  uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+		resources: {
+			avatarUploaded: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AvatarUploaded'))'
+		},
+		urls: {
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save-configuration.vm'))',
+			setSelectedAvatar: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('set-selected-avatar.vm'))',
+			setUploadedAvatar: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('set-uploaded-avatar.vm'))'
+		}
+	});
+});
+</script>

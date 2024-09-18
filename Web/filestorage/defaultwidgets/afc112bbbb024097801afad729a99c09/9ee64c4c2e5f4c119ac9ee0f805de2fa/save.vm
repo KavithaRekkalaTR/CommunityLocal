@@ -1,0 +1,67 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Name = false)
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+
+	#set($ApplicationKey = false)
+	#set($ApplicationKey = $core_v2_page.GetFormValue('ApplicationKey'))
+
+	#set($Description = $core_v2_page.GetFormValue('Description'))
+	#set($ParentGroupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ParentGroupId')))
+	
+	#set($GroupType = $core_v2_page.GetFormValue('GroupType'))
+	#set($EnableMessages = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableMessages')))
+	#set($EnableContactForm = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableContactForm')))
+
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 1/0
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+	#set($fileRemoved = $core_v2_page.GetFormValue('FileRemoved')) ## 1/0	
+
+	#if ($Name)
+		$options.Add('Name', $Name)
+	#end
+	#if ($ApplicationKey && $ApplicationKey != '')
+		$options.Add('Key', $ApplicationKey)
+	#end
+	#if ($ParentGroupId > 0)
+		$options.Add('ParentGroupId', $ParentGroupId)
+	#end	
+
+	$options.Add('Description', $Description)
+	$options.Add('GroupType', $GroupType)
+	$options.Add('EnableGroupMessages', $EnableMessages)
+	$options.Add('EnableContactForm', $EnableContactForm)
+
+	#if ($fileChanged == '1')
+		#set($file = false)
+		#set($file = $core_v2_uploadedFile.Get($fileContextId, $fileName))
+		#if ($file)
+			$options.Add('AvatarFileUploadContext', $fileContextId)
+			$options.Add('AvatarFileName',$file.Name)
+		#end
+	#elseif ($fileRemoved == '1')
+		$options.Add('RemoveAvatarImage', 'true')
+	#end
+
+	#set($response = $core_v2_group.Update($context.Group.ID, $options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+	
+	#if ($fileChanged == '2')
+	    #set($response = $context.SetSelectableAvatar($fileName))
+	    #if($response.HasErrors())
+    		$core_v2_page.SendJsonError($response.Errors)
+    	#end
+	#end
+
+	{"success":true, "redirectUrl":"$response.Url"}
+
+#end

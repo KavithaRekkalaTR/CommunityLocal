@@ -1,0 +1,24 @@
+##
+## Renders markup description of an extension for use in autocomplete
+##
+## Requires in scope:
+##   $apiExtension
+##
+
+## ACE prevents use of an actual anchor here. Shimming with an onclick that simulates a true data-messagename link
+<div class="suggestion_details">
+	#if ($apiExtension.Description)
+		<div class="description">$core_v2_language.Truncate($apiExtension.Description, 250, '…')</div>
+	#end
+	#if ($apiExtension.IsPrivate)
+		<div>
+			<span class="private_api">$core_v2_language.GetResource('PrivateExtension')</span>
+		</div>
+	#end
+	<span class="mfw suggestion view_docs" onclick="jQuery.telligent.evolution.messaging.publish('studio.view.documentation.show', { target: this, elm: this });"
+		data-type="extension"
+		data-name="$core_v2_encoding.HtmlAttributeEncode($apiExtension.Name)"
+		data-displayname="$core_v2_encoding.HtmlAttributeEncode($apiExtension.Name)"
+		data-target="">View Documentation</span>
+	<span class="view_doc_shortcut">$core_v2_language.GetResource('ViewDocShortcut')</span>
+</div>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:DeleteCommentPanel_Name}" cssClass="comment-delete" description="${resource:DeleteCommentPanel_Description}" instanceIdentifier="5aabcf9ae27b49e793cf060498d68763" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="true">
+	<contentScript><![CDATA[
+
+#set ($commentId = $context.CommentId)
+#set ($comment = $core_v2_comments.Get($commentId))
+
+#set ($saveButtonTemplateId = $core_v2_widget.UniqueId('saveButtonTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveButtonTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item"><span class="field-item-input"><a href="#" class="button save two-wide" data-messagename="delete-comment-delete">$core_v2_language.GetResource('delete')</a><a href="#" class="button save two-wide" data-messagename="delete-comment-cancel">$core_v2_language.GetResource('cancel')</a></span></li>
+		</ul>
+	</fieldset>
+</script>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<div class="editing-title">$core_v2_language.GetResource('confirm')</div>
+		</li>
+		#if ($comment.ReplyCount > 0)
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" class="include-children" checked="" id="$core_v2_widget.UniqueId('includeChildren')" name="$core_v2_widget.UniqueId('includeChildren')">
+					<label class="field-item-name" for="$core_v2_widget.UniqueId('includeChildren')">$core_v2_language.GetResource('delete_children')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('delete_children_desc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		#end
+	</ul>
+</fieldset></form>
+
+<script>
+var saveButtonTemplateId = '$core_v2_encoding.JavascriptEncode($saveButtonTemplateId)';
+
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	var header = jQuery(jQuery.telligent.evolution.template.compile(saveButtonTemplateId)({}));
+	var wrapper = jQuery.telligent.evolution.administration.panelWrapper();
+	var commentId = '$context.CommentId';
+	jQuery.telligent.evolution.administration.header(header);
+
+	jQuery.telligent.evolution.messaging.subscribe('delete-comment-delete', function(data) {
+		var deleteChildren = #if ($comment.ReplyCount == 0) true #else wrapper.find('input.include-children').first().is(':checked') #end;
+		jQuery.telligent.evolution.del({
+			url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/comments/{CommentId}.json',
+			data: {
+				CommentId: commentId,
+				DeleteChildren: deleteChildren
+			}
+		}).then(function(){
+			jQuery.telligent.evolution.messaging.publish('ui.comment.delete', {
+				commentId: commentId,
+				deleteChildren: deleteChildren
+			});
+			jQuery.telligent.evolution.administration.close();
+		});
+	});
+	jQuery.telligent.evolution.messaging.subscribe('delete-comment-cancel', function(data) {
+		jQuery.telligent.evolution.administration.close();
+	});
+
+});
+</script>
+
+]]></contentScript>
+
+<headerScript><![CDATA[ $core_v2_language.GetResource('DeleteCommentPanel_Name') ]]></headerScript>
+<languageResources>
+<language key="en-us">
+<resource name="DeleteCommentPanel_Name">Delete Comment</resource>
+<resource name="DeleteCommentPanel_Description">Comment deletion panel widget.</resource>
+<resource name="confirm">Are you sure you want to delete this comment?</resource>
+<resource name="delete">Delete</resource>
+<resource name="cancel">Cancel</resource>
+<resource name="delete_children">Delete Children</resource>
+<resource name="delete_children_desc">When selected, also deletes children.</resource>
+</language>
+</languageResources>
+<restScopes>
+	<scope id="comments.comments.modify" />
+</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

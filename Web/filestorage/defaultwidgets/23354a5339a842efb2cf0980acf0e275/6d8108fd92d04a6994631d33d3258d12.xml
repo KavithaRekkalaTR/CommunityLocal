@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="6d8108fd92d04a6994631d33d3258d12" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="message-redirects" lastModified="2021-08-24 18:17:10Z" provider="23354a5339a842efb2cf0980acf0e275">
+    <contentScript language="Velocity"><![CDATA[#set($headerTemplate = $core_v2_widget.UniqueId('header'))
+
+<p>$core_v2_language.GetResource('Instructions')</p>
+
+<form><fieldset>
+	<div class="filter-selector">
+	    <div>
+            <input type="text" id="$core_v2_widget.UniqueId('filter')" style="width:50%" placeholder="$core_v2_language.GetResource('Search_For')" />
+        </div>
+        <div style="margin-top: 10px;">
+            <select id="$core_v2_widget.UniqueId('redirect')">
+    			<option value="">$core_v2_language.GetResource('Redirect_Any')</option>
+    			<option value="WithRedirect">$core_v2_language.GetResource('Redirect_With')</option>
+			    <option value="WithoutRedirect">$core_v2_language.GetResource('Redirect_Without')</option>
+    		</select>
+        </div>
+    </div>
+</form></fieldset>
+
+<form><fieldset>
+<ul class="field-list" id="$core_v2_widget.UniqueId('overrides')">
+    #foreach ($message in $context.GetMessages())
+    	<li class="field-item" data-text="$message.Name.ToLower()" #if ($message.Url) data-redirected="true" #else data-redirected="false" #end>
+    		#set($id = "message_${message.Id.ToString()}")
+    		<label for="$id" class="field-item-name">
+                $message.Name
+            </label>
+    		<span class="field-item-description">
+    			$message.Description
+    		</span>
+    		<span class="field-item-input">
+    			<input type="text" id="$id" value="$!message.Url" data-messageid="$message.Id.ToString()" data-originalvalue="$!message.Url" />
+    		</span>
+    		<ul class="attribute-list">
+    			<li class="attribute-item">
+	                <a href="#" data-messagename="messageredirect.preview" data-messageid="$message.Id.ToString()" data-name="$core_v2_language.GetResource('PreviewDefault')">
+    	                $core_v2_language.GetResource('PreviewDefault')
+        	        </a>
+				</li>
+				<li class="attribute-item">$core_v2_language.FormatString($core_v2_language.GetResource('Identifier'), $message.Id.ToString())</li>
+    		</ul>
+    	</li>
+    #end
+</ul>
+</fieldset></form>
+
+<script type="text/html" id="$headerTemplate">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.messageRedirects')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.messageRedirects.register({
+			headerTemplateId: '$headerTemplate',
+			text: {
+				saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save-Successful'))'
+			},
+			fields: {
+			    filter: jQuery('#$core_v2_widget.UniqueId('filter')'),
+			    redirect: jQuery('#$core_v2_widget.UniqueId('redirect')'),
+				overrides: jQuery('#$core_v2_widget.UniqueId('overrides')')
+			},
+			urls: {
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.jsm'))',
+				preview: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('modal-preview.vm'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enabled redirecting messages to custom pages or URLs.</resource>
+  <resource name="Identifier">Identifier: {0}</resource>
+  <resource name="Instructions">Programmatic messages and exceptions have default renderings. To override the default rendering and redirect users who would be presented with the default message to an alternate URL, specify redirect URLs below.</resource>
+  <resource name="Name">Message Redirects</resource>
+  <resource name="PreviewDefault">View default</resource>
+  <resource name="Redirect_Any">With or without redirects</resource>
+  <resource name="Redirect_With">With redirects</resource>
+  <resource name="Redirect_Without">Without redirects</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Save-Successful">Redirects have been saved successfully.</resource>
+  <resource name="Search_For">Find messages...</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,23 @@
+##
+## Renders a signature of LESS function
+##
+## Requires in scope:
+##   $lessFunction
+##
+
+#set ($requiredParameters = [])
+#foreach ($parameter in $lessFunction.Parameters)
+	#if ($parameter.IsRequired)
+		#set ($addedAt = $requiredParameters.Add($parameter))
+	#end
+#end
+
+#set ($parameters = "")
+#foreach ($parameter in $requiredParameters)
+#each
+	#set ($parameters = "${parameters}@${parameter.Name}")
+#between
+	#set ($parameters = "${parameters}, ")
+#end
+
+${lessFunction.Name}($parameters)

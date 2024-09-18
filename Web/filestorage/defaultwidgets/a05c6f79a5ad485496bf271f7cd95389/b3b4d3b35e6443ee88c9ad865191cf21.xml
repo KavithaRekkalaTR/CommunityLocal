@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UpgradeTheme_Name}" version="10.0.0.0" description="${resource:UpgradeTheme_Description}" instanceIdentifier="b3b4d3b35e6443ee88c9ad865191cf21" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-upgrade-theme" provider="a05c6f79a5ad485496bf271f7cd95389">
+	<contentScript><![CDATA[## Possible interests: social-migration, theme-update, widget-update (default), social-migration-preview
+
+#set ($upgradeFormWrapper = $core_v2_widget.UniqueId('upgradeForm'))
+#set ($upgradeProgressWrapper = $core_v2_widget.UniqueId('upgradeProgress'))
+#set ($upgradeProgressKey = "upgrade-ui:${core_v2_user.Accessing.Id}")
+
+## If an upgrade is in-progress, show existing indicator for it instead
+#set ($status = $core_v2_widget.GetScheduledFileStatus($upgradeProgressKey))
+#if ($status && $status.PercentComplete < 1)
+
+	<p>$core_v2_language.GetResource('StagingChanges')</p>
+
+	$core_v2_ui.ScheduledFile($upgradeProgressKey, "%{ IncludeProgress = 'True', IncludeAllMessages = 'False', IncludeLatestMessage = 'True' }")
+
+	<script>
+		jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+			jQuery.telligent.evolution.messaging.subscribe('scheduledFile.complete', function(data) {
+				if (data.progressKey == '$core_v2_encoding.JavascriptEncode($upgradeProgressKey)') {
+					if (data.result && data.result.warnings && data.result.warnings.length > 0) {
+						jQuery.telligent.evolution.notifications.show(data.result.warnings[0], {
+							type: 'warning'
+						});
+					} else {
+						window.location = (data.result && data.result.successUrl) ? data.result.successUrl : '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)';
+					}
+				}
+			});
+		});
+	</script>
+
+## Otherwise, show a form for initiating a UI upgrade
+#else
+	<div class="upgrade-form" id="$core_v2_encoding.HtmlAttributeEncode($upgradeFormWrapper)">
+		#if ($context.Interest == 'social-migration-preview')
+			$core_v2_language.GetResource('preview-social-theme-instructions')
+
+			<form>
+				<fieldset>
+					<ul class="field-list">
+						<li class="field-item">
+							<span class="field-item-input">
+								<a href="#" data-messagename="administration.upgradetheme.preview-social-theme" class="button preview-social-theme">$core_v2_language.GetResource('preview-social-theme')</a>
+							</span>
+						</li>
+					</ul>
+				</fieldset>
+			</form>
+		#elseif ($context.Interest == 'social-migration')
+			#if ($context.CanMigrateToSocialTheme)
+				$core_v2_language.GetResource('begin-migration-instructions')
+
+				<form><fieldset>
+					<ul class="field-list">
+						<li class="field-item">
+							<span class="field-item-input">
+								<input type="checkbox" id="$core_v2_widget.UniqueId('PlatformPages')" data-name="PlatformPages" checked />
+								<label for="$core_v2_widget.UniqueId('PlatformPages')">$core_v2_language.GetResource('migrate-PlatformPages')</label>
+							</span>
+							<span class="field-item-description">$core_v2_language.GetResource('migrate-PlatformPages-description')</span>
+						</li>
+						<li class="field-item">
+							<span class="field-item-input">
+								<input type="checkbox" id="$core_v2_widget.UniqueId('ContentPages')" data-name="ContentPages" checked />
+								<label for="$core_v2_widget.UniqueId('ContentPages')">$core_v2_language.GetResource('migrate-ContentPages')</label>
+							</span>
+							<span class="field-item-description">$core_v2_language.GetResource('migrate-ContentPages-description')</span>
+						</li>
+						<li class="field-item">
+							<span class="field-item-input">
+								<input type="checkbox" id="$core_v2_widget.UniqueId('Headers')" data-name="Headers" checked />
+								<label for="$core_v2_widget.UniqueId('Headers')">$core_v2_language.GetResource('migrate-Headers')</label>
+							</span>
+							<span class="field-item-description">$core_v2_language.GetResource('migrate-Headers-description')</span>
+						</li>
+						<li class="field-item">
+							<span class="field-item-input">
+								<input type="checkbox" id="$core_v2_widget.UniqueId('Footers')" data-name="Footers" checked />
+								<label for="$core_v2_widget.UniqueId('Footers')">$core_v2_language.GetResource('migrate-Footers')</label>
+							</span>
+							<span class="field-item-description">$core_v2_language.GetResource('migrate-Footers-description')</span>
+						</li>
+						<li class="field-item">
+							<span class="field-item-input">
+								<input type="checkbox" id="$core_v2_widget.UniqueId('Navigation')" data-name="Navigation" checked />
+								<label for="$core_v2_widget.UniqueId('Navigation')">$core_v2_language.GetResource('migrate-Navigation')</label>
+							</span>
+							<span class="field-item-description">$core_v2_language.GetResource('migrate-Navigation-description')</span>
+						</li>
+				   </ul>
+				</fieldset></form>
+
+				$core_v2_language.GetResource('begin-migration-instructions-2')
+
+				<fieldset>
+					<ul class="field-list">
+						<li class="field-item">
+							<span class="field-item-input">
+								<a href="#" data-messagename="administration.upgradetheme.begin-migration" class="button begin-migration">$core_v2_language.GetResource('begin-migration')</a>
+							</span>
+						</li>
+					</ul>
+				</fieldset>
+			#else
+				$core_v2_language.GetResource('begin-migration-invalid-instructions')
+			#end
+		#elseif ($context.Interest == 'widget-update')
+			#if ($context.UpgradedScriptedContentFragmentCount > 0)
+				$core_v2_language.GetResource('preview-upgrade-widgets-instructions')
+
+				<fieldset>
+					<ul class="field-list">
+						<li class="field-item">
+							<span class="field-item-input">
+								<a href="#" data-messagename="administration.upgradetheme.preview-upgrade-widgets" class="button preview-upgrade-widgets">$core_v2_language.GetResource('preview-upgrade-widgets')</a>
+							</span>
+						</li>
+					</ul>
+				</fieldset>
+			#else
+				$core_v2_language.GetResource('preview-upgrade-widgets-invalid-instructions')
+			#end
+		#elseif ($context.Interest == 'theme-update')
+			#if (!$context.CanMigrateToSocialTheme)
+				$core_v2_language.GetResource('preview-upgrade-social-theme-instructions')
+
+				<fieldset>
+					<ul class="field-list">
+						<li class="field-item">
+							<span class="field-item-input">
+								<a href="#" data-messagename="administration.upgradetheme.preview-upgrade-social-theme" class="button preview-upgrade-social-theme">$core_v2_language.GetResource('preview-upgrade-social-theme')</a>
+							</span>
+						</li>
+					</ul>
+				</fieldset>
+			#else
+				$core_v2_language.GetResource('preview-upgrade-social-theme-invalid-instructions')
+			#end
+		#else
+			$core_v2_widget.Hide()
+		#end
+	</div>
+	<div class="upgrade-progress" id="$core_v2_encoding.HtmlAttributeEncode($upgradeProgressWrapper)" style="display:none">
+		<p>$core_v2_language.GetResource('StagingChanges')</p>
+	</div>
+	#registerEndOfPageHtml('telligent.evolution.widgets.upgradeTheme')
+		<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	#end
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.upgradeTheme.register({
+				previewUrl: '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)',
+				beginMigrationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('migrate-theme-callback.jsm'))',
+				previewSocialThemeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-theme-callback.jsm'))',
+				previewUpgradeSocialThemeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('upgrade-theme-callback.jsm'))',
+				previewUpgradeWidgetsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('upgrade-widgets-callback.jsm'))',
+				systemNotificationUrl: '$core_v2_encoding.JavascriptEncode($context.SystemNotificationsUrl)',
+				text: {
+					migrationScheduled: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('theme-migration-scheduled'))'
+				},
+				formWrapper: jQuery('#${core_v2_encoding.JavascriptEncode($upgradeFormWrapper)}'),
+				progressWrapper: jQuery('#${core_v2_encoding.JavascriptEncode($upgradeProgressWrapper)}')
+			});
+		});
+		</script>
+	#end
+#end
+				]]></contentScript>
+	<languageResources><language key="en-us"><resource name="begin-migration">Start Migration</resource><resource name="begin-migration-instructions">&lt;p&gt;The Social theme provides the newest user experience and latest features. To simplify the transition to the Social theme, you can automatically migrate your customizations from your current theme to the Social theme and review the site before committing to changing to the Social theme.&lt;/p&gt;			&lt;p&gt;When migrating customizations, the migration process will detect changes within the site, every group, and every blog against the currently selected theme(s) and apply those same changes to the Social theme within the design language of the Social theme to provide a good starting point for reviewing your site's content within the structure of the newest theme.&lt;/p&gt;&lt;p&gt;Select the customizations you would like to migrate below. If no options are selected, the Social theme will be installed for review against its default configuration.&lt;/p&gt;			</resource><resource name="begin-migration-instructions-2">&lt;p&gt;When you click 'Start Migration' below, a background process will install the Social theme and migrate any selected customizations into the Social theme. When that process is complete, you'll be sent a notification that will include a link to review the changes. The migration process may take up to an hour for most sites.&lt;/p&gt;	</resource><resource name="begin-migration-invalid-instructions">			&lt;p&gt;Unfortunately, because you're already using the Social theme, there is nothing to migrate.&lt;/p&gt;	</resource><resource name="migrate-ContentPages">Custom pages</resource><resource name="migrate-ContentPages-description">Custom pages created in the source theme will be migrated to the Social theme.</resource><resource name="migrate-Footers">Footers</resource><resource name="migrate-Footers-description">Customizations made to theme footers will be migrated from the currently selected theme to the Social theme.</resource><resource name="migrate-Headers">Headers</resource><resource name="migrate-Headers-description">Customizations made to theme headers will be migrated from the currently selected theme to the Social theme.</resource><resource name="migrate-Navigation">Navigation</resource><resource name="migrate-Navigation-description">Customizations made to platform-defined navigation widgets will be migrated to the Social theme.</resource><resource name="migrate-PlatformPages">Platform-defined pages</resource><resource name="migrate-PlatformPages-description">Customizations made to platform-defined pages within the currently active theme will be migrated to the Social theme.</resource><resource name="preview-social-theme">Review Migrated Theme</resource><resource name="preview-social-theme-instructions">			&lt;p&gt;Click the 'Review Migrated Theme' button below to begin previewing the migration of your site to the Social theme.&lt;/p&gt;			&lt;p&gt;The preview will enable you to review the site and approve, deny, or edit individual migrated changes before you commit to switching to the Social theme.&lt;/p&gt;	</resource><resource name="preview-upgrade-social-theme">Review Upgraded Theme</resource><resource name="preview-upgrade-social-theme-instructions">			&lt;p&gt;To review the latest implementation of the Social theme, including the latest functionality and bug fixes, click 'Review Upgraded Theme' below.&lt;/p&gt;			&lt;p&gt;When reviewing the theme, you (and only you) will be able to review and approve, deny, or edit individual changes associated with the most recent release before committing the updated components to be available to all of the users on your site.&lt;/p&gt;	</resource><resource name="preview-upgrade-social-theme-invalid-instructions">			&lt;p&gt;Unfortunately, because your site is not currently using the Social theme, the theme cannot be upgraded at this time.&lt;/p&gt;	</resource><resource name="preview-upgrade-widgets">Review Upgraded Widgets</resource><resource name="preview-upgrade-widgets-instructions">			&lt;p&gt;To review the latest implementations of the widgets provided in the recently-installed release, including the latest functionality and bug fixes, click 'Review Upgraded Widgets' below.&lt;/p&gt;			&lt;p&gt;When reviewing widgets, you (and only you) will be able to review and approve, deny, or edit individual widgets within the site before committing the updated widgets to be available to all users of your site.&lt;/p&gt;	</resource><resource name="preview-upgrade-widgets-invalid-instructions">			&lt;p&gt;There are no widgets to review. Perhaps someone else has already reviewed and committed the updated widgets on this site related to the recent upgrade.&lt;/p&gt;	</resource><resource name="theme-migration-scheduled">The migration to the social theme has been scheduled. A notification will be sent when the migration is ready to review.</resource><resource name="UpgradeTheme_Description">Review user experience upgrades.</resource><resource name="UpgradeTheme_Name">User Experience Upgrade</resource><resource name="StagingChanges">Staging changes…</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

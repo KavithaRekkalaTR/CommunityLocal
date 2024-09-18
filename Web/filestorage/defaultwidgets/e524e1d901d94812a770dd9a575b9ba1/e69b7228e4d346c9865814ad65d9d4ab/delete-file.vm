@@ -1,0 +1,15 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($mediaGalleryId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('MediaGalleryId')))
+	#set($fileId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('FileId')))
+
+	#set($response = $core_v2_media.Delete($mediaGalleryId, $fileId))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

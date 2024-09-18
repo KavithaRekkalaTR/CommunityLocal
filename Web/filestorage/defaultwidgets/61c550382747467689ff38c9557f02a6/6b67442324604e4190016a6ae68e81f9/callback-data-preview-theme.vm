@@ -1,0 +1,34 @@
+##
+## Preview Theme Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+
+	#set ($options = "%{}")
+
+	#set ($idQuery = $core_v2_page.GetFormValue("_w_id"))
+	#if ($idQuery)
+		$options.Add('Id', $idQuery)
+	#end
+
+	#set ($typeIdQuery = $core_v2_page.GetFormValue("_w_typeId"))
+	#if ($typeIdQuery)
+		$options.Add('TypeId', $typeIdQuery)
+	#end
+
+	#set ($appIdQuery = $core_v2_page.GetFormValue("_w_applicationId"))
+	#if ($appIdQuery)
+		$options.Add('ApplicationId', $appIdQuery)
+	#end
+
+	#set($response = $context.PreviewTheme($options))
+	#if ($response && $response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success": true,
+		"url": "$core_v2_encoding.JavascriptEncode($response.Url)"
+	}
+#end

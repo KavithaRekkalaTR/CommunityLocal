@@ -1,0 +1,1 @@
+@%~dp0Telligent.Jobs.Server.exe --console

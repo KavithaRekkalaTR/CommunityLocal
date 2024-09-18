@@ -1,0 +1,1 @@
+Telligent.SocketMessageBus.Service.exe --install %*

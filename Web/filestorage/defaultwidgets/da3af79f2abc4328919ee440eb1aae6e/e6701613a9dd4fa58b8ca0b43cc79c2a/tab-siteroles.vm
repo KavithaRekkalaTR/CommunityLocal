@@ -1,0 +1,41 @@
+#set($roles = $context.GetSiteRoles())
+
+<fieldset class="common-filters">
+    <ul class="field-list">
+        <li class="field-item">
+            <span class="field-item-input">
+                <select name="allowed-filter">
+                    <option value="">$core_v2_language.GetResource('ShowAllRoles')</option>
+                    <option value="allowed" selected="selected">$core_v2_language.GetResource('ShowAllowedRoles')</option>
+                </select>
+            </span>
+        </li>
+        <li class="field-item">
+            <span class="field-item-input"><input type="text" name="searchrole" placeholder="$core_v2_language.GetResource('FindRole')"></input></span>
+        </li>
+    </ul>
+</fieldset>
+
+#set ($anyAllowed = false)
+
+#foreach($role in $roles)
+#beforeall
+	<ul class="navigation-list contextual-administration-links site-roles">
+#each
+    #set ($hasAllowedPermissions = $context.HasAllowedPermissions($role.Id, $context.ApplicationId))
+    #if ($hasAllowedPermissions)
+        #set ($anyAllowed = true)
+    #end
+    <li class="navigation-list-item role-item" data-roleid="$role.Id" data-title="$core_v2_encoding.HtmlAttributeEncode($role.Name)" data-allowedpermissions="$hasAllowedPermissions" data-text="$core_v2_encoding.HtmlAttributeEncode($role.Name.ToLower())" #if(!$hasAllowedPermissions) style="display: none;" #end>
+		<a href="#" class="role" data-messagename="contextualroles-edit-role" data-roleid="$role.Id" data-title="$core_v2_encoding.HtmlAttributeEncode($role.Name)" data-hasoverrides="$context.HasOverrides($role.Id, $context.applicationId)">
+			<div>
+				<span class="name">$role.Name</span>
+				<span class="description">$!role.Description</span>
+			</div>
+		</a>
+	</li>
+#afterall
+	</ul>
+#end
+
+<div class="message norecords" #if($anyAllowed) style="display: none;"#end>$core_v2_language.GetResource("NoResults")</div>

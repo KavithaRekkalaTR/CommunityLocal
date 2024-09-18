@@ -1,0 +1,42 @@
+#set ($showWidget = true)
+#set ($visibleTo = $core_v2_widget.GetStringValue('visibleTo', ''))
+
+#if ($visibleTo != '')
+    #if ($visibleTo == 'anonymous' && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+        #set ($showWidget = false)
+    #elseif ($visibleTo == 'authenticated' && !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+        #set ($showWidget = false)
+    #elseif ($visibleTo == 'includeRoles')
+        #set ($showWidget = false)
+
+        #set($includeRoles = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('includeRoles', '')))
+        #if ($includeRoles.Values('Role').Count > 0)
+            #foreach($role in $includeRoles.Values('Role'))
+                #set($role = $core_v2_role.Get($core_v2_utility.ParseInt($role)))
+                #if($core_v2_roleUsers.IsUserInRoles($core_v2_user.Accessing.Username, $core_v2_utility.MakeList($role.Name)))
+                    #set ($showWidget = true)
+                    #break
+                #end
+            #end
+        #end
+    #elseif ($visibleTo == 'excludeRoles')
+        #set($excludeRoles = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('excludeRoles', '')))
+        #if ($excludeRoles.Values('Role').Count > 0)
+            #foreach($role in $excludeRoles.Values('Role'))
+                #set($role = $core_v2_role.Get($core_v2_utility.ParseInt($role)))
+                #if($core_v2_roleUsers.IsUserInRoles($core_v2_user.Accessing.Username, $core_v2_utility.MakeList($role.Name)))
+                    #set ($showWidget = false)
+                    #break
+                #end
+            #end
+        #end
+    #end
+
+    #if ($showWidget == false)
+        #if ($core_v2_widget.IsInWidgetPreviewMode)
+            <div class="message warning">$core_v2_language.GetResource("WidgetHidden")</div>
+        #else
+            $core_v2_widget.Hide()
+        #end
+    #end
+#end

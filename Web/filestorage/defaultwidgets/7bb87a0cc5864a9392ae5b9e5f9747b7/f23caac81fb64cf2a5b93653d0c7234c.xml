@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_UserReputation_Name}" version="11.0.0.0" description="${resource:Core_UserReputation_Description}" instanceIdentifier="f23caac81fb64cf2a5b93653d0c7234c" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="user-reputation" lastModified="2020-01-14 16:09:11Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($user = false)
+#set($user = $core_v2_user.Current)
+#if (!$user || !$user.Url || $core_v2_page.Url.IndexOf($user.Url) == -1)
+	$core_v2_widget.Hide()
+#end
+
+#set($isEditable = true)
+#if ($user.Id != $core_v2_user.Accessing.Id || !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#set($isEditable = false)
+#end
+#set ($isInEditMode = true)
+#if (!$isEditable || !$core_v2_editableGroup.IsEditable('User'))
+	#set ($isInEditMode = false)
+#end
+
+#set ($isHome = false)
+#if ($core_v2_urls.Current == 'User')
+	#set($isHome = true)
+#end
+
+#if ($isHome && !$isInEditMode)
+		#set ($reputationMessage = false)
+		#set ($reputationPercentage = $user.QualityPercentile)
+
+		#if ($reputationPercentage >= 0 && $reputationPercentage < 5)
+			#set ($reputationPercentage = 0)
+		#elseif ($reputationPercentage >= 5 && $reputationPercentage < 10)
+			#set ($reputationPercentage = 5)
+		#elseif ($reputationPercentage >= 10 && $reputationPercentage < 15)
+			#set ($reputationPercentage = 10)
+		#elseif ($reputationPercentage >= 15 && $reputationPercentage < 20)
+			#set ($reputationPercentage = 15)
+		#elseif ($reputationPercentage >= 20 && $reputationPercentage < 25)
+			#set ($reputationPercentage = 20)
+		#elseif ($reputationPercentage >= 25 && $reputationPercentage < 30)
+			#set ($reputationPercentage = 25)
+		#elseif ($reputationPercentage >= 30 && $reputationPercentage < 35)
+			#set ($reputationPercentage = 30)
+		#elseif ($reputationPercentage >= 35 && $reputationPercentage < 40)
+			#set ($reputationPercentage = 35)
+		#elseif ($reputationPercentage >= 40 && $reputationPercentage < 45)
+			#set ($reputationPercentage = 40)
+		#elseif ($reputationPercentage >= 45 && $reputationPercentage < 50)
+			#set ($reputationPercentage = 45)
+		#elseif ($reputationPercentage >= 50 && $reputationPercentage < 55)
+			#set ($reputationPercentage = 50)
+		#elseif ($reputationPercentage >= 55 && $reputationPercentage < 60)
+			#set ($reputationPercentage = 55)
+		#elseif ($reputationPercentage >= 60 && $reputationPercentage < 65)
+			#set ($reputationPercentage = 60)
+		#elseif ($reputationPercentage >= 65 && $reputationPercentage < 70)
+			#set ($reputationPercentage = 65)
+		#elseif ($reputationPercentage >= 70 && $reputationPercentage < 75)
+			#set ($reputationPercentage = 70)
+		#elseif ($reputationPercentage >= 75 && $reputationPercentage < 80)
+			#set ($reputationPercentage = 75)
+		#elseif ($reputationPercentage >= 80 && $reputationPercentage < 85)
+			#set ($reputationPercentage = 80)
+		#elseif ($reputationPercentage >= 85 && $reputationPercentage < 90)
+			#set ($reputationPercentage = 85)
+		#elseif ($reputationPercentage >= 90 && $reputationPercentage < 95)
+			#set ($reputationPercentage = 90)
+		#elseif ($reputationPercentage >= 95 && $reputationPercentage < 99)
+			#set ($reputationPercentage = 95)
+		#elseif ($reputationPercentage > 99)
+			#set ($reputationPercentage = 99)
+		#end
+
+		#if ($reputationPercentage)
+			#if ($reputationPercentage >= 50 || $user.Id == $core_v2_user.Accessing.Id)
+				#set ($topPercent = (100 - $reputationPercentage))
+				#if ($user.Id == $core_v2_user.Accessing.Id)
+					#set ($reputationTemplate = $core_v2_language.GetResource('ReputationSelf'))
+				#else
+					#set ($reputationTemplate = $core_v2_language.GetResource('ReputationOther'))
+				#end
+				#set ($reputationMessage = $core_v2_language.FormatString($reputationTemplate, $topPercent.ToString(), $user.DisplayName))
+			#end
+		#end
+
+		#if ($reputationMessage)
+	  <div class="content-details minimal">
+		<ul class="attribute-list">
+			<li class="attribute-item">
+					<span class="attribute-name"></span>
+					<span class="attribute-value">$reputationMessage</span>
+				</li>
+		</ul>
+	  </div>
+		#else
+	  $core_v2_widget.Hide()
+	#end
+#else
+	$core_v2_widget.Hide()
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_UserReputation_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_UserReputation_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_UserReputation_Description">Displays a message to user about their reputation in community.</resource>
+  <resource name="Core_UserReputation_Name">User - Reputation</resource>
+  <resource name="Options">Options</resource>
+  <resource name="ReputationOther">{1} has a reputation in the &lt;strong&gt;top {0}%&lt;/strong&gt; of the community.</resource>
+  <resource name="ReputationSelf">Your current reputation puts you in the &lt;strong&gt;top {0}%&lt;/strong&gt; of members. Members in the top 50% are highlighted within the community.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="0233cbb383784e11a1e5e541f3b0a795" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

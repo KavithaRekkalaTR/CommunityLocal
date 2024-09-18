@@ -1,0 +1,30 @@
+#set ($baseUrl = $thread.Url)
+
+<div class="threaded-filter" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('filter'))">
+
+	#if ($thread.ThreadStatus == 'Answered' || $thread.ThreadStatus == 'AnsweredNotVerified')
+		<ul class="filter type margin-bottom margin-top">
+			<li class="filter-option" data-sortby="CreatedDate" data-sortorder="Ascending">
+				<a class="navigable" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($thread.Url, "ReplySortBy=CreatedDate&ReplySortOrder=Ascending"))">$core_v2_language.GetResource('AllReplies')</a>
+			</li>
+			<li class="filter-option" data-filter="answers" data-sortby="Answers" data-sortorder="Descending">
+				<a class="navigable" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($thread.Url, "ReplyFilter=Answers&ReplySortBy=Answers&ReplySortOrder=Descending"))">$core_v2_language.GetResource('answers')</a>
+			</li>
+		</ul>
+	#end
+
+	<ul class="filter order margin-bottom margin-top">
+		<li class="filter-option" data-sortby="CreatedDate" data-sortorder="Ascending">
+			<a class="navigable" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($thread.Url, "ReplySortBy=CreatedDate&ReplySortOrder=Ascending"))">$core_v2_language.GetResource('oldest')</a>
+		</li>
+		#if ($flattenedDepth > 0)
+			<li class="filter-option" data-sortby="Votes" data-sortorder="Descending">
+				<a class="navigable" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($thread.Url, "ReplySortBy=Votes&ReplySortOrder=Descending"))">$core_v2_language.GetResource('best')</a>
+			</li>
+		#end
+		<li class="filter-option" data-sortby="CreatedDate" data-sortorder="Descending">
+			<a class="navigable" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($thread.Url, "ReplySortBy=CreatedDate&ReplySortOrder=Descending"))">$core_v2_language.GetResource('newest')</a>
+		</li>
+	</ul>
+
+</div>

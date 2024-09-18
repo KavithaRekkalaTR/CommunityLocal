@@ -1,0 +1,20 @@
+##
+## List All LESS Function API Data
+##
+
+#set ($fragmentId = false)
+#set ($fragmentIdQuery = $core_v2_page.GetQueryStringValue("_w_fragmentId"))
+#if ($fragmentIdQuery && $fragmentIdQuery.length > 0)
+	#set ($fragmentId = $core_v2_utility.ParseGuid($fragmentIdQuery))
+#end
+
+#if ($fragmentId)
+	#set ($lessFunctions = $shellApi.ListAllFunctions("Widget"))
+#else
+	#set ($lessFunctions = $shellApi.ListAllFunctions("Theme"))
+#end
+
+$core_v2_page.SetContentType('application/json')
+{
+	"functions": $core_v2_widget.ExecuteFile('callback-sub-serialize-less-functions.vm')
+}

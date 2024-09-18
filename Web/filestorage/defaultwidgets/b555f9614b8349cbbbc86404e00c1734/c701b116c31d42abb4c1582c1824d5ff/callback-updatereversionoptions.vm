@@ -1,0 +1,12 @@
+$core_v2_page.SetContentType('application/json')
+
+{
+    #set($scopedProperties = $context.GetRevertableScopedProperties())
+    #if ($scopedProperties.Count == 0)
+    	"hasReversionOptions": false,
+    	"reversionHtml": ""
+    #else
+    	"hasReversionOptions": true,
+    	"reversionHtml": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('render-reversion-options.vm'))"
+    #end
+}

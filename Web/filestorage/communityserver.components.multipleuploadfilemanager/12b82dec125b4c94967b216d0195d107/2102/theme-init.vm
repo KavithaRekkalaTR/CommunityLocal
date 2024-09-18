@@ -1,0 +1,13 @@
+#set($siteHeader = $core_v2_theme.GetStringValue('siteHeader', 'adaptive', 10))
+#set($sidebar = $core_v2_theme.GetStringValue('sidebar', 'adaptive', 10))
+#set($minWidth = $core_v2_theme.GetIntValue('minWidth', 670, 10))
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.theme.social.register({
+		dockedSidebars: #if ($sidebar == 'adaptive') true #else false #end,
+		adaptiveHeaders: #if ($siteHeader == 'adaptive') true #else false #end,
+		adaptiveHeadersMinWidth: $minWidth
+	})
+});
+</script>

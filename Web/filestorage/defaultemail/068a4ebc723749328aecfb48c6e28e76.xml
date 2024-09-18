@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Wiki Page Comment" version="13.0.0.0" description="Raises notifications to users when a comment is made on a wiki page to which you are subscribed." id="068a4ebc723749328aecfb48c6e28e76" lastModified="2023-08-30 16:29:34Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('wiki_title')
+    $core_v2_wiki.Get("%{ Id=$context_v1_email.Context.WikiPage.WikiId }").Name
+#token('page_title')
+    $context_v1_email.Context.WikiPage.Title
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('wiki_title')
+    $core_v2_wiki.Get("%{ Id=$context_v1_email.Context.WikiPage.WikiId }").Name
+#token('page_title')
+    $context_v1_email.Context.WikiPage.Title
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p><strong>
+#format($core_v2_language.GetResource('Body_NewComment'))
+#token('page_title')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.WikiPage.Url)">$context_v1_email.Context.WikiPage.Title</a>
+#end
+</strong></p>
+<p>
+#format($core_v2_language.GetResource('Body_By'))
+#token('user_name')
+    #set($profileUrl = false)
+    #set($profileUrl = $context_v1_email.Context.Comment.User.Url)
+    #if ($profileUrl)
+        <a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$context_v1_email.Context.Comment.User.DisplayName</a>
+    #else
+        $context_v1_email.Context.Comment.User.DisplayName
+    #end
+#end
+</p>
+<p>
+$context_v1_email.Context.Comment.Body('Email')
+</p>
+<p>
+#format($core_v2_language.GetResource('Body_ViewOnline'))
+#token('view_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.WikiPage.Url)">$core_v2_language.GetResource('ViewOnline')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer_Unsubscribe'))
+#token('unsubscribe_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.WikiPage.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+#end
+</p>
+#set($flagAsAbuseUrl = false)
+#set($flagAsAbuseUrl = $core_v2_urls.ReportAbuse($context_v1_email.Context.Comment.Url, $context_v1_email.Context.Comment.ContentId, $core_v2_comments.ContentTypeId))
+#if ($flagAsAbuseUrl)
+    <p>
+    #format($core_v2_language.GetResource('Footer_FlagAsAbuse'))
+    #token('flag_as_abuse_link')
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($flagAsAbuseUrl)">$core_v2_language.GetResource('FlagAsAbuse')</a>
+    #end
+    </p>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_By">By {user_name}</resource>
+  <resource name="Body_NewComment">{page_title}: New comment</resource>
+  <resource name="Body_ViewOnline">{view_link}.</resource>
+  <resource name="FlagAsAbuse">Flag as spam/abuse</resource>
+  <resource name="Footer_FlagAsAbuse">{flag_as_abuse_link}.</resource>
+  <resource name="Footer_Unsubscribe">You received this notification because you subscribed to comments on the wiki page. To unsubscribe, {unsubscribe_link}.</resource>
+  <resource name="Subject">{wiki_title}: New comment for {page_title}</resource>
+  <resource name="Header">{wiki_title}: New comment for {page_title}</resource>
+  <resource name="Unsubscribe">go here</resource>
+  <resource name="ViewOnline">View this post online</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,24 @@
+<ul class="attribute-list">
+<% if (typeof commentCount !== 'undefined')	{ %>
+	<li class="attribute-item count">
+		<span class="value prepend-icon comment">
+			<% if(commentCount == 1) { %>
+				<%= commentCount %> $core_v2_language.GetResource('Comment_Single')
+			<% } else { %>
+				<%= commentCount %> $core_v2_language.GetResource('Comment_Multilple')
+			<% } %>
+		</span>
+	</li>
+<% } %>
+<% if (typeof userCount !== 'undefined') { %>
+	<li class="attribute-item users">
+		<span class="value prepend-icon user">
+			<% if(userCount == 1) { %>
+				<%= userCount %> $core_v2_language.GetResource('User_Single')
+			<% } else { %>
+				<%= userCount %> $core_v2_language.GetResource('User_Multiple')
+			<% } %>
+		</span>
+	</li>
+<% } %>
+</ul>

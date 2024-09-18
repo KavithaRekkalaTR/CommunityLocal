@@ -1,0 +1,14 @@
+##
+## Renders a list of api methods as JSON
+##
+## Requires in scope:
+##   $apiMethods
+##
+[
+	#foreach ($apiMethod in $apiMethods)
+	#between
+		,
+	#each
+		$core_v2_widget.ExecuteFile('callback-sub-serialize-api-method.vm')
+	#end
+]

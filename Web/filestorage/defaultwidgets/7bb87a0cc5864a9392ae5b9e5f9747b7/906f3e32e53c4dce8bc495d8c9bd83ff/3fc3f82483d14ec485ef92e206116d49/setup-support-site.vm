@@ -1,0 +1,396 @@
+<li class="field-item support community-name">
+	<label class="field-item-name" for="$core_v2_widget.UniqueId('support-communityname')">$core_v2_language.GetResource('CommunityName')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityName_Description')</span>
+	<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('support-communitytype')" /></span>
+</li>
+<li class="field-item support community-description">
+	<label class="field-item-name" for="$core_v2_widget.UniqueId('support-communitydescription')">$core_v2_language.GetResource('CommunityDescription')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityDescription_Description')</span>
+	<span class="field-item-input"><textarea id="$core_v2_widget.UniqueId('support-communitydescription')"></textarea></span>
+</li>
+<li class="field-item support photo-upload" id="$core_v2_widget.UniqueId('support-logo')">
+	<label for="$core_v2_widget.UniqueId('support-logo')" class="field-item-name">$core_v2_language.GetResource('CommunityLogo')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('CommunityLogo_Description')</span>
+	<span class="field-item-input preview" style="display: none;">
+	</span>
+		<span class="field-item-input upload">
+		<a href="#" class="prepend-icon upload add" id="$core_v2_widget.UniqueId('support-upload-logo')">$core_v2_language.GetResource('UploadPhoto')</a>
+		<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemovePhoto')</a>
+	</span>
+</li>
+<li class="field-item support products">
+	<label class="field-item-name">$core_v2_language.GetResource('Products')</label>
+	<span class="field-item-description">$core_v2_language.GetResource('Products_Description')</span>
+	<span class="field-item-input">
+		<table class="form">
+			<thead>
+				<tr>
+					<th style="width: 50%;">$core_v2_language.GetResource('Product_Name')</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><input type="text" class="product-name" placeholder="$core_v2_language.GetResource('Product_Name_Placeholder')" style="width: 100%;" /></td>
+					<td style="word-break: normal;"><a href="#" class="add-product button">$core_v2_language.GetResource('Add')</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</span>
+</li>
+<li class="field-item support">
+	<span class="field-item-input">
+		<a id="$core_v2_widget.UniqueId('support-save')" href="#" class="internal-link button">$core_v2_language.GetResource('Setup')</a>
+		<span class="progress" style="display: none;"></span>
+	</span>
+</li>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<![CDATA[
+		jQuery(function()
+		{
+			var siteLogo = {
+				field: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('support-logo'))'),
+				progressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+				changeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePhoto'))',
+				addText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadPhoto'))',
+						previewUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('photo-preview.vm'))',
+						uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+						uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			};
+			jQuery.telligent.evolution.widgets.siteAndGroupSetup.setupFileUpload(siteLogo);
+
+			var wrapper = jQuery('#$core_v2_widget.WrapperElementId');
+
+			wrapper.find('.field-item.support.community-description textarea').evolutionResize();
+
+			var checkTimeout = null;
+			wrapper.find('.field-item.support.products a.add-product').on('click', function() {
+				var row = jQuery(this).closest('tr');
+				var name = row.find('input.product-name');
+
+				if (name.val().length > 0) {
+					var newRow = jQuery('<tr><td><input type="text" class="product-name" style="width: 100%;" /></td><td style="word-break: normal;"><a href="#" class="remove-product button">$core_v2_language.GetResource('Remove')</a></td></tr>');
+
+					newRow.find('input.product-name').val(name.val());
+
+					row.before(newRow);
+
+					name.val('');
+				}
+
+				window.clearTimeout(checkTimeout);
+				checkTimeout = window.setTimeout(function() {
+					checkConfiguration();
+				}, 500);
+
+				return false;
+			});
+
+			wrapper.on('click', '.field-item.support.products a.remove-product', function() {
+				if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RemoveProduct_Confirm'))')) {
+					var row = jQuery(this).closest('tr');
+					row.fadeOut('fast', function() { row.remove(); });
+				}
+				return false;
+			});
+
+			function getConfiguration() {
+				var productForumsGroupId = -1, newsGroupId = -1;
+
+				var configuration = {
+					uploadContextId: siteLogo.uploadContextId
+				};
+
+				var v = wrapper.find('.field-item.support.community-name input').val();
+				if (v) {
+					configuration.siteName = v;
+				}
+
+				v = wrapper.find('.field-item.support.community-description textarea').val();
+				if (v) {
+					configuration.siteDescription = v;
+				}
+
+				var logoFileName = null;
+				if (siteLogo.file != null && siteLogo.file.fileName.length > 0) {
+					configuration.headerTemplate = {
+						template: 'template-site-header-support',
+						parameters: {
+							'{{LOGOFILENAME}}': siteLogo.file.fileName,
+							'{{LOGOCONTENTSBASE64}}': 'FILECONTENTS:' + siteLogo.file.fileName
+						}
+					};
+					configuration.logoFileName = siteLogo.file.fileName;
+				} else {
+					configuration.headerTemplate = {
+						template: 'template-site-header-support-nologo'
+					};
+				}
+
+				configuration.pageTemplates = [];
+				configuration.pageTemplates.push({
+					template: 'template-user-home-support',
+					themeTypeId: '$core_v2_user.ThemeTypeId.ToString()',
+					themeContextId: '$core_v2_configuration.DefaultThemeContextId.ToString()',
+					dynamicParameters: function() {
+						return {
+							'PRODUCTFORUMSGROUPID': productForumsGroupId,
+							'NEWSGROUPID': newsGroupId
+						};
+					}
+				});
+
+				configuration.groups = [];
+
+                #if ($core_v2_forum)
+
+                    configuration.groups.push({
+                        name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_GeneralDiscussion'))',
+                        type: 'Joinless',
+                        headerTemplate: { template: 'template-group-header-nonav' },
+                        pageTemplates: [
+                            { template: 'template-group-home-forum-single' }
+                        ],
+                        applications: [
+                            {
+                                type: 'forum',
+                                name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Forum_Name'))',
+                                threadType: 'Discussion'
+                            }
+                        ]
+                    });
+
+                    var productForums = {
+                        name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_ProductForums'))',
+                        type: 'Joinless',
+                        headerTemplate: { template: 'template-group-header-nonav' },
+                        pageTemplates: [
+                            { template: 'template-group-home-forum-multiple' }
+                        ],
+                        applications: [],
+                        created: function(id) {
+                            productForumsGroupId = id;
+                        }
+                    };
+
+                    wrapper.find('.field-item.support.products tr').each(function() {
+                        var r = jQuery(this);
+                        var productName = r.find('input.product-name').val();
+
+                        if (productName && productName.length > 0) {
+                            productForums.applications.push({
+                                type: 'forum',
+                                name: productName,
+                                threadType: 'QuestionAndAnswer'
+                            });
+                        }
+                    });
+
+                    configuration.groups.push(productForums);
+
+                #end
+
+				#if ($telligentIdeas_v1_challenges)
+
+                    var productIdeas = {
+                        name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Ideas'))',
+                        type: 'Joinless',
+                        headerTemplate: { template: 'template-group-header-nonav' },
+                        pageTemplates: [
+                            { template: 'template-group-home-ideation-multiple' }
+                        ],
+                        applications: []
+                    };
+
+                    wrapper.find('.field-item.support.products tr').each(function() {
+                        var r = jQuery(this);
+                        var productName = r.find('input.product-name').val();
+
+                        if (productName && productName.length > 0) {
+                            productIdeas.applications.push({
+                                type: 'ideation',
+                                name: productName
+                            });
+                        }
+                    });
+
+                    configuration.groups.push(productIdeas);
+
+				#end
+
+				configuration.groups.push({
+					name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_News'))',
+					type: 'Joinless',
+					headerTemplate: { template: 'template-group-header-nonav' },
+					pageTemplates: [
+						{ template: 'template-group-home-blog-single' }
+					],
+					applications: [
+						{
+							type: 'blog',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Announcements_Name'))'
+						}
+					],
+					created: function(id) {
+						newsGroupId = id;
+					}
+				});
+
+				#if ($articles_v1_articles)
+
+                    configuration.groups.push({
+                        name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Documentation'))',
+                        type: 'Joinless',
+                        headerTemplate: { template: 'template-group-header-nonav' },
+                        pageTemplates: [
+                            { template: 'template-group-home-collection-single' }
+                        ],
+                        applications: [
+                            {
+                                type: 'collection',
+                                name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Articles_Documentation_Name'))'
+                            }
+                        ]
+                    });
+
+                #elseif ($core_v2_wikis)
+
+                    configuration.groups.push({
+                        name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Documentation'))',
+                        type: 'Joinless',
+                        headerTemplate: { template: 'template-group-header-nonav' },
+                        pageTemplates: [
+                            { template: 'template-group-home-wiki-single' }
+                        ],
+                        applications: [
+                            {
+                                type: 'wiki',
+                                name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Documentation_Name'))'
+                            }
+                        ]
+                    });
+
+                #end
+
+   				#if ($core_v2_gallery)
+
+				configuration.groups.push({
+					name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Resources'))',
+					type: 'Joinless',
+					headerTemplate: { template: 'template-group-header-nonav' },
+					pageTemplates: [
+						{ template: 'template-group-home-gallery-single' }
+					],
+					applications: [
+						{
+							type: 'gallery',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Resources_Name'))'
+						}
+					]
+				});
+
+                #end
+
+				configuration.groups.push({
+					name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_CustomerAdvisoryBoard'))',
+					type: 'PrivateUnlisted',
+					headerTemplate: { template: 'template-group-header' },
+					pageTemplates: [
+						{ template: 'template-group-home-default' }
+					],
+					applications: [
+						{
+							type: 'blog',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Announcements_Name'))'
+						},
+						{
+							type: 'forum',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Forum_Name'))',
+							threadType: 'Discussion'
+						},
+						{
+							type: 'gallery',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Resources_Name'))'
+						}
+						#if ($calendar_v1_calendars)
+							,
+							{
+								type: 'calendar',
+								name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Events_Name'))'
+							}
+						#end
+					]
+				});
+
+				configuration.groups.push({
+					name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Partners'))',
+					type: 'PrivateListed',
+					headerTemplate: { template: 'template-group-header' },
+					pageTemplates: [
+						{ template: 'template-group-home-default' }
+					],
+					applications: [
+						{
+							type: 'blog',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Announcements_Name'))'
+						},
+						{
+							type: 'forum',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Forum_Name'))',
+							threadType: 'Discussion'
+						},
+						{
+							type: 'gallery',
+							name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application_Resources_Name'))'
+						}
+					]
+				});
+
+				configuration.submit = jQuery('#$core_v2_widget.UniqueId('support-save')');
+				configuration.progress = wrapper.find('.progress');
+				configuration.success = function() {
+					if (window.setCommunityType) {
+						window.setCommunityType('Support');
+					}
+					wrapper.find('fieldset.setup-form').hide();
+					wrapper.find('fieldset.complete-form').show();
+				}
+				configuration.error = function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SiteCreationError'))', { type: 'error' });
+				};
+
+				return configuration;
+			}
+
+			function checkConfiguration() {
+				var configuration = getConfiguration();
+
+				jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.licenseCheck', configuration);
+				if (!configuration.valid && configuration.message) {
+					alert(configuration.message);
+					return false;
+				} else {
+					return true;
+				}
+			}
+
+			var save = jQuery('#$core_v2_widget.UniqueId('support-save')');
+			save.on('click', function() {
+				var configuration = getConfiguration();
+
+				jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.licenseCheck', configuration);
+				if (!configuration.valid && configuration.message) {
+					alert(configuration.message);
+				} else {
+					jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.siteAndGroupSetup.setup', configuration);
+				}
+
+				return false;
+			});
+
+		});
+	//]]]]><![CDATA[>
+	</script>
+#end

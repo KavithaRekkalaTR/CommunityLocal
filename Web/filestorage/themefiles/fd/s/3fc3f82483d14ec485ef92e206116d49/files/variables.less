@@ -1,0 +1,76 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+@import "-evo-themefile-url('variables.vm')";
+
+// defaults
+@default-color-background: #ffffff;
+@default-color-foreground: #11171A;
+@default-color-accent: #2196F3;
+@default-color-link: #2196F3;
+@default-color-positive: #9CCC65;
+@default-color-pending: #FFB300;
+@default-color-attention: #FF5722;
+@default-color-negative: #E53935;
+@default-font-size: 14px;
+@default-font-weight: 400;
+@default-line-height: 1.5em;
+@default-font-style: 'normal';
+
+// font
+@font-size: -evo-themeconfig-unit('baseFontSizeValue', @default-font-size);
+@font-weight: -evo-themeconfig-int('baseFontWeight', @default-font-weight);
+@line-height: -evo-themeconfig-unit('baseFontLineHeight', @default-line-height);
+@font-style: -evo-themeconfig-string('baseFontStyle', @default-font-style);
+
+// color
+@color-contrast: -evo-themeconfig-double('contrast', 0);
+@color-background: -evo-themeconfig-color('backgroundColor', @default-color-background);
+@color-foreground: -evo-themeconfig-color('foregroundColor', @default-color-foreground);
+@color-accent: -evo-themeconfig-color('accentColor', @default-color-accent);
+@color-link: -evo-themeconfig-color('linkFontColor', @default-color-link);
+
+@color-positive: -evo-themeconfig-color('statePositive', @default-color-positive);
+@color-pending: -evo-themeconfig-color('statePending', @default-color-pending);
+@color-attention: -evo-themeconfig-color('stateAttention', @default-color-attention);
+@color-negative: -evo-themeconfig-color('stateNegative', @default-color-negative);
+
+// size
+@min-width: -evo-themeconfig-unit('minWidth', 670px);
+@max-width: -evo-themeconfig-unit('maxWidth', 1060px);
+@spacing: 10px;
+@sidebar-width: 240px;
+@sidebar-width-tablet: 200px;
+
+// composers
+@color-composer-accent: #cce7f3;
+@color-mention-background: #d8dfea;
+@color-hashtag-background: #fef9c1;
+
+// site banner
+@color-site-banner-background: #fafafa;
+@color-site-banner-input: #ffffff;
+@color-site-banner-foreground: #263238;
+
+// contextual banner
+@navigation-margin: @spacing * (2/3);
+@applications-navigation-font-size: @font-size * .9;
+@applications-navigation-font-size-line-height: 1.3em;
+@applications-navigation-height: (@applications-navigation-font-size * @applications-navigation-font-size-line-height);
+@parent-navigation-font-size: @font-size * .7;
+@parent-navigation-font-size-line-height: 1.1em;
+@parent-navigation-height: @applications-navigation-height;
+
+// format - threaded
+@threaded-content-border-width: 4px;
+@threaded-content-border-color: -evo-decrease-contrast(@color-background, 9%, @color-foreground, @color-contrast);
+@threaded-content-item-spacing: @spacing * 2.5;
+@threaded-content-item-avatar-level-0: 44px;
+@threaded-content-item-avatar-level-1: 39px;
+@threaded-content-item-avatar-level-2: 34px;
+@threaded-content-item-avatar-level-3: 29px;

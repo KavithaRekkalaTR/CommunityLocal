@@ -1,0 +1,24 @@
+##
+## Default generic code editor view template
+## Can be overridden in specific studio, but usually not needed
+##
+## Expects in scope:
+## nothing in particular... whatever the studio-specific model includes
+## Should expose elements with class names:
+##    template-editor-header
+##    template-editor-state
+##
+<div class="editor-header">
+	<form class="template-editor-header"></form>
+	<div class="editor-state template-editor-state"></div>
+	<div class="state-labels" style="display:none">
+		<span class="from"></span>
+		<span class="to"></span>
+	</div>
+	<span class="field-description ui-tip" data-tip="<%= description %>"><%= description %></span>
+</div>
+<div class="editor-content with-code-editor">
+	<form>
+		<textarea class="code-editor"></textarea>
+	</form>
+</div>

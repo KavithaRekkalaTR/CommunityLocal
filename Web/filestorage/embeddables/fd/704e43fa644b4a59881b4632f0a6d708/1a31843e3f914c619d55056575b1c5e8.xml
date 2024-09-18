@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<embeddables>
+  <embeddable name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" id="1a31843e3f914c619d55056575b1c5e8" lastModified="2021-08-10 15:55:32Z" provider="704e43fa-644b-4a59-881b-4632f0a6d708" isCacheable="false" varyCacheByUser="false" category="External Content">
+    <contentScript language="Velocity"><![CDATA[#set ($sanitizedEmbedCode = false)
+#set ($sanitizedEmbedCode = $core_v2_widget.GetHtmlValue('sanitizedEmbedCode', ''))
+
+#if ($sanitizedEmbedCode && $sanitizedEmbedCode != '')
+  <span>$sanitizedEmbedCode</span>
+#else
+    #set ($content = false)
+    #set ($url = $core_v2_widget.GetUrlValue('url', ''))
+    
+    #if ($url && $url != '')
+      #set ($embedId = $core_v2_widget.UniqueId('embed'))
+      #set($embedHtml = false)
+      #set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+      #if($api.validate($url))
+        #set($embedHtml = $api.retrieve($url))
+    
+        #if ($embedHtml && $embedHtml != '')
+          $embedHtml
+        #else
+          <div id="$core_v2_encoding.HtmlAttributeEncode($embedId)" class="message"><a href="$url">$url</a></div>
+        #end
+      #else
+        $core_v2_widget.Hide()
+      #end
+    #end
+#end]]></contentScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+  <property id="url" labelResourceName="Url" descriptionResourceName="Description" dataType="url" template="url" defaultProtocol="https" allowedFileExtensions="" allowLocal="false" allowRemote="true" enablePreview="false">
+      <propertyRule name="rule.jsm" />
+  </property>
+  <property id="sanitizedEmbedCode" dataType="html" rows="5" enableRichEditing="false" sanitize="false" visible="false" />
+</propertyGroup>/]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Description">Displays a twitter embed</resource>
+  <resource name="Name">Twitter</resource>
+  <resource name="Url">Tweet Url</resource>
+</language>]]></languageResources>
+    <previewImage name="twitter.svg" />
+    <iconImage name="twitter.svg" />
+    <files>
+      <file name="api.jsm" />
+      <file name="rule.jsm" />
+    </files>
+  </embeddable>
+</embeddables>

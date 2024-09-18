@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_BlogArchiveList_Name}" version="11.0.0.0" description="${resource:Blogs_BlogArchiveList_Description}" instanceIdentifier="957f4b146dab4c47af2abc060f6bcbfe" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="blog-archive-list" lastModified="2020-01-14 16:08:16Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+
+#set ($blogId = $core_v2_blog.Current.Id)
+#set ($blogPostSummaries = $core_v2_blogPostSummary.List($blogId))
+
+<ul class="navigation-list">
+#foreach ($summary in $blogPostSummaries)
+	<li class="navigation-list-item">
+		<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_blogUrls.Month($blogId, $summary.Date))">$core_v2_language.FormatDate($summary.Date, "MMMM yyyy")</a> ($summary.Count)
+	</li>
+#end
+</ul>
+
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Blogs_BlogArchiveList_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blogs_BlogArchiveList_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Blogs_BlogArchiveList_Description">Displays a list of months of archived blog posts.</resource>
+  <resource name="Blogs_BlogArchiveList_Name">Blog - Monthly Archive List</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="94b4a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

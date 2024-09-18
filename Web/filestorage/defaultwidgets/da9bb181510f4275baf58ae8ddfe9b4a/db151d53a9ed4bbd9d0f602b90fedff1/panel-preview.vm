@@ -1,0 +1,93 @@
+#set ($id = $core_v2_page.GetQueryStringValue('_w_id'))
+#set ($typeId = $core_v2_page.GetQueryStringValue('_w_typeId'))
+
+#set ($theme = $context.GetTheme("%{ Id = $id, TypeId = $typeId }"))
+
+<div class="preview-theme">
+	<form>
+		#if ($theme.IsStaged)
+			<div class="message information">
+				$core_v2_language.GetResource('preview-note')
+			</div>
+			<p>
+				#if ($theme.TypeId != $core_v2_configuration.SiteThemeTypeId)
+					#format($core_v2_language.GetResource('preview-desc-app'))
+						#token('theme-name')
+							$core_v2_encoding.HtmlEncode($theme.Name)
+						#token('type-name')
+							$core_v2_language.Lowercase($theme.TypeName)
+					#end
+				#else
+					#format($core_v2_language.GetResource('preview-desc-site'))
+						#token('theme-name')
+							$core_v2_encoding.HtmlEncode($theme.Name)
+						#token('type-name')
+							$core_v2_language.Lowercase($theme.TypeName)
+					#end
+				#end
+			</p>
+		#else
+			<p>
+				#if ($theme.TypeId != $core_v2_configuration.SiteThemeTypeId)
+					#format($core_v2_language.GetResource('view-desc-app'))
+						#token('theme-name')
+							$core_v2_encoding.HtmlEncode($theme.Name)
+						#token('type-name')
+							$core_v2_language.Lowercase($theme.TypeName)
+					#end
+				#else
+					#format($core_v2_language.GetResource('view-desc-site'))
+						#token('theme-name')
+							$core_v2_encoding.HtmlEncode($theme.Name)
+						#token('type-name')
+							$core_v2_language.Lowercase($theme.TypeName)
+					#end
+				#end
+			</p>
+		#end
+		<fieldset>
+			<ul class="field-list">
+				#if ($theme.TypeId != $core_v2_configuration.SiteThemeTypeId)
+					<li class="field-item" id="">
+						<label for="" class="field-item-name">$core_v2_language.GetResource('previewIn')</label>
+						<span class="field-item-description">
+							#format($core_v2_language.GetResource('previewInDesc'))
+								#token('theme-name')
+									$core_v2_encoding.HtmlEncode($theme.Name)
+								#token('type-name')
+									$core_v2_language.Lowercase($theme.TypeName)
+							#end
+						</span>
+						<span class="field-item-input select-default">
+							<input type="text" id="" name="" class="application-lookup" />
+						</span>
+					</li>
+				#end
+			</ul>
+		</fieldset>
+	</form>
+</div>
+
+#set ($previewHeaderTemplateId = $core_v2_widget.UniqueId('previewHeaderTemplate'))
+#registerClientTemplate($previewHeaderTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-preview.vm')
+#end
+#registerEndOfPageHtml('themesPanel.import')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-preview.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.themes.themeAdministration.preview.register({
+			importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+			searchApplicationsCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-search-applications.jsm'))',
+			previewCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-preview.jsm'))',
+			previewHeaderTemplateId: '$core_v2_encoding.JavascriptEncode($previewHeaderTemplateId)',
+			themeTypeId: '$core_v2_encoding.JavascriptEncode($typeId)',
+			themeId: '$core_v2_encoding.JavascriptEncode($id)',
+			previewNoMatchText: 'No Match',
+			previewSearchText: 'Search'
+		});
+	});
+	</script>
+#end

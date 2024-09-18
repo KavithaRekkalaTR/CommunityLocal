@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupMentionListWidget_Title}" version="11.0.0.0" description="${resource:GroupMentionListWidget_Description}" instanceIdentifier="7f2edee679dd4f47985960a90294e6e9" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="group-mention-list" lastModified="2020-01-14 16:07:56Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set($group = false)
+#set($group = $core_v2_group.Current)
+#if (!$group)
+    $core_v2_widget.Hide()
+#end
+
+$core_v2_ui.PagedContent('mentions.vm')
+$core_v2_ui.Pager($mentions.PageIndex, $mentions.PageSize, $mentions.TotalCount, "%{PagedContentFile='mentions.vm'}")
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Title}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="fragmentHeader" labelResourceName="Configuration_Title" defaultValue="${resource:Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageSize" labelResourceName="Configuration_PageSize" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Configuration_PageSize">Page Size</resource>
+  <resource name="Configuration_Title">Widget Title</resource>
+  <resource name="GroupMentionListWidget_Description">Shows content that mentioned a group.</resource>
+  <resource name="GroupMentionListWidget_Title">Group - Mention List</resource>
+  <resource name="No_Mentions_Message">{0} has not yet been mentioned.</resource>
+  <resource name="Title">Group Mentions</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

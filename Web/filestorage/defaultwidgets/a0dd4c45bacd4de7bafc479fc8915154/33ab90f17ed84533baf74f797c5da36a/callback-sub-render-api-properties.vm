@@ -1,0 +1,142 @@
+##
+## Properties Renderer
+##
+## Requires in scope:
+##   $properties
+##
+
+#set ($d = '$')
+#foreach ($prop in $properties)
+#beforeall
+	<div class="properties">
+		<h4 class="members_heading">$core_v2_language.GetResource('Properties')</h4>
+#each
+	#set ($parent = false)
+	#set ($parent = $prop.Parent)
+
+	#set ($dynamicPropertyTypes = false)
+	#if ($prop.DynamicTypes)
+		#set ($dynamicPropertyTypes = $prop.DynamicTypes.GetTypes($fragmentId))
+	#end
+
+	#if($prop.DynamicTypes && !($dynamicPropertyTypes.Count > 0))
+		<div class="documentation-member">
+			<a name="$core_v2_encoding.HtmlAttributeEncode($prop.Name)"></a>
+			<h3 class="member_heading">$prop.Name</h3>
+			<div class="documentation-member-body">
+				<p>$prop.Description</p>
+			</div>
+		</div>
+	#else
+		<div class="documentation-member">
+			<a name="$core_v2_encoding.HtmlAttributeEncode($prop.Name)"></a>
+			<h3 class="member_heading">$prop.Name</h3>
+			<div class="documentation-member-body">
+				<p>$prop.Description</p>
+
+				<div class="documentation-section access">
+					<div class="label">
+						$core_v2_language.GetResource('Access'):
+						<span class="value">
+						#if ($prop.CanRead)
+							${core_v2_language.GetResource('Read')}#if ($prop.CanWrite), #end
+						#end
+						#if ($prop.CanWrite)
+							$core_v2_language.GetResource('Write')
+						#end
+						</span>
+					</div>
+				</div>
+
+				<div class="documentation-section type">
+					#if ($prop.DynamicTypes)
+						<span class="label">$core_v2_language.GetResource('DynamicObjProperties')</span>
+						<span class="value">
+							#set ($existingType = $type)
+							#set ($type = false)
+							#foreach ($typeOverload in $prop.DynamicTypes.GetTypes($fragmentId))
+							#beforeall
+								<table cellspacing="0">
+									<thead>
+										<tr>
+											<th>$core_v2_language.GetResource('Name')</th>
+											<th>$core_v2_language.GetResource('Type')</th>
+										</tr>
+									</thead>
+									<tbody>
+							#each
+									#set ($type = $typeOverload.Type)
+									<tr>
+										<td>$!typeOverload.Name</td>
+										<td>
+											$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+										</td>
+									</tr>
+							#afterall
+									</tbody>
+								</table>
+							#end
+							#set ($type = $existingType)
+						</span>
+					#else
+						<span class="label">$core_v2_language.GetResource('Type')</span>
+						<span class="value">
+							#set ($existingType = $type)
+							#set ($type = false)
+							<ul>
+							#foreach ($typeOverload in $prop.Types)
+								<li>
+									#set ($type = $typeOverload.Type)
+									$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+									#if ($typeOverload.Description)
+										<span class="description">
+											$typeOverload.Description
+										</span>
+									#end
+								</li>
+							#end
+							</ul>
+							#set ($type = $existingType)
+						</span>
+					#end
+				</div>
+
+				<div class="documentation-section usage">
+					<span class="label">$core_v2_language.GetResource('Example')</span>
+					<div class="value">
+						#if ($parent && $parent.MetadataType == 'AutomationEvent')
+							<pre>${d}context_v2_automationTrigger.Arguments.$prop.Name</pre>
+						#else
+							#if ($prop.DynamicTypes)
+								<pre>#foreach ($typeOverload in $prop.DynamicTypes.GetTypes($fragmentId))
+$${shellApi.LowerCaseFirstCharacter($prop.Parent.Name)}.${prop.Name}.${typeOverload.Name}
+#end</pre>
+							#else
+								<pre>$${shellApi.LowerCaseFirstCharacter($prop.Parent.Name)}.$prop.Name</pre>
+							#end
+						#end
+					</div>
+				</div>
+
+				<div class="documentation-section usage">
+					<span class="label">$core_v2_language.GetResource('JsExample')</span>
+					<div class="value">
+						#if ($parent && $parent.MetadataType == 'AutomationEvent')
+							<pre>context_v2_automationTrigger.Arguments.$prop.Name</pre>
+						#else
+							#if ($prop.DynamicTypes)
+								<pre>#foreach ($typeOverload in $prop.DynamicTypes.GetTypes($fragmentId))
+${shellApi.LowerCaseFirstCharacter($prop.Parent.Name)}.${prop.Name}.${typeOverload.Name}
+#end</pre>
+							#else
+								<pre>${shellApi.LowerCaseFirstCharacter($prop.Parent.Name)}.$prop.Name</pre>
+							#end
+						#end
+					</div>
+				</div>
+			</div>
+		</div>
+	#end
+#afterall
+	</div>
+#end

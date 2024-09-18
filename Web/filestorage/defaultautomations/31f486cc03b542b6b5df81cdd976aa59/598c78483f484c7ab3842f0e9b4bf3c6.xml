@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" id="598c78483f484c7ab3842f0e9b4bf3c6" executeAsServiceUser="true" isSingleton="false" hostId="94e30ae53ec54de284a1606a4d914c1b" trigger="Event" lastModified="2019-11-16 00:03:00Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="reviewablecontent.aftercreate" />
+      <event key="reviewablecontent.afterdeny" />
+      <event key="reviewablecontent.afterapprove" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[// ensure that the content is managed by this automation (events are generic, but 
+// this automation instance manages a single application/content type)
+if (context_v2_automationTrigger.Arguments.ApplicationId != context_v1_reviewWorkflow.ApplicationId 
+    || context_v2_automationTrigger.Arguments.ContentTypeId != context_v1_reviewWorkflow.ContentTypeId) {
+    return;
+}
+
+// attempt to load the privileged version of the reviewable content from the private API
+var reviewableContent = context_v1_reviewWorkflow.Get(context_v2_automationTrigger.Arguments.Id);
+if (!reviewableContent || reviewableContent.HasErrors()) {
+    return;
+}
+
+var STATE_AUTHOR_REVISION = 'AuthorRevision',
+    STATE_REVIEW = 'Review';
+
+function getReviewUserIds() {
+    var reviewUserIds = [], user;
+    
+    var userIds = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('reviewers', '') || '').Values('User');
+    if (userIds == null || userIds.Count == 0) {
+        return reviewUserIds;
+    }
+    
+    for (var i = 0; i < userIds.Count; i++) {
+        user = core_v2_user.Get({ Id: userIds[i] });
+        if (user != null && !user.HasErrors()) {
+            reviewUserIds.push(user.Id);
+        }
+    }
+    
+    return reviewUserIds;
+}
+
+function assignForReview(fromRevision) {
+
+    var reviewUserIds = getReviewUserIds();
+    if (reviewUserIds.length == 0) {
+        // no reviewers, publish immediately
+        var content = context_v1_reviewWorkflow.Publish(reviewableContent.Id);
+        if (content && !content.HasErrors()) {
+            if (fromRevision) {
+                notifyOfPublication(content);
+            }
+
+            context_v1_reviewWorkflow.Update(reviewableContent.Id, {
+                Assignees: [],
+                AutomationState: {
+                    state: ''
+                },
+                DenialOptionsXml: '',
+                ApprovalOptionsXml: '',
+                Status: core_v2_language.FormatString(core_v2_language.GetResource('ReviewStatus_Published'), {
+                    title: content.HtmlName('Web'),
+                    url: content.Url
+                })
+            });
+        } else if (content && content.HasErrors()) {
+            context_v1_reviewWorkflow.Error(reviewableContent.Id, content.Errors.get_Item(0).Message);
+        }
+    } else {
+        var status = '';
+        if (fromRevision) {
+            status = core_v2_language.GetResource('ReviewStatus_Reviewers_FromRevision');
+        } else {
+            status = core_v2_language.GetResource('ReviewStatus_Reviewers')
+        }
+        
+        // assign it to the configured reviewers
+        context_v1_reviewWorkflow.Update(reviewableContent.Id, {
+            Assignees: reviewUserIds,
+            AutomationState: {
+                state: STATE_REVIEW
+            },
+            DenialOptionsXml: core_v2_widget.RenderFile('review-denial-options.xml'),
+            ApprovalOptionsXml: '',
+            Status: status
+        });
+    }
+}
+
+function assignForRevision(revisionNotes) {
+    
+    var status = '';
+    if (revisionNotes && revisionNotes.length > 0) {
+        status = core_v2_language.FormatString(core_v2_language.GetResource('ReviewStatus_AuthorRevision_WithNotes'), {
+            revisionnotes: revisionNotes
+            });
+    } else {
+        status = core_v2_language.GetResource('ReviewStatus_AuthorRevision');
+    }
+    
+    // assign to the author to revise
+    reviewableContent = context_v1_reviewWorkflow.Update(reviewableContent.Id, {
+        Assignees: reviewableContent.Author.Id,
+        AutomationState: {
+            state: STATE_AUTHOR_REVISION
+        },
+        DenialOptionsXml: '',
+        ApprovalOptionsXml: '',
+        Status: status
+    });
+    
+    if (reviewableContent && !reviewableContent.HasErrors()) {
+        notifyOfRevisionRequest(revisionNotes);
+    }
+}
+
+function notifyOfPublication(content) {
+    
+    var data = {
+        title: reviewableContent.Title,
+        url: content.Url,
+        contenttypename: (core_v2_contentType.Get(reviewableContent.ContentTypeId).Name || '??').toLowerCase()
+    };
+    
+    core_v2_email.Send(
+        core_v2_language.FormatString(core_v2_language.GetResource('Notification_Publish_Subject'), data), 
+        core_v2_language.FormatString(core_v2_language.GetResource('Notification_Publish_Body'), data), 
+        {
+            ToUserId: reviewableContent.Author.Id
+        });
+}
+
+function notifyOfDeletion() {
+    var data = {
+        title: reviewableContent.Title,
+        contenttypename: (core_v2_contentType.Get(reviewableContent.ContentTypeId).Name || '??').toLowerCase()
+    };
+    
+    core_v2_email.Send(
+        core_v2_language.FormatString(core_v2_language.GetResource('Notification_Delete_Subject'), data), 
+        core_v2_language.FormatString(core_v2_language.GetResource('Notification_Delete_Body'), data), 
+        {
+            ToUserId: reviewableContent.Author.Id
+        });
+}
+
+function notifyOfRevisionRequest(revisionNotes) {
+    var data = {
+        title: reviewableContent.Title,
+        revisionnotes: revisionNotes && revisionNotes.length > 0 ? revisionNotes : core_v2_language.GetResource('Notification_EmptyRevisionNotes'),
+        contenttypename: (core_v2_contentType.Get(reviewableContent.ContentTypeId).Name || '??').toLowerCase()
+    };
+    
+    core_v2_email.Send(
+        core_v2_language.FormatString(core_v2_language.GetResource('Notification_RevisionRequested_Subject'), data), 
+        core_v2_language.FormatString(core_v2_language.GetResource('Notification_RevisionRequested_Body'), data), 
+        {
+            ToUserId: reviewableContent.Author.Id
+        });
+}
+
+if (context_v2_automationTrigger.Event == 'AfterCreate') {
+    
+    // when content is created, assign it to be reviewed
+    assignForReview(false);
+    
+} else if (context_v2_automationTrigger.Event == 'AfterApprove') {
+    
+    if (reviewableContent.AutomationState.Value('state') == STATE_AUTHOR_REVISION && context_v2_automationTrigger.Arguments.UserId == reviewableContent.Author.Id) {
+        // the author revised the content, reassign to reviewers
+        assignForReview(true);
+    } else {
+        // a reviewer has approved the content, publish it
+        var content = context_v1_reviewWorkflow.Publish(reviewableContent.Id);
+        if (content && !content.HasErrors()) {
+            notifyOfPublication(content);
+            
+            context_v1_reviewWorkflow.Update(reviewableContent.Id, {
+                AutomationState: {
+                    state: STATE_REVIEW
+                },
+                DenialOptionsXml: core_v2_widget.RenderFile('review-denial-options.xml'),
+                ApprovalOptionsXml: '',
+                Status: core_v2_language.FormatString(core_v2_language.GetResource('ReviewStatus_Published'), {
+                    title: content.HtmlName('Web'),
+                    url: content.Url
+                })
+            });
+        } else if (content && content.HasErrors()) {
+            context_v1_reviewWorkflow.Error(reviewableContent.Id, content.Errors.get_Item(0).Message);
+        }
+    }
+} else if (context_v2_automationTrigger.Event == 'AfterDeny') {
+    
+    if (reviewableContent.AutomationState.Value('state') == STATE_AUTHOR_REVISION && context_v2_automationTrigger.Arguments.UserId == reviewableContent.Author.Id) {
+        // the author has denied the content, delete it
+        var result = context_v1_reviewWorkflow.Delete(reviewableContent.Id);
+        if (result && result.HasErrors()) {
+            context_v1_reviewWorkflow.Error(reviewableContent.Id, result.Errors.get_Item(0).Message);
+        }
+    } else if (context_v2_automationTrigger.Arguments.Options.GetBool('allowRevision')) {
+        // a reviewer has denied the content but revisions are allowed, assign back to the author for revision with notes
+        var revisionNotes = context_v2_automationTrigger.Arguments.Options.GetHtml('revisionNotes');
+        assignForRevision(revisionNotes);
+    } else {
+        // a reviewer has denied the content without allowing revision, delete it
+        var result = context_v1_reviewWorkflow.Delete(reviewableContent.Id);
+        if (result && !result.HasErrors()) {
+            notifyOfDeletion();
+            
+            context_v1_reviewWorkflow.Update(reviewableContent.Id, {
+                AutomationState: {
+                    state: STATE_REVIEW
+                },
+                DenialOptionsXml: core_v2_widget.RenderFile('review-denial-options.xml'),
+                ApprovalOptionsXml: '',
+                Status: core_v2_language.GetResource('ReviewStatus_Deleted')
+            });
+        } else if (result && result.HasErrors()) {
+            context_v1_reviewWorkflow.Error(reviewableContent.Id, result.Errors.get_Item(0).Message);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="reviewers" dataType="custom" template="core_v2_userLookup" maxSelections="20" labelResourceName="Field_Reviewers" descriptionResourceName="Field_Reviewers_Description" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enables one or more reviewers to approve/deny all content being created within an application.</resource>
+  <resource name="Field_AllowRevision">Allow the author revise their content</resource>
+  <resource name="Field_AllowRevision_Description">If enabled, the author will be provided with your revision notes and will be allowed to edit their content and resubmit it for review, otherwise, the content will be scheduled to be deleted.</resource>
+  <resource name="Field_Reviewers">Reviewers</resource>
+  <resource name="Field_Reviewers_Description">Members who can review new or edited content.</resource>
+  <resource name="Field_RevisionNotes">Revision notes</resource>
+  <resource name="Field_RevisionNotes_Description">Provide any notes that you'd like to share with the author when they revise this content.</resource>
+  <resource name="Name">Simple Review</resource>
+  <resource name="Notification_Delete_Body">&lt;p&gt;Your {contenttypename}, "{title}," was denied by reviewers and will not be published.&lt;/p&gt;</resource>
+  <resource name="Notification_Delete_Subject">Denied: "{title}"</resource>
+  <resource name="Notification_EmptyRevisionNotes">No revision notes were provided.</resource>
+  <resource name="Notification_Publish_Body">&lt;p&gt;Your {contenttypename}, &lt;a href="{url}"&gt;"{title}"&lt;/a&gt;, has been published.&lt;/p&gt;</resource>
+  <resource name="Notification_Publish_Subject">Published: "{title}"</resource>
+  <resource name="Notification_RevisionRequested_Body">&lt;p&gt;Your {contenttypename}, "{title}," has been reviewed but revisions have been requested. You can revise the {contenttypename} within the moderation queue and resubmit it. &lt;/p&gt;{revisionnotes}</resource>
+  <resource name="Notification_RevisionRequested_Subject">Revision Requested: "{title}"</resource>
+  <resource name="Options">Options</resource>
+  <resource name="ReviewStatus_AuthorRevision">&lt;p&gt;Reviewers have requested that you revise this content. When you have completed editing the content, click 'Approve' to resubmit for review. If you would like to abandon this content, click 'Deny'.&lt;/p&gt;</resource>
+  <resource name="ReviewStatus_AuthorRevision_WithNotes">&lt;p&gt;Reviewers have requested that you revise this content. When you have completed editing the content, click 'Approve' to resubmit for review. If you would like to abandon this content, click 'Deny'. The reviewer provided the following revision notes:&lt;/p&gt;{revisionnotes}</resource>
+  <resource name="ReviewStatus_Deleted">&lt;p&gt;This content has been deleted.&lt;/p&gt;</resource>
+  <resource name="ReviewStatus_Published">&lt;p&gt;This content has been published as &lt;a href="{url}"&gt;"{title}"&lt;/a&gt;.&lt;/p&gt;</resource>
+  <resource name="ReviewStatus_Reviewers">&lt;p&gt;'Approve' will publish this content. 'Deny' can be used to request revisions or delete this change.&lt;/p&gt;</resource>
+  <resource name="ReviewStatus_Reviewers_FromRevision">&lt;p&gt;Revisions have been made by the author, as requested. 'Approve' will publish this content. 'Deny' can be used to request revisions or delete this change.&lt;/p&gt;</resource>
+</language>]]></languageResources>
+    <files>
+      <file name="review-denial-options.xml" />
+    </files>
+  </automation>
+</automations>

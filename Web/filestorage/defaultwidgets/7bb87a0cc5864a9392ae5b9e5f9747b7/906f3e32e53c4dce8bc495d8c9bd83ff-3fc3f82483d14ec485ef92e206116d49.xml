@@ -1,0 +1,315 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SiteAndGroupSetup_Title}" version="12.0.0.0" description="${resource:SiteAndGroupSetup_Description}" instanceIdentifier="906f3e32e53c4dce8bc495d8c9bd83ff" theme="3fc3f82483d14ec485ef92e206116d49" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="site-and-group-setup" lastModified="2022-10-14 18:46:41Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($group = $core_v2_group.Current)
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#set($adminDefault = false)
+#set($adminDefault = $core_v2_page.GetQueryStringValue('_cpdefault'))
+#if ($adminDefault)
+	$core_v2_widget.Hide()
+#end
+#if ($group.ParentGroupId <= 0)
+	#set($group = false)
+	#if($core_v2_urls.Current != 'Home')
+		$core_v2_widget.Hide()
+	#end
+#else
+	#if ($core_v2_groupUrls.Current != 'Group')
+		$core_v2_widget.Hide()
+	#end
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.siteAndGroupSetup')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+		jQuery(function()
+		{
+			jQuery.telligent.evolution.widgets.siteAndGroupSetup.register({
+				rootGroupId: $core_v2_group.Root.Id,
+				groupCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupCreationProgress'))',
+				blogCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('BlogCreationProgress'))',
+				forumCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForumCreationProgress'))',
+				galleryCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GalleryCreationProgress'))',
+				wikiCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('WikiCreationProgress'))',
+				collectionCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ArticleCollectionCreationProgress'))',
+				ideationCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChallengeCreationProgress'))',
+				calendarCreationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CalendarCreationProgress'))',
+				siteConfigurationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SiteConfigurationProgress'))',
+				groupConfigurationProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupConfigurationProgress'))',
+				setSiteConfigurationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('set-site-configuration.vm'))',
+				inviteToGroupUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('invite-to-group.vm'))',
+				importPageTemplateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('import-page-template.vm'))',
+				importHeaderTemplateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('import-header-template.vm'))',
+				importFooterTemplateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('import-footer-template.vm'))',
+                updateLicenseDataUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('licensing.vm'))',
+                overLicensedMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensedMessage'))',
+                overLicensedSeperator: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensedSeperator'))',
+                overLicenseNames: {
+                group: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_group'))',
+                applications: {
+                    forum: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_forum'))',
+                    blog: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_blog'))',
+                    wiki:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_wiki'))' ,
+                    collection:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_collection'))' ,
+                    gallery: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_gallery'))',
+                    ideation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_challenge'))',
+                    calendar:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('overLicensed_calendar'))'
+                }
+                }
+			});
+		});
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+	</script>
+#end
+
+#if(!$group)
+	#set($groups = $core_v2_group.List("%{ParentGroupId=$core_v2_group.Root.Id, PageSize=2, PageIndex=1}"))
+	#if ($core_v2_page.IsInDeveloperMode)
+	    <div class="message information">$core_v2_language.GetResource('DeveloperModeEnabled')</div>
+	#elseif (!$core_v2_page.IsInThemePreviewMode && ($groups.TotalCount > 1 || ($groups.TotalCount == 1 && !$groups.get_Item(0).Name.StartsWith('Admin'))))
+		## site already configured, register script to clean up page
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+				jQuery(function()
+				{
+					jQuery.telligent.evolution.widgets.siteAndGroupSetup.configureDefault({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('configure-default-site.vm'))'
+					});
+				});
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+			</script>
+		#end
+	#elseif ($core_v3_permission.CheckPermission($core_v2_sitePermissions.ModifyTheme, $core_v2_user.Accessing.Id).IsAllowed && $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageSettings, $core_v2_user.Accessing.Id).IsAllowed)
+		## site not configured, user has access, show configuration form
+		$core_v2_widget.ExecuteFile('setup-new-site.vm')
+	#else
+		## not configured but the accessing user can't edit
+		<div class="message information">$core_v2_language.GetResource('LoginToSetupSite')</div>
+	#end
+#else
+	#set($hasApps = false)
+	#set ($apps = $core_v2_blog.List("%{GroupId=$group.Id,PageIndex=0,PageSize=1,IncludeSubGroups='True'}"))
+	#if ($apps && $apps.TotalCount > 0)
+		#set($hasApps = true)
+	#else
+		#set ($apps = $core_v2_forum.List("%{GroupId=$group.Id,PageIndex=0,PageSize=1,IncludeSubGroups='True'}"))
+		#if ($apps && $apps.TotalCount > 0)
+			#set($hasApps = true)
+		#else
+			#set($apps = $core_v2_gallery.List("%{GroupId=$group.Id,PageIndex=0,PageSize=1,IncludeSubGroups='True'}"))
+			#if ($apps && $apps.TotalCount > 0)
+				#set($hasApps = true)
+			#else
+				#set($apps = $core_v2_wiki.List("%{GroupId=$group.Id,PageIndex=0,PageSize=1,IncludeSubGroups='True'}"))
+				#if ($apps && $apps.TotalCount > 0)
+					#set($hasApps = true)
+                #else
+                    #set($apps = $articles_v1_articleCollections.List("%{GroupId=$group.Id,PageIndex=0,PageSize=1,IncludeSubGroups='True'}"))
+                    #if ($apps && $apps.TotalCount > 0)
+                        #set($hasApps = true)
+                    #else
+                        #set($apps = $telligentIdeas_v1_challenges.List($group.Id, "%{IncludeSubGroups='True',PageIndex=0,PageSize=1}"))
+                        #if ($apps && $apps.TotalCount > 0)
+                            #set($hasApps = true)
+                        #end
+
+                        ## can't get a calendar for a group :(
+                    #end
+				#end
+			#end
+		#end
+	#end
+
+	#if (!$core_v2_page.IsInThemePreviewMode && $hasApps)
+		## group already configured, register script to clean up page
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+				jQuery(function()
+				{
+					jQuery.telligent.evolution.widgets.siteAndGroupSetup.configureDefault({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('configure-default-group.vm'))'
+					});
+				});
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+			</script>
+		#end
+	#elseif ($core_v3_permission.CheckPermission($core_v2_groupPermissions.EditTheme, $core_v2_user.Accessing.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed && $core_v3_permission.CheckPermission($core_v2_groupPermissions.ModifyGroup, $core_v2_user.Accessing.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+		## group not configured, user has access, show configuration form
+		$core_v2_widget.ExecuteFile('setup-new-group.vm')
+	#else
+		## not configured but the accessing user can't edit
+		<div class="message information">$core_v2_language.GetResource('LoginToSetupGroup')</div>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_language.GetResource('SiteSetup_Title')
+	]]></headerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">Add</resource>
+  <resource name="Application_Announcements">Announcements (blog)</resource>
+  <resource name="Application_Announcements_Name">Announcements</resource>
+  <resource name="Application_Articles_Documentation">Documentation (articles)</resource>
+  <resource name="Application_Articles_Documentation_Name">Documentation</resource>
+  <resource name="Application_Articles_KnowledgeBase">Knowledge Base (articles)</resource>
+  <resource name="Application_Articles_KnowledgeBase_Name">Knowledge Base</resource>
+  <resource name="Application_Articles_Policies">Policies (articles)</resource>
+  <resource name="Application_Articles_Policies_Name">Policies</resource>
+  <resource name="Application_Articles_Positions">Positions (articles)</resource>
+  <resource name="Application_Articles_Positions_Name">Positions</resource>
+  <resource name="Application_Collateral">Collateral (gallery)</resource>
+  <resource name="Application_Collateral_Name">Collateral</resource>
+  <resource name="Application_CustomerBulletins">Customer Bulletins (blog)</resource>
+  <resource name="Application_CustomerBulletins_Name">Customer Bulletins</resource>
+  <resource name="Application_Documentation">Documentation (wiki)</resource>
+  <resource name="Application_Documentation_Name">Documentation</resource>
+  <resource name="Application_Documents">Documents (gallery)</resource>
+  <resource name="Application_Documents_Name">Documents</resource>
+  <resource name="Application_Escalations">Escalations (forum)</resource>
+  <resource name="Application_Escalations_Name">Escalations</resource>
+  <resource name="Application_Events">Events (calendar)</resource>
+  <resource name="Application_Events_Name">Events</resource>
+  <resource name="Application_Forum">Forum (forum)</resource>
+  <resource name="Application_Forum_Name">Forum</resource>
+  <resource name="Application_Helpdesk">Helpdesk (forum)</resource>
+  <resource name="Application_Helpdesk_Name">Helpdesk</resource>
+  <resource name="Application_KnowledgeBase">Knowledge Base (wiki)</resource>
+  <resource name="Application_KnowledgeBase_Name">Knowledge Base</resource>
+  <resource name="Application_Photos">Photos (gallery)</resource>
+  <resource name="Application_Photos_Name">Photos</resource>
+  <resource name="Application_Policies">Policies (wiki)</resource>
+  <resource name="Application_Policies_Name">Policies</resource>
+  <resource name="Application_Positions">Positions (wiki)</resource>
+  <resource name="Application_Positions_Name">Positions</resource>
+  <resource name="Application_Presentations">Presentations (gallery)</resource>
+  <resource name="Application_Presentations_Name">Presentations</resource>
+  <resource name="Application_Resources">Resources (gallery)</resource>
+  <resource name="Application_Resources_Name">Resources</resource>
+  <resource name="Application_Suggestions">Suggestions (ideation)</resource>
+  <resource name="Application_Suggestions_Name">Suggestions</resource>
+  <resource name="Application_Support">Support (forum)</resource>
+  <resource name="Application_Support_Name">Support</resource>
+  <resource name="Application_Whitepapers">Whitepapers (gallery)</resource>
+  <resource name="Application_Whitepapers_Name">Whitepapers</resource>
+  <resource name="Applications">Applications</resource>
+  <resource name="Applications_Description">Select applications this group should support. Additional applications can be added later using the "New" menu</resource>
+  <resource name="ArticleCollectionCreationProgress">Creating article collection '{0}'</resource>
+  <resource name="Avatar">Group avatar</resource>
+  <resource name="Avatar_Description">Select an image to represent this group throughout this site. A 600 by 600 pixel image, or larger, is recommended.</resource>
+  <resource name="BlogCreationProgress">Creating blog '{0}'</resource>
+  <resource name="CalendarCreationProgress">Creating calendar '{0}'</resource>
+  <resource name="ChallengeCreationProgress">Creating ideation '{0}'</resource>
+  <resource name="ChangePhoto">Change photo</resource>
+  <resource name="CommunityDescription">Community description</resource>
+  <resource name="CommunityDescription_Description">Describe the purpose of this community.</resource>
+  <resource name="CommunityLogo">Community logo</resource>
+  <resource name="CommunityLogo_Description">Select an image to use in the header of the site. A 250 by 88 pixel image (or an image with a similar aspect ratio) is recommended.</resource>
+  <resource name="CommunityName">Community name</resource>
+  <resource name="CommunityName_Description">This name will be shown throughout the site to refer to the community.</resource>
+  <resource name="CommunityType">Type of community</resource>
+  <resource name="CommunityType_Enterprise">Enterprise social network</resource>
+  <resource name="CommunityType_Other">Other</resource>
+  <resource name="CommunityType_Support">Support community</resource>
+  <resource name="CompanyName">Company name</resource>
+  <resource name="CompanyName_Description">The name of your company.</resource>
+  <resource name="Department_Name">Name</resource>
+  <resource name="Department_Name_Placeholder">Department Name...</resource>
+  <resource name="DepartmentAvatar">Avatar</resource>
+  <resource name="DepartmentAvatar_Description">Select an avatar to represent this department throughout this site. A 600 by 600 pixel image, or larger, is recommended.</resource>
+  <resource name="DepartmentOwnerEmail">Owner email address</resource>
+  <resource name="DepartmentOwnerEmail_Description">If you provide the email address of the user that will own this department, we'll invite them to own the resulting group as part of this set up process.</resource>
+  <resource name="Departments">Departments and applications</resource>
+  <resource name="Departments_Description">List your company's departments and select their applications. Additional departments and applications can be added later using the "New" menu within a group.</resource>
+  <resource name="DeveloperModeEnabled">The site setup process is disabled when developer mode is enabled because the factory default implementation of the site homepage would be overwritten.</resource>
+  <resource name="ForumCreationProgress">Creating forum '{0}'</resource>
+  <resource name="GalleryCreationProgress">Creating gallery '{0}'</resource>
+  <resource name="Group_CustomerAdvisoryBoard">Customer Advisory Board</resource>
+  <resource name="Group_Departments">Departments</resource>
+  <resource name="Group_Documentation">Documentation</resource>
+  <resource name="Group_GeneralDiscussion">General Discussion</resource>
+  <resource name="Group_Ideas">Ideas</resource>
+  <resource name="Group_Name">Name</resource>
+  <resource name="Group_Name_Placeholder">Group Name...</resource>
+  <resource name="Group_News">News</resource>
+  <resource name="Group_Partners">Partners</resource>
+  <resource name="Group_ProductForums">Product Forums</resource>
+  <resource name="Group_Resources">Resources</resource>
+  <resource name="GroupConfigurationProgress">Configuring group '{0}'</resource>
+  <resource name="GroupConfigured_Body">&lt;p&gt;Congratulations! Your new group, &lt;a href="{1}"&gt;{0}&lt;/a&gt;, is now set up. Next, you may want to:&lt;/p&gt;&lt;ul&gt;	&lt;li&gt;&lt;strong&gt;Publish some content&lt;/strong&gt;&lt;br /&gt;Use the "new" menu in your group to publish content to your group.&lt;/li&gt;	&lt;li&gt;&lt;strong&gt;Invite or add members&lt;/strong&gt;&lt;br /&gt;If your group is membership-based, you may want to &lt;a href="{2}"&gt;add or invite members&lt;/a&gt;.&lt;/li&gt;&lt;/ul&gt;			</resource>
+  <resource name="GroupConfigured_Subject">{0} is set up</resource>
+  <resource name="GroupCreationError">An error occurred while setting up this group. Please try again.</resource>
+  <resource name="GroupCreationProgress">Creating group '{0}'</resource>
+  <resource name="Groups">Top-level groups and applications</resource>
+  <resource name="Groups_Description">Groups are used to organize content and functionality at a high level within the community. Identify your top-level groups and their applications below. Additional groups and applications can be added later using the "New" menu on a group or the Group Administration area of the Control Panel.</resource>
+  <resource name="LimitedLicense_Group">          IMPORTANT: This community is using the Free Edition license and has restrictions and limitations (&lt;a href="http://telligent.com/free-edition-telligent-community" target="_blank"&gt;learn more about the Free Edition license&lt;/a&gt;). If you have a commercial license, please &lt;a href="{0}administration?returnUrl={1}#_aptype=panel&amp;_appanelid=79ec8834-ce85-41b8-bc8b-b51955251c62"&gt;install the license&lt;/a&gt; before continuing with the starter kit site setup.        </resource>
+  <resource name="LimitedLicense_Site">          IMPORTANT: This community is using the Free Edition license and has restrictions and limitations (&lt;a href="http://telligent.com/free-edition-telligent-community" target="_blank"&gt;learn more about the Free Edition license&lt;/a&gt;). If you have a commercial license, please &lt;a href="{0}administration?returnUrl={1}#_aptype=panel&amp;_appanelid=79ec8834-ce85-41b8-bc8b-b51955251c62"&gt;install the license&lt;/a&gt; before continuing with the starter kit site setup.        </resource>
+  <resource name="LoginToSetupGroup">This group has not yet been set up. Sign in as an owner of this group to complete the setup.</resource>
+  <resource name="LoginToSetupSite">This site has not yet been set up. Sign in as a site administrator to complete the setup.</resource>
+  <resource name="OptimizeHomePage">Show only the selected application(s) on the group home page</resource>
+  <resource name="OptimizeHomePage_Description">If you aren't planning on adding additional applications after this group is set up, enable this option to update the layout of the group to show only the application(s) you've selected.</resource>
+  <resource name="overLicensed_blog">blogs ({0} too many)</resource>
+  <resource name="overLicensed_calendar">calendars ({0} too many)</resource>
+  <resource name="overLicensed_challenge">ideations ({0} too many)</resource>
+  <resource name="overLicensed_collection">article collections ({0} too many)</resource>
+  <resource name="overLicensed_forum">forums ({0} too many)</resource>
+  <resource name="overLicensed_gallery">galleries ({0} too many)</resource>
+  <resource name="overLicensed_group">groups ({0} too many)</resource>
+  <resource name="overLicensed_wiki">wikis ({0} too many)</resource>
+  <resource name="overLicensedMessage">The setup options you selected will exceed your licensed number of {0}. Adjust your selections or contact your administrator to upgrade the site's license.</resource>
+  <resource name="overLicensedSeperator">, </resource>
+  <resource name="OwnerEmail">Owner email address</resource>
+  <resource name="OwnerEmail_Description">If you provide the email address of the user that will own this group, we'll invite them to own the group as part of this set up process.</resource>
+  <resource name="Product_Name">Name</resource>
+  <resource name="Product_Name_Placeholder">Product name...</resource>
+  <resource name="Products">Products</resource>
+  <resource name="Products_Description">List the products that you want to support in this community. Groups and applications will be created to support these products. Additional groups and applications can be added later using the "New" menu on a group.</resource>
+  <resource name="Remove">Remove</resource>
+  <resource name="RemoveDepartment_Confirm">Are you sure you want to remove this department?</resource>
+  <resource name="RemoveGroup_Confirm">Are you sure you want to remove this group?</resource>
+  <resource name="RemovePhoto">Remove photo</resource>
+  <resource name="RemoveProduct_Confirm">Are you sure you want to remove this product?</resource>
+  <resource name="Setup">Set up</resource>
+  <resource name="SetupGroup">Set Up Your Group</resource>
+  <resource name="SetupGroup_Description">To help get your new group set up, please provide the following information:</resource>
+  <resource name="SetupSite">Set Up Your Community</resource>
+  <resource name="SetupSite_Description">To help get your new community set up, please provide the following information:</resource>
+  <resource name="SiteAndGroupSetup_Description">Configures groups and applications in a new site</resource>
+  <resource name="SiteAndGroupSetup_Title">Set Up Your Community/Group</resource>
+  <resource name="SiteConfigurationProgress">Configuring site</resource>
+  <resource name="SiteConfigured_Body">&lt;p&gt;Congratulations! Your new community is now set up. Next, you may want to:&lt;/p&gt;&lt;ul&gt;	&lt;li&gt;&lt;strong&gt;Personalize your community&lt;/strong&gt;&lt;br /&gt;Go to &lt;a href="#_cptype=category&amp;_cpcontexttype=Theme&amp;_cpcontextid=0c647246-6735-42f9-875d-c8b991fe739b"&gt;Manage Site Theme&lt;/a&gt; to customize headers, footers, pages, styling, and other theme options.&lt;/li&gt;	&lt;li&gt;&lt;strong&gt;Customize email templates&lt;/strong&gt;&lt;br /&gt;Go to &lt;a href="{1}"&gt;Administration&lt;/a&gt; &amp;gt; Translation and review templated email messages to customize email coming from this community.&lt;/li&gt;	&lt;li&gt;&lt;strong&gt;Publish content&lt;/strong&gt;&lt;br /&gt;Use the "new" menu to publish content to your community.&lt;/li&gt;&lt;/ul&gt;			</resource>
+  <resource name="SiteConfigured_Subject">Your new community is set up</resource>
+  <resource name="SiteCreationError">An error occurred while setting up this community. Please try again.</resource>
+  <resource name="UploadPhoto">Upload a photo</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="ViewGroup">View the group</resource>
+  <resource name="ViewSite">View the community</resource>
+  <resource name="WikiCreationProgress">Creating wiki '{0}'</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="groups.groups.readonly" />
+      <scope id="groups.groups.modify" />
+      <scope id="groups.avatars.modify" />
+      <scope id="blogs.blogs.readonly" />
+      <scope id="blogs.blogs.modify" />
+      <scope id="forums.forums.readonly" />
+      <scope id="forums.forums.modify" />
+      <scope id="articlecollections.collections.readonly" />
+      <scope id="articlecollections.collections.modify" />
+      <scope id="wikis.wikis.readonly" />
+      <scope id="wikis.wikis.modify" />
+      <scope id="galleries.galleries.readonly" />
+      <scope id="galleries.galleries.modify" />
+      <scope id="ideas.ideations.readonly" />
+      <scope id="ideas.ideations.modify" />
+      <scope id="calendars.calendars.readonly" />
+      <scope id="calendars.calendars.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

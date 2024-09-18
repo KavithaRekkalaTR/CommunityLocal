@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Email Verification" version="13.0.0.0" description="Allows editing content of messages sent in the email verification workflow" id="eff3f794c89044378015809f30f10d4f" lastModified="2023-05-09 15:54:34Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#set($verificationUrl = false)
+#set($verificationUrl = $core_v2_urls.EmailVerification($context_v1_email.Context.EmailVerification.VerificationKey))
+<p>
+#if ($context_v1_email.Context.EmailVerification.IsNewAccount)
+    #format($core_v2_language.GetResource('Body_NewAccount'))
+    #token('verify_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($verifycationUrl)">
+	    $core_v2_language.GetResource('Verify')
+	    </a>
+	#token('verify_link_here')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($verificationUrl)">
+        $core_v2_language.GetResource('Here')
+        </a>
+    #end
+#else
+    #format($core_v2_language.GetResource('Body'))
+    #token('verify_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($verifycationUrl)">
+	    $core_v2_language.GetResource('Verify')
+	    </a>
+	#token('verify_link_here')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($verificationUrl)">
+        $core_v2_language.GetResource('Here')
+        </a>
+    #end
+#end
+</p>
+<p>
+<a href="$core_v2_encoding.HtmlAttributeEncode($verificationUrl)">$core_v2_urls.FullPath($verificationUrl)</a>
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Please {verify_link} to complete the updating of your account. You can {verify_link_here} or copy and paste the URL below:</resource>
+  <resource name="Body_NewAccount">Please {verify_link} to complete your registration process. You can {verify_link_here} or copy and paste the URL below:</resource>
+  <resource name="Here">click here</resource>
+  <resource name="Subject">Verify your email address for {site_name}</resource>
+  <resource name="Header">Verify your email address for {site_name}</resource>
+  <resource name="Verify">verify your email address</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

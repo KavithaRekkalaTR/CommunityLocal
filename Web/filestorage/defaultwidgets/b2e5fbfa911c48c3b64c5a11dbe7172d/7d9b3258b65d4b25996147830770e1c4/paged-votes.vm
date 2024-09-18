@@ -1,0 +1,75 @@
+﻿#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set($userVotes = $telligentIdeas_v1_votes.List("%{IdeaId = '$context.Id', PageIndex = $pageIndex, PageSize = $pageSize}"))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($userVotes.PageIndex + 1) * $userVotes.PageSize)
+#if ($userVotes.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#set ($idea = $telligentIdeas_v1_ideas.Get($context.Id))
+#set ($totalVotes = 0)
+#set ($totalVotes = $idea.TotalVotes)
+
+<p class="vote-summary">
+	#if($totalVotes == 1) 
+		$core_v2_language.FormatString($core_v2_language.GetResource('VoteFormat'), $core_v2_language.FormatNumber($totalVotes))
+	#else 
+		$core_v2_language.FormatString($core_v2_language.GetResource('VotesFormat'), $core_v2_language.FormatNumber($totalVotes))
+	#end
+	$core_v2_language.GetResource('by')
+	#if($userVotes.TotalCount == 1) 
+		$core_v2_language.FormatString($core_v2_language.GetResource('VoterFormat'), $core_v2_language.FormatNumber($userVotes.TotalCount))
+	#else 
+		$core_v2_language.FormatString($core_v2_language.GetResource('VotersFormat'), $core_v2_language.FormatNumber($userVotes.TotalCount))
+	#end
+</p>
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$userVotes.TotalCount" id="$core_v2_encoding.HtmlAttributeEncode($votesListId)">
+
+#foreach($vote in $userVotes)
+#each
+
+    #set($direction = 'neutral')
+    #set($sign = '')
+    #if($vote.Value)
+        #set($direction = 'positive')
+        #set($sign = '+')
+    #elseif ($vote.Value == false)
+        #set($direction = 'negative')
+    #end
+
+  <li class="content-item file">
+	<h4 class="name">$vote.User.Username</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item votes">
+				#if($vote.TotalVotes == 1)
+					<span class="value $direction">$sign $core_v2_language.FormatString($core_v2_language.GetResource('VoteFormat'), $core_v2_language.FormatNumber($vote.TotalVotes))</span>
+				#else
+					<span class="value $direction">$sign $core_v2_language.FormatString($core_v2_language.GetResource('VotesFormat'), $core_v2_language.FormatNumber($vote.TotalVotes))</span>
+				#end
+			</li>
+			<li class="attribute-item last-vote">
+				<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('LatestVote'), $core_v2_language.FormatDateAndTime($vote.LastUpdatedDate))</span>
+			</li>
+		</ul>
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				<li class="navigation-list-item view-file">
+					<a href="$core_v2_page.AbsoluteUrl($core_v2_urls.User($vote.User.Id))">$core_v2_language.GetResource('ViewUser')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+  </li>
+#nodata
+	<div class="message information">$core_v2_language.GetResource('NoVotes')</div>
+#end
+
+</ul>
+

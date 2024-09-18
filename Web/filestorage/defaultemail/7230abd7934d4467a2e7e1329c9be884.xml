@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Calendar Event Canceled Notifications" version="13.0.0.0" description="Raises notifications to subscribed users on a piece of content when an event is canceled in a Calendar." id="7230abd7934d4467a2e7e1329c9be884" lastModified="2023-09-15 19:52:14Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('event_title')
+    $context_v1_email.Context.CalendarEvent.EventTitle
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('event_title')
+    $context_v1_email.Context.CalendarEvent.EventTitle
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('event_title_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.CalendarEvent.Url)">$context_v1_email.Context.CalendarEvent.EventTitle</a>
+#end
+</p>
+<p>
+$context_v1_email.Context.CalendarEvent.EventDateString
+#if ($context_v1_email.Context.CalendarEvent.EventLocation && $context_v1_email.Context.CalendarEvent.EventLocation.Length > 0)
+    <br />
+    $context_v1_email.Context.CalendarEvent.EventLocation
+#end
+</p>
+$context_v1_email.Context.CalendarEvent.HtmlDescription('Email')]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('unsubscribe_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.CalendarEvent.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">{event_title_link} is cancelled</resource>
+  <resource name="Footer">You were sent this email because you opted to receive calendar notifications. If you no longer wish to receive updates, you can {unsubscribe_link}.</resource>
+  <resource name="Subject">{site_name}: {event_title} cancelled</resource>
+  <resource name="Header">{event_title} cancelled</resource>
+  <resource name="Unsubscribe">unsubscribe</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

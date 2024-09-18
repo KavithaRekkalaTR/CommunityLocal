@@ -1,0 +1,38 @@
+#if ($hasReply && $includeFooterReplyForm)
+	<form>
+		<fieldset id="$core_v2_encoding.HtmlAttributeEncode($footerReplyFormId)"
+			#if ($thread.ReplyCount == 0) class="hidden"#end>
+			<ul class="field-list">
+				<li class="field-item post-body">
+					<span class="field-item-input">
+						#set ($submittableEditorOptions = "%{}")
+						$submittableEditorOptions.Add('ContentTypeId', $core_v2_forumReply.ContentTypeId.ToString())
+						$submittableEditorOptions.Add('Width','100%')
+						$submittableEditorOptions.Add('Height','60px')
+						$submittableEditorOptions.Add('Placeholder', $core_v2_language.GetResource('placeholder'))
+						$submittableEditorOptions.Add('AutoResize', true)
+						$submittableEditorOptions.Add('EnableEnterToSubmitToggle', false)
+						$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('Reply_EnterToReply'))
+						$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('Reply_Reply'))
+
+						#set ($dq = '"')
+						#set ($fullEditorLink = '')
+						#if ($enableFullEditor)
+							#set ($fullEditorLink = "<a href=${dq}#${dq} data-threadid=${dq}${thread.Id}${dq} data-messagename=${dq}telligent.evolution.widgets.thread.fullEditor.start${dq} class=${dq}inline-button${dq}>${core_v2_language.GetResource('full_editor')}</a>")
+						#end
+						#if ($thread.ThreadType == 'QuestionAndAnswer')
+							#set ($suggestAnswer = "<span class=${dq}suggest-field${dq}><input type=${dq}checkbox${dq} id=${dq}${createSuggestId}${dq} class=${dq}suggest${dq} /><label for=${dq}${createSuggestId}${dq}>${core_v2_language.GetResource('suggest_as_answer')}</label></span>")
+							$submittableEditorOptions.Add('BeforeHtml', "${fullEditorLink}${suggestAnswer}")
+						#else
+							$submittableEditorOptions.Add('BeforeHtml', "${fullEditorLink}")
+						#end
+
+						$core_v2_submittableEditor.Render($footerCreateEditorId, "function() { jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.thread.submit', { from: '${core_v2_widget.WrapperElementId}-root', position: 'footer', #if ($userMustLogin) login: true #else login: false #end, forumId: $forum.Id , threadId: $thread.Id }); }", $submittableEditorOptions)
+					</span>
+					<span class="field-item-validation" style="display: none;"></span>
+					<span class="processing hidden"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+#end

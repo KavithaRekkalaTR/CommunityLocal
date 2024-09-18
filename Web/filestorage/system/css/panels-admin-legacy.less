@@ -1,0 +1,481 @@
+&.legacy {
+	max-width: 1000px;
+	img { max-width: 100%; }
+
+	table:not([width="100%"]) { width: 100%; }
+
+	background-color: @ap-content-color-background;
+	color: @ap-content-color-foreground;
+	font-family: @ap-font-family;
+	font-size: @ap-font-size;
+
+	.CommonTextButton, input[type="button"], input[type="submit"], input[type="image"] {
+		display: inline-table;
+		display: -moz-inline-box;
+		display: inline-block;
+		margin: 1px;
+		white-space: nowrap;
+		cursor: pointer;
+
+		border-width: 0 !important;
+		color: @ap-content-color-background !important;
+		background-color: @ap-content-color-accent !important;
+		border-radius: 3px;
+		font-weight: normal;
+		text-align: center;
+		font-size: @panel-font-size;
+		padding: (@ap-spacing / 2) @ap-spacing;
+		font-weight: 500;
+		&:hover {
+			background-color: lighten(@panel-content-accent, 5%);
+			color: @panel-content-foreground;
+		}
+		&:active {
+			background-color: darken(@panel-content-accent, 5%);
+			color: @panel-content-background;
+		}
+		&.delete {
+			background-color: #a91616;
+			color: @panel-content-foreground;
+			&:hover {
+				background-color: lighten(#a91616, 5%);
+			}
+			&:active {
+				background-color: darken(#a91616, 5%);
+			}
+		}
+		&.disabled {
+			background-color: fade(@panel-content-foreground, 50%);
+			cursor: default;
+			&:hover {
+				color: @panel-content-foreground;
+			}
+		}
+	}
+
+	div.WidgetList div.WidgetActions a {
+		display: none;
+	}
+
+	.CommonPaneTabSet {
+		margin-bottom: @ap-spacing;
+
+		table { width: 100%; }
+
+		a {
+			.transition(all .1s);
+			display: block;
+			padding: (@ap-spacing / 2) @ap-spacing (@ap-spacing / 3) @ap-spacing;
+			border-bottom: 3px solid fade(@ap-content-color-foreground, 10%);
+			text-align: center;
+			border-right: 0px;
+			color: fade(@ap-content-color-foreground, 40%) !important;
+			font-size: @ap-font-size * 1.1;
+			font-weight: @ap-font-weight-heavy !important;
+			&:active {
+				background-color: fade(@ap-content-color-foreground, 3%);
+			}
+			&.CommonPaneTabSelected {
+				color: @ap-content-color-foreground !important;
+				border-bottom: 3px solid @ap-content-color-foreground;
+			}
+			&:hover {
+				color: @ap-content-color-foreground !important;
+				border-color: lighten(@ap-content-color-foreground, 10%) !important;
+				&:active {
+					background-color: lighten(@ap-content-color-background, 10%);
+				}
+				&.CommonPaneTabSelected {
+					background-color: @ap-content-color-background !important;
+					color: @ap-content-color-accent !important;
+				}
+			}
+		}
+	}
+
+	legend {display: none;}
+	fieldset {
+		background-color: darken(@ap-content-color-background, 5%);
+		padding: @ap-spacing;
+		border-radius: 3px;
+	}
+
+	.CommonListArea > table, .CommonListArea > .CommonFormArea > table {
+		margin: 0px;
+		padding: 0px;
+		width: 100%;
+		th, td {
+			word-wrap: normal;
+			line-height: @ap-line-height;
+			padding: @ap-spacing / 1.5;
+			border-bottom: 1px solid fade(@ap-content-color-foreground, 10%);
+			background-color: @ap-content-color-background;
+			color: @ap-content-color-foreground;
+			font-family: @ap-font-family;
+
+			&:first-child:last-child:empty {
+				display:none;
+			}
+		}
+		th {
+			text-align: left;
+			font-weight: bold;
+			border-bottom: 1px solid fade(@ap-content-color-foreground, 30%);
+		}
+
+		td:last-child {
+			text-align: right;
+		}
+		th:last-child {
+			text-align: right;
+		}
+
+		td:first-child {
+			text-align:left;
+		}
+		th:first-child {
+			text-align:left;
+		}
+	}
+
+	.CommonListHeader, .CommonListHeaderLeftMost {
+		word-wrap: normal;
+		line-height: @ap-line-height;
+		padding: @ap-spacing / 1.5;
+		background-color: @ap-content-color-background;
+		color: @ap-content-color-foreground;
+		font-family: @ap-font-family;
+		text-align: left;
+		font-weight: bold;
+		border-bottom: 1px solid fade(@ap-content-color-foreground, 30%);
+	}
+
+	.CommonFormSubTitle { display: none; }
+
+	td.CommonFormFieldName, td.CommonFormField {
+		padding: @ap-spacing 0;
+		border-bottom: 1px solid fade(@ap-content-color-foreground, 10%);
+	}
+	td.CommonFormField {
+		text-align: right;
+		padding-right: @ap-spacing;
+		input + span {
+			&::before {
+				content: ' ';
+				height: 0px;
+				display:block;
+				overflow:hidden;
+			}
+		}
+	}
+
+	.CommonSubTitle {
+		padding: (@ap-spacing / 2) @ap-spacing (@ap-spacing / 3) 0;
+		border-bottom: 3px solid fade(@ap-content-color-foreground, 10%);
+		border-right: 0px;
+		color: fade(@ap-content-color-foreground, 40%) !important;
+		font-size: @ap-font-size * 1.1;
+		font-weight: @ap-font-weight-heavy !important;
+		margin: (@ap-spacing * 3) 0 @ap-spacing 0;
+
+		input[type="radio"] {
+			margin: 0 (@ap-spacing / 2) 0 @ap-spacing;
+		}
+	}
+
+	.CommonFormDescription {
+		margin: @ap-spacing 0;
+		padding: 0;
+	}
+
+	td > table:not([width="100%"]) {
+		width: auto;
+	}
+
+	td.CommonFormField > table {
+		float: right;
+	}
+
+	.CommonFormField {
+		> table {
+			width: auto !important;
+			tr {
+				td {
+					border-width: 0 !important;
+					&:last-child {
+						padding-right: 0;
+					}
+				}
+			}
+		}
+
+		select {
+			width: auto;
+			&.RolesListBox {
+				width: 275px;
+			}
+		}
+
+		input[type="search"]:hover,
+		input[type="password"]:hover,
+		input[type="text"]:hover,
+		input[type="number"]:hover,
+		input[type="input"]:hover,
+		//select:hover,
+		textarea:hover,
+		input[type="search"]:focus,
+		input[type="password"]:focus,
+		input[type="number"]:focus,
+		input[type="text"]:focus,
+		input[type="input"]:focus,
+		//select:focus,
+		textarea:focus,
+		.glow-lookuptextbox:hover,
+		.glow-lookuptextbox:focus {
+			outline: none;
+			border: 1px solid transparent !important;
+			input {
+				border-width: 0 !important;
+			}
+		}
+		input {
+			&::-webkit-input-placeholder { color: darken(@ap-content-color-background, 50%); font-style: italic; }
+			&:-moz-placeholder { color: darken(@ap-content-color-background, 50%); font-style: italic; }
+			&::-moz-placeholder { color: darken(@ap-content-color-background, 50%); font-style: italic; }
+			&:-ms-input-placeholder { color: darken(@ap-content-color-background, 50%); font-style: italic; }
+		}
+		input[type="search"],
+		input[type="password"],
+		input[type="text"],
+		input[type="number"],
+		input[type="input"],
+		.glow-lookuptextbox,
+		textarea {
+			-webkit-appearance: none;
+			border: 1px solid lighten(@ap-content-color-foreground, 60%) !important;
+			background-color: lighten(@ap-content-color-background, 10%) !important;
+			color: @ap-content-color-foreground;
+			padding: 6px;
+			font-size: (1 * @ap-font-size);
+			font-family: @ap-font-family;
+			box-sizing: border-box;
+			resize: none;
+			.round(2px);
+			.transition(all (@ap-transition-duration / 2));
+			&:hover, &:focus {
+				border-color: @ap-content-color-accent;
+				background-color: lighten(@ap-content-color-background, 15%) !important;
+				border: 1px solid @ap-content-color-accent !important;
+			}
+			&:focus {
+				border: 1px solid @ap-content-color-accent !important;
+			}
+			input {
+				border-width: 0 !important;
+				padding: 0;
+				&:hover,&:focus {
+					border-width: 0 !important;
+				}
+			}
+		}
+
+		input[type="radio"] {
+			margin: 0 (@ap-spacing / 2) 0 @ap-spacing;
+		}
+
+		input[type="checkbox"] {
+			margin: 0 (@ap-spacing /2) 0 0;
+		}
+
+		.glow-lookuptextbox {
+			font-size: (1 * @ap-font-size) !important;
+			font-family: @ap-font-family !important;
+			line-height: normal !important;
+			display: inline-block !important;
+			input {
+				color: @ap-content-color-foreground !important;
+				padding: 2px !important;
+			}
+			> div {
+				color: @ap-content-color-foreground !important;
+				line-height: normal !important;
+				top: 0px !important;
+				border-color: Transparent !important;
+				border-radius: 2px !important;
+
+				&:nth-last-child(3) {
+					> div {
+						color: darken(@ap-content-color-background, 50%) !important;
+						font-style: italic !important;
+						padding: 2px !important;
+					}
+				}
+
+				> div {
+					margin: 0px !important;
+					line-height: normal !important;
+					text-align: left;
+					border-color: Transparent !important;
+					border-radius: 2px !important;
+					color: @ap-content-color-foreground !important;
+					font-style: normal !important;
+					a {
+						margin: (@ap-spacing / 4) (@ap-spacing / 2) (@ap-spacing / 4) (@ap-spacing / 4) !important;
+					}
+					span {
+						position: relative;
+					}
+				}
+			}
+		}
+
+		.checkbox-list {
+			td {
+				text-align: left;
+			}
+		}
+	}
+
+	.CommonMessageSuccess, .CommonMesageWarning, .CommonMessageError {
+		border-radius: 3px;
+		padding: @ap-spacing;
+		border: 1px solid fade(@ap-content-color-foreground, 10%) !important;
+		background-color: fade(@ap-content-color-foreground, 2%);
+		margin: 0 0 @ap-spacing 0;
+		font-size: @ap-font-size * .9;
+		font-style: italic;
+	}
+
+	.CommonMessageSuccess {
+		color: #27ae60;
+		border-color: #27ae60 !important;
+		background-color: fade(#27ae60, 5%);
+	}
+	.CommonMessageError {
+		color: @ap-content-color-attention;
+		border-color: @ap-content-color-attention !important;
+		background-color: fade(@ap-content-color-attention, 5%);
+	}
+	.CommonMessageWarning {
+		color: #d35400;
+		border-color: #f1c40f !important;
+		background-color: fade(#f1c40f, 5%);
+	}
+
+	.schedule-editor {
+		input[type="radio"] {
+			margin: 0 (@ap-spacing / 2) 0 1px;
+		}
+
+		input[type="checkbox"] {
+			margin: 0 (@ap-spacing / 2) 0 (@ap-spacing / 2);
+		}
+
+		label {
+			margin-right: @ap-spacing;
+		}
+	}
+
+	.CommonSortableMoveUpButton
+	{
+		display: inline-table;
+		display: -moz-inline-box;
+		display: inline-block;
+		margin: 1px;
+		border: solid 1px #999;
+		border-top-color: #ccc;
+		border-left-color: #ccc;
+		background-color: #eee;
+		color: #333;
+		font-size: 80%;
+		font-weight: bold;
+		background-repeat: no-repeat;
+		background-position: left top;
+		width: 20px;
+		height: 20px;
+		line-height: normal;
+		background-image: url(~/cfs-file/__key/system/images/up.gif);
+	}
+
+	.CommonSortableMoveUpButton:LINK, .CommonSortableMoveUpButton:VISTED, .CommonSortableMoveUpButton:ACTIVE
+	{
+		text-decoration: none;
+		color: #333;
+	}
+
+	.CommonSortableMoveUpButton:HOVER
+	{
+		text-decoration: none;
+		color: #333;
+		background-color: #ddd;
+	}
+
+	.CommonSortableMoveDownButton
+	{
+		display: inline-table;
+		display: -moz-inline-box;
+		display: inline-block;
+		margin: 1px;
+		border: solid 1px #999;
+		border-top-color: #ccc;
+		border-left-color: #ccc;
+		background-color: #eee;
+		color: #333;
+		font-size: 80%;
+		font-weight: bold;
+		background-repeat: no-repeat;
+		background-position: left top;
+		width: 20px;
+		height: 20px;
+		line-height: normal;
+		background-image: url(~/cfs-file/__key/system/images/down.gif);
+	}
+
+	.CommonSortableMoveDownButton:LINK, .CommonSortableMoveDownButton:VISTED, .CommonSortableMoveDownButton:ACTIVE
+	{
+		text-decoration: none;
+		color: #333;
+	}
+
+	.CommonSortableMoveDownButton:HOVER
+	{
+		text-decoration: none;
+		color: #333;
+		background-color: #ddd;
+	}
+
+	.CommonSortableDeleteButton
+	{
+		display: inline-table;
+		display: -moz-inline-box;
+		display: inline-block;
+		margin: 1px;
+		border: solid 1px #999;
+		border-top-color: #ccc;
+		border-left-color: #ccc;
+		background-color: #eee;
+		color: #333;
+		font-size: 80%;
+		font-weight: bold;
+		background-repeat: no-repeat;
+		background-position: left top;
+		width: 20px;
+		height: 20px;
+		line-height: normal;
+		background-image: url(~/cfs-file/__key/system/images/delete.gif);
+	}
+
+	.CommonSortableDeleteButton:LINK, .CommonSortableDeleteButton:VISTED, .CommonSortableDeleteButton:ACTIVE
+	{
+		text-decoration: none;
+		color: #333;
+	}
+
+	.CommonSortableDeleteButton:HOVER
+	{
+		text-decoration: none;
+		color: #333;
+		background-color: #ddd;
+	}
+
+}

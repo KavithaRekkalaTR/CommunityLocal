@@ -1,0 +1,164 @@
+#set($action = $core_v2_page.GetQueryStringValue('action'))
+#set($statusKey = $core_v2_page.GetQueryStringValue('w_statuskey'))
+#if ($statusKey.length > 0)
+	#set($status = $telligentIdeas_v1_statuses.Get($statusKey))
+#end
+
+#set($statusName = '')
+#if ($status)
+	#set($statusName = $status.InternalName)
+#end
+
+#if (!$action)
+	#set($action = "create-update")
+#end
+
+#if ($action == "create-update")
+
+	<form><fieldset class="editor-content overview">
+		<ul class="field-list">
+
+			<li class="field-item name">
+				<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('Name')" name="statusname" maxlength="256" style="width:50%;" value="$!statusName" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item score">
+				<label for="$core_v2_widget.UniqueId('Score')" class="field-item-name">$core_v2_language.GetResource('Score')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Score_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('Score')" name="StatusScore" maxlength="3" style="width:50%;" value="$!status.ScoreValue" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item default">
+				<span class="field-item-input">
+					#if($status.IsDefault)
+						<label>$core_v2_language.GetResource('Default_Current')</label>
+					#else
+						<input type="checkbox" name="permissions" id="$core_v2_widget.UniqueId('Default')" />
+						<label for="$core_v2_widget.UniqueId('Default')">$core_v2_language.GetResource('Default')</label>
+					#end
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('Default_Detail')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+            
+			<li class="field-item closed">
+				<span class="field-item-input">
+                    <input type="checkbox" name="isclosed" id="$core_v2_widget.UniqueId('Closed')" #if($status.IsClosed)checked#end />
+                    <label for="$core_v2_widget.UniqueId('Closed')">$core_v2_language.GetResource('Closed')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('Closed_Detail')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>    
+			
+			<li class="field-item closed">
+				<span class="field-item-input">
+                    <input type="checkbox" name="releasesvotes" id="$core_v2_widget.UniqueId('ReleasesVotes')" #if($status.ReleasesVotes)checked#end />
+                    <label for="$core_v2_widget.UniqueId('ReleasesVotes')">$core_v2_language.GetResource('ReleasesVotes')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('ReleasesVotes_Detail')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li> 
+
+			#if($status)
+			<li class="field-item view-id">
+				<span class="field-item-input">
+					<a class="inline-button" href="#">$core_v2_language.GetResource('ViewIdentifiers')</a>
+				</span>
+			</li>
+			<li class="field-item key" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('Key')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Key_Detail')</span>
+				<span class="field-item-input">
+					$status.Key
+				</span>
+			</li>
+			#end
+		</ul>
+	</fieldset></form>
+
+	<script type="text/javascript">
+		jQuery(function(j){
+			j.telligent.evolution.widgets.administrationIdea.status.edit.register({
+				statusKey: '$statusKey',
+				statusName: #if($status) '$status.Name' #else '' #end,
+				isDefault: #if($status) '$status.IsDefault' #else '' #end,
+				inputs: {
+					nameId: '#$core_v2_widget.UniqueId('Name')',
+					scoreValue: '#$core_v2_widget.UniqueId('Score')',
+					defaultCheckbox: '#$core_v2_widget.UniqueId('Default')',
+					closed: '#$core_v2_widget.UniqueId('Closed')',
+					releasesVotes: '#$core_v2_widget.UniqueId('ReleasesVotes')'
+				},
+				text: {
+					actionSaveButton: '$core_v2_language.GetResource('Save')',
+					actionDeleteButton: '$core_v2_language.GetResource('Delete')',
+					statusCreated: '$core_v2_language.GetResource('StatusCreated')',
+					statusUpdated: '$core_v2_language.GetResource('StatusUpdated')',
+					saveError: '$core_v2_language.GetResource('SaveError')',
+					deleteError: '$core_v2_language.GetResource('DeleteError')'
+				},
+				urls: {
+					save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))'
+				},
+				details : j('.inline-button'),
+				keyItem : j('.field-item.key')
+			});
+		});
+	</script>
+
+#elseif ($action == "delete")
+
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item reassign">
+				<label class="field-item-name" style="margin-bottom: 25px;">$core_v2_language.GetResource('Delete_Detail')</label>
+				<span class="field-item-input">
+
+					#foreach($status in $telligentIdeas_v1_statuses.List())
+					#beforeall
+						<ul class="content-list">
+					#each
+						#if ($status.Key != $statusKey)
+							<li data-statuskey="$status.Key">
+								<input type="radio" name="$core_v2_widget.UniqueId('reassign')" value="$status.Key"> $status.Name
+							</li>
+						#end
+					#afterall
+						</ul>
+					#end
+
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+
+	<script type="text/javascript">
+		jQuery(function(j){
+			j.telligent.evolution.widgets.administrationIdea.status.delete.register({
+				statusKey: '$statusKey',
+				statusName: #if($status) '$status.Name' #else '' #end,
+				inputs: {
+					reassign: '$core_v2_widget.UniqueId('reassign')'
+				},
+				text: {
+					actionSaveButton: '$core_v2_language.GetResource('Save')',
+					actionDeleteButton: '$core_v2_language.GetResource('Delete')',
+					statusDeleted: '$core_v2_language.GetResource('StatusDeleted')',
+					saveError: '$core_v2_language.GetResource('SaveError')',
+					deleteError: '$core_v2_language.GetResource('DeleteError')'
+				},
+				urls: {
+					delete: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))'
+				}
+			});
+		});
+	</script>
+#end

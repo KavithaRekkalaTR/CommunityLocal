@@ -1,0 +1,28 @@
+﻿#if (!$context.HasAccess)
+	$core_v2_widget.Hide()
+#end
+#foreach ($detail in $context.VersionDetails)
+#beforeall
+<table>
+	<thead>
+		<tr>
+			<th>$core_v2_language.GetResource('Component')</th>
+			<th>$core_v2_language.GetResource('Version')</th>
+			<th>$core_v2_language.GetResource('Last_Modified')</th>
+		</tr>
+	</thead>
+	<tbody>
+#each
+	<tr>
+		<td>$detail.Name</td>
+		<td>$detail.Version</td>
+		<td>
+			#if ($detail.LastModified)
+				$core_v2_language.FormatDateAndTime($detail.LastModified)
+			#end
+		</td>
+	</tr>
+#afterall
+	</tbody>
+</table>
+#end

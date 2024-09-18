@@ -1,0 +1,146 @@
+#set($isAggregate = $core_v2_widget.GetBoolValue('showAll',false))
+#set($currentGroup = false)
+#set($currentGroup = $core_v2_group.Current)
+#set($currentGroupId = -1)
+#set($currentCalendarContext= 'Group')
+
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize', 5))
+
+#set($sortOrder = 'Descending')
+#set($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'ApplicationName'))
+#set($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#if ($sortBy == 'ApplicationName')
+	#set($sortBy = 'Name')
+	#set($sortOrder = 'Ascending')
+#elseif ($sortBy == 'Posts')
+	#set($sortBy = 'TotalPosts')
+#elseif($sortBy == 'ApplicationIdsOrder')
+    #set($sortOrder = 'Ascending')
+#end
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('sortOrder'))
+
+#if($currentGroup && !$isAggregate)
+    #set($currentGroupId = $currentGroup.Id)
+#end
+
+#set($query = "%{PageSize=$pageSize,PageIndex=$pageIndex,CalendarContext=$currentCalendarContext,SortBy=$sortBy, SortOrder=$sortOrder}")
+
+#if(!$isAggregate)
+    $query.Add('CalendarReferenceId',$currentGroupId)
+#end
+
+#if($sortBy == 'ApplicationIdsOrder')
+    #set($calendarSelection = false)
+    #set ($calendarSelection = $core_v2_widget.GetCustomValue('calendarSelection', ''))
+    #if ($calendarSelection && $calendarSelection.Length > 0)
+    	#set($calendarSelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($calendarSelection).Values('calendar')))
+    	$query.Add('ApplicationIds', $calendarSelection)
+    #end
+#end
+
+#set($calendars = $calendar_v1_calendars.List($query))
+
+#if ($calendars.TotalCount > $pageSize)
+	<div class="sort" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sort'))">
+		<form>
+		<span class="by">
+			<select class="ui-select" data-querykey="sortBy">
+				<option value="Name" #if($sortBy == 'Name') selected #end>$core_v2_language.GetResource('Calendar_Name')</option>
+				<option value="CreateDate" #if($sortBy == 'TotalPosts') selected #end>$core_v2_language.GetResource('Calendar_CreateDate')</option>
+			</select>
+		</span>
+		<span class="order">
+			<select class="ui-select" data-querykey="sortOrder">
+				<option value="Descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+				<option value="Ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+			</select>
+		</span>
+		</form>
+	</div>
+#end
+
+#registerEndOfPageHtml()
+    <script type="text/javascript">
+    jQuery(function(j){
+        var sort = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort'))');
+        sort.on('change', 'select', function(e) {
+            var select = j(this), hashAdjustment = {};
+            hashAdjustment[select.data('querykey')] = select.val();
+            j.telligent.evolution.url.hashData(hashAdjustment, {
+                prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+            });
+        });
+    });
+    </script>
+#end
+
+#set($showTitle = $core_v2_widget.GetBoolValue('showTitleColumn', true))
+#set($showGroup = $core_v2_widget.GetBoolValue('showGroupColumn', false))
+#set($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set($showLastPost = $core_v2_widget.GetBoolValue('showLastPostColumn', true))
+
+<div id="$core_v2_widget.UniqueId('content')">
+	#foreach($calendar in $calendars)
+	#beforeall
+			<ul class="content-list content simple margin-bottom tabular">
+	#each
+		<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($calendar.Url)">
+			<div class="name cell">
+				<h2>
+					#if($showGroup)
+						<a $core_v2_ui.ContentPeek($calendar.Group.ContainerId, $core_v2_group.ContentTypeId, 'internal-link view-application view-container')
+						    href="$core_v2_encoding.HtmlAttributeEncode($calendar.Group.Url)">$calendar.Group.Name: </a>
+					#end
+					#if($showTitle)
+						<a class="internal-link view-application" href="$core_v2_encoding.HtmlAttributeEncode($calendar.Url)">$calendar.Name</a>
+					#end
+				</h2>
+				#if(!$inSidebar && $calendar.Description)
+					<div class="content">$calendar.HtmlDescription('web')</div>
+				#end
+			</div>
+
+			#if(!$inSidebar)
+				#set($events = false)
+				#if($showPosts || $showLastPost)
+					#set($events = $calendar_v1_events.List("%{CalendarId = $calendar.Id, SortBy = 'StartDate', SortOrder='Ascending', DateRangeStart='$core_v2_utility.CurrentDate.Date', PageIndex=0, PageSize=1 }"))
+				#end
+
+				#if($showPosts)
+					<div class="minimal cell nowrap metadata">
+						<span class="value">$core_v2_language.FormatNumber($events.TotalCount)</span>
+						<span class="description">
+							#if ($events.TotalCount == 1)
+								$core_v2_language.GetResource('post_singular')
+							#else
+								$core_v2_language.GetResource('post_plural')
+							#end
+						</span>
+					</div>
+				#end
+
+				#if ($showLastPost)
+					<div class="minimal cell nowrap latest metadata">
+						#if($events.TotalCount > 0)
+							#set ($nextEvent = $events.get_Item(0))
+							<span class="value">
+								<a class="internal-link ui-tip" href="$core_v2_encoding.HtmlAttributeEncode($nextEvent.Url)" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.FormatString($core_v2_language.GetResource('next_event'), $nextEvent.EventTitle))">$nextEvent.EventTitle</a>
+							</span>
+							<span class="description">$core_v2_language.FormatAgoDate($nextEvent.EventStartDate)</span>
+						#end
+					</div>
+				#end
+			#end
+		</li>
+
+		#set($hasResults = true)
+	#nodata
+		<div class="message norecords">$core_v2_language.GetResource('Calendar_NoResults')</div>
+	#afterall
+		</ul>
+	#end
+</div>
+
+$core_v2_ui.Pager($calendars.PageIndex, $calendars.PageSize, $calendars.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

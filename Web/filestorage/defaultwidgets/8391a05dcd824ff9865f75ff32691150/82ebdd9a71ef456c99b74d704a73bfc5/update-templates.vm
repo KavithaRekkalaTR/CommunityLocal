@@ -1,0 +1,10 @@
+#foreach ($serializedTemplate in $core_v2_page.GetFormValues('template[]'))
+    #set($template = false)
+    #set($template = $core_v2_page.ParseQueryString($serializedTemplate))
+    #if ($template)
+        #set($response = $context.UpdateTemplate($template.Value('Id'), $template.Value('Language'), $template.Value('Value')))
+        #if ($response.HasErrors())
+    		$core_v2_page.SendJsonError($item.Errors)
+    	#end
+    #end
+#end

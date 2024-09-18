@@ -1,0 +1,62 @@
+#if (!$core_v2_userRecommendation)
+	$core_v2_widget.Hide()
+#end
+
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 5))
+#set ($user = $core_v2_user.Accessing)
+#if ($user.IsSystemAccount)
+	$core_v2_widget.Hide()
+#end
+
+#set($items = $core_v2_userRecommendation.List("%{PageSize=$pageSize,PageIndex=0}"))
+#if (!$items || $items.TotalCount == 0)
+	$core_v2_widget.Hide()
+#end
+
+#foreach ($item in $items)
+	#beforeall
+		<div class="avatar-list">
+		<ul class="content-list">
+	#each
+		<li class="content-item" #if ($item.User.ProfileUrl) data-href="$core_v2_encoding.HtmlAttributeEncode($item.User.ProfileUrl)" #end>
+			<div class="actions">
+				<div class="navigation-list">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="telligent.evolution.widgets.more.ignore" data-userid="$item.User.Id" class="ignore ui-tip replace-with-icon cancel-circled" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('IgnoreRecommendation'))" data-wrapper="#$core_v2_encoding.JavascriptEncode($core_v2_widget.WrapperElementId)">$core_v2_language.GetResource('Ignore')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="author" #if ($item.User.ProfileUrl) data-authorprofileurl="$core_v2_encoding.HtmlAttributeEncode($item.User.ProfileUrl)" #else data-authorprofileurl="" #end>
+				<div class="avatar">
+					#if ($item.User.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($item.User.ProfileUrl)" class="internal-link view-user-profile">
+							$core_v2_ui.GetResizedImageHtml($item.User.AvatarUrl, 35, 35, "%{border='0px', alt=$item.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($item.User.AvatarUrl, 35, 35, "%{border='0px', alt=$item.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+					#end
+				</div>
+				<div class="meta">
+					<span class="user-name">
+						$core_v2_ui.UserPresence($item.User.Id)
+						#if ($item.User.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($item.User.ProfileUrl)" class="internal-link view-user-profile">
+								$item.User.DisplayName
+							</a>
+						#else
+							$item.User.DisplayName
+						#end
+					</span>
+				</div>
+			</div>
+			<a href="$core_v2_encoding.HtmlAttributeEncode($item.User.ProfileUrl)" class="internal-link view-full-post navigable">
+				<div class="content">$!core_v2_language.Truncate($!item.User.Bio(), 200, '...')</div>
+			</a>
+		</li>
+	#afterall
+		</ul>
+	</div>
+#end

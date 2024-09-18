@@ -1,0 +1,104 @@
+##
+## Property Template Renderer
+##
+## Requires in scope:
+##   $propertyTemplate
+##   $propertyTemplates
+##
+
+#if ($propertyTemplate)
+
+	<h2 class="documentation_title">
+		${propertyTemplate.Name}
+	</h2>
+
+	#if ($propertyTemplate.Description)
+		<p>$propertyTemplate.Description</p>
+	#end
+
+	<div class="methods">
+
+		#foreach ($dataType in $propertyTemplate.DataTypes)
+		#beforeall
+			<div class="documentation-member" style="margin-bottom:10px">
+				<div class="documentation-section">
+					<span class="label">$core_v2_language.GetResource('DataTypes')</span>
+				</div>
+		#each
+			$dataType
+		#between
+			,
+		#afterall
+			</div>
+		#end
+
+		<div class="documentation-member">
+
+			<div class="documentation-section example">
+				<span class="label">$core_v2_language.GetResource('Example')</span>
+				<div class="value">
+
+					#set ($dataType = "")
+					#set ($dataTypeCount = 0)
+					#foreach ($dt in $propertyTemplate.DataTypes)
+						#if ($dataTypeCount == 0)
+							#set ($dataType = $dt)
+						#end
+						#set ($dataTypeCount = $dataTypeCount + 1)
+					#end
+
+					#set ($optionsAttributes = "")
+					#set ($dq = '"')
+					#foreach ($option in $propertyTemplate.Options)
+						#set ($optionsAttributes = "${optionsAttributes} ${option.Name}=${dq}${option.Default}${dq}")
+					#end
+
+<pre>&lt;property id="propertyId" labelResourceName="nameResource" descriptionResourceName="descriptionResource" dataType="${dataType}" template="${propertyTemplate.Name}"${optionsAttributes} /&gt;</pre>
+			</div>
+
+			#if ($propertyTemplate.Options && $propertyTemplate.Options.Count > 0)
+				<div class="documentation-section parameters">
+					<span class="label">$core_v2_language.GetResource('Parameters')</span>
+
+					<div class="value">
+						#foreach ($option in $propertyTemplate.Options)
+						#beforeall
+							<table cellspacing="0">
+								<thead>
+									<tr>
+										<th>$core_v2_language.GetResource('Name')</th>
+										<th>$core_v2_language.GetResource('Description')</th>
+										<th>$core_v2_language.GetResource('Default')</th>
+										<th>$core_v2_language.GetResource('Options')</th>
+									</tr>
+								</thead>
+								<tbody>
+						#each
+								<tr>
+									<td>$option.Name</td>
+									<td>$!option.Description</td>
+									<td>$!option.Default</td>
+									<td>
+										#if ($option.Options)
+											#foreach ($opt in $option.Options)
+												$opt
+											#between
+												,
+											#end
+										#end
+									</td>
+								</tr>
+						#afterall
+								</tbody>
+							</table>
+						#end
+					</div>
+
+				</div>
+
+			#end
+
+		</div>
+	</div>
+
+#end

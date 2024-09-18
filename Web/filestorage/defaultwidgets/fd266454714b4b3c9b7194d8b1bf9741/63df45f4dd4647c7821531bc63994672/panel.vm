@@ -1,0 +1,108 @@
+## Load and Render a Contextual Panel
+## Expects $panelId in scope or available from query string
+
+#set ($rawPanelId = false)
+#set ($rawPanelId = $core_v2_page.GetQueryStringValue("panelId"))
+#if ($rawPanelId)
+	#set ($panelId = $core_v2_utility.ParseGuid($rawPanelId))
+#end
+
+#set ($rawContextType = false)
+#set ($rawContextType = $core_v2_page.GetQueryStringValue("contextType"))
+#if ($rawContextType)
+	#set ($contextType = $rawContextType)
+#end
+
+#set ($parameters = false)
+#set ($parameters = $core_v2_page.GetQueryStringValue("parameters"))
+
+#set ($panel = false)
+#if ($parameters)
+	#set ($panel = $core_v2_contextualPanels.GetPanel($contextType, $panelId, $parameters))
+#else
+	#set ($panel = $core_v2_contextualPanels.GetPanel($contextType, $panelId))
+#end
+
+## Render Panel
+$core_v2_page.SetContentType('application/json')
+
+#if ($panel)
+
+	#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+
+	{
+		"type": "panel",
+		"contextType": "$core_v2_encoding.JavascriptEncode($contextType)",
+		"panelId": "$panelId.ToString()",
+
+		## Express whether this panel exists uiniquely within its category
+		#if ($isCategorySingleton)
+			"isCategorySingleton": true,
+		#end
+
+		## Heading
+
+		## Determine what to use as the "back" navigation for this panel
+
+		## First identify the parent category, if one exists
+		#set ($allPanelCategories = $core_v2_contextualPanels.GetPanelCategories())
+		#set ($parentCategory = false)
+
+		#if ($allPanelCategories && $allPanelCategories.Count > 0)
+			#foreach ($category in $allPanelCategories)
+				#if ($category.PanelType == $panel.PanelType)
+					#foreach ($childPanel in $category.Panels)
+						#if ($childPanel.Id == $panel.Id)
+							#set ($parentCategory = $category)
+						#end
+					#end
+				#end
+			#end
+		#end
+
+		#if ($contextType == 'Explicit')
+			"backUrl": "",
+			"backLabel": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Back'))",
+
+		## if there's a parent category and it has more than just the current panel,
+		#elseif ($parentCategory && $parentCategory.Panels && $parentCategory.Panels.Count > 1)
+			## show a back button to it
+
+			#set ($categoryName = $parentCategory.Name)
+			#if ($parentCategory.PanelType == 'Container' || $parentCategory.PanelType == 'Application')
+				#set ($categoryName = $core_v2_language.FormatString($core_v2_language.GetResource('CategoryName'), $parentCategory.Name))
+			#elseif($category.PanelType == 'Theme')
+				#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('ThemeCategoryName'), $category.Name))
+			#end
+
+			"backUrl": "$core_v2_encoding.JavascriptEncode($parentCategory.Url)",
+			"backLabel": "$core_v2_encoding.JavascriptEncode($categoryName)",
+
+		## if the parent category only contains the current panel, instead link back deeper to all categories, if there's more than one
+		#elseif ($allPanelCategories && $allPanelCategories.Count > 1)
+
+			"backUrl": "$core_v2_encoding.JavascriptEncode($rootPanelUrl)",
+			"backLabel": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AllCategories'))",
+
+		#else
+			"backUrl": null,
+			"backLabel": null,
+		#end
+
+		"name": "$core_v2_encoding.JavascriptEncode($panel.Name)",
+		"cssClass": "$core_v2_encoding.JavascriptEncode($panel.CssClass)",
+		"badgeCount": $panel.BadgeCount,
+
+		## Content
+
+		"content": "$core_v2_encoding.JavascriptEncode($panel.ViewHtml())"
+	}
+#else
+	$core_v2_page.SetStatusCode(500)
+	{
+		"error": true,
+		"loggedIn": #if($core_v2_user.IsRegistered($core_v2_user.Accessing.Id)) true #else false #end,
+		"contextType" : "$core_v2_encoding.JavascriptEncode($contextType)",
+		"panelId" : "$core_v2_encoding.JavascriptEncode($panelId.ToString())"
+	}
+#end

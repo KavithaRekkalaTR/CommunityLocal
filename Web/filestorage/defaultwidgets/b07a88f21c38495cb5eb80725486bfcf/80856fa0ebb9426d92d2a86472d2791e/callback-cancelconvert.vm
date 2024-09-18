@@ -1,0 +1,20 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($fileStoreKey = $core_v2_page.GetFormValue('w_fileStoreKey'))
+	#set ($path = $core_v2_page.GetFormValue('w_path'))
+	#set ($fileName = $core_v2_page.GetFormValue('w_fileName'))
+
+	#if ($fileStoreKey && $path && $fileName)
+		#set ($response = $context.CancelConvert($fileStoreKey, $path, $fileName))
+		#if ($response.Errors && $response.Errors.Count > 0)
+			$core_v2_page.SendJsonError($response.Errors)
+		#else
+			{
+				"fileStoreKey": "$core_v2_encoding.JavascriptEncode($fileStoreKey)",
+				"path": "$core_v2_encoding.JavascriptEncode($path)",
+				"fileName": "$core_v2_encoding.JavascriptEncode($fileName)"
+			}
+		#end
+	#end
+#end

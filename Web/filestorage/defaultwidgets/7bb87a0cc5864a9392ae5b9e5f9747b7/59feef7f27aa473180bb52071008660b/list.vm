@@ -1,0 +1,208 @@
+#set ($showTitle = $core_v2_widget.GetBoolValue('showTitleColumn', true))
+#set ($showGroup = $core_v2_widget.GetBoolValue('showGroupColumn', false))
+#set ($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set ($showLastPost = $core_v2_widget.GetBoolValue('showLastPostColumn', true))
+#set ($showSubGroups = $core_v2_widget.GetBoolValue('groupAndSubGroups', false))
+
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 5))
+
+#set ($sortOrder = 'Descending')
+#set ($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'ApplicationName'))
+#set ($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#if ($sortBy == 'ApplicationName')
+	#set ($sortBy = 'Name')
+	#set($sortOrder = 'Ascending')
+#elseif ($sortBy == 'Threads')
+	#set ($sortBy = 'Thread')
+#elseif ($sortBy == 'ApplicationIdsOrder')
+	#set($sortOrder = 'Ascending')
+#end
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('sortOrder'))
+
+#set($query = "%{IncludeSubGroups=$showSubGroups,PageIndex=$pageIndex,PageSize=$pageSize,SortBy=$sortBy,SortOrder=$sortOrder}")
+#set($group = false)
+#set($group = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('group', '')).Value('Group')))
+#if ($group > 0)
+	$query.Add('GroupId', $group)
+#else
+	$query.Add('GroupId', $core_v2_group.Current.Id.ToString())
+#end
+
+#if($sortBy == 'ApplicationIdsOrder')
+	#set($forumSelection = false)
+	#set ($forumSelection = $core_v2_widget.GetCustomValue('forumSelection', ''))
+	#if ($forumSelection && $forumSelection.Length > 0)
+		#set($forumSelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($forumSelection).Values('forum')))
+		$query.Add('ApplicationIds', $forumSelection)
+	#end
+#end
+
+#set($forums = $core_v2_forum.List($query))
+
+#if ($forums.TotalCount > $pageSize)
+	<div class="sort" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sort'))">
+		<form>
+		<span class="by">
+			<select class="ui-select" data-querykey="sortBy">
+				<option value="Name" #if($sortBy == 'Name') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_ForumColumn')</option>
+				<option value="Thread" #if($sortBy == 'Thread') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_PostsColumn')</option>
+				<option value="LastPost" #if($sortBy == 'LastPost') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_LastPostColumn')</option>
+			</select>
+		</span>
+		<span class="order">
+			<select class="ui-select" data-querykey="sortOrder">
+				<option value="Descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+				<option value="Ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+			</select>
+		</span>
+		</form>
+	</div>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery(function(j){
+			var sort = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort'))');
+			sort.on('change', 'select', function(e) {
+				var select = j(this), hashAdjustment = {};
+				hashAdjustment[select.data('querykey')] = select.val();
+				j.telligent.evolution.url.hashData(hashAdjustment, {
+					prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+				});
+			});
+		});
+		</script>
+	#end
+#end
+
+#foreach($forum in $forums)
+#beforeall
+	<ul class="content-list content simple margin-bottom tabular">
+#each
+	<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($forum.Url)">
+
+		<div class="name cell">
+			<h2>
+				#if($showGroup)
+					<a $core_v2_ui.ContentPeek($forum.Group.ContainerId, $core_v2_group.ContentTypeId, 'internal-link view-application view-container')
+					    href="$core_v2_encoding.HtmlAttributeEncode($forum.Group.Url)">$forum.Group.Name: </a>
+				#end
+				#if($showTitle)
+					<a
+						#if ($inSidebar)
+							$core_v2_ui.ContentPeek($forum.ApplicationId, $core_v2_forum.ContentTypeId, "internal-link view-application")
+						#else
+							class="internal-link view-application"
+						#end
+						href="$core_v2_encoding.HtmlAttributeEncode($forum.Url)">$forum.Name</a>
+				#end
+			</h2>
+			#if(!$inSidebar && $forum.Description)
+				<div class="content">$forum.HtmlDescription('web')</div>
+			#end
+		</div>
+
+		#if(!$inSidebar)
+			#set ($pages = false)
+
+			#if($showPosts || $showLastPost)
+				#set($pages = $core_v2_forumThread.List("%{ForumId=$forum.Id,PageIndex=0,PageSize=1,SortBy = 'lastpost', SortOrder = 'Descending', AreStickyPostsOnTop='false'}"))
+			#end
+
+			#if($showPosts)
+				<div class="minimal cell nowrap metadata">
+					#set ($hasQaForums = false)
+					#set ($hasDiscussionForums = false)
+					#foreach ($threadType in $forum.AllowedThreadTypes)
+						#if ($threadType == 'QuestionAndAnswer')
+							#set ($hasQaForums = true)
+						#elseif ($threadType == 'Discussion')
+							#set($hasDiscussionForums = true)
+						#end
+					#end
+					<span class="value">$core_v2_language.FormatNumber($pages.TotalCount)</span>
+					<span class="description">
+					#if ($pages.TotalCount == 1)
+						#if ($hasQaForums && $hasDiscussionForums)
+							$core_v2_language.GetResource('questionordiscussion_singular')
+						#elseif($hasQaForums)
+							$core_v2_language.GetResource('question_singular')
+						#else
+							$core_v2_language.GetResource('discussion_singular')
+						#end
+					#else
+						#if ($hasQaForums && $hasDiscussionForums)
+							$core_v2_language.GetResource('questionordiscussion_plural')
+						#elseif($hasQaForums)
+							$core_v2_language.GetResource('question_plural')
+						#else
+							$core_v2_language.GetResource('discussion_plural')
+						#end
+					#end
+					</span>
+				</div>
+			#end
+
+			#if ($showLastPost)
+
+				#set ($latest = false)
+				#set ($forumThread = false)
+				#set ($latestContentTypeId = $core_v2_forumThread.ContentTypeId)
+
+				#if($pages.TotalCount > 0 && $forum.LatestPostDate)
+					## Get latest reply or thread
+
+					#set ($forumThreads = $core_v2_forumThread.List("%{ ForumId = $forum.Id, PageSize = 1, PageIndex = 0, SortBy = 'lastpost', SortOrder = 'Descending', AreStickyPostsOnTop='false' }"))
+					#foreach ($thread in $forumThreads)
+						#set ($forumThread = $thread)
+						#set ($latest = $forumThread)
+					#end
+
+					#if ($forumThread)
+						#set ($forumReply = false)
+						#set ($forumReplies = $core_v2_forumReply.List($forumThread.Id, "%{ ForumId = $forum.Id, PageSize = 1, PageIndex = 0, SortBy = 'PostDate', SortOrder = 'Descending' }"))
+						#foreach ($reply in $forumReplies)
+							#set ($forumReply = $reply)
+						#end
+
+						#if ($forumReply.Date > $forumThread.Date)
+							#set ($latest = $forumReply)
+							#set ($latestContentTypeId = $core_v2_forumReply.ContentTypeId)
+						#end
+					#end
+				#end
+
+				<div class="minimal cell nowrap metadata">
+					#if($latest)
+						<span class="thumbnail">
+							#if ($latest.Author.ProfileUrl)
+								<a class="internal-link view-user-profile" href="$core_v2_encoding.HtmlAttributeEncode($latest.Author.ProfileUrl)">
+									$core_v2_ui.GetResizedImageHtml($latest.Author.AvatarUrl, 40, 40, "%{border='0px', alt=$latest.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+								</a>
+							#else
+								$core_v2_ui.GetResizedImageHtml($latest.Author.AvatarUrl, 40, 40, "%{border='0px', alt=$latest.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+							#end
+						</span>
+					#end
+				</div>
+
+				<div class="minimal cell nowrap latest metadata">
+					#if($latest)
+						<span class="value">
+							<a $core_v2_ui.ContentPeek($latest.ContentId, $latestContentTypeId, "internal-link")
+								href="$core_v2_encoding.HtmlAttributeEncode($latest.Url)">$latest.Subject</a>
+						</span>
+						<span class="description">$core_v2_language.FormatAgoDate($latest.Date)</span>
+					#end
+				</div>
+			#end
+		#end
+	</li>
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_NoResults')</div>
+#end
+
+$core_v2_ui.Pager($forums.PageIndex, $forums.PageSize, $forums.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

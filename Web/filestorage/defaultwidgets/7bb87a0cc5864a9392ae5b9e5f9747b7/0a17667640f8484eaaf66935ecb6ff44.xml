@@ -1,0 +1,309 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Groups_GroupLinks_Name}" version="11.0.0.0" description="${resource:Groups_GroupLinks_Description}" instanceIdentifier="0a17667640f8484eaaf66935ecb6ff44" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="group-links" lastModified="2020-06-03 16:49:20Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=groupCreateGroup&amp;Link=groupContactOwners&amp;Link=groupInviteUser&amp;Link=groupJoin&amp;Link=groupFavorite&amp;Link=groupEditTheme&amp;Link=groupManageCustomPages&amp;Link=groupManageMembers&amp;Link=groupContactRequests')))
+#set ($hasLinks = false)
+#set ($group = $core_v2_group.Current)
+#set ($user = $core_v2_user.Accessing)
+#set ($canModifyMembership = $core_v3_permission.CheckPermission($core_v2_groupPermissions.ModifyMembership, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+#set ($collapse = $core_v2_widget.GetBoolValue('collapsed', false))
+#set ($groupLinks = $links.Values('Link'))
+
+#set ($linksToShow = $groupLinks.Count)
+#if ($collapse)
+	#set ($linksToShow = 0)
+#end
+
+#set ($redirectToAfterLeave = false)
+#if ($group && $group.GroupType == 'PrivateUnlisted')
+	#set ($redirectToAfterLeave = $core_v2_urls.Home())
+#end
+
+#foreach($link in $groupLinks)
+#beforeall
+	<div class="ui-links navigation-list links" data-direction="vertical" data-minlinks="$linksToShow" data-maxlinks="$linksToShow">
+		<ul class="navigation-list">
+#each
+		#set ($url = false)
+
+		#if ($link == 'groupCreateGroup')
+			#if ($group)
+				#set ($url = $core_v2_groupUrls.AddGroup($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link create-group">$core_v2_language.GetResource('Groups_Links_CreateNewGroup')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupContactOwners')
+			#if ($group)
+				#set ($url = $core_v2_groupUrls.Contact($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-contact">$core_v2_language.GetResource('Hubs_ContactGroupOwners')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupInviteUser')
+			#if ($group && $canModifyMembership)
+				#set ($url = $core_v2_groupUrls.ManageMembers($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)&action=invite" class="internal-link view-invite">$core_v2_language.GetResource('Groups_Links_InviteAUser')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'emailDigest')
+			#if($core_v2_user.IsRegistered($user.Id) && $core_v2_configuration.EnableEmailDigest && $group && $core_v3_permission.CheckPermission($core_v2_groupPermissions.ReadGroup, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+				<li class="navigation-list-item"><a href="#" onclick="jQuery.glowModal('$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('emaildigest.vm'))', { width: 400, height: 200 }); return false;" class="internal-link manage-email-digest">$core_v2_language.GetResource('Email_Digest_Options')</a></li>
+				#set($hasLinks = true)
+			#end
+		#elseif ($link == 'groupJoin')
+			#if ($group && $group.GroupType != 'Joinless')
+
+				#set ($member = $core_v2_groupUserMember.Get($group.Id, "%{ UserId = $user.Id }"))
+				#set ($canJoinGroup = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroup, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+				#set ($canJoinGroupByRequest = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroupByRequest, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+				#registerEndOfPageHtml('telligent.evolution.widgets.GroupLinks')
+					<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+				#end
+				#registerEndOfPageHtml()
+					<script type="text/javascript">
+						jQuery(function(j){
+							j.telligent.evolution.widgets.groupLinks.register({
+								groupId: $core_v2_group.Current.Id,
+								userId: $core_v2_user.Accessing.Id,
+								canJoinGroup: #if($canJoinGroup) true,#else false,#end
+								canJoinGroupByRequest: #if($canJoinGroupByRequest) true,#else false,#end
+								joinMessageLinkName: 'widget.${core_v2_widget.WrapperElementId}.join',
+								requestJoinMessageLinkName: 'widget.${core_v2_widget.WrapperElementId}.requestjoin',
+								cancelMessageLinkName: 'widget.${core_v2_widget.WrapperElementId}.canceljoin',
+								requestJoinUrl: #if(!$canJoinGroup) "$core_v2_groupUrls.RequestMembership($group.Id)",#else null,#end
+								cancelConfirmMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("Hubs_Membership_LeaveConfirm"))',
+								joinedText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Joined'))',
+								leftText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Group_Left'))',
+								redirectToAfterLeave: #if (!$redirectToAfterLeave) null #else '$core_v2_encoding.JavascriptEncode($redirectToAfterLeave)' #end
+							});
+						});
+					</script>
+				#end
+
+				#if (!$member.IsRoleMember)
+					#if ($member.MembershipType == "Owner" || $member.MembershipType == "Manager" || $member.MembershipType == "Member" || $member.MembershipType == "PendingMember")
+						#set ($canLeaveGroup = $member.MembershipType != "Owner" || $core_v2_groupUserMember.List($group.Id, "%{MembershipType = 'Owner', PageSize = 1}").TotalCount > 1)
+						#if ($canLeaveGroup)
+							<li class="navigation-list-item leave-group">
+								<a href="#" class="internal-link leave-group" data-messagename="widget.${core_v2_widget.WrapperElementId}.canceljoin">
+									#if ($member.MembershipType == "PendingMember")
+										$core_v2_language.GetResource("Hubs_CancelJoinRequest")
+									#else
+										$core_v2_language.GetResource("Hubs_LeaveGroup")
+									#end
+								</a>
+							</li>
+							#set($hasLinks = true)
+						#end
+					#elseif ($canJoinGroupByRequest || $canJoinGroup)
+						#if ($group.GroupType == "PublicOpen")
+							<li class="navigation-list-item join-group">
+								<a href="#" class="internal-link join-group" data-messagename="widget.${core_v2_widget.WrapperElementId}.join">
+									$core_v2_language.GetResource('Hubs_JoinGroup')
+								</a>
+							</li>
+							#set($hasLinks = true)
+						#elseif ($group.GroupType == "PublicClosed")
+							<li class="navigation-list-item">
+								<a href="#" class="internal-link join-group" data-messagename="widget.${core_v2_widget.WrapperElementId}.requestjoin">
+									$core_v2_language.GetResource('Hubs_ApplyToJoin')
+								</a>
+							</li>
+							#set($hasLinks = true)
+						#end
+					#end
+				#end
+
+			#end
+		#elseif ($link == 'groupEdit')
+			#if ($group)
+				#set ($url = $core_v2_groupUrls.Edit($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-group">$core_v2_language.GetResource('Hubs_EditHub')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupEditTheme')
+			#if ($group)
+				#set ($url = $core_v2_groupUrls.EditTheme($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-theme">$core_v2_language.GetResource('Groups_Links_EditThisTheme')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupManageCustomPages')
+			#if ($group)
+				#set ($url = $core_v2_groupUrls.ManageCustomPages($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link manage-pages">$core_v2_language.GetResource('Groups_Links_ManageCustomPages')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupMentions')
+			#if ($group)
+				#set ($url = $core_v2_groupUrls.MentionList($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link group-mention-list">$core_v2_language.GetResource('Groups_Links_MentionList')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupManageMembers')
+			#if ($group && $canModifyMembership)
+				#set ($url = $core_v2_groupUrls.ManageMembers($group.Id))
+				#if ($url)
+					#set ($pendingMemberCount = $core_v2_groupUserMember.List($group.Id, "%{ MembershipType = 'PendingMember', PageSize = 1, PageIndex = 0 }").TotalCount)
+					<li class="navigation-list-item">
+						#if ($pendingMemberCount > 0)
+							#set ($url = "$url&filter=requests")
+							#set ($linkText = $core_v2_language.FormatString($core_v2_language.GetResource('CF_ManageMembers_Pending'), $pendingMemberCount.ToString()))
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-group-membership pending">$linkText</a>
+						#else
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-group-membership">
+								#if ($group.GroupType == 'Joinless')
+									$core_v2_language.GetResource('CF_ManageGroupOwners')
+								#else
+									$core_v2_language.GetResource('CF_ManageMembers')
+								#end
+							</a>
+						#end
+					</li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupContactRequests')
+			#if ($group && $canModifyMembership)
+				#set ($url = $core_v2_groupUrls.ContactRequests($group.Id))
+				#if ($url)
+					#set ($contactRequestCount = $core_v2_groupContactRequest.List($core_v2_group.Current.Id).TotalCount)
+					<li class="navigation-list-item">
+						#if ($contactRequestCount > 0)
+							#set ($linkText = $core_v2_language.FormatString($core_v2_language.GetResource('Hubs_ContactRequest_Unread'), $contactRequestCount.ToString()))
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-contact-requests unread">$linkText</a>
+						#else
+							<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-contact-requests">$core_v2_language.GetResource('Hubs_ContactRequest')</a>
+						#end
+					</li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupFavorite')
+			#if ($group && $core_v2_bookmark.SupportsBookmarks($core_v2_group.ContentTypeId) && $core_v2_bookmark.CanBookmark($group.ContentId, $core_v2_group.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($group.ContentId, $core_v2_group.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($group.ContentId, $core_v2_group.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif ($link == 'groupReviewAppeals')
+			#if ($group)
+				#set ($url = $core_v2_urls.AppealQueue("%{ ContainerId = $group.ContainerId }"))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link group-review-appeal-list">$core_v2_language.GetResource('Groups_Links_ReviewAppeals')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'groupRss')
+			#if ($group)
+				#set ($url = $core_v2_groupUrls.Rss($group.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link group-rss">$core_v2_language.GetResource('Groups_Links_GroupRss')</a></li>
+					#set ($hasLinks = true)
+				#end
+			#end
+		#end
+#afterall
+			<li class="navigation-list-item">
+				<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+			</li>
+		</ul>
+	</div>
+#end
+
+#if (!$hasLinks)
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Groups_GroupLinks_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="linkArea" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Groups_GroupLinks_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="collapsed" labelResourceName="collapsed" defaultValue="false" dataType="Bool" />
+	<property id="links" labelResourceName="Wikis_WikiLinks_Links" defaultValue="Link=groupCreateGroup&amp;Link=groupContactOwners&amp;Link=groupInviteUser&amp;Link=groupJoin&amp;Link=groupFavorite&amp;Link=groupEditTheme&amp;Link=groupManageCustomPages&amp;Link=groupManageMembers&amp;Link=groupContactRequests&amp;Link=groupReviewAppeals" dataType="Custom" template="core_v2_sortableList" height="300" key="Link">
+		<propertyValue value="groupCreateGroup" labelResourceName="Groups_Links_CreateNewGroup" orderNumber="1000000" />
+		<propertyValue value="groupContactOwners" labelResourceName="Hubs_ContactGroupOwners" orderNumber="1000001" />
+		<propertyValue value="groupInviteUser" labelResourceName="CF_InviteUser_ShowLink" orderNumber="1000002" />
+		<propertyValue value="groupJoin" labelResourceName="CF_JoinGroup_ShowLink" orderNumber="1000003" />
+		<propertyValue value="groupFavorite" labelResourceName="CF_FavoriteGroup_ShowLink" orderNumber="1000004" />
+		<propertyValue value="groupEdit" labelResourceName="CF_EditGroup_ShowLink" orderNumber="1000005" />
+		<propertyValue value="groupEditTheme" labelResourceName="CF_EditTheme_ShowLink" orderNumber="1000006" />
+		<propertyValue value="groupManageCustomPages" labelResourceName="CF_ManageCustomPages_ShowLink" orderNumber="1000007" />
+		<propertyValue value="groupManageMembers" labelResourceName="CF_ManageMembers_ShowLink" orderNumber="1000008" />
+		<propertyValue value="groupContactRequests" labelResourceName="CF_ContactRequests_ShowLink" orderNumber="1000009" />
+		<propertyValue value="groupMentions" labelResourceName="Groups_Links_MentionList" orderNumber="1000010" />
+		<propertyValue value="groupReviewAppeals" labelResourceName="Groups_Links_ReviewAppeals" orderNumber="1000011" />
+		<propertyValue value="emailDigest" labelResourceName="Groups_Links_EmailDigest" orderNumber="1000012" />
+		<propertyValue value="groupRss" labelResourceName="Groups_Links_GroupRss" orderNumber="1000013" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_ContactRequests_ShowLink">Contact requests</resource>
+  <resource name="CF_EditGroup_ShowLink">Manage group</resource>
+  <resource name="CF_EditTheme_ShowLink">Edit theme</resource>
+  <resource name="CF_FavoriteGroup_ShowLink">Bookmark group</resource>
+  <resource name="CF_InviteUser_ShowLink">Invite people</resource>
+  <resource name="CF_JoinGroup_ShowLink">Join group</resource>
+  <resource name="CF_ManageCustomPages_ShowLink">Manage pages</resource>
+  <resource name="CF_ManageGroupOwners">Manage owners</resource>
+  <resource name="CF_ManageMembers">Manage members</resource>
+  <resource name="CF_ManageMembers_Pending">Manage members ({0})</resource>
+  <resource name="CF_ManageMembers_ShowLink">Manage members</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="collapsed">Collapsed</resource>
+  <resource name="Daily">Daily</resource>
+  <resource name="Email_Digest_Options">Email digest options</resource>
+  <resource name="EmailDigest_Message_Daily">You are now subscribed to the daily digest.</resource>
+  <resource name="EmailDigest_Message_UnsubscribedGroup">You are now unsubscribed from email digest for this group.</resource>
+  <resource name="EmailDigest_Message_Weekly">You are now subscribed to the weekly digest.</resource>
+  <resource name="Frequency">Frequency</resource>
+  <resource name="Group_Joined">You have joined this group.</resource>
+  <resource name="Group_Left">You have left this group.</resource>
+  <resource name="Groups_GroupLinks_Description">Common action links related to any group such as membership and administration.</resource>
+  <resource name="Groups_GroupLinks_Name">Group - Links</resource>
+  <resource name="Groups_Links_CreateNewGroup">New group</resource>
+  <resource name="Groups_Links_EditThisTheme">Edit theme</resource>
+  <resource name="Groups_Links_EmailDigest">Email digest options</resource>
+  <resource name="Groups_Links_GroupRss">Group RSS</resource>
+  <resource name="Groups_Links_InviteAUser">Invite</resource>
+  <resource name="Groups_Links_ManageCustomPages">Manage pages</resource>
+  <resource name="Groups_Links_MentionList">Mentions</resource>
+  <resource name="Groups_Links_ReviewAppeals">Review appeals</resource>
+  <resource name="Hubs_ApplyToJoin">Request membership</resource>
+  <resource name="Hubs_CancelJoinRequest">Cancel join request</resource>
+  <resource name="Hubs_ContactGroupOwners">Contact owners</resource>
+  <resource name="Hubs_ContactRequest">Contact requests</resource>
+  <resource name="Hubs_ContactRequest_Unread">Contact requests ({0})</resource>
+  <resource name="Hubs_EditHub">Manage group</resource>
+  <resource name="Hubs_JoinGroup">Join</resource>
+  <resource name="Hubs_LeaveGroup">Leave</resource>
+  <resource name="Hubs_Membership_LeaveConfirm">Are you sure you want to leave this group?</resource>
+  <resource name="more">More</resource>
+  <resource name="NotSubscribed">Not Subscribed</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Weekly">Weekly</resource>
+  <resource name="Wikis_WikiLinks_Links">Select, rearrange, and enable the links to be displayed</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="groups.groups.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

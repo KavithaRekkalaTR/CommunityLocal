@@ -1,0 +1,18 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($forumId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('forumId')))
+
+	#set($body = false)
+	#set($body = $core_v2_page.GetFormValue('body'))
+
+	#set($data = $core_v2_page.MakeQueryString("%{}"))
+
+	#if($body)
+		$data.Add('title', $body)
+	#end
+
+	#set($storeId = $core_v2_utility.StoreTemporaryData($data.ToString()))
+
+	{ "threadUrl":"$core_v2_encoding.JavaScriptEncode($core_v2_forumUrls.AddThread($forumId, $storeId))" }
+#end

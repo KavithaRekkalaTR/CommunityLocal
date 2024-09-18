@@ -1,0 +1,7 @@
+#set ($etlDate = $reporting.GetEtlReport().LatestImportDate)
+#if ($etlDate)
+    <div class="etldate">$core_v2_language.GetResource('AsOf') $core_v2_language.FormatDateAndTime($etlDate, "%{AdjustTimeZone = 'false'}")</div>
+#end
+<div class="content-container"></div>
+
+<div class="welcome">$core_v2_language.GetResource('Welcome')</div>

@@ -1,0 +1,40 @@
+## Fonts
+
+#set ($baseFontUrl = false)
+#set ($baseFont = $core_v2_widget.GetStringValue('baseFont', 'system'))
+
+#set ($baseFontFamily = '-apple-system, BlinkMacSystemFont, Helvetica, Arial, "Segoe UI", sans-serif')
+
+#if ($baseFont == 'helvetica')
+	#set ($baseFontFamily = 'Helvetica, Arial, "Segoe UI", sans-serif')
+#elseif ($baseFont == 'source-sans-pro')
+	#set ($baseFontUrl = $core_v2_widget.GetFileUrl('source-sans-pro.woff'))
+	#set ($baseFontFamily = 'source-sans-pro')
+#elseif ($baseFont == 'open-sans')
+	#set ($baseFontUrl = $core_v2_widget.GetFileUrl('open-sans.woff'))
+	#set ($baseFontFamily = 'open-sans')
+#elseif ($baseFont == 'fira-sans')
+	#set ($baseFontUrl = $core_v2_widget.GetFileUrl('fira-sans.woff'))
+	#set ($baseFontFamily = 'fira-sans')
+#elseif ($baseFont == 'custom')
+	#set ($baseFontUrl = $core_v2_widget.GetUrlValue('baseFontCustom', ''))
+	#if ($baseFontUrl && $baseFontUrl.length > 0)
+		#set ($baseFontFamily = 'custom')
+	#else
+		#set ($baseFontUrl = false)
+	#end
+#end
+
+#if ($baseFontUrl)
+
+@font-face {
+	font-family: "${baseFontFamily}";
+	src: url("${baseFontUrl}") format('woff');
+}
+@font-family: "$baseFontFamily";
+
+#else
+
+@font-family: $baseFontFamily;
+
+#end

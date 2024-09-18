@@ -1,0 +1,11 @@
+##
+## Gets a pre-rendered list of best replies
+##
+
+$core_v2_page.SetContentType('application/json')
+$core_v2_widget.ExecuteFile('common-config.vm')
+#set ($contentId = $content.ContentId)
+#set ($contentTypeId = $content.ContentTypeId)
+{
+	"bestReplies": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('common-rendered-best.vm'))"
+}

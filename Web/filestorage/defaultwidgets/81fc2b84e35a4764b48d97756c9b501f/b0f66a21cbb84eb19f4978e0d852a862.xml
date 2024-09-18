@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="b0f66a21cbb84eb19f4978e0d852a862" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="article-management" lastModified="2024-01-23 21:35:15Z" provider="81fc2b84e35a4764b48d97756c9b501f">
+    <contentScript language="Velocity"><![CDATA[#set($hasPublishGroups = false)
+#set ($draftCount = $context.DraftCount)
+#if ($articles_v1_publishGroups.List($context.ArticleCollection.Id, "%{ PageSize = 1, PageIndex = 0 }").Count > 0)
+    #set($hasPublishGroups = true)
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                #set($addUrl = false)
+                #set($addUrl = $articles_v1_articleUrls.CreateArticle($context.ArticleCollection.Id))
+                #if ($addUrl)
+                    <span class="field-item-input"><a href="$core_v2_encoding.HtmlAttributeEncode($addUrl)" class="button add">$core_v2_language.GetResource('add')</a></span>
+                #end
+            </li>
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="inline-button select-multiple" id="$core_v2_widget.UniqueId('select-multiple')">$core_v2_language.GetResource('Action_SelectMultiple')</a>
+                    <a href="#" class="inline-button publish" id="$core_v2_widget.UniqueId('publish-multiple')">$core_v2_language.GetResource('Action_Publish')</a>
+                    <a href="#" class="inline-button unpublish" id="$core_v2_widget.UniqueId('unpublish-multiple')">$core_v2_language.GetResource('Action_Unpublish')</a>
+                    <a href="#" class="inline-button delete" id="$core_v2_widget.UniqueId('delete-multiple')">$core_v2_language.GetResource('Action_Delete')</a>
+                    <a href="#" class="inline-button undelete" id="$core_v2_widget.UniqueId('undelete-multiple')">$core_v2_language.GetResource('Action_Undelete')</a>
+                    <a href="#" class="inline-button select-all" id="$core_v2_widget.UniqueId('selectall-multiple')">$core_v2_language.GetResource('Action_SelectAll')</a>
+                    <a href="#" class="inline-button deselect-all" id="$core_v2_widget.UniqueId('deselect-multiple')">$core_v2_language.GetResource('Action_DeselectAll')</a>
+                    <a href="#" class="inline-button cancel" id="$core_v2_widget.UniqueId('cancel-multiple')">$core_v2_language.GetResource('Cancel')</a>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+<form><fieldset class="filter-form">
+	<ul class="field-list">
+        <li class="field-item filters">
+            <span class="field-item-input">
+                <span class="field-item-component">
+                    <select class="sort-field article-filter">
+                        #if ($draftCount > 0)
+                            <option value="published">$core_v2_language.GetResource('Filter_Published')</option>
+                            <option value="drafted" selected="selected">$core_v2_language.GetResource('Filter_Drafted') ($draftCount)</option>
+                        #else
+                            <option value="published" selected="selected">$core_v2_language.GetResource('Filter_Published')</option>
+                            <option value="drafted">$core_v2_language.GetResource('Filter_Drafted')</option>
+                        #end
+                        <option value="unpublished">$core_v2_language.GetResource('Filter_Unpublished')</option>
+                        <option value="deletedarticles">$core_v2_language.GetResource('Filter_DeletedArticles')</option>
+                        <option value="deleteddrafts">$core_v2_language.GetResource('Filter_DeletedDrafts')</option>
+                    </select>
+                </span>
+                <span class="field-item-component">
+                    <input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('containing'))" class="search">
+                </span>
+                #if ($hasPublishGroups)
+                    <span class="field-item-component">
+                        <input type="text" id="$core_v2_widget.UniqueId('publish-group')" />
+                    </span>
+                #end
+                <span class="field-item-component">
+                    <input type="text" id="$core_v2_widget.UniqueId('category')" />
+                </span>
+                <span class="field-item-component">
+                    <select class="sort-field article-default">
+                        <option value="" selected="selected">$core_v2_language.GetResource('IsDefault_Any')</option>
+                        <option value="1">$core_v2_language.GetResource('IsDefault_True')</option>
+                        <option value="0">$core_v2_language.GetResource('IsDefault_False')</option>
+                    </select>
+                </span>
+                <span class="field-item-component">
+                    <select class="sort-field sortby">
+                        <option value="Title" data-filter="published drafted deleted">$core_v2_language.GetResource('SortBy_Title')</option>
+                        #if ($context.ArticleCollection.EnableHelpfulness)
+                            <option value="TotalHelpfulRatings" data-filter="published">$core_v2_language.GetResource('SortBy_TotalHelpfulRatings')</option>
+                            <option value="TotalNotHelpfulRatings" data-filter="published">$core_v2_language.GetResource('SortBy_TotalNotHelpfulRatings')</option>
+                        #end
+                        <option value="LastUpdateDate" selected="selected" data-filter="published drafted deleted">$core_v2_language.GetResource('SortBy_UpdateDate')</option>
+                        <option value="PublishDate" data-filter="published deleted">$core_v2_language.GetResource('SortBy_PublishDate')</option>
+                        <option value="DeleteDate" data-filter="deleted">$core_v2_language.GetResource('SortBy_DeleteDate')</option>
+                    </select>
+                </span>
+                <span class="field-item-component">
+                    <select class="sort-field sortorder">
+                        <option value="Ascending">$core_v2_language.GetResource('SortOrder_Ascending')</option>
+                        <option value="Descending" selected="selected">$core_v2_language.GetResource('SortOrder_Descending')</option>
+                    </select>
+                </span>
+            </span>
+        </li>
+	</ul>
+</fieldset></form>
+$core_v2_widget.ExecuteFile('callback-getarticles.vm')
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.articleManagement.register({
+		collectionId: '$context.ArticleCollection.Id.ToString()',
+		currentArticleId: #if ($articles_v1_articles.Current) '$articles_v1_articles.Current.Id.ToString()' #else '' #end,
+		hasPublishGroups: #if ($hasPublishGroups) true #else false #end,
+        draftCount: $draftCount,
+		fields: {
+		    list: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('articles'))'),
+		    publishGroup: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('publish-group'))'),
+		    category: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('category'))')
+		},
+		fieldIds: {
+		    selectMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('select-multiple'))',
+            publishMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('publish-multiple'))',
+            unpublishMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('unpublish-multiple'))',
+            deleteMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('delete-multiple'))',
+            undeleteMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('undelete-multiple'))',
+            deselectMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('deselect-multiple'))',
+            selectAllMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('selectall-multiple'))',
+            cancelMultiple: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('cancel-multiple'))'
+		},
+		templates: {
+		    header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)'
+		},
+		urls: {
+			getArticles: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getarticles.vm'))',
+			getPublishGroups: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getpublishgroups.jsm'))',
+			getCategories: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcategories.jsm'))',
+			viewCollection: '$core_v2_encoding.JavaScriptEncode($articles_v1_articleUrls.ArticleCollection($context.ArticleCollection.Id))',
+			bulkChange: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('panel-schedulebulkchange.vm'))',
+			singleChange: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-change.jsm'))',
+			helpfulnessManagement: '$core_v2_encoding.JavascriptEncode($context.HelpfulnessManagementUrl)'
+		},
+		text: {
+			deleteConfirm: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Delete_Confirm'))',
+			deleteSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Delete_Success'))',
+			undeleteConfirm: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Undelete_Confirm'))',
+			undeleteSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Undelete_Success'))',
+			noArticles: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('NoResults'))',
+			publishMultiple: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Publish'))',
+			unpublishMultiple: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Unpublish'))',
+			deleteMultiple: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Delete'))',
+			undeleteMultiple: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Undelete'))',
+			publishMultipleCount: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Publish_Count'))',
+			unpublishMultipleCount: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Unpublish_Count'))',
+			deleteMultipleCount: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Delete_Count'))',
+			undeleteMultipleCount: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Undelete_Count'))',
+			publishGroupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_Placeholder'))',
+			categoryPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Category_Placeholder'))',
+			noCategoryMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Category_NoMatches'))',
+			noPublishGroupMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_NoMatches'))',
+			applyingChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ApplyingChanges_Title'))',
+			publishMultipleConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Publish_Confirm'))',
+			publishMultipleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Publish_Success'))',
+			unpublishMultipleConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Unpublish_Confirm'))',
+			unpublishMultipleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Unpublish_Success'))',
+			deleteMultipleConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Delete_Confirm'))',
+			deleteMultipleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Delete_Success'))',
+			undeleteMultipleConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Undelete_Confirm'))',
+			undeleteMultipleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Multiple_Undelete_Success'))',
+			publishConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Publish_Confirm'))',
+			publishSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Publish_Success'))',
+			unpublishConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Unpublish_Confirm'))',
+			unpublishSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Unpublish_Success'))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Action_Delete">Delete</resource>
+  <resource name="Action_Delete_Count">Delete ({0})</resource>
+  <resource name="Action_DeselectAll">Deselect all</resource>
+  <resource name="Action_Publish">Publish</resource>
+  <resource name="Action_Publish_Count">Publish ({0})</resource>
+  <resource name="Action_SelectAll">Select all</resource>
+  <resource name="Action_SelectMultiple">Select multiple</resource>
+  <resource name="Action_Undelete">Undelete</resource>
+  <resource name="Action_Undelete_Count">Undelete ({0})</resource>
+  <resource name="Action_Unpublish">Unpublish</resource>
+  <resource name="Action_Unpublish_Count">Unpublish ({0})</resource>
+  <resource name="add">Add Article</resource>
+  <resource name="ApplyingChanges_Title">Applying Changes...</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="Category_NoMatches">No matching categories were found.</resource>
+  <resource name="Category_Placeholder">In any category...</resource>
+  <resource name="containing">Containing...</resource>
+  <resource name="Date_Deleted">Deleted {0}</resource>
+  <resource name="Date_Published">Published {0}</resource>
+  <resource name="Date_Publishing">Publishing {0}</resource>
+  <resource name="Date_Unpublished">Unpublished {0}</resource>
+  <resource name="Date_Unpublishing">Unpublishing {0}</resource>
+  <resource name="Date_Updated">Updated {0}</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Delete_Confirm">Are you sure you want to delete '{0}'?</resource>
+  <resource name="Delete_Success">'{0}' has been deleted successfully.</resource>
+  <resource name="Description">View, edit, delete and manage articles.</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="Feedback">Feedback</resource>
+  <resource name="Filter_DeletedArticles">Deleted articles</resource>
+  <resource name="Filter_DeletedDrafts">Deleted drafts</resource>
+  <resource name="Filter_Drafted">Drafts</resource>
+  <resource name="Filter_Published">Published articles</resource>
+  <resource name="Filter_Unpublished">Unpublished articles</resource>
+  <resource name="for_publishgroup">For {0}</resource>
+  <resource name="Helpful">{0} found helpful</resource>
+  <resource name="in_category">In {0}</resource>
+  <resource name="IsDefault_Any">Regardless of default usage</resource>
+  <resource name="IsDefault_False">Not category/collection defaults only</resource>
+  <resource name="IsDefault_True">Category/collection defaults only</resource>
+  <resource name="More">More</resource>
+  <resource name="Multiple_Delete_Confirm">Are you sure you want to delete the selected items?</resource>
+  <resource name="Multiple_Delete_Success">The selected items have been deleted.</resource>
+  <resource name="Multiple_Publish_Confirm">Are you sure you want to publish the selected drafts?</resource>
+  <resource name="Multiple_Publish_Success">The selected drafts have been published.</resource>
+  <resource name="Multiple_Undelete_Confirm">Are you sure you want to undelete the selected items?</resource>
+  <resource name="Multiple_Undelete_Success">The selected items have been restored.</resource>
+  <resource name="Multiple_Unpublish_Confirm">Are you sure you want to unpublish the selected articles?</resource>
+  <resource name="Multiple_Unpublish_Success">The selected articles have been unpublished.</resource>
+  <resource name="Name">Articles</resource>
+  <resource name="NoResults">No articles were found matching the filter.</resource>
+  <resource name="NotCategorized">Not categorized</resource>
+  <resource name="NotHelpful">{0} provided feedback</resource>
+  <resource name="Publish">Publish</resource>
+  <resource name="Publish_Confirm">Are you sure you want to publish '{0}'?</resource>
+  <resource name="Publish_Success">'{0}' has been published.</resource>
+  <resource name="PublishGroup_NoMatches">No matching publish groups were found.</resource>
+  <resource name="PublishGroup_Placeholder">For any publish group...</resource>
+  <resource name="PublishPendingReview">The article was published successfully pending review.</resource>
+  <resource name="SortBy_DeleteDate">By Deleted Date</resource>
+  <resource name="SortBy_PublishDate">By Published Date</resource>
+  <resource name="SortBy_Title">By Title</resource>
+  <resource name="SortBy_TotalHelpfulRatings">By Most Helpful</resource>
+  <resource name="SortBy_TotalNotHelpfulRatings">By Most Feedback</resource>
+  <resource name="SortBy_UpdateDate">By Last Updated Date</resource>
+  <resource name="SortOrder_Ascending">Ascending</resource>
+  <resource name="SortOrder_Descending">Descending</resource>
+  <resource name="Status_Deleted">Deleted</resource>
+  <resource name="Status_Draft">Draft</resource>
+  <resource name="Status_PendingReview">Pending review</resource>
+  <resource name="Status_Published">Published</resource>
+  <resource name="Status_ReadyToPublish">Ready to publish</resource>
+  <resource name="Status_Unpublished">Unpublished</resource>
+  <resource name="Undelete">Undelete</resource>
+  <resource name="Undelete_Confirm">Are you sure you want to undelete '{0}'?</resource>
+  <resource name="Undelete_Success">'{0}' has been undeleted successfully.</resource>
+  <resource name="Unpublish">Unpublish</resource>
+  <resource name="Unpublish_Confirm">Are you sure you want to unpublish '{0}'?</resource>
+  <resource name="Unpublish_Success">'{0}' has been unpublished.</resource>
+  <resource name="View">View</resource>
+  <resource name="ViewSubscribers">Subscribers</resource>
+  <resource name="ViewUser">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

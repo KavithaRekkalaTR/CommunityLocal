@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_SearchResultList_Name}" version="12.0.0.0" description="${resource:Core_SearchResultList_Description}" instanceIdentifier="46ece83160e84ca58a06c153e9f4719d" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="search-result-list" lastModified="2022-05-17 18:06:47Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#if ($core_v2_widget.GetStringValue('viewType', '') == 'options')
+	<div id="$core_v2_widget.UniqueId('options')">
+	</div>
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(j) {
+				j('#$core_v2_widget.WrapperElementId').on('change', 'select', function() {
+					var s = j(this);
+					var f = {};
+					f[s.data('parameter')] = s.val();
+					j.telligent.evolution.url.hashData(f, {
+						prefix: 'serp'
+					});
+				});
+
+				j.telligent.evolution.messaging.subscribe('telligent.evolution.widgets.searchResultList.optionsUpdated', function(data) {
+					var optionsContainer = $('#$core_v2_widget.UniqueId('options')');
+					optionsContainer.find('select').each(function(){
+						$(this).glowDropDownList('close');
+					});
+					if (data.optionsHtml) {
+						optionsContainer.html(data.optionsHtml);
+					}
+				});
+			});
+		</script>
+	#end
+#else
+	#set ($initialQuery = '')
+	#set ($initialQuery = $core_v2_utility.Trim($core_v2_page.GetQueryStringValue('q')))
+	$core_v2_ui.PagedContent('results.vm', "%{ QueryStringProperty = 'serp' }")
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(j) {
+				j.telligent.evolution.messaging.subscribe('search.ready', function(ctx) {
+					ctx.init({
+						initialQuery: '$core_v2_encoding.JavascriptEncode($initialQuery)',
+						customResultRendering: true
+					})
+				});
+
+				j.telligent.evolution.messaging.subscribe('search.query', function(ctx) {
+					var newUrl = j.telligent.evolution.url.modify({
+						query: { 'q': ctx.value },
+						hash: { 'serpq': ctx.value }
+					});
+					if(history && history.replaceState)
+						history.replaceState({}, 'title', newUrl);
+					j.telligent.evolution.url.hashData(
+						{ q: ctx.value },
+						{ prefix: 'serp' });
+				});
+			});
+		</script>
+	#end
+#end
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_SearchResultList_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_SearchResultList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="viewType" labelResourceName="view_type" defaultValue="results" dataType="String">
+		<propertyValue value="results" labelResourceName="view_type_results" orderNumber="1000000" propertiesToShow="pageSize,defaultAskForum" propertiesToHide="" />
+		<propertyValue value="options" labelResourceName="view_type_options" orderNumber="1000001" propertiesToShow="" propertiesToHide="pageSize,defaultAskForum" />
+	</property>
+	<property id="pageSize" labelResourceName="Core_SearchResults_PageSize_Name" descriptionResourceName="Core_SearchResults_PageSize_Description" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="1000" />
+	</property>
+	<property id="defaultAskForum" labelResourceName="Core_SearchResults_DefaultForum_Name" descriptionResourceName="Core_SearchResults_DefaultForum_Description" dataType="Custom" template="core_v2_forumLookup" enableGroupSelection="false" maxForumSelections="1" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AllTags">Regardless of tags</resource>
+  <resource name="Anything">Anything</resource>
+  <resource name="Anytime">Anytime</resource>
+  <resource name="ApplicationInContainer">{1}: {0}</resource>
+  <resource name="AskAQuestion">Ask a question</resource>
+  <resource name="By">By {0}</resource>
+  <resource name="ByAnyone">By anyone</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_SearchResultList_Description">Displays a list of results for a particular search.</resource>
+  <resource name="Core_SearchResultList_Name">Search Result List</resource>
+  <resource name="Core_SearchResults_all_time">Any Time</resource>
+  <resource name="Core_SearchResults_Alphabetical">Alphabetical</resource>
+  <resource name="Core_SearchResults_Ask_Body">Description of the problem</resource>
+  <resource name="Core_SearchResults_Ask_BodyLegend">One or two paragraphs work best.</resource>
+  <resource name="Core_SearchResults_Ask_Forum">Where to ask your question:</resource>
+  <resource name="Core_SearchResults_Ask_Submit">Submit</resource>
+  <resource name="Core_SearchResults_Ask_Title">Question</resource>
+  <resource name="Core_SearchResults_Ask_TitleLegend">A single phrase summarizing your question.</resource>
+  <resource name="Core_SearchResults_DefaultForum_Description">This forum will be added to the list of related forums (if any) in a search query.</resource>
+  <resource name="Core_SearchResults_DefaultForum_Name">Forum to target when asking for help</resource>
+  <resource name="Core_SearchResults_HighestRating">Highest Rating</resource>
+  <resource name="Core_SearchResults_MostRecent">Most Recent</resource>
+  <resource name="Core_SearchResults_MostRelevant">Most Relevant</resource>
+  <resource name="Core_SearchResults_NoQuery">Please enter a search term</resource>
+  <resource name="Core_SearchResults_NoResults">We couldn’t find anything that matches your search.</resource>
+  <resource name="Core_SearchResults_NoResults_AskForm">We couldn’t find anything that matches your search. You can &lt;a href="#" onclick="{0}"&gt;submit a question&lt;/a&gt; to request additional assistance.</resource>
+  <resource name="Core_SearchResults_NoResultsLink">Not what you're looking for?</resource>
+  <resource name="Core_SearchResults_PageSize_Description">The number of posts to display when searching.</resource>
+  <resource name="Core_SearchResults_PageSize_Name">Search Results/Page</resource>
+  <resource name="Core_SearchResults_past_month">In the past month</resource>
+  <resource name="Core_SearchResults_past_week">In the past week</resource>
+  <resource name="Core_SearchResults_past_year">In the past year</resource>
+  <resource name="Core_SearchResults_Result">{0} Result</resource>
+  <resource name="Core_SearchResults_Results">{0} Results</resource>
+  <resource name="In">In {0}</resource>
+  <resource name="InAnyApplication">In any application</resource>
+  <resource name="InAnyGroup">In any ${group_lowercase}</resource>
+  <resource name="Options">Options</resource>
+  <resource name="SearchResults_RSS">RSS</resource>
+  <resource name="Tagged">Tagged {0}</resource>
+  <resource name="view_type">View</resource>
+  <resource name="view_type_options">Filter Options</resource>
+  <resource name="view_type_results">Search Results</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="forums.threads.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

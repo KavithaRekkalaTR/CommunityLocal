@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:CalendarEventActivityStory_Name}" version="13.0.0.0" description="${resource:CalendarEventActivityStory_Description}" instanceIdentifier="f3f992c3d73443c38d0b6751533797c6" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2023-12-01 10:30:18Z" provider="331fbff637b04017b430daa60602748d">
+    <contentScript language="Velocity"><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+
+	#set($event = $calendar_v1_events.Show("%{ContentId = '$context.Story.ContentId'}"))
+	#if(!$event)
+		$core_v2_widget.Hide()
+	#else
+		#set($actor = $context.Story.PrimaryUser)
+		#if ($actor.Url)
+		 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+		#else
+			#set($profile0Html = $actor.DisplayName)
+		#end
+
+		#if($isPreview)
+				#format($core_v2_language.GetResource('Story_NewEvent_Preview'))
+						#token('user')
+							$profile0Html
+					#token('event')
+							<a href="$core_v2_encoding.HtmlAttributeEncode($event.Url)">$event.EventTitle</a>
+					#token('calendar')
+							#if ($content.Application.Container.ParentContainer)
+										<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+										<span class="group-application-separator">&gt;</span>
+								#end
+								<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+									href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+						#end
+		#else
+
+			<div class="activity-summary calendar">
+					#format($core_v2_language.GetResource('in'))
+										#token('user')
+									$profile0Html
+							#token('calendar')
+									#if ($content.Application.Container.ParentContainer)
+											<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+												href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+											<span class="group-application-separator">&gt;</span>
+									#end
+									<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+										href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+								#end
+			</div>
+
+			<div class="activity-container calendar">
+				<div class="activity-content calendar">
+
+					#if ($event.IsCancelled)
+						<span class="activity-title calendar cancelled">$core_v2_language.GetResource('Story_Cancelled_Message') $event.EventTitle</span>
+					#else
+						<span class="activity-title calendar"><a class="internal-link view-post" title="{0}" href="$core_v2_encoding.HtmlAttributeEncode($event.Url)">$event.EventTitle</a></span>
+					#end
+
+					<ul class="event-metadata-list">
+						<li class=""event-date"">$event.EventDateString
+							<span class="event-timezone">
+								 $!core_v2_configuration.GetTimeZone($core_v2_user.Accessing.TimeZoneId, $event.EventStartDate).NameWithoutOffset
+							</span>
+						</li>
+
+						#if ($event.EventLocation != '')
+							<li class="event-location">$event.EventLocation</li>
+						#end
+					</ul>
+				</div>
+			</div>
+		#end
+	#end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CalendarEventActivityStory_Description">Story for calendar events.</resource>
+  <resource name="CalendarEventActivityStory_Name">Calendar Event Activity Story</resource>
+  <resource name="in">{user} in {calendar}:</resource>
+  <resource name="Story_Cancelled_Message">Cancelled:</resource>
+  <resource name="Story_NewEvent_Preview">{user} scheduled {event} in {calendar}.</resource>
+  <resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

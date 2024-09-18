@@ -1,0 +1,24 @@
+<div class="content">
+	#set ($languages = $context.ListLanguages())
+	#foreach ($language in $languages)
+		<h2>$language.Name</h2>
+		<table>
+			<tr>
+				<th>$core_v2_language.GetResource('ResourceName')</th>
+				<th>$core_v2_language.GetResource('OldValue')</th>
+				<th>$core_v2_language.GetResource('NewValue')</th>
+			</tr>
+			<% foreach(languages['$core_v2_encoding.JavascriptEncode($language.Key)'], function(resource){  %>
+				<tr class="ui-tip <%: (resource.change || '') %>"
+					<% if(resource.change == 'added'){ %> data-tip="$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NewResource'))" <% } %>
+					<% if(resource.change == 'removed'){ %> data-tip="$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RemovedResource'))" <% } %>
+					<% if(resource.change == 'changed'){ %> data-tip="$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangedResource'))" <% } %>
+					>
+					<td><%: (resource.name || '') %></td>
+					<td><%: (resource.old || '') %></td>
+					<td><%: (resource.new || '') %></td>
+				</tr>
+			<% }); %>
+		</table>
+	#end
+</div>

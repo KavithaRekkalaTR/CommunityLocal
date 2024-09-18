@@ -1,0 +1,28 @@
+#foreach($group in $groups)
+#beforeall
+	<div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+#each
+	#if ($content == 'bookmark')
+		<div class="content-item content thumbnail" data-hasmore="$hasMore" data-url="$core_v2_encoding.HtmlAttributeEncode($group.Content.Url)" style="cursor: pointer;">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($group.Content.AvatarUrl, 140, 140, "%{alt=$group.Content.HtmlName('Web'),border='0',ResizeMethod = 'ZoomAndCrop'}")
+		        </div>
+		        <h2 class="name">
+		            <a href="$core_v2_encoding.HtmlAttributeEncode($group.Content.Url)">$group.Content.HtmlName('Web')</a>
+		        </h2>
+		</div>
+	#else
+		<div class="content-item content thumbnail" data-hasmore="$hasMore" data-url="$core_v2_encoding.HtmlAttributeEncode($group.Url)" style="cursor: pointer;">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($group.AvatarUrl, 140, 140, "%{alt=$group.Name,border='0',ResizeMethod = 'ZoomAndCrop'}")
+		        </div>
+		        <h3 class="name">
+		            <a href="$core_v2_encoding.HtmlAttributeEncode($group.Url)">$group.Name</a>
+		        </h3>
+		</div>
+	#end
+#afterall
+	</div>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('Groups_GroupList_NoGroups')</div>
+#end

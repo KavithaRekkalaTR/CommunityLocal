@@ -1,0 +1,5 @@
+#set($url = false)
+#set ($url = $core_v2_page.GetFormValue('url'))
+#if ($url)
+	$!core_v2_ui.GetPreviewHtml($url, "%{Width=320, Height=240, OutputIsPersisted='False'}")
+#end

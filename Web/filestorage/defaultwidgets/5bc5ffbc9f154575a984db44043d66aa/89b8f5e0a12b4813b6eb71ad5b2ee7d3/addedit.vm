@@ -1,0 +1,141 @@
+#set($pointFactorId = false)
+#set($pointFactorId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_pointFactorId')))
+
+#if ($pointFactorId)
+    #set($pointFactor = $context.GetPointFactor($pointFactorId))
+    #if (!$pointFactor || $pointFactor.HasErrors())
+        #set($pointFactor = false)
+    #end
+#else
+    #set($pointFactor = false)
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId("addEditHeaderTemplateId_$!pointFactor.Id"))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input user-options">
+					<a href="#" class="button save-pointfactor">$core_v2_language.GetResource('Action_Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+</script>
+
+<form><fieldset>
+	<ul class="field-list">
+		#set($automations = false)
+		#set($automations = $context.ListAutomations())
+		#if ($automations.Count > 0)
+    		<li class="field-item automation">
+    		    <label for="$core_v2_widget.UniqueId('Automation')" class="field-item-name">$core_v2_language.GetResource('Field_Automation')</label>
+    			<span class="field-item-description">$core_v2_language.GetResource('Field_Automation_Description')</span>
+    			<span class="field-item-input">
+    			    <select id="$core_v2_widget.UniqueId('Automation')" name="$core_v2_widget.UniqueId('Automation')">
+    			        <option value="">$core_v2_language.GetResource('Value_Automation_NotSelected')</option>
+    			        #foreach ($automation in $automations)
+    			            <option value="$automation.Id.ToString()" #if($pointFactor && $pointFactor.AutomationId == $automation.Id) selected #end>$automation.Name</option>
+    			        #end
+    			    </select>
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+    		#set($selectedAutomationId = false)
+    		#set($selectedAutomationId = $pointFactor.AutomationId)
+
+            #if($selectedAutomationId)
+                #set($automationConfigurationData = false)
+                #set($automationConfigurationData = $context.GetAutomationConfiguration($pointFactor.Id))
+
+                <div class="automation-configuration-form">
+                    $core_v2_widget.ExecuteFile('render-automationconfiguration.vm')
+                </div>
+            #end
+        #end
+    </ul>
+    <ul class="field-list">
+		<li class="field-item points">
+			<label for="$core_v2_widget.UniqueId('Points')" class="field-item-name">$core_v2_language.GetResource('Field_Points')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Points_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Points')" name="$core_v2_widget.UniqueId('Points')" #if ($pointFactor) data-originalvalue="$pointFactor.Points" value="$pointFactor.Points" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item update-points" style="display: none;">
+			<span class="field-item-input">
+				<span class="field-item-input"><input type="checkbox" name="$core_v2_widget.UniqueId('UpdatePoints')" id="$core_v2_widget.UniqueId('UpdatePoints')" />
+    			<label for="$core_v2_widget.UniqueId('UpdatePoints')" class="field-item-name">$core_v2_language.GetResource('Field_UpdatePoints')</label></span>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_UpdatePoints_Description')</span>
+		</li>
+
+		<li class="field-item title">
+			<label for="$core_v2_widget.UniqueId('Title')" class="field-item-name">$core_v2_language.GetResource('Field_Title')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Title_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Title')" name="$core_v2_widget.UniqueId('Title')" #if ($pointFactor) value="$pointFactor.Title" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item description">
+			<label for="$core_v2_widget.UniqueId('Description')" class="field-item-name">$core_v2_language.GetResource('Field_Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Description_Description')</span>
+			<span class="field-item-input">
+			    $core_v2_editor.Render('Description', "%{ Height='100px', Value = $!pointFactor.Description }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item enabled">
+		    <span class="field-item-input">
+		        <input type="checkbox" #if (!$pointFactor || $pointFactor.Enabled) checked="checked" #end id="$core_v2_widget.UniqueId('Enabled')" />
+		        <label for="$core_v2_widget.UniqueId('Enabled')">$core_v2_language.GetResource('Field_Enabled')</label>
+		    </span>
+		    <span class="field-item-description">$core_v2_language.GetResource('Field_Enabled_Description')</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('addedit.js'))"></script>
+<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+        jQuery.telligent.evolution.widgets.administrationPointsAddEdit.register({
+            headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+            pointFactorId: #if($pointFactor) '$pointFactor.Id.ToString()' #else null #end,
+            fieldIds: {
+                title: '#$core_v2_widget.UniqueId('Title')',
+                enable: '#$core_v2_widget.UniqueId('Enabled')',
+                points: '#$core_v2_widget.UniqueId('Points')',
+                updatePoints: '#$core_v2_widget.UniqueId('UpdatePoints')',
+                automation: '#$core_v2_widget.UniqueId('Automation')'
+            },
+            description: {
+                getValue: function() { return $core_v2_editor.GetContentScript('Description'); },
+                attachChange: function(f) { $core_v2_editor.GetAttachOnChangeScript('Description', 'f') }
+            },
+            automationConfiguration: {
+                getValues: function() {
+                    try {
+                        return ($core_v2_dynamicForm.GetValuesScript($core_v2_widget.UniqueId('AutomationConfiguration')));
+                    } catch (e) {
+                        return null;
+                    }
+                }
+            },
+            text: {
+                pointFactorCreatedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_PointFactorCreated'))',
+                pointFactorEditedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_PointFactorEdited'))',
+                descriptionRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FieldRequired'))',
+                pointsRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FieldRequired'))',
+            },
+            urls: {
+                addUpdatePointFactor: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('addupdate.vm'))',
+                updateAutomationConfigurationForm: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-automationconfigurationform.vm'))'
+            }
+        });
+    });
+</script>

@@ -1,0 +1,68 @@
+#*
+Renders jobs
+
+Expects In Scope:
+	$jobs
+*#
+
+#foreach ($job in $jobs)
+	<li class="content-item job">
+		<div class="content page">
+			<h4 class="name">
+				$job.Description
+			</h4>
+			<div class="post-attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item">
+						#if($job.State == 'Processing')
+							<span class="value highlight">$core_v2_language.GetResource('processing')</span>
+						#else
+							<span class="value">$core_v2_language.GetResource('ready')</span>
+						#end
+					</li>
+					<li class="attribute-item">
+						<span class="value #if($job.State == 'Processing')highlight#end">
+						#if($job.State == 'Processing' && $context.ConvertUtcToUserTime($job.ExecutionTimeUtc) > $core_v2_utility.CurrentUserDate)
+							$core_v2_language.FormatAgoDate($core_v2_utility.CurrentDate)
+						#else
+							$core_v2_language.FormatAgoDate($context.ConvertUtcToUserTime($job.ExecutionTimeUtc), true)
+						#end
+						</span>
+					</li>
+					<li class="attribute-item">
+						#set($exectionContext = $job.Data.get_item('_______EXECUTION_CONTEXT'))
+						#if($exectionContext == "InProcess" || $exectionContext == "Service")
+							$core_v2_language.GetResource($exectionContext)
+						#else
+							$exectionContext
+						#end
+					</li>
+				</ul>
+			</div>
+			<div class="content expandable description">
+				$core_v2_language.FormatString($core_v2_language.GetResource('JobFormat'), $job.Id.ToString(), $core_v2_language.FormatDateAndTime($context.ConvertUtcToUserTime($job.ExecutionTimeUtc)))
+			</div>
+			#set($editUrl = false)
+			#set($editUrl = $context.GetConfigureUrl($job.JobId))
+			#if ($editUrl)
+    			<div class="actions expandable">
+    				<div class="navigation-list ui-links" data-direction="horizontal">
+    					<ul>
+    						<li class="navigation-list-item">
+    							<a href="$core_v2_encoding.HtmlAttributeEncode($editUrl)">
+    								$core_v2_language.GetResource('Edit')
+    							</a>
+    						</li>
+    						<li class="navigation-list-item">
+    							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+    						</li>
+    						<li class="navigation-list-item">
+    							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+    						</li>
+    					</ul>
+    				</div>
+    			</div>
+    		#end
+		</div>
+	</li>
+#end

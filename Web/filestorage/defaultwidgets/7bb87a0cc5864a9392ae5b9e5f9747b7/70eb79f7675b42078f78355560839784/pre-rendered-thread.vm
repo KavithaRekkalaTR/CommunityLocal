@@ -1,0 +1,46 @@
+##
+## Server-rendered flattened thread
+##
+## Expects in scope: $thread, $sortBy, $sortOrder
+##
+
+#set ($listOptions = "%{}")
+
+## Sorting
+
+#if ($sortBy)
+	#set ($listSortBy = $sortBy)
+	## .List and .ListThreaded have different values for date sorting
+	#if ($listSortBy == 'CreatedDate')
+		#set ($listSortBy = 'PostDate')
+	#end
+	$listOptions.add('SortBy', $listSortBy)
+#end
+#if ($sortOrder)
+	$listOptions.add('SortOrder', $sortOrder)
+#end
+
+## Flat Threaded Paging
+
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize', $pageSize))
+
+$listOptions.Add('PageIndex', $pageIndex)
+$listOptions.Add('PageSize', $pageSize)
+
+## Request Replies
+
+#set ($forumReplies = $core_v2_forumReply.List($thread.Id, $listOptions))
+
+## Render flattened
+
+#foreach ($forumReply in $forumReplies)
+#beforeall
+	<ul>
+#each
+	$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+#afterall
+	</ul>
+#end
+
+$core_v2_ui.Pager($forumReplies.PageIndex, $forumReplies.PageSize, $forumReplies.TotalCount)

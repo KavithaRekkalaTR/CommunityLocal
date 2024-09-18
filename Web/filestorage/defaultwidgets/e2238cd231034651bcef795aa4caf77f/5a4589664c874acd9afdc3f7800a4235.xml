@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:AbuseConfiguration_Name}" version="12.0.0.0" description="${resource:AbuseConfiguration_Description}" instanceIdentifier="5a4589664c874acd9afdc3f7800a4235" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="abuse-configuration" lastModified="2022-02-17 19:00:04Z" provider="e2238cd231034651bcef795aa4caf77f">
+    <contentScript language="Velocity"><![CDATA[<form><fieldset>
+    <h3>$core_v2_language.GetResource('abuseThresholds')</h3>
+	<ul class="field-list">
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('minFlags')">$core_v2_language.GetResource('minFlags_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('minFlags_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('minFlags')" name="$core_v2_widget.UniqueId('minFlags')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('minFlags', 2).ToString())" />
+			</span>
+		</li>
+
+    <li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('maxFlags')">$core_v2_language.GetResource('maxFlags_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('maxFlags_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('maxFlags')" name="$core_v2_widget.UniqueId('maxFlags')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('maxFlags', 100).ToString())" />
+			</span>
+		</li>
+    </ul>
+
+    <h3>$core_v2_language.GetResource('abuseTimeWindows')</h3>
+	<ul class="field-list">
+    <li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('appealTimeWindow')">$core_v2_language.GetResource('appealTimeWindow_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('appealTimeWindow_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('appealTimeWindow')" name="$core_v2_widget.UniqueId('appealTimeWindow')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('appealTimeWindow', 5).ToString())" />
+			</span>
+		</li>
+
+    <li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('moderateTimeWindow')">$core_v2_language.GetResource('moderateTimeWindow_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('moderateTimeWindow_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('moderateTimeWindow')" name="$core_v2_widget.UniqueId('moderateTimeWindow')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('moderateTimeWindow', 60).ToString())" />
+			</span>
+		</li>
+
+    <li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('expungeTimeWindow')">$core_v2_language.GetResource('expungeTimeWindow_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('expungeTimeWindow_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('expungeTimeWindow')" name="$core_v2_widget.UniqueId('expungeTimeWindow')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('expungeTimeWindow', 30).ToString())" />
+			</span>
+		</li>
+    </ul>
+    
+    <h3>$core_v2_language.GetResource('moderationOptions')</h3>
+	<ul class="field-list">
+        <li class="field-item" id="$core_v2_widget.UniqueId('moderationRejectionEntersAbuseWorkflow')">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('moderationRejectionEntersAbuseWorkflow')">$core_v2_language.GetResource('moderationRejectionEntersAbuseWorkflow_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('moderationRejectionEntersAbuseWorkflow_description')</span>
+			#set($contentTypes = $core_v2_widget.GetCustomValue('moderationToAbuseContentTypes', 'all'))
+			#set($contentTypeIds = "%{}")
+			#foreach($contentTypeId in $core_v2_page.ParseQueryString($contentTypes).Values('ContentType'))
+			    $contentTypeIds.Add($contentTypeId, 'True')
+			#end
+			
+		    #foreach ($contentType in $core_v2_contentType.List())
+		        #if($core_v2_abuseReport.CanBeMarkedAsAbusive($contentType.Id))
+		            <span class="field-item-input">
+			            <input type="checkbox" value="$contentType.Id" id="${core_v2_widget.UniqueId('contenttype')}_${contentType.Id}" #if ($contentTypes == 'all' || $contentTypeIds.Contains($contentType.Id.ToString())) checked="checked" #end />
+			            <label for="${core_v2_widget.UniqueId('contenttype')}_${contentType.Id}">$contentType.Name</label>
+			        </span>
+		        #end
+		    #end
+		</li>
+    </ul>
+    
+    <h3>$core_v2_language.GetResource('exemptions')</h3>
+    #set($users = false)
+    #set($exemptCount = 0)
+    #set($exemptPercentile = $core_v2_widget.GetDoubleValue('exemptReputationPercentile', 2) / 100)
+    #set($users = $core_v2_user.List("%{ PageIndex = 0, PageSize = 1 }"))
+    #if ($users && $exemptPercentile > 0)
+        #set($exemptCount = $users.TotalCount * $exemptPercentile)
+    #end
+	<ul class="field-list">
+        <li class="field-item" id="$core_v2_widget.UniqueId('exemptReputation')">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('exemptReputationPercentile')">$core_v2_language.GetResource('exemptReputationPercentile_name')</label>
+			<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('exemptReputationPercentile_description'), $core_v2_utility.Round($exemptCount).ToString())</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('exemptReputationPercentile')" name="$core_v2_widget.UniqueId('exemptReputationPercentile')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('exemptReputationPercentile', 2).ToString())" />
+			</span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('exemptRoles')">$core_v2_language.GetResource('exemptRoles_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('exemptRoles_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('exemptRoles')" name="$core_v2_widget.UniqueId('exemptRoles')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetCustomValue('exemptRoles', ''))" />
+			</span>
+		</li>
+    </ul>
+    <h3>$core_v2_language.GetResource('userAccountProtection')
+        <span class="description">$core_v2_language.GetResource('userAccountProtection_description')</span>
+    </h3>
+	<ul class="field-list">
+
+    <li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('userExpungeAgeThreshold')">$core_v2_language.GetResource('userExpungeAgeThreshold_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('userExpungeAgeThreshold_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('userExpungeAgeThreshold')" name="$core_v2_widget.UniqueId('userExpungeAgeThreshold')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('userExpungeAgeThreshold', 45).ToString())" />
+			</span>
+		</li>
+
+    <li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('userExpungePostsThreshold')">$core_v2_language.GetResource('userExpungePostsThreshold_name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('userExpungePostsThreshold_description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('userExpungePostsThreshold')" name="$core_v2_widget.UniqueId('userExpungePostsThreshold')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('userExpungePostsThreshold', 4).ToString())" />
+			</span>
+		</li>
+	</ul>
+
+    <h3>$core_v2_language.GetResource('ipThrottling')</h3>
+
+    <ul class="field-list">
+
+    <li class="field-item">
+            <label class="field-item-name" for="$core_v2_widget.UniqueId('throttlingExempt')"> $core_v2_language.GetResource('throttlingExempt_name')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('throttlingExempt_description')</span>
+            <span class="field-item-input">
+                <textarea id="$core_v2_widget.UniqueId('throttlingExempt')" rows="10">$core_v2_utility.Join($core_v2_utility.NewLine, $core_v2_utility.Split(',', $core_v2_widget.GetCustomValue('throttlingExempt', '')))</textarea>
+            </span>
+    	</li>
+    </ul>
+
+</fieldset></form>
+
+#set($exemptRoleNames = '')
+#set($exemptRoleIds = $core_v2_utility.Split(',', $core_v2_widget.GetCustomValue('exemptRoles', '')))
+#foreach($roleId in $exemptRoleIds)
+    #set($roleName = '???')
+    #set($roleId = $core_v2_utility.ParseInt($roleId))
+    #if ($roleId && $roleId > 0)
+        #set($role = false)
+        #set($role = $core_v2_role.Get($roleId))
+        #if ($role && !$role.HasErrors())
+            #set($roleName = $role.Name)
+        #end
+    #end
+    
+    #if ($exemptRoleNames.Length > 0)
+        #set($exemptRoleNames = "$exemptRoleNames,")
+    #end
+    #set($exemptRoleNames = "$exemptRoleNames'${core_v2_encoding.JavascriptEncode($roleName)}'")
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.abuseConfiguration')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.abuseConfiguration.register({
+                saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+                minFlags: jQuery('#$core_v2_widget.UniqueId('minFlags')'),
+                maxFlags: jQuery('#$core_v2_widget.UniqueId('maxFlags')'),
+                appealTimeWindow: jQuery('#$core_v2_widget.UniqueId('appealTimeWindow')'),
+                moderateTimeWindow: jQuery('#$core_v2_widget.UniqueId('moderateTimeWindow')'),
+                expungeTimeWindow: jQuery('#$core_v2_widget.UniqueId('expungeTimeWindow')'),
+                exemptReputationPercentile: jQuery('#$core_v2_widget.UniqueId('exemptReputationPercentile')'),
+                exemptRoles: jQuery('#$core_v2_widget.UniqueId('exemptRoles')'),
+                userExpungeAgeThreshold: jQuery('#$core_v2_widget.UniqueId('userExpungeAgeThreshold')'),
+                userExpungePostsThreshold: jQuery('#$core_v2_widget.UniqueId('userExpungePostsThreshold')'),
+                moderationToAbuseContentTypes: jQuery('#$core_v2_widget.UniqueId('moderationRejectionEntersAbuseWorkflow')'),
+                exemptReputation: jQuery('#$core_v2_widget.UniqueId('exemptReputation')'),
+                selectedExemptRoleNames: [$exemptRoleNames],
+                lookupRoleUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-findrole.jsm'))',
+                throttlingExempt: '#$core_v2_widget.UniqueId('throttlingExempt')',
+                text: {
+        			save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+                    saveSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save_successful'))',
+                    roleNotFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('role_not_found'))',
+                    findRole: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('find_role'))',
+                    exemptReputationDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('exemptReputationPercentile_description'))'
+                }
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AbuseConfiguration_Description">Moderation and abuse workflow options.</resource>
+  <resource name="AbuseConfiguration_Name">Moderation Options</resource>
+  <resource name="abuseThresholds">Abuse Report Thresholds</resource>
+  <resource name="abuseTimeWindows">Moderation/Abuse Time Windows</resource>
+  <resource name="appealTimeWindow_description">The number of days before an appeal expires. (Default = 5)</resource>
+  <resource name="appealTimeWindow_name">Appeal Time Window</resource>
+  <resource name="exemptions">Exemptions</resource>
+  <resource name="exemptReputationPercentile_description">When set to a value greater than 0, authors with a reputation at or better than the configured percentile will not be subject to automated abuse rules, manual abuse flagging, or moderation. Current settings will exempt {0} members. (Default = 2)</resource>
+  <resource name="exemptReputationPercentile_name">Exempt Authors from Abuse Automation Minimum Reputation Percentile</resource>
+  <resource name="exemptRoles_description">Selected roles will not be subject to automated abuse rules, manual abuse flagging, or moderation.</resource>
+  <resource name="exemptRoles_name">Exempt Roles</resource>
+  <resource name="expungeTimeWindow_description">The number of days after an appeal or moderation request expires before the content is deleted. (Default = 30)</resource>
+  <resource name="expungeTimeWindow_name">Expunge Time Window</resource>
+  <resource name="find_role">Select a role...</resource>
+  <resource name="ipThrottling">IP Throttling</resource>
+  <resource name="maxFlags_description">Maximum number of abuse reports necessary to guarantee content is abusive and immediately enters the abuse workflow regardless of scoring. (Default = 100)</resource>
+  <resource name="maxFlags_name">Definitely Abusive Reports Threshold</resource>
+  <resource name="minFlags_description">Minimum number of abuse reports necessary for content to enter the abuse workflow (Default = 2). Abuse will be determined based on scoring. If the content is flagged by a moderator it will enter the abuse workflow immediately, regardless of the minimum abuse reports threshold and scoring.</resource>
+  <resource name="minFlags_name">Minimum Abusive Reports Threshold</resource>
+  <resource name="moderateTimeWindow_description">The number of days after content is moderated before it is flagged for expungement. (Default = 60)</resource>
+  <resource name="moderateTimeWindow_name">Moderate Time Window</resource>
+  <resource name="moderationOptions">Moderation Workflow Options</resource>
+  <resource name="moderationRejectionEntersAbuseWorkflow_description">For the following checked content types, when content in moderation is rejected, the content will enter the abuse workflow to allow the author to appeal the decision. If unchecked, the content will be rejected and scheduled for deletion.</resource>
+  <resource name="moderationRejectionEntersAbuseWorkflow_name">Enter Abuse Workflow on Rejection</resource>
+  <resource name="role_not_found">No matching roles were found.</resource>
+  <resource name="save">Save</resource>
+  <resource name="save_successful">Moderation options has been saved.</resource>
+  <resource name="throttlingExempt_description">IP addresses or ranges, identified here (one per line), which should be exempt from IP address throttling. For ranges, use format 192.168.1.1-192.168.1.255 or 192.168.1.*</resource>
+  <resource name="throttlingExempt_name">Throttling IP Exempt List</resource>
+  <resource name="userAccountProtection">Member Account Protection</resource>
+  <resource name="userAccountProtection_description">Abusive member accounts meeting any of the following thresholds will be marked as disapproved, instead of being deleted, when expunged.</resource>
+  <resource name="userExpungeAgeThreshold_description">Minimum number of days since the member account was created. (Default = 45)</resource>
+  <resource name="userExpungeAgeThreshold_name">Account Age Expunge Threshold</resource>
+  <resource name="userExpungePostsThreshold_description">Minimum number of non-abusive posts. (Default = 4)</resource>
+  <resource name="userExpungePostsThreshold_name">Posts Expunge Threshold</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

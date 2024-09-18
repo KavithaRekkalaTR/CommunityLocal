@@ -1,0 +1,17 @@
+﻿## Loads Attachment Preview
+
+#set ($fileName = false)
+#set ($fileName = $core_v2_page.GetFormValue('filename'))
+#set ($uploadContextId = false)
+#set ($uploadContextId = $core_v2_page.GetFormValue('uploadContextId'))
+#if ($fileName && $uploadContextId)
+	#set ($file = false)
+	#set ($file = $core_v2_uploadedFile.Get($uploadContextId, $fileName))
+	#if ($file)
+	   #set ($url = $file.Url)
+	#end
+#end
+
+#if ($url)
+	$!core_v2_ui.GetPreviewHtml($url, "%{Width=320, Height=240, OutputIsPersisted='False'}")
+#end

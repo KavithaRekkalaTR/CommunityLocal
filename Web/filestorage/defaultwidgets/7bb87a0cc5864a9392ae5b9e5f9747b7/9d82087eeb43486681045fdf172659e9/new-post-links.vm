@@ -1,0 +1,27 @@
+#set($links = false)
+#set($links = $core_v2_group.ListNewPostLinks($group.Id))
+#foreach($link in $links)
+#beforeall
+    <div class="ui-links navigation-list links #if ($groupSelectionMode == 'targetable') with-group-selector #end" data-direction="horizontal" data-minlinks="1" data-maxlinks="100">
+        <ul class="navigation-list">
+            #if ($enableStatus)
+                <li class="navigation-list-item">
+                    <a class="internal-link add-post status selected" data-messagename="widget.${core_v2_widget.WrapperElementId}.applicationLink" href="#">$core_v2_language.GetResource('statusMessage')</a>
+                </li>
+            #end
+#each
+            #if (!$core_v2_utility.IsMatch($link.CssClass, "(application)|(group)"))
+                <li class="navigation-list-item">
+                    <a class="$link.CssClass" data-messagename="widget.${core_v2_widget.WrapperElementId}.applicationLink" href="$core_v2_encoding.HtmlAttributeEncode($link.Url)">$link.Label</a>
+                </li>
+            #end
+#afterall
+            <li class="navigation-list-item">
+                <a class="more prepend-icon down-open-mini" href="#" data-more>$core_v2_language.GetResource('more')</a>
+            </li>
+            <li class="navigation-list-item">
+                <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+            </li>
+        </ul>
+    </div>
+#end

@@ -1,0 +1,373 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:activityStoryStream_name}" version="13.0.0.0" description="${resource:activityStoryStream_description}" instanceIdentifier="ff79be4dcc9b4884bbf9a455ef5eb1c5" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="activity-story-stream" lastModified="2024-01-26 16:10:38Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 10))
+#set ($endlessScroll = $core_v2_widget.GetBoolValue('endlessScroll', true))
+
+#set($filterType = false)
+#set($filterType = $core_v2_widget.GetStringValue('filterType', ''))
+
+#set ($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#set ($uploadFileUrl = $core_v2_uploadedFile.GetUploadUrl($uploadContextId))
+
+#set ($user = false)
+#if ($filterType == 'User')
+	#set($user = $core_v2_user.Current)
+	#if (!$user)
+		#set ($user = $core_v2_user.Accessing)
+	#end
+	## if contextual/accessing user is anonymous, fall back to site filter mode
+	#if (!$core_v2_user.IsRegistered($user.Id))
+		#set ($filterType = 'Site')
+	#end
+#else
+	#set($user = $core_v2_user.Accessing)
+#end
+
+#set ($group = $core_v2_group.Current)
+
+#set ($loadingId = $core_v2_widget.UniqueId('loading'))
+#set ($pagerId = $core_v2_widget.UniqueId('pager'))
+#set ($containerId = $core_v2_widget.UniqueId('containerId'))
+#set ($tabsId = $core_v2_widget.UniqueId('tabs'))
+
+## filter tabs
+#set ($filterName0 = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('filterName0',$core_v2_language.GetResource('filterNameDefault'))))
+#set ($filterTypes0 = false)
+#if($filterType == 'User')
+	#set ($filterTypes0 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterUserActivityTypes0','')))
+#else
+	#set ($filterTypes0 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterActivityTypes0','')))
+#end
+
+#set ($filterName1 = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('filterName1',$core_v2_language.GetResource('filterNameDefault'))))
+#set ($filterTypes1 = false)
+#if($filterType == 'User')
+	#set ($filterTypes1 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterUserActivityTypes1','')))
+#else
+	#set ($filterTypes1 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterActivityTypes1','')))
+#end
+
+#set ($filterName2 = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('filterName2',$core_v2_language.GetResource('filterNameDefault'))))
+#set ($filterTypes2 = false)
+#if($filterType == 'User')
+	#set ($filterTypes2 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterUserActivityTypes2','')))
+#else
+	#set ($filterTypes2 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterActivityTypes2','')))
+#end
+
+#set ($filterName3 = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('filterName3',$core_v2_language.GetResource('filterNameDefault'))))
+#set ($filterTypes3 = false)
+#if($filterType == 'User')
+	#set ($filterTypes3 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterUserActivityTypes3','')))
+#else
+	#set ($filterTypes3 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterActivityTypes3','')))
+#end
+
+#set ($filterName4 = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('filterName4',$core_v2_language.GetResource('filterNameDefault'))))
+#set ($filterTypes4 = false)
+#if($filterType == 'User')
+	#set ($filterTypes4 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterUserActivityTypes4','')))
+#else
+	#set ($filterTypes4 = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('filterActivityTypes4','')))
+#end
+
+#if ($filterTypes0.Values('filters').Count > 0 || $filterTypes1.Values('filters').Count > 0 || $filterTypes2.Values('filters').Count > 0 || $filterTypes3.Values('filters').Count > 0 || $filterTypes4.Values('filters').Count > 0)
+	<ul class="filter with-query" id="$core_v2_encoding.HtmlAttributeEncode($tabsId)" style="display:none">
+		#if ($filterTypes0.Values('filters').Count > 0 && $filterName0.length > 0)
+			<li class="filter-option"><a href="#" data-filterindex="0">$filterName0</a></span>
+		#end
+		#if ($filterTypes1.Values('filters').Count > 0 && $filterName1.length > 0)
+			<li class="filter-option"><a href="#" data-filterindex="1">$filterName1</a></span>
+		#end
+		#if ($filterTypes2.Values('filters').Count > 0 && $filterName2.length > 0)
+			<li class="filter-option"><a href="#" data-filterindex="2">$filterName2</a></span>
+		#end
+		#if ($filterTypes3.Values('filters').Count > 0 && $filterName3.length > 0)
+			<li class="filter-option"><a href="#" data-filterindex="3">$filterName3</a></span>
+		#end
+		#if ($filterTypes4.Values('filters').Count > 0 && $filterName4.length > 0)
+			<li class="filter-option"><a href="#" data-filterindex="4">$filterName4</a></span>
+		#end
+	</ul>
+#end
+
+<div class="content-list-header activity-stories"></div>
+<div class="content-list-name activity-stories"></div>
+#if ($core_v2_user.IsRegistered($user.Id))
+	<div $core_v2_tourTip.Render($core_v2_language.GetResource('TourTip'))></div>
+#end
+<div id="$core_v2_widget.UniqueId('more-stories')" class="more-stories" style="display:none;"></div>
+<ul $core_v2_servicePresence.RenderAttributes($core_v2_activityStory.ServiceId, "%{CssClass='content-list activity-stories'}") id="$containerId"></ul>
+<div class="content-list-footer activity-stories"></div>
+
+#if (!$endlessScroll)
+	<div class="pager" id="$pagerId">
+		<a href="#">$core_v2_language.GetResource('showMore')</a>
+	</div>
+#end
+
+<div id="$loadingId" class="loading"><span class="ui-loading"></span></div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.activityStoryStream')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.activityStoryStream.register({
+				wrapper: '#$core_v2_widget.WrapperElementId',
+				loader: '#$core_v2_encoding.JavascriptEncode($loadingId)',
+				pager: '#$core_v2_encoding.JavascriptEncode($pagerId)',
+				container: '#$core_v2_encoding.JavascriptEncode($containerId)',
+				filterType: '$core_v2_encoding.JavascriptEncode($filterType)',
+				tabs: '#$core_v2_encoding.JavascriptEncode($tabsId)',
+				pageSize: $pageSize,
+				statusMessageContentTypeId: '$core_v2_statusMessage.ContentTypeId.ToString()',
+				moreStoriesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-morestories.vm'))',
+				getStoryUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getstory.vm'))',
+				moreCommentsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-morecomments.vm'))',
+				getCommentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcomment.vm'))',
+				getEditorUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-geteditor.vm'))',
+				updateStatusUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-updatestatus.vm'))',
+				statusAttachmentUploadContextId : '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+				statusAttachmentUploadFileUrl : '$core_v2_encoding.JavascriptEncode($uploadFileUrl)',
+				previewStatusAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-previewattachment.vm'))',
+				deleteForumReplyPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_urls.DeleteForumReply(0))',
+				accessingUserId: $core_v2_user.Accessing.Id,
+				userId: #if($user)$user.Id#else-1#end,
+				groupId: $group.Id,
+				containerId: '$group.ContainerId.ToString()',
+				includeSubGroups: #if($core_v2_widget.GetBoolValue('includeSubGroups', false)) false #else true #end,
+				maxReplyLength: $core_v2_configuration.ActivityMessageReplyMaxLength,
+				todayText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('today'))',
+				cancelText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('cancel'))',
+				replyText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reply'))',
+				endlessScroll: #if($endlessScroll) true #else false #end,
+				hideOriginalPost: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('hideOriginalPost'))',
+				showOriginalPost: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('showOriginalPost'))',
+				hideHistory: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('hideHistory'))',
+				showHistory: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('showHistory'))',
+				deleteActivityMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleteActivityMessage'))',
+				deleteCommentMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleteCommentMessage'))',
+				commentModeratedMessaage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CF_Comment_ModeratedMessaage'))',
+				commentContentTypeId: '$core_v2_comments.ContentTypeId.ToString()',
+				commentDeletedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('comment-deleted'))',
+				moreStories: '#$core_v2_widget.UniqueId('more-stories')',
+				showMoreStoriesSingleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('show-more-stories-single'))',
+				showMoreStoriesMultipleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('show-more-stories-multiple'))',
+				showMoreCommentsSingleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('show-more-comments-single'))',
+				showMoreCommentsMultipleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('show-more-comments-multiple'))',
+				editSuccessText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('edit-success'))',
+				filters: {
+					#set($firstFilter = true)
+					#foreach($filterIndex in [0..4])
+						#set($first = true)
+						#if ($filterType == 'User')
+							#set ($filterActivityTypesProperty = "filterUserActivityTypes${filterIndex}")
+						#else
+							#set ($filterActivityTypesProperty = "filterActivityTypes${filterIndex}")
+						#end
+						#set ($filterActivityTypes = false)
+						#set ($filterActivityTypes = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue($filterActivityTypesProperty,'')))
+						#if ($filterActivityTypes && $filterActivityTypes.Values('filters').Count > 0)
+							#set ($includedStoryTypes = false)
+							#set ($includedStoryTypes = $filterActivityTypes.Values('filters'))
+							#foreach ($storyType in $includedStoryTypes)
+								#set ($includedUsers = false)
+								#set ($includedUsers = $filterActivityTypes.Value($storyType))
+								#if ($includedUsers)
+									#if ($first)
+										#set($first = false)
+										#if ($firstFilter)
+											#set($firstFilter = false)
+										#else
+											,
+										#end
+										$filterIndex: {
+									#else
+										,
+									#end
+									'$storyType':true
+								#end
+							#end
+							#if (!$firstFilter)
+								}
+							#end
+						#end
+					#end
+				}
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:activityStoryStream_name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="options">
+	<property id="fragmentHeader" labelResourceName="title" defaultValue="${resource:activityStoryStream_name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageSize" labelResourceName="pageSize" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="filterType" labelResourceName="filterType" descriptionResourceName="filterType_Desc" dataType="String">
+		<propertyValue value="Site" labelResourceName="filterType_site" orderNumber="1000000" propertiesToHide="includeSubGroups,filterUserActivityTypes0,filterUserActivityTypes1,filterUserActivityTypes2,filterUserActivityTypes3,filterUserActivityTypes4" propertiesToShow="activityTypes0,filterActivityTypes1,filterActivityTypes2,filterActivityTypes3,filterActivityTypes4" />
+		<propertyValue value="MyGroups" labelResourceName="filterType_mygroups" orderNumber="1000001" propertiesToHide="includeSubGroups,filterUserActivityTypes0,filterUserActivityTypes1,filterUserActivityTypes2,filterUserActivityTypes3,filterUserActivityTypes4" propertiesToShow="activityTypes0,filterActivityTypes1,filterActivityTypes2,filterActivityTypes3,filterActivityTypes4" />
+		<propertyValue value="Group" labelResourceName="filterType_group" orderNumber="1000002" propertiesToHide="filterUserActivityTypes0,filterUserActivityTypes1,filterUserActivityTypes2,filterUserActivityTypes3,filterUserActivityTypes4" propertiesToShow="includeSubGroups,filterActivityTypes0,filterActivityTypes1,filterActivityTypes2,filterActivityTypes3,filterActivityTypes4" />
+		<propertyValue value="User" labelResourceName="filterType_userProfile" orderNumber="1000003" propertiesToHide="includeSubGroups,filterActivityTypes0,filterActivityTypes1,filterActivityTypes2,filterActivityTypes3,activityTypes4" propertiesToShow="filterUserActivityTypes0,filterUserActivityTypes1,filterUserActivityTypes2,filterUserActivityTypes3,filterUserActivityTypes4" />
+	</property>
+	<property id="includeSubGroups" labelResourceName="includeSubGroups" defaultValue="false" dataType="Bool" />
+	<property id="endlessScroll" labelResourceName="endlessScroll" descriptionResourceName="endlessScrollDesc" defaultValue="true" dataType="Bool" />
+</propertyGroup>
+<propertyGroup id="filter0" labelResourceName="filter0" descriptionResourceName="filter_desc">
+	<property id="filterName0" labelResourceName="filterName" descriptionResourceName="filterDesc" defaultValue="${resource:filterNameDefault}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="filterActivityTypes0" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" defaultValue="filters=948477cb045b40778bf17ce1a091db11&amp;filters=44a697e2d1b348f6951945cfa2bfc4fd&amp;filters=0f7404b7d8f24a1b97c9175af1be4570&amp;filters=06336ce1600c40e4b32d97ff811ad7bd&amp;filters=acf00be657174a25a17de2036c694444&amp;filters=0a680cf3f19648c592dbdf8cebe3fe92&amp;filters=ecf7e9ef76f0447c9b252a531c7bb651&amp;filters=edebd6ada45a470f89e63dfc31714bd6&amp;filters=a23334fb669a421d85e91945a7b80581&amp;filters=14656a259a034311b8e346cef57ac02b&amp;filters=333cc77c019644c5aefa6e35a0011ee8&amp;filters=276a9e5128394ae98291e3f24b49cbc4&amp;filters=e9dd0cb7adf74518b0961b00f3f51246&amp;filters=304f80b62ab44cfb82fae232f7eca49d&amp;filters=3d10e9df357b42038f7d3bf15f60fd61&amp;filters=cf26068cf6644050bf69f1d5c3e7eb1a&amp;filters=432f675c15bb429c98a99e99d539587b&amp;filters=919abea56ce64b34a6a6baf8b392af90&amp;948477cb045b40778bf17ce1a091db11=All&amp;44a697e2d1b348f6951945cfa2bfc4fd=All&amp;0f7404b7d8f24a1b97c9175af1be4570=All&amp;06336ce1600c40e4b32d97ff811ad7bd=All&amp;acf00be657174a25a17de2036c694444=All&amp;0a680cf3f19648c592dbdf8cebe3fe92=All&amp;ecf7e9ef76f0447c9b252a531c7bb651=All&amp;edebd6ada45a470f89e63dfc31714bd6=All&amp;a23334fb669a421d85e91945a7b80581=All&amp;14656a259a034311b8e346cef57ac02b=All&amp;333cc77c019644c5aefa6e35a0011ee8=All&amp;276a9e5128394ae98291e3f24b49cbc4=All&amp;e9dd0cb7adf74518b0961b00f3f51246=All&amp;304f80b62ab44cfb82fae232f7eca49d=All&amp;3d10e9df357b42038f7d3bf15f60fd61=All&amp;cf26068cf6644050bf69f1d5c3e7eb1a=All&amp;432f675c15bb429c98a99e99d539587b=All&amp;919abea56ce64b34a6a6baf8b392af90=All" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_User" orderNumber="1000001" />
+		<propertyValue value="Followed" labelResourceName="activityTypeUsers_Followed" orderNumber="1000002" />
+		<propertyValue value="User,Followed" labelResourceName="activityTypeUsers_UserAndFollowed" orderNumber="1000003" />
+		<propertyValue value="All" labelResourceName="activityTypeUsers_All" orderNumber="1000004" />
+	</property>
+	<property id="filterUserActivityTypes0" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_Include" orderNumber="1000001" />
+	</property>
+</propertyGroup>
+<propertyGroup id="filter1" labelResourceName="filter1" descriptionResourceName="filter_desc">
+	<property id="filterName1" labelResourceName="filterName" descriptionResourceName="filterDesc" defaultValue="${resource:filterNameDefault}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="filterActivityTypes1" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_User" orderNumber="1000001" />
+		<propertyValue value="Followed" labelResourceName="activityTypeUsers_Followed" orderNumber="1000002" />
+		<propertyValue value="User,Followed" labelResourceName="activityTypeUsers_UserAndFollowed" orderNumber="1000003" />
+		<propertyValue value="All" labelResourceName="activityTypeUsers_All" orderNumber="1000004" />
+	</property>
+	<property id="filterUserActivityTypes1" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_Include" orderNumber="1000001" />
+	</property>
+</propertyGroup>
+<propertyGroup id="filter2" labelResourceName="filter2" descriptionResourceName="filter_desc">
+	<property id="filterName2" labelResourceName="filterName" descriptionResourceName="filterDesc" defaultValue="${resource:filterNameDefault}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="filterActivityTypes2" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_User" orderNumber="1000001" />
+		<propertyValue value="Followed" labelResourceName="activityTypeUsers_Followed" orderNumber="1000002" />
+		<propertyValue value="User,Followed" labelResourceName="activityTypeUsers_UserAndFollowed" orderNumber="1000003" />
+		<propertyValue value="All" labelResourceName="activityTypeUsers_All" orderNumber="1000004" />
+	</property>
+	<property id="filterUserActivityTypes2" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_Include" orderNumber="1000001" />
+	</property>
+</propertyGroup>
+<propertyGroup id="filter3" labelResourceName="filter3" descriptionResourceName="filter_desc">
+	<property id="filterName3" labelResourceName="filterName" descriptionResourceName="filterDesc" defaultValue="${resource:filterNameDefault}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="filterActivityTypes3" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_User" orderNumber="1000001" />
+		<propertyValue value="Followed" labelResourceName="activityTypeUsers_Followed" orderNumber="1000002" />
+		<propertyValue value="User,Followed" labelResourceName="activityTypeUsers_UserAndFollowed" orderNumber="1000003" />
+		<propertyValue value="All" labelResourceName="activityTypeUsers_All" orderNumber="1000004" />
+	</property>
+	<property id="filterUserActivityTypes3" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_Include" orderNumber="1000001" />
+	</property>
+</propertyGroup>
+<propertyGroup id="filter4" labelResourceName="filter4" descriptionResourceName="filter_desc">
+	<property id="filterName4" labelResourceName="filterName" descriptionResourceName="filterDesc" defaultValue="${resource:filterNameDefault}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="filterActivityTypes4" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_User" orderNumber="1000001" />
+		<propertyValue value="Followed" labelResourceName="activityTypeUsers_Followed" orderNumber="1000002" />
+		<propertyValue value="User,Followed" labelResourceName="activityTypeUsers_UserAndFollowed" orderNumber="1000003" />
+		<propertyValue value="All" labelResourceName="activityTypeUsers_All" orderNumber="1000004" />
+	</property>
+	<property id="filterUserActivityTypes4" labelResourceName="activityTypes" descriptionResourceName="activityTypesDesc" dataType="Custom" template="core_v2_activityStoryFilter">
+		<propertyValue labelResourceName="activityTypeUsers_Exclude" orderNumber="1000000" />
+		<propertyValue value="User" labelResourceName="activityTypeUsers_Include" orderNumber="1000001" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="activityStoryStream_description">Displays a stream of activity stories from the site with previews.</resource>
+  <resource name="activityStoryStream_name">Activity Story Stream</resource>
+  <resource name="activityTypes">Activity Story Types</resource>
+  <resource name="activityTypesDesc">Determines which activities from which users are included in this filter. If no types are selected, the filter will not be displayed.</resource>
+  <resource name="activityTypeUsers_All">Include all users' activity</resource>
+  <resource name="activityTypeUsers_Exclude">Exclude activity</resource>
+  <resource name="activityTypeUsers_Followed">Include accessing user's followed users' activity</resource>
+  <resource name="activityTypeUsers_Include">Include contextual user's activity</resource>
+  <resource name="activityTypeUsers_User">Include accessing user's activity</resource>
+  <resource name="activityTypeUsers_UserAndFollowed">Include accessing user's and followed users' activity</resource>
+  <resource name="add-file">Add File</resource>
+  <resource name="answer">Verified Answer</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Comment_ModeratedMessaage">Thank you, your reply requires moderation so it may take a while to appear.</resource>
+  <resource name="change-file">Change File</resource>
+  <resource name="comment-deleted">This reply has been deleted.</resource>
+  <resource name="comment-underreview">This comment is under review.</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="deleteActivityMessage">Are you sure you want to delete this story?</resource>
+  <resource name="deleteCommentMessage">Are you sure you want to delete this comment?</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="edit-success">Status message updated successfully.</resource>
+  <resource name="endlessScroll">Endless Stream</resource>
+  <resource name="endlessScrollDesc">Automatically load more stories when scrolled near the end</resource>
+  <resource name="enter_to_reply">Enter to Reply</resource>
+  <resource name="filter_desc">Configures an optional filter</resource>
+  <resource name="filter0">Filter 1</resource>
+  <resource name="filter1">Filter 2</resource>
+  <resource name="filter2">Filter 3</resource>
+  <resource name="filter3">Filter 4</resource>
+  <resource name="filter4">Filter 5</resource>
+  <resource name="filterDesc">Determines the display name of the filter</resource>
+  <resource name="filterName">Filter Name</resource>
+  <resource name="filterNameDefault">Filter</resource>
+  <resource name="filterType">Activity Stream Mode</resource>
+  <resource name="filterType_Desc">Determines the default view of the Activity Stream and the set of filters to display</resource>
+  <resource name="filterType_group">Group (activity in a group and optionally subgroups)</resource>
+  <resource name="filterType_mygroups">Site (contextual user's joined and joinless groups only)</resource>
+  <resource name="filterType_site">Site (all site activity)</resource>
+  <resource name="filterType_userProfile">User (activity for contextual user)</resource>
+  <resource name="hideHistory">Hide revision history</resource>
+  <resource name="hideOriginalPost">Hide original post</resource>
+  <resource name="includeSubGroups">Include subgroup activity</resource>
+  <resource name="in-reply-to">{0} in reply to {1}</resource>
+  <resource name="message">Send a Private Message</resource>
+  <resource name="more">More</resource>
+  <resource name="no_messages">There was no activity to display.</resource>
+  <resource name="options">Options</resource>
+  <resource name="pageSize">Number of Items to Display</resource>
+  <resource name="PostComment">Post</resource>
+  <resource name="PostReply">Reply</resource>
+  <resource name="read-more">Read more.</resource>
+  <resource name="remove-file">Remove File</resource>
+  <resource name="reply">Reply</resource>
+  <resource name="save">Save</resource>
+  <resource name="showHistory">Show revision history</resource>
+  <resource name="showMore">Show More</resource>
+  <resource name="show-more-comments-multiple">Show {0} new replies.</resource>
+  <resource name="show-more-comments-single">Show {0} new reply.</resource>
+  <resource name="show-more-stories-multiple">Show {0} new stories.</resource>
+  <resource name="show-more-stories-single">Show {0} new story.</resource>
+  <resource name="showOriginalPost">Show original post</resource>
+  <resource name="suggest_as_answer">Suggest as Answer</resource>
+  <resource name="suggested">Suggested Answer</resource>
+  <resource name="title">Widget Title</resource>
+  <resource name="today">Today</resource>
+  <resource name="TourTip">The activity stream provides updates of all the different activities happening within the community.</resource>
+  <resource name="View">View</resource>
+  <resource name="view_more_comments">View more replies</resource>
+  <resource name="view_more_comments_loading">...</resource>
+  <resource name="writeReply">Write a reply...</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="activitystories.activitystories.modify" />
+      <scope id="forums.replies.modify" />
+      <scope id="comments.comments.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

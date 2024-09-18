@@ -1,0 +1,11 @@
+﻿#set ($exceptionIds = $core_v2_page.GetFormValue("_w_exceptionIds"))
+#set ($affectedType = $core_v2_page.GetFormValue("_w_affectedType"))
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	$context_exceptions.Delete($exceptionIds, $affectedType)
+	{
+		"success": true
+	}
+#end

@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:BlogMirroredFeedsApplicationPanel_Name}" version="10.0.0.0" description="${resource:BlogMirroredFeedsApplicationPanel_Description}" instanceIdentifier="7aa8d68697ca4af0aa58b051a2149bf9" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="blog-mirroredfeeds" provider="132ce5694ac5400dbfb8cf81eb994ff1">
+    <contentScript><![CDATA[
+
+#set ($feeds = false)
+#set ($feeds = $context.ListFeeds)
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+
+<div class="content-list-name"></div>
+<div class="content-list-description"></div>
+<ul class="content-list content simple margin-bottom expandable">
+#foreach ($feed in $feeds)
+	<li class="content-item feed" data-feedid="$core_v2_encoding.HtmlAttributeEncode($feed.FeedId.ToString())">
+		<div class="content feed">
+			<h4 class="name">$feed.Title</h4>
+			<div class="content">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($feed.Url)">$feed.Url</a>
+			</div>
+			<div class="post-attributes expandable">
+				<ul class="attribute-list">
+					<li class="attribute-item interval-minutes">
+						<span class="name"></span>
+						<span class="value">
+							#if ($feed.intervalMinutes == 1)
+								#set ($intervalResource = $core_v2_language.GetResource('IntervalSingular'))
+							#else
+								#set ($intervalResource = $core_v2_language.GetResource('IntervalPlural'))
+							#end
+							$core_v2_language.FormatString($intervalResource, $feed.IntervalMinutes.ToString())
+						</span>
+					</li>
+					<li class="attribute-item lastUpdated">
+						<span class="name">$core_v2_language.GetResource('LastUpdate')</span>
+						<span class="value">
+							$core_v2_language.FormatDateAndTime($feed.LastUpdateDate)
+						</span>
+					</li>
+					#if ($feed.PostFullText)
+						<li class="attribute-item excerpt-size">
+							<span class="name"></span>
+							<span class="value">$core_v2_language.GetResource('FullText')</span>
+						</li>
+					#else
+						<li class="attribute-item excerpt-size">
+							<span class="name">$core_v2_language.GetResource('ExcerptSize')</span>
+							<span class="value">$feed.ExerptSize</span>
+						</li>
+					#end
+				</ul>
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="edit-feed">$core_v2_language.GetResource('edit')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="delete-feed">$core_v2_language.GetResource('delete')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#nodata
+#end
+</ul>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save"><%= label %></a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogMirroredFeedsApplicationPanel.register({
+		headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		createUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('create.vm'))',
+		updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update.vm'))',
+		createFormUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('create-form.vm'))',
+		updateFormUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update-form.vm'))',
+		deleteUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+		text: {
+			addLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Add'))',
+			createLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Create'))',
+			saveLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))',
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Updated'))',
+			createSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Created'))',
+			editHeading: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditHeding'))',
+			addHeading: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddHeading'))'
+		}
+	});
+});
+</script>
+
+	]]></contentScript>
+    <languageResources><language key="en-us"><resource name="Add">New Mirrored Feed</resource><resource name="AddHeading">Add Mirrored Feed</resource><resource name="AnonymousDisplayName">Anonymous (Show Author from Feed)</resource><resource name="BlogMirroredFeedsApplicationPanel_Description">Manage external blog mirroring in this blog.</resource><resource name="BlogMirroredFeedsApplicationPanel_Name">Mirrored Feeds</resource><resource name="cancel">Cancel</resource><resource name="Create">Create Mirrored Feed</resource><resource name="Created">Mirrored Feed Created</resource><resource name="DefaultAuthorUsernameLabel">Post Author</resource><resource name="DefaultAuthorUsernameLabel_Desc">The selected user will be set as the author of mirrored blog posts. All users set as owners of this blog are available to be the author, along with the anonymous user account.</resource><resource name="delete">Delete</resource><resource name="edit">Edit</resource><resource name="EditHeding">Edit Mirrored Feed</resource><resource name="ExcerptSize">Posts excerpts of length:</resource><resource name="ExerptSizeLabel">Excerpt Size</resource><resource name="ExerptSizeLabel_Desc">This number, in characters, represents how many characters will be displayed when only the posts excerpt is shown.</resource><resource name="FullText">Posts full text.</resource><resource name="IntervalMinutesLabel">Update Interval</resource><resource name="IntervalMinutesLabel_Desc">This is the value, in minutes, representing how often you would like to check for new posts from the above defined Feed URL</resource><resource name="IntervalPlural">Updates every {0} minutes</resource><resource name="IntervalSingular">Updates every {0} minute</resource><resource name="LastUpdate">Latest:</resource><resource name="more">More</resource><resource name="PostFullTextLabel">Post Full Text</resource><resource name="PostFullTextLabel_Desc">If this option is checked then the entire body of the feed will be posted. If it is not checked only an excerpt will be posted with a link back to the original post.</resource><resource name="Save">Save Mirrored Feed</resource><resource name="TitleLabel">Feed Title</resource><resource name="TitleLabel_Desc">A Friendly name to label this feed with.</resource><resource name="Updated">Mirrored Feed Updated</resource><resource name="UrlLabel">Feed URL</resource><resource name="UrlLabel_Desc">This is the URL of the RSS feed you would like to consume.</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

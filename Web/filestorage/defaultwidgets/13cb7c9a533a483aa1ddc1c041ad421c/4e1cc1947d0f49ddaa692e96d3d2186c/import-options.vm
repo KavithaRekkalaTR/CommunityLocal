@@ -1,0 +1,95 @@
+#set($fileName = false)
+#set($fileName = $core_v2_page.GetQueryStringValue('_w_filename'))
+
+#set($uploadContextId = false)
+#set($uploadContextId = $core_v2_page.GetQueryStringValue('_w_uploadContextId'))
+
+#set($importOptions = $context.GetImportOptions($uploadContextId, $fileName))
+#if ($importOptions.HasErrors())
+	$core_v2_page.SendJsonError($importOptions.Errors)
+#end
+
+#if (!$importOptions.HasHeader && !$importOptions.HasFooter && !$importOptions.HasThemeConfiguration && $importOptions.Pages.Count == 0 && $importOptions.ScopedProperties.Count == 0)
+	<p>$core_v2_language.FormatString($core_v2_language.GetResource('no-import-options'), $context.ThemeTypeName.ToLower())</p>
+#else
+	<p>$core_v2_language.GetResource('import-options-instructions')</p>
+
+	<form><fieldset>
+	#if ($importOptions.HasHeader || $importOptions.HasFooter || $importOptions.HasThemeConfiguration)
+		<h5 class="list-header">
+			$core_v2_language.GetResource('theme-options')
+		</h5>
+		<p class="list-description"><a href="#" class="select-all inline-button" data-type="option" data-select="all">$core_v2_language.GetResource('select-all')</a></p>
+
+		<ul class="field-list checkbox-list">
+			#if ($importOptions.HasHeader)
+				<li class="field-item header">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId('header')" value="header" data-refresh="true" data-type="option" />
+						<label for="$core_v2_widget.UniqueId('header')">$core_v2_language.GetResource('header')</label>
+					</span>
+					<span class="field-item-description">$core_v2_language.GetResource('header-description')</span>
+				</li>
+			#end
+
+			#if ($importOptions.HasFooter)
+				<li class="field-item footer">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId('footer')" value="footer" data-refresh="true" data-type="option" />
+						<label for="$core_v2_widget.UniqueId('footer')">$core_v2_language.GetResource('footer')</label>
+					</span>
+					<span class="field-item-description">$core_v2_language.GetResource('footer-description')</span>
+				</li>
+			#end
+
+			#if ($importOptions.HasThemeConfiguration)
+				<li class="field-item themeconfiguration">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId('themeconfiguration')" value="themeconfiguration" data-refresh="true" data-type="option" />
+						<label for="$core_v2_widget.UniqueId('themeconfiguration')">$core_v2_language.GetResource('themeconfiguration')</label>
+					</span>
+					<span class="field-item-description">$core_v2_language.GetResource('themeconfiguration-description')</span>
+				</li>
+			#end
+
+		</ul>
+	#end
+
+	#if ($importOptions.Pages.Count > 0)
+		<h5 class="list-header">
+			$core_v2_language.GetResource('pages')
+		</h5>
+		<p class="list-description"><a href="#" class="select-all inline-button" data-type="page" data-select="all">$core_v2_language.GetResource('select-all')</a></p>
+		<ul class="field-list checkbox-list">
+			#foreach($page in $importOptions.Pages)
+				<li class="field-item page">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($page.Id))" value="$core_v2_encoding.HtmlAttributeEncode($page.Id)" data-pagename="$core_v2_encoding.HtmlAttributeEncode($page.Name)" data-type="page" />
+						<label for="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($page.Id))">$page.Title</label>
+					</span>
+					<span class="field-item-description">$page.Description</span>
+				</li>
+			#end
+		</ul>
+	#end
+
+	#if ($importOptions.ScopedProperties.Count > 0)
+		<h5 class="list-header">
+			$core_v2_language.GetResource('scoped-properties')
+		</h5>
+		<p class="list-description"><a href="#" class="select-all inline-button" data-type="scopedproperty" data-select="all">$core_v2_language.GetResource('select-all')</a></p>
+		<ul class="field-list checkbox-list">
+			#foreach($sp in $importOptions.ScopedProperties)
+				<li class="field-item page">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($sp.Id))" value="$core_v2_encoding.HtmlAttributeEncode($sp.Id)" data-refresh="true" data-type="scopedproperty" />
+						<label for="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($sp.Id))">$sp.Title</label>
+					</span>
+					<span class="field-item-description">$sp.Description</span>
+				</li>
+			#end
+		</ul>
+	#end
+
+	</fieldset></form>
+#end

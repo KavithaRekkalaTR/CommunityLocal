@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="a20c7fbb05134a7085e9cea657ca9df2" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-06-03 16:26:26Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="forumreply.aftercreate" />
+      <event key="forumreply.afterdelete" />
+      <event key="forumreply.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[
+var replyCountRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('replyCountRange', ''));
+var minReplyCount= core_v2_utility.ParseInt(replyCountRangeQuery.Value('Minimum'));
+var maxReplyCount = core_v2_utility.ParseInt(replyCountRangeQuery.Value('Maximum'));
+var threadType = core_v2_widget.GetStringValue('threadType', '');
+var replyType = core_v2_widget.GetStringValue('replyType', '');
+var userId = context_v2_automationTrigger.Arguments.Author.Id;
+
+var query = {
+    PageSize: 1,
+    PageIndex: 0,
+    AuthorId: userId
+};
+
+if (replyType && replyType.length > 0) {
+    query.ForumReplyQueryType = replyType;
+}
+
+if (threadType == 'Question') {
+    query.IncludeQuestionThreads = true;
+    query.IncludeDiscussionThreads = false;
+} else if (threadType == 'Discussion') {
+    query.IncludeQuestionThreads = false;
+    query.IncludeDiscussionThreads = true;
+}
+
+var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+var totalCount = core_v2_forumReply.List(query).TotalCount;
+
+if (totalCount >= minReplyCount && (maxReplyCount === 0 || totalCount <= maxReplyCount)) {
+    if (!hasAchievement) {
+        context_v1_achievementAutomation.Award(userId);
+    }
+} else {
+    if (hasAchievement) {
+        context_v1_achievementAutomation.Revoke(userId);
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="replyCountRange" labelResourceName="ReplyCountRange" descriptionResourceName="ReplyCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+    <property id="threadType" labelResourceName="ThreadType" descriptionResourceName="ThreadType_Description" dataType="String" defaultValue="">
+        <propertyValue value="" labelResourceName="ThreadType_Any" />
+        <propertyValue value="Discussion" labelResourceName="ThreadType_Discussion" />
+        <propertyValue value="Question" labelResourceName="ThreadType_Question" />
+    </property>
+    <property id="replyType" labelResourceName="ReplyType" descriptionResourceName="ReplyType_Description" dataType="String" defaultValue="">
+        <propertyValue value="" labelResourceName="ReplyType_Any" />
+        <propertyValue value="non-verified-answers" labelResourceName="ReplyType_NonVerifiedAnswers" />
+        <propertyValue value="verified-answers" labelResourceName="ReplyType_VerifiedAnswers" />
+    </property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Grants or revokes an achievement based on the number of replies an author has created.</resource>
+  <resource name="ReplyCountRange">Reply count range</resource>
+  <resource name="ReplyCountRange_Description">The minimum and maximum number of forum replies authored by a member required to award the achievement.  Maximum value is optional, if set the achievement will be removed once the maximum value is exceeded.</resource>
+  <resource name="ReplyType">Types of replies to count</resource>
+  <resource name="ReplyType_Any">Any</resource>
+  <resource name="ReplyType_Description">Only replies of the selected type will be counted.</resource>
+  <resource name="ReplyType_NonVerifiedAnswers">Unverified answers</resource>
+  <resource name="ReplyType_VerifiedAnswers">Verified answers</resource>
+  <resource name="ThreadType">Types of threads from which to count replies</resource>
+  <resource name="ThreadType_Any">Any</resource>
+  <resource name="ThreadType_Description">Only threads of the selected type will be reviewed when counting replies.</resource>
+  <resource name="ThreadType_Discussion">Discussions only</resource>
+  <resource name="ThreadType_Question">Questions only</resource>
+  <resource name="Title">Award to authors of forum replies by their total reply count</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

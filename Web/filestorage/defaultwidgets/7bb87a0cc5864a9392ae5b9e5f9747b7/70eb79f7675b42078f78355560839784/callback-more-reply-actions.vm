@@ -1,0 +1,211 @@
+## Parse Parameters
+
+$core_v2_widget.ExecuteFile('common-config.vm')
+
+#set ($forumApplicationId = false)
+#set ($forumApplicationId = $core_v2_page.GetQueryStringValue('forumApplicationId'))
+#if ($forumApplicationId && $forumApplicationId.length > 0)
+	#set ($forumApplicationId = $core_v2_utility.ParseGuid($forumApplicationId))
+#end
+
+#set ($threadContentId = false)
+#set ($threadContentId = $core_v2_page.GetQueryStringValue('threadContentId'))
+#if ($threadContentId && $threadContentId.length > 0)
+	#set ($threadContentId = $core_v2_utility.ParseGuid($threadContentId))
+#end
+
+#set ($replyContentId = false)
+#set ($replyContentId = $core_v2_page.GetQueryStringValue('replyContentId'))
+#if ($replyContentId && $replyContentId.length > 0)
+	#set ($replyContentId = $core_v2_utility.ParseGuid($replyContentId))
+#end
+
+#set ($forumApplicationId = false)
+#set ($forumApplicationId = $core_v2_page.GetQueryStringValue('forumApplicationId'))
+#if ($forumApplicationId && $forumApplicationId.length > 0)
+	#set ($forumApplicationId = $core_v2_utility.ParseGuid($forumApplicationId))
+#end
+
+#set ($forumReplyActionsId = $core_v2_page.GetQueryStringValue('forumReplyActionsId'))
+
+## Load Entities
+
+#set ($forum = false)
+#if ($forumApplicationId)
+	#set ($forum = $core_v2_forum.Get($forumApplicationId))
+#end
+
+#set ($thread = false)
+#if ($threadContentId)
+	#set ($thread = $core_v2_forumThread.Get($threadContentId))
+#end
+
+#set ($forumReply = false)
+#if ($replyContentId)
+	#set ($forumReply = $core_v2_forumReply.Get($replyContentId))
+#end
+
+#set ($threadIsQA = false)
+#if ($thread.ThreadType == 'QuestionAndAnswer')
+	#set ($threadIsQA = true)
+#end
+
+
+## Load Permissions
+#set ($isRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+#set ($hasModeratePermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReviewAbuse, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+#set ($hasModerateUsersPermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+
+#set ($hasModifyPostPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $forumReply.ContentId, ContentTypeId = $core_v2_forumReply.ContentTypeId }").IsAllowed)
+#set ($hasDeletePostPermission = $forumReply.Author.Id == $core_v2_user.Accessing.Id || $core_v3_permission.CheckPermission($core_v2_forumPermissions.DeletePost, $core_v2_user.Accessing.Id, "%{ ContentId = $forumReply.ContentId, ContentTypeId = $core_v2_forumReply.ContentTypeId }").IsAllowed)
+#set ($editUrl = $core_v2_encoding.JavascriptEncode($core_v2_forumUrls.EditForumReply($forumReply.Id)))
+
+#set ($accessingUserHasMarkAnswerPermission = false)
+#if ($threadIsQA)
+	#set ($accessingUserHasMarkAnswerPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.MarkAsAnswer, $core_v2_user.Accessing.Id, "%{ ContentId = $forumReply.ContentId, ContentTypeId = $core_v2_forumReply.ContentTypeId }").IsAllowed)
+#end
+
+<ul>
+
+#if ($threadIsQA && $accessingUserHasMarkAnswerPermission && !($forumReply.IsSuggestedAnswer || $forumReply.IsAnswer))
+	<li class="navigation-list-item">
+		<a href="#"
+			data-replyid="$forumReply.Id"
+			data-messagename="telligent.evolution.widgets.thread.suggest">
+			$core_v2_language.GetResource('suggest_as_answer')
+		</a>
+	</li>
+#end
+
+#set ($voteId = $core_v2_widget.UniqueId("vote${forumReply.ContentId}"))
+#set ($unvoteId = $core_v2_widget.UniqueId("unvote${forumReply.ContentId}"))
+
+## Verify Answer Vote
+#if (!$forumReply.IsDeleted && $threadIsQA && $accessingUserHasMarkAnswerPermission && !$effectivelyAskedQuestion && !$forumReply.IsAnswer)
+	<li class="navigation-list-item vote has-question-only">
+		<a id="$core_v2_encoding.HtmlAttributeEncode($voteId)"
+			class="primary"
+			data-replyid="$forumReply.Id"
+			data-messagename="telligent.evolution.widgets.thread.votereply"
+			data-unvotelink="$core_v2_encoding.HtmlAttributeEncode($unvoteId)"
+			data-links="$core_v2_encoding.HtmlAttributeEncode($replyActionsId)"
+			href="#">
+			$core_v2_language.GetResource('VoteReply')
+		</a>
+	</li>
+#end
+
+## Reject Answer Vote
+#if (!$forumReply.IsDeleted && $threadIsQA && $accessingUserHasMarkAnswerPermission && !$effectivelyAskedQuestion && ($forumReply.IsSuggestedAnswer || $forumReply.IsAnswer))
+	<li class="navigation-list-item unvote has-question-only">
+		<a id="$core_v2_encoding.HtmlAttributeEncode($unvoteId)"
+			class="primary"
+			data-replyid="$forumReply.Id"
+			data-messagename="telligent.evolution.widgets.thread.unvotereply"
+			data-votelink="$core_v2_encoding.HtmlAttributeEncode($voteId)"
+			data-links="$core_v2_encoding.HtmlAttributeEncode($replyActionsId)"
+			href="#">
+			$core_v2_language.GetResource('UnvoteReply')
+		</a>
+	</li>
+#end
+
+
+## Report abuse
+#if ($isRegistered)
+	<li class="navigation-list-item">
+		$core_v2_ui.Moderate($forumReply.ContentId, $forumReply.GlobalContentTypeId)
+	</li>
+#end
+
+## Edit Post
+#if ($hasModifyPostPermission)
+	<li class="navigation-list-item">
+		<a href="#" class="internal-link edit-reply" data-messagename="ui.replies.edit" data-id="$forumReply.Id">$core_v2_language.GetResource('edit')</a>
+	</li>
+#end
+
+## Delete Reply
+#if ($hasDeletePostPermission)
+	<li class="navigation-list-item">
+		<a href="#" class="internal-link delete-reply" data-messagename="ui.replies.delete" data-id="$forumReply.Id">$core_v2_language.GetResource('delete')</a>
+	</li>
+#end
+
+## Convert Content
+#set($convert = false)
+#set($convert = $core_v2_ui.ConvertContent($forumReply.ContentId, $forumReply.GlobalContentTypeId))
+#if ($convert)
+	<li class="navigation-list-item">
+		$convert
+	</li>
+#end
+
+#if ($hasModeratePermission)
+	## Split Thread
+	#set ($splitUrl = false)
+	#set ($splitUrl = $core_v2_forumUrls.SplitForumReply($forumReply.Id, $forumReply.ContentTypeId))
+	#if ($splitUrl)
+		<li class="navigation-list-item edit">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($splitUrl)">$core_v2_language.GetResource('Split')</a>
+		</li>
+	#end
+#end
+
+#if ($hasModifyPostPermission && $hasModeratePermission)
+	## Lock/Unlock Thread
+	<li class="navigation-list-item">
+		<a data-messagename="telligent.evolution.widgets.thread.lock"
+			data-forumid="$thread.ForumId"
+			data-threadid="$thread.Id"
+			#if ($thread.IsLocked)
+				data-locked="true"
+			#else
+				data-locked="false"
+			#end
+			data-links="$core_v2_encoding.HtmlAttributeEncode($forumReplyActionsId)"
+			data-offtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Lock'))"
+			data-ontext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Unlock'))"
+			href="#">
+				#if ($thread.IsLocked)
+					$core_v2_language.GetResource('Unlock')
+				#else
+					$core_v2_language.GetResource('Lock')
+				#end
+		</a>
+	</li>
+#end
+
+#if ($hasModerateUsersPermission)
+	## Moderate/Unmoderate User
+	<li class="navigation-list-item">
+		<a data-messagename="telligent.evolution.widgets.thread.moderateuser"
+			data-userid="$forumReply.Author.Id"
+			#if ($forumReply.Author.ModerationLevel == "Moderated")
+				data-moderated="true"
+			#else
+				data-moderated="false"
+			#end
+			data-links="$core_v2_encoding.HtmlAttributeEncode($forumReplyActionsId)"
+			data-offtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Moderate_User'))"
+			data-ontext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('UnModerate_User'))"
+			href="#">
+				#if ($forumReply.Author.ModerationLevel == "Moderated")
+					$core_v2_language.GetResource('UnModerate_User')
+				#else
+					$core_v2_language.GetResource('Moderate_User')
+				#end
+		</a>
+	</li>
+
+## Edit User
+	#set ($editUserUrl = false)
+	#set ($editUserUrl = $core_v2_urls.EditUser($forumReply.Author.Id))
+	#if ($editUserUrl)
+		<li class="navigation-list-item edit">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($editUserUrl)">$core_v2_language.GetResource('EditUser')</a>
+		</li>
+	#end
+#end
+
+</ul>

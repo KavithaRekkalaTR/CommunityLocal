@@ -1,0 +1,75 @@
+##
+## Studio-specific Tree Node Implementation
+##
+
+<% if(node.isFilterResult) { %>
+	<div class="component-attributes">
+		<% if(node.model && node.model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% }  %>
+		<span class="component-name <%: node.cssClass %>">
+			<% if(node.model.HostName) { %>
+				<span class="automation-type-name"><%: node.model.HostName %></span>
+			<% } %>
+			<span class="automation-name"><%: node.model.ProcessedName %></span>
+			<span class="automation-name"> / <%: node.label %></span>
+		</span>
+	</div>
+<% } else if(node.isHost) { %>
+	<div class="component-attributes">
+		<span class="component-name">
+			<span class="automation-name ui-tip" data-tip="<%: node.description %>">
+				<%: node.label %>
+			</span>
+		</span>
+	</div>
+<% } else { %>
+	<div class="component-attributes">
+		<% if(node.model && node.model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% }  %>
+		<span class="component-name <%: node.cssClass %> <% if(node.model) { %> ui-tip <% } %>"
+			<% if(node.model) { %>
+				data-tip="<%: node.model.ProcessedDescription %>"
+			<% } %>
+		>
+			<span class="automation-name"><%: node.label %></span>
+		</span>
+		<% if(node.model) { %>
+			<% if(node.model.State == 'Custom' || node.model.State == 'CustomizedDefault') { %>
+				<span class="state">
+					<% if(node.model.State == 'Custom') { %>
+						$core_v2_language.GetResource('Custom')
+					<% } else if(node.model.State == 'CustomizedDefault' && node.model.IsStaged) { %>
+						$core_v2_language.GetResource('ChangesStaged')
+					<% } else if(node.model.State == 'CustomizedDefault' && !node.model.IsStaged) { %>
+						$core_v2_language.GetResource('CustomizedDefault')
+					<% } %>
+				</span>
+			<% } %>
+			<% if(node.model.IsTranslated && (node.model.IsStaged || node.model.State !== 'CustomizedDefault')) { %>
+				<span class="state">$core_v2_language.GetResource('Translated')</span>
+			<% } %>
+			<% if(node.model.IsReverted) { %>
+				## Deletion is a specific case of reversion
+				<% if(node.model.IsDeleted) { %>
+					<span class="state ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('deleted_desc'))">$core_v2_language.GetResource('deleted')</span>
+				<% } else  { %>
+					<span class="state ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('reverted_desc'))">$core_v2_language.GetResource('reverted')</span>
+				<% } %>
+			<% } %>
+		<% } %>
+	</div>
+	<div class="component-controls">
+		<% if(node.model) { %>
+			<div class="node-actions ui-tip"
+				data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('AutomationActions'))"></div>
+		<% } else if(node.type == 'file' || node.type == 'script' || node.type == 'style') { %>
+			<a href="#"
+				class="delete delete-attachment ui-tip"
+				data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Delete')) <%: node.label %>"
+				data-messagename="ma.view.file.delete"
+				data-reqkey="<%: node.key %>">&times;</a>
+		<% } %>
+	</div>
+<% } %>

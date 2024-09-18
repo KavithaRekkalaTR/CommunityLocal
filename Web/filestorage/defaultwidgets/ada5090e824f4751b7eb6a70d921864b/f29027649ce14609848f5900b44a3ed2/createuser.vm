@@ -1,0 +1,106 @@
+#set ($headerTemplateId = $core_v2_widget.UniqueId('createMemberHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('CreateInstructions')</p>
+
+<form><fieldset>
+    <ul class="field-list">
+        <li class="field-item required user-name">
+			<label for="$core_v2_widget.UniqueId('Username')" class="field-item-name">$core_v2_language.GetResource('Field_UserName')</label>
+			<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Field_UserName_Desc'), $core_v2_configuration.PasswordMinLength.ToString())</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('Username')" id="$core_v2_widget.UniqueId('Username')" MaxLength="64" size="31" value="$!core_v2_encoding.HtmlAttributeEncode($username)" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item required email">
+			<label for="$core_v2_widget.UniqueId('PrivateEmail')" class="field-item-name">$core_v2_language.GetResource('Field_Email')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Email_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('PrivateEmail')" id="$core_v2_widget.UniqueId('PrivateEmail')" MaxLength="254" size="31" value="$!core_v2_encoding.HtmlAttributeEncode($email)" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item required password">
+			<label for="$core_v2_widget.UniqueId('Password1')" class="field-item-name">$core_v2_language.GetResource('Field_Password1')</label>
+			<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Field_Password1_Desc'), $core_v2_configuration.PasswordMinLength.ToString())</span>
+			<span class="field-item-input">
+				<input name="$core_v2_widget.UniqueId('Password1')" id="$core_v2_widget.UniqueId('Password1')" MaxLength="64" type="password" autocomplete="off" size="31" value="$!core_v2_encoding.HtmlAttributeEncode($password)" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item required password2">
+			<label for="$core_v2_widget.UniqueId('Password2')" class="field-item-name">$core_v2_language.GetResource('Field_Password2')</label>
+			<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Field_Password2_Desc'), $core_v2_configuration.PasswordMinLength.ToString())</span>
+			<span class="field-item-input">
+				<input name="$core_v2_widget.UniqueId('Password2')" id="$core_v2_widget.UniqueId('Password2')" MaxLength="64" type="password" autocomplete="off" size="31" value="$!core_v2_encoding.HtmlAttributeEncode($password2)" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('Timezone')">${core_v2_language.GetResource("Field_Timezone")}</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_Timezone_Desc')</span>
+			<span class="field-item-input">
+			    #set($siteTimeZone = $core_v2_infoResult.Get().TimeZoneId)
+				#foreach($timezone in $core_v2_configuration.TimeZones)
+				#beforeall
+					<select id="$core_v2_widget.UniqueId('Timezone')" name="$core_v2_widget.UniqueId('Timezone')">
+				#each
+					<option value="$timezone.Id" #if ($timezone.Id == $siteTimeZone) selected="selected"#end>$timezone.Name</option>
+				#afterall
+					</select>
+				#end
+			</span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.usersAdministrationCreate')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('createuser.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.membersCreate.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    usernameMinLength: $core_v2_configuration.UsernameMinLength,
+			usernameMaxLength: $core_v2_configuration.UsernameMaxLength,
+			passwordMinLength: $core_v2_configuration.PasswordMinLength,
+		    fieldIds: {
+		        username: '$core_v2_widget.UniqueId('Username')',
+                privateEmail: '$core_v2_widget.UniqueId('PrivateEmail')',
+                password1: '$core_v2_widget.UniqueId('Password1')',
+                password2: '$core_v2_widget.UniqueId('Password2')',
+                timezone: '$core_v2_widget.UniqueId('Timezone')'
+		    },
+		    fields: {
+		        username: jQuery('#$core_v2_widget.UniqueId('Username')'),
+                privateEmail: jQuery('#$core_v2_widget.UniqueId('PrivateEmail')'),
+                password1: jQuery('#$core_v2_widget.UniqueId('Password1')'),
+                password2: jQuery('#$core_v2_widget.UniqueId('Password2')'),
+                timezone: jQuery('#$core_v2_widget.UniqueId('Timezone')')
+		    },
+		    text: {
+		        saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateSuccessful'))',
+		        usernameInvalidUserName: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_InvalidUserName'))",
+				usernameDuplicateUserName: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_DuplicateUsername'))",
+				passwordError: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_PasswordRegExValidator'))",
+				passwordLimits: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_PasswordLimits'))",
+				passwordMatch: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_PasswordNoMatch'))",
+				emailInvalid: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_InvalidEmail'))",
+				emailDuplicate: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_DuplicateEmailAddress'))"
+		    }
+    	});
+	});
+	</script>
+#end

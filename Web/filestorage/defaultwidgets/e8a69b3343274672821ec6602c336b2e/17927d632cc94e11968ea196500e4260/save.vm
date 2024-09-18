@@ -1,0 +1,15 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+    $core_v2_widget.SetIntValue('defaultMediaWidth', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('defaultMediaWidth')))
+    $core_v2_widget.SetIntValue('defaultMediaHeight', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('defaultMediaHeight')))
+    $core_v2_widget.SetCustomValue('fonts', $core_v2_page.GetFormValue('fonts'))
+    $core_v2_widget.SetCustomValue('fontSizes', $core_v2_page.GetFormValue('fontSizes'))
+	$core_v2_widget.SetStringValue('mobileUserAgentPattern', $core_v2_page.GetFormValue('mobileUserAgentPattern'))
+	$core_v2_widget.SetBoolValue('enableEnterToSubmitToggle', $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableEnterToSubmitToggle')))
+
+	{
+		"success": true
+	}
+
+#end

@@ -1,0 +1,112 @@
+##
+## Import selection form.
+## Expects in scope: $importResult, $uploadContext, $fileName
+##
+
+<form>
+	<fieldset>
+		<ul class="field-list">
+		#if ($importResult.NewEmbeddables.Count == 0 && $importResult.UpdatedEmbeddables.Count == 0)
+			<p class="message error">$core_v2_language.GetResource('ImportEmpty')</p>
+		#elseif ($context.DeveloperModeEnabled && ($importResult.NewEmbeddables.Count > 0 || $importResult.UpdatedEmbeddables.Count > 0))
+			<p class="message error">
+				#format($core_v2_language.GetResource('ImportDevMode'))
+					#token('studio')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">$core_v2_language.GetResource('Studio')</a>
+				#end
+			</p>
+		#else
+
+			#if ($importResult.NewEmbeddables.Count > 0)
+				<li class="field-item importable-embeddables new-embeddables">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('NewEmbeddableResources')
+						#else
+							$core_v2_language.GetResource('NewEmbeddables')
+						#end
+					</label>
+					<span class="field-item-description">$core_v2_language.GetResource('TheFollowingEmbeddablesAreNew')</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($embeddable in $importResult.NewEmbeddables)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${embeddable.Id}" class="importable-embeddable" data-id="$embeddable.Id" data-model="embeddable" checked />
+							<label  for="cb${embeddable.Id}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($embeddable.ProcessedName)
+							</label>
+						</span>
+						#if ($embeddable.ProcessedDescription)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($embeddable.ProcessedDescription)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.UpdatedEmbeddables.Count > 0)
+				<li class="field-item importable-embeddables updated-embeddables">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('UpdatedEmbeddableResources')
+						#else
+							$core_v2_language.GetResource('UpdatedEmbeddables')
+						#end
+					</label>
+					<span class="field-item-description">
+						#format ($core_v2_language.GetResource('UpdatedEmbeddableDesc'))
+							#token ('studio-begin-link')
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">
+							#token ('studio-end-link')
+								</a>
+						#end
+					</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($embeddable in $importResult.UpdatedEmbeddables)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${embeddable.Id}" class="importable-embeddable" data-id="$embeddable.Id" data-model="embeddable" />
+							<label  for="cb${embeddable.Id}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($embeddable.ProcessedName)
+							</label>
+						</span>
+						#if ($embeddable.ProcessedDescription)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($embeddable.ProcessedDescription)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.MatchingEmbeddables.Count > 0)
+				<li class="field-item importable-embeddables updated-embeddables">
+					<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+				</li>
+			#end
+		#end
+		</ul>
+	</fieldset>
+</form>
+
+#set ($importTemplateId = $core_v2_widget.UniqueId('importTemplate'))
+#registerClientTemplate($importTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-import.vm')
+#end
+#registerEndOfPageHtml('embeddablesPanel.import')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-import.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.embeddables.embeddableAdministration.import.register({
+			importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+			importTemplateId: '$core_v2_encoding.JavascriptEncode($importTemplateId)',
+			uploadContext: '$core_v2_encoding.JavascriptEncode($uploadContext)',
+			fileName: '$core_v2_encoding.JavascriptEncode($fileName)',
+			importCompleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportComplete'))'
+		});
+	});
+	</script>
+#end

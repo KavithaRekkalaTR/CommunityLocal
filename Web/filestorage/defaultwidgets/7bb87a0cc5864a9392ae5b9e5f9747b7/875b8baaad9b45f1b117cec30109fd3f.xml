@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Wikis_Compare_Name}" version="11.0.0.0" description="${resource:Wikis_Compare_Description}" instanceIdentifier="875b8baaad9b45f1b117cec30109fd3f" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="compare" lastModified="2020-01-14 16:08:02Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($currentPage = $core_v2_wikiPage.Current)
+#set ($revANumber = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("revA")))
+#set ($revBNumber = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("revB")))
+
+#set ($revA = $core_v2_wikiPageRevision.Get($currentPage.WikiId, $revANumber, "%{PageId = $currentPage.Id}"))
+#set ($revB = $core_v2_wikiPageRevision.Get($currentPage.WikiId, $revBNumber, "%{PageId = $currentPage.Id}"))
+
+#if ($revANumber == 0)
+	#set ($labelRevA = $core_v2_language.GetResource("Wikis_Compare_StatusMessage_CurrentRevision"))
+	#set ($linkRevA = $core_v2_wikiUrls.Page($currentPage.Id))
+	#set ($titleA = $currentPage.Title)
+	#set ($bodyA = $currentPage.Body())
+	#set ($tagsA = $core_v2_utility.Join(", ", $currentPage.Tags))
+#elseif ($revA)
+	#set ($labelRevA = "$core_v2_language.GetResource('Wikis_Compare_StatusMessage_Revision')$revANumber")
+	#set ($linkRevA = $core_v2_wikiUrls.Revision($currentPage.Id, $revANumber))
+	#set ($titleA = $revA.Title)
+	#set ($bodyA = $revA.Body())
+	#set ($tagsA = $revA.Tags)
+#end
+
+#if ($revBNumber == 0)
+	#set ($labelRevB = $core_v2_language.GetResource("Wikis_Compare_StatusMessage_CurrentRevision"))
+	#set ($linkRevB = $core_v2_wikiUrls.Page($currentPage.Id))
+	#set ($titleB = $currentPage.Title)
+	#set ($bodyB = $currentPage.Body())
+	#set ($tagsB = $core_v2_utility.Join(", ", $currentPage.Tags))
+#elseif ($revB)
+	#set ($labelRevB = "$core_v2_language.GetResource('Wikis_Compare_StatusMessage_Revision')$revBNumber")
+	#set ($linkRevB = $core_v2_wikiUrls.Revision($currentPage.Id, $revBNumber))
+	#set ($titleB = $revB.Title)
+	#set ($bodyB = $revB.Body())
+	#set ($tagsB = $revB.Tags)
+#end
+
+#set ($mergedTitle = $core_v2_ui.Merge($titleA, $titleB))
+#set ($mergedBody = $core_v2_ui.Merge($bodyA, $bodyB))
+#set ($mergedTags = $core_v2_ui.Merge($tagsA, $tagsB))
+
+<fieldset class="margin-top">
+	<p>$core_v2_language.FormatString($core_v2_language.GetResource("Wikis_Compare_StatusMessage"), $labelRevA, $labelRevB, $linkRevA, $linkRevB)</p>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<a href='$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.PageHistory($currentPage.Id))' class='internal-link view-history button'>$core_v2_language.GetResource('History')</a>
+				<a href='$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.Page($currentPage.Id))' class='internal-link view-post'>$core_v2_language.GetResource('Wikis_Compare_StatusMessageLink')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+<div class="content full">
+	<h1 class="name">$mergedTitle</h1>
+	<div style="font-size: 90%">$mergedTags</div>
+	<div class="content">$mergedBody</div>
+</div>
+
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_Compare_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Wikis_Compare_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="History">History</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Wikis_Compare_Description">Compares wiki revisions.</resource>
+  <resource name="Wikis_Compare_Name">Wikis - Compare</resource>
+  <resource name="Wikis_Compare_StatusMessage">You are currently comparing &lt;a href="{2}"&gt;{0}&lt;/a&gt; and &lt;a href="{3}"&gt;{1}&lt;/a&gt;.</resource>
+  <resource name="Wikis_Compare_StatusMessage_CurrentRevision">the current version</resource>
+  <resource name="Wikis_Compare_StatusMessage_Revision">revision </resource>
+  <resource name="Wikis_Compare_StatusMessageLink">View current version</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="438f4b20be39493c908f292b4592f6fc" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

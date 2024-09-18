@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SubGroups_Name}" version="9.0.0.0" description="${resource:SubGroups_Description}" instanceIdentifier="b25463f3aed041558ec30bb9af6ae275" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-sub-groups-list" provider="2be81192090d4ceebe3a46d6e23b999a">
+	<contentScript><![CDATA[
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+<div id="$core_v2_widget.UniqueId('list')">
+	$core_v2_widget.ExecuteFile('list.vm')
+</div>
+<div id="$core_v2_widget.UniqueId('searchresultlist')" style="display: none;">
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.subGroups')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.subGroups.register({
+			groupId: $context.GroupId,
+			list: jQuery('#$core_v2_widget.UniqueId('list')'),
+			searchResultList: jQuery('#$core_v2_widget.UniqueId('searchresultlist')'),
+			listUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list.vm'))',
+			searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+			createUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('create.vm'))',
+			canCreate: #if($core_v3_permission.CheckPermission($core_v2_groupPermissions.CreateGroup, $core_v2_user.Accessing.Id, "%{ ApplicationId = $context.ContainerId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed) true#else false#end,
+			groupNameId: '$core_v2_widget.UniqueId('groupName')',
+			groupDescriptionId: '$core_v2_widget.UniqueId('groupDescription')',
+			groupTypeName: '$core_v2_widget.UniqueId('groupType')',
+			text: {
+				addGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('add_group'))',
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+				deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete_confirmation'))',
+				deleteSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete_success'))',
+				requiredNameValidationMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('required_name_validation_message'))',
+				uniqueNameValidationMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('unique_name_validation_message'))',
+				createSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('create_success'))'
+			}
+		});
+	});
+	</script>
+#end
+				]]></contentScript>
+	<languageResources><language key="en-us">
+  <resource name="SubGroups_Name">Sub-Groups</resource>
+  <resource name="SubGroups_Description">Create and manage this group's sub-groups.</resource>
+  <resource name="newgroup_name">Name</resource>
+  <resource name="newgroup_name_description">Enter a name for the group.</resource>
+  <resource name="newgroup_description">Description</resource>
+  <resource name="newgroup_description_description">Enter a description for the group (256 chars)</resource>
+  <resource name="newgroup_type">Group Privacy</resource>
+  <resource name="newgroup_type_description">Should the new group be public or private?</resource>
+  <resource name="type_joinless">Joinless</resource>
+  <resource name="type_joinless_description">All content is public. No membership required.</resource>
+  <resource name="type_publicopen">Public (open membership)</resource>
+  <resource name="type_publicopen_description">All content is public. Membership is required to contribute.</resource>
+  <resource name="type_publicclosed">Public (closed membership)</resource>
+  <resource name="type_publicclosed_description">All content is public. Membership approval required to contribute.</resource>
+  <resource name="type_privatelisted">Private (listed)</resource>
+  <resource name="type_privatelisted_description">Content is private. Group name and description are public. Membership approval required to contribute.</resource>
+  <resource name="type_privateunlisted">Private (unlisted)</resource>
+  <resource name="type_privateunlisted_description">Content is private. Group is hidden to non-members. Membership approval required to contribute.</resource>
+  <resource name="add_group">Add Sub-Group</resource>
+  <resource name="save">Save</resource>
+  <resource name="delete_confirmation">Are you sure you want to delete '{0}'? All content and applications within this group will be deleted.</resource>
+  <resource name="delete_success">The '{0}' group has been deleted.</resource>
+  <resource name="required_name_validation_message">You must enter a sub-group name.</resource>
+  <resource name="unique_name_validation_message">The sub-group name already exists in this group.</resource>
+  <resource name="create_success">The '{0}' group has been created.</resource>
+  <resource name="no-search-results">No sub-groups were found matching your search text.</resource>
+  <resource name="no-sub-groups">This group does not currently contain any sub-groups.</resource>
+  <resource name="find">Find a sub-group...</resource>
+  <resource name="view">View</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="more">More</resource>
+  <resource name="cancel">Cancel</resource>
+</language></languageResources>
+<restScopes>
+  <scope id="groups.groups.modify" />
+</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

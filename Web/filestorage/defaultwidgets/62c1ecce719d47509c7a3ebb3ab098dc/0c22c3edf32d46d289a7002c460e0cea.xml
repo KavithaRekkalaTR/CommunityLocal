@@ -1,0 +1,211 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="0c22c3edf32d46d289a7002c460e0cea" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-09-11 18:55:35Z" provider="62c1ecce719d47509c7a3ebb3ab098dc">
+    <contentScript language="Velocity"><![CDATA[#set ($backgroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', '', 'background-color', '#2196F3', 10))
+#set ($backgroundColorTo = $core_v2_theme.GetPaletteColorValue('contextBanner', '', 'background-color-to', '', 10))
+#set ($foregroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', '', 'foreground-color', '#ffffff', 10))
+
+#set ($border = false)
+#set ($borderValue = $core_v2_theme.GetPaletteIntValue('contextBanner', '', 'include-border', 0, 10))
+#if ($borderValue == 1)
+	#set ($border = true)
+#end
+
+#set ($shadow = false)
+#set ($shadowValue = $core_v2_theme.GetPaletteIntValue('contextBanner', '', 'include-shadow', 0, 10))
+#if ($shadowValue == 1)
+	#set ($shadow = true)
+#end
+
+#if ($backgroundColorTo && $backgroundColorTo.length > 0)
+	#set ($background = "linear-gradient(to right, ${backgroundColor}, ${backgroundColorTo})")
+#else
+	#set ($background = $backgroundColor)
+#end
+
+<style>
+.banner.application {
+	min-height: 176px;
+}
+.banner.application::after {
+    display: none;
+}
+
+.header-fragments .layout .header-top-content .layout-region.content {
+	background: $background;
+}
+
+#if ($shadow && $border)
+	.header-fragments .layout .header-top-content .layout-region.content {
+		 border-bottom: 1px solid #CFD8DC;
+	}
+
+	.header-fragments .layout .header-top-content {
+		box-shadow: none;
+	}
+#elseif ($shadow)
+	.header-fragments .layout .header-top-content .layout-region.content {
+		border-bottom: 0px;
+	}
+	.header-fragments .layout .header-top-content {
+		box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+	}
+## when only border, always shows border
+#elseif ($border)
+	.header-fragments .layout .header-top-content .layout-region.content {
+		border-bottom: 1px solid #CFD8DC;
+	}
+	.header-fragments .layout .header-top-content {
+		box-shadow: none;
+	}
+#else
+	.header-fragments .layout .header-top-content .layout-region.content {
+		border-bottom: 0px;
+	}
+	.header-fragments .layout .header-top-content {
+		box-shadow: none;
+	}
+#end
+
+.banner.application,
+.banner.application .name .title a {
+	color: $foregroundColor;
+}
+.banner.application::after {
+	background-color: $foregroundColor;
+}
+
+</style>
+
+<div class="header-fragments evolution-reflow-container">
+    <div class="layout">
+
+        <div class="layout-header"></div>
+        <div class="layout-content header-top-content">
+
+            <div class="layout-region content">
+                <div class="layout-region-inner content">
+
+                    <div class="content-fragment blog-banner no-wrapper">
+                        <div class="content-fragment-content">
+                            <div class="banner application">
+                    	        <div class="name">
+                    			    <h1 class="title">
+                    				    <a href="#">$context.BlogPost.Title</a>
+                    			    </h1>
+                    			</div>
+                        	</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="layout-footer"></div>
+
+    </div>
+</div>
+
+
+<div class="content-fragment-page post evolution-reflow-container">
+    <div class="layout">
+
+        <div class="layout-header"></div>
+        <div class="layout-content content-left-sidebar-right">
+
+            <div class="layout-region content">
+                <div class="layout-region-inner content">
+
+                    <div class="content-fragment blog-post-byline no-wrapper with-spacing">
+                        <div class="content-fragment-content">
+                            <div class="content-details">
+                    	        <div class="content-author">
+                    		        <div class="avatar">
+                    				    <a href="#">
+                    				        $core_v2_ui.GetResizedImageHtml($context.BlogPost.Author.AvatarUrl, 80, 80, "%{ ResizeMethod = 'ZoomAndCrop', alt = $context.BlogPost.Author.DisplayName }")
+                    				    </a>
+                    				</div>
+                    		        <span class="user-name">
+                    					<a href="#" class="internal-link view-user-profile">
+                    				    	$context.BlogPost.Author.DisplayName
+                    				    </a>
+                    				</span>
+                    	        </div>
+                    	        <div class="content-date">
+                    		        $core_v2_language.FormatDate($context.BlogPost.PublishedDate)
+                    	        </div>
+                            </div>
+                    	</div>
+                    </div>
+
+                    #if($context.BlogPost && $context.BlogPost.PostImageUrl && $context.BlogPost.PostImageUrl.length > 0)
+                        #if($context.BlogPost.PostImageAlternateText && $context.BlogPost.PostImageAlternateText.length > 0)
+                            #set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($context.BlogPost.PostImageAlternateText))
+                        #else
+                            #set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($context.BlogPost.HtmlName('web')))
+                        #end
+
+                        <div class="content-fragment blog-post-poster no-wrapper with-spacing">
+                            <div class="content-fragment-content">
+                                <div class="content full text">
+                                	<div class="poster">
+                                		$core_v2_ui.GetResizedImageHtml($context.BlogPost.PostImageUrl, 800, 400, "%{ ResizeMethod = 'ZoomAndCrop', alt = $postImageAltText }")
+                                	</div>
+                                </div>
+                            </div>
+                        </div>
+                    #end
+
+                    <div class="content-fragment blog-post no-wrapper with-spacing">
+                        <div class="content-fragment-content">
+                            #set ($hasAttachment = false)
+                            #set ($hasAttachment = $context.BlogPost.File && $context.BlogPost.File.FileUrl)
+                            #set ($mediaType = false)
+                            #set ($mediaRendered = false)
+                            #if ($hasAttachment)
+                            	#set ($mediaType = $core_v2_ui.GetMediaType($context.BlogPost.File.FileUrl, "%{ ViewType = 'View' }"))
+                            #end
+
+                            <div class="content full text">
+                                #if ($hasAttachment && ($mediaType == 'Video' || $mediaType == 'Audio'))
+                            		<div class="attachment">
+                            			<div class="viewer">
+                            				$core_v2_ui.GetViewHtml($context.BlogPost.File.FileUrl, "%{ AdjustToContainer = 'true' }")
+                            			</div>
+                            			<a href="$core_v2_encoding.HtmlAttributeEncode($post.File.FileUrl)" target="_blank">$context.BlogPost.File.FileName</a>
+                            		</div>
+                            		#set ($mediaRendered = true)
+                            	#end
+
+                    			<div class="content">
+                    			    $context.BlogPost.Body('Web')
+                        		</div>
+
+                        		#if (!$mediaRendered && $hasAttachment)
+                            		<div class="attachment">
+                            			<ul class="navigation-list">
+                            				<li class="navigation-list-item">
+                            					<a href="$core_v2_encoding.HtmlAttributeEncode($context.BlogPost.File.FileUrl)" target="_blank">$context.BlogPost.File.FileName</a>
+                            				</li>
+                            			</ul>
+                            		</div>
+                            		#set ($mediaRendered = true)
+                            	#end
+                        	</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enables previewing a blog post that is currently in a review workflow.</resource>
+  <resource name="Name">Blog Post Preview</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ArticleCategoryList_Name}" description="${resource:ArticleCategoryList_Description}" instanceIdentifier="4ccfcb0ad16c4d97a8e532d4dd2c9b11" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="article-category-list" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+	<contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($currentCategory = $articles_v1_categories.Current)
+#set ($currentCollection = $articles_v1_articleCollections.Current)
+
+#set ($roundIcons = $core_v2_widget.GetBoolValue('roundIcons', false))
+#set ($includeArticles = $core_v2_widget.GetBoolValue('includeArticles', false))
+#set ($includeEmpty = $core_v2_widget.GetBoolValue('includeEmpty', false))
+#set ($excludeEmpty = true)
+#if ($includeEmpty)
+	#set ($excludeEmpty = false)
+#end
+
+#set ($currentArticle = false)
+#if ($includeArticles)
+	#set ($currentArticle = $articles_v1_articles.Current)
+#end
+
+#set ($wrap = false)
+#if ($core_v2_widget.GetStringValue('layout', 'nowrap') == 'wrap')
+	#set ($wrapItems = $core_v2_widget.GetStringValue('wrapItems', '4'))
+	#set ($wrap = "wrap-${wrapItems}")
+#end
+
+#set ($mode = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('mode', 'hierarchy')))
+$core_v2_widget.ExecuteFile("${mode}.vm")
+
+			]]></contentScript>
+	<headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:ArticleCategoryList_Name}'))
+			]]></headerScript>
+	<configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:ArticleCategoryList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="mode" labelResourceName="modeName" dataType="String" defaultValue="hierarchy">
+		<propertyValue value="hierarchy" labelResourceName="hierarchy" propertiesToShow="includeArticles" propertiesToHide="roundIcons,layout,wrapItems" />
+		<propertyValue value="subcategories" labelResourceName="subCategoryList" propertiesToShow="roundIcons,layout,wrapItems" propertiesToHide="includeArticles" />
+		<propertyValue value="rootcategories" labelResourceName="rootCategoryList" propertiesToShow="roundIcons,layout,wrapItems" propertiesToHide="includeArticles" />
+	</property>
+	<property id="includeEmpty" labelResourceName="includeEmpty" dataType="bool" defaultValue="false" />
+	<property id="includeArticles" labelResourceName="includeArticles" descriptionResourceName="includeArticlesDesc" dataType="bool" defaultValue="false" />
+	<property id="roundIcons" labelResourceName="roundIcons" dataType="bool" defaultValue="true" />
+	<property id="layout" labelResourceName="layout" dataType="String" defaultValue="nowrap">
+		<propertyValue value="nowrap" labelResourceName="layout_nowrap" propertiesToHide="wrapItems" />
+		<propertyValue value="wrap" labelResourceName="layout_wrap" propertiesToShow="wrapItems" />
+	</property>
+	<property id="wrapItems" labelResourceName="wrapItems" defaultValue="4" dataType="String">
+		<propertyValue value="1" labelText="1" />
+		<propertyValue value="2" labelText="2" />
+		<propertyValue value="3" labelText="3" />
+		<propertyValue value="4" labelText="4" />
+		<propertyValue value="5" labelText="5" />
+		<propertyValue value="6" labelText="6" />
+		<propertyValue value="7" labelText="7" />
+		<propertyValue value="8" labelText="8" />
+		<propertyValue value="9" labelText="9" />
+		<propertyValue value="10" labelText="10" />
+		<propertyValue value="11" labelText="11" />
+		<propertyValue value="12" labelText="12" />
+		<propertyValue value="13" labelText="13" />
+		<propertyValue value="14" labelText="14" />
+		<propertyValue value="15" labelText="15" />
+		<propertyValue value="16" labelText="16" />
+		<propertyValue value="17" labelText="17" />
+		<propertyValue value="18" labelText="18" />
+		<propertyValue value="19" labelText="19" />
+		<propertyValue value="20" labelText="20" />
+	</property>
+</propertyGroup>]]></configuration>
+	<languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+  <resource name="ArticleCategoryList_Name">Articles - Category List</resource>
+  <resource name="ArticleCategoryList_Description">Displays article collection categories.</resource>
+  <resource name="subCategoryList">Sub-categories of current category</resource>
+  <resource name="rootCategoryList">Top-level categories of current collection</resource>
+  <resource name="hierarchy">Full category hierarchy of current collection</resource>
+  <resource name="modeName">List mode</resource>
+  <resource name="includeEmpty">Include empty categories</resource>
+  <resource name="includeArticles">Include articles</resource>
+  <resource name="includeArticlesDesc">Includes articles within the category tree</resource>
+  <resource name="roundIcons">Rounded icons</resource>
+  <resource name="layout">Layout</resource>
+  <resource name="layout_nowrap">Single row</resource>
+  <resource name="layout_wrap">Wrap multiple rows</resource>
+  <resource name="wrapItems">Items per row</resource>
+</language>]]></languageResources>
+	<additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

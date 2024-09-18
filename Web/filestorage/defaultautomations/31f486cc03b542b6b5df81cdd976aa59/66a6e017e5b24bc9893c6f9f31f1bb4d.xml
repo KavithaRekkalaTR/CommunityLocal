@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="66a6e017e5b24bc9893c6f9f31f1bb4d" executeAsServiceUser="false" isSingleton="true" trigger="Event" lastModified="2021-01-05 19:32:59Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="article.aftercreate" />
+    </events>
+    <executionScript language="Velocity"><![CDATA[#set ($contentId = $context_v2_automationTrigger.Arguments.ContentId)
+#set ($userId = $context_v2_automationTrigger.Arguments.UserId)
+#set ($user = $core_v2_user.Get("%{ Id = $userId }"))
+#set ($article = $articles_v1_articles.Get("%{ Id = $contentId }"))
+
+#if($article && $user && $user.Username.ToLowerInvariant() != $core_v2_user.AnonymousUserName.ToLowerInvariant())
+    #if($core_v2_widget.GetBoolValue('subscribeToComments', true))
+        #set($subscription = $core_v2_contentSubscription.Get($article.ContentId, "%{ IncludeApplicationSubscriptions = 'true', TypeId = $articles_v1_subscriptionTypes.ArticleComments }"))
+        #if(!$subscription || !$subscription.IsSubscribed)
+            $core_v2_contentSubscription.Create($article.ContentId, $article.ContentTypeId, "%{ TypeId = $articles_v1_subscriptionTypes.ArticleComments }"))
+        #end
+    #end
+
+    #if($core_v2_widget.GetBoolValue('subscribeToUpdates', true))
+      #set($updatesSubscription = $core_v2_contentSubscription.Get($article.ContentId, "%{ IncludeApplicationSubscriptions = 'true', TypeId = $articles_v1_subscriptionTypes.ArticleUpdates }"))
+      #if(!$updatesSubscription || !$updatesSubscription.IsSubscribed)
+          $core_v2_contentSubscription.Create($article.ContentId, $article.ContentTypeId, "%{ TypeId = $articles_v1_subscriptionTypes.ArticleUpdates }"))
+      #end
+    #end
+#end]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="subscribeToUpdates" labelResourceName="SubscribeToUpdates" dataType="bool" defaultValue="true" />
+    <property id="subscribeToComments" labelResourceName="SubscribeToComments" dataType="bool" defaultValue="true" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">When a user comments on an article, this automation will subscribe the user to comment notifications for that article.</resource>
+  <resource name="SubscribeToComments">Subscribe to New Comments</resource>
+  <resource name="SubscribeToUpdates">Subscribe to Article Updates</resource>
+  <resource name="Title">Subscribe users to article updates and comments when they create an article</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

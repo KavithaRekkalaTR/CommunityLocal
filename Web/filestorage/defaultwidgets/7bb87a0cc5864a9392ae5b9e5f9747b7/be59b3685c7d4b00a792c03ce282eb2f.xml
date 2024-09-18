@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_AcceptInvitation_Name}" version="11.0.0.0" description="${resource:Core_AcceptInvitation_Description}" instanceIdentifier="be59b3685c7d4b00a792c03ce282eb2f" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="accept-invitation" lastModified="2020-01-14 16:08:51Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set($userInvitation = false)
+#set($userInvitation = $core_v2_userInvitation.Current)
+#set($user = $core_v2_user.Accessing)
+#set($invitationUser = false)
+#set($invitationUser = $core_v2_user.Get("%{Email = '$userInvitation.Email'}"))
+#set($userWhoSentInvite = $core_v2_user.Get("%{Id = '$userInvitation.UserId'}"))
+#set($loginUrl = $core_v2_urls.Login("%{InvitationId = '$userInvitation.InvitationKey'}"))
+#set($message = $core_v2_encoding.HtmlEncode($userInvitation.Message))
+#set ($hasErrors = false)
+#if (!$core_v2_widget.IsInWidgetPreviewMode)
+	#if (!$core_v2_user.IsRegistered($user.Id))
+		#if($userInvitation)
+			#set($registerUrl = $core_v2_urls.AddUser($userInvitation.InvitationKey))
+		#else
+			#set($registerUrl = $core_v2_urls.AddUser())
+		#end
+	#else
+		#set($result = $core_v2_userInvitation.Accept($userInvitation.InvitationKey))
+		#if ($result && !$result.HasErrors())
+			#set($group = false)
+			#set($group = $core_v2_group.Get("%{Id = '$userInvitation.GroupId'}"))
+			#if($group)
+				$core_v2_page.Redirect($core_v2_groupUrls.Group($group.Id))
+			#else
+				$core_v2_page.Redirect($core_v2_urls.Message(78))
+			#end
+		#elseif ($result && $result.HasErrors())
+			<div class="message error">$result.Errors.get_Item(0).Message</div>
+			#set($hasErrors = true)
+		#end
+	#end
+#end
+#if (!$hasErrors)
+	<p>
+		#if($group)
+			$core_v2_language.FormatString($core_v2_language.GetResource("AcceptInvitation_Hub_AnnonymousUser"), $userWhoSentInvite.Username, $message, $registerUrl, $loginUrl, $group.Name)
+		#else
+			$core_v2_language.FormatString($core_v2_language.GetResource("AcceptInvitation_AnonymousUser"), $userWhoSentInvite.Username, $message, $registerUrl, $loginUrl)
+		#end
+	</p>
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_AcceptInvitation_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_AcceptInvitation_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AcceptInvitation_AnonymousUser">
+ You have been sent an invitation by {0} to join this community.
+  &lt;ul&gt;
+  &lt;li&gt;If you already have a user account for this community, please &lt;a href="{3}" class="internal-link login"&gt;&lt;span&gt;&lt;/span&gt;log in&lt;/a&gt; to accept this invitation&lt;/li&gt;
+  &lt;li&gt;If you do not have a user account, you can accept this invitation by &lt;a href="{2}" class="internal-link user-registration"&gt;&lt;span&gt;&lt;/span&gt;joining this community&lt;/a&gt; now&lt;/li&gt;
+  &lt;/ul&gt;
+ </resource>
+  <resource name="AcceptInvitation_Hub_AnnonymousUser">
+ You have been sent an invitation by {0} to join the {4} group.
+  &lt;ul&gt;
+  &lt;li&gt;If you already have a user account for this community, please &lt;a href="{3}" class="internal-link login"&gt;&lt;span&gt;&lt;/span&gt;log in&lt;/a&gt; to accept this invitation&lt;/li&gt;
+  &lt;li&gt;If you do not have a user account, you can accept this invitation by &lt;a href="{2}" class="internal-link user-registration"&gt;&lt;span&gt;&lt;/span&gt;joining this community&lt;/a&gt; now&lt;/li&gt;
+  &lt;/ul&gt;
+ </resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_AcceptInvitation_Description">Displays a message to the user to accept an invitation to join the community or a group.</resource>
+  <resource name="Core_AcceptInvitation_Name">Accept Invitation</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

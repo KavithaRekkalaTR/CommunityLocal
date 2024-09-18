@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="70b3e3d3ed88481faa6527b2887e6ad8" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2020-02-20 16:18:47Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="user.aftercreate" />
+      <event key="user.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var user = core_v2_user.Get({ Id: context_v2_automationTrigger.Arguments.Id})
+if (!user || user.HasErrors()) {
+    return;
+}
+
+var fieldNames = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('fieldNames', '')).Values('Name');
+if (!fieldNames || fieldNames.Count == 0) {
+    return;
+}
+
+var shouldAward = true;
+var field;
+for (var i = 0; i < fieldNames.Count && shouldAward; i++) {
+    field = user.ProfileFields.Get(fieldNames[i]);
+    if (!field || field.Value == '' || field.Value == '0') {
+        shouldAward = false;
+    }
+}
+
+var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(user.Id, user.ContentId, core_v2_user.ContentTypeId);
+if (shouldAward) {
+    // ensure points awarded
+    if (!awardedPoints) {
+        context_v1_pointsAutomation.AwardPoints(user.Id, user.ContentId, core_v2_user.ContentTypeId);
+    }
+} else {
+    // ensure points not awarded
+    if (awardedPoints) {
+        context_v1_pointsAutomation.RevokePoints(user.Id, user.ContentId, core_v2_user.ContentTypeId);
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="fieldNames" labelResourceName="Fields" descriptionResourceName="Fields_Description" dataType="custom" template="core_v2_userProfileFields" singleSelect="false" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Awards points when a member provides values for one or more profile fields.</resource>
+  <resource name="Fields">Required profile fields</resource>
+  <resource name="Fields_Description">The fields that must have been completed to award points to the member.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Title">When a member completes profile fields</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

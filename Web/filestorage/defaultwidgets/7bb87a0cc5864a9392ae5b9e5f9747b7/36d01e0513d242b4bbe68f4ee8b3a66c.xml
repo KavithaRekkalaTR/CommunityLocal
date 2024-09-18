@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_Details}" version="13.0.0.0" description="${resource:Forums_Details_Description}" instanceIdentifier="36d01e0513d242b4bbe68f4ee8b3a66c" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="forum-details" lastModified="2022-09-02 20:22:44Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($forum = $core_v2_forum.Current)
+#if (!$forum)
+	$core_v2_widget.Hide()
+#end
+
+#set ($supportsDiscussionThreads = false)
+#set ($supportsQuestionThreads = false)
+#foreach ($threadType in $forum.AllowedThreadTypes)
+	#if ($threadType == 'Discussion')
+		#set($supportsDiscussionThreads = true)
+	#elseif($threadType == 'QuestionAndAnswer')
+		#set ($supportsQuestionThreads = true)
+	#end
+#end
+
+<div class="content-details minimal">
+	<ul class="attribute-list">
+		#if ($forum.Description && $forum.Description.length > 0)
+			<li class="attribute-item">
+				<span class="attribute-name">$core_v2_language.GetResource('Description')</span>
+				<span class="attribute-value">$forum.HtmlDescription('web')</span>
+			</li>
+		#end
+		<li class="attribute-item supplementary">
+			<span class="attribute-name">$core_v2_language.GetResource('Threads')</span>
+			<span class="attribute-value">
+				#if ($supportsDiscussionThreads && $forum.ThreadCount != 1)
+					#set ($formatString = $core_v2_language.GetResource('ThreadCountPlural_Discussion'))
+				#elseif ($supportsDiscussionThreads && $forum.ThreadCount == 1)
+					#set ($formatString = $core_v2_language.GetResource('ThreadCountSingular_Discussion'))
+				#elseif (!$supportsDiscussionThreads && $forum.ThreadCount != 1)
+					#set ($formatString = $core_v2_language.GetResource('ThreadCountPlural_QA'))
+				#elseif (!$supportsDiscussionThreads && $forum.ThreadCount == 1)
+					#set ($formatString = $core_v2_language.GetResource('ThreadCountSingular_QA'))
+				#end
+				$core_v2_language.FormatString($formatString, $forum.ThreadCount.ToString())
+			</span>
+		</li>
+	</ul>
+</div>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+#set ($forum = $core_v2_forum.Current)
+
+#if(($header == '' || $header == '${resource:Forums_Details}') && $forum)
+	$forum.Name
+#else
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_Details}'))
+#end
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_Details}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Forums_Details">Forums - Details</resource>
+  <resource name="Forums_Details_Description">Displays details about a forum</resource>
+  <resource name="Options">Options</resource>
+  <resource name="ThreadCountPlural_Discussion">{0} Discussions</resource>
+  <resource name="ThreadCountPlural_QA">{0} Questions</resource>
+  <resource name="ThreadCountSingular_Discussion">{0} Discussion</resource>
+  <resource name="ThreadCountSingular_QA">{0} Question</resource>
+  <resource name="Threads">Threads</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="ad5b66803de14b2d9ee9cfe27ecea026" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

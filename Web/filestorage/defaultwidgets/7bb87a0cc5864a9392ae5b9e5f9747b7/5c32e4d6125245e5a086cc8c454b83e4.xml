@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Groups_CreateGroup_Name}" version="11.0.0.0" description="${resource:Groups_CreateGroup_Description}" instanceIdentifier="5c32e4d6125245e5a086cc8c454b83e4" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="create-group" lastModified="2020-01-14 16:07:33Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+## require non-anonymous user
+#if (!$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	$core_v2_authentication.RedirectToLogin()
+#end
+
+## get current or root group
+#set ($group = $core_v2_group.Current)
+#if (!$group)
+	#set ($group = $core_v2_group.Root)
+#end
+#set ($rootGroupId = false)
+#set ($rootGroupId = $core_v2_group.Root.Id)
+
+## require create group permissions
+#if (!$core_v3_permission.CheckPermission($core_v2_groupPermissions.CreateGroup, $core_v2_user.Accessing.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+	$core_v2_widget.Hide()
+#end
+
+## require modification permissions to be able to edit a group's name
+#set ($groupNameEditable = $core_v3_permission.CheckPermission($core_v2_groupPermissions.ModifyGroup, $core_v2_user.Accessing.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+#set ($groupNameId = $core_v2_widget.UniqueId('groupName'))
+#set ($groupDescriptionId = $core_v2_widget.UniqueId('groupDescription'))
+#set ($groupTypeId = $core_v2_widget.UniqueId('groupType'))
+#set ($groupTypeJoinlessId = $core_v2_widget.UniqueId('joinless'))
+#set ($groupTypePublicOpenId = $core_v2_widget.UniqueId('publicOpen'))
+#set ($groupTypePublicClosedId = $core_v2_widget.UniqueId('publicClosed'))
+#set ($groupTypePrivateListedId = $core_v2_widget.UniqueId('privateListed'))
+#set ($groupTypePrivateUnlistedId = $core_v2_widget.UniqueId('privateUnlisted'))
+#set ($parentGroupId = $core_v2_widget.UniqueId('parentGroup'))
+#set ($enableMessagesId = $core_v2_widget.UniqueId('enableMessages'))
+#set ($createGroupId = $core_v2_widget.UniqueId('createGroup'))
+
+<form><fieldset>
+	<h2>$core_v2_language.GetResource('Hubs_GroupCreate')</h2>
+	<ul class="field-list">
+		<li class="field-item required group-name">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($groupNameId)" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Hubs_Name_SubTitle')</span>
+			<span class="field-item-input">
+				<input name="$core_v2_encoding.HtmlAttributeEncode($groupNameId)" type="text" maxlength="256" id="$core_v2_encoding.HtmlAttributeEncode($groupNameId)" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item group-description">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($groupDescriptionId)" class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Hubs_Description_Desc')</span>
+			<span class="field-item-input">
+				<textarea name="$core_v2_encoding.HtmlAttributeEncode($groupDescriptionId)" maxlength="256" id="$core_v2_encoding.HtmlAttributeEncode($groupDescriptionId)"></textarea>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item group-type">
+			<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($groupTypeJoinlessId)">$core_v2_language.GetResource('Hubs_Type')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Hubs_PublicPrivate')</span>
+			<span class="field-item-input">
+				<ul class="field-list">
+					<li class="field-item">
+						<span class="field-item-input">
+							<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypeJoinlessId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="Joinless" checked="checked" />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypeJoinlessId)">$core_v2_language.GetResource('HubTypes_Joinless')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('HubTypes_Joinless_Description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicOpenId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="PublicOpen" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicOpenId)">$core_v2_language.GetResource('HubTypes_Public_Open')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('HubTypes_Public_Open_Description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicClosedId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="PublicClosed" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePublicClosedId)">$core_v2_language.GetResource('HubTypes_Public_Closed')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('HubTypes_Public_Closed_Description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateListedId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode$($groupTypeId)" value="PrivateListed" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateListedId)">$core_v2_language.GetResource('HubTypes_PrivateListed')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('HubTypes_PrivateListed_Description')</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+								<input id="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateUnlistedId)" type="radio" name="$core_v2_encoding.HtmlAttributeEncode($groupTypeId)" value="PrivateUnlisted" />
+								<label for="$core_v2_encoding.HtmlAttributeEncode($groupTypePrivateUnlistedId)">$core_v2_language.GetResource('HubTypes_PrivateNotListed')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('HubTypes_PrivateNotListed_Description')</span>
+					</li>
+				</ul>
+			</span>
+		</li>
+		<li class="field-item parent-group">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($parentGroupId)" class="field-item-name">$core_v2_language.GetResource('Hubs_Group')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Hubs_SelectCategory')</span>
+			<span class="field-item-input">
+				<input	id="$core_v2_encoding.HtmlAttributeEncode($parentGroupId)"
+						name="$core_v2_encoding.HtmlAttributeEncode($parentGroupId)"
+						type="text"value="$group.Id" />
+			</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input id="$core_v2_encoding.HtmlAttributeEncode($enableMessagesId)" type="checkbox" name="$core_v2_encoding.HtmlAttributeEncode($enableMessagesId)" />
+				<label for="$core_v2_encoding.HtmlAttributeEncode($enableMessagesId)">$core_v2_language.GetResource('Groups_EnableMessages')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Groups_EnableMessages_Desc')</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<a id="$core_v2_encoding.HtmlAttributeEncode($createGroupId)" class="internal-link create-group button submit-button" href="#">
+					$core_v2_language.GetResource('Create')
+				</a>
+				<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+<div class="field-list-footer"></div>
+
+
+#registerEndOfPageHtml('telligent.evolution.widgets.createGroup')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	jQuery(function(){
+		jQuery.telligent.evolution.widgets.createGroup.register({
+			parentGroupInput: jQuery('#$core_v2_encoding.JavascriptEncode($parentGroupId)'),
+			noGroupsMatchText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupLookUp_NoMatches'))",
+			defaultParentGroupId: $group.Id,
+			defaultParentGroupName: '$core_v2_encoding.JavascriptEncode($group.Name)',
+			rootGroupId: $rootGroupId,
+			groupNameInput: jQuery('#$core_v2_encoding.JavascriptEncode($groupNameId)'),
+			groupDescriptionInput: jQuery('#$core_v2_encoding.JavascriptEncode($groupDescriptionId)'),
+			groupTypeName: "$core_v2_encoding.JavascriptEncode($groupTypeId)",
+			enableMessagesInput: jQuery('#$core_v2_encoding.JavascriptEncode($enableMessagesId)'),
+			createGroupInput: jQuery('#$core_v2_encoding.JavascriptEncode($createGroupId)'),
+			requiredNameValidationMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateGroup_GroupName_GroupNameRequired'))',
+			uniqueNameValidationMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateGroup_GroupName_DuplicateGroupName'))'
+		});
+	});
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+	</script>
+#end
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Groups_CreateGroup_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Groups_CreateGroup_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Create">Create</resource>
+  <resource name="CreateGroup_GroupName_DuplicateGroupName">The group name already exists under the selected parent group.</resource>
+  <resource name="CreateGroup_GroupName_GroupNameRequired">You must enter a group name.</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Group_CreateGroup">Create Group</resource>
+  <resource name="GroupLookUp_NoMatches">A matching group could not be found.</resource>
+  <resource name="Groups_CreateGroup_Description">Displays a form for creating a new group.</resource>
+  <resource name="Groups_CreateGroup_Name">Group - Create</resource>
+  <resource name="Groups_EnableMessages">Enable group status updates</resource>
+  <resource name="Groups_EnableMessages_Desc">Allows a list of recent group activity and status messages to be displayed. Group members can create new status messages.</resource>
+  <resource name="Hubs_Description_Desc">Enter a description for the group (256 chars)</resource>
+  <resource name="Hubs_Group">Parent group</resource>
+  <resource name="Hubs_GroupCreate">Create a Group</resource>
+  <resource name="Hubs_Name_SubTitle">Enter a name for the group.</resource>
+  <resource name="Hubs_PublicPrivate">Should the new group be public or private?</resource>
+  <resource name="Hubs_SelectCategory">The parent group identifies where this group will be categorized within the site. Begin typing to search for and select a parent group.</resource>
+  <resource name="Hubs_Type">Group privacy</resource>
+  <resource name="HubTypes_Joinless">Joinless</resource>
+  <resource name="HubTypes_Joinless_Description">All content is public. No membership required.</resource>
+  <resource name="HubTypes_PrivateListed">Private (listed)</resource>
+  <resource name="HubTypes_PrivateListed_Description">Content is private. Group name and description are public. Membership approval required to contribute.</resource>
+  <resource name="HubTypes_PrivateNotListed">Private (unlisted)</resource>
+  <resource name="HubTypes_PrivateNotListed_Description">Content is private. Group is hidden to non-members. Membership approval required to contribute.</resource>
+  <resource name="HubTypes_Public_Closed">Public (closed membership)</resource>
+  <resource name="HubTypes_Public_Closed_Description">All content is public. Membership approval required to contribute.</resource>
+  <resource name="HubTypes_Public_Open">Public (open membership)</resource>
+  <resource name="HubTypes_Public_Open_Description">All content is public. Membership is required to contribute.</resource>
+  <resource name="Name">Name</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="groups.groups.modify" />
+			<scope id="groups.groups.readonly" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

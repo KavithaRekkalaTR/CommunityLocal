@@ -1,0 +1,130 @@
+#set ($appealId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_appealid')))
+#set ($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentid')))
+#set ($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contenttypeid')))
+#set ($authorId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_authorid')))
+
+#set($author = false)
+#if ($authorId > 0)
+    #set($author = $core_v2_user.Get("%{Id=$authorId}"))
+#elseif ($appealId == $core_v2_utility.ParseGuid(''))
+	#set ($content = $core_v2_content.Get($contentId, $contentTypeId))
+	#set ($author = $core_v2_user.Get("%{Id=$content.CreatedByUserId}"))
+#else
+	#set ($author = $core_v2_abuseAppeal.Get($appealId).AuthorUser)
+#end
+
+#if ($author)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<table class="form">
+
+						#if ($author.ProfileUrl)
+							<tr>
+								<th>$core_v2_language.GetResource('Profile')</th>
+								<td><a href="$core_v2_encoding.HtmlAttributeEncode($author.ProfileUrl)" target="_blank">$core_v2_language.GetResource('ViewProfile')</a></td>
+							</tr>
+						#end
+
+						<tr>
+							<th>$core_v2_language.GetResource('MemberSince')</th>
+							<td>$core_v2_language.FormatDate($author.JoinDate)</td>
+						</tr>
+
+						<tr>
+							<th>$core_v2_language.GetResource('reputation')</th>
+							<td>
+								#set($top = (100 - $author.QualityPercentile))
+								#if ($top <= 0)
+									#set($top = 1)
+								#end
+								$core_v2_language.FormatString($core_v2_language.GetResource('reputation_value'), $core_v2_language.FormatNumber($top))
+							</td>
+						</tr>
+
+						## roles
+						#set ($userRoles = $core_v2_role.List("%{ Include = 'user', UserId = $author.Id, PageIndex = 0, PageSize = 20 }"))
+						#set ($userRolesString = "")
+						#foreach ($role in $userRoles)
+						#each
+							#if ($role && (!$role.GroupId || $role.GroupId == 0))
+								#if ($userRolesString != "")
+									#set($userRolesString = "$userRolesString, ")
+								#end
+								#set($userRolesString = "$userRolesString$role.Name")
+							#end
+						#end
+						<tr>
+							<th>$core_v2_language.GetResource('CurrentRoles')</th>
+							<td>$!userRolesString</td>
+						</tr>
+
+						#set($contents = $core_v2_abusiveContent.List("%{ AuthorUserId = $author.ContentId, PageSize = 10, PageIndex = 0 }"))
+
+						## count of abusive content in various states
+						#set($reportedAbusiveContent = $core_v2_abusiveContent.List("%{ AbuseState = 'Reported', AuthorUserId = $author.ContentId, PageSize = 1, PageIndex = 0 }"))
+						#set($appealedAbusiveContent = $core_v2_abusiveContent.List("%{ AppealState = 'Initiated', AuthorUserId = $author.ContentId, PageSize = 1, PageIndex = 0 }"))
+						#set($appealResponsedAbusiveContent = $core_v2_abusiveContent.List("%{ AppealState = 'AuthorResponded', AuthorUserId = $author.ContentId, PageSize = 1, PageIndex = 0 }"))
+						#set($confirmedAbusiveContent = $core_v2_abusiveContent.List("%{ AppealState = 'Rejected', AuthorUserId = $author.ContentId, PageSize = 1, PageIndex = 0 }"))
+						#set($expiredAbusiveContent = $core_v2_abusiveContent.List("%{ AppealState = 'Expired', AuthorUserId = $author.ContentId, PageSize = 1, PageIndex = 0 }"))
+						#set($notAbusiveContent = $core_v2_abusiveContent.List("%{ AbuseState = 'NotAbusive', AuthorUserId = $author.ContentId, PageSize = 1, PageIndex = 0 }"))
+
+						## counts of abuse appeals in various states
+						#set ($initiatedAppeals = $core_v2_abuseAppeal.List("%{ AppealState = 'Initiated', ContentAuthorId = $author.ContentId, PageSize = 1, PageIndex = 0	}"))
+						#set ($acceptedAppeals = $core_v2_abuseAppeal.List("%{ AppealState = 'Accepted', ContentAuthorId = $author.ContentId, PageSize = 1, PageIndex = 0  }"))
+						#set ($rejectedAppeals = $core_v2_abuseAppeal.List("%{ AppealState = 'Rejected', ContentAuthorId = $author.ContentId, PageSize = 1, PageIndex = 0  }"))
+						#set ($expiredAppeals = $core_v2_abuseAppeal.List("%{ AppealState = 'Expired', ContentAuthorId = $author.ContentId, PageSize = 1, PageIndex = 0	}"))
+						#set ($authorResponseAppeals = $core_v2_abuseAppeal.List("%{ AppealState = 'AuthorResponded', ContentAuthorId = $author.ContentId, PageSize = 1, PageIndex = 0  }"))
+
+						#set ($totalCommentCount = 0)
+						#set ($allComments = $core_v2_comments.List("%{ PageIndex = 0, PageSize = 1, UserId = $author.Id, IncludeChildren = 'True' }"))
+						#set ($totalCommentCount = $allComments.TotalCount)
+						#set ($totalPostCount = $author.TotalPosts + $totalCommentCount)
+
+						<tr>
+							<th>$core_v2_language.GetResource('Posts')</th>
+							<td>
+								<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Search("%{QueryString = 'q=user:$author.Id'}"))" target="_blank">
+									$core_v2_language.FormatNumber($totalPostCount)
+								</a>
+							</td>
+						</tr>
+
+						#set ($contentWithFlags = $reportedAbusiveContent.TotalCount + $appealedAbusiveContent.TotalCount + $expiredAbusiveContent.TotalCount + $confirmedAbusiveContent.TotalCount + $appealResponsedAbusiveContent.TotalCount)
+						<tr>
+							<th>$core_v2_language.GetResource('PostsWithFlags')</th>
+							<td>$core_v2_language.FormatNumber($contentWithFlags)</td>
+						</tr>
+
+						#set ($contentHidden = $initiatedAppeals.TotalCount + $rejectedAppeals.TotalCount + $expiredAppeals.TotalCount + $authorResponseAppeals.TotalCount)
+						<tr>
+							<th>$core_v2_language.GetResource('PostsHidden')</th>
+							<td>$core_v2_language.FormatNumber($contentHidden)</td>
+						</tr>
+
+						#set ($appealCount = $acceptedAppeals.TotalCount + $rejectedAppeals.TotalCount + $expiredAppeals.TotalCount + $authorResponseAppeals.TotalCount)
+						<tr>
+							<th>$core_v2_language.GetResource('Appeals')</th>
+							<td>$core_v2_language.FormatNumber($appealCount)</td>
+						</tr>
+
+						#set ($respondedAppealCount = $authorResponseAppeals.TotalCount)
+						<tr>
+							<th>$core_v2_language.GetResource('AppealsOpen')</th>
+							<td>$core_v2_language.FormatNumber($respondedAppealCount)</td>
+						</tr>
+
+						#set ($acceptedAppealCount = $acceptedAppeals.TotalCount)
+						<tr>
+							<th>$core_v2_language.GetResource('AppealsAccepted')</th>
+							<td>$core_v2_language.FormatNumber($acceptedAppealCount)</td>
+						</tr>
+					</table>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#else
+	<div class="message error">$core_v2_language.GetResource('AuthorNotFound')</div>
+#end

@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Wikis_BrowseWikis_Name}" version="13.0.0.0" description="${resource:Wikis_BrowseWikis_Description}" instanceIdentifier="1c53e7f3d0e147cd88cda740602fa4e4" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="browse-wikis" lastModified="2022-09-02 20:26:57Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+
+$core_v2_widget.ExecuteFile('inSidebar.vm')
+
+<div class="margin-bottom">
+	$core_v2_ui.PagedContent('list.vm')
+</div>
+$core_v2_ui.Pager($wikis.PageIndex, $wikis.PageSize, $wikis.TotalCount, "%{ShowIndividualPages = 'false', ShowPrevious = 'true', ShowNext = 'true', PagedContentFile = 'list.vm', ShowFirst = 'true', ShowLast = 'true' }")
+
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#if($core_v2_widget.GetBoolValue('includeGroupName',false))
+	$core_v2_language.FormatString($core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_BrowseWikis_Name}')), $core_v2_group.Current.Name)
+#else
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_BrowseWikis_Name}'))
+#end
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Wikis_BrowseWikis_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="showTitleColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowTitle_Wiki" defaultValue="true" dataType="Bool" />
+	<property id="showGroupColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowGroup_Wiki" defaultValue="false" dataType="Bool" />
+	<property id="showPostsColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowPosts" defaultValue="true" dataType="Bool" />
+	<property id="showLastPostColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowLatest_Wiki" defaultValue="true" dataType="Bool" />
+	<property id="group" labelResourceName="UIFragment_Core_BrowseApplication_Group" defaultValue="Group=-1" dataType="Custom" template="core_v2_groupLookup" enableCurrent="true" />
+	<property id="groupAndSubGroups" labelResourceName="UIFragment_Core_BrowseApplication_GroupAndSubGroups" defaultValue="false" dataType="Bool" />
+	<property id="itemsBeforeScroll" labelResourceName="UIFragment_Core_BrowseApplication_ItemsToShow" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="defaultSortOrder" labelResourceName="UIFragment_Core_BrowseApplication_DefaultSortOrder" defaultValue="ApplicationName" dataType="String">
+		<propertyValue value="ApplicationName" labelResourceName="UIFragment_Core_BrowseApplication_ApplicationName" />
+		<propertyValue value="ApplicationIdsOrder" labelResourceName="UIFragment_Core_BrowseApplication_Custom" />
+	</property>
+	<property id="wikiSelection" labelResourceName="UIFragment_Core_BrowseApplication_WikiInclusion" dataType="Custom" template="core_v2_wikiOrder" key="wiki" includeSubGroupsPropertyId="groupAndSubGroups" visibilityPropertyId="defaultSortOrder" visibilityPropertyValue="ApplicationIdsOrder" groupPropertyId="group" />
+	<property id="includeGroupName" labelResourceName="UIFragment_Core_BrowseApplication_IncludeGroupName" defaultValue="false" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="LastUpdated">Latest: {0}</resource>
+  <resource name="Options">Options</resource>
+  <resource name="post_plural">pages</resource>
+  <resource name="post_singular">page</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ApplicationName">By name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Custom">Custom order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_DefaultSortOrder">Sort Order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Group">Filter to Group</resource>
+  <resource name="UIFragment_Core_BrowseApplication_GroupAndSubGroups">Show data from Group and all Subgroups</resource>
+  <resource name="UIFragment_Core_BrowseApplication_IncludeGroupName">Include current group's name in Title (Title must be a formatted string with a {0} placeholder)</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ItemsToShow">Number of results to display</resource>
+  <resource name="UIFragment_Core_BrowseApplication_NoResults">No results could be found.</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowGroup_Wiki">Show Wiki Group Name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowLatest_Wiki">Show Last Update</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowPosts">Show Post Count</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowTitle_Wiki">Show Wiki Name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_WikiInclusion">Include Wikis</resource>
+  <resource name="Wikis_BrowseWikis_Description">Displays a browse control to view all wikis on the site.</resource>
+  <resource name="Wikis_BrowseWikis_Name">Wikis - Browse Wikis</resource>
+  <resource name="Wikis_BrowseWikis_Title_BrowseWikis_In">Browse Wikis in {0}</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,117 @@
+##
+## Import selection form.
+## Expects in scope: $importResult, $uploadContext, $fileName
+##
+<form>
+	<fieldset>
+		<ul class="field-list">
+		#if ($importResult.NewThemes.Count == 0 && $importResult.UpdatedThemes.Count == 0)
+			<p class="message error">$core_v2_language.GetResource('ImportEmpty')</p>
+		#elseif ($context.DeveloperModeEnabled && ($importResult.NewThemes.Count > 0 || $importResult.UpdatedThemes.Count > 0))
+			<p class="message error">
+				#format($core_v2_language.GetResource('ImportDevMode'))
+					#token('studio')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">$core_v2_language.GetResource('Studio')</a>
+				#end
+			</p>
+		#else
+
+			#if ($importResult.NewThemes.Count > 0)
+				<li class="field-item importable-themes new-themes">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('NewThemeResources')
+						#else
+							$core_v2_language.GetResource('NewThemes')
+						#end
+					</label>
+					<span class="field-item-description">$core_v2_language.GetResource('TheFollowingThemesAreNew')</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($theme in $importResult.NewThemes)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${theme.Id}:$!{theme.TypeId}" class="importable-theme" data-id="$theme.Id" data-type="$!theme.TypeId" data-model="theme" checked />
+							<label  for="cb${theme.Id}:$!{theme.TypeId}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($theme.Name)
+								#if ($theme.TypeName)
+									($theme.TypeName)
+								#end
+							</label>
+						</span>
+						#if ($theme.Description)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($theme.Description)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.UpdatedThemes.Count > 0)
+				<li class="field-item importable-themes updated-themes">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('UpdatedThemeResources')
+						#else
+							$core_v2_language.GetResource('UpdatedThemes')
+						#end
+					</label>
+					<span class="field-item-description">
+						#format ($core_v2_language.GetResource('UpdatedThemeDesc'))
+							#token ('studio-begin-link')
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">
+							#token ('studio-end-link')
+								</a>
+						#end
+					</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($theme in $importResult.UpdatedThemes)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${theme.Id}:$!{theme.TypeId}" class="importable-theme" data-id="$theme.Id" data-type="$!theme.TypeId" data-model="theme" />
+							<label  for="cb${theme.Id}:$!{theme.TypeId}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($theme.Name)
+								#if ($theme.TypeName)
+									($theme.TypeName)
+								#end
+							</label>
+						</span>
+						#if ($theme.Description)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($theme.Description)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.MatchingThemes.Count > 0)
+				<li class="field-item importable-themes updated-themes">
+					<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+				</li>
+			#end
+		#end
+		</ul>
+	</fieldset>
+</form>
+
+#set ($importTemplateId = $core_v2_widget.UniqueId('importTemplate'))
+#registerClientTemplate($importTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-import.vm')
+#end
+#registerEndOfPageHtml('themesPanel.import')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-import.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.themes.themeAdministration.import.register({
+			importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+			importTemplateId: '$core_v2_encoding.JavascriptEncode($importTemplateId)',
+			uploadContext: '$core_v2_encoding.JavascriptEncode($uploadContext)',
+			fileName: '$core_v2_encoding.JavascriptEncode($fileName)',
+			importCompleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportComplete'))'
+		});
+	});
+	</script>
+#end

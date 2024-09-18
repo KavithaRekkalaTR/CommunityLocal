@@ -1,0 +1,90 @@
+<li class="content-item comment #if ($reply.IsAnswer) answer #elseif ($reply.IsSuggestedAnswer) suggested #end" #if ($reply.ParentId) data-parentcommentid="$!reply.ParentId"#end data-commentid="$!reply.Id" data-commentdate="$!core_v2_utility.GetTimestamp($reply.CreatedDate)" #if ($reply) data-replycount="$reply.ReplyCount" #else data-replycount="0" #end>
+	<div class="full-post-header comment"></div>
+	<div class="full-post comment">
+
+		<div class="post-author">
+			<span class="avatar">
+				#if($reply.Author.ProfileUrl)
+				    <a href="$core_v2_encoding.HtmlAttributeEncode($reply.Author.ProfileUrl)">
+                        $core_v2_ui.GetResizedImageHtml($reply.Author.AvatarUrl, 32, 32, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$reply.Author.DisplayName}")
+					</a>
+				#else
+					$core_v2_ui.GetResizedImageHtml($reply.Author.AvatarUrl, 32, 32, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$reply.Author.DisplayName}")
+				#end
+			</span>
+			<span class="user-name">
+			    #set($author = '')
+				#if($reply.Author.ProfileUrl)
+					#set($author = "<a href='$core_v2_encoding.HtmlAttributeEncode($reply.Author.ProfileUrl)' class='internal-link view-user-profile'>$reply.Author.DisplayName</a>")
+				#else
+					#set($author = $reply.Author.DisplayName)
+				#end
+				
+				#set($parentReply = false)
+				#if ($reply.ParentId)
+				    #set($parentReply = $core_v2_forumReply.Get($reply.ParentId))
+				    #if($parentReply.HasErrors())
+				        #set($parentReply = false)
+				    #end
+				#end
+				
+				#if ($parentReply)
+    				#set($parentAuthor = "<a href='$core_v2_encoding.HtmlAttributeEncode($parentReply.Url)' class='internal-link view-comment'>$parentReply.Author.DisplayName</a>")
+    				$core_v2_language.FormatString($core_v2_language.GetResource('in-reply-to'), $author, $parentAuthor)
+				#else
+				    $author
+				#end
+				#if ($reply.IsAnswer)
+				    <span class="answer-status ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('answer'))">$core_v2_language.GetResource('answer')</span>
+				#elseif ($reply.IsSuggestedAnswer)
+				    <span class="answer-status ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('suggested'))">$core_v2_language.GetResource('suggested')</span>
+				#end
+			</span>
+		</div>
+
+		<div class="post-content user-defined-markup">
+			#set($body = $reply.Body())
+			#set($truncatedBody = $core_v2_language.Truncate($body, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+			$truncatedBody
+			#if ($truncatedBody.Length < $body.Length)
+			    <a href="$core_v2_encoding.HtmlAttributeEncode($reply.Url)">$core_v2_language.GetResource('read-more')</a>
+			#end   
+		</div>
+
+		<div class="post-actions">
+		    #set($maxLinks = 1)
+		    #if ($hasReplyPermission)
+		        #set($maxLinks = $maxLinks + 1)
+		    #end
+            <div class="navigation-list ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($reply.Url)" class="date">$core_v2_ui.AgoDate($reply.CreatedDate)</a>
+					</li>
+					#if ($hasReplyPermission)
+					    <li class="navigation-list-item">
+					        <a href="#" data-commentid="$reply.Id" data-messagename="replytocomment">$core_v2_language.GetResource('reply')</a>
+					    </li>
+					#end
+					#if ($core_v3_permission.CheckPermission($core_v2_forumPermissions.DeletePost, $core_v2_user.Accessing.Id, "%{ ContentId = $reply.ContentId, ContentTypeId = $core_v2_forumReply.ContentTypeId }").IsAllowed)
+						<li class="navigation-list-item">
+							<a href="#" data-commentid="$reply.Id" data-messagename="deleteforumreply">$core_v2_language.GetResource('delete')</a>
+						</li>
+					#end
+					#if ($accessingUserIsRegistered)
+						<li class="navigation-list-item">
+							$core_v2_ui.Moderate($reply.ContentId, $core_v2_forumReply.ContentTypeId)
+						</li>
+					#end
+                    <li class="navigation-list-item">
+                    	<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+                    </li>
+                    <li class="navigation-list-item">
+                    	<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                    </li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="full-post-footer comment"></div>
+</li>

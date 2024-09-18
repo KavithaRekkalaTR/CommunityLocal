@@ -1,0 +1,124 @@
+## Configuration
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 10))
+#set ($endlessScroll = $core_v2_widget.GetBoolValue('endlessScroll', true))
+#set ($enableFullEditor = $core_v2_widget.GetBoolValue('enableFullEditor', false))
+#set ($highlightNewSeconds = $core_v2_widget.GetIntValue('highlightNewSeconds', 4))
+#set ($includeSiblings = false)
+#set ($hidden = false)
+
+#set ($isFlat = false)
+#set ($depth = $core_v2_widget.GetIntValue('depth', 3))
+#set ($flattenedDepth = $depth - 1)
+#if ($depth == 1)
+	#set ($isFlat = true)
+#end
+
+#set ($includeFooterReplyForm = false)
+#if ($isFlat)
+	#set ($includeFooterReplyForm = $core_v2_widget.GetBoolValue('enableFooterReply', false))
+#end
+
+#set ($bestSize = 0)
+#if ($core_v2_widget.GetBoolValue('includeBest', true))
+	#set ($bestSize = $core_v2_widget.GetIntValue('bestSize', 3))
+#end
+
+## default sort selections to widget configuration
+#set ($defaultSort = $core_v2_widget.GetStringValue('defaultSortOrder', 'Oldest'))
+#if ($defaultSort == 'Oldest')
+	#set ($sortBy = "CreatedDate")
+	#set ($sortOrder = "Ascending")
+#elseif ($defaultSort == 'Best')
+	#set ($sortBy = "Votes")
+	#set ($sortOrder = "Descending")
+#elseif ($defaultSort == 'Newest')
+	#set ($sortBy = "CreatedDate")
+	#set ($sortOrder = "Descending")
+#end
+
+## override to respect any query string sort selections
+#set ($forumReplySortByQuery = false)
+#set ($forumReplySortByQuery = $core_v2_page.GetQueryStringValue('ReplySortBy'))
+#if ($forumReplySortByQuery)
+	#set ($sortBy = $forumReplySortByQuery)
+#end
+
+#set ($forumReplySortOrderQuery = false)
+#set ($forumReplySortOrderQuery = $core_v2_page.GetQueryStringValue('ReplySortOrder'))
+#if ($forumReplySortOrderQuery)
+	#set ($sortOrder = $forumReplySortOrderQuery)
+#end
+
+## determine any page offsets for JS-crawled target pages
+#set ($replyOffsetId = false)
+#set ($forumReplyOffsetIdQuery = false)
+#set ($forumReplyOffsetIdQuery = $core_v2_page.GetQueryStringValue('ReplyOffsetId'))
+#if ($forumReplyOffsetIdQuery)
+	#set ($replyOffsetId = $core_v2_utility.ParseInt($forumReplyOffsetIdQuery))
+#end
+
+#set ($replyOffsetDirection = false)
+#set ($replyOffsetDirection = $core_v2_page.GetQueryStringValue('ReplyOffsetDirection'))
+
+#set ($filter = false)
+#set ($filterQuery = false)
+#set ($filterQuery = $core_v2_page.GetQueryStringValue('ReplyFilter'))
+#if ($filterQuery && $filterQuery.length > 0)
+	#set ($filter = $filterQuery)
+#end
+
+#set ($flattenedSortBy = "CreatedDate")
+#if ($sortBy == "CreatedDate")
+	#set ($flattenedSortOrder = $sortOrder)
+#else
+	#set ($flattenedSortOrder = "Ascending")
+#end
+
+## context
+#set ($forum = $core_v2_forum.Current)
+#set ($thread = $core_v2_forumThread.Current)
+#set ($currentReply = $core_v2_forumReply.Current)
+#set ($accessingUser = $core_v2_user.Accessing)
+
+## hide if no current thread
+#if (!$thread)
+	#set ($hidden = true)
+	$core_v2_widget.Hide()
+#end
+
+## permission
+#set ($isRegistered = $core_v2_user.IsRegistered($accessingUser.Id))
+#set ($hasModeratePermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReviewAbuse, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+#set ($hasModifyThreadPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+#set ($hasReadForumPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReadForum, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+#if (!$hasReadForumPermission)
+	#set ($hidden = true)
+	$core_v2_widget.Hide()
+#end
+#set ($hasModerateUsersPermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+#set ($hasReplyPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+
+#set ($userMustLogin = false)
+#if (!$hasReplyPermission && !$isRegistered)
+	#set ($userMustLogin = true)
+#end
+
+
+#set ($accessingUserIsAuthor = false)
+#set ($votedForThread = false)
+#set ($effectivelyAskedQuestion = false)
+#if ($thread.ThreadType == 'QuestionAndAnswer')
+	#set ($threadVote = false)
+	#set ($threadVote = $core_v2_forumThreadVote.Get($thread.Id))
+	#if ($threadVote)
+		#set ($votedForThread = true)
+	#end
+
+	#if ($accessingUser.Id == $thread.Author.Id)
+		#set ($accessingUserIsAuthor = true)
+	#end
+
+	#if ($accessingUserIsAuthor || $votedForThread)
+		#set ($effectivelyAskedQuestion = true)
+	#end
+#end

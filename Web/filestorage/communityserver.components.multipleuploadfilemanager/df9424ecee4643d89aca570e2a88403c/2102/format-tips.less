@@ -1,0 +1,58 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+/* tips */
+.tip {
+	background-color: fade(@color-foreground, 90%);
+	color: @color-background;
+	max-width: 200px;
+	padding: 2px 6px 2px 6px;
+	font-size: 11px;
+	margin-bottom: 8px;
+	z-index: 1000000 !important;
+	text-overflow: ellipsis;
+	word-wrap: break-word;
+	a {
+		color: @color-background;
+	}
+	&.above {
+		&:after {
+			top: 100%;
+			border: solid transparent;
+			content: " ";
+			height: 0;
+			width: 0;
+			position: absolute;
+			pointer-events: none;
+			border-top-color: fade(@color-foreground, 90%);
+			border-width: 6px;
+			margin-left: -6px;
+		}
+		&.left:after { left: 12px; }
+		&.center:after { left: 50%; }
+		&.right:after { right: 6px; }
+	}
+	&.below {
+		margin-top: 8px;
+		&:after {
+			bottom: 100%;
+			border: solid transparent;
+			content: " ";
+			height: 0;
+			width: 0;
+			position: absolute;
+			pointer-events: none;
+			border-bottom-color: fade(@color-foreground, 90%);
+			border-width: 6px;
+			margin-left: -6px;
+		}
+		&.left:after { left: 12px; }
+		&.center:after { left: 50%; }
+		&.right:after { right: 6px; }
+	}
+}

@@ -1,0 +1,102 @@
+#set ($hasAttachment = false)
+#set ($hasAttachment = $forumReply.File && $reply.File.FileUrl)
+#set ($mediaType = false)
+#set ($mediaRendered = false)
+#if ($hasAttachment)
+	#set ($mediaType = $core_v2_ui.GetMediaType($reply.File.FileUrl, "%{ ViewType = 'View' }"))
+#end
+
+<li class="threaded content-item #if($permalink) permalinked #end" id="$reply.Id">
+	<div class="rendered-content">
+        <div data-status="">
+            <div class="author">
+                <div class="avatar">
+                    <a href="#" class="internal-link view-user-profile">
+                        $core_v2_ui.GetResizedImageHtml($reply.Author.AvatarUrl, 44, 44, "%{ ResizeMethod = 'ZoomAndCrop', alt = $reply.Author.DisplayName }")
+                    </a>
+                </div>
+                <div class="meta">
+                    <span class="qa-votes">
+			        </span>
+                    <span class="user-name">
+	                    <a href="#" class="internal-link view-user-profile">
+                            $reply.Author.DisplayName
+                        </a>
+                    </span>
+                    <a href="#" class="internal-link view-post navigable">
+                        $core_v2_language.FormatAgoDate($reply.Date)
+                    </a>
+                    #if ($reply.ParentId)
+        				#set ($parentForumReply = false)
+        				#set ($parentForumReply = $core_v2_forumReply.Get($reply.ParentId))
+        				#if ($parentForumReply)
+        					<span class="parent">
+        					    #format($core_v2_language.GetResource('InReplyTo'))
+        					        #token('user')
+        						        <a class="internal-link view-post navigable" href="#${reply.ParentId}">$parentForumReply.Author.DisplayName</a>
+        						#end
+        					</span>
+        				#end
+        			#end
+                </div>
+            </div>
+            
+            ## attachment: audio/video
+        	#if ($hasAttachment && ($mediaType == 'Video' || $mediaType == 'Audio'))
+        		<div class="attachment">
+        			$core_v2_ui.GetViewHtml($reply.File.FileUrl, "%{ AdjustToContainer = 'true' }")
+        			<a href="$core_v2_encoding.HtmlAttributeEncode($forumReply.File.FileUrl)" target="_blank">$forumReply.File.FileName</a>
+        		</div>
+        		#set ($mediaRendered = true)
+        	#end
+            
+            <div class="content full threaded-reply-content user-defined-markup">
+                <div class="content">
+                    $reply.Body('Web')
+               </div>
+            </div>
+            
+            ## email files
+        	#if($reply.EmailFiles && $reply.EmailFiles.Count() > 0)
+        		#foreach($emailFile in $reply.EmailFiles)
+        		#beforeall
+        			<ul class="content-list attachments">
+        		#each
+        				<li class="content-item">
+        					<a href="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)" target="_blank" class="internal-link view-full-post preview">
+        						$core_v2_ui.GetPreviewHtml($emailFile.DirectDownloadUrl, "%{ Width = 44 }")
+        					</a>
+        					<a href="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)" target="_blank" class="internal-link view-full-post">
+        						$emailFile.FileName
+        					</a>
+        				</li>
+        		#afterall
+        			</ul>
+        		#end
+        	#end
+        
+        	## edit notes
+        	#if($reply.EditNotes && $reply.EditNotes != "" && $core_v2_forumConfiguration.DisplayEditNotes)
+        		<br /><br />
+        		$reply.EditNotes
+        		<br />
+        	#end
+        
+        	#if (!$mediaRendered && $hasAttachment)
+        		<div class="attachment margin-bottom">
+        			<ul class="navigation-list">
+        				<li class="navigation-list-item">
+        					<a class="file-name" href="$core_v2_encoding.HtmlAttributeEncode($reply.File.FileUrl)" target="_blank">$reply.File.FileName</a>
+        				</li>
+        			</ul>
+        		</div>
+        		#set ($mediaRendered = true)
+        	#end
+
+        	<div class="actions meta edit">
+        	</div>
+            <div class="actions meta default">
+            </div>
+        </div>
+    </div>
+</li>

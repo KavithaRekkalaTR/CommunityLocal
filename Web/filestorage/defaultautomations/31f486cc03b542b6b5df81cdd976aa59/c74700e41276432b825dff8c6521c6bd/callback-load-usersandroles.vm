@@ -1,0 +1,38 @@
+#set($userIds = $core_v2_utility.Split(',', $core_v2_page.GetFormValue('userIds')))
+#set($roleIds = $core_v2_utility.Split(',', $core_v2_page.GetFormValue('roleIds')))
+
+$core_v2_page.SetContentType('application/json')
+
+{
+    "users": {
+        #set($first = true)
+        #foreach($userId in $userIds)
+            #set($user = false)
+            #set($userId = $core_v2_utility.ParseInt($userId))
+            #set($user = $core_v2_user.Get("%{ Id = $userId }"))
+            #if ($user && !$user.HasErrors())
+                #if ($first)
+                    #set($first = false)
+                #else
+                    ,
+                #end
+                    "$user.Id": "$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end"
+            #end
+        #end
+    },
+    "roles": {
+        #set($first = true)
+        #foreach($roleId in $roleIds)
+            #set($role = false)
+            #set($role = $core_v2_role.Get($core_v2_utility.ParseInt($roleId)))
+            #if ($role && !$role.HasErrors())
+                #if ($first)
+                    #set($first = false)
+                #else
+                    ,
+                #end
+                    "$role.Id": "$core_v2_encoding.JavascriptEncode($role.Name) ($core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserOrRoleLookUp_Role')))"
+            #end
+        #end
+    }
+}

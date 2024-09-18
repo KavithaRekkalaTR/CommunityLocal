@@ -1,0 +1,17 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+    #set($options = "%{}")
+    
+    #set($xFrameOption = $core_v2_page.GetFormValue('XFrameOption'))
+    #set($urls = $core_v2_utility.Split(' ', $core_v2_page.GetFormValue('Urls')))
+    #set($sameSiteOption = $core_v2_page.GetFormValue('SameSiteOption'))
+
+	#set($result = false)
+    #set($result = $context.Save($xFrameOption, $urls,$sameSiteOption))
+    #if ($result.Errors.Count > 0)
+        $core_v2_page.SendJsonError($result.Errors)
+    #end
+    
+    {"success":true}
+#end

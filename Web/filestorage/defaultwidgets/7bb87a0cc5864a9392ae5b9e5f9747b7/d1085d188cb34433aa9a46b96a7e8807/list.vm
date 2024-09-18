@@ -1,0 +1,37 @@
+##
+## Render Filtering and Sorting
+##
+$core_v2_widget.ExecuteFile('query.vm')
+
+#set ($currentCollection = $articles_v1_articleCollections.Current)
+#set ($excerptSize = $core_v2_widget.GetIntValue('excerptSize', 250))
+#set ($displayTypeImage = $core_v2_widget.GetBoolValue('displayTypeImage', true))
+#set ($noArticlesHide = $core_v2_widget.GetBoolValue('noArticlesHide', false))
+
+#foreach($article in $articles)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+	$core_v2_widget.ExecuteFile('listitem.vm')
+#afterall
+	</ul>
+#nodata
+	#if($noArticlesHide)
+		$core_v2_widget.Hide()
+	#else
+		<div class="message norecords">
+			#set ($addUrl = $articles_v1_articleUrls.CreateArticle($currentCollection.Id, true))
+			#if ($currentCollection && $addUrl)
+				$core_v2_language.FormatString($core_v2_language.GetResource("Article_NoPosts_Created_Link"), $addUrl)
+			#else
+				$core_v2_language.GetResource("Article_NoPosts_Created")
+			#end
+		</div>
+	#end
+#end
+
+#if ($core_v2_widget.GetBoolValue('enablePaging', true))
+	#if ($articles)
+		$core_v2_ui.Pager($articles.PageIndex, $articles.PageSize, $articles.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")
+	#end
+#end

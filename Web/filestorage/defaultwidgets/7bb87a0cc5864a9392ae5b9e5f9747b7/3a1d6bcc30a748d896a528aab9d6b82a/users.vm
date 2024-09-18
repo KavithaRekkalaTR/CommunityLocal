@@ -1,0 +1,87 @@
+#set ($pageIndex = 0)
+#set ($pageIndexQuery = $core_v2_page.GetQueryStringValue('w_pageIndex'))
+#if ($pageIndexQuery)
+	#set ($pageIndex = $core_v2_utility.ParseInt($pageIndexQuery))
+#end
+
+#set ($pageSize = 10)
+#set ($pageSizeQuery = $core_v2_page.GetQueryStringValue('w_pageSize'))
+#if ($pageSizeQuery)
+	#set ($pageSize = $core_v2_utility.ParseInt($pageSizeQuery))
+#end
+
+#set ($includeContainer = true)
+#set ($includeContainerQuery = $core_v2_page.GetQueryStringValue('w_includeContainer'))
+#if ($includeContainerQuery)
+	#set ($includeContainer = $core_v2_utility.ParseBool($includeContainerQuery))
+#end
+
+#set ($forModal = false)
+#set ($forModalQuery = $core_v2_page.GetQueryStringValue('w_forModal'))
+#if ($forModalQuery)
+	#set ($forModal = $core_v2_utility.ParseBool($forModalQuery))
+#end
+
+#set ($onlineUsers = false)
+#set ($onlineUsers = $core_v2_user.List("%{ Presence = 'Online', PageSize = $pageSize, PageIndex = $pageIndex, SortBy = 'DisplayName' }"))
+
+#if ($onlineUsers)
+	#if ($includeContainer && !$forModal)
+		<div class="content-details minimal">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<span class="attribute-value">
+						<a href="#" class="total ui-tip"
+							data-tip="$core_v2_language.GetResource('ViewAll')"
+							data-messagename="widget.online-members.view-more">
+							#if ($onlineUsers.TotalCount == 1)
+								#set ($countResource = 'CountSingular')
+							#else
+								#set ($countResource = 'CountPlural')
+							#end
+							#format ($core_v2_language.GetResource($countResource))
+								#token('count')
+									$onlineUsers.TotalCount
+							#end
+						</a>
+					</span>
+				</li>
+			</ul>
+		</div>
+	#end
+
+	#foreach ($user in $onlineUsers)
+	#beforeall
+		#if ($includeContainer)
+			<div class="avatar-list">
+				<ul class="content-list">
+		#end
+	#each
+		<li class="content-item">
+			<div class="author">
+				<span class="avatar">
+					#if($user.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="internal-link view-user-profile">
+							$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 35, 35, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$updateUser.DisplayName}")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 35, 35, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$updateUser.DisplayName}")
+					#end
+				</span>
+				<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="internal-link view-full-post navigable">
+					<div class="content">$user.DisplayName</div>
+				</a>
+			</div>
+		</li>
+	#afterall
+		#if ($includeContainer)
+			</ul>
+				#if ($forModal)
+					<a href="#" class="view-more">
+						$core_v2_language.GetResource('ViewMore')
+					</a>
+				#end
+			</div>
+		#end
+	#end
+#end

@@ -1,0 +1,53 @@
+/* Banner Notifications - Platform Defaults */
+.banner-notifications-container {
+	color: @color-background;
+	a, a:hover {
+		color: @color-background;
+	}
+	&::before {
+		background-color: @color-foreground;
+	}
+	.banner-notifications-controls {
+		&.close {
+			.banner-notifications-controls-close {
+				.replace_with_icon(@cancel-circled, 22px);
+				font-size: 1em;
+				&::before {
+					top: -1px;
+				}
+			}
+		}
+		&.navigator {
+			.banner-notifications-controls-forward {
+				.replace_with_icon(@right-open, 22px);
+				&::before {
+					top: -1px;
+				}
+			}
+			.banner-notifications-controls-backward  {
+				.replace_with_icon(@left-open, 22px);
+				&::before {
+					top: -1px;
+				}
+			}
+		}
+	}
+	&.warning, &.system-notification {
+		&::before {
+			background-color: @color-pending;
+		}
+		color: @color-foreground;
+		a, a:hover {
+			color: @color-foreground;
+		}
+	}
+	&.error {
+		&::before {
+			background-color: @color-attention;
+		}
+		color: @color-background;
+		a, a:hover {
+			color: @color-background;
+		}
+	}
+}

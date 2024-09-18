@@ -1,0 +1,152 @@
+$core_v2_widget.ExecuteFile('setquery.vm')
+
+#set ($threads = $core_v2_forumThread.List($filter, $options))
+
+#if ($hideEmpty && (!$threads || $threads.TotalCount == 0))
+	$core_v2_widget.Hide()
+#end
+
+## Render threads
+
+#foreach ($thread in $threads)
+#beforeall
+	<ul class="content-list content margin-bottom tabular">
+#each
+
+	<li class="content-item with-href #if($thread.IsSticky && $thread.StickyDate > $core_v2_utility.CurrentUserDate) highlight#end" data-threadid="$thread.Id" data-href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)">
+
+		<div class="icon cell answer-status">
+			#if ($thread.ThreadType == "QuestionAndAnswer")
+				#if ($thread.ThreadStatus == "Answered")
+					<span class="attribute-value"><a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($thread.Url, 'ReplyFilter=Answers&ReplySortBy=Answers&ReplySortOrder=Descending')))" class="verified replace-with-icon check" data-threadid="$thread.Id" data-answertype="verified-answers">$core_v2_language.GetResource('Status_VerifiedAnswer')</a></span>
+				#elseif ($thread.ThreadStatus == "AnsweredNotVerified")
+					<span class="attribute-value"><a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($thread.Url, 'ReplyFilter=Answers&ReplySortBy=Answers&ReplySortOrder=Descending')))" class="suggested replace-with-icon check" data-threadid="$thread.Id" data-answertype="non-verified-answers">$core_v2_language.GetResource('Status_SuggestedAnswer')</a></span>
+				#else
+					<span class="attribute-value unanswered ui-tip replace-with-icon help" title="$core_v2_language.GetResource('NotAnswered_Tip')">$core_v2_language.GetResource('Status_NotAnswered')</span>
+				#end
+			#else
+				<span class="attribute-value discussion ui-tip replace-with-icon chat" title="$core_v2_language.GetResource('Discussion_Tip')">$core_v2_language.GetResource('Status_Discussion')</span>
+			#end
+		</div>
+		<div class="name cell">
+			<h2>
+			    #set($cssClass = 'internal-link view-post')
+			    #if ($thread.HasRead)
+			        #set($cssClass = "$cssClass read")
+			    #else
+			        #set($cssClass = "$cssClass unread")
+			    #end
+				<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)" $core_v2_ui.ContentPeek($thread.ContentId, $core_v2_forumThread.ContentTypeId, $cssClass)>$thread.Subject</a>
+				$core_v2_ui.ForumVotes("threadquality", $thread.Id)
+				#if ($thread.ThreadType == "QuestionAndAnswer")
+					$core_v2_ui.ForumVotes('thread', $thread.Id)
+				#end
+				#if ($thread.IsLocked)
+				    <span class="identifier locked ui-tip" title="$core_v2_language.GetResource('Locked_Tip')">$core_v2_language.GetResource('Locked')</span>
+				#end
+			</h2>
+		</div>
+		<div class="cell nowrap supplementary">
+			<span class="value">$thread.ViewCount.ToString()</span>
+			<span class="description">
+				#if ($thread.ViewCount == 1)
+					$core_v2_language.GetResource('ViewCount_Singular')
+				#else
+					$core_v2_language.GetResource('ViewCount_Plural')
+				#end
+			</span>
+		</div>
+		<div class="cell nowrap supplementary">
+			<span class="value">$thread.ReplyCount.ToString()</span>
+			<span class="description">
+				#if ($thread.ReplyCount == 1)
+					$core_v2_language.GetResource('ReplyCount_Singular')
+				#else
+					$core_v2_language.GetResource('ReplyCount_Plural')
+				#end
+			</span>
+		</div>
+		<div class="cell nowrap latest">
+			#set ($latestReplyAuthorId = false)
+			#set ($latestReplyAuthorId = $thread.LatestForumReplyAuthorId)
+			#set ($isStarter = false)
+			#set ($latestUrl = $thread.Url)
+			#set ($latestPeek = '')
+			#if ($latestReplyAuthorId && $latestReplyAuthorId > 0)
+				#set ($latestUser = $core_v2_user.Get("%{Id = $latestReplyAuthorId }"))
+				#set ($latestUrl = $core_v2_forumUrls.ForumReply($thread.LatestForumReplyId))
+				#set($forumReply = false)
+				#set($forumReply = $core_v2_forumReply.Get($thread.LatestForumReplyId))
+				#if ($forumReply && !$forumReply.HasErrors())
+				    #set ($latestPeek = $core_v2_ui.ContentPeek($forumReply.ContentId, $core_v2_forumReply.ContentTypeId))
+				#end
+			#else
+				#set ($isStarter = true)
+				#set ($latestUser = $thread.Author)
+				#set ($latestPeek = $core_v2_ui.ContentPeek($thread.ContentId, $core_v2_forumThread.ContentTypeId))
+			#end
+
+			#if ($isStarter)
+				#set ($latestFormat = $core_v2_language.GetResource('StartedFormat'))
+			#else
+				#set ($latestFormat = $core_v2_language.GetResource('LatestReplyFormat'))
+			#end
+			
+			<span class="value">
+				$core_v2_language.FormatString($latestFormat, $core_v2_encoding.HtmlAttributeEncode($latestUrl), $core_v2_ui.AgoDate($thread.LatestPostDate), $latestPeek)
+			</span>
+
+			<span class="description">
+				#if ($latestUser.ProfileUrl)
+					$core_v2_language.GetResource('by') <a href="$core_v2_encoding.HtmlAttributeEncode($latestUser.ProfileUrl)" class="internal-link view-user-profile">$latestUser.DisplayName</a>
+				#else
+					$core_v2_language.GetResource('by') $latestUser.DisplayName
+				#end
+			</span>
+		</div>
+	</li>
+	<li class="content-item preview" data-threadid="$thread.Id">
+		<div class="cell supplementary"></div>
+		<div class="cell content"></div>
+		<div class="cell supplementary"></div>
+		<div class="cell supplementary"></div>
+		<div class="cell supplementary"></div>
+	</li>
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">
+		#set ($addUrl = $core_v2_forumUrls.AddThread($currentForum.Id, true))
+		#if ($currentForum && $addUrl)
+
+			#foreach ($threadType in $forum.AllowedThreadTypes)
+				#if ($threadType == 'QuestionAndAnswer')
+					#set ($hasQaForums = true)
+				#elseif ($threadType == 'Discussion')
+					#set($hasDiscussionForums = true)
+				#end
+			#end
+			#if ($hasQaForums && $hasDiscussionForums)
+				#set($message = $core_v2_language.GetResource('Question_or_Discussion'))
+			#elseif($hasQaForums)
+				#set($message = $core_v2_language.GetResource('Question'))
+			#else
+				#set($message = $core_v2_language.GetResource('Discussion'))
+			#end
+
+			$core_v2_language.FormatString($core_v2_language.GetResource("ViewThreads_NoTopics_Link"), $addUrl, $message)
+		#else
+			$core_v2_language.GetResource("ViewThreads_NoTopics")
+		#end
+	</div>
+#end
+
+
+## Paging
+
+#set ($pagerOptions = "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true' }")
+## only reload on each hash change if this supports user filtering
+#if ($supportUserFiltering)
+	$pagerOptions.Add('LoadOnAnyHashChange', 'true')
+#end
+$core_v2_ui.Pager($threads.PageIndex, $threads.PageSize, $threads.TotalCount, $pagerOptions)

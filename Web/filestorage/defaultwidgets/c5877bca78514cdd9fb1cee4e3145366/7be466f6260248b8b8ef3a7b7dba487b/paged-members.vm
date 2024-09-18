@@ -1,0 +1,55 @@
+#set($query = "%{SortBy = 'DisplayName', SortOrder = 'Ascending'}")
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$query.Add('PageIndex', $pageIndex)
+$query.Add('PageSize', 20)
+
+#set($membershipType = false)
+#set($membershipType = $core_v2_page.GetQueryStringValue('w_membershiptype'))
+#if ($membershipType && $membershipType.Length > 0)
+    $query.Add('MembershipType', $membershipType)
+#else
+    $query.Add('MembershipType', 'Owner,Manager,Member')
+#end
+
+#set($searchText = false)
+#set($searchText = $core_v2_page.GetQueryStringValue('w_query'))
+#if ($searchText && $searchText.length > 0)
+    $query.Add('UserNameFilter', $searchText)
+#else
+    #set($searchText = false)
+#end
+
+#set($members = $core_v2_groupUserMember.ListEffectiveGroupMembers($context.Group.Id, $query))
+#set ($hasMore = 'false')
+#if ($members.PageIndex == $pageIndex)
+    #set ($currentPagedQuantity = ($members.PageIndex + 1) * $members.PageSize)
+    #if ($members.TotalCount > $currentPagedQuantity)
+    	#set ($hasMore = 'true')
+    #end
+#else
+    #set($members = [])
+#end
+
+<div data-hasmore="$hasMore">
+    #if ($pageIndex == 0 && $members.TotalCount > 0) 
+        <p class="result-overview">
+            #if ($members.TotalCount == 1)
+                $core_v2_language.FormatString($core_v2_language.GetResource('member-count-singular'), $core_v2_language.FormatNumber($members.TotalCount))
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('member-count'), $core_v2_language.FormatNumber($members.TotalCount))
+            #end
+            #if (!$searchText && !$membershipType)
+                <a href="#" class="inline-button" data-messagename="groupmembers.export">$core_v2_language.GetResource('export-as-csv')</a>
+            #end
+        </p>
+    #end
+    
+    <ul class="content-list content expandable simple">
+    #foreach($member in $members)
+    #each
+      $core_v2_widget.ExecuteFile('format-usermember.vm')
+    #end
+    </ul>
+</div>

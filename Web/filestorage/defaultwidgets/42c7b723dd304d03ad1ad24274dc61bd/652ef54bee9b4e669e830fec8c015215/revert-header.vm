@@ -1,0 +1,89 @@
+#set ($applicationOverrides = $context.ListHeaderOverrides())
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('revertThemeHeaderHeader'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button revert-all">$core_v2_language.GetResource('revert-all')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+#if ($applicationOverrides.Errors.Count > 0)
+    <p>$core_v2_language.FormatString($core_v2_language.GetResource('revert-header-instructions-nolist'), $context.ThemeTypeName.ToLower())</p>
+    <div class="message error">
+        #foreach($error in $applicationOverrides.Errors)
+            $error.Message
+        #end
+    </div>
+#else
+    #foreach($applicationOverride in $applicationOverrides)
+        #beforeall
+            <p>$core_v2_language.FormatString($core_v2_language.GetResource('revert-header-instructions'), $context.ThemeTypeName.ToLower())</p>
+            <ul class="content-list content simple">
+        #each
+            <li class="content-item application-override" data-applicationid="$applicationOverride.ApplicationId.ToString()" style="position:relative;">
+            	<div class="content-container">
+                	<h4 class="name">
+                	    $applicationOverride.Name
+                	</h4> 
+                	<div class="actions">
+                		<div class="navigation-list ui-links" data-direction="horizontal">
+                			<ul>
+                			    #if ($applicationOverride.Url)
+                    				<li class="navigation-list-item">
+                    					<a href="$core_v2_encoding.HtmlAttributeEncode($applicationOverride.Url)" target="_blank">
+                    						$core_v2_language.GetResource('view-application')
+                    					</a>
+                    				</li>
+                				#end
+                				<li class="navigation-list-item">
+                					<a href="#" data-messagename="themepages.revertapplicationoverride" data-applicationid="$applicationOverride.ApplicationId.ToString()" data-applicationname="$applicationOverride.Name">
+                						$core_v2_language.GetResource('revert')
+                					</a>
+                				</li>
+                				<li class="navigation-list-item">
+                					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+                				</li>
+                				<li class="navigation-list-item">
+                					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                				</li>
+                			</ul>
+                		</div>
+                	</div>
+                </div>
+            </li>
+        #afterall
+            </ul>    
+        #nodata
+            <div class="message norecords">$core_v2_language.GetResource('no-application-customizations')</div>
+    #end
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.themePagesRevertHeader')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('revert-header.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.themePagesRevertHeader.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    hasCustomizations: #if($applicationOverrides.Count > 0 || $applicationOverrides.Errors.Count > 0) true #else false #end,
+		    urls: {
+		        revertAllHeader: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revertAllHeader.vm'))',
+		        revertApplicationHeader: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revertApplicationHeader.vm'))'
+		    },
+		    text: {
+		        revertAllConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-all-header-confirmation'))',
+		        revertAllSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-all-header-success'))',
+		        revertApplicationConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-application-header-confirmation'))',
+		        revertApplicationSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-application-header-success'))'
+		    }
+    	});
+	});
+	</script>
+#end

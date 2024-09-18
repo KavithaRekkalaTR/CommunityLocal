@@ -1,0 +1,147 @@
+##
+## Perform Query
+##
+
+## Analyzes context and performs a blog post query based on it,
+## resulting in an exposed $posts object in widget scope
+
+#set ($postFilter = $core_v2_widget.GetStringValue("postFilter", "all"))
+
+## user to query
+#set ($user = false)
+#set($userFilterType = $core_v2_widget.GetStringValue("userQueryType", "all"))
+#if($userFilterType == "accessingUser")
+	#set($user = $core_v2_user.Accessing)
+#elseif($userFilterType == "currentUser")
+	#set($user = $core_v2_user.Current)
+#end
+
+## blog post data sourcing
+#set($selectedBlogOrGroup = $core_v2_widget.GetStringValue("selectedBlogOrGroup", ""))
+#set($parsedBlogOrGroup = $core_v2_page.ParseQueryString($selectedBlogOrGroup))
+#set($blogs = false)
+#set($blogs = $parsedBlogOrGroup.Values('Blog'))
+#set($group = false)
+#set($group = $parsedBlogOrGroup.Value('Group'))
+#set($includeSubGroups = $parsedBlogOrGroup.Value('IncludeSubGroups'))
+#if ($selectedBlogOrGroup.length == 0)
+	#set ($includeSubGroups = true)
+#end
+
+#if (!$blogs && !$group)
+	#if ($core_v2_blog.Current)
+		#set($blogs = [$core_v2_blog.Current.Id])
+	#elseif($core_v2_group.Current)
+		#set($group = $core_v2_group.Current.Id)
+	#end
+#elseif (!$blogs && $group == '-1')
+	#set($group = $core_v2_group.Current.Id)
+#end
+
+#set($tagsToFilter = $core_v2_widget.GetStringValue('tagsToFilter', ''))
+
+## sorting
+#set ($postSortBy = $core_v2_page.GetQueryStringValue('PostSortBy'))
+#if (!$postSortBy || $postSortBy.Length == 0)
+	## if not provided, use the default
+	#set($postSortBy = $core_v2_widget.GetStringValue('postSortBy', 'MostRecent'))
+#end
+
+## sort order
+#set ($postSortOrder = $core_v2_page.GetQueryStringValue('PostSortOrder'))
+#if (!$postSortOrder || $postSortOrder != 'Ascending')
+	#set($postSortOrder = 'Descending')
+#end
+
+## paging
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize', 25))
+
+## base blog query
+#set ($blogPostQuery = "%{ PageSize = $pageSize, PageIndex = $pageIndex, SortBy = $postSortBy, SortOrder = $postSortOrder, Tags = $tagsToFilter }")
+#set ($featuredContentQuery = "%{ PageSize = $pageSize, PageIndex = $pageIndex, SortOrder = $postSortOrder, ContentTypeIds = $core_v2_blogPost.ContentTypeId.ToString() }")
+
+## date filtering
+#set ($day = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('d')))
+#set ($month = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('m')))
+#set ($year = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('y')))
+#set ($minDate = $core_v2_utility.ParseDate('0001-01-01'))
+#set ($maxDate = $core_v2_utility.ParseDate('9999-12-31'))
+#if ($month > 0 && $month < 13 && $day > 0 && $day < 32 && $year > $minDate.Year && $year <= $maxDate.Year)
+	#set ($currentBlogPost = false)
+	#set ($currentBlogPost = $core_v2_blogPost.Current)
+	#if (!$currentBlogPost)
+		$blogPostQuery.Add('DateFilter', "${year}-${month}-${day}")
+		$blogPostQuery.Add('DateFilterType', 'Month')
+	#end
+#end
+
+#set($oneBlog = true)
+
+## Query for blog posts
+#if($blogs)
+	## get posts related to a group or groups
+	## construct a comma-separated string of blog ids
+	#set ($featuredContentApplicationId = false)
+	#foreach ($blog in $blogs)
+		## id of -1 means use the current blog
+		#if ($blog == -1)
+			#set ($blog = $core_v2_blog.Current.Id)
+		#end
+		#if($blog > 0)
+			#set ($featuredContentApplicationId = $blog.ApplicationId)
+			#if(!$blogIds)
+				#set($blogIds = "$blog")
+			#else
+				#set($blogIds = "$blogIds,$blog")
+				#set($oneBlog = false)
+			#end
+		#end
+	#end
+
+	#if ($featuredContentApplicationId)
+		$featuredContentQuery.Add('ApplicationId', $featuredContentApplicationId)
+	#end
+
+	$blogPostQuery.Add('BlogIds', $blogIds)
+
+#else
+	## get posts related to a group
+	#set ($containerId = false)
+	#if($group == 0 || !$group)
+		#set ($groupId = $core_v2_group.Current.Id)
+		#set ($containerId = $core_v2_group.Current.ContainerId)
+	#else
+		#set($groupId = $group)
+		#set($groupModel = $core_v2_group.Get("%{ Id = $groupId }"))
+		#if ($groupModel)
+			#set ($containerId = $groupModel.ContainerId)
+		#end
+	#end
+
+	#set($groupBlogs = $core_v2_blog.List("%{GroupId=$groupId,IncludeSubGroups=$includeSubGroups,PageIndex=0,PageSize=2}"))
+	#if($groupBlogs && $groupBlogs.Count > 1)
+		#set($oneBlog = false)
+	#end
+
+	$blogPostQuery.Add('GroupId', $groupId)
+	$blogPostQuery.Add('IncludeSubGroups', $includeSubGroups)
+	#if ($containerId)
+		$featuredContentQuery.Add('ContainerId', $containerId)
+		$featuredContentQuery.Add('IncludeSubContainers', $includeSubGroups)
+	#end
+#end
+
+## user filtering
+#if ($user)
+	$blogPostQuery.Add('AuthorId', $user.Id)
+#end
+
+## Load Posts
+#set ($posts = false)
+#set ($featuredContents = false)
+#if ($postFilter == 'all')
+	#set ($posts = $core_v2_blogPost.List($blogPostQuery))
+#elseif ($postFilter == 'featured')
+	#set ($featuredContents = $core_v3_feature.List($featuredContentQuery))
+#end

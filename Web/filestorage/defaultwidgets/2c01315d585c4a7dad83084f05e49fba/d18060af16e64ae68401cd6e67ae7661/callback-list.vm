@@ -1,0 +1,47 @@
+<ul class="content-list content expandable simple">
+#foreach($apiKey in $context.ListApiKeys())
+	<li class="content-item apikey" data-title="$core_v2_encoding.HtmlAttributeEncode($apikey.Name)" data-id="$apiKey.Id">
+		<div class="content apikey">
+		<h4 class="name">
+			$apiKey.Name
+		</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item enabled">
+					#if($apiKey.Enabled)
+						<span class="value highlight">$core_v2_language.GetResource('enabled')</span>
+					#else
+						<span class="value">$core_v2_language.GetResource('disabled')</span>
+					#end
+				</li>
+			</ul>
+		</div>
+		<div class="content expandable">
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+				    <li class="navigation-list-item">
+						<a href="#" data-messagename="apikeys.regeneratesecret" data-name="$core_v2_encoding.HtmlAttributeEncode($apiKey.Name)" data-id="$apiKey.Id">$core_v2_language.GetResource('regenerate-secret')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="apikeys.edit" data-name="$core_v2_encoding.HtmlAttributeEncode($apiKey.Name)" data-id="$apiKey.Id">$core_v2_language.GetResource('edit')</a>
+					</li>
+				    <li class="navigation-list-item">
+				        <a href="#" data-messagename="apikeys.toggleenabled" data-name="$core_v2_encoding.HtmlAttributeEncode($apiKey.Name)" data-id="$apiKey.Id" #if($apiKey.Enabled) data-enabled="1" #else data-enabled="0" #end>#if($apiKey.Enabled)$core_v2_language.GetResource('disable')#else$core_v2_language.GetResource('enable')#end</a>
+				    </li>
+				    <li class="navigation-list-item">
+				        <a href="#" data-messagename="apikeys.delete" data-name="$core_v2_encoding.HtmlAttributeEncode($apiKey.Name)" data-id="$apiKey.Id">$core_v2_language.GetResource('delete')</a>
+				    </li>
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#end
+</ul>

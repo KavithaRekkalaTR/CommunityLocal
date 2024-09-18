@@ -1,0 +1,198 @@
+#set($contentTypeName = '')
+#set($contentType = false)
+#set($contentTypeNameProperCase = '')
+#set($contentType = $core_v2_contentType.Get($reviewableContent.ContentTypeId))
+#if ($reviewableContent.ContentTypeId != $core_v2_utility.ParseGuid('') && $contentType && $contentType.Name)
+    #set($contentTypeNameProperCase = $contentType.Name)
+	#set($contentTypeName = $contentTypeNameProperCase.ToLowerInvariant())
+#else
+    #set($contentTypeNameProperCase = $core_v2_language.GetResource('missing-content-type-name'))
+	#set($contentTypeName = $contentTypeNameProperCase.ToLowerInvariant())
+#end
+#set($reviewableContentReadOnly = true)
+
+<li data-reviewablecontentid="$reviewableContent.Id" class="content-item reviewable-content" data-isreadonly="1">
+	<div class="moderated-content-header">
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-input">
+						#if ($author && $hasModerateUsersPermission)
+							<div class="ui-links navigation-list" data-minlinks="0" data-direction="vertical" data-maxlinks="0">
+								<ul class="navigation-list">
+									#if($reviewableContent.ContentTypeId != $core_v2_user.ContentTypeId)
+										<li class="navigation-list-item abuse">
+											$core_v2_ui.Moderate($reviewableContent.Author.ContentId, $core_v2_user.ContentTypeId, "%{ CssClass='appeals-moderate'}")
+										</li>
+									#end
+									<li class="navigation-list-item moderate">
+										#set ($moderateText = $core_v2_language.GetResource('moderate_author'))
+										#set ($unmoderateText = $core_v2_language.GetResource('unmoderate_author'))
+										#set ($type = 'author')
+										#if ($reviewableContent.Author.ModerationLevel == 'Moderated')
+											<a href="#" class="moderate-toggle" data-messagename="user-moderate-toggle" data-userid="$reviewableContent.Author.Id" data-moderated="true" data-type="$type">
+												$unmoderateText
+											</a>
+										#else
+											<a href="#" class="moderate-toggle" data-messagename="user-moderate-toggle" data-userid="$reviewableContent.Author.Id" data-moderated="false" data-type="$type">
+												$moderateText
+											</a>
+										#end
+									</li>
+									<li class="navigation-list-item delete">
+										#set($isAuthor = false)
+										#set($deleteText = $core_v2_language.GetResource('delete_author'))
+										<a href="#" class="delete-user" data-messagename="user-delete" data-userid="$reviewableContent.Author.Id" data-username="$core_v2_encoding.HtmlAttributeEncode($reviewableContent.Author.DisplayName)">$deleteText</a>
+									</li>
+									<li class="navigation-list-item">
+										<a href="#" class="button" data-more>$core_v2_language.GetResource('more')</a>
+									</li>
+									<li class="navigation-list-item">
+										<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+									</li>
+								</ul>
+							</div>
+						#end
+
+						#if ($context.CanApprove($reviewableContent.Id))
+							<a href="#" class="accept button">$core_v2_language.GetResource('Accept')</a>
+						#else
+							<span class="accept button disabled">$core_v2_language.GetResource('Accept')</span>
+						#end
+						
+						#if ($context.CanDeny($reviewableContent.Id))
+							<a href="#" class="reject delete button">$core_v2_language.GetResource('Reject')</a>
+						#else
+							<span class="reject delete button disabled">$core_v2_language.GetResource('Reject')</span>
+						#end
+						
+						#if ($context.CanEdit($reviewableContent.Id))
+                            <a href="#" class="save inline-button" style="display: none;">$core_v2_language.GetResource('Save')</a>
+                            <a href="#" class="edit inline-button">$core_v2_language.GetResource('Edit')</a>
+                        #end
+                        
+                        #if ($context.CanPreview($reviewableContent.Id))
+                            <a href="#" class="preview inline-button">$core_v2_language.GetResource('Preview')</a>
+                        #end
+                        
+                        #if ($context.CanPublish($reviewableContent.Id))
+                            <a href="#" class="publish inline-button">$core_v2_language.GetResource('Publish')</a>
+                        #end
+                        
+                        #if ($context.CanDelete($reviewableContent.Id))
+                            <a href="#" class="delete inline-button">$core_v2_language.GetResource('Delete')</a>
+                        #end
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</div>
+	<div class="moderated-content-attributes">
+		<div class="author">
+			#if ($reviewableContent.Author)
+				#set($userUrl = false)
+				#set($userUrl = $context.ViewMember($reviewableContent.Author.Id))
+				<div class="avatar">
+              #if ($userUrl)
+                <a href="$core_v2_encoding.HtmlAttributeEncode($userUrl)" #if(!$userUrl.StartsWith('#')) target="_blank"#end>
+                  $core_v2_ui.GetResizedImageHtml($reviewableContent.Author.AvatarUrl, 32, 32, "%{border='0px', alt=$reviewableContent.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+                </a>
+              #else
+                $core_v2_ui.GetResizedImageHtml($reviewableContent.Author.AvatarUrl, 32, 32, "%{border='0px', alt=$reviewableContent.Author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+              #end
+            </div>
+            <span class="user-name">
+                #if ($userUrl)
+                  <a href="$core_v2_encoding.HtmlAttributeEncode($userUrl)" class="internal-link view-profile" #if(!$userUrl.StartsWith('#')) target="_blank"#end>
+                    $reviewableContent.Author.DisplayName
+                  </a>
+                #else
+                  $reviewableContent.Author.DisplayName
+                #end
+            </span>
+			#end
+		</div>
+		<ul class="attribute-list">
+			<li class="attribute-item">
+				<span class="attribute-value">$core_v2_language.FormatDateAndTime($reviewableContent.CreatedDate)</span>
+			</li>
+			
+			    #set($content = false)
+			    #if ($reviewableContent.ContentId)
+			        #set($content = $core_v2_content.Get($reviewableContent.ContentId, $reviewableContent.ContentTypeId))
+			        #if ($content.HasErrors())
+			            #set($content = false)
+			        #end
+			    #end
+			
+				#if ($content.IsEnabled && $content.Url)
+					<li class="attribute-item">
+						<span class="attribute-value">
+						    #format($core_v2_language.GetResource('EditedContent'))
+						        #token()
+						            <a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">$content.HtmlName('Web')</a>
+						    #end
+						</span>
+					</li>
+				#elseif ($content)
+				    <li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('EditedContent'), $content.HtmlName('Web'))</span>
+					</li>
+				#else
+				    <li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('NewContent'), $contentTypeNameProperCase)</span>
+					</li>
+				#end
+				
+				#if ($reviewableContent.Application && $reviewableContent.Application.HtmlName('Web').Trim().Length > 0 && $reviewableContent.Application.ApplicationId != $reviewableContent.Application.Container.ContainerId)
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('InApplication'), $core_v2_encoding.HtmlAttributeEncode($reviewableContent.Application.Url), $reviewableContent.Application.HtmlName('Web'))</span>
+					</li>
+				#end
+				#if ($reviewableContent.Application && $reviewableContent.Application.Container && $reviewableContent.Application.Container.HtmlName('Web').Trim().Length > 0)
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('InContainer'), $core_v2_encoding.HtmlAttributeEncode($reviewableContent.Application.Container.Url), $reviewableContent.Application.Container.HtmlName('Web'))</span>
+					</li>
+				#end
+				
+				#if ($reviewableContent.ModerationStatus == 'Published')
+				    <li class="attribute-item approved">
+    					<span class="attribute-value">$core_v2_language.GetResource('Published')</span>
+    				</li>
+				#elseif ($reviewableContent.ModerationStatus == 'Deleted')
+				    <li class="attribute-item denied">
+    					<span class="attribute-value">$core_v2_language.GetResource('Deleted')</span>
+    				</li>
+				#else
+    				<li class="attribute-item pending">
+    					<span class="attribute-value">$core_v2_language.GetResource('PendingReview')</span>
+    				</li>
+				#end
+		</ul>
+	</div>
+	<div class="moderated-content-approvedeny-wrapper" style="display:none;">
+	    <p class="moderated-content-approvedeny-instructions"></p>
+	    <div class="moderated-content-approvedeny-form"></div>
+	    <fieldset>
+	        <ul class="field-list">
+	            <li class="field-item">
+	                <span class="field-item-input">
+                        <a href="#" class="accept button">$core_v2_language.GetResource('Accept')</a>
+		                <a href="#" class="reject delete button">$core_v2_language.GetResource('Reject')</a>
+                        <a href="#" class="cancel inline-button">$core_v2_language.GetResource('cancel')</a>	                    
+	                </span>
+	            </li>
+	        </ul>
+	    </fieldset>
+	</div>
+	<div class="moderated-content-information">
+		<div class="message information">
+			<p>
+				$!reviewableContent.Status
+			</p>
+		</div>
+	</div>
+    $core_v2_widget.ExecuteFile('reviewablecontent-content.vm')
+  </div>
+  <div style="clear: both;"></div>
+</li>

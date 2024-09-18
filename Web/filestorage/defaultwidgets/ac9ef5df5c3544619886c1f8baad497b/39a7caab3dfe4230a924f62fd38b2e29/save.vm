@@ -1,0 +1,40 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#set($AppKey = $core_v2_page.GetFormValue('AppKey'))
+##owners
+	#set($Description = $core_v2_page.GetFormValue('Description'))
+	#set($Owners = $core_v2_page.GetFormValue('Owners'))
+	#set($GroupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupId')))
+	#set($Enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enabled')))
+	#set($Sitemap = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Sitemap')))
+	#set($ViewType = $core_v2_page.GetFormValue('ViewType'))
+
+	#if ($Name && $Name != '')
+		$options.Add('Name', $Name)
+	#end
+	#if ($AppKey && $AppKey != '')
+		$options.Add('AppKey', $AppKey)
+	#end	
+	#if ($GroupId > 0)
+		$options.Add('GroupId', $GroupId)
+	#end	
+
+	$options.Add('Description', $Description)
+	$options.Add('Owners', $Owners)
+	$options.Add('Enabled', $Enabled)
+	$options.Add('Sitemap', $Sitemap)
+	$options.Add('ViewType', $ViewType)
+
+	#set($response = $context.Update($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "redirectUrl":"$response.Url"}
+
+#end

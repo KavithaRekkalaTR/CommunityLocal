@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="86a5192d6eeb4d33a954b9cb9bf308ee" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2019-12-23 20:58:54Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="blogpost.aftercreate" />
+      <event key="blogpost.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_blogPost.ContentTypeId);
+if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.IsApproved && !awardedPoints) {
+    context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_blogPost.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (context_v2_automationTrigger.Arguments.IsApproved) {
+        // ensure points awarded
+        if (!awardedPoints) {
+            context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_blogPost.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (awardedPoints) {
+            context_v1_pointsAutomation.RevokePoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_blogPost.ContentTypeId);
+        }
+    }
+}]]></executionScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Awards points to authors of blog posts.</resource>
+  <resource name="Title">When a blog post is posted</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

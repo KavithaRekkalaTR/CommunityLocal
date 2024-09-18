@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:TagBrowser}" version="10.0.0.0" description="${resource:TagBrowser_Description}" instanceIdentifier="2990b0cbdc004d86835967cc24cb042e" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="6c98721d76b34ef7b26b1c485c08bc84">
+    <contentScript><![CDATA[#set($tags = false)
+#set($tags = $core_v2_utility.FlattenHierarchy($context.Tags, 'Children'))
+
+#if(!$tags || $tags.Count == 0)
+	<p>
+	    #if ($context.ParentTag)
+            $core_v2_language.FormatString($core_v2_language.GetResource('notags_withparent'), $context.ParentTag.Name)
+        #else
+            $core_v2_language.GetResource('notags')
+        #end
+	</p>
+#else
+    <p style="margin: 0 0 20px 0;">
+        #if ($context.ParentTag)
+            $core_v2_language.FormatString($core_v2_language.GetResource('instructions_withparent'), $context.ParentTag.Name)
+        #else
+            $core_v2_language.GetResource('instructions')
+        #end
+    </p>
+
+    <div id="$core_v2_widget.UniqueId('hierarchy')">
+    	#set($currentLevel = 0)
+    	#set($hiddenLevel = 0)
+    	#set($wasHidden = false)
+    	#foreach($tag in $tags)
+    		#if($tag.Level > $currentLevel)
+    			#foreach($i in [$currentLevel..$tag.Level])
+    				#if($i != $currentLevel)
+    					<div class="hierarchy-children" #if ($i != 1) style="display: none" #end>
+    						<ul class="hierarchy-list">
+    				#end
+    			#end
+    		#elseif ($tag.Level < $currentLevel)
+    			#foreach($i in [$tag.Level..$currentLevel])
+    				#if($i != $currentLevel)
+    							</li>
+    						</ul>
+    					</div>
+    				#end
+    			#end
+    		#else
+    			</li>
+    		#end
+    		<li data-tagid="$tag.Item.Id">
+    			<div class="hierarchy-item#if($currentTag && $currentTag.Id == $tag.Item.Id) selected#end#if($tag.HasChildren) with-children#else without-children#end">
+                #if ($tag.HasChildren)
+        			    <a href="#" data-value="$core_v2_encoding.UrlEncode($tag.Item.Name)=$core_v2_encoding.UrlEncode($tag.Item.Name)=$core_v2_encoding.UrlEncode($tag.Item.Id)"><span class="expand-collapse collapsed">+</span>$tag.Item.Name</a>
+        			</div>
+        		#else
+    					<a href="#" data-value="$core_v2_encoding.UrlEncode($tag.Item.Name)=$core_v2_encoding.UrlEncode($tag.Item.Name)=$core_v2_encoding.UrlEncode($tag.Item.Id)">$tag.Item.Name</a>
+    				</div>
+    			#end
+    		#set($currentLevel = $tag.Level)
+    	#end
+    	#if ($currentLevel > 0)
+    		#foreach($i in [1..$currentLevel])
+    					</li>
+    				</ul>
+    			</div>
+    		#end
+    	#end
+    </div>
+
+    <script type="text/javascript">
+    jQuery(function() {
+        jQuery('#$core_v2_widget.UniqueId('hierarchy')').on('click', '.hierarchy-item.with-children .expand-collapse', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+
+    		var expandCollapse = $(this);
+    		var currentItem = expandCollapse.closest('li');
+    		var children = currentItem.children('.hierarchy-children');
+
+    		if (children && children.length > 0) {
+    			if (!children.is(':visible'))
+    				children.slideDown(100, function() {
+    					expandCollapse.html('-').removeClass('collapsed').addClass('expanded');
+    				});
+    			else
+    				children.slideUp(100, function() {
+    					expandCollapse.html('+').removeClass('expanded').addClass('collapsed');
+    				});
+    		}
+
+            return false;
+    	});
+        jQuery('#$core_v2_widget.UniqueId('hierarchy')').on('click', 'a', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+
+            var v = jQuery(this).data('value');
+            if (v && ${context.CallbackFunctionName})
+                ${context.CallbackFunctionName}(v);
+
+            return false;
+        });
+    });
+    </script>
+#end]]></contentScript>
+    <languageResources><language key="en-us"><resource name="instructions">Select a tag.</resource><resource name="instructions_withparent">Select a tag from within '{0}.'</resource><resource name="notags">There are no options to select from.</resource><resource name="notags_withparent">There are no options to select from within '{0}.'</resource><resource name="TagBrowser">Browse</resource><resource name="TagBrowser_Description">Enables browsing of tags within Knowledge Management.</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

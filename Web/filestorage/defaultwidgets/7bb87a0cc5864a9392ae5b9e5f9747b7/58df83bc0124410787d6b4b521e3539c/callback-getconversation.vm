@@ -1,0 +1,22 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($conversationId = false)
+#set($conversationId = $core_v2_page.GetQueryStringValue('Id'))
+#set($userNames = false)
+#set($userNames = $core_v2_page.GetQueryStringValue('Usernames'))
+#if ($conversationId)
+    #set($conversationId = $core_v2_utility.ParseGuid($conversationId))
+    #set($conversation = $core_v2_conversation.Get($conversationId))
+#elseif($userNames)
+    #set($conversation = $core_v2_conversation.Get($userNames))
+#end
+
+#if ($conversation.HasErrors())
+    $core_v2_page.SendJsonError($conversation.Errors)
+#end
+
+{
+    #if ($conversation)
+        "Conversation": $core_v2_widget.ExecuteFile('format-conversation.vm')
+    #end
+}

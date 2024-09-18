@@ -1,0 +1,87 @@
+##
+## Loads and renders Best (most voted) comment excerpts
+## Expects in scope:
+##   $contentId
+##   $contentTypeId
+##   $bestSize
+##
+
+#set ($listBestOptions = "%{}")
+$listBestOptions.add('FlattenedDepth', 0)
+$listBestOptions.add('RootPageSize', $bestSize)
+$listBestOptions.add('ChildPageSize', $bestSize)
+$listBestOptions.add('FlattenedSortBy', 'Votes')
+$listBestOptions.add('FlattenedSortOrder', 'Descending')
+$listBestOptions.add('ContentId', $contentId)
+$listBestOptions.add('ContentTypeId', $contentTypeId)
+#if ($commentTypeId)
+	$listBestOptions.add('CommentTypeId', $commentTypeId)
+#end
+
+#set ($bestReplies = $core_v2_comments.ListThreaded($listBestOptions))
+#set ($hasBestRepliesOverThreshold = false)
+#foreach ($bestReply in $bestReplies)
+	#set ($netVotes = $bestReply.YesVotes)
+	#set ($netVotes = $netVotes - $bestReply.NoVotes)
+	#if ($netVotes > 0)
+		#set ($hasBestRepliesOverThreshold = true)
+	#end
+#end
+
+#if ($hasBestRepliesOverThreshold)
+	#foreach ($bestReply in $bestReplies)
+	#beforeall
+		<div class="threaded-summary">
+			<h2>$core_v2_language.GetResource('TopReplies')</h2>
+			<ul class="content-list">
+	#each
+		#set ($netVotes = $bestReply.YesVotes)
+		#set ($netVotes = $netVotes - $bestReply.NoVotes)
+		#if ($netVotes > 0)
+			<li class="content-item">
+				<div class="author" #if ($bestReply.User.ProfileUrl) data-authorprofileurl="$core_v2_encoding.HtmlAttributeEncode($bestReply.User.ProfileUrl)" #else data-authorprofileurl="" #end>
+					<div class="avatar">
+						#if ($bestReply.User.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.User.ProfileUrl)" class="internal-link view-user-profile">
+								$core_v2_ui.GetResizedImageHtml($bestReply.User.AvatarUrl, 44, 44, "%{border='0px', alt=$bestReply.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+							</a>
+						#else
+							$core_v2_ui.GetResizedImageHtml($bestReply.User.AvatarUrl, 44, 44, "%{border='0px', alt=$bestReply.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+						#end
+					</div>
+					<div class="meta">
+						<span class="user-name">
+							$core_v2_ui.UserPresence($bestReply.User.Id)
+							#if ($bestReply.User.ProfileUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.User.ProfileUrl)" class="internal-link view-user-profile">
+									$bestReply.User.DisplayName
+								</a>
+							#else
+								$bestReply.User.DisplayName
+							#end
+						</span>
+						<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.Url)" class="internal-link view-post navigable">
+							$core_v2_ui.AgoDate($bestReply.CreatedDate)
+						</a>
+						#if ($bestReply.ParentCommentId)
+							#set ($bestReplyParent = false)
+							#set ($bestReplyParent = $core_v2_comments.Get($bestReply.ParentCommentId))
+							#if ($bestReplyParent)
+								<span class="parent">
+									$core_v2_language.GetResource('in_reply_to') <a class="internal-link view-post navigable ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_parent'))" href="$core_v2_encoding.HtmlAttributeEncode($bestReplyParent.Url)">$bestReplyParent.User.DisplayName</a>
+								</span>
+							#end
+						#end
+						<span class="votes">+$netVotes</span>
+					</div>
+				</div>
+				<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.Url)" class="internal-link view-full-post navigable ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ViewReply'))">
+					<div class="content user-defined-markup">$core_v2_language.Truncate($bestReply.Body('WebQuote'), 200, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'false' }")</div>
+				</a>
+			</li>
+		#end
+	#afterall
+			</ul>
+		</div>
+	#end
+#end

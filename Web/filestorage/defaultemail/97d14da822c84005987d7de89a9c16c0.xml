@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Changed Password" version="13.0.0.0" description="Sends an email when a user has changed their password" id="97d14da822c84005987d7de89a9c16c0" lastModified="2023-04-17 14:06:18Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Body'))
+#token('site_name')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Home(false))">$core_v2_infoResult.Get().SiteName</a>
+#end
+<p>
+$core_v2_language.GetResource('Body_Disclaimer')
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Your password on {site_name} has been changed.</resource>
+  <resource name="Body_Disclaimer">If you didn't make this change, please contact the site administrator as soon as possible.</resource>
+  <resource name="Subject">Password changed on {site_name}</resource>
+  <resource name="Header">Password changed on {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

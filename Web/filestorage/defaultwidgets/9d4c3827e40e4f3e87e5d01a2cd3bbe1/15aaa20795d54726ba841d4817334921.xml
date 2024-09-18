@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="10.0.0.0" description="${resource:Description}" instanceIdentifier="15aaa20795d54726ba841d4817334921" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="9d4c3827e40e4f3e87e5d01a2cd3bbe1">
+	<contentScript><![CDATA[#set($message = $core_v2_message.Current)
+#set($user = $core_v2_user.Accessing)
+#set($dq = '"')
+	
+	#set($homeAnchor = "<a href=${dq}${core_v2_urls.Home()}${dq}><span></span>${core_v2_language.GetResource('CreateNewAccount_NewUserMessage_Home')}</a>")
+	#set($editProfileAnchor = "<a href=${dq}${core_v2_editableGroup.GetEditUrl('User', ${core_v2_urls.User(${user.Id})})}${dq} class=${dq}internal-link edit-user-profile${dq}><span></span>${core_v2_language.GetResource('CreateNewAccount_EditProfileLink')}</a>")
+	#set($returnUrl = false)
+	#set($returnUrl = $core_v2_page.ReturnUrl)
+	<fieldset class="field-list">
+		$core_v2_language.FormatString($core_v2_language.GetResource("CreateNewAccount_NewUserMessage"), $homeAnchor, $editProfileAnchor)
+		#if (!$returnUrl || $returnUrl == '' || $core_v2_page.UrlsAreEqual($returnUrl, $core_v2_page.Url))
+			#set ($returnUrl = $core_v2_urls.Home())
+		#end
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($returnUrl)" class="button">$core_v2_language.GetResource('CreateNewAccount_NewUserMessage_ReturnUrl')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldlist>]]></contentScript>
+	<languageResources><language key="en-us">
+		<resource name="Name">User Account Created (Automatic Activation Mode)</resource>
+		<resource name="Description">User Message used for created user account in automatic activation mode.</resource>
+	  	<resource name="CreateNewAccount_EditProfileLink">update your profile</resource>
+		<resource name="CreateNewAccount_NewUserMessage">&lt;p&gt;Welcome to the community! Your account has been created and you are signed in.&lt;/p&gt;&lt;p&gt;You can take a few minutes now and {1} or go back to the {0} of the community. Or, just click the "Ok" button to go back to the page you were just on.&lt;/p&gt;</resource>
+		<resource name="CreateNewAccount_NewUserMessage_Home">home page</resource>
+		<resource name="CreateNewAccount_NewUserMessage_ReturnUrl">Ok</resource>
+	</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

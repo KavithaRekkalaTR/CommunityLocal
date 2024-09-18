@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+#set($direction = 'ltr')
+#if ($core_v2_language.IsRightToLeft)
+    #set($direction = 'rtl')
+#end
+<html lang="$core_v2_language.Code" class="direction-${direction}" style="direction: ${direction}">
+
+#set($headerOptions = "%{ IsModal = 'False' }")
+#set($previewHtml = false)
+#set($type = $core_v2_page.GetQueryStringValue('w_type'))
+#if ($type == 'content')
+    #set($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentid')))
+    #set($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contenttypeid')))
+    #set($content = false)
+    #set($content = $context.GetContent($contentId, $contentTypeId))
+    #if ($content && !$content.HasErrors() && $content.Application)
+        $headerOptions.Add('ApplicationId', $content.Application.ApplicationId)
+        $headerOptions.Add('ApplicationTypeId', $content.Application.ApplicationTypeId)
+    #end
+    
+    #set($previewHtml = $context.Preview($contentId, $contentTypeId))
+#elseif ($type == 'reviewablecontent')
+    #set($reviewableContentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_reviewablecontentid')))
+    #set($reviewableContent = false)
+    #set($reviewableContent = $context.GetReviewableContent($reviewableContentId))
+    #if ($reviewableContent && !$reviewableContent.HasErrors() && $reviewableContent.Application)
+        $headerOptions.Add('ApplicationId', $reviewableContent.Application.ApplicationId)
+        $headerOptions.Add('ApplicationTypeId', $reviewableContent.Application.ApplicationTypeId)
+    #end
+    
+    #set($previewHtml = $context.Preview($reviewableContentId))
+#end
+
+<head>
+    $core_v2_page.RenderThemeHeaders($headerOptions)
+</head>
+<body>
+    #if($previewHtml && $previewHtml.Length > 0)
+        $previewHtml
+    #else
+        <div class="message error">$core_v2_language.GetResource('NoPreviewAvailable')</div>
+    #end
+</body>
+</html>

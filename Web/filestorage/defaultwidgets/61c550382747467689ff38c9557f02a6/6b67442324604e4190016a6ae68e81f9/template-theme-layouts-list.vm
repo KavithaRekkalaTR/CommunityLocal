@@ -1,0 +1,34 @@
+<% if(layouts && layouts.length > 0) { %>
+	<ul class="child-items">
+	<% foreach(layouts, function(layout){ %>
+		<li class="child-item <%: layout.Type %> <%: layout.Name %>" data-comparison="<%: layout.Comparison %>">
+			<div>
+				<% if(layout.State == 'Staged') { %>
+					<%= template('studioShell-stagedIndicator') %>
+				<% } %>
+				<% if(layout.SampleUrl) { %>
+					<a href="<%: layout.SampleUrl %>" target="sample" class="name"><%: layout.Title %></a>
+				<% } else { %>
+					<span class="name"><%: layout.Title %></span>
+				<% } %>
+				<% if (layout.State != 'Staged' && !layout.IsDefinedByTheme) { %>
+					<span class="notthemed-indicator">$core_v2_language.GetResource('layout-notthemed')</span>
+				<% } %>
+			</div>
+			<% if(layout.Description) { %>
+				<span class="description"><%: layout.Description %></span>
+			<% } %>
+			<ul class="actions">
+				<% if(layout.SampleUrl) { %>
+					<li><a href="<%: layout.SampleUrl %>" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ViewSample'))" target="sample">$core_v2_language.GetResource('View')</a></li>
+				<% } %>
+				<% if(layout.EditUrl) { %>
+					<li><a href="<%: layout.EditUrl %>" target="sample">$core_v2_language.GetResource('Edit')</a></li>
+				<% } %>
+			</ul>
+		</li>
+	<% }); %>
+	</ul>
+<% } else { %>
+	<div class="message">$core_v2_language.GetResource('NoneDefined')</div>
+<% } %>

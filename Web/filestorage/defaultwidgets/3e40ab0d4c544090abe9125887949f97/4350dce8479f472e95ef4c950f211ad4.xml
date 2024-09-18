@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="Socket Message Bus" version="10.0.0.0" description="" instanceIdentifier="4350dce8479f472e95ef4c950f211ad4" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="3e40ab0d4c544090abe9125887949f97">
+	<contentScript><![CDATA[
+
+#set ($tabWrapper = $core_v2_widget.UniqueId('tab'))
+#set ($diagnosticsWrapper = $core_v2_widget.UniqueId('diagnosticsWrapper'))
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($tabWrapper)" $core_v2_servicePresence.RenderAttributes($context.ServicePresenceId)>
+	<div class="socket-message-bus-diagnostics" id="$core_v2_encoding.HtmlAttributeEncode($diagnosticsWrapper)">
+		#set ($includeRemote = false)
+		$core_v2_widget.ExecuteFile('diagnostics.vm')
+	</div>
+</div>
+<script type="text/javascript">
+	(function(){
+		var api = $context.JsonApi;
+		var tabWrapper = jQuery('#${core_v2_encoding.JavascriptEncode($tabWrapper)}');
+		var diagnosticsWrapper = jQuery('#${core_v2_encoding.JavascriptEncode($diagnosticsWrapper)}');
+		var diagnosticsUrl = '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-diagnostics.vm'))';
+
+		api.registerContent({
+			name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Diagnostics'))',
+			orderNumber: 1000000,
+			selected: function() {
+				tabWrapper.css({
+					visibility: 'visible',
+					height: 'auto',
+					width: 'auto',
+					left: '0',
+					position: 'static',
+					overflow: 'visible',
+					top: '0'
+				});
+			},
+			unselected: function() {
+				tabWrapper.css({
+					visibility: 'hidden',
+					height: '100px',
+					width: '800px',
+					left: '-1000px',
+					position: 'absolute',
+					overflow: 'hidden',
+					top: '-1000px'
+				});
+			}
+		});
+
+		function loadAndRenderDiagnostics() {
+			jQuery.telligent.evolution.get({
+				url: diagnosticsUrl,
+				cache: false
+			}).then(function(r){
+				diagnosticsWrapper.html(r);
+			})
+		}
+
+		var refreshOnInterval;
+		var refreshOnSocketMessage;
+
+		function rescheduleRefreshOnInterval() {
+			clearInterval(refreshOnInterval);
+			refreshOnInterval = setInterval(loadAndRenderDiagnostics, 5 * 1000);
+		}
+
+		function rescheduleOnMessage(){
+			clearTimeout(refreshOnSocketMessage);
+			refreshOnSocketMessage = setTimeout(loadAndRenderDiagnostics, 200);
+		}
+
+		loadAndRenderDiagnostics();
+		rescheduleRefreshOnInterval();
+
+		jQuery.telligent.evolution.messaging.subscribe('socket.connected', 'busdiagnostic', function () {
+			if (jQuery.telligent.evolution.sockets.busdiagnostic) {
+				jQuery.telligent.evolution.sockets.busdiagnostic.on('domainschanged', function (data) {
+					rescheduleOnMessage();
+					rescheduleRefreshOnInterval();
+				});
+			}
+		});
+
+		jQuery.telligent.evolution.administration.on('panel.unloaded', function(){
+			clearInterval(refreshOnInterval);
+			jQuery.telligent.evolution.messaging.unsubscribe('busdiagnostic');
+		});
+	})();
+
+</script>]]></contentScript>
+	<languageResources><language key="en-us">
+	<resource name="Diagnostics">Diagnostics</resource>
+	<resource name="LocalSummary">This web server ({machine_name}) is {state} to the bus.</resource>
+	<resource name="ConnectedSince">Since {connected_at}</resource>
+	<resource name="MessageBusServer">Message Bus Server</resource>
+	<resource name="WebServer">Web Server</resource>
+	<resource name="JobServer">Job Server</resource>
+	<resource name="ThisServer">This Server</resource>
+	<resource name="Connected">connected</resource>
+	<resource name="NotConnected">not connected</resource>
+	<resource name="ConnectedToBus">Connected to bus</resource>
+	<resource name="NotConnectedToBus">Not connected to bus</resource>
+	<resource name="ServerName">Server Name</resource>
+	<resource name="AllServersSummary">All app and job servers currently connected to the bus:</resource>
+	<resource name="AllServersSummaryDescLocalOffline">Since this app server is disconnected from the bus, the connection states of other app and job servers are unknown.</resource>
+	<resource name="NoServers">No other servers appear to be connected.</resource>
+	<resource name="LastSentAt">Last message sent to bus</resource>
+	<resource name="LastReceivedAt">Last message received from bus</resource>
+</language></languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Members}" version="13.0.0.0" description="${resource:Members_Description}" instanceIdentifier="f29027649ce14609848f5900b44a3ed2" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="administration-users" lastModified="2023-03-22 20:46:46Z" provider="ada5090e824f4751b7eb6a70d921864b">
+    <contentScript language="Velocity"><![CDATA[#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input user-options">
+	                <a href="#" data-messagename="membersearch.add" class="button add-member">$core_v2_language.GetResource('Action_Add')</a>
+    				<div id="$core_v2_widget.UniqueId('selection-actions')" class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="0" data-direction="horizontal" style="visibility:hidden;">
+                        <ul>
+                			<li class="navigation-list-item">
+                				<a href="#" data-messagename="membersearch.changestatuses" data-status="Approved">$core_v2_language.GetResource('Action_ChangeStatuses_Approved')</a>
+                			</li>
+                			<li class="navigation-list-item">
+                				<a href="#" data-messagename="membersearch.changestatuses" data-status="Banned">$core_v2_language.GetResource('Action_ChangeStatuses_Banned')</a>
+                			</li>
+                			<li class="navigation-list-item">
+                				<a href="#" data-messagename="membersearch.changestatuses" data-status="Disapproved">$core_v2_language.GetResource('Action_ChangeStatuses_Disapproved')</a>
+                			</li>
+                			<li class="navigation-list-item">
+                				<a href="#" data-messagename="membersearch.deleteall">$core_v2_language.GetResource('Action_Delete')</a>
+                			</li>
+                			<li class="navigation-list-item">
+                				<a href="#" data-more class="supplemental-button">$core_v2_language.GetResource('Action_ModifyMembers')</a>
+                			</li>
+                			<li class="navigation-list-item">
+                				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                			</li>
+                		</ul>
+                    </div>
+                    <a href="#" class="supplemental-button" id="$core_v2_widget.UniqueId('clear-selection')" data-messagename="membersearch.clearselection">$core_v2_language.GetResource('Action_ClearSelection')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<form><fieldset>
+	<div class="filter-selector">
+	    <div>
+    		<input type="text" id="$core_v2_widget.UniqueId('user-query')" style="width:25%" placeholder="$core_v2_language.GetResource('Search_For')" />
+	        <input type="text" id="$core_v2_widget.UniqueId('role-query')" style="width:25%" />
+        </div>
+        <div>
+    		<select id="$core_v2_widget.UniqueId('account-status')">
+    			<option value="All">$core_v2_language.GetResource('AccountStatus_Any')</option>
+    			<option value="ApprovalPending">$core_v2_language.GetResource('AccountStatus_ApprovalPending')</option>
+			    <option value="Approved">$core_v2_language.GetResource('AccountStatus_Approved')</option>
+			    <option value="Banned">$core_v2_language.GetResource('AccountStatus_Banned')</option>
+			    <option value="Disapproved">$core_v2_language.GetResource('AccountStatus_Disapproved')</option>
+			    <option value="PendingDeletion">$core_v2_language.GetResource('AccountStatus_PendingDeletion')</option>
+    		</select>
+
+    		<select id="$core_v2_widget.UniqueId('join-visited-date')">
+    			<option value="">$core_v2_language.GetResource('JoinedVisited_Any')</option>
+    			<option value="JoinedBefore">$core_v2_language.GetResource('JoinedVisited_JoinedBefore')</option>
+    			<option value="JoinedAfter">$core_v2_language.GetResource('JoinedVisited_JoinedAfter')</option>
+    			<option value="JoinedBetween">$core_v2_language.GetResource('JoinedVisited_JoinedBetween')</option>
+    			<option value="VisitedBefore">$core_v2_language.GetResource('JoinedVisited_VisitedBefore')</option>
+    			<option value="VisitedAfter">$core_v2_language.GetResource('JoinedVisited_VisitedAfter')</option>
+    		</select>
+
+    		<span id="$core_v2_widget.UniqueId('joined-visited-start')">
+        		<input type="text" id="$core_v2_widget.UniqueId('start-date')" />
+        		<span id="$core_v2_widget.UniqueId('joined-visited-end')">
+            		$core_v2_language.GetResource('JoinedVisited_And')
+            		<input type="text" id="$core_v2_widget.UniqueId('end-date')" />
+            	</span>
+    		</span>
+        </div>
+        <div>
+    		<select id="$core_v2_widget.UniqueId('sort-by')">
+    			<option value="DisplayName">$core_v2_language.GetResource('SortBy_Name')</option>
+    			<option value="JoinedDate" selected>$core_v2_language.GetResource('SortBy_JoinedDate')</option>
+    			<option value="LastVisitedDate">$core_v2_language.GetResource('SortBy_LastVisitedDate')</option>
+    		</select>
+
+    		<select id="$core_v2_widget.UniqueId('sort-order')">
+    		    <option value="Ascending">$core_v2_language.GetResource('SortOrder_Ascending')</option>
+    		    <option value="Descending" selected>$core_v2_language.GetResource('SortOrder_Descending')</option>
+    		</select>
+    	</div>
+	</div>
+</fieldset></form>
+
+<h2><span id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('memberCount'))"></span>
+    <a href="#" class="inline-button save export-all" data-messagename="membersearch.export">
+        <span id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('exportAction'))"></span>
+    </a>    
+</h2>
+
+<ul class="content-list content expandable simple"></ul>
+<div id="$core_v2_widget.UniqueId('noresults')" class="message information" style="display:none;">
+    $core_v2_language.GetResource('NoMatchingUsers')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.memberSearch')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.memberSearch.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        userQuery: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('user-query'))'),
+		        roleQuery: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('role-query'))'),
+		        accountStatus: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('account-status'))'),
+		        joinedVisitedDate: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('join-visited-date'))'),
+		        joinedVisitedDateStartDate: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('start-date'))'),
+		        joinedVisitedDateEndDate: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('end-date'))'),
+		        joinedVisitedDateStartWrapper: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('joined-visited-start'))'),
+		        joinedVisitedDateEndWrapper: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('joined-visited-end'))'),
+		        sortBy: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort-by'))'),
+		        sortOrder: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort-order'))'),
+		        noResults: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('noresults'))')
+		    },
+		    fieldIds: {
+		        clearSelection: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('clear-selection'))',
+		        selectionActions: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('selection-actions'))',
+                memberCountId: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('memberCount'))',
+                exportActionId: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('exportAction'))'
+		    },
+		    urls: {
+		        lookupRolesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-roles.vm'))',
+		        listUsers: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+		        csvExport: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('export-to-csv.vm'))',
+		        del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+		        merge: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('merge.vm'))',
+		        ban: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('ban.vm'))',
+		        createUser: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('createuser.vm'))',
+		        getEditUserUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('get-edit-user-url.vm'))'
+		    },
+            text: {
+                roleLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Find_Role'))',
+                noRolesMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Find_Role_NoMatches'))',
+                roleSelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Find_Role_Selected'))',
+                modifyMember: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_ModifyMember'))',
+                modifyMembers: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_ModifyMembers'))',
+                exportAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_ExportAsCSV'))',
+                exportMember: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_ExportAsCSV_SelectedOne'))',
+                exportMembers: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_ExportAsCSV_Selected'))',
+                cannotExportInvalidQuery: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_CannotExportInvalidQuery'))',
+
+                noUsersToDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_NoUsersSelectedToDelete'))',
+                dels: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete_Users'))',
+                del: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete_User'))',                
+                merge: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Merge_User'))',
+                noUsersToBan: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_NoUsersSelectedToBan'))',
+                bans: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Ban_Users'))',
+                ban: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Ban_User'))',
+                changeStatusConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeStatus_Confirm'))',
+                changeStatusSuccessful: ' $core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeStatus_Successful'))',
+                createUser: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateUser'))',
+                export: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Export'))'
+            }
+    	});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AccountStatus_Any">With any status</resource>
+  <resource name="AccountStatus_ApprovalPending">Pending approval</resource>
+  <resource name="AccountStatus_Approved">Approved</resource>
+  <resource name="AccountStatus_Banned">Banned</resource>
+  <resource name="AccountStatus_Disapproved">Disapproved</resource>
+  <resource name="AccountStatus_PendingDeletion">Pending Deletion</resource>
+  <resource name="Action_Add">Add Member</resource>
+  <resource name="Action_ChangeStatuses_Approved">Approve</resource>
+  <resource name="Action_ChangeStatuses_Banned">Temporarily Ban</resource>
+  <resource name="Action_ChangeStatuses_Disapproved">Disapprove</resource>
+  <resource name="Action_ClearSelection">Clear Selection</resource>
+  <resource name="Action_Delete">Delete</resource>
+  <resource name="Action_Export">Export</resource>
+  <resource name="Action_ExportAsCSV">Export as CSV</resource>
+  <resource name="Action_ExportAsCSV_Selected">Export {0} as CSV</resource>
+  <resource name="Action_ExportAsCSV_SelectedOne">Export {0} as CSV</resource>
+  <resource name="Action_ExportSelectedAsCSV">Export {0} as CSV</resource>
+  <resource name="Action_ModifyMember">Modify {0} Member</resource>
+  <resource name="Action_ModifyMembers">Modify {0} Members</resource>
+  <resource name="Ban">Ban</resource>
+  <resource name="Ban_User">Ban {0} Member</resource>
+  <resource name="Ban_Users">Ban {0} Members</resource>
+  <resource name="BanConfirm">Are you user you want to ban these members?</resource>
+  <resource name="BanInstructions">To ban these members, select the reason and duration of the ban. If you would rather permanently prevent these members from accessing the site, consider setting their account status to 'Disapproved' or deleting their accounts.</resource>
+  <resource name="BanReason_Advertising">Advertising</resource>
+  <resource name="BanReason_Aggressive">Aggressive</resource>
+  <resource name="BanReason_BadSignature">Bad signature</resource>
+  <resource name="BanReason_BadUsername">Bad user name</resource>
+  <resource name="BanReason_BanDodging">Ban dodging</resource>
+  <resource name="BanReason_Other">Other</resource>
+  <resource name="BanReason_Profanity">Profanity</resource>
+  <resource name="BanReason_Spam">SPAM</resource>
+  <resource name="BanSuccessful">The members have been banned successfully.</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ChangeStatus_Confirm">Are you sure you want to change the account status of these members?</resource>
+  <resource name="ChangeStatus_Successful">The members account statuses have been updated successfully.</resource>
+  <resource name="CreateInstructions">Add a member below. You'll be able to set additional options after completing this form.</resource>
+  <resource name="CreateSuccessful">The member was added successfully.</resource>
+  <resource name="CreateUser">Add a Member</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Delete_User">Delete {0} Member</resource>
+  <resource name="Delete_Users">Delete {0} Members</resource>
+  <resource name="DeleteConfirm">Are you sure you want to delete these members?</resource>
+  <resource name="DeleteInstructions">To delete these members, select how you would like to handle these members' content. You can choose to merge or reassign it to another user or delete it along with the members.</resource>
+  <resource name="DeleteScheduled">The members have been successfully scheduled for deletion.</resource>
+  <resource name="DeleteSuccessful">The members have been deleted successfully.</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="ExactMatch">Best Match</resource>
+  <resource name="ExportInstructions">Select the fields to include in the export.</resource>
+  <resource name="Field_BannedUntil">Banned Until</resource>
+  <resource name="Field_BannedUntil_Desc">The date through which these members will be banned from accessing the site.</resource>
+  <resource name="Field_BanReason">Ban Reason</resource>
+  <resource name="Field_BanReason_Desc">The reason for banning these members. This will be visible to the members when they attempt to access the site.</resource>
+  <resource name="Field_ContentReassignment">What do you want to do with these members' content?</resource>
+  <resource name="Field_DoNotReassign">Delete all of these members' content permanently</resource>
+  <resource name="Field_DoNotReassign_Desc">All of these members' content will be deleted. Note that this is done via a background process and will take several minutes to complete.</resource>
+  <resource name="Field_Email">Private email address</resource>
+  <resource name="Field_Email_Desc">The email address used to communicate with this member.</resource>
+  <resource name="Field_MergeToUser">Merge into: </resource>
+  <resource name="Field_MergeToUser_Placeholder">Select member...</resource>
+  <resource name="Field_Password1">Password</resource>
+  <resource name="Field_Password1_Desc">The password used by this member to login.</resource>
+  <resource name="Field_Password2">Password verification</resource>
+  <resource name="Field_Password2_Desc">Please enter the same password to ensure it was typed correctly.</resource>
+  <resource name="Field_ReassignToFormerMember">Reassign to {0}</resource>
+  <resource name="Field_ReassignToFormerMember_Desc">By reassigning to this system account, the content is preserved while also not artificially benefiting any real user via point or achievement awards.</resource>
+  <resource name="Field_ReassignToUser">Reassign to: </resource>
+  <resource name="Field_ReassignToUser_Desc">Note that assigning content to an existing user will result in the new user being credited with points and/or achievements because of their inherited content.</resource>
+  <resource name="Field_ReassignToUser_Placeholder">Select member...</resource>
+  <resource name="Field_Timezone">Timezone</resource>
+  <resource name="Field_Timezone_Desc">The timezone in which this member accesses the site.</resource>
+  <resource name="Field_UserName">Username</resource>
+  <resource name="Field_UserName_Desc">The login/user name used to identify this user within the site.</resource>
+  <resource name="Find_Role">In role...</resource>
+  <resource name="Find_Role_NoMatches">No matching roles were found.</resource>
+  <resource name="Find_Role_Selected">In '{0}' role</resource>
+  <resource name="Joined">Joined {0}</resource>
+  <resource name="JoinedVisited_And">and</resource>
+  <resource name="JoinedVisited_Any">And any join and last visited date</resource>
+  <resource name="JoinedVisited_JoinedAfter">Who joined after</resource>
+  <resource name="JoinedVisited_JoinedBefore">Who joined before</resource>
+  <resource name="JoinedVisited_JoinedBetween">Who joined between</resource>
+  <resource name="JoinedVisited_VisitedAfter">Who last visited after</resource>
+  <resource name="JoinedVisited_VisitedBefore">Who last visited before</resource>
+  <resource name="LastVisited">Last visited {0}</resource>
+  <resource name="MemberNotFound">The member could not be found.</resource>
+  <resource name="Members">Members</resource>
+  <resource name="Members_Description">Find, create, and manage members.</resource>
+  <resource name="Members_Plural">{0} Members</resource>
+  <resource name="Members_Singular">{0} Member</resource>
+  <resource name="Merge">Merge</resource>
+  <resource name="Merge_User">Merge Member {0}</resource>
+  <resource name="MergeConfirm">Are you sure you want to merge these members?</resource>
+  <resource name="MergeInstructions">Select which user to merge {0} into.</resource>
+  <resource name="MergeInstructions_Desc">This option should only be used if the user being merged was created mistakenly as a duplicate account of the existing user.  If selected, in addition to content being reassigned to the reassign user, all group memberships, profile data, security roles, conversations, subscriptions, notification settings and friendships will be merged.  Users cannot be merged with system accounts.</resource>
+  <resource name="MergeInto">Merge into</resource>
+  <resource name="MergeSuccessful">The member has been merged successfully.</resource>
+  <resource name="more">More</resource>
+  <resource name="NeverVisited">Never visited</resource>
+  <resource name="NoBio">(This member has not entered a biography)</resource>
+  <resource name="NoMatchingUsers">No matching members were found.</resource>
+  <resource name="PostCount">{0} Post</resource>
+  <resource name="PostsCount">{0} Posts</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Search_For">Search for...</resource>
+  <resource name="SelectAll">Select all</resource>
+  <resource name="SelectNone">Select none</resource>
+  <resource name="SortBy_JoinedDate">By joined date</resource>
+  <resource name="SortBy_LastVisitedDate">By last visited date</resource>
+  <resource name="SortBy_Name">By name</resource>
+  <resource name="SortOrder_Ascending">Ascending</resource>
+  <resource name="SortOrder_Descending">Descending</resource>
+  <resource name="UserAccountStatus_Approved">Approved</resource>
+  <resource name="UserAccountStatus_Banned">Banned until {0}</resource>
+  <resource name="UserAccountStatus_Disapproved">Disapproved</resource>
+  <resource name="UserAccountStatus_PendingApproval">Pending approval</resource>
+  <resource name="UserAccountStatus_PendingDeletion">Pending deletion</resource>
+  <resource name="UserAccountStatus_Unknown">Unknown</resource>
+  <resource name="Validation_CannotExportInvalidQuery">The export cannot be completed because the filter is currently invalid.</resource>
+  <resource name="Validation_DuplicateEmailAddress">A user with this email address already exists.</resource>
+  <resource name="Validation_DuplicateUsername">That username is not available.</resource>
+  <resource name="Validation_InvalidEmail">The email address is invalid.</resource>
+  <resource name="Validation_InvalidUserName">The username does not meet the requirements for this site.</resource>
+  <resource name="Validation_NoUsersSelectedToBan">Please select one or more members to ban.</resource>
+  <resource name="Validation_NoUsersSelectedToDelete">Please select one or more members to delete.</resource>
+  <resource name="Validation_PasswordLimits">The password must be at least {0} characters.</resource>
+  <resource name="Validation_PasswordNoMatch">Password does not match.</resource>
+  <resource name="Validation_PasswordRegExValidator">The password includes invalid characters.</resource>
+  <resource name="View">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="users.users.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

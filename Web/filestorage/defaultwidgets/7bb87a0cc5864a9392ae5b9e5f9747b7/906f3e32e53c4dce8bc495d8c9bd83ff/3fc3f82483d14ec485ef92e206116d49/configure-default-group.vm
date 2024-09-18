@@ -1,0 +1,12 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($response = false)
+	#set($response = $core_v2_themePage.Update($core_v2_group.ThemeTypeId, $core_v2_group.Current.ThemeId, $core_v2_group.Current.ApplicationId, $core_v2_widget.RenderFile('template-group-home-default.xml'), false))
+
+	#if (!$response || ($response.Errors && $response.HasErrors()))
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+		{"success":"True"}
+	#end
+#end

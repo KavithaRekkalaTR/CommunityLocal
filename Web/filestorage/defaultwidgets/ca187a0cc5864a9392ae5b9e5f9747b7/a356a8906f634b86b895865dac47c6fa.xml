@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_AddEditCalendar_Name}" version="11.0.0.0" description="${resource:Calendar_AddEditCalendar_Description}" instanceIdentifier="a356a8906f634b86b895865dac47c6fa" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="add-edit-calendar" lastModified="2020-01-14 16:09:36Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+
+#set ($userId = $core_v2_user.Accessing.Id)
+#set($group = false)
+#set($group = $core_v2_group.Current)
+
+#if(!$group)
+  $core_v2_widget.Hide()
+#end
+
+#if (!$core_v3_permission.CheckPermission($calendar_v1_permissions.CreateCalendar, $userId, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+  $core_v2_widget.Hide()
+#end
+
+#set($calendar = false)
+#set($calendar = $calendar_v1_calendars.Current)
+#if ($calendar && !$calendar_v1_calendars.HasPermission($calendar.Id,$calendar_v1_permissions.EditCalendar))
+  $core_v2_widget.Hide()
+#end
+
+<div id="$core_v2_widget.UniqueId('form')">
+  <div class="field-list-header"></div>
+  <form><fieldset class="field-list">
+
+	<h1>
+	  #if ($calendar)
+		$calendar.Name
+	  #else
+		$core_v2_language.GetResource('Calendar_New')
+	  #end
+	</h1>
+
+	<div id="$core_v2_widget.UniqueId('successMessage')" class="message success" style="display:none">$core_v2_language.GetResource("Calendar_Saved")</div>
+	<div id="$core_v2_widget.UniqueId('errorMessage')" class="message error" style="display:none">$core_v2_language.GetResource("Calendar_GenericError")</div>
+
+	<ul class="field-list">
+	  <li class="field-item calendar-name">
+		<label class="field-item-header" for="$core_v2_widget.UniqueId('name')">$core_v2_language.GetResource("Calendar_Name_Label")</label>
+		<span class="field-item-input">
+		  <input type="text" id="$core_v2_widget.UniqueId('name')" width="200px" name="$core_v2_widget.UniqueId('name')" value="#if($calendar && $calendar.Name.length > 0)$calendar.Name#end" />
+		</span>
+		<span class="field-item-validation" style="display: none;"></span>
+	  </li>
+	  <li class="field-item calendar-body">
+		<label class="field-item-header" for="$core_v2_widget.UniqueId('description')">$core_v2_language.GetResource("Calendar_Description_Label")</label>
+
+		<span class="field-item-input">
+		  <textarea id="$core_v2_widget.UniqueId('description')" rows="5" cols="70" name="$core_v2_widget.UniqueId('description')" style="resize: none; overflow-y: hidden;">#if($calendar && $calendar.Description.length > 0)$calendar.Description#end</textarea>
+		</span>
+		<span class="field-item-validation" style="display: none;"></span>
+	  </li>
+	  <li class="field-item post-submit">
+
+		<span class="field-item-input">
+		  <a href="#" id="$core_v2_widget.UniqueId('save')" class="internal-link save-post button">
+			<span></span> $core_v2_language.GetResource('Calendar_Create_Button')
+		  </a>
+		  <span class="processing" style="display: none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+
+		  #if ($calendar)<a href="#" id="$core_v2_widget.UniqueId('delete')">$core_v2_language.GetResource('Calendar_Delete_Button')</a>#end
+
+		</span>
+
+	  </li>
+	</ul>
+  </fieldset></form>
+  <div class="field-list-footer"></div>
+</div>
+
+
+#registerEndOfPageHtml('telligent.evolution.Calendar.widgets.addeditcalendar')
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+  <script type="text/javascript">
+  //<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+  jQuery(function(j)
+  {
+	j.telligent.evolution.Calendar.widgets.addEditCalendar.register({
+	  bodySelector        : '#$core_v2_widget.UniqueId('description')',
+	  calendarId          : #if($calendar)$calendar.Id#else-1#end,
+	  creator             : $userId,
+	  delete              : '#$core_v2_widget.UniqueId('delete')',
+	  deleteConfirmation  : '$core_v2_language.GetResource('Calendar_Delete_Confirmation')',
+	  deleteErrorMessage  : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Calendar_Delete_Error'))',
+	  descLengthMessage   : '$core_v2_language.GetResource('Calendar_Validator_DescriptionLength')',
+	  errorMessage        : j('#$core_v2_widget.UniqueId('errorMessage')'),
+	  groupId             : $group.Id,
+	  groupHomeUrl        : '$core_v2_encoding.JavascriptEncode($calendar_v1_urls.GroupHome($group.Id))',
+	  nameRequiredMessage : '$core_v2_language.GetResource('Calendar_Validator_NameRequired')',
+	  nameSelector        : '#$core_v2_widget.UniqueId('name')',
+	  processingMessage   : '$core_v2_language.GetResource('Calendar_Saving')',
+	  save                : j('#$core_v2_widget.UniqueId('save')'),
+	  saveUrl             : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+	  successMessage      : j('#$core_v2_widget.UniqueId('successMessage')'),
+	  wrapperId           : '$core_v2_widget.WrapperElementId'
+	});
+  });
+  //<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+  </script>
+#end
+
+	  ]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Calendar_AddEditCalendar_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_AddEditCalendar_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Calendar_AddEditCalendar_Description">Displays a form for creating a new calendar or editing an existing calendar</resource>
+  <resource name="Calendar_AddEditCalendar_Name">Event Calendar - Add/Edit Calendar</resource>
+  <resource name="Calendar_AddEditCalendar_Title">Add/Edit Calendar</resource>
+  <resource name="Calendar_Create_Button">Save</resource>
+  <resource name="Calendar_Delete_Button">Delete</resource>
+  <resource name="Calendar_Delete_Confirmation">Are you sure you want to delete this calendar?</resource>
+  <resource name="Calendar_Delete_Error">Unable to delete calendar, an error occurred.</resource>
+  <resource name="Calendar_Description_Label">Description</resource>
+  <resource name="Calendar_GenericError">There was an error with the last request.</resource>
+  <resource name="Calendar_Name_Label">Name</resource>
+  <resource name="Calendar_New">New Calendar</resource>
+  <resource name="Calendar_Saved">Calendar was saved successfully</resource>
+  <resource name="Calendar_Saving">Saving...</resource>
+  <resource name="Calendar_Validator_DescriptionLength">Please shorten the description</resource>
+  <resource name="Calendar_Validator_NameRequired">Name is required</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="calendars.calendars.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

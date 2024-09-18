@@ -1,0 +1,76 @@
+#set($userIds = $core_v2_page.GetFormValue('userIds'))
+#set($ids = $core_v2_utility.Split(',', $userIds))
+#foreach ($id in $ids)
+    #set($intId = false)
+    #set($intId = $core_v2_utility.ParseInt($id))
+    #if (!$intId)
+        #set($userIds = '')
+    #end
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('banMembersHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button ban">$core_v2_language.GetResource('Ban')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('BanInstructions')</p>
+
+<form><fieldset>
+    <ul class="field-list">
+        <li class="field-item banning">
+			<label for="$core_v2_widget.UniqueId('BannedReason')" class="field-item-name">$core_v2_language.GetResource('Field_BanReason')</label>
+			<span class="field-item-description">$core_v2_language.GetResource("Field_BanReason_Desc")</span>
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('BannedReason')" name="$core_v2_widget.UniqueId('BanReason')">
+				    <option value="Profanity">$core_v2_language.GetResource('BanReason_Profanity')</option>
+				    <option value="Advertising">$core_v2_language.GetResource('BanReason_Advertising')</option>
+				    <option value="Spam">$core_v2_language.GetResource('BanReason_Spam')</option>
+				    <option value="Aggressive">$core_v2_language.GetResource('BanReason_Aggressive')</option>
+				    <option value="BadUsername">$core_v2_language.GetResource('BanReason_BadUsername')</option>
+				    <option value="BadSignature">$core_v2_language.GetResource('BanReason_BadSignature')</option>
+				    <option value="BanDodging">$core_v2_language.GetResource('BanReason_BanDodging')</option>
+				    <option value="Other">$core_v2_language.GetResource('BanReason_Other')</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item banning">
+			<label for="$core_v2_widget.UniqueId('BannedUntil')" class="field-item-name">$core_v2_language.GetResource('Field_BannedUntil')</label>
+			<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource("Field_BannedUntil_Desc"), " href='#'  data-messagename='administeruser.delete' data-userid='$context.UserId'")</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('BannedUntil')" name="$core_v2_widget.UniqueId('BannedUntil')" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.usersAdministrationBan')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ban.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.membersBan.register({
+		    userIds: [$userIds],
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+                bannedReason: jQuery('#$core_v2_widget.UniqueId('BannedReason')'),
+                bannedUntil: jQuery('#$core_v2_widget.UniqueId('BannedUntil')'),
+		    },
+		    text: {
+		        banSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('BanSuccessful'))',
+		        verifyBan: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('BanConfirm'))'
+		    }
+    	});
+	});
+	</script>
+#end

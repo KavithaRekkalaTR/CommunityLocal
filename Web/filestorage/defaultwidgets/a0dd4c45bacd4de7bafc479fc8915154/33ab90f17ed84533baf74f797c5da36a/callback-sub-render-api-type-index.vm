@@ -1,0 +1,69 @@
+##
+## Type Member Index Renderer
+##
+## Requires in scope:
+##   $type
+##
+#if ($type)
+
+	<div>
+
+	<h3>$type.Name</h3>
+
+	## Enum Values
+
+	#if ($type.EnumValues)
+		#foreach ($enumValue in $type.EnumValues)
+		#beforeall
+			<h3>$core_v2_language.GetResource('Values')</h3>
+			<ul>
+		#each
+			<li>$enumValue.Name</li>
+		#afterall
+			</ul>
+		#end
+	#end
+
+	## Properties
+
+	#if ($type.Properties)
+		#foreach ($prop in $type.Properties)
+		#beforeall
+			<h3>$core_v2_language.GetResource('Properties')</h3>
+			<ul>
+		#each
+			<li>
+				<a href="#"
+					data-name="$core_v2_encoding.HtmlAttributeEncode($type.FullName)"
+					data-type="type"
+					data-target="$core_v2_encoding.HtmlAttributeEncode($prop.Name)"
+					class="documentation-link">$prop.Name</a>
+			</li>
+		#afterall
+			</ul>
+		#end
+	#end
+
+	## Methods
+
+	#if ($type.Methods)
+		#foreach ($method in $type.Methods)
+		#beforeall
+			<h3>$core_v2_language.GetResource('Methods')</h3>
+			<ul>
+		#each
+			<li>
+				<a href="#"
+					data-name="$core_v2_encoding.HtmlAttributeEncode($type.FullName)"
+					data-type="type"
+					data-target="$core_v2_encoding.HtmlAttributeEncode($method.Name)"
+					class="documentation-link">$method.Name</a>
+			</li>
+		#afterall
+			</ul>
+		#end
+	#end
+
+	</div>
+
+#end

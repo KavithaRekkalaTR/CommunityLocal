@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Moderated Content Accepted" version="13.0.0.0" description="Sends notification to an author that their moderated content has been approved." id="157c7a0ce4524653a680803d5d160a66" lastModified="2023-04-20 16:25:10Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	#format($core_v2_language.GetResource('Subject_User'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#else
+	#format($core_v2_language.GetResource('Subject_Content'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	#format($core_v2_language.GetResource('Header_User'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#else
+	#format($core_v2_language.GetResource('Header_Content'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	$core_v2_language.GetResource('Body_User')
+#else
+    #format($core_v2_language.GetResource('Body_Content'))
+    #token('view_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Content.Url)">$core_v2_language.GetResource('View')</a>
+	#end
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Content">We've reviewed your content and have published it to the site. We appreciate your help in keeping the community experience safe and enjoyable for everyone, creating posts that are appropriate and consistent with our culture. The content is available {view_link}.</resource>
+  <resource name="Body_User">We've reviewed your user account and have approved it. We appreciate your help in keeping the community experience safe and enjoyable for everyone.</resource>
+  <resource name="Subject_Content">Your content on {site_name}</resource>
+  <resource name="Subject_User">Your user account on {site_name}</resource>
+  <resource name="Header_Content">Your content on {site_name}</resource>
+  <resource name="Header_User">Your user account on {site_name}</resource>
+  <resource name="View">here</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

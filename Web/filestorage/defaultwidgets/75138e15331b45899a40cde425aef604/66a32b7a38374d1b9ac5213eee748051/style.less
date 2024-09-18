@@ -1,0 +1,29 @@
+@positive: -evo-themeconfig-color('statePositive', #9CCC65);
+@pending: -evo-themeconfig-color('statePending', #FFB300);
+@spacing: 10px;
+
+.content-peek-fragment.forum-thread {
+	.content-peek .content-peek-heading .content-peek-name .content-peek-subtitle {
+		font-weight: 600;
+		font-size: 1em;
+		&.verified {
+			color: @positive;
+			a {
+				color: @positive;
+				&:after {
+					margin-left: @spacing;
+				}
+			}
+		}
+		&.suggested {
+			color: @pending;
+			a {
+				color: @pending;
+				&:after {
+					margin-left: @spacing;
+				}
+			}
+		}
+	}
+}
+

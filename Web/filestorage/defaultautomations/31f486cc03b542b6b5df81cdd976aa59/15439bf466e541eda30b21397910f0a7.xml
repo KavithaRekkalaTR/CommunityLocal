@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="15439bf466e541eda30b21397910f0a7" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2019-12-23 20:20:31Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="wikipage.aftercreate" />
+      <event key="wikipage.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var awardFor = core_v2_widget.GetStringValue('authorshipType', 'createonly');
+
+if (context_v2_automationTrigger.Event == 'AfterCreate') {
+    if (context_v2_automationTrigger.Arguments.IsPublished && (awardFor == 'createonly' || awardFor == 'createoredit')) {
+        context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.User.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_wikiPage.ContentTypeId);
+    }
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (awardFor == 'createoredit' || awardFor == 'editonly') {
+        if (context_v2_automationTrigger.Arguments.IsPublished && context_v2_automationTrigger.Arguments.RevisionSaved) {
+            context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.User.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_wikiPage.ContentTypeId);
+        }
+    } 
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="authorshipType" labelResourceName="Authorship" descriptionResourceName="Authorship_Description" dataType="string" defaultValue="createonly">
+        <propertyValue value="createonly" labelResourceName="Authorship_CreateOnly" />
+        <propertyValue value="editonly" labelResourceName="Authorship_EditOnly" />
+        <propertyValue value="createoredit" labelResourceName="Authorship_CreateOrEdit" />
+    </property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Authorship">Award for</resource>
+  <resource name="Authorship_CreateOnly">New pages only</resource>
+  <resource name="Authorship_CreateOrEdit">New pages or edits</resource>
+  <resource name="Authorship_Description">Identify which authorship actions should award this achievement</resource>
+  <resource name="Authorship_EditOnly">Edits to existing pages only</resource>
+  <resource name="Description">Awards points to authors of wiki pages.</resource>
+  <resource name="Title">When a wiki page is authored</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

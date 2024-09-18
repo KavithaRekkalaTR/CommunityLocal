@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:EventsPanel_Name}" version="11.0.0.0" description="${resource:EventsPanel_Description}" instanceIdentifier="36b63d48b4a04605a4a0b370c0d6d4af" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="events" lastModified="2021-01-27 17:32:37Z" provider="e2411c20fd4d4c62b95d08c0d49460e8">
+    <contentScript language="Velocity"><![CDATA[#set ($eventsListId = $core_v2_widget.UniqueId('eventsList'))
+#set ($searchInputId = $core_v2_widget.UniqueId('searchInput'))
+#set ($machineNamesId = $core_v2_widget.UniqueId('machineNames'))
+#set ($eventTypesId = $core_v2_widget.UniqueId('eventTypes'))
+#set ($eventCountId = $core_v2_widget.UniqueId('eventCount'))
+#set ($headerTemplateId = $core_v2_widget.UniqueId('listHeaderTemplate'))
+
+#set ($initialStartDate = $core_v2_utility.CurrentUserDate.AddDays(-7))
+
+<p>$core_v2_language.GetResource('Instructions')</p>
+
+<form>
+	<fieldset>
+		<div class="filter-selector">
+            <div class="search-filters">
+                <select class="eventType" id="$core_v2_encoding.HtmlAttributeEncode($eventTypesId)">
+                    <option value="">$core_v2_language.GetResource('Type_All')</option>
+                    <option value="0">$core_v2_language.GetResource('Type_Information')</option>
+                    <option value="1">$core_v2_language.GetResource('Type_Warning')</option>
+                    <option value="2">$core_v2_language.GetResource('Type_Error')</option>
+                    <option value="3">$core_v2_language.GetResource('Type_Debug')</option>
+                </select>
+
+				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)"
+					style="width: 25%" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('containing'))">
+            </div>
+
+            <div>
+                $core_v2_language.GetResource('between')
+                <input type="text" class="startDate" id="$core_v2_widget.UniqueId('startDate')" name="startDate" style="width: 20%"  />
+                $core_v2_language.GetResource('and')
+                <input type="text" class="endDate" id="$core_v2_widget.UniqueId('endDate')" name="endDate" style="width: 20%"  />
+                    #set ($machineNames = $context.ListMachineNames())
+                    #if($machineNames.Count >= 2)
+                        </div>
+                        <div style="margin-top: 5px;">
+                            <select id="$core_v2_encoding.HtmlAttributeEncode($machineNamesId)">
+                                <option value="">$core_v2_language.GetResource('Node_Any')</option>
+                                #foreach ($machineName in $machineNames)
+                                    <option value="$machineName">$core_v2_language.GetResource('on') $machineName</option>
+                                #end
+                            </select>
+                    #end
+
+                <span class="field-item-input">
+                    <a href="#" class="inline-button" data-messagename="events-refresh">$core_v2_language.GetResource('Refresh')</a>
+                </span>
+            </div>
+		</div>
+	</fieldset>
+</form>
+
+<h2 id="$core_v2_encoding.HtmlAttributeEncode($eventCountId)" ></h2>
+
+<ul class="content-list content simple margin-bottom expandable" id="$core_v2_encoding.HtmlAttributeEncode($eventsListId)">
+	#set ($inProcess = true)
+    #set ($options = "%{ StartDate = '$initialStartDate', EndDate = '$initialEndDate', PageSize = 20, PageIndex = 0 }")
+    #set ($events = $context.ListEvents($options))
+	$core_v2_widget.ExecuteFile('render-list.vm')
+</ul>
+
+#registerClientTemplate($headerTemplateId)
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item submit">
+                <span class="field-item-input">
+                    <a href="#" class="button internal-link save" data-messagename="events-export-all">$core_v2_language.GetResource('ExportAll')</a>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+#end
+
+#registerEndOfPageHtml('eventsPanel')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.eventsPanel.register({
+				listCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+				exportCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export.jsm'))',
+				exportAllCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-all.jsm'))',
+				headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+				eventsListId: '#$core_v2_encoding.JavascriptEncode($eventsListId)',
+				eventCountId: '#$core_v2_encoding.JavascriptEncode($eventCountId)',
+				machineNamesId: '#$core_v2_encoding.JavascriptEncode($machineNamesId)',
+                eventTypesId:  '#$core_v2_encoding.JavascriptEncode($eventTypesId)',
+				searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+                startDateId: "#$core_v2_widget.UniqueId('startDate')",
+                endDateId: "#$core_v2_widget.UniqueId('endDate')",
+                startDate: '$core_v2_encoding.JavascriptEncode($initialStartDate)',
+                exportText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Export'))',
+                exportAllText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportAll'))',
+				noEventsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))'
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="after">after</resource>
+  <resource name="and">and</resource>
+  <resource name="between">that occurred between</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="containing">containing</resource>
+  <resource name="Event">Event</resource>
+  <resource name="Events_Plural">{0} Events</resource>
+  <resource name="Events_Singular">{0} Event</resource>
+  <resource name="EventsPanel_Description">View platform events.</resource>
+  <resource name="EventsPanel_Name">Events</resource>
+  <resource name="Export">Export as CSV</resource>
+  <resource name="ExportAll">Export Filtered as CSV</resource>
+  <resource name="Instructions">Below is a listing of events occurring throughout the site.</resource>
+  <resource name="more">More</resource>
+  <resource name="Node_Any">on any node</resource>
+  <resource name="NoResults">No events match the filter.</resource>
+  <resource name="on">on</resource>
+  <resource name="Refresh">Refresh</resource>
+  <resource name="Type_All">All events</resource>
+  <resource name="Type_Debug">Debug events</resource>
+  <resource name="Type_Error">Error events</resource>
+  <resource name="Type_Information">Information events</resource>
+  <resource name="Type_Warning">Warning events</resource>
+  <resource name="UserAgent">User Agent</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

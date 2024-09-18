@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeCollectionStory}" version="10.0.0.0" description="${resource:KnowledgeCollectionStory-Description}" instanceIdentifier="7b1222de9d2c4cd2b7ae4da94589c008" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="6e0814f89d8f42229c40027156dfcd5c">
+    <contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content)
+	$core_v2_widget.Hide()
+#else
+		#format($core_v2_language.GetResource('Created_KnowledgeCollection'))
+				#token('user')
+					<span class="user-name">
+						#if ($context.Story.PrimaryUser.ProfileUrl)
+							<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($context.Story.PrimaryUser.ProfileUrl)">$context.Story.PrimaryUser.DisplayName</a>
+						#else
+							$context.Story.PrimaryUser.DisplayName
+						#end
+					</span>
+				#token('knowledgecollection')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">$content.HtmlName('Web')</a>
+				#token('group')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+		#end
+#end]]></contentScript>
+    <languageResources><language key="en-us"><resource name="Created_KnowledgeCollection">{user} created {knowledgecollection} in {group}.</resource><resource name="KnowledgeCollectionStory">Knowledge Collection Activity Story</resource><resource name="KnowledgeCollectionStory-Description">Renders stories related to knowledge collections.</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

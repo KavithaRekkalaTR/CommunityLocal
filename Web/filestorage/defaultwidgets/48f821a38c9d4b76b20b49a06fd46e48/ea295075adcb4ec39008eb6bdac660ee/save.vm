@@ -1,0 +1,28 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($defaultUserFriends = $core_v2_page.GetFormValue('defaultUserFriends'))
+	#set($defaultModerationLevel = $core_v2_page.GetFormValue('defaultModerationLevel'))
+	#set($welcomeMessageEnabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('welcomeMessageEnabled')))
+	#set($welcomeMessageFromUser = $core_v2_page.GetFormValue('welcomeMessageFromUser'))
+	#set($welcomeMessageSubject = $core_v2_page.GetFormValue('welcomeMessageSubject'))
+	#set($welcomeMessageBody = $core_v2_page.GetFormValue('welcomeMessageBody'))
+
+	$options.Add('DefaultUserFriends', $defaultUserFriends)
+	$options.Add('DefaultModerationLevel', $defaultModerationLevel)
+	$options.Add('WelcomeMessageEnabled', $welcomeMessageEnabled)
+	$options.Add('WelcomeMessageFromUser', $welcomeMessageFromUser)
+	$options.Add('WelcomeMessageSubject', $welcomeMessageSubject)
+	$options.Add('WelcomeMessageBody', $welcomeMessageBody)
+
+	#set($response = $context.Save($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

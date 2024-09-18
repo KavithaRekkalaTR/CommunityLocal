@@ -1,0 +1,45 @@
+<div class="preview-theme">
+	<form>
+		<% if (IsStaged) { %>
+			<div class="message information">
+				$core_v2_language.GetResource('preview-note')
+			</div>
+			<p>
+				<% if(TypeId != '$core_v2_configuration.SiteThemeTypeId') { %>
+					$core_v2_language.GetResource('preview-desc-app')
+				<% } else { %>
+					$core_v2_language.GetResource('preview-desc-site')
+				<% } %>
+			</p>
+		<% } else { %>
+			<p>
+				<% if(TypeId != '$core_v2_configuration.SiteThemeTypeId') { %>
+					$core_v2_language.GetResource('view-desc-app')
+				<% } else { %>
+					$core_v2_language.GetResource('view-desc-site')
+				<% } %>
+			</p>
+		<% } %>
+		<fieldset>
+			<ul class="field-list">
+				<% if(TypeId != '$core_v2_configuration.SiteThemeTypeId') { %>
+					<li class="field-item" id="">
+						<label for="" class="field-item-name">$core_v2_language.GetResource('previewIn')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('previewInDesc')</span>
+						<span class="field-item-input select-default">
+							<input type="text" id="" name="" class="application-lookup" />
+						</span>
+					</li>
+				<% } %>
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+					</span>
+					<span class="field-item-input">
+						<a href="#" class="button continue">$core_v2_language.GetResource('startPreview')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+</div>

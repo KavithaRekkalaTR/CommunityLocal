@@ -1,0 +1,23 @@
+<div class="administration-panel-wrapper" data-panelid="<%: (panelId || '') %>" data-namespace="<%: (namespace || '') %>" data-rootpanelid="<%: (rootPanelId || '') %>">
+	<div class="administration-panel <%: (cssClass || '') %>">
+		<div class="administration-panel-heading">
+			<div class="administration-panel-heading-meta">
+				<% if(backUrl && backLabel) { %>
+					<a href="<%: backUrl %>" class="back ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('BackTip'))">
+						<span class="icon">&lt;</span> <span class="label"><%: backLabel %></span>
+					</a>
+				<% } else if (backLabel) { %>
+				    <a href="#" class="back ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('BackTip'))" onclick="window.history.back(); return false;">
+						<span class="icon">&lt;</span> <span class="label"><%: backLabel %></span>
+					</a>
+				<% } %>
+				<span class="name"><%: (name || '') %></span>
+				<span class="description"><%: (description || '') %></span>
+			</div>
+			<div class="custom-panel-heading-content"></div>
+		</div>
+		<div class="administration-panel-contents">
+			<%= (typeof content === "string" ? content : "") %>
+		</div>
+	</div>
+</div>

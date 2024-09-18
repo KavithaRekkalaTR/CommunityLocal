@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="8e76abf4adb64f2fa6bd26e9e1a711e0" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-search" lastModified="2023-02-23 19:32:08Z" provider="e49131a0a4d24d8d9f558ff13cd3900f">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.SearchStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('affectednodes')
+	    #foreach($node in $context.Status.AffectedNodes)
+	    #each
+		    #if ($context.Target == 'Web')
+				<strong>${node}</strong>
+			#else
+				${node}
+			#end
+		#between
+		    ,
+		#end
+#end
+
+#if ($context.Target == 'Web' && $context.Status.SearchStatus == 'Connected')
+
+	<table style="display:inline-block">
+	<thead>
+		<tr>
+			<th>
+				$core_v2_language.GetResource('Index_Name')
+			</th>
+			<th>
+			    $core_v2_language.GetResource('Indexed_Count')
+			</th>
+			<th>
+			    $core_v2_language.GetResource('Indexed_Today')
+			</th>
+		</tr>
+	</thead>
+
+	<tr>
+		<td>
+			Content
+		</td>
+		<td>
+			#set($count = false)
+    	    #set($count = $context.Status.ContentIndexCount)
+    	    #if ($count)
+    	        $core_v2_language.FormatNumber($count)
+    	    #else
+    	        $core_v2_language.GetResource('Count_Unknown')
+    	    #end
+		</td>
+		<td>
+			#set($count = false)
+    	    #set($count = $context.Status.ContentIndexedToday)
+    	    #if ($count)
+    	        $core_v2_language.FormatNumber($count)
+    	    #else
+    	        $core_v2_language.GetResource('Count_Unknown')
+    	    #end
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			Conversations
+		</td>
+		<td>
+			#set($count = false)
+    	    #set($count = $context.Status.ConversationIndexCount)
+    	    #if ($count)
+    	       $core_v2_language.FormatNumber($count)
+    	    #else
+    	        $core_v2_language.GetResource('Count_Unknown')
+    	    #end
+		</td>
+		<td>
+			 #set($count = false)
+    	    #set($count = $context.Status.ConversationIndexedToday)
+    	    #if ($count)
+    	       $core_v2_language.FormatNumber($count)
+    	    #else
+    	        $core_v2_language.GetResource('Count_Unknown')
+    	    #end
+		</td>
+	</tr>
+
+	</table>
+
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Connected">All known nodes are connected to the search indexes and the search indexes appear to be healthy.</resource>
+  <resource name="ContentMisconfiguration">Servers serving this community are not consistently configured. Please review every server's configuration to ensure that the &lt;code&gt;SearchContentUrl&lt;/code&gt; value in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same.</resource>
+  <resource name="ConversationMisconfiguration">Servers serving this community are not consistently configured. Please review every server's configuration to ensure that the &lt;code&gt;SearchConversationsUrl&lt;/code&gt; value in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same.</resource>
+  <resource name="Count_Unknown">Unknown</resource>
+  <resource name="FrequentExceptions">Frequent errors were detected affecting the search index. Search functionality may be affected. Review the exceptions log to further diagnose the issue.</resource>
+  <resource name="Index_Name">Index Name</resource>
+  <resource name="Indexed_Count">Number of Indexed Items</resource>
+  <resource name="Indexed_Today">Indexed Today</resource>
+  <resource name="IndexedContentCountNotMatched">Servers serving this community are not consistently configured.  The content count indexed does not match across nodes.  Please review ever server's configuration to ensure that the &lt;code&gt;SearchContentUrl&lt;/code&gt; value in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the correct.</resource>
+  <resource name="IndexedConversationCountNotMatched">Servers serving this community are not consistently configured.  The content count indexed does not match across nodes.  Please review ever server's configuration to ensure that the &lt;code&gt;SearchConversationUrl&lt;/code&gt; value in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the correct.</resource>
+  <resource name="InvalidContentSchema">The content search schema is incorrect. A connection to the content search index is established, but the search index appears to be using an invalid schema. Please upgrade the context search index's configuration to match the version of the community.</resource>
+  <resource name="InvalidConversationSchema">The conversation search schema is incorrect. A connection to the conversation search index is established, but the search index appears to be using an invalid schema. Please upgrade the conversation search index's configuration to match the version of the community.</resource>
+  <resource name="NoContentConnection">The content search index could not be reached from the following servers: {affectednodes}. Search functionality will not be available on these servers. Please review these servers' network connections and configuration to resolve the issue.</resource>
+  <resource name="NoConversationConnection">The conversation search index could not be reached from the following servers: {affectednodes}. Search functionality will not be available on these servers. Please review these servers' network connections and configuration to resolve the issue.</resource>
+  <resource name="NoProvider">No search provider is currently enabled. Search functionality is currently unavailable. Please enable and properly configure a search provider.</resource>
+  <resource name="SlowContentConnection">The content search index appeared slow from the following servers: {affectednodes}. Search functionality may not be available or performant on these servers. Please review these servers network connections and configuration to resolve the issue.</resource>
+  <resource name="SlowConversationConnection">The conversation search index appeared slow from the following servers: {affectednodes}. Search functionality may not be available or performant on these servers. Please review these servers network connections and configuration to resolve the issue.</resource>
+  <resource name="Unknown">The status of search indexes is not yet known. Please wait for the status to be determined.</resource>
+  <resource name="Widget-Description">Search System Indicator</resource>
+  <resource name="Widget-Title">Search</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

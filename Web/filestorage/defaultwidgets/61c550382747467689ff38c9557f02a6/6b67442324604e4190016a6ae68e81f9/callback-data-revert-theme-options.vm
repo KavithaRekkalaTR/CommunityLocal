@@ -1,0 +1,73 @@
+##
+## Revert Theme Options Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+	#set ($options = "%{}")
+
+	#set ($idQuery = $core_v2_page.GetFormValue("_w_id"))
+	#if ($idQuery)
+		$options.Add('Id', $idQuery)
+	#end
+
+	#set ($typeIdQuery = $core_v2_page.GetFormValue("_w_typeId"))
+	#if ($typeIdQuery)
+		$options.Add('TypeId', $typeIdQuery)
+	#end
+
+	#set ($stageQuery = $core_v2_page.GetFormValue("_w_stage"))
+	#if ($stageQuery)
+		$options.Add('Stage', $core_v2_utility.ParseBool($stageQuery))
+	#end
+
+	#set ($revertPagesToQuery = $core_v2_page.GetFormValue("_w_revertPagesTo"))
+	#if ($revertPagesToQuery)
+		$options.Add('RevertPagesTo', $revertPagesToQuery)
+	#end
+
+	#set ($revertCustomPagesQuery = $core_v2_page.GetFormValue("_w_revertCustomPages"))
+	#if ($revertCustomPagesQuery)
+		$options.Add('RevertCustomPages', $core_v2_utility.ParseBool($revertCustomPagesQuery))
+	#end
+
+	#set ($revertHeadersToQuery = $core_v2_page.GetFormValue("_w_revertHeadersTo"))
+	#if ($revertHeadersToQuery)
+		$options.Add('RevertHeadersTo', $revertHeadersToQuery)
+	#end
+
+	#set ($revertFootersToQuery = $core_v2_page.GetFormValue("_w_revertFootersTo"))
+	#if ($revertFootersToQuery)
+		$options.Add('RevertFootersTo', $revertFootersToQuery)
+	#end
+	
+	#set($revertThemeConfigurations = $core_v2_page.GetFormValue('_w_revertThemeConfigurations'))
+	#if ($revertThemeConfigurations)
+	    $options.Add('RevertThemeConfigurations', $core_v2_utility.ParseBool($revertThemeConfigurations))
+	#end
+
+	#set ($revertScopedPropertiesQuery = $core_v2_page.GetFormValue("_w_revertScopedProperties"))
+	#if ($revertScopedPropertiesQuery)
+		$options.Add('RevertScopedProperties', $core_v2_utility.ParseBool($revertScopedPropertiesQuery))
+	#end
+
+	#set ($response = false)
+	#set ($response = $context.RevertThemeOptions($options))
+	#if ($response && $response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success": true
+		#if ($response.Warnings && $response.Warnings.Count > 0)
+			,"warnings": [
+			#foreach($warning in $response.Warnings)
+				#each
+					"$core_v2_encoding.JavascriptEncode($warning.Message)"
+				#between
+				,
+			#end
+			]
+		#end
+	}
+#end

@@ -1,0 +1,102 @@
+## collect list of custom widget-defined features
+
+#set ($customFeatures = [])
+#if ($customFeatureStrategy != 'exclude')
+	## if any property of one of the 5 custom feature slots is defined, it's showable
+	#foreach($i in [0..4])
+		#set ($customFeatureTitle = false)
+		#set ($customFeatureTitle = $core_v2_widget.GetStringValue("feature${i}title", ""))
+		#set ($customFeatureDescription = false)
+		#set ($customFeatureDescription = $core_v2_widget.GetStringValue("feature${i}description", ""))
+		#set ($customFeatureUrl = false)
+		#set ($customFeatureUrl = $core_v2_widget.GetUrlValue("feature${i}url", ""))
+		#set ($customFeatureImage = false)
+		#set ($customFeatureImage = $core_v2_widget.GetUrlValue("feature${i}image", ""))
+		#set ($customFeatureBlur = false)
+		#set ($customFeatureBlur = $core_v2_widget.GetBoolValue("feature${i}blur", false))
+		#if ($scalingMode == 'dynamic')
+			#set ($customFeatureBlur = false)
+		#end
+		#set ($customFeatureShadowText = true)
+		#set ($customFeatureShadowText = $core_v2_widget.GetBoolValue("feature${i}shadow", true))
+
+		#set ($customFeatureDesignMode = false)
+		#set ($customFeatureDesignMode = $core_v2_widget.GetStringValue("feature${i}designMode", ""))
+		#if ($customFeatureDesignMode.Length == 0)
+			## Presume defaults based on upgraded version of widget
+			#if ($customFeatureImage.length > 0 || $customFeatureTitle.length > 0 || $customFeatureDescription.length > 0)
+				#if ($customFeatureImage.Length > 0)
+					$core_v2_widget.SetStringValue("feature${i}designMode", "photo")
+					#set ($customFeatureDesignMode = 'photo')
+				#else
+					$core_v2_widget.SetStringValue("feature${i}designMode", "color")
+					#set ($customFeatureDesignMode = 'color')
+				#end
+			## New defaults
+			#else
+				$core_v2_widget.SetStringValue("feature${i}designMode", "inherit")
+				#set ($customFeatureDesignMode = 'inherit')
+			#end
+		#end
+
+		## If no photo provided in photo mode, fall back to 'inherit'
+		#if ($customFeatureDesignMode == 'photo' && (!$customFeatureImage || $customFeatureImage.Length == 0))
+			#set ($customFeatureDesignMode = 'inherit')
+		#end
+
+		## Set colors based on palette or custom
+		#set ($inheritingDefaultImage = false)
+		#if ($customFeatureDesignMode == 'inherit')
+			#set ($customFeatureDesignMode = $defaultFeatureDesignMode)
+			#set ($customFeatureImage = $defaultFeatureImage)
+			#set ($customFeatureBlur = $defaultFeatureBlur)
+			#set ($customFeatureShadowText = $defaultFeatureShadowText)
+			#set ($customFeatureColorMode = $defaultFeatureColorMode)
+			#set ($customFeatureBackground = $defaultFeatureBackground)
+			#set ($customFeatureBackground2 = $defaultFeatureBackground2)
+			#set ($customFeatureForeground = $defaultFeatureForeground)
+			#if ($customFeatureImage && $customFeatureImage.Length > 0)
+				#set ($inheritingDefaultImage = true)
+			#end
+		#elseif ($customFeatureDesignMode == 'photo')
+			#set ($customFeatureBackground = '#AAA')
+			#set ($customFeatureForeground = '#FFF')
+		#elseif ($customFeatureDesignMode == 'color')
+			#set ($customFeatureColorMode = false)
+			#set ($customFeatureBackground = false)
+			#set ($customFeatureBackground2 = false)
+			#set ($customFeatureForeground = false)
+
+			#set ($paletteId = $core_v2_widget.GetCustomValue("feature${i}paletteId", ''))
+			#set ($customFeatureBackgroundFrom = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color', '#2196F3', 10))
+			#set ($customFeatureBackgroundTo = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color-to', '', 10))
+			#set ($customFeatureForeground = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'foreground-color', '#ffffff', 10))
+
+			#if ($customFeatureBackgroundFrom.Length > 0 && $customFeatureBackgroundTo.Length > 0)
+				#set ($customFeatureBackground = $customFeatureBackgroundFrom)
+				#set ($customFeatureBackground2 = $customFeatureBackgroundTo)
+				#set ($customFeatureColorMode = 'gradient')
+			#else
+				#set ($customFeatureBackground = $customFeatureBackgroundFrom)
+				#set ($customFeatureColorMode = 'solid')
+			#end
+		#end
+
+		#if (($customFeatureImage.length > 0 && !$inheritingDefaultImage) || $customFeatureTitle.length > 0 || $customFeatureDescription.length > 0)
+			#set ($customFeature = "%{}")
+			$customFeature.Add('Title', $customFeatureTitle)
+			$customFeature.Add('Description', $customFeatureDescription)
+			$customFeature.Add('Url', $customFeatureUrl)
+			$customFeature.Add('DesignMode', $customFeatureDesignMode)
+			$customFeature.Add('Image', $customFeatureImage)
+			$customFeature.Add('Shadow', $customFeatureShadowText)
+			$customFeature.Add('Blur', $customFeatureBlur)
+			$customFeature.Add('ColorMode', $customFeatureColorMode)
+			$customFeature.Add('Background', $customFeatureBackground)
+			$customFeature.Add('Background2', $customFeatureBackground2)
+			$customFeature.Add('Foreground', $customFeatureForeground)
+			$customFeature.Add('Type', 'Custom')
+			#set ($addedAt = $customFeatures.Add($customFeature))
+		#end
+	#end
+#end

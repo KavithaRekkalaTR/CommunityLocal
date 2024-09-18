@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Following" version="13.0.0.0" description="Raises notifications when users are followed." id="e4f9a316b44e403a8e7be895bce1b08a" lastModified="2023-05-09 15:37:24Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('follower_name')
+    #set($follower = false)
+    #set($follower = $core_v2_user.Get("%{ Id=$context_v1_email.Context.Follow.FollowerId }"))
+    #if ($follower && !$follower.HasErrors())
+        $follower.DisplayName
+    #else
+        $context_v1_email.Context.Follow.FollowerId
+    #end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('follower_name')
+    #set($follower = false)
+    #set($follower = $core_v2_user.Get("%{ Id=$context_v1_email.Context.Follow.FollowerId }"))
+    #if ($follower && !$follower.HasErrors())
+        $follower.DisplayName
+    #else
+        $context_v1_email.Context.Follow.FollowerId
+    #end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('follower_name_link')
+    #set($follower = false)
+    #set($follower = $core_v2_user.Get("%{ Id=$context_v1_email.Context.Follow.FollowerId }"))
+    #if ($follower && !$follower.HasErrors())
+        #if ($follower.Url)
+            <a href="$core_v2_encoding.HtmlAttributeEncode($follower.Url)">$follower.DisplayName</a>
+        #else
+            $follower.DisplayName
+        #end
+    #else
+        $context_v1_email.Context.Follow.FollowerId
+    #end
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+</p>
+
+#set($friendsUrl = $core_v2_urls.Friends($context_v1_email.Context.Follow.FollowingId, false))
+#if ($friendsUrl)
+    <p>
+    #format($core_v2_language.GetResource('Body_Friends'))
+    #token('friends_link')
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($friendsUrl)">$core_v2_language.GetResource('Friends')</a>
+    #end
+    </p>
+#end]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">{follower_name_link} is now following you on {site_name}.</resource>
+  <resource name="Body_Friends">{friends_link}.</resource>
+  <resource name="Friends">You can see all of your friends here</resource>
+  <resource name="Subject">{site_name}: {follower_name} is now following you</resource>
+  <resource name="Header">{follower_name} is now following you</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,75 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($template = false)
+	#set($template = $core_v2_page.GetFormValue('Template'))
+
+	#set($xml = false)
+	#set($xml = $core_v2_widget.RenderFile("${template}.xml"))
+
+	#set($parameters = false)
+	#set($parameters = $core_v2_page.ParseQueryString($core_v2_page.GetFormValue('Parameters')))
+
+	#set ($uploadContextId = false)
+	#set ($uploadContextId = $core_v2_page.GetFormValue('UploadContextId'))
+	
+	#set($response = false)
+	#if ($xml)
+		#if ($parameters)
+			#foreach($key in $parameters.Keys)
+				#set($value = $parameters.Value($key))
+				#if ($value.StartsWith('FILECONTENTS:'))
+					#set($file = false)
+					#set($file = $core_v2_uploadedFile.Get($uploadContextId, $value.Substring(13)))
+					#if ($file)
+						#set($xml = $xml.Replace($key, $file.FileDataBase64.Replace('=', '%3d')))
+					#end
+				#else
+					#set($xml = $xml.Replace($key, $core_v2_encoding.UrlEncode($parameters.Value($key))))
+				#end
+			#end
+		#end
+
+        #set ($themeId = $core_v2_utility.ParseGuid($core_v2_page.ThemeName))
+		#set($themeContextId = false)
+		#set($themeTypeId = false)
+		#set($themeTypeId = $core_v2_page.GetFormValue('ThemeTypeId'))
+		#if ($themeTypeId && $themeTypeId.Length > 0)
+			#set($themeTypeId = $core_v2_utility.ParseGuid($themeTypeId))
+		#else
+			#set($themeTypeId = false)
+		#end
+		#set($themeContextId = $core_v2_page.GetFormValue('ThemeContextId'))
+		#if ($themeContextId && $themeContextId.Length > 0)
+			#set($themeContextId = $core_v2_utility.ParseGuid($themeContextId))
+		#else
+			#set($themeContextid = false)
+		#end
+		#if (!$themeTypeId)
+			#set($groupId = false)
+			#set($groupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupId')))
+			#if($groupId && $groupId > 0)
+				#set($group = false)
+				#set($group = $core_v2_group.Get("%{Id = $groupId}"))
+				#if ($group)
+					#set($themeTypeId = $core_v2_group.ThemeTypeId)
+					#set($themeContextId = $group.ApplicationId)
+					#set($themeId = $group.ThemeId)
+				#end
+			#else
+				#set($themeTypeId = $core_v2_configuration.SiteThemeTypeId)
+				#set($themeContextId = $core_v2_configuration.SiteThemeContextId)
+			#end
+		#end
+
+		#if ($themeTypeId && $themeContextId)
+			#set($response = $core_v2_themePage.Update($themeTypeId, $themeId, $themeContextId, $xml))
+		#end
+	#end
+
+	#if (!$response || ($response.Errors && $response.HasErrors()))
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+		{"success":"True"}
+	#end
+#end

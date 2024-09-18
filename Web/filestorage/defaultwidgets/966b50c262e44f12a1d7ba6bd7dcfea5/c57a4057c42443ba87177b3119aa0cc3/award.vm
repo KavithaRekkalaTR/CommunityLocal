@@ -1,0 +1,58 @@
+#set($id = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_achievementid')))
+#set($achievement = false)
+#set($achievement = $core_v2_achievement.Get($id))
+#if (!$achievement || $achievement.HasErrors())
+    <div class="message error">$core_v2_language.GetResource('AchievementNotFound')</div>
+#else
+    #set ($headerTemplateId = $core_v2_widget.UniqueId('awardHeaderTemplateId'))
+    <script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    	<fieldset>
+    	    <ul class="field-list">
+    	        <li class="field-item">
+                    <span class="field-item-input user-options">
+    	                <a href="#" data-messagename="achievement.awardto" class="button award-achievement">$core_v2_language.GetResource('Action_Award')</a>
+                    </span>
+    	        </li>
+            </ul>
+        </fieldset>
+    </script>
+    
+    <form><fieldset>
+    	<ul class="field-list">
+    		<li class="field-item name">
+    			<label for="$core_v2_widget.UniqueId('awardto')" class="field-item-name">$core_v2_language.GetResource('Field_AwardTo')</label>
+    			<span class="field-item-description">$core_v2_language.GetResource('Field_AwardTo_Description')</span>
+    			<span class="field-item-input">
+    				<input type="text" id="$core_v2_widget.UniqueId('awardto')" name="$core_v2_widget.UniqueId('awardto')"  /> 
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+    	</ul>	
+    </fieldset></form>
+    
+    #registerEndOfPageHtml('telligent.evolution.widgets.administrationAchievementsAward')
+    	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('award.js'))"></script>
+    #end
+    <script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+    	jQuery.telligent.evolution.widgets.administrationAchievementsAward.register({
+    	    achievementId: '$id.ToString()',
+    	    achievementTitle: '$core_v2_encoding.JavascriptEncode($achievement.Title)',
+    		headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+    	    fields: {
+                awardTo: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('awardto'))')
+    	    },
+    		urls: {
+    		    findUsers: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-findusers.vm'))'
+    		},
+    		text:  {
+    			alreadyAwarded: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Identifier_AlreadyAwarded'))',
+    			noUsersMatchText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingMembers'))',
+    			userLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Placeholder_FindMember'))',
+    			awardSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_AchievementAwarded'))',
+    			noMembersSelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMembersSelected'))'
+    		}
+    	});
+    });
+    </script>
+#end

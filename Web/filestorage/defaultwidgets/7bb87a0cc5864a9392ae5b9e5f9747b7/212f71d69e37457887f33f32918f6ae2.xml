@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ContentPeek_Name}" version="11.0.0.0" description="${resource:ContentPeek_Description}" instanceIdentifier="212f71d69e37457887f33f32918f6ae2" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="content-peek" lastModified="2020-11-03 22:08:24Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set ($contentTypeIds = '')
+#set ($includeContentTypeIds = $core_v2_widget.GetCustomValue('includeContentTypeIds', 'all'))
+#if ($includeContentTypeIds == 'all')
+	#set($first = true)
+	#foreach($contentType in $core_v2_contentType.List())
+	   #if ($first)
+			#set($contentTypeIds = "${contentTypeIds}${contentType.Id}")
+			#set($first = false)
+		#else
+			#set($contentTypeIds = "${contentTypeIds},${contentType.Id}")
+		#end
+	#end
+#else
+	#set($first = true)
+	#foreach($contentTypeId in $core_v2_page.ParseQueryString($includeContentTypeIds).Values('ContentTypeId'))
+	#each
+		#if ($first)
+			#set($contentTypeIds = "${contentTypeIds}${core_v2_utility.ParseGuid($contentTypeId)}")
+			#set($first = false)
+		#else
+			#set($contentTypeIds = "${contentTypeIds},${core_v2_utility.ParseGuid($contentTypeId)}")
+		#end
+	#end
+#end
+
+#set ($includeLegacyUserLinks = $core_v2_widget.GetBoolValue('includeLegacyUserLinks', true))
+
+#registerEndOfPageHtml('telligent.evolution.widgets.contentPeek')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function(){
+		jQuery.telligent.evolution.widgets.contentPeek.register({
+			contentTypeIds: '$core_v2_encoding.JavascriptEncode($contentTypeIds)',
+			includeLegacyUserLinks: #if ($includeLegacyUserLinks) true #else false #end
+		});
+	});
+	</script>
+#end
+
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:ContentPeek_Name}'))
+]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+<property id="includeContentTypeIds" labelResourceName="includeContentTypes" descriptionResourceName="includeContentTypesDesc" defaultValue="all" dataType="Custom" template="core_v2_contentTypeList" />
+<property id="includeLegacyUserLinks" labelResourceName="includeLegacyUserLinks" descriptionResourceName="includeLegacyUserLinksDesc" defaultValue="true" dataType="bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ContentPeek_Description">Renders previews on hover</resource>
+  <resource name="ContentPeek_Name">Hover - Previews</resource>
+  <resource name="includeContentTypes">Enabled Previews</resource>
+  <resource name="includeContentTypesDesc">Preview mentions of and specially-crafted links to the following on hover:</resource>
+  <resource name="includeLegacyUserLinks">Legacy User Previews</resource>
+  <resource name="includeLegacyUserLinksDesc">Preview links to users' profiles</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="remoting.service.readonly" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

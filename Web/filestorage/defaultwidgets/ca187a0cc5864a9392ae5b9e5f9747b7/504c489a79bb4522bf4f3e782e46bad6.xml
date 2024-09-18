@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_EventRegistrationAdd_Name}" version="11.0.0.0" description="${resource:Calendar_EventRegistrationAdd_Description}" instanceIdentifier="504c489a79bb4522bf4f3e782e46bad6" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="true" cssClass="event-registration-invite-form" lastModified="2020-01-14 16:09:32Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($show = false)
+#set($show = $core_v2_page.GetQueryStringValue('Show').ToLower())
+
+#set($sort = false)
+#set($sort = $core_v2_page.GetQueryStringValue('SortBy').ToLower())
+
+#set($order = false)
+#set($order = $core_v2_page.GetQueryStringValue('SortOrder').ToLower())
+#set ($calendar = $calendar_v1_calendars.Current)
+
+<div class="filter-selector">
+	<div>
+		<form>
+		<select data-parameter="Show" class="ui-select">Cancelled
+			<option value="">$core_v2_language.GetResource('show_all')</option>
+			<option value="Cancelled" #if ($show == "cancelled") selected#end>$core_v2_language.GetResource('show_cancelled')</option>
+			<option value="Confirmed" #if ($show == "confirmed") selected#end>$core_v2_language.GetResource('show_confirmed')</option>
+			<option value="Invited" #if ($show == "invited") selected#end>$core_v2_language.GetResource('show_invited')</option>
+			<option value="NotApproved" #if ($show == "notapproved") selected#end>$core_v2_language.GetResource('show_notapproved')</option>
+		</select>
+		<select data-parameter="SortBy" class="ui-select">
+			<option value="">$core_v2_language.GetResource('sort_username')</option>
+			<option value="RegistrationDate" #if ($sort == "registrationdate") selected#end>$core_v2_language.GetResource('sort_registrationDate')</option>
+			<option value="Status" #if ($sort == "status") selected#end>$core_v2_language.GetResource('sort_registrationStatus')</option>
+		</select>
+		<select data-parameter="SortOrder" class="ui-select">
+			<option value="">$core_v2_language.GetResource('order_ascending')</option>
+			<option value="Descending" #if($order == 'descending') selected#end>$core_v2_language.GetResource('order_descending')</option>
+		</select>
+		</form>
+	</div>
+</div>
+
+#set($event = $calendar_v1_events.Current)
+#set($url = false)
+#set($url = $calendar_v1_urls.Event($event.Id))
+
+#if ($url)
+	<div class="ui-links navigation-list links margin-top" data-minlinks="2" data-direction="vertical">
+		<ul class="navigation-list">
+			<li class="navigation-list-item">
+				<a href="$url" class="internal-link add-group-member" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Event_View'))">$core_v2_language.GetResource('Event_View')</a>
+			</li>
+		</ul>
+	</div>
+#end
+
+#if ($calendar_v1_calendars.HasPermission($calendar.Id,$calendar_v1_permissions.ManageRegistrations))
+	<div class="ui-links navigation-list links" data-minlinks="2" data-direction="vertical">
+		<ul class="navigation-list">
+			<li class="navigation-list-item">
+				<a href="#" onclick="jQuery.glowModal('$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('invite-modal.vm'))', { width: 400, height: 300, onClose: function(result){ jQuery(jQuery.telligent.evolution.widgets.eventRegistrationList.content).trigger('reload');}}); return false;" class="internal-link add-group-member" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Invite'))">$core_v2_language.GetResource('Invite')</a>
+			</li>
+		</ul>
+	</div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.eventRegistrationInvitation')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(j){
+			j.telligent.evolution.widgets.eventRegistrationSort.register({
+				wrapper : '#$core_v2_widget.WrapperElementId'
+			});
+		});
+	</script>
+#end
+
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${Calendar_EventRegistrationAdd_Title}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="linkArea" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_EventRegistrationAdd_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AllowAnonymous_Off">Enable anonymous registrations to invite by email address</resource>
+  <resource name="AlreadySelected">Already Invited</resource>
+  <resource name="Calendar_EventRegistrationAdd_Description">Allows Registration Manager to invite/register users for an event.</resource>
+  <resource name="Calendar_EventRegistrationAdd_Name">Event Calendar - Event Registration Invitation Form</resource>
+  <resource name="Calendar_EventRegistrationAdd_Title">Send Invitations</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Confirmed">Confirmed</resource>
+  <resource name="Event_View">View Event</resource>
+  <resource name="Groups_GroupMembershipList_InviteByName">Invite Members By Name</resource>
+  <resource name="Groups_GroupMembershipList_SendInvitation">Send Invitiation(s)</resource>
+  <resource name="Groups_GroupMembershipList_UserNames">User Name(s) or Email Address(es)</resource>
+  <resource name="Groups_ManageMembers_AjaxError">An error occurred while communicating with the server.  Please try again.</resource>
+  <resource name="Groups_ManageMembers_InvalidEmails">One or more emails is invalid</resource>
+  <resource name="Groups_ManageMembers_MissingEmails">Please enter valid email addresses to send invitations</resource>
+  <resource name="Groups_ManageMembers_MissingInviteUserNames">Please enter username(s) to invite.</resource>
+  <resource name="Groups_ManageMembers_MissingUserNames">Please enter username(s) to add as members.</resource>
+  <resource name="Hubs_EmailAddresses">Email Addresses (comma separated)</resource>
+  <resource name="Hubs_InvitationSentMessage">Registrations added successfully.</resource>
+  <resource name="Hubs_InviteMemberByEmail">Invite By Email</resource>
+  <resource name="Invite">Invite</resource>
+  <resource name="Options">Options</resource>
+  <resource name="order_ascending">Ascending</resource>
+  <resource name="order_descending">Descending</resource>
+  <resource name="show_all">Showing all</resource>
+  <resource name="show_cancelled">Showing cancelled</resource>
+  <resource name="show_confirmed">Showing confirmed</resource>
+  <resource name="show_invited">Showing invited</resource>
+  <resource name="show_notapproved">Showing not approved</resource>
+  <resource name="sort_registrationDate">By date registered</resource>
+  <resource name="sort_registrationStatus">By registration status</resource>
+  <resource name="sort_username">By username</resource>
+  <resource name="Status">Status</resource>
+  <resource name="UserLookUpTextBox_NoMatches_AllUsers">No matches were found</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="ca14a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

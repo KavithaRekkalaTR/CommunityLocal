@@ -1,0 +1,40 @@
+$core_v2_widget.ExecuteFile('setquery.vm')
+
+#set($ideas = false)
+#set($ideas = $telligentIdeas_v1_ideas.List($query))
+
+#foreach ($idea in $ideas)
+#beforeall
+	<div class="avatar-list">
+	<ul class="content-list">
+#each
+	#set($author = $idea.Author)
+
+	<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)">
+		<div class="author">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($author.AvatarUrl, 35, 35, "%{border='0px', alt=$author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+			</div>
+			<a $core_v2_ui.ContentPeek($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId, 'internal-link view-full-post navigable ')
+				href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)">
+				<div class="content">$core_v2_language.Truncate($idea.Name, 200, "...")</div>
+			</a>
+			<div class="meta">
+				<span class="idea-status status-$idea.Status.Key">$idea.Status.Name</span>
+				<a $core_v2_ui.ContentPeek($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId, 'internal-link view-post navigable')
+					href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)">
+                    #if($sortBy.ToLower() == 'statuslastupdateddate')
+                        $core_v2_ui.AgoDate($idea.StatusDate)
+                    #else
+    					$core_v2_ui.AgoDate($idea.CreatedDate)
+                    #end
+				</a>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+	</div>
+#nodata
+	$core_v2_widget.Hide()
+#end

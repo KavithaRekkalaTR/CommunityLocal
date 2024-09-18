@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Idea_Create_Name}" version="13.0.0.0" description="${resource:Idea_Create_Description}" instanceIdentifier="8f2eba6966c04afd9ee93aa6ee88ab3d" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="idea-create" lastModified="2022-08-12 03:17:30Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[#set($userId = $core_v2_user.Accessing.Id)
+#set($group = false)
+#set($group = $core_v2_group.Current)
+#set($challenge = false)
+#set($challenge = $telligentIdeas_v1_challenges.Current)
+
+#if(!$group || !$challenge)
+  $core_v2_widget.Hide()
+#else
+
+  #set($idea = false)
+  #set($idea = $telligentIdeas_v1_ideas.Current)
+
+  #set($categories = $telligentIdeas_v1_ideaCategories.List($challenge.Id))
+
+  #set($canCreate = $telligentIdeas_v1_ideaPermissions.CanCreateIdeas($challenge.Id))
+  #set ($voteComparison = 0)
+  #set($authorVotes = $telligentIdeas_v1_votes.Get($idea.Id, $userId))
+  #if($authorVotes)
+    #set ($voteComparison = $authorVotes.TotalVotes)
+  #end
+  #set($canEdit = ($idea.TotalVotes == $voteComparison && $idea.Author.Id == $core_v2_user.Accessing.Id) || $telligentIdeas_v1_ideaPermissions.CanEditIdeas($challenge.Id))
+
+  #if (!$idea && !$canCreate)
+	<div id="$core_v2_widget.UniqueId('errorMessage')" class="message error">$core_v2_language.GetResource("CreateIdeaPermissionDenied")</div>
+  #elseif ($idea && !$canEdit)
+	<div id="$core_v2_widget.UniqueId('errorMessage')" class="message error">$core_v2_language.GetResource("EditIdeaPermissionDenied")</div>
+  #elseif ($categories.Count == 0 && $challenge.RequiresCategory)
+    <div class="message error">
+        $core_v2_language.GetResource("NoRequiredCategories")
+    </div>
+  #else
+
+	<div id="$core_v2_widget.UniqueId('form')">
+	  <div class="field-list-header"></div>
+	  <form><fieldset class="field-list">
+		#if ($idea)
+		  <h1>$idea.Name</h1>
+		#else
+		  <h1>$core_v2_language.GetResource("Idea_Create_Title")</h1>
+		#end
+
+		<ul class="field-list">
+		  <li class="field-item required idea-name">
+			<label class="field-item-header" for="$core_v2_widget.UniqueId('name')">$core_v2_language.GetResource("Name")</label>
+			<span class="field-item-input">
+			  <textarea rows="1" class="scaled" maxlength="256" id="$core_v2_widget.UniqueId('name')" name="$core_v2_widget.UniqueId('name')">$!core_v2_encoding.HtmlEncode($idea.Name)</textarea>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		  </li>
+
+		<li class="field-item required idea-body">
+		  <label for="$core_v2_widget.UniqueId('body')" class="field-item-header">$core_v2_language.GetResource('Description')</label>
+		  <span class="field-item-input">$core_v2_editor.Render('body',"%{Width='100%', Height='250px', Value=$!idea.Description('raw'), ContentTypeId=$telligentIdeas_v1_ideas.ContentTypeId, ApplicationId=$challenge.ApplicationId, ApplicationTypeId=$telligentIdeas_v1_challenges.ContentTypeId }")</span>
+		  <span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		#set($hasCategories = false)
+    	#set($categoryId = false)
+    	#set($categoryId = $idea.Category.Id)
+    	#if ($categories.Count > 0)
+    	    #set($hasCategories = true)
+    	    <li class="field-item post-category">
+    			<label for="$core_v2_widget.UniqueId('Category')" class="field-item-header">$core_v2_language.GetResource('CreateEditPost_Category')</label>
+    			<span class="field-item-input">
+        			<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('Category'))" data-querykey="category">
+        			    #if (!$challenge.RequiresCategory)
+            			    <option value="0" #if(!$categoryId) selected #end>$core_v2_language.GetResource('NotCategorized')</option>
+            			#else
+            			    <option value="" #if(!$categoryId) selected #end>$core_v2_language.GetResource('SelectCategory')</option>
+            			#end
+            			#foreach ($category in $categories)
+            				<option value="$category.Id" #if($category.Id==$categoryId)selected="selected"#end>$category.Name</option>
+            			#end
+            		</select>
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+        #end
+
+		<li class="field-item post-tags">
+		  #set($tags = '')
+		  #foreach($tag in $core_v2_tags.Get($idea.Id, $telligentIdeas_v1_ideas.ContentTypeId, "%{}"))
+		  #each
+			  #set($tags = "$tags$core_v2_encoding.JavascriptEncode($core_v2_encoding.HtmlDecode($tag.TagName))")
+		  #between
+			  #set($tags = "$tags,")
+		  #end
+			<label for="$core_v2_widget.UniqueId('Tags')" class="field-item-header">$core_v2_language.GetResource('CreateEditPost_Tags')</label>
+			<span class="field-item-input">
+				<input id="$core_v2_widget.UniqueId('TagBox')" type="text" value="$tags" size="70" />
+			</span>
+		</li>
+
+			<li class="field-item create-post">
+				<span class="field-item-input">
+					<a href="javascript:void(0);" class="internal-link save-post disabled button" id="$core_v2_widget.UniqueId('save')">
+					  <span></span>$core_v2_language.GetResource('CreateButton')
+					</a>
+					<a id="$core_v2_widget.UniqueId('cancel')" href="javascript:void(0);" class="internal-link inline-button cancel-post">$core_v2_language.GetResource('Cancel')</a>
+					<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+	  <div class="field-list-footer"></div>
+	</div>
+
+	#registerEndOfPageHtml('telligent.evolution.Ideation.widgets.addEditIdea')
+	  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	#end
+
+	#registerEndOfPageHtml()
+
+	  <script type="text/javascript">
+	  //<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	  jQuery(function(j)
+	  {
+		j.telligent.evolution.Ideation.widgets.addEditIdea.register({
+		  wrapperId:'$core_v2_widget.WrapperElementId'
+		  ,save: j('#$core_v2_widget.UniqueId('save')')
+		  ,nameInput:"#$core_v2_widget.UniqueId('name')"
+		  ,ideaId:#if($idea)'$idea.Id'#else'00000000-0000-0000-0000-000000000000'#end
+		  ,groupId:$group.Id
+		  ,appId:'$challenge.Id'
+		  ,applicationId:'$challenge.ApplicationId'
+		  ,userId:$userId
+		  ,getBodyContent: function() { return $core_v2_editor.GetContentScript('body'); }
+		  ,tagBox: j('#$core_v2_widget.UniqueId('TagBox')')
+		  ,categoryId: "$core_v2_widget.UniqueId('Category')"
+		  ,nameRequiredMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validator_NameRequired'))'
+		  ,duplicateNameMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validator_DuplicateName'))'
+		  ,categoryRequiredMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validator_CategoryRequired'))'
+		  ,processingMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Saving'))'
+		  ,successMessage:j('#$core_v2_widget.UniqueId('successMessage')')
+		  ,errorMessage:j('#$core_v2_widget.UniqueId('errorMessage')')
+		  ,saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))'
+		  ,ideaContentTypeId: '$telligentIdeas_v1_ideas.ContentTypeId.ToString()'
+		  ,cancelLink: jQuery('#$core_v2_widget.UniqueId('cancel')')
+  		  ,cancelConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CancelConfirmation'))'
+          ,requiresCategory: '$challenge.RequiresCategory'
+		});
+	  });
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+	</script>
+	#end
+  #end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Idea_Create_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Idea_Create_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CancelConfirmation">Are you sure you want to cancel? All unsaved changes will be lost.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="CreateButton">Post</resource>
+  <resource name="CreateEditPost_Category">Category</resource>
+  <resource name="CreateEditPost_Tags">Tags</resource>
+  <resource name="CreateIdeaPermissionDenied">You do not have permission to create ideas in this ideation.</resource>
+  <resource name="Description">Description</resource>
+  <resource name="EditIdeaPermissionDenied">You do not have permission to edit this idea in this ideation.</resource>
+  <resource name="Idea_Create_Description">Form to create or update an Idea</resource>
+  <resource name="Idea_Create_Name">Ideas - Create Idea</resource>
+  <resource name="Idea_Create_Title">Submit your Idea</resource>
+  <resource name="Name">Idea</resource>
+  <resource name="NoRequiredCategories">This ideation has been configured to require categories, but no categories were defined. Please contact your site administrator.</resource>
+  <resource name="NotCategorized">(Not categorized)</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Saving">Saving...</resource>
+  <resource name="SelectCategory">Select Category...</resource>
+  <resource name="Validator_CategoryRequired">Category is required</resource>
+  <resource name="Validator_DuplicateName">A idea with this name already exists</resource>
+  <resource name="Validator_NameRequired">Idea is required</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="4daabcc42846400e95f4990266d3e3c9" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

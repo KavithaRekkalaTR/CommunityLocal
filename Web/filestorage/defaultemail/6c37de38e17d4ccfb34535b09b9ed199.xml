@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Calendar Event Created Notifications" version="13.0.0.0" description="Raises notifications to subscribed users on a piece of content when an event is added to a Calendar." id="6c37de38e17d4ccfb34535b09b9ed199" lastModified="2023-09-15 19:52:14Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('event_title')
+    $context_v1_email.Context.CalendarEvent.EventTitle
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('event_title')
+    $context_v1_email.Context.CalendarEvent.EventTitle
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body_Introduction'))
+#token('event_title_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.CalendarEvent.Url)">$context_v1_email.Context.CalendarEvent.EventTitle</a>
+#end
+</p>
+<p>
+$context_v1_email.Context.CalendarEvent.EventDateString
+#if ($context_v1_email.Context.CalendarEvent.EventLocation && $context_v1_email.Context.CalendarEvent.EventLocation.Length > 0)
+    <br />
+    $context_v1_email.Context.CalendarEvent.EventLocation
+#end
+</p>
+$context_v1_email.Context.CalendarEvent.HtmlDescription('Email')
+
+#if ($context_v1_email.Context.CalendarEventRegistration.RegistrationType == 'ApprovalRequired')
+	#set($registerUrl = false)
+	#if ($context_v1_email.Context.CalendarEvent.Event.RegistrationType == 'Open' || $context_v1_email.Context.CalendarEvent.Event.RegistrationType == 'ApprovalRequired')
+		#set($registerUrl = $context_v1_email.Context.CalendarEvent.Event.Url)
+	#end
+	#if ($registerUrl)
+	    <p>
+	    #format($core_v2_language.GetResource('Body_Register'))
+	    #token('register_link')
+		    <a href="$core_v2_encoding.HtmlAttributeEncode($registerUrl)">$core_v2_language.GetResource('Register')</a>
+		#end
+		</p>
+	#end
+#end]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('unsubscribe_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.CalendarEvent.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Introduction">{event_title_link} was added.</resource>
+  <resource name="Body_Register">{register_link}.</resource>
+  <resource name="Footer">You were sent this email because you opted to receive calendar notifications. If you no longer wish to receive updates, you can {unsubscribe_link}.</resource>
+  <resource name="Register">Click here to register</resource>
+  <resource name="Subject">{site_name}: {event_title} was added</resource>
+  <resource name="Header">{event_title} was added</resource>
+  <resource name="Unsubscribe">unsubscribe</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

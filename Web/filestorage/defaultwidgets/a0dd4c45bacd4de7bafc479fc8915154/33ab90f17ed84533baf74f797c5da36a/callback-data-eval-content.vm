@@ -1,0 +1,12 @@
+#set ($response = $shellApi.Evaluate($input, $mode))
+#set ($type = 'standard')
+#if ($response.IndexOf('<span class="error">') == 0)
+	#set ($type = 'error')
+#end
+{
+	"date": "$core_v2_encoding.JavascriptEncode($core_v2_language.FormatDateAndTime($core_v2_utility.CurrentDate))",
+	"type": "$type",
+	"input": "$core_v2_encoding.JavascriptEncode($input)",
+	"output": "$core_v2_encoding.JavascriptEncode($response)",
+	"mode": "$core_v2_encoding.JavascriptEncode($mode)"
+}

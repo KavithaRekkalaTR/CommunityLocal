@@ -1,0 +1,49 @@
+##
+## Form shown when a non-external-authentication-linked existing user is attempting to log in via an external authentication provider
+##
+
+#if (!$externalUserData)
+	#set ($externalUserData = $core_v2_authentication.GetExternalLinkedAuthenticationUserData($externalUserDataToken))
+#end
+#set ($externalAuthProvider = $core_v2_authentication.GetExternalLinkedAuthenticationProvider($externalUserData.ProviderId))
+
+<form action="" method="POST">
+<input type="hidden" name="$core_v2_encoding.HtmlAttributeEncode($actionInput)" id="$core_v2_encoding.HtmlAttributeEncode($actionInput)" value="link_accounts" />
+
+<fieldset class="link-accounts">
+
+	<h1>$core_v2_language.GetResource('Login_Title')</h1>
+
+	<ul class="field-list login">
+
+		<li class="field-item">
+			<span class="field-item-description">
+				$core_v2_language.FormatString($core_v2_language.GetResource('Login_LinkProvider_Welcome'), $user.DisplayName)
+				$core_v2_language.FormatString($core_v2_language.GetResource('Login_ExistingAccount'), $siteInfo.SiteName, $externalAuthProvider.NameHtml)
+			</span>
+		</li>
+
+		#set ($useCommunityNames = true)  ## acts like a parameter to tell the credential form to use fully quaified community names
+		$core_v2_widget.ExecuteFile('sub_form_credentials.vm')
+		<li class="field-item">
+			<a class="internal-link login submit-button button" href="#">$core_v2_language.GetResource('LoginSmall_Button')</a>
+			<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+		</li>
+
+		#set ($forgotPasswordUrl = $core_v2_urls.ForgotPassword())
+		#if ($forgotPasswordUrl)
+			<li class="field-item">
+				<span class="field-item-description">
+					$core_v2_language.GetResource('Login_Reset_Password_Message') <a href="$core_v2_encoding.HtmlAttributeEncode($forgotPasswordUrl)">$core_v2_language.GetResource('Login_Reset_Password_Link')</a>
+				</span>
+			</li>
+		#end
+		<li class="field-item">
+			<span class="field-item-description">
+				$core_v2_language.GetResource('Login_LinkProvider_Message')
+			</span>
+		</li>
+	</ul>
+
+</fieldset>
+</form>

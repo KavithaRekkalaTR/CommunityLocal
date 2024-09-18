@@ -1,0 +1,31 @@
+#set($pageId = false)
+#set($pageId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('_w_wikiPageId')))
+
+#set($wikiId = false)
+#set($wikiId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('_w_wikiId')))
+
+#if ($pageId)
+    #set($pages = $core_v2_wikiToc.List($wikiId, $pageId))
+#else
+    #set($pages = $core_v2_wikiToc.List($wikiId))
+#end
+
+$core_v2_page.SetContentType('text/json')
+
+{
+    "pages": [
+        #foreach($page in $pages)
+            #each
+            {
+                "id": $page.Id,
+                "title": "$core_v2_encoding.JavascriptEncode($page.Title)",
+                "position": #if ($page.Position) $page.Position #else null #end,
+                "hidden": #if ($page.HiddenInTableOfContents) true #else false #end,
+                "hasChildren": #if ($page.Children.Count > 0) true #else false #end,
+                "isDefault": #if($page.IsDefaultPage) true #else false #end
+            }
+            #between
+            ,
+        #end
+    ]
+}

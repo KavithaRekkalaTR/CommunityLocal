@@ -1,0 +1,6 @@
+#set($blogPost = $context.GetAdjustedForExternalPost())
+#if(!$blogPost)
+	$core_v2_widget.Hide()
+#elseif ($blogPost.File && $blogPost.File.FileUrl != '')
+    $core_v2_ui.GetViewHtml($blogPost.File.FileUrl, "%{ OutputIsPersisted = 'false', AdjustToContainer = 'true' }")
+#end

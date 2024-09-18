@@ -1,0 +1,290 @@
+<div class="editor-header">
+	<form class="template-editor-header"></form>
+	<div class="editor-state template-editor-state"></div>
+	<span class="field-description ui-tip" data-tip="<%= description %>"><%= description %></span>
+</div>
+<div class="editor-content overview">
+	<div class="components">
+		<div class="automation-components">
+			$core_v2_widget.ExecuteFile('template-automation-overview-components.vm')
+		</div>
+		<div class="automation-files">
+			$core_v2_widget.ExecuteFile('template-automation-overview-files.vm')
+		</div>
+	</div>
+	<div class="metadata">
+		<form>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item name">
+						<label class="field-item-name">$core_v2_language.GetResource('Name')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('NameDesc')</span>
+						<span class="field-item-input name">
+							<div class="token-editor">
+								<span class="processed"><%: ProcessedName %></span>
+								<input type="text" tabindex="0" class="raw name" size="40" class="name" value="<%: Name %>" />
+							</div>
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item description">
+						<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('DescriptionDesc')</span>
+						<span class="field-item-input description">
+							<div class="token-editor">
+								<span class="processed"><%: ProcessedDescription %></span>
+								<input type="text" tabindex="1" class="raw description" value="<%: Description %>" />
+							</div>
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+				</ul>
+			</fieldset>
+
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item execution-user">
+						<span class="field-item-input execution-user">
+							<input class="execution-user" type="checkbox" <% if(ExecuteAsServiceUser) { %> checked <% } %> id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ExecuteAsServiceUser')):<%= Id %>" />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ExecuteAsServiceUser')):<%= Id %>">$core_v2_language.GetResource('ExecuteAsService')</label>
+						</span>
+						<span class="field-item-description">
+							#format ($core_v2_language.GetResource('ExecuteAsServiceDescription'))
+								#token ('accessing_user')
+									<a href="#" data-messagename="studio.view.documentation.show" data-type="extension" data-name="core_v2_user" data-target="Accessing">core_v2_user.Accessing</a>
+								#token ('execute_file')
+									<a href="#" data-messagename="studio.view.documentation.show" data-type="extension" data-name="core_v2_widget" data-target="ExecuteFile">core_v2_widget.ExecuteFile()</a>
+							#end
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+				</ul>
+			</fieldset>
+
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item singleton">
+						<span class="field-item-input singleton">
+							<input class="singleton" type="checkbox"
+								<% if(IsSingleton) { %> checked <% } %> id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('IsSingleton')):<%= Id %>"
+								<% if (EnabledConfigurations.length > 1) { %> disabled <% } %> />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('IsSingleton')):<%= Id %>">$core_v2_language.GetResource('Singleton')</label>
+						</span>
+						<span class="field-item-description">
+							$core_v2_language.GetResource('SingletonDesc')
+						</span>
+						<% if (EnabledConfigurations.length > 1) { %>
+							<span class="field-item-description">
+								<em>$core_v2_language.GetResource('SingletonWarning')</em>
+							</span>
+						<% } %>
+						<span class="field-item-description was"></span>
+					</li>
+				</ul>
+			</fieldset>
+
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item trigger">
+						<label class="field-item-name">$core_v2_language.GetResource('Trigger')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('TriggerDesc')</span>
+						<span class="field-item-description was"></span>
+
+						<span class="field-item-input">
+							<input id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeJob')):<%= Id %>" type="checkbox" class="trigger-type" value="Job" <% if(TriggerTypes.indexOf('Job') > -1) { %> checked <% } %> />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeJob')):<%= Id %>" class="field-item-name">$core_v2_language.GetResource('Scheduled')</label>
+						</span>
+						<div class="trigger-form Job">
+							<fieldset>
+								<ul class="field-list">
+									<li class="field-item ScheduleType">
+										<label class="field-item-name">$core_v2_language.GetResource('ScheduleThisAutomation')</label>
+										<span class="field-item-description"></span>
+										<span class="field-item-input ScheduleType">
+											<select class="raw ScheduleType">
+												<option value="Seconds" <% if(ScheduleType == 'Seconds') { %> selected <% } %>>$core_v2_language.GetResource('EveryFewSeconds')</option>
+												<option value="Minutes" <% if(ScheduleType == 'Minutes') { %> selected <% } %>>$core_v2_language.GetResource('EveryFewMinutes')</option>
+												<option value="Hours" <% if(ScheduleType == 'Hours') { %> selected <% } %>>$core_v2_language.GetResource('EveryFewHours')</option>
+												<option value="Daily" <% if(ScheduleType == 'Daily') { %> selected <% } %>>$core_v2_language.GetResource('OnceDaily')</option>
+											</select>
+										</span>
+									</li>
+
+									<li class="field-item ScheduleSeconds">
+										<label class="field-item-name">$core_v2_language.GetResource('SecondsBetweenExecutions')</label>
+										<span class="field-item-description">$core_v2_language.GetResource('SecondsBetweenExecutionsDesc')</span>
+										<span class="field-item-input ScheduleSeconds">
+											<input type="number" min="1" step="1" placeholder="1" tabindex="1" class="raw ScheduleSeconds" value="<%: (ScheduleSeconds || '1') %>" />
+										</span>
+									</li>
+
+									<li class="field-item ScheduleMinutes">
+										<label class="field-item-name">$core_v2_language.GetResource('MinutesBetweenExecutions')</label>
+										<span class="field-item-description">$core_v2_language.GetResource('MinutesBetweenExecutionsDesc')</span>
+										<span class="field-item-input ScheduleMinutes">
+											<input type="number" min="1" step="1" placeholder="1" tabindex="1" class="raw ScheduleMinutes" value="<%: (ScheduleMinutes || '1') %>" />
+										</span>
+									</li>
+
+									<li class="field-item ScheduleHours">
+										<label class="field-item-name">$core_v2_language.GetResource('HoursBetweenExecutions')</label>
+										<span class="field-item-description">$core_v2_language.GetResource('HoursBetweenExecutionsDesc')</span>
+										<span class="field-item-input ScheduleHours">
+											<input type="number" min="1" step="1" placeholder="1" tabindex="1" class="raw ScheduleHours" value="<%: (ScheduleHours || '1') %>" />
+										</span>
+									</li>
+
+									<div class="ScheduleDaily">
+										<li class="field-item ScheduleDailyTime">
+											<label class="field-item-name">$core_v2_language.GetResource('TimeToExecute')</label>
+											<span class="field-item-description">$core_v2_language.GetResource('TimeToExecuteDesc')</span>
+											<span class="field-item-input ScheduleDailyTime">
+												<input type="text" tabindex="1" class="raw ScheduleDailyTime" value="<%: (ScheduleDailyTime || '') %>" />
+											</span>
+										</li>
+
+										<li class="field-item ScheduleDaily">
+											<label class="field-item-name">$core_v2_language.GetResource('DaysToExecute')</label>
+											<span class="field-item-description">$core_v2_language.GetResource('DaysToExecuteDesc')</span>
+											<span class="field-item-input">
+												<input type="checkbox" <% if(ScheduleDailySunday) { %> checked <% } %> class="ScheduleDailySunday" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailySunday')):<%= Id %>" />
+												<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailySunday')):<%= Id %>">$core_v2_language.GetResource('Sunday')</label>
+											</span>
+											<span class="field-item-input">
+												<input type="checkbox" <% if(ScheduleDailyMonday) { %> checked <% } %> class="ScheduleDailyMonday" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyMonday')):<%= Id %>" />
+												<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyMonday')):<%= Id %>">$core_v2_language.GetResource('Monday')</label>
+											</span>
+											<span class="field-item-input">
+												<input type="checkbox" <% if(ScheduleDailyTuesday) { %> checked <% } %> class="ScheduleDailyTuesday" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyTuesday')):<%= Id %>" />
+												<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyTuesday')):<%= Id %>">$core_v2_language.GetResource('Tuesday')</label>
+											</span>
+											<span class="field-item-input">
+												<input type="checkbox" <% if(ScheduleDailyWednesday) { %> checked <% } %> class="ScheduleDailyWednesday" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyWednesday')):<%= Id %>" />
+												<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyWednesday')):<%= Id %>">$core_v2_language.GetResource('Wednesday')</label>
+											</span>
+											<span class="field-item-input">
+												<input type="checkbox" <% if(ScheduleDailyThursday) { %> checked <% } %> class="ScheduleDailyThursday" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyThursday')):<%= Id %>" />
+												<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyThursday')):<%= Id %>">$core_v2_language.GetResource('Thursday')</label>
+											</span>
+											<span class="field-item-input">
+												<input type="checkbox" <% if(ScheduleDailyFriday) { %> checked <% } %> class="ScheduleDailyFriday" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyFriday')):<%= Id %>" />
+												<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailyFriday')):<%= Id %>">$core_v2_language.GetResource('Friday')</label>
+											</span>
+											<span class="field-item-input">
+												<input type="checkbox" <% if(ScheduleDailySaturday) { %> checked <% } %> class="ScheduleDailySaturday" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailySaturday')):<%= Id %>" />
+												<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('ScheduleDailySaturday')):<%= Id %>">$core_v2_language.GetResource('Saturday')</label>
+											</span>
+										</li>
+									</div>
+									<li class="field-item">
+										<span class="field-item-description">
+											#format ($core_v2_language.GetResource('JobArgs'))
+												#token ('args')
+													<a href="#" data-messagename="studio.view.documentation.show" data-type="type" data-name="Telligent.Evolution.Extensibility.Api.Version1.AutomationScheduledEventArgs" data-displayname="AutomationJobTriggerArguments" data-target="">$core_v2_language.GetResource('arguments')</a>
+												#token('trigger')
+													<a href="#" data-messagename="studio.view.documentation.show" data-type="extension" data-name="context_v2_automationTrigger" data-target="">context_v2_automationTrigger</a>
+											#end
+										</span>
+									</li>
+								</ul>
+							</fieldset>
+						</div>
+
+						<span class="field-item-input">
+							<input id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeEvent')):<%= Id %>" type="checkbox" class="trigger-type" value="Event" <% if(TriggerTypes.indexOf('Event') > -1) { %> checked <% } %> />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeEvent')):<%= Id %>" class="field-item-name">$core_v2_language.GetResource('APIEventOccurs')</label>
+						</span>
+						<div class="trigger-form Event">
+							<fieldset>
+								<ul class="field-list">
+									<li class="field-item eventLookup">
+										<label class="field-item-name">$core_v2_language.GetResource('ApiEvents')</label>
+										<span class="field-item-description">
+											#format($core_v2_language.GetResource('ApiEventsDesc'))
+												#token('trigger')
+													<a href="#" data-messagename="studio.view.documentation.show" data-type="extension" data-name="context_v2_automationTrigger" data-target="">context_v2_automationTrigger</a>
+											#end
+										</span>
+										<span class="field-item-input eventLookup">
+											<input type="text" tabindex="3" class="raw eventLookup" size="40"  />
+										</span>
+									</li>
+								</ul>
+							</fieldset>
+
+							<div class="selected-events">
+								$core_v2_widget.ExecuteFile('template-automation-overview-events.vm')
+							</div>
+						</div>
+
+						<span class="field-item-input">
+							<input id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeManual')):<%= Id %>" type="checkbox" class="trigger-type" value="Manual" <% if(TriggerTypes.indexOf('Manual') > -1) { %> checked <% } %> />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeManual')):<%= Id %>" class="field-item-name">$core_v2_language.GetResource('ManualExecutionOnly')</label>
+						</span>
+						<div class="trigger-form Manual">
+							<p>$core_v2_language.GetResource('ManualWidget')</p>
+							<p>$core_v2_language.GetResource('VelocityExample')</p>
+							#set ($dollar = '$')
+							<pre>${dollar}core_v2_automation.Execute(${dollar}core_v2_utility.ParseGuid('<%: Id %>'), "%{ Key1 = Value1, Key2 = Value2 }")</pre>
+							<p>$core_v2_language.GetResource('JavaScriptExample')</p>
+							<pre>core_v2_automation.Execute(core_v2_utility.ParseGuid('<%: Id %>'), { Key1: Value1, Key2: Value2 });</pre>
+							<p>$core_v2_language.GetResource('ManualPlugin')</p>
+							<pre>Apis.Get&lt;Api.Version1.IAutomations&gt;().Execute(new Guid("<%: Id %>"), new NameValueCollection());</pre>
+							#format ($core_v2_language.GetResource('ManualRequestArgs'))
+								#token ('args')
+									<a href="#" data-messagename="studio.view.documentation.show" data-type="type" data-name="Telligent.Evolution.Extensibility.Api.Version1.AutomationManualEventArgs" data-displayname="AutomationManualEventArgs" data-target="">$core_v2_language.GetResource('arguments')</a>
+								#token('trigger')
+									<a href="#" data-messagename="studio.view.documentation.show" data-type="extension" data-name="context_v2_automationTrigger" data-target="">context_v2_automationTrigger</a>
+							#end
+						</div>
+
+						<span class="field-item-input">
+							<input id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeHttp')):<%= Id %>" type="checkbox" class="trigger-type" value="Http" <% if(TriggerTypes.indexOf('Http') > -1) { %> checked <% } %> />
+							<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('triggerTypeHttp')):<%= Id %>" class="field-item-name">$core_v2_language.GetResource('HttpExecutionOnly')</label>
+						</span>
+						<div class="trigger-form Http">
+							<fieldset>
+								<ul class="field-list">
+									<li class="field-item HttpAuthentication">
+										<label class="field-item-name">$core_v2_language.GetResource('Authentication')</label>
+										<span class="field-item-description">$core_v2_language.GetResource('AuthenticationDesc')</span>
+										<div class="message error auth-none" <% if(HttpAuthentication != 'None') { %> style="display:none" <% } %>>$core_v2_language.GetResource('NoAuthWarning')</div>
+										<span class="field-item-input HttpAuthentication">
+											<select class="raw HttpAuthentication">
+												<option value="None" <% if(HttpAuthentication == 'None') { %> selected <% } %>>$core_v2_language.GetResource('NoAuthentication')</option>
+												<option value="Rest" <% if(HttpAuthentication == 'Rest') { %> selected <% } %>>$core_v2_language.GetResource('Rest')</option>
+											</select>
+										</span>
+									</li>
+								</ul>
+							</fieldset>
+							<p>$core_v2_language.GetResource('ManualPost')</p>
+							<pre>POST ${core_v2_urls.Home()}api.ashx/v2/automation/<%: Id %></pre>
+
+							<div class="rest-scope" <% if(HttpAuthentication != 'None') { %> style="display:none" <% } %>>
+								<p>
+									$core_v2_language.GetResource('RestScope')
+									<em class="rest-scope-name"><%: RestScopeName %></em>
+								</p>
+								<pre class="rest-scope-id"><%: RestScopeId %></pre>
+							</div>
+
+							#format ($core_v2_language.GetResource('HttpRequestArgs'))
+								#token ('args')
+									<a href="#" data-messagename="studio.view.documentation.show" data-type="type" data-name="Telligent.Evolution.Extensibility.Api.Version1.AutomationHttpEventArgs" data-displayname="AutomationHttpEventArgs" data-target="">$core_v2_language.GetResource('arguments')</a>
+								#token('trigger')
+									<a href="#" data-messagename="studio.view.documentation.show" data-type="extension" data-name="context_v2_automationTrigger" data-target="">context_v2_automationTrigger</a>
+							#end
+						</div>
+					</li>
+				</ul>
+			</fieldset>
+		</form>
+		<div class="content full details">
+			<div class="attributes" style="display:block">
+				$core_v2_widget.ExecuteFile('template-automation-overview-details.vm')
+			</div>
+		</div>
+	</div>
+</div>

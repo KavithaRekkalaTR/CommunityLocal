@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_AskAQuestion}" version="11.0.0.0" description="${resource:Forums_AskAQuestion_Description}" instanceIdentifier="f3810cda32ed45db871f26fcdd08b46f" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="forum-ask-question" lastModified="2021-01-07 19:15:06Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+## hide if no forum
+#set ($forum = $core_v2_forum.Current)
+#if (!$forum)
+	#set($forums = $core_v2_forum.List("%{ GroupId = $core_v2_group.Current.Id, PageSize = 2, PageIndex = 0 }"))
+	#if ($forums && $forums.TotalCount == 1)
+		#foreach($f in $forums)
+			#set($forum = $f)
+		#end
+	#else
+		$core_v2_widget.Hide()
+	#end
+#end
+
+## hide if forum does not support QA
+#set ($supportsQuestionThreads = false)
+#foreach ($threadType in $forum.AllowedThreadTypes)
+	#if ($threadType == 'QuestionAndAnswer')
+		#set($supportsQuestionThreads = true)
+	#end
+#end
+#if (!$supportsQuestionThreads)
+	$core_v2_widget.Hide()
+#end
+
+## hide if accessing user cannot create threads
+#if(!$core_v3_permission.CheckPermission($core_v2_forumPermissions.CreatePost, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+	$core_v2_widget.Hide()
+#end
+
+#set ($questionInputId = $core_v2_widget.UniqueId('questionInput'))
+#set ($submitId = $core_v2_widget.UniqueId('submitInput'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<textarea id="$core_v2_encoding.HtmlAttributeEncode($questionInputId)" class="search-input" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('question'))" aria-label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('question'))"></textarea>
+			</span>
+			<span class="field-item-input">
+				<a href="#" onclick="javascript:return false;" class="search-input button disabled" id="$core_v2_encoding.HtmlAttributeEncode($submitId)">$core_v2_language.GetResource('ask')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.forumAskQuestion')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.forumAskQuestion.register({
+				questionInput: '#$core_v2_encoding.JavascriptEncode($questionInputId)',
+				submitInput: '#$core_v2_encoding.JavascriptEncode($submitId)',
+				forumId: $forum.Id,
+				applicationId: '$forum.ApplicationId',
+				forumThreadContentType: '$core_v2_forumThread.ContentTypeId',
+				addThreadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('addthread.vm'))',
+				searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+				suggestionHeading: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('suggestionHeading'))',
+				close: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('close'))'
+			});
+		});
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_AskAQuestion}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_AskAQuestion}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="relatedContentTypeIds" labelResourceName="RelatedContentTypes" descriptionResourceName="RelatedContentTypes_Desc" defaultValue="ContentTypeId=6b577b8c-0470-4e20-9d29-b6772bf67243&amp;ContentTypeId=ab51a545-f7a4-4570-8125-283b303f9082&amp;ContentTypeId=d6391dab-5520-42d8-95a6-6e62d1c6394e" dataType="Custom" template="core_v2_contentTypeList" isSearchable="true" strictContentTypes="true" />
+	<property id="relatedContentGroups" labelResourceName="RelatedContentGroups" descriptionResourceName="RelatedContentGroups_Desc" defaultValue="" template="core_v2_groupLookup" enableCurrent="true" maxSelections="10" format="query" dataType="Custom" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ask">Ask</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="close">Close</resource>
+  <resource name="Forums_AskAQuestion">Forums - Ask a Question</resource>
+  <resource name="Forums_AskAQuestion_Description">Creates or finds an existing question thread</resource>
+  <resource name="noDirectMatches">No similar questions were found.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="question">Ask a question...</resource>
+  <resource name="RelatedContentGroups">Load Suggested Content From</resource>
+  <resource name="RelatedContentGroups_Desc">Select groups from which to load suggested content. If no groups are selected, content across the entire community could be suggested.</resource>
+  <resource name="RelatedContentTypes">Suggested Content</resource>
+  <resource name="RelatedContentTypes_Desc">Content matching the question found in other content of the following types will be presented with forum-related suggestions.</resource>
+  <resource name="relatedHeading">The following is similar. Do any of these answer your question?</resource>
+  <resource name="suggestionHeading">The following questions were similar. Do they answer your question?</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="ad5b66803de14b2d9ee9cfe27ecea026" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

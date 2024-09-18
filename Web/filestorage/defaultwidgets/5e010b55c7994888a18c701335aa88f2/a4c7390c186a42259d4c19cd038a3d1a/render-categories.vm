@@ -1,0 +1,64 @@
+﻿#*
+Renders Categories
+
+Expects In Scope:
+	$categories
+*#
+
+#set ($firstCategoryUrl = false)
+
+#foreach ($category in $categories)
+#beforeall
+	<ul class="navigation-list administration-links administrative-panel-categories">
+#each
+		## Determine what effective URL to use for the category
+
+		## Default to the category
+		#set ($categoryUrl = $category.Url)
+
+		## Check if there are members in this category
+		#set ($categoryMembers = false)
+		#set ($categoryMembers = $core_v2_administrationPanels.GetMembersForCategory($category.Id))
+		#if ($categoryMembers && $categoryMembers.Count == 1)
+			#foreach ($categoryMember in $categoryMembers)
+				## if there's only 1 member and it's a panel, default to that panel's URL instead of the category's
+				#if ($categoryMember.CategoryMemberType == 'Panel')
+					#set ($categoryUrl = $categoryMember.Url)
+				## or if there's only 1 member and it's a plugin types panel and only has 1 plugin, use that plugin's URL
+				#elseif ($categoryMember.CategoryMemberType == 'PluginTypes')
+					#set ($plugins = $categoryMember.PluginPanels)
+					#if ($plugins && $plugins.Count == 1)
+						#foreach ($plugin in $plugins)
+							#set ($categoryUrl = $core_v2_language.FormatString($plugin.Url, $core_v2_encoding.UrlEncode($categoryMember.TypeName)))
+						#end
+					#end
+				#end
+			#end
+		#end
+
+		#if (!$firstCategoryUrl)
+			#set ($firstCategoryUrl = $categoryUrl)
+		#end
+
+		#set ($hasAvatar = false)
+		#if ($category.AvatarUrl && $category.AvatarUrl.Length > 0)
+			#set ($hasAvatar = true)
+		#end
+		<li class="navigation-list-item #if ($hasAvatar) with-avatar #end" data-id="$category.Id">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($categoryUrl)">
+				<div>
+					#if ($hasAvatar)
+						<span class="avatar">
+							$core_v2_ui.GetResizedImageHtml($category.AvatarUrl, 16, 16, "%{ border='0px', alt=$category.Name, ResizeMethod = 'ZoomAndCrop' }")
+						</span>
+					#end
+					<span class="name">$category.Name</span>
+					<span class="badge" data-categoryid="$category.Id" data-count="$category.BadgeCount">$category.BadgeCount</span>
+				</div>
+			</a>
+		</li>
+
+#afterall
+	</ul>
+#nodata
+#end

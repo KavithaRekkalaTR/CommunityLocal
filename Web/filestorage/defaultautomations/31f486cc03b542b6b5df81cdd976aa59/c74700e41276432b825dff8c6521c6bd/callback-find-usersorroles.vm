@@ -1,0 +1,50 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_searchText'))
+
+#set($matchingRoles = $core_v2_role.Find($searchText))
+#set($matchingUsers = $core_v2_user.Lookup($searchText, "%{PageSize=20}"))
+
+#set($totalRoles = $matchingRoles.Count)
+#set($totalUsers = $matchingUsers.Count)
+#if($totalRoles + $totalUsers > 20)
+	#if ($totalRoles > 10)
+		#if ($totalUsers > 10)
+			#set($totalUsers = 10)
+		#end
+	#else
+		#set($totalUsers = 20 - $totalRoles)
+	#end
+	#if($totalRoles > 10)
+		#set($totalRoles = 20 - $totalUsers)
+	#end
+#end
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+	#set($index = 0)
+	#if($matchingUsers)
+		#foreach($user in $matchingUsers)
+			#if ($index < $totalUsers)
+                {
+                    "id":"user:${user.Id}",
+                    "name":"$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+                    "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 16, 16, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop}")) $core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end"
+                },
+			#end
+			#set($index = $index + 1)
+		#end
+	#end
+	#set($index = 0)
+	#if ($matchingRoles)
+		#foreach($role in $matchingRoles)
+			#if ($index < $totalRoles)
+				{
+    		        "id":"role:${role.Id}",
+    		        "name":"$core_v2_encoding.JavascriptEncode($role.Name) ($core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserOrRoleLookUp_Role')))",
+    		        "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 16, 16, "%{border='0px', ResizeMethod = 'ZoomAndCrop' }")) $core_v2_encoding.JavascriptEncode($role.Name) ($core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserOrRoleLookUp_Role')))"
+                },
+			#end
+			#set($index = $index + 1)
+		#end
+	#end
+null]}

@@ -1,0 +1,150 @@
+// button style
+.button {
+	line-height: 2.5em;
+	padding: 0 (@ap-spacing * 3) 0 (@ap-spacing * 3);
+	border: 0px;
+	border-radius: 3px;
+	display: inline-block;
+	background-color: @ap-content-color-accent;
+	color: @panel-content-foreground;
+	font-family: @ap-font-family;
+	font-size: @ap-font-size * 1.1;
+	font-weight: 500;
+	margin: 0;
+	width: 100%;
+	text-align: center;
+	.transition(background-color (@ap-transition-duration / 2));
+	cursor: pointer;
+	&:hover, &:focus {
+		background-color: lighten(@ap-content-color-accent, 5%);
+		color: @ap-content-color-background;
+	}
+	&:active {
+		background-color: darken(@ap-content-color-accent, 5%);
+		color: @ap-content-color-background;
+	}
+	&.delete {
+		background-color: #a91616;
+	}
+	&.disabled {
+		color: @ap-content-color-background;
+		background-color: fade(@ap-content-color-foreground, 20%);
+		cursor: default;
+		&:hover {
+			color: @ap-content-color-background;
+		}
+	}
+}
+a.inline-button {
+	display: inline-block;
+	color: @ap-content-color-accent !important;
+	font-weight: bold;
+	background-color: fade(@ap-content-color-foreground, 5%);
+	padding: 0 (@ap-spacing / 3) 0 (@ap-spacing / 3);
+	.round(2px);
+	margin: 0 @ap-spacing @ap-spacing 0;
+	&:hover {
+		background-color: @ap-content-color-accent !important;
+		color: @ap-content-color-background !important;
+	}
+	&:active {
+		background-color: darken(@ap-content-color-accent, 5%) !important;
+	}
+}
+
+// filter
+.filter {
+	clear: both;
+	width: 100%;
+	display: flex;
+	.uiselect {
+		> span {
+			color: fade(@ap-content-color-foreground, 10%) !important;
+		}
+	}
+	.filter-option {
+		text-align: center;
+		flex: 1 1 0;
+		align-self: flex-end;
+		width: 100%;
+		a {
+			.transition(all .1s);
+			display: block;
+			padding: (@ap-spacing / 2) 0 (@ap-spacing / 3) 0;
+			border-bottom: 3px solid fade(@ap-content-color-foreground, 10%);
+			text-align: center;
+			border-right: 0px;
+			color: fade(@ap-content-color-foreground, 40%) !important;
+			font-size: @ap-font-size * 1.1;
+			font-weight: @ap-font-weight-heavy !important;
+			&:active {
+				background-color: fade(@ap-content-color-foreground, 3%);
+			}
+			&:hover {
+				color: @ap-content-color-accent !important;
+				border-bottom: 3px solid @ap-content-color-accent;
+			}
+		}
+		&.selected {
+			a {
+				color: @ap-content-color-foreground !important;
+				border-bottom: 3px solid @ap-content-color-foreground;
+			}
+		}
+	}
+}
+
+.filter-selector {
+	margin-right: @ap-spacing;
+	display: block;
+	padding: (@ap-spacing / 1.5) @ap-spacing (@ap-spacing * 1.5) @ap-spacing;
+	font-size: @ap-font-size * 1.25;
+	text-align: center;
+	select {
+		margin-right: (@ap-spacing / 2);
+		margin-bottom: (@ap-spacing / 2);
+		&:last-child {
+			margin-right: 0px;
+		}
+	}
+	&:hover {
+	}
+	&:last-child {
+		margin-right: 0;
+	}
+}
+
+// messages
+.message {
+	.round(3px);
+	padding: @ap-spacing;
+	border: 1px solid fade(@ap-content-color-foreground, 10%) !important;
+	background-color: fade(@ap-content-color-foreground, 2%);
+	margin: 0 0 @ap-spacing 0;
+	font-size: @ap-font-size * .9;
+	font-style: italic;
+	.inline-button {
+		font-style: normal;
+		margin: 0px;
+		padding: 0 5px 0 5px;
+		margin: 0 2px 0 2px;
+	}
+	&.success {
+		color: #27ae60;
+		border-color: #27ae60 !important;
+		background-color: fade(#27ae60, 5%);
+	}
+	&.error {
+		color: @ap-content-color-attention;
+		border-color: @ap-content-color-attention !important;
+		background-color: fade(@ap-content-color-attention, 5%);
+	}
+	&.information {
+		color: #d35400;
+		border-color: #f1c40f !important;
+		background-color: fade(#f1c40f, 5%);
+		.inline-button {
+			background-color: fade(#f1c40f, 20%);
+		}
+	}
+}

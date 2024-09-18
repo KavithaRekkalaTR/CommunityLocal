@@ -1,0 +1,10 @@
+##
+## List All Property Templates
+##
+
+#set ($propertyTemplates = $shellApi.ListAllPropertyTemplates())
+
+$core_v2_page.SetContentType('application/json')
+{
+	"templates": $core_v2_widget.ExecuteFile('callback-sub-serialize-templates.vm')
+}

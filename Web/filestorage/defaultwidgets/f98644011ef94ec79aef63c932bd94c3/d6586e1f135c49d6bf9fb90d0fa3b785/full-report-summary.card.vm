@@ -1,0 +1,16 @@
+#set ($current = $context.GetAggregate($type, $options))
+#set ($trend = $context.GetTrend($type, $options))
+#set ($title = $core_v2_language.GetResource($type))
+
+#if(!$current.HasErrors())
+<li class="$css card value-with-trend">
+    <div class="value">$current.Aggregate.ToString("N0")</div><div class="description">$title</div>
+    $reporting_ui.TrendHtml($trend)
+</li>
+#else
+    <div class="report-summary">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

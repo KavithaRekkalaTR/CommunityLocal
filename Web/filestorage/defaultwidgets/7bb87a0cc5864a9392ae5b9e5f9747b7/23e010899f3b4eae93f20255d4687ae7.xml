@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Wikis_Revision_Name}" version="11.0.0.0" description="${resource:Wikis_Revision_Description}" instanceIdentifier="23e010899f3b4eae93f20255d4687ae7" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="revision" lastModified="2020-01-14 16:07:02Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($currentPage = $core_v2_wikiPage.Current)
+#set ($currentGroup = $core_v2_group.Current)
+
+## hide this widget if the content is abusive and accessing user does not have permission to review
+#set ($abusiveContent = false)
+#set ($abusiveContent = $core_v2_abusiveContent.Get($currentPage.ContentId, $currentPage.ContentTypeId))
+
+#set ($canDeleteVersions = false)
+#set ($canDeleteVersions = $core_v3_permission.CheckPermission($core_v2_wikiPermissions.DeletePage, $core_v2_user.Accessing.Id, "%{ ContentId = $currentPage.ContentId, ContentTypeId = $core_v2_wikiPage.ContentTypeId }").IsAllowed)
+
+#set ($canReviewAppeals = false)
+#set ($canReviewAppeals = $core_v2_abuseAppeal.CanReviewAppealsInApplication($wiki.ApplicationId, $core_v2_wiki.ApplicationTypeId))
+
+#set ($deleteCompleteText = $core_v2_language.GetResource('Wikis_Compare_DeleteRevision_Complete'))
+
+#if ($abusiveContent && $abusiveContent.IsAbusive)
+	#set ($currentGroup = $core_v2_group.Current)
+	#set ($deleteCompleteText = $core_v2_language.GetResource('Wikis_Compare_DeleteRevision_Complete_Abusive'))
+	#if (!$canReviewAppeals)
+		$core_v2_widget.Hide()
+	#end
+#end
+
+#set ($currentPageRevision = $core_v2_wikiPageRevision.Current)
+#set ($hasModifyPagePermission = $core_v3_permission.CheckPermission($core_v2_wikiPermissions.ModifyPage, $core_v2_user.Accessing.Id, "%{ ContentId = $currentPage.ContentId, ContentTypeId = $core_v2_wikiPage.ContentTypeId }").IsAllowed)
+
+#if ($currentPage && $currentPageRevision && $currentPage.Revision == $currentPageRevision.RevisionNumber)
+	<fieldset class="margin-top">
+		<p>$core_v2_language.GetResource("Wikis_History_ViewingCurrentVersion")</p>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href='$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.PageHistory($currentPage.Id))' class='internal-link view-history'>$core_v2_language.GetResource('History')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#else
+	<fieldset class="margin-top">
+		<p>$core_v2_language.GetResource("Wikis_Compare_OldRevisionMessage")</p>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					#if ($hasModifyPagePermission)
+						<a href="javascript:void( 0 )" id="$core_v2_widget.UniqueId('revertPageButton')" class="internal-link revert-page button">$core_v2_language.GetResource("Wikis_Compare_RevertPage")</a>
+					#end
+					#if ($canDeleteVersions)
+						<a href="javascript:void( 0 )" id="$core_v2_widget.UniqueId('deleteRevisionButton')" class="internal-link delete-revision button">$core_v2_language.GetResource("Wikis_Compare_DeleteRevision")</a>
+					#end
+					<a href='$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.PageHistory($currentPage.Id))' class='internal-link view-history'>$core_v2_language.GetResource('History')</a>
+					<a href='$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.Page($currentPage.Id))' class='internal-link view-post'><span></span>$core_v2_language.GetResource('Wikis_Compare_StatusMessageLink')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+
+
+
+<div class="content full">
+	<h1 class="name">
+		<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.Revision($currentPage.Id, $currentPageRevision.RevisionNumber))" class="internal-link view-post">$currentPageRevision.Title</a>
+	</h1>
+	<div class="content">
+		$currentPageRevision.Body()
+	</div>
+
+	#if ($hasModifyPagePermission)
+		#registerEndOfPageHtml('telligent.evolution.widgets.revision')
+			<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+		#end
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+				jQuery(function() {
+					jQuery.telligent.evolution.widgets.revision.register({
+						revertPageButton:jQuery("#$core_v2_widget.UniqueId('revertPageButton')"),
+						deleteRevisionButton:jQuery("#$core_v2_widget.UniqueId('deleteRevisionButton')"),
+						revertPageConfirmationText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_Compare_RevertPage_Confirmation'))",
+						deleteRevisionConfirmationText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_Compare_DeleteRevision_Confirmation'))",
+						pageRevisionBody:"$core_v2_encoding.JavascriptEncode($currentPageRevision.Body('Raw'))",
+						pageRevisionTitle:"$core_v2_encoding.JavascriptEncode($currentPageRevision.Title)",
+						pageRevisionTags:"$core_v2_encoding.JavascriptEncode($currentPageRevision.Tags)",
+						pageId: $currentPage.Id,
+						wikiId: $currentPage.WikiId,
+						revisionId: $currentPageRevision.RevisionNumber,
+						pageUrl:"$core_v2_wikiUrls.Page($currentPage.Id)",
+						historyUrl:"$core_v2_wikiUrls.PageHistory($currentPage.Id)",
+						processingErrorText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_History_RevertPageError'))",
+						deleteRevisionCompleteText:"$core_v2_encoding.JavascriptEncode($deleteCompleteText)"
+					});
+				});
+			</script>
+		#end
+	#end
+</div>
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_Revision_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Wikis_Revision_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="History">History</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Wikis_Compare_DeleteRevision">Delete</resource>
+  <resource name="Wikis_Compare_DeleteRevision_Complete">Revision {0} has been deleted.</resource>
+  <resource name="Wikis_Compare_DeleteRevision_Complete_Abusive">Revision {0} has been deleted. This wiki page is still considered abusive. You must still restore the page.</resource>
+  <resource name="Wikis_Compare_DeleteRevision_Confirmation">Are you sure you want to delete this revision?</resource>
+  <resource name="Wikis_Compare_OldRevisionMessage">You are currently reviewing an older revision of this page.</resource>
+  <resource name="Wikis_Compare_RevertPage">Revert</resource>
+  <resource name="Wikis_Compare_RevertPage_Confirmation">Are you sure you want to revert this page to this version?</resource>
+  <resource name="Wikis_Compare_StatusMessageLink">View current version</resource>
+  <resource name="Wikis_History_RevertPageError">An error occurred reverting the page, please try again.</resource>
+  <resource name="Wikis_History_ViewingCurrentVersion">You are currently viewing the latest version of this page.</resource>
+  <resource name="Wikis_Revision_Description">Displays a wiki revision.</resource>
+  <resource name="Wikis_Revision_Name">Wikis - Revision</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="438f4b20be39493c908f292b4592f6fc" />
+    </requiredContext>
+		<restScopes>
+			<scope id="wikis.pages.modify" />
+			<scope id="wikis.revisions.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

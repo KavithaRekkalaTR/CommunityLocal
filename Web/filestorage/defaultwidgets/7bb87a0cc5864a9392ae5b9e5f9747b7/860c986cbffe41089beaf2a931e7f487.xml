@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_ChangePassword_Name}" version="13.0.0.0" description="${resource:Core_ChangePassword_Description}" instanceIdentifier="860c986cbffe41089beaf2a931e7f487" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="change-password" lastModified="2023-06-26 20:42:34Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#if (!$core_v2_widget.IsInWidgetPreviewMode)
+	$core_v2_page.EnsureSecureConnection("%{ IsAuthenticatingUser = 'true' }")
+#end
+#set($isLoggedIn = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+#set($verificationContext = $core_v2_page.GetQueryStringValue("verificationcontext"))
+
+#if (!$isLoggedIn && !$verificationContext)
+    #set ($forgotPasswordUrl = $core_v2_urls.ForgotPassword())
+	<div class="message">$core_v2_language.GetResource('ChangePassword_RecoveryLinkExpired') <a href="$core_v2_encoding.HtmlAttributeEncode($forgotPasswordUrl)">$core_v2_language.GetResource('ChangePassword_ResetPasswordLink')</a></div>
+#else
+	<form><fieldset>
+		<h1>$core_v2_language.GetResource('ChangePassword')</h1>
+		<p>
+			#if ($core_v2_configuration.AuthenticationType == "windows")
+				$core_v2_language.GetResource('ChangePassword_Instructions_SSO')
+			#else
+				$core_v2_language.GetResource('ChangePassword_Instructions')
+			#end
+		</p>
+		<ul class="field-list">
+			#if ($core_v2_authentication.RequireOriginalPasswordWhenChangingPassword() && $core_v2_configuration.AuthenticationType != "windows")
+				<li class="field-item current-password">
+					<label for="$core_v2_widget.UniqueId('currentPassword')" class="field-item-name">$core_v2_language.GetResource('ChangePassword_CurrentPassword')</label>
+					<span class="field-item-input">
+						<input name="$core_v2_widget.UniqueId('currentPassword')" type="password" autocomplete="off" maxlength="64" size="30" id="$core_v2_widget.UniqueId('currentPassword')" />
+					</span>
+					<span class="field-item-validation" style="display:none;"></span>
+				</li>
+			#end
+			<li class="field-item new-password">
+				<label for="$core_v2_widget.UniqueId('newPassword')" class="field-item-name">$core_v2_language.GetResource('ChangePassword_NewPassword')</label>
+				<span class="field-item-input">
+					<input name="$core_v2_widget.UniqueId('newPassword')" type="password" autocomplete="off" maxlength="64" size="30" id="$core_v2_widget.UniqueId('newPassword')" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item new-password-confirm">
+				<label for="$core_v2_widget.UniqueId('newPasswordConfirm')" class="field-item-name">$core_v2_language.GetResource('ChangePassword_ReEnterNewPassword')</label>
+				<span class="field-item-input">
+					<input name="$core_v2_widget.UniqueId('newPasswordConfirm')" type="password" autocomplete="off" maxlength="64" size="30" id="$core_v2_widget.UniqueId('newPasswordConfirm')" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" id="$core_v2_widget.UniqueId('submitPassword')" name="$core_v2_widget.UniqueId('submitPassword')" class="button">$core_v2_language.GetResource('ChangePassword_ChangePassword')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+#end
+
+#set($successUrl = false)
+#set($successUrl = $core_v2_urls.Logout("%{ ReturnToCurrentUrl = 'True' }"))
+#if($successUrl)
+    #set($successUrl = $core_v2_page.AdjustQueryString($successUrl, "deauth=password"))
+#else
+    #set($successUrl = $core_v2_urls.Home())
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.changePassword')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.changePassword.register({
+				wrapperId: '$core_v2_widget.WrapperElementId',
+				currentPasswordInput: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId("currentPassword"))",
+				newPasswordInput: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId("newPassword"))",
+				newPasswordConfirmInput: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId("newPasswordConfirm"))",
+				submitPasswordInput: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId("submitPassword"))",
+				passwordMinLength: $core_v2_configuration.PasswordMinLength,
+				passwordLimitsMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePassword_InvalidLength'))',
+				passwordMatchMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePassword_ReEnterNewPasswordInvalid'))',
+				changeSuccessMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangePassword_Success'))',
+				verificationContext: "$!core_v2_page.GetQueryStringValue("verificationcontext")",
+				changeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('changePassword.vm'))',
+				successUrl: '$core_v2_encoding.JavascriptEncode($successUrl)'
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_ChangePassword_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_ChangePassword_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="ChangePassword">Change Password</resource>
+  <resource name="ChangePassword_ChangePassword">Change Password</resource>
+  <resource name="ChangePassword_CurrentPassword">Current Password:</resource>
+  <resource name="ChangePassword_Instructions">Use this form to change your password. Once changed, you will be asked to to sign in.</resource>
+  <resource name="ChangePassword_Instructions_SSO">Use this form to set a password that you will use to post from an offline blogging tool such as Microsoft Word or Windows Live Writer.</resource>
+  <resource name="ChangePassword_InvalidLength">Password is too short, must be at least {0} characters.</resource>
+  <resource name="ChangePassword_NewPassword">New Password:</resource>
+  <resource name="ChangePassword_RecoveryLinkExpired">Password recovery link expired. Please, recover a forgotten password</resource>
+  <resource name="ChangePassword_ReEnterNewPassword">Re-enter New Password:</resource>
+  <resource name="ChangePassword_ReEnterNewPasswordInvalid">Passwords do not match!</resource>
+  <resource name="ChangePassword_ResetPasswordLink">here</resource>
+  <resource name="ChangePassword_Success">Your password has successfully been changed</resource>
+  <resource name="Core_ChangePassword_Description">Displays the change password form for a user.</resource>
+  <resource name="Core_ChangePassword_Name">Change Password</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

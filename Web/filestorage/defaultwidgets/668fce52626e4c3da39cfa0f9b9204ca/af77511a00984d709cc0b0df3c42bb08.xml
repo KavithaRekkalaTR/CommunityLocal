@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupGlobalPermissionsAdministrationPanel_Name}" version="12.0.0.0" description="${resource:GroupGlobalPermissionsAdministrationPanel_Description}" instanceIdentifier="af77511a00984d709cc0b0df3c42bb08" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="group-default-permission-roles" provider="668fce52626e4c3da39cfa0f9b9204ca">
+    <contentScript><![CDATA[
+
+#set($siteRoles = $context.GetSiteRoles())
+#set($canManage = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+
+<p class="instructions">$core_v2_language.GetResource('GlobalPermissionsInstructions')</p>
+
+<ul class="content-list" style="margin-bottom: 1em;">
+   <li class="content-item grouptype" data-grouptype="Joinless" data-title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('type_joinless'))">
+        <h4 class="name">$core_v2_language.GetResource('type_joinless')</h4>
+        <div class="attributes">
+			<div class="content">$core_v2_language.GetResource('type_joinless_description')</div>
+		</div>
+	</li>
+   <li class="content-item grouptype" data-grouptype="PublicOpen" data-title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('type_publicopen'))">
+        <h4 class="name">$core_v2_language.GetResource('type_publicopen')</h4>
+        <div class="attributes">
+			<div class="content">$core_v2_language.GetResource('type_publicopen_description')</div>
+		</div>
+	</li>
+   <li class="content-item grouptype" data-grouptype="PublicClosed"  data-title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('type_publicclosed'))">
+        <h4 class="name">$core_v2_language.GetResource('type_publicclosed')</h4>
+        <div class="attributes">
+			<div class="content">$core_v2_language.GetResource('type_publicclosed_description')</div>
+		</div>
+	</li>
+   <li class="content-item grouptype" data-grouptype="PrivateListed"  data-title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('type_privatelisted'))">
+        <h4 class="name">$core_v2_language.GetResource('type_privatelisted')</h4>
+        <div class="attributes">
+			<div class="content">$core_v2_language.GetResource('type_privatelisted_description')</div>
+		</div>
+	</li>
+   <li class="content-item grouptype" data-grouptype="PrivateUnlisted"  data-title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('type_privateunlisted'))">
+        <h4 class="name">$core_v2_language.GetResource('type_privateunlisted')</h4>
+        <div class="attributes">
+			<div class="content">$core_v2_language.GetResource('type_privateunlisted_description')</div>
+		</div>
+	</li>
+</ul>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+	<ul class="field-list">
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" class="button overwrite-permission">$core_v2_language.GetResource("OverwritePermission")</a>
+			</span>
+		</li>
+	</ul>
+    </fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.globalPermissions.register({
+        headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		urls: {
+            roleslist: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('roles-list.vm'))',
+            overwriteform: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('overwrite-form.vm'))',
+		},
+		text:  {
+            overwritePermission: '$core_v2_language.GetResource('OverwritePermission')',
+		}
+	});
+});
+</script>
+	]]></contentScript>
+    <languageResources><language key="en-us">
+        <resource name="GroupGlobalPermissionsAdministrationPanel_Description">Manage global group permissions</resource>
+        <resource name="GroupGlobalPermissionsAdministrationPanel_Name">Global Permissions</resource>
+        <resource name="type_joinless">Joinless</resource>
+        <resource name="type_joinless_description">All content is public. No membership required.</resource>
+        <resource name="type_publicopen">Public (open membership)</resource>
+        <resource name="type_publicopen_description">All content is public. Membership is required to contribute.</resource>
+        <resource name="type_publicclosed">Public (closed membership)</resource>
+        <resource name="type_publicclosed_description">All content is public. Membership approval required to contribute.</resource>
+        <resource name="type_privatelisted">Private (listed)</resource>
+        <resource name="type_privatelisted_description">Content is private. Group name and description are public. Membership approval required to contribute.</resource>
+        <resource name="type_privateunlisted">Private (unlisted)</resource>
+        <resource name="type_privateunlisted_description">Content is private. Group is hidden to non-members. Membership approval required to contribute.</resource>
+        <resource name="ReadOnlyMode">The group permission defaults for the selected role may not be edited.</resource>
+        <resource name="FindRole">Find a role...</resource>
+        <resource name="NoRolesFound">No matching roles found.</resource>
+        <resource name="PermissionsHeaderText">{0} - {1}</resource>
+        <resource name="NoPermissionsFound">No matching permissions found.</resource>
+        <resource name="Find">Find a permission...</resource>
+        <resource name="PermissionsListInstructions">'Save' will update the defaults, but only apply to groups created after the save. 'Save and Overwrite Existing Groups' will apply the current default to all existing groups and overwrite any customized permissions for the current role and group type.</resource>
+        <resource name="ShowEnabledandDisabled">Show allowed and denied permissions</resource>
+        <resource name="ShowEnabled">Show allowed permissions only</resource>
+        <resource name="ShowDisabled">Show denied permissions only</resource>
+        <resource name="Save">Save</resource>
+        <resource name="SaveAndOverwrite">Save and Overwrite Existing Groups</resource>
+        <resource name="RevertToDefault">Revert to Factory Default</resource>
+        <resource name="Permissions">Permissions</resource>
+        <resource name="ItemPermissions">{0} Permissions</resource>
+        <resource name="SelectAll">Select All</resource>
+        <resource name="SelectNone">Select None</resource>
+        <resource name="PermissionsUpdated">The {0} group permission defaults for the {1} role have been updated.</resource>
+        <resource name="PermissionsOverwritten">The {0} group permission defaults have been updated for the {1} role and the changes have been applied to all {0} groups.</resource>
+        <resource name="DefaultAllowed">Default:  Allowed</resource>
+        <resource name="DefaultDenied">Default:  Denied</resource>
+        <resource name="UnsavedCustomization">Unsaved Customization</resource>
+        <resource name="TemplateSaveConfirmation">The {0} group permission defaults will be updated for the {1} role and the change will be applied to new {0} groups as they are created.  Are you sure wish to continue?</resource>
+        <resource name="TemplateSaveOverwriteConfirmation">The {0} permission defaults will be updated for the {1} role and the change will be to all existing {0} groups.  This will also schedule a background job, to run immediately, that will recalculate permissions for the site.  Are you sure wish to continue?</resource>
+
+        <resource name="Overwrite">Overwrite</resource>
+        <resource name="OverwriteFormInstructions">Use this form to overwrite a permission for the selected role in every group of the selected type.</resource>
+        <resource name="OverwritePermission">Overwrite Permission</resource>
+        <resource name="PermissionOverwritten">The {0} has been {1} in {2} groups for the {3} role.</resource>
+        <resource name="PermissionOverwritten_TemplateUpdated">The {0} has been {1} in {2} groups for the {3} role.  The {2} group permission defaults have been updated for the {3} role.</resource>
+        <resource name="PermissionAllowed">allowed</resource>
+        <resource name="PermissionDenied">denied</resource>
+        <resource name="Field_GroupTypes">Group Type</resource>
+        <resource name="Field_Roles">Role</resource>
+        <resource name="Field_Permissions">Permission</resource>
+        <resource name="Field_AllowDeny">Allow/Deny</resource>
+        <resource name="Field_UpdateTemplate">Groups to Overwrite</resource>
+        <resource name="Field_UpdateTemplate_Description">Select 'Overwrite Existing Groups Only' to apply the change to current groups.  Select 'Apply to New and Existing Groups' to apply the change to current groups and to update the permission defaults and make the change to new groups as they created.</resource>
+        <resource name="UpdateExisting">Overwrite Existing Groups Only</resource>
+        <resource name="UpdateNewAndExisting">Apply to New and Existing Groups</resource>
+        <resource name="OverwriteConfirmation">The {0} permission will be {1} for the {3} role in all {2} groups.  This will also schedule a background job, to run immediately, that will recalculate permissions for the site.  Are you sure wish to continue?</resource>
+        <resource name="OverwriteConfirmationUpdateTemplate">The {0} permission will be {1} for the {3} role in all {2} groups.  The change will be applied to the {2} group permission defaults for the {3} role.  This will also schedule a background job, to run immediately, that will recalculate permissions for the site.  Are you sure wish to continue?</resource>
+
+        <resource name="SelectGroupType">Select Group Type...</resource>
+        <resource name="SelectRole">Select Role...</resource>
+        <resource name="SelectPermission">Select Permission...</resource>
+        <resource name="SelectAllowDeny">Select Allow or Deny...</resource>
+        <resource name="Allow">Allow</resource>
+        <resource name="Deny">Deny</resource>
+
+        <resource name="Delete">Delete</resource>
+        <resource name="Edit">Edit</resource>
+        <resource name="Name">Name</resource>
+        <resource name="ShowAllRoles">Show all roles</resource>
+        <resource name="ShowAllowedRoles">Show roles with allowed permissions</resource>
+        <resource name="GlobalPermissionsInstructions">The Global Permissions panel enables viewing and setting the default group permissions for site roles.</resource>
+
+        </language>
+    </languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

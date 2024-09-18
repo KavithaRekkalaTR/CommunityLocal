@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:TokenizedString}" version="11.0.0.0" description="${resource:TokenizedString_Description}" instanceIdentifier="0d8a7077d3444d65b35f44e583b1aa66" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-06-10 18:47:18Z" provider="511e578680314f888518f8b3ed3d95c8">
+    <contentScript language="Velocity"><![CDATA[#set($value = false)
+#set($value = $context.Value)
+
+#if ($context.Editable)
+    <div id="${context.UniqueId}_Wrapper" class="custom-string-token-editor">
+        <div class="token-header">
+            <div style="float: left; white-space: nowrap; color: #555; padding: 3px 0;">
+                $core_v2_language.GetResource('InsertToken')
+            </div>
+            <div class="ui-links" data-direction="horizontal" id="${context.UniqueId}_Tokens">
+                <ul>
+                    #foreach($token in $context.Tokens)
+                        <li><a href="#" data-token="{$core_v2_encoding.HtmlAttributeEncode($token.Key)}" class="token">$token.Label</a></li>
+                    #end
+                    <li><a href="#" data-more>$core_v2_language.GetResource('More')</a></li>
+        			<li><a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a></li>
+                </ul>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+        <textarea id="${context.UniqueId}_Input" rows="$context.Rows" cols="40">$!value</textarea>
+    </div>
+
+    <script type="text/javascript">
+        jQuery(function() {
+            var api = $context.JsonApi;
+            var wrapper = jQuery('#${context.UniqueId}_Wrapper');
+            var i = jQuery('#${context.UniqueId}_Input');
+            var tokenWrapper = jQuery('#${context.UniqueId}_Tokens');
+            var availableTokens = {};
+            var resizeHandle = null;
+            #foreach($token in $context.Tokens)
+                availableTokens['$core_v2_encoding.JavascriptEncode($token.Key)'] = '$core_v2_encoding.JavascriptEncode($token.Label)';
+            #end
+            
+            var resize = function(registerLinkEvents) {
+                if (tokenWrapper.is(':visible')) {
+                    tokenWrapper.uilinks('resize');
+                    i.evolutionComposer('resize', wrapper.outerWidth(), i.outerHeight());
+                    jQuery.each(tokenWrapper.uilinks('list'), function(i, l) {
+            		   jQuery(l.element).off('.tokenStringPropertyTemplate').on('click.tokenStringPropertyTemplate', function() {
+            		      var token = jQuery(this).data('token');
+            		      if (token) {
+                		      dynamicTokens.insert(token);
+                		      return false; 
+            		      }
+            		   });
+            		});
+                } else {
+                    window.clearTimeout(resizeHandle);
+                    resizeHandle = window.setTimeout(function() { resize(); }, 100);
+                }
+            }
+            
+            wrapper.on('resized', function() { resize(); });
+            resizeHandle = window.setTimeout(function() { resize(); }, 1);
+
+            var dynamicTokens = (function() {
+                var findTokens = /\{([^\}]+)\}/g;
+                var getTokens = function(context) {
+                        var tokens = context.data('_tokens');
+                        if (typeof tokens === 'undefined' || tokens === null) {
+                            tokens = [];
+                            context.data('_tokens', tokens);
+                        }
+                        return tokens;
+                    },
+                    addToken = function(context, token) {
+                        var tokens = getTokens(context);
+                        tokens.push(token);
+                        updateHighlights(context);
+                    }, 
+                    updateHighlights = function(context) {
+                        var tokens = getTokens(context).reverse(),
+            				currentValue = context.val();
+            			context.clearHighlights('composer-token-highlight');
+            			var tokenStarts = {};
+            			jQuery.each(tokens, function(i, token) {
+            				if(token && token.decodedName !== null && token.decodedName.length > 0) {
+            					var nameStart = currentValue.indexOf(token.decodedName);
+            					if(nameStart < 0 || tokenStarts[nameStart]) {
+            						tokens.splice(i,1);
+            					} else {
+            						while(nameStart >= 0) {
+            							context.addHighlight({
+            								start: nameStart,
+            								stop: token.decodedName.length + nameStart,
+            								className: 'composer-token-highlight'
+            							});
+            							tokenStarts[nameStart] = true;
+            							nameStart = currentValue.indexOf(token.decodedName, nameStart + 1);
+            						}
+            					}
+            				}
+            			});
+            			context.renderHighlights();
+                    },
+                    collectRawTokens = function(context) {
+                        var value = context.val(),
+                			match = findTokens.exec(value);
+                		while(match !== null && match.index >= 0 && match !== null && match.length > 1) {
+                		    var tokenName = availableTokens[match[1]];
+                		    if (tokenName) {
+                    			var token = {
+                    				token: match[0],
+                    				name: '{' + tokenName + '}',
+                    				decodedName: '{' + jQuery.telligent.evolution.html.decode(tokenName) + '}'
+                    			};
+                    			context.val(context.val().replace(token.token, token.name));
+                    			addToken(context, token);
+                		    }
+                			match = findTokens.exec(value);
+                		}
+                    }
+                
+                var _context;
+                
+                var api = {
+                    init: function(context) {
+                        _context = context;
+                    },
+                    onTransform: function(context, processNewValue) {
+                        collectRawTokens(context);
+                        updateHighlights(context);
+                    },
+                    shouldActivate: function(context) {
+                        return false;
+                    },
+                    val: function(value, context) {
+            			var tokens = getTokens(context);
+            			jQuery.each(tokens, function(i, token) {
+            				value = value.replace(new RegExp(jQuery.telligent.evolution.regex.encode(token.name),'g'), token.token);
+            			});
+            			return value;
+            		},
+                    onkeydown: function(context, e) {
+                        return true;
+                    },
+                    oninput: function(context, e) {
+                        return true;
+                    },
+                    insert: function(token) {
+                        var v = _context.val();
+                        var c = _context.caretPosition();
+                        _context.val(v.substr(0, c) + token + v.substr(c));
+                        collectRawTokens(_context);
+                        updateHighlights(_context);
+                    }
+                };
+                
+                return api;
+            })();
+
+            i.evolutionComposer({
+                plugins: [dynamicTokens]
+            });
+            
+            jQuery.each(tokenWrapper.uilinks('list'), function(i, l) {
+    		   jQuery(l.element).off('.tokenStringPropertyTemplate').on('click.tokenStringPropertyTemplate', function() {
+    		      var token = jQuery(this).data('token');
+    		      if (token) {
+        		      dynamicTokens.insert(token);
+        		      return false; 
+    		      }
+    		   });
+    		});
+
+            api.register({
+                val: function(val) { return i.evolutionComposer('val', val) },
+                hasValue: function() { return i.evolutionComposer('val').length > 0; }
+            });
+            i.evolutionComposer('oninput', function() {
+                api.changed(i.evolutionComposer('val'));
+            });
+        });
+    </script>
+#else
+    #if ($value && $value.Length > 0)
+        #foreach($token in $context.Tokens)
+            #set($tokenKey = "{${token.Key}}")
+            #set($tokenLabel = "{${token.Label}}")
+            #set($value = $value.Replace($tokenKey, $tokenLabel))
+        #end
+    #end
+    $!value
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Cancel">Cancel</resource>
+  <resource name="InsertToken">Insert Token:</resource>
+  <resource name="More">More</resource>
+  <resource name="TokenizedString">Tokenized String Property Template</resource>
+  <resource name="TokenizedString_Description">Enables the definition of strings containing token placeholders represented by the selectable values of properties.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

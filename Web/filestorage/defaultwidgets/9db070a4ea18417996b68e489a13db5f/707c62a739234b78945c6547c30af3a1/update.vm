@@ -1,0 +1,49 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($id = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('id')))
+
+	#set ($name = $core_v2_page.GetFormValue('name'))
+	#set ($description = $core_v2_page.GetFormValue('description'))
+	#set ($authors = $core_v2_page.GetFormValue('authors'))
+	#set ($address = $core_v2_page.GetFormValue('address'))
+	#set ($enable = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enable')))
+	#set ($enableAggBugs = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableAggBugs')))
+	#set ($includeInSiteMap = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('includeInSiteMap')))
+	#set ($includeInAggregate = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('includeInAggregate')))
+	#set ($groupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('groupId')))
+	#set ($mailingListEnabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('mailingListEnabled')))
+
+	#set ($enableContact = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableContact')))
+	#set ($contactEmailAddress = $core_v2_page.GetFormValue('contactEmailAddress'))
+
+	$options.Add('name', $name)
+	$options.Add('description', $description)
+	$options.Add('authors', $authors)
+	$options.Add('address', $address)
+	$options.Add('enable', $enable)
+	$options.Add('enableAggBugs', $enableAggBugs)
+	$options.Add('includeInSiteMap', $includeInSiteMap)
+	$options.Add('includeInAggregate', $includeInAggregate)
+	$options.Add('groupId', $groupId)
+	$options.Add('mailingListEnabled', $mailingListEnabled)
+
+	$options.Add('enableContact', $enableContact)
+
+	#if ($enableContact)
+		$options.Add('contactEmailAddress', $contactEmailAddress)
+	#end
+
+	#set($response = $context.Update($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+	
+	#set ($blog = $core_v2_blog.Get("%{Id = $id}"))
+
+	{"success":true, "redirectUrl":"$blog.Url"}
+
+#end

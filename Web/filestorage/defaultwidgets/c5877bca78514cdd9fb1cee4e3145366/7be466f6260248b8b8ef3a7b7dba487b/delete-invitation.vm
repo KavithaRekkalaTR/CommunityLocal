@@ -1,0 +1,17 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($inviteKey = false)
+	#set($inviteKey = $core_v2_page.GetFormValue('InvitationKey'))
+	#if ($inviteKey)
+	    #set($inviteKey = $core_v2_utility.ParseGuid($inviteKey))
+
+    	#set($response = false)
+        #set($response = $context.DeleteInvitation($inviteKey))
+    	#if (!$response || ($response.Errors && $response.HasErrors()))
+    		$core_v2_page.SendJsonError($response.Errors)
+    	#else
+    		{"success":"True"}
+    	#end
+    #end
+#end

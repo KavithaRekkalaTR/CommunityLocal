@@ -1,0 +1,109 @@
+#set($group = $core_v2_group.Current)
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($contactRequests = $core_v2_groupContactRequest.List($group.Id, "%{ PageSize='10', PageIndex='${pageIndex}' }"))
+
+#if(!$contactRequests || $contactRequests.TotalCount == 0)
+	<div class="message norecords">
+		$core_v2_language.GetResource("Hubs_Contact_NoneExist")
+	</div>
+#else
+	#foreach($contactRequest in $contactRequests)
+		#beforeall
+			<ul class="content-list content margin-bottom">
+		#each
+			<li class="content-item">
+				<div class="content abbreviated">
+					<div class="summary">
+						<h2 class="name">
+							$contactRequest.Subject
+						</h2>
+
+						<div class="author">
+							#set($author = false)
+							#set($author = $core_v2_user.Get("%{Email = $contactRequest.EmailAddress}"))
+							#if ($author)
+								<div class="avatar">
+									#if ($author.ProfileUrl)
+										<a href="$core_v2_encoding.HtmlAttributeEncode($author.ProfileUrl)">
+											$core_v2_ui.GetResizedImageHtml($author.AvatarUrl, 44, 44, "%{border='0px', alt=$author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+										</a>
+									#else
+										$core_v2_ui.GetResizedImageHtml($author.AvatarUrl, 44, 44, "%{border='0px', alt=$author.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+									#end
+								</div>
+								<span class="user-name">
+									#if ($author.ProfileUrl)
+										<a href="$core_v2_encoding.HtmlAttributeEncode($author.ProfileUrl)" class="internal-link view-profile">
+											$author.DisplayName
+										</a>
+									#else
+										$author.DisplayName
+									#end
+								</span>
+							#else
+								<div class="avatar">
+								</div>
+								<span class="user-name">
+									$contactRequest.Name
+								</span>
+							#end
+						</div>
+
+						<div class="content">
+							$contactRequest.Body
+						</div>
+					</div>
+
+					<div class="attributes">
+						<ul class="attribute-list">
+							<li class="attribute-item">
+								<span class="attribute-value">$core_v2_language.FormatDate($contactRequest.DateCreated)</span>
+							</li>
+							#if($contactRequest.IsModerated)
+								<li class="attribute-item post-moderated-true">
+									<span class="attribute-value">$core_v2_language.GetResource("Groups_ContactRequests_PossibleSpamNotEmailed")</span>
+								</li>
+							#else
+								<li class="attribute-item post-moderated-false">
+									<span class="attribute-value">$core_v2_language.GetResource("Groups_ContactRequests_MessageEmailed")</span>
+								</li>
+							#end
+						</ul>
+					</div>
+
+					<div class="actions">
+						<div class="ui-links navigation-list" data-minlinks="1" data-direction="horizontal" data-maxlinks="100">
+							<ul class="navigation-list">
+								<li class="navigation-list-item">
+									<a href="mailto:$core_v2_encoding.HtmlAttributeEncode($contactRequest.EmailAddress)?subject=$contactRequest.Subject" class="internal-link deny-contact-request">
+										$core_v2_language.GetResource("Reply")
+									</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="deny-contact-request" data-request-id="${contactRequest.Id}">
+										$core_v2_language.GetResource("Delete")
+									</a>
+								</li>
+								#if ($contactRequest.IsModerated)
+									<li class="navigation-list-item">
+										<a href="#" data-messagename="approve-contact-request" data-request-id="${contactRequest.Id}">
+											$core_v2_language.GetResource("Approve")
+										</a>
+									</li>
+								#end
+								<li class="navigation-list-item">
+									<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+				</div>
+			</li>
+		#afterall
+			</ul>
+	#end
+#end

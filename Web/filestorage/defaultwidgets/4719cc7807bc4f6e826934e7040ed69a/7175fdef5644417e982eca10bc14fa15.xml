@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:JobsPanel_Name}" version="11.0.0.0" description="${resource:JobsPanel_Description}" instanceIdentifier="7175fdef5644417e982eca10bc14fa15" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="jobs" lastModified="2020-11-11 19:56:48Z" provider="4719cc7807bc4f6e826934e7040ed69a">
+    <contentScript language="Velocity"><![CDATA[
+#set ($jobs = $context.ListJobs("%{ PageSize = 100, PageIndex = 0 }"))
+
+#set ($jobslistId = $core_v2_widget.UniqueId('jobsList'))
+#set ($filterId = $core_v2_widget.UniqueId('filter'))
+
+<p>$core_v2_language.GetResource('Instructions')</p>
+
+<form><fieldset id="$core_v2_encoding.HtmlAttributeEncode($filterId)">
+	<div class="filter-selector">
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="text" class="nameFilter" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))"/>
+					<a href="#" data-messagename="jobs-refresh" class="inline-button">$core_v2_language.GetResource('Refresh')</a>
+				</span>
+			</li>
+		</ul>
+	</div>
+</fieldset></form>
+
+<ul id="$core_v2_encoding.JavascriptEncode($jobslistId)" class="content-list content expandable">
+	#if ($jobs && $jobs.Count > 0)
+		$core_v2_widget.ExecuteFile('jobs-render.vm')
+	#else
+		<div class="message">$core_v2_language.GetResource('NoJobs')</div>
+	#end
+</ul>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script>
+jQuery(function(){
+	jQuery.telligent.evolution.widgets.jobsPanel.register({
+		list: '#$core_v2_encoding.JavascriptEncode($jobslistId)',
+		filter: '#$core_v2_encoding.JavascriptEncode($filterId)',
+		getJobsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('jobs-query.vm'))',
+	});
+});
+</script>
+
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="ExecutionTime">Scheduled Execution Time</resource>
+  <resource name="find">Find by name/type…</resource>
+  <resource name="InProcess">on the web server</resource>
+  <resource name="Instructions">Currently scheduled background processes are listed below.</resource>
+  <resource name="JobFormat">Job {0} is scheduled to process at {1}</resource>
+  <resource name="JobsPanel_Description">View current job statuses.</resource>
+  <resource name="JobsPanel_Name">Jobs</resource>
+  <resource name="more">More</resource>
+  <resource name="NoJobs">No jobs match the filter.</resource>
+  <resource name="processing">Running since</resource>
+  <resource name="ready">Scheduled to start</resource>
+  <resource name="Refresh">Refresh</resource>
+  <resource name="Service">in the job service</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

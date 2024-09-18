@@ -1,0 +1,14 @@
+##
+## Renders a list of api extensions as JSON
+##
+## Requires in scope:
+##   $apiExtensions
+##
+[
+	#foreach ($apiExtension in $apiExtensions)
+	#between
+		,
+	#each
+		$core_v2_widget.ExecuteFile('callback-sub-serialize-api-extension.vm')
+	#end
+]

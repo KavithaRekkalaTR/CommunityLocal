@@ -1,0 +1,147 @@
+##
+## Expects in scope: $fragment
+##
+#if ($fragment)
+	<div class="content fragment">
+		<input type="checkbox" class="multiselect" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId" />
+		<h4 class="name">$core_v2_encoding.HtmlEncode($fragment.ProcessedName)</h4>
+
+		<div class="attributes">
+			<ul class="attribute-list">
+				#if ($fragment.IsStaged)
+					<li class="attribute-item staged">
+						<span class="attribute-value">
+							#if ($fragment.IsDeleted)
+								<span class="pill negative ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('DeletedDesc'))">$core_v2_language.GetResource('Staged') $core_v2_language.GetResource('Deleted')</span>
+							#elseif ($fragment.IsReverted)
+								<span class="pill negative ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('RevertedDesc'))">$core_v2_language.GetResource('Staged') $core_v2_language.GetResource('Reverted')</span>
+							#else
+								<span class="pill negative">$core_v2_language.GetResource('Staged')</span>
+							#end
+						</span>
+					</li>
+				#end
+
+				<li class="attribute-item state">
+					<span class="attribute-value">
+						<span class="pill">
+							#if ($fragment.State == 'FactoryDefault')
+								$core_v2_language.GetResource('FactoryDefault')
+							#elseif ($fragment.State == 'Custom')
+								$core_v2_language.GetResource('Custom')
+							#elseif ($fragment.State == 'CustomizedDefault')
+								$core_v2_language.GetResource('CustomizedDefault')
+							#end
+						</span>
+					</span>
+				</li>
+
+				#if ($fragment.IsTranslated)
+					<li class="attribute-item translated">
+						<span class="attribute-value">
+							<span class="pill">$core_v2_language.GetResource('Translated')</span>
+						</span>
+					</li>
+				#end
+
+				<li class="attribute-item provider">
+					<span class="attribute-value">
+						$!fragment.FactoryDefaultProviderName
+					</span>
+				</li>
+
+				<li class="attribute-item theme">
+					<span class="attribute-value">
+						#if ($fragment.ThemeTitle)
+							$core_v2_encoding.HtmlEncode($fragment.ThemeTitle)
+						#end
+					</span>
+				</li>
+			</ul>
+		</div>
+
+		#if ($!fragment.ProcessedDescription)
+			<div class="content description expandable">
+				$core_v2_encoding.HtmlEncode($core_v2_language.Truncate($!fragment.ProcessedDescription, 500, "…"))
+			</div>
+		#end
+
+		<div class="actions expandable">
+			#set ($maxLinks = 4)
+			#if ($fragment.IsStaged)
+				#set ($maxLinks = $maxLinks + 2)
+			#end
+			<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="$maxLinks">
+				<ul>
+
+					#if ($fragment.IsStaged)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="fragment-publish" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('PublishStagedChanges')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="fragment-revert" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('RevertStagedChanges')</a>
+						</li>
+					#end
+
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="fragment-edit"  data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('Availability')</a>
+					</li>
+
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="fragment-replace"  data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('Replacement')</a>
+					</li>
+
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="fragment-export" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('Export')</a>
+					</li>
+
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="fragment-exportresources" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('ExportResources')</a>
+					</li>
+
+					#set ($editUrl = false)
+					#if ($fragment.ThemeId)
+						#set ($editUrl = $context.EditUrl("%{ InstanceIdentifier = $fragment.InstanceIdentifier, ThemeId = $fragment.ThemeId }"))
+					#else
+						#set ($editUrl = $context.EditUrl("%{ InstanceIdentifier = $fragment.InstanceIdentifier }"))
+					#end
+					#if ($editUrl)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($editUrl)">$core_v2_language.GetResource('EditFragment')</a>
+						</li>
+					#end
+
+					#set ($sampleUrl = false)
+					#if ($fragment.ThemeId)
+						#set ($sampleUrl = $context.GetSampleUrl("%{ InstanceIdentifier = $fragment.InstanceIdentifier, ThemeId = $fragment.ThemeId }"))
+					#else
+						#set ($sampleUrl = $context.GetSampleUrl("%{ InstanceIdentifier = $fragment.InstanceIdentifier }"))
+					#end
+					#if ($sampleUrl)
+						<li class="navigation-list-item">
+							<a href="#" data-sampleurl="$core_v2_encoding.HtmlAttributeEncode($sampleUrl)" #if ($fragment.IsStaged) data-staged="true" #else data-staged="false" #end data-messagename="fragment-preview">$core_v2_language.GetResource('Preview')</a>
+						</li>
+					#end
+
+					#if ($fragment.State == 'Custom' || ($fragment.State == 'FactoryDefault' && $fragment.IsEditable && $context.DeveloperModeEnabled))
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="fragment-delete" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('Delete')</a>
+						</li>
+					#elseif ($fragment.State == 'CustomizedDefault')
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="fragment-delete" data-id="$fragment.InstanceIdentifier" data-themeid="$!fragment.ThemeId">$core_v2_language.GetResource('RevertToDefault')</a>
+						</li>
+					#end
+
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+#end

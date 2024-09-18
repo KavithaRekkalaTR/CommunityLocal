@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeManagement-Topics}" version="11.0.0.0" description="${resource:KnowledgeManagement-Topics-Description}" instanceIdentifier="2a02b181b79047e48229d4977401270a" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="knowledgemanagement-topics" lastModified="2020-01-14 16:07:08Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($collection = false)
+#set($collection = $km_v1_knowledgeCollections.Current)
+#if(!$$collection)
+    $core_v2_widget.Hide()
+#end
+
+#set($currentTag = false)
+#set($currentTag = $km_v1_tags.Current)
+#if (!$currentTag)
+    #set($currentDocument = $km_v1_documents.Current)
+    #if ($currentDocument && $currentDocument.Tags && $currentDocument.Tags.Count > 0)
+        #set($currentTag = $currentDocument.Tags.get_Item(0))
+    #end
+#end
+
+#set($tags = false)
+#if ($currentTag)
+	#set($tags = $core_v2_utility.FlattenHierarchy($km_v1_tags.List($collection.Id), 'Children', "%{ ExpandToChildProperty='Id', ExpandToChildValue=$currentTag.Id }"))
+#else
+	#set($tags = $core_v2_utility.FlattenHierarchy($km_v1_tags.List($collection.Id), 'Children', "%{ ExpandToLevel=1 }"))
+#end
+
+#if(!$tags || $tags.Count == 0)
+	$core_v2_widget.Hide()
+#end
+
+<div id="$core_v2_widget.UniqueId('hierarchy')">
+	#set($currentLevel = 0)
+	#set($hiddenLevel = 0)
+	#set($wasHidden = false)
+	#foreach($tag in $tags)
+		#if($tag.Level > $currentLevel)
+			#foreach($i in [$currentLevel..$tag.Level])
+				#if($i != $currentLevel)
+					<div class="hierarchy-children">
+						<ul class="hierarchy-list">
+				#end
+			#end
+		#elseif ($tag.Level < $currentLevel)
+			#foreach($i in [$tag.Level..$currentLevel])
+				#if($i != $currentLevel)
+							</li>
+						</ul>
+					</div>
+				#end
+			#end
+		#else
+			</li>
+		#end
+		<li data-tagid="$tag.Item.Id">
+			<div class="hierarchy-item#if($currentTag && $currentTag.Id == $tag.Item.Id) selected#end#if($tag.HasChildren) with-children#else without-children#end">
+            #if ($tag.HasChildren)
+    			#if ($tag.IsExpanded)
+    					<a href="$core_v2_encoding.HtmlAttributeEncode($tag.Item.Url)"><span class="expand-collapse expanded">-</span>$tag.Item.Name</a>
+    				</div>
+    			#else
+    					<a href="$core_v2_encoding.HtmlAttributeEncode($tag.Item.Url)"><span class="expand-collapse collapsed">+</span>$tag.Item.Name</a>
+    				</div>
+    			#end
+    		#else
+					<a href="$core_v2_encoding.HtmlAttributeEncode($tag.Item.Url)">$tag.Item.Name</a>
+				</div>
+			#end
+		#set($currentLevel = $tag.Level)
+	#end
+	#if ($currentLevel > 0)
+		#foreach($i in [1..$currentLevel])
+					</li>
+				</ul>
+			</div>
+		#end
+	#end
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.knowledgeManagementTopics')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function(j) {
+		j.telligent.evolution.widgets.knowledgeManagementTopics.register({
+			hierarchy: j('#$core_v2_widget.UniqueId('hierarchy')'),
+			loadTagsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('load-tags.vm'))',
+			knowledgeCollectionId: '$collection.Id',
+			wrapper: '#$core_v2_widget.WrapperElementId'
+		});
+	});
+	</script>
+#end
+
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:KnowledgeManagement-Topics}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:KnowledgeManagement-Topics}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="KnowledgeManagement-Topics">Knowledge Management - Topics</resource>
+  <resource name="KnowledgeManagement-Topics-Description">Shows the topic tree to enable filtering knowledge documents.</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="742b7e868c6e4f05ab6d096bc87c690a" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

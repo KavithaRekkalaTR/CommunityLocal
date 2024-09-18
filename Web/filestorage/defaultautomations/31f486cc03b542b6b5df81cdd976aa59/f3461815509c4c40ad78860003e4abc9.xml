@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="f3461815509c4c40ad78860003e4abc9" executeAsServiceUser="true" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2019-05-10 17:21:09Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="idea.aftercreate" />
+      <event key="idea.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.IsEnabled) {
+    context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.AuthorUserId, context_v2_automationTrigger.Arguments.ContentId, telligentIdeas_v1_ideas.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(context_v2_automationTrigger.Arguments.AuthorUserId, context_v2_automationTrigger.Arguments.ContentId, telligentIdeas_v1_ideas.ContentTypeId);
+    if (context_v2_automationTrigger.Arguments.IsEnabled) {
+        // ensure points awarded
+        if (!awardedPoints) {
+            context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.AuthorUserId, context_v2_automationTrigger.Arguments.ContentId, telligentIdeas_v1_ideas.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (awardedPoints) {
+            context_v1_pointsAutomation.RevokePoints(context_v2_automationTrigger.Arguments.AuthorUserId, context_v2_automationTrigger.Arguments.ContentId, telligentIdeas_v1_ideas.ContentTypeId);
+        }
+    }
+}]]></executionScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Awards points to authors of ideas posted to an ideation.</resource>
+  <resource name="Title">When an idea is submitted</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

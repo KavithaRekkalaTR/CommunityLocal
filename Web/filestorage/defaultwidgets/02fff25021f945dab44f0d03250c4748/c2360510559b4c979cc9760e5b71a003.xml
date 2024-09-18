@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:DeleteForumReplyPanel_Name}" cssClass="forum-reply-delete" description="${resource:DeleteForumReplyPanel_Description}" instanceIdentifier="c2360510559b4c979cc9760e5b71a003" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="true">
+	<contentScript><![CDATA[
+#set ($replyId = $context.ReplyId)
+#set ($forumReply = $core_v2_forumReply.Get($replyId))
+
+#set ($saveButtonTemplateId = $core_v2_widget.UniqueId('saveButtonTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveButtonTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item"><span class="field-item-input"><a href="#" class="button save two-wide" data-messagename="delete-reply-delete">$core_v2_language.GetResource('delete')</a><a href="#" class="button save two-wide" data-messagename="delete-reply-cancel">$core_v2_language.GetResource('cancel')</a></span></li>
+		</ul>
+	</fieldset>
+</script>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<div class="editing-title">$core_v2_language.GetResource('confirm')</div>
+		</li>
+		#if ($forumReply.ReplyCount > 0)
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" class="include-children" checked="" id="$core_v2_widget.UniqueId('includeChildren')" name="$core_v2_widget.UniqueId('includeChildren')">
+					<label class="field-item-name" for="$core_v2_widget.UniqueId('includeChildren')">$core_v2_language.GetResource('delete_children')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('delete_children_desc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		#end
+	</ul>
+</fieldset></form>
+
+<script>
+var saveButtonTemplateId = '$core_v2_encoding.JavascriptEncode($saveButtonTemplateId)';
+
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	var header = jQuery(jQuery.telligent.evolution.template.compile(saveButtonTemplateId)({}));
+	var wrapper = jQuery.telligent.evolution.administration.panelWrapper();
+	var replyId = '$context.ReplyId';
+	jQuery.telligent.evolution.administration.header(header);
+
+	jQuery.telligent.evolution.messaging.subscribe('delete-reply-delete', function(data) {
+		var deleteChildren = #if ($forumReply.ReplyCount == 0) true #else wrapper.find('input.include-children').first().is(':checked') #end;
+		jQuery.telligent.evolution.del({
+			url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/forums/threads/{ThreadId}/replies/{ReplyId}.json',
+			data: {
+				ThreadId: $forumReply.ThreadId,
+				ReplyId: replyId,
+				DeleteChildren: deleteChildren,
+				SendAuthorDeleteNotification: true
+			}
+		}).then(function(){
+			jQuery.telligent.evolution.messaging.publish('ui.forumReply.delete', {
+				replyId: replyId,
+				deleteChildren: deleteChildren
+			});
+			jQuery.telligent.evolution.administration.close();
+
+			// synthesize forumReply.deleted event for originating user who won't receive socket event
+			jQuery.telligent.evolution.get({
+				url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/forums/threads/{ThreadId}.json',
+				data: { ThreadId: $forumReply.ThreadId }
+			}).then(function(t){
+				jQuery.telligent.evolution.messaging.publish('forumReply.deleted', {
+					replyId: replyId,
+					threadId: $forumReply.ThreadId,
+					forumId: t.Thread.ForumId,
+					authorId: t.Thread.Author.Id,
+					status: t.Thread.ThreadStatus,
+					replyCount: t.Thread.ReplyCount,
+					childCount: 0,
+					answerCount: t.Thread.AnswerCount + t.Thread.SuggestedAnswerCount
+				}, { crossWindow: true });
+			});
+		});
+	});
+	jQuery.telligent.evolution.messaging.subscribe('delete-reply-cancel', function(data) {
+		jQuery.telligent.evolution.administration.close();
+	});
+
+});
+</script>
+
+]]></contentScript>
+
+<headerScript><![CDATA[ $core_v2_language.GetResource('DeleteForumReplyPanel_Name') ]]></headerScript>
+<languageResources>
+<language key="en-us">
+<resource name="DeleteForumReplyPanel_Name">Delete Reply</resource>
+<resource name="DeleteForumReplyPanel_Description">Reply deletion panel widget.</resource>
+<resource name="confirm">Are you sure you want to delete this reply?</resource>
+<resource name="delete">Delete</resource>
+<resource name="cancel">Cancel</resource>
+<resource name="delete_children">Delete Children</resource>
+<resource name="delete_children_desc">When selected, also deletes children.</resource>
+</language>
+</languageResources>
+<restScopes>
+    <scope id="forums.threads.readonly" />
+		<scope id="forums.replies.modify" />
+  </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

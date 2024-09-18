@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget_Name}" version="12.0.0.0" description="${resource:Widget_Description}" instanceIdentifier="7e89c70395b84a32a357b06e54f9dd51" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-01-03 21:59:09Z" provider="db6c0b540d114359a744791c53560612">
+    <contentScript language="Velocity"><![CDATA[<p>$core_v2_language.GetResource('instructions')</p>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+		    <span class="field-item-input">
+                <select id="$core_v2_widget.UniqueId('tree')" style="width: 300px; height:400px;" size="10">
+                </select>
+            </span>
+        </li>
+	</ul>
+</fieldset></form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input"><a href="#" class="button save disabled">$core_v2_language.GetResource('publish')</a></span>
+            </li>
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="inline-button add-category">$core_v2_language.GetResource('add')</a>
+                    <a href="#" class="inline-button view-category">$core_v2_language.GetResource('view')</a>
+                    <a href="#" class="inline-button edit-category">$core_v2_language.GetResource('edit')</a>
+                    <a href="#" class="inline-button delete-category">$core_v2_language.GetResource('delete')</a>
+                    <a href="#" class="inline-button undelete-category">$core_v2_language.GetResource('undelete')</a>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.articleCategoryManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.articleCategoryManagement.register({
+			articleCollectionId: '$context.ArticleCollection.Id',
+			tree: jQuery('#$core_v2_widget.UniqueId('tree')'),
+			uploadContextId: '$core_v2_uploadedFile.CreateContextId()',
+			templates: {
+			    header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)'  
+			},
+			urls: {
+			    getCategories: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcategories.jsm'))',
+			    expandedImage: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('expanded.png'))',
+			    collapsedImage: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('collapsed.png'))',
+			    blankImage: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('blank.gif'))',
+			    addEditCategory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-addupdatecategory.vm'))',
+			    undeleteCategories: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-undeletecategory.vm'))',
+			    getCategory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcategory.jsm'))',
+			    undeleteCategory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-undeletecategory.jsm'))',
+			    deleteCategory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-deletecategory.vm'))'
+			},
+			text: {
+			    saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('publish-successful'))',
+			    addCategory: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('add-category'))',
+			    editCategory: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('edit-category'))',
+			    undeleteCategory: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('undelete-category'))',
+			    deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete-confirmation'))',
+			    saveProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('publishing'))',
+			    save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('publish'))',
+			    deleteCategory: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete-category'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="add">Add</resource>
+  <resource name="add-category">Add</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="category-defaultarticle">Default Article</resource>
+  <resource name="category-defaultarticle-description">When selected, the default article can be shown when navigating to this category.</resource>
+  <resource name="category-description">Description</resource>
+  <resource name="category-image">Icon</resource>
+  <resource name="category-image-description">A visual representation of this category.</resource>
+  <resource name="category-name">Name</resource>
+  <resource name="category-replace-with">Reassign to (Optional)</resource>
+  <resource name="category-replace-with-description">Optionally select a category to assign to articles assigned to this category when it is deleted.</resource>
+  <resource name="containing">Containing...</resource>
+  <resource name="Date_Deleted">Deleted {0}</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="delete-category">Delete '{0}'</resource>
+  <resource name="delete-confirmation">Are you sure you want to remove "{0}"?</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="edit-category">Edit</resource>
+  <resource name="image-change">Change</resource>
+  <resource name="image-progress">Uploading ({0}%...)</resource>
+  <resource name="image-remove">Remove</resource>
+  <resource name="image-upload">Upload</resource>
+  <resource name="info-nomatchingarticles">No matching articles were found.</resource>
+  <resource name="info-nomatchingcategories">No matching categories were found.</resource>
+  <resource name="instructions">Manage categories. Drag and drop categories to adjust structure. No changes are committed until published.</resource>
+  <resource name="More">More</resource>
+  <resource name="no-deleted-categories-found">No deleted categories were found.</resource>
+  <resource name="parent-is-deleted">This category cannot be undeleted because its parent, '{0},' is deleted. Please undelete the parent category first.</resource>
+  <resource name="publish">Publish Changes</resource>
+  <resource name="publishing">Publishing ({0}%...)</resource>
+  <resource name="publish-successful">Changes have been published successfully.</resource>
+  <resource name="save">Save</resource>
+  <resource name="undelete">Undelete</resource>
+  <resource name="undelete-category">Undelete Categories</resource>
+  <resource name="undelete-confirmation">Are you sure you want to undelete '{0}'?</resource>
+  <resource name="view">View</resource>
+  <resource name="Widget_Description">Manage categories and their structure.</resource>
+  <resource name="Widget_Name">Categories</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="articlecollections.articlecategories.modify" />
+      <scope id="articlecollections.categories.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

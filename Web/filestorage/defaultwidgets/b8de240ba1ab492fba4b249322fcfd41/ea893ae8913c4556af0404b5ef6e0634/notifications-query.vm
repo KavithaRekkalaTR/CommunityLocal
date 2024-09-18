@@ -1,0 +1,26 @@
+#set ($notificationType = $core_v2_page.GetQueryStringValue("_w_notificationType"))
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("_w_pageIndex")))
+#set ($resolved = $core_v2_page.GetQueryStringValue("_w_resolved"))
+#set ($pluginType = $core_v2_page.GetQueryStringValue("_w_pluginType"))
+
+#set ($pageSize = 20)
+#set ($sortBy = $core_v2_page.GetQueryStringValue("_w_sortBy"))
+#set ($affectedType = $core_v2_page.GetQueryStringValue("_w_affectedType"))
+
+#set ($options = "%{}")
+$options.Add('NotificationType', $notificationType)
+
+#if($resolved == 'notresolved')
+    $options.Add('IsResolved', 'false')
+#else
+    $options.Add('IsResolved', 'true')
+#end
+
+$options.Add('PageIndex', $pageIndex)
+$options.Add('PageSize', $pageSize)
+$options.Add('SortBy', $sortBy)
+$options.Add('PluginType', $pluginType)
+
+#set ($notifications = $context.List($options))
+
+$core_v2_widget.ExecuteFile('notifications-render.vm')

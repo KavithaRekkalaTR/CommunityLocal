@@ -1,0 +1,95 @@
+##
+## Renders an individual feature, whether an actual featured content entity or custom feature'
+## Feature object can contain:
+##
+## * Type
+## * Title
+## * Description
+## * Url
+## * DesignMode
+## * Image
+## * Shadow
+## * Blur
+## * ColorMode
+## * Background
+## * Background2
+## * Foreground
+## * UserAvatarUrl
+## * UserProfileUrl
+## * UserDisplayName
+##
+
+<li class="content-item #if ($feature.Shadow && $feature.DesignMode == 'photo') with-shadow ${verticalAlignment} #end #if ($feature.Blur && $feature.DesignMode == 'photo') with-blur #end #if ($feature.Url && $feature.Url.length > 0) with-url #end" style="
+	#if ($feature.DesignMode == 'color' && $feature.ColorMode == 'gradient')
+		background: linear-gradient(to right, $feature.Background, $feature.Background2)
+	#elseif ($feature.DesignMode == 'color' && $feature.ColorMode == 'solid')
+		background: $feature.Background
+	#end
+	"
+	#if ($feature.Url)
+		data-featureurl="$core_v2_encoding.HtmlAttributeEncode($feature.Url)"
+	#end
+	data-foreground="$feature.Foreground"
+	>
+	#if ($feature.DesignMode == 'photo')
+		<div class="feature-photo" style="
+			#set ($resizedCoverPhotoUrl = false)
+			#set ($resizeHeight = $height)
+			#if ($feature.Blur)
+				#set ($resizeHeight = $resizeHeight / 5)
+			#end
+			#set ($resizedCoverPhotoUrl = $core_v2_ui.GetResizedImageUrl($feature.Image, 0, $resizeHeight, "%{ ResizeMethod='ZoomAndCrop' }"))
+			background-image: url($resizedCoverPhotoUrl);
+			background-position: ${backgroundAlignment};
+			#if ($feature.Blur)
+				filter: blur(15px);
+				margin: -30px;
+			#end
+		">
+		</div>
+	#end
+	<div class="content">
+
+		#if ($feature.Title && $feature.Title.length > 0)
+			<h2 class="name" style="color: $feature.Foreground">
+				#if ($feature.Url && $feature.Url.length > 0)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($feature.Url)" class="internal-link view-post" style="color: $feature.Foreground">
+						$core_v2_language.Truncate($feature.Title, 50, '…')
+					</a>
+				#else
+					$core_v2_language.Truncate($feature.Title, 50, '…')
+				#end
+			</h2>
+		#end
+
+		#if ($feature.Description && $feature.Description.length > 0)
+			<div class="excerpt" style="color: $feature.Foreground">
+				$core_v2_language.Truncate($feature.Description, $truncateLength, '…')
+			</div>
+		#end
+
+		#if ($feature.UserAvatarUrl && $feature.UserAvatarUrl.length > 0 && $feature.UserDisplayName && $feature.UserDisplayName.length > 0)
+			<div class="author">
+				<div class="avatar">
+					#if ($feature.UserProfileUrl && $feature.UserProfileUrl.length > 0)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($feature.UserProfileUrl)">
+							$core_v2_ui.GetResizedImageHtml($feature.UserAvatarUrl, 16, 16, "%{border='0px', alt=$feature.UserDisplayName, ResizeMethod = 'ZoomAndCrop' }")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($feature.UserAvatarUrl, 16, 16, "%{border='0px', alt=$feature.UserDisplayName, ResizeMethod = 'ZoomAndCrop' }")
+					#end
+				</div>
+				<span class="user-name" style="color: $feature.Foreground">
+					#if ($feature.UserProfileUrl && $feature.UserProfileUrl.length > 0)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($feature.UserProfileUrl)" class="internal-link view-user-profile" style="color: $feature.Foreground">
+							$core_v2_language.Truncate($feature.UserDisplayName, 50, '…')
+						</a>
+					#else
+						$core_v2_language.Truncate($feature.UserDisplayName, 50, '…')
+					#end
+				</span>
+			</div>
+		#end
+
+	</div>
+</li>

@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Wikis_History_Name}" version="11.0.0.0" description="${resource:Wikis_History_Description}" instanceIdentifier="be2489b0472c4ce88243bf2d9d5f0c61" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="history" lastModified="2020-01-14 16:08:49Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($currentPage = $core_v2_wikiPage.CurrentOrDefault)
+
+## hide this widget if the content is abusive and accessing user does not have permission to review
+#set ($abusiveContent = false)
+#set ($abusiveContent = $core_v2_abusiveContent.Get($currentPage.ContentId, $currentPage.ContentTypeId))
+#set ($abusiveAndCanReviewAppealsInGroup = false)
+#if ($abusiveContent && $abusiveContent.IsAbusive)
+	#set ($abusiveAndCanReviewAppeals = $core_v2_abuseAppeal.CanReviewAppealsInApplication($core_v2_wiki.Current.ApplicationId, $core_v2_wiki.ApplicationTypeId))
+	#if (!$abusiveAndCanReviewAppeals)
+		$core_v2_widget.Hide()
+	#end
+#end
+
+#set ($deleteCompleteSingleText = $core_v2_language.GetResource('Wikis_History_Delete_Complete_Single'))
+#set ($deleteCompleteMultipleText = $core_v2_language.GetResource('Wikis_History_Delete_Complete_Multiple'))
+#if ($abusiveAndCanReviewAppealsInGroup)
+	#set ($deleteCompleteSingleText = $core_v2_language.GetResource('Wikis_History_Delete_Complete_Abusive_Single'))
+	#set ($deleteCompleteMultipleText = $core_v2_language.GetResource('Wikis_History_Delete_Complete_Abusive_Multiple'))
+#end
+
+#set ($canDeleteVersions = false)
+#set ($canDeleteVersions = $core_v3_permission.CheckPermission($core_v2_wikiPermissions.DeletePage, $core_v2_user.Accessing.Id, "%{ ContentId = $currentPage.ContentId, ContentTypeId = $core_v2_wikiPage.ContentTypeId }").IsAllowed)
+
+#set ($currentPageSize = 10)
+#set ($currentPageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($revisions = $core_v2_wikiPageRevision.List($currentPage.WikiId, "%{PageId = $currentPage.Id, PageIndex = $currentPageIndex, PageSize = $currentPageSize}"))
+
+<div class="content full">
+	<h1 class="name">
+		<a href="$core_v2_encoding.HtmlAttributeEncode($currentPage.Url)" class="internal-link view-post">$currentPage.Title</a>
+	</h1>
+	<div class="content margin-bottom">
+		<form>
+		<table id="$core_v2_widget.UniqueId('revisionListing')" class="table-list">
+			<thead>
+			<tr class="table-header">
+				<th class="table-header-column" colspan="2">$core_v2_language.GetResource("Wikis_History_Revision")</th>
+				<th class="table-header-column">$core_v2_language.GetResource("Wikis_History_Date")</th>
+				<th class="table-header-column">$core_v2_language.GetResource("Wikis_History_Author")</th>
+			</tr>
+			</thead>
+			<tbody>
+				<tr class="table-item">
+					#if ($revisions && $revisions.Count > 0)
+						<td class="table-column">
+							<label for="$core_v2_widget.UniqueId('SelectAll')" class="hidden">$core_v2_language.GetResource('SelectAll')</label>
+							<input type="checkbox" name="0" checked="checked" id="$core_v2_widget.UniqueId('SelectAll')" />
+						</td>
+						<td class="table-column">
+					#else
+						<td class="table-column" colspan="2">
+					#end
+						$core_v2_language.GetResource("Wikis_History_CurrentRevision")</td>
+					<td class="table-column">$core_v2_language.FormatDateAndTime($currentPage.LastModifiedDate)</td>
+					<td class="table-column">
+						#if ($currentPage.User.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($currentPage.User.ProfileUrl)" class="internal-link view-user-profile">$currentPage.User.DisplayName</a>
+						#else
+							$currentPage.User.DisplayName
+						#end
+					</td>
+				</tr>
+
+		#foreach ($revision in $revisions)
+		#each
+				<tr class="table-item">
+					<td class="table-column">
+						#set ($id = "${core_v2_widget.UniqueId('Revision')}-${revision.RevisionNumber}")
+						<label for="$id" class="field-item-header hidden">$revision.RevisionNumber</label>
+						<input type="checkbox" name="$revision.RevisionNumber" id="$id" />
+					</td>
+					<td class="table-column">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.Revision($currentPage.Id, $revision.RevisionNumber))">$core_v2_language.GetResource("Revision") #$revision.RevisionNumber</a>
+					</td>
+					<td class="table-column">
+						$core_v2_language.FormatDateAndTime($revision.LastModifiedDate)
+					</td>
+					<td class="table-column">
+						#if ($revision.User.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($revision.User.ProfileUrl)" class="internal-link view-user-profile">$revision.User.DisplayName</a>
+						#else
+							$revision.User.DisplayName
+						#end
+					</td>
+				</tr>
+		#end
+
+			</tbody>
+		</table>
+		</form>
+	</div>
+</div>
+
+$core_v2_ui.Pager($currentPageIndex, $revisions.PageSize, $revisions.TotalCount)
+
+<fieldset class="margin-top">
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				#if ($revisions && $revisions.Count > 0)
+					<a href="#" class="button" id="$core_v2_widget.UniqueId('compareVersionsButton')">$core_v2_language.GetResource('Wikis_History_Compare')</a>
+					#if ($canDeleteVersions)
+						<a href="#" class="button" id="$core_v2_widget.UniqueId('deleteVersionsButton')">$core_v2_language.GetResource('Wikis_History_Delete')</a>
+					#end
+				#end
+				<a href='$core_v2_encoding.HtmlAttributeEncode($core_v2_wikiUrls.Page($currentPage.Id))' class='internal-link view-post'><span></span>$core_v2_language.GetResource('Wikis_History_ViewCurrent')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.history')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+		jQuery(function()
+		{
+			jQuery.telligent.evolution.widgets.history.register({
+				compareVersionsButton:jQuery('#$core_v2_widget.UniqueId('compareVersionsButton')'),
+				deleteVersionsButton:jQuery('#$core_v2_widget.UniqueId('deleteVersionsButton')'),
+				revisionListingContainer:jQuery('#$core_v2_widget.UniqueId('revisionListing')'),
+				tooManyVersionsText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_History_TooManyVersionsSelected'))",
+				notEnoughVersionsText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_History_NotEnoughVersionsSelected'))",
+				deleteNotEnoughText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_History_Delete_NotEnoughVersionsSelected'))",
+				deleteCurrentText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_History_Delete_CurrentVersion'))",
+				deleteConfirmText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_History_Delete_Confirm'))",
+				deleteCompleteSingleText:"$core_v2_encoding.JavascriptEncode($deleteCompleteSingleText)",
+				deleteCompleteMultipleText:"$core_v2_encoding.JavascriptEncode($deleteCompleteMultipleText)",
+				wikiId: $currentPage.WikiId,
+				wikiPageId: $currentPage.Id,
+				revisionCount: $currentPage.RevisionCount
+			});
+		});
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_History_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Wikis_History_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Revision">Revision</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="Wikis_History_Author">Revision Author</resource>
+  <resource name="Wikis_History_Compare">Compare Versions</resource>
+  <resource name="Wikis_History_CurrentRevision">Current Revision</resource>
+  <resource name="Wikis_History_Date">Creation Date</resource>
+  <resource name="Wikis_History_Delete">Delete Versions</resource>
+  <resource name="Wikis_History_Delete_Complete_Abusive_Multiple">Revisions {0} have been deleted. This wiki page is still considered abusive. You must still restore the page.</resource>
+  <resource name="Wikis_History_Delete_Complete_Abusive_Single">Revision {0} has been deleted. This wiki page is still considered abusive. You must still restore the page.</resource>
+  <resource name="Wikis_History_Delete_Complete_Multiple">Revisions {0} have been deleted.</resource>
+  <resource name="Wikis_History_Delete_Complete_Single">Revision {0} has been deleted.</resource>
+  <resource name="Wikis_History_Delete_Confirm">Are you sure you want to delete the selected revisions?</resource>
+  <resource name="Wikis_History_Delete_CurrentVersion">The current revision version cannot be deleted.</resource>
+  <resource name="Wikis_History_Delete_NotEnoughVersionsSelected">Please select at least one version to delete.</resource>
+  <resource name="Wikis_History_Description">Displays history for wikis.</resource>
+  <resource name="Wikis_History_Name">Wikis - History</resource>
+  <resource name="Wikis_History_NotEnoughVersionsSelected">Please select two versions to compare</resource>
+  <resource name="Wikis_History_Revision">Revision</resource>
+  <resource name="Wikis_History_TooManyVersionsSelected">Please only select two versions to compare</resource>
+  <resource name="Wikis_History_ViewCurrent">View current version</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="438f4b20be39493c908f292b4592f6fc" />
+    </requiredContext>
+		<restScopes>
+			<scope id="wikis.revisions.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

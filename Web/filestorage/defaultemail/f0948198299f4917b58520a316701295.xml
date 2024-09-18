@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Abusive Author Appeal Rejected" version="13.0.0.0" description="Notifies a user that their abuse appeal has been rejected." id="f0948198299f4917b58520a316701295" lastModified="2023-05-11 20:26:30Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	#format($core_v2_language.GetResource('Subject_User'))
+	#token('site_name')
+		$core_v2_infoResult.Get().SiteName
+	#end
+#else
+	#format($core_v2_language.GetResource('Subject'))
+	#token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#token('site_name')
+		$core_v2_infoResult.Get().SiteName
+	#end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	$core_v2_language.GetResource('Header_User')
+#else
+	#format($core_v2_language.GetResource('Header'))
+	#token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#token('site_name')
+		$core_v2_infoResult.Get().SiteName
+	#end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	<p>
+	$core_v2_language.GetResource('Body_User_Introduction')
+	</p>
+#else
+	<p>
+	#format($core_v2_language.GetResource('Body_Introduction'))
+	#token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#end
+	</p>
+#end
+<p>
+$core_v2_language.GetResource('Body_FollowOn')
+</p>
+#if ($context_v1_email.Context.AbuseAppeal.BoardResponse && $context_v1_email.Context.AbuseAppeal.BoardResponse.Length > 0)
+    <p><em>$context_v1_email.Context.AbuseAppeal.BoardResponse</em></p>
+#end]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_FollowOn">We appreciate your participation in the community and in the joint effort to keep content interesting, safe, and enjoyable for everyone.</resource>
+  <resource name="Body_Introduction">Unfortunately, after reviewing the appeal you recently submitted, we think it's best to leave that particular {contenttype_name} off the site to avoid creating any discomfort for other members. Please continue to participate actively in the community. After all, it's composed of engaged members just like you.</resource>
+  <resource name="Body_User_Introduction">Unfortunately, after reviewing the appeal you recently submitted, we think it's best to remove your account.&amp;nbsp;</resource>
+  <resource name="Subject">{site_name}: Your appeal to display your {contenttype_name}</resource>
+  <resource name="Subject_User">{site_name}: Your appeal to resolve an issue with your account</resource>
+  <resource name="Header">Your appeal to display your {contenttype_name}</resource>
+  <resource name="Header_User">Your appeal to resolve an issue with your account</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

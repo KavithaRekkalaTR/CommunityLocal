@@ -1,0 +1,16 @@
+##
+## Methods Renderer
+##
+## Requires in scope:
+##   $methods
+##
+
+#foreach ($method in $methods)
+#beforeall
+	<div class="methods">
+		<h4 class="members_heading">$core_v2_language.GetResource('Methods')</h4>
+#each
+		$core_v2_widget.ExecuteFile('callback-sub-render-api-method.vm')
+#afterall
+	</div>
+#end

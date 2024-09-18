@@ -1,0 +1,24 @@
+#set($group = false)
+#set($group = $core_v2_group.Current)
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 15))
+
+#set($mentions = $core_v2_mention.List("%{MentionedContentIds=$group.ContentId.ToString(),MentionedContentTypeId=$core_v2_group.ContentTypeId,PageSize=$pageSize,PageIndex=$pageIndex,SortBy='Date',SortOrder='Descending'}"))
+#foreach($mention in $mentions)
+#beforeall
+	<ul class="content-list content">
+#each
+	<li class="content-item" #if ($mention.MentioningContent.Url) data-href="$core_v2_encoding.HtmlAttributeEncode($mention.MentioningContent.Url)" #end>
+		#set ($resultHtml = false)
+		#set ($resultHtml = $mention.MentioningContent.ViewHtml())
+		#if ($resultHtml)
+			$resultHtml
+		#end
+	</li>
+#afterall
+	</ul>
+#nodata
+	<div class="message information">
+		$core_v2_language.FormatString($core_v2_language.GetResource("No_Mentions_Message"), $group.Name)
+	</div>
+#end

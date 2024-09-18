@@ -1,0 +1,100 @@
+#if ($isCurrent)
+	<h1><a href="$core_v2_encoding.HtmlAttributeEncode($leaderboard.Url)">$leaderboard.Name</a></h1>	
+#else
+	<h2><a href="$core_v2_encoding.HtmlAttributeEncode($leaderboard.Url)">$leaderboard.Name</a></h2>	
+#end
+<div class="description">$!leaderboard.Description()</div>	
+
+<div class="leaders content full">
+	
+	#foreach ($leader in $leaders)
+	#beforeall
+		<ul class="leaders">
+		<li class="row leader-header">
+			<div class="column rank-column">$core_v2_language.GetResource("Rank")</div>					
+			<div class="column name-column">$core_v2_language.GetResource("Name")</div>			
+			#if ($showValue)			
+				<div class="column points-column">$core_v2_language.GetResource("Points")</div>					
+			#end
+		</li>
+	#each
+		<li class="row leader-item #if($leader.user.Id == $core_v2_user.Accessing.Id)current-leader-item#end">
+			<div class="column rank-column">#if($leader.Rank != -1)$leader.Rank #else $core_v2_language.GetResource("NotRanked") #end</div>
+			<div class="column name-column">
+				#if ($leader.user.ProfileUrl)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($leader.user.ProfileUrl)" class="internal-link view-user-profile avatar">
+						$core_v2_ui.GetResizedImageHtml($leader.user.AvatarUrl, 35, 35, "%{ alt = $leader.user.DisplayName, ResizeMethod='ZoomAndCrop' }")
+					</a>
+					<a href="$core_v2_encoding.HtmlAttributeEncode($leader.user.ProfileUrl)" class="internal-link view-user-profile username">
+						$leader.user.DisplayName
+					</a>
+				#else
+					$core_v2_ui.GetResizedImageHtml($leader.user.AvatarUrl, 35, 35, "%{ alt = $leader.user.DisplayName, ResizeMethod='ZoomAndCrop' }")
+					<span class="username">$leader.user.DisplayName</span>
+				#end	
+				
+			</div>				
+			#if ($showValue)
+				#set ($query = "%{}")
+				#if($leaderboard.ContainerId)
+					$query.Add('ContainerId', $leaderboard.ContainerId.ToString())
+				#end
+				#if($leaderboard.StartDate)
+					$query.Add('StartDate', $leaderboard.StartDate.ToString())
+				#end
+				#if($leaderboard.EndDate)
+					$query.Add('EndDate', $leaderboard.EndDate.ToString())
+				#end
+				<div class="column points-column">
+                    #set($pointsUrl = false)
+				    #set($pointsUrl = $core_v2_urls.UserPoints($leader.User.Id, $query))
+                    #if($leader.Value != -1)
+				        #if($pointsUrl)
+    				        <a href="$core_v2_encoding.HtmlAttributeEncode($pointsUrl)">$core_v2_language.FormatNumber($leader.Value)</a> 
+    				    #else
+        				    $core_v2_language.FormatNumber($leader.Value)
+    				    #end
+				    #else 
+				        &nbsp;
+				    #end
+			    </div>
+			#end
+		</li>
+	#afterall
+		</ul>
+	#nodata
+		#if($leaderboard.LastCalculatedDate)
+			<div class="message">$core_v2_language.GetResource("NoLeaders")</div>
+		#else
+			<div class="message">$core_v2_language.GetResource("LeaderboardNotCalculated")</div>
+		#end
+	#end
+
+	<div class="actions">
+		#set($maxLinks = 3)
+		<div class="ui-links navigation-list" data-minlinks="$maxLinks" data-direction="horizontal" data-maxlinks="$maxLinks">
+			<ul class="navigation-list">
+				#if ($leaderboard.LastCalculatedDate)
+					<li class="navigation-list-item date">
+						<span class="attribute-value">$core_v2_language.GetResource("LastUpdated") $core_v2_language.FormatDateAndTime($leaderboard.LastCalculatedDate)</span>
+					</li>
+				#end
+				#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+					#set ($likeFormat = '{toggle} <span class="count"><span class="icon"></span>{count}</span>')
+				#else
+					#set ($likeFormat = '<span class="count"><span class="icon"></span>{count}</span>')
+				#end
+				<li class="navigation-list-item like">
+					$core_v2_ui.Like($leaderboard.ContentId, $leaderboard.ContentTypeId, "%{ Format = $likeFormat, IncludeTip = 'true' }")
+				</li>
+	
+				<li class="navigation-list-item">
+					<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>

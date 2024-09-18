@@ -1,0 +1,335 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blog_Banner_Name}" version="13.0.0.0" description="${resource:Blog_Banner_Description}" instanceIdentifier="2f91c9a38a9f426ab9155ff3acc352a2" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="blog-banner" lastModified="2022-08-31 20:26:56Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($blog = $core_v2_blog.Current)
+#if (!$blog)
+	$core_v2_widget.Hide()
+#end
+
+#set ($post = false)
+#set ($renderTitle = $core_v2_widget.GetBoolValue('renderTitle', true))
+#set ($renderPoster = $core_v2_widget.GetBoolValue('renderPoster', true))
+#if ($renderTitle || $renderPoster)
+	#set($post = $core_v2_blogPost.Current)
+#end
+
+$core_v2_widget.ExecuteFile('style.vm')
+
+<div class="banner application">
+	<div class="name">
+		#if ($renderTitle && $post)
+			<h1 class="title">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">$post.Title</a>
+			</h1>
+		#else
+			<div class="title">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($blog.Url)">$blog.Name</a>
+			</div>
+			#if ($blog.Description)
+				<div class="description">$blog.HtmlDescription('web')</div>
+			#end
+		#end
+	</div>
+
+	## Custom Navigation
+	#set ($navigationItems = $core_v2_customNavigation.Deserialize($core_v2_widget.GetCustomValue('navigation', '')))
+	#foreach($navigationItem in $navigationItems)
+	#beforeall
+		<div class="navigation-list ui-links" data-minlinks="0" data-direction="horizontal">
+			<ul class="navigation-list">
+	#each
+				<li class="navigation-list-item #if($navigationItem.IsSelected) selected#end">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($navigationItem.Url)" class="#if($navigationItem.IsSelected) selected#end">$!navigationItem.Label</a>
+				</li>
+	#afterall
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+</div>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Blog_Banner_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blog_Banner_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="renderTitle" labelResourceName="renderTitle" descriptionResourceName="renderTitle_desc" defaultValue="True" dataType="Bool" />
+	<property id="renderPoster" labelResourceName="renderPoster" descriptionResourceName="renderPoster_desc" defaultValue="False" dataType="Bool" />
+	<property id="navigation" labelResourceName="navigation" descriptionResourceName="navigation_desc" dataType="Custom" template="core_v2_siteCustomNavigation" maxDepth="1" />
+</propertyGroup>
+<propertyGroup id="design" labelResourceName="design" descriptionResourceName="design_desc">
+	<property id="designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" defaultValue="inherit" dataType="String">
+		<propertyValue value="inherit" labelResourceName="inherit" propertiesToShow="inheritHeight,customHeight" propertiesToHide="coverPhotoUrl,coverPhotoLayout,blurCoverPhoto,shadowCoverPhoto,coverPhotoAlignment,coverPhotoFixedHeight,coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId,paletteId" />
+		<propertyValue value="color" labelResourceName="color" propertiesToShow="paletteId,customHeight" propertiesToHide="coverPhotoUrl,coverPhotoLayout,blurCoverPhoto,shadowCoverPhoto,coverPhotoAlignment,coverPhotoFixedHeight,coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId,inheritHeight" />
+		<propertyValue value="photo" labelResourceName="photo" propertiesToShow="coverPhotoUrl,coverPhotoLayout,blurCoverPhoto,shadowCoverPhoto,coverPhotoAlignment,coverPhotoFixedHeight,coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId" propertiesToHide="paletteId,inheritHeight,customHeight" />
+	</property>
+	<property id="inheritHeight" labelResourceName="inheritHeight" descriptionResourceName="inheritHeightDesc" defaultValue="custom" dataType="String">
+		<propertyValue value="inherit" labelResourceName="inheritHeightInherit" propertiesToShow="" propertiesToHide="customHeight" />
+		<propertyValue value="custom" labelResourceName="inheritHeightCustom" propertiesToShow="customHeight" propertiesToHide="" />
+	</property>
+	<property id="paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="customHeight" labelResourceName="customHeight" descriptionResourceName="customHeightDesc" defaultValue="176" dataType="Int" />
+	<property id="coverPhotoUrl" labelResourceName="coverphoto" descriptionResourceName="coverPhotoUrl_desc" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+	<property id="coverPhotoLayout" labelResourceName="coverPhotoLayout" descriptionResourceName="coverPhotoLayoutDesc" defaultValue="cover" dataType="String" renderValueLabelAsHtml="true" showHtmlWhenSelected="true" labelWidth="520">
+		<propertyValue value="dynamic" labelResourceName="coverPhotoLayoutDynamic" propertiesToShow="coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" propertiesToHide="coverPhotoFixedHeight,blurCoverPhoto,coverPhotoBackgroundPaletteId" />
+		<propertyValue value="cover" labelResourceName="coverPhotoLayoutCover" propertiesToShow="coverPhotoFixedHeight,blurCoverPhoto" propertiesToHide="coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId" />
+		<propertyValue value="contain" labelResourceName="coverPhotoLayoutContain" propertiesToShow="coverPhotoFixedHeight,coverPhotoBackgroundPaletteId" propertiesToHide="blurCoverPhoto,coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" />
+	</property>
+	<property id="coverPhotoFixedHeight" labelResourceName="coverPhotoFixedHeight" descriptionResourceName="coverPhotoFixedHeightDesc" defaultValue="176" dataType="Int" />
+	<property id="coverPhotoLayoutDynamicHeightMode" labelResourceName="coverPhotoLayoutDynamicHeightMode" descriptionResourceName="coverPhotoLayoutDynamicHeightModeDesc" defaultValue="defined" dataType="String">
+		<propertyValue value="defined" labelResourceName="coverPhotoLayoutDynamicHeightModeDefined" propertiesToShow="coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" propertiesToHide="" />
+		<propertyValue value="measured" labelResourceName="coverPhotoLayoutDynamicHeightModeMeasured" propertiesToShow="" propertiesToHide="coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" />
+	</property>
+	<property id="coverPhotoLayoutDynamicDefinedWidth" labelResourceName="coverPhotoLayoutDynamicDefinedWidth" descriptionResourceName="coverPhotoLayoutDynamicDefinedWidthDesc" defaultValue="1500" dataType="Int" />
+	<property id="coverPhotoLayoutDynamicDefinedHeight" labelResourceName="coverPhotoLayoutDynamicDefinedHeight" descriptionResourceName="coverPhotoLayoutDynamicDefinedHeightDesc" defaultValue="375" dataType="Int" />
+	<property id="coverPhotoAlignment" labelResourceName="coverPhotoAlignment" descriptionResourceName="coverPhotoAlignmentDesc" defaultValue="center center" dataType="String">
+		<propertyValue value="left top" labelResourceName="lefttop" />
+		<propertyValue value="center top" labelResourceName="centertop" />
+		<propertyValue value="right top" labelResourceName="righttop" />
+		<propertyValue value="left center" labelResourceName="leftcenter" />
+		<propertyValue value="center center" labelResourceName="centercenter" />
+		<propertyValue value="right center" labelResourceName="rightcenter" />
+		<propertyValue value="left bottom" labelResourceName="leftbottom" />
+		<propertyValue value="center bottom" labelResourceName="centerbottom" />
+		<propertyValue value="right bottom" labelResourceName="rightbottom" />
+	</property>
+	<property id="coverPhotoBackgroundPaletteId" labelResourceName="coverPhotoBackgroundPalette" descriptionResourceName="coverPhotoBackgroundPaletteDesc" dataType="String" template="themepalette" paletteTypeId="contextBanner" />
+	<property id="blurCoverPhoto" labelResourceName="coverPhotoBlur" descriptionResourceName="coverPhotoBlur_desc" defaultValue="False" dataType="Bool" />
+	<property id="shadowCoverPhoto" labelResourceName="shadowCoverPhoto" descriptionResourceName="shadowCoverPhoto_desc" defaultValue="True" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="amber">Amber</resource>
+  <resource name="backgroundColor">Background Color</resource>
+  <resource name="backgroundColor2">Secondary Gradient Background Color</resource>
+  <resource name="black">Black</resource>
+  <resource name="Blog_Banner_Description">Displays a blog banner.</resource>
+  <resource name="Blog_Banner_Name">Blog - Banner</resource>
+  <resource name="blue">Blue</resource>
+  <resource name="bluegray">Blue Gray</resource>
+  <resource name="border">Bottom Border</resource>
+  <resource name="border_desc">Render a bottom border beneath the banner. When the bottom shadow is enabled, only renders when not scrolled.</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="centerbottom">Bottom, Center</resource>
+  <resource name="centercenter">Center, Center</resource>
+  <resource name="centertop">Top, Center</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="city">City</resource>
+  <resource name="color">Use Color</resource>
+  <resource name="colorMode">Color Type</resource>
+  <resource name="coverphoto">Cover Photo</resource>
+  <resource name="coverPhotoAlignment">Cover Photo Alignment</resource>
+  <resource name="coverPhotoAlignmentDesc">When the cover photo exceeds its boundaries, it can be aligned.</resource>
+  <resource name="coverPhotoBackgroundPalette">Background</resource>
+  <resource name="coverPhotoBackgroundPaletteDesc">When using fixed banner height with the entire photo visible, this color will be used to fill any area not covered by the photo.</resource>
+  <resource name="coverPhotoBlur">Blur Cover Photo</resource>
+  <resource name="coverPhotoBlur_desc">When selected, cover photo is blurred. This is useful for legibility of overlaid text when using a complex image.</resource>
+  <resource name="coverPhotoFixedHeight">Banner height</resource>
+  <resource name="coverPhotoFixedHeightDesc">The blog banner will be fixed to this height in pixels.</resource>
+  <resource name="coverPhotoLayout">Cover Photo Layout</resource>
+  <resource name="coverPhotoLayoutContain">&lt;span class="cover-layout contain"&gt;&lt;strong&gt;Fixed&lt;/strong&gt; banner height with entire photo &lt;strong&gt;scaled&lt;/strong&gt; to be visible within the banner space&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutCover">&lt;span class="cover-layout cover"&gt;&lt;strong&gt;Fixed&lt;/strong&gt; banner height with photo &lt;strong&gt;scaled and cropped&lt;/strong&gt; to fill the available banner space&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDesc">Select the way in which the cover photo and banner are positioned.</resource>
+  <resource name="coverPhotoLayoutDynamic">&lt;span class="cover-layout dynamic"&gt;&lt;strong&gt;Dynamic&lt;/strong&gt; banner height proportional to the browser width to show a consistent photo at all sizes&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeight">Dynamic banner crop height</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeightDesc">The height, in pixels, to which the cover photo will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidth">Dynamic banner crop width</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidthDesc">The width, in pixels, to which the cover photo will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="coverPhotoLayoutDynamicHeightMode">Dynamic banner height proportions</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeDefined">Using specific dimensions</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeDesc">With dynamic banner height, the banner will resize in proportion to the width of the browser to keep the cover photo fully visible at all browser sizes. The proportion used can be measured based either on the photo's own dimensions or specified with an explicit crop width and height.</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeMeasured">Measured from photo</resource>
+  <resource name="coverPhotoUrl_desc">When provided, a cover photo is rendered as the banner's background.</resource>
+  <resource name="custom">Custom</resource>
+  <resource name="customHeight">Height</resource>
+  <resource name="customHeightDesc">Height in pixels</resource>
+  <resource name="cyan">Cyan</resource>
+  <resource name="design">Design</resource>
+  <resource name="design_desc">Customize your blog's banner design. The blog banner's design overrides the group banner's design.</resource>
+  <resource name="designMode">Design</resource>
+  <resource name="designMode_desc">Customize your blog's banner with a cover photo or color palette.</resource>
+  <resource name="foregroundColor">Foreground Color</resource>
+  <resource name="gradient">Gradient</resource>
+  <resource name="green">Green</resource>
+  <resource name="inherit">Use Group's Design</resource>
+  <resource name="inheritHeight">Height Mode</resource>
+  <resource name="inheritHeightCustom">Use Custom Height</resource>
+  <resource name="inheritHeightDesc">With the group's design, your blog's banner can retain the group banner's height or specify its own.</resource>
+  <resource name="inheritHeightInherit">Use Group Banner's Height</resource>
+  <resource name="leftbottom">Bottom, Left</resource>
+  <resource name="leftcenter">Center, Left</resource>
+  <resource name="lefttop">Top, Left</resource>
+  <resource name="lightblue">Light Blue</resource>
+  <resource name="lightbluegray">Light Blue Gray</resource>
+  <resource name="lime">Lime</resource>
+  <resource name="limeade">Limeade</resource>
+  <resource name="moonrise">Moonrise</resource>
+  <resource name="more">More</resource>
+  <resource name="navigation">Custom Navigation</resource>
+  <resource name="navigation_desc">Add, edit, delete, and reorder custom navigation links.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="palette">Color Palette</resource>
+  <resource name="palette_desc">Select a color palette for your blog's banner. These are defined by the theme and can be adjusted.</resource>
+  <resource name="peach">Peach</resource>
+  <resource name="photo">Use Cover Photo</resource>
+  <resource name="pink">Pink</resource>
+  <resource name="purple">Purple</resource>
+  <resource name="red">Red</resource>
+  <resource name="renderPoster">Post Image</resource>
+  <resource name="renderPoster_desc">When selected, renders post image as the banner background on post pages when available instead of the configured design.</resource>
+  <resource name="renderTitle">Post Title</resource>
+  <resource name="renderTitle_desc">When selected, renders post title on post pages instead of the blog name.</resource>
+  <resource name="rightbottom">Bottom, Right</resource>
+  <resource name="rightcenter">Center, Right</resource>
+  <resource name="righttop">Top, Right</resource>
+  <resource name="river">River</resource>
+  <resource name="scooter">Scooter</resource>
+  <resource name="shadow">Bottom Shadow</resource>
+  <resource name="shadow_desc">Render a shadow beneath the banner. When the bottom border is enabled, only renders when scrolled.</resource>
+  <resource name="shadowCoverPhoto">Shadow Cover Photo</resource>
+  <resource name="shadowCoverPhoto_desc">When selected, cover photo is shadowed to increase legibility of text on a light photo</resource>
+  <resource name="solid">Solid</resource>
+  <resource name="stellar">Stellar</resource>
+  <resource name="sunny">Sunny</resource>
+  <resource name="sunset">Sunset</resource>
+  <resource name="teal">Teal</resource>
+  <resource name="tropic">Tropic</resource>
+  <resource name="white">White</resource>
+  <resource name="yellow">Yellow</resource>
+</language>
+<language key="es-es">
+  <resource name="amber">Ámbar</resource>
+  <resource name="backgroundColor">Color de fondo</resource>
+  <resource name="backgroundColor2">Color de fondo degradado secundario</resource>
+  <resource name="black">Negro</resource>
+  <resource name="Blog_Banner_Description">Muestra una banner de blog.</resource>
+  <resource name="Blog_Banner_Name">Blog - Banner</resource>
+  <resource name="blue">Azul</resource>
+  <resource name="bluegray">Azul grisáceo</resource>
+  <resource name="border">Borde inferior</resource>
+  <resource name="border_desc">Representa un borde inferior debajo del banner. Cuando la sombra inferior está habilitada, solo se representa cuando no se desplaza.</resource>
+  <resource name="cancel">Cancelar</resource>
+  <resource name="centerbottom">Abajo, centro</resource>
+  <resource name="centercenter">Centro, centro</resource>
+  <resource name="centertop">Arriba, centro</resource>
+  <resource name="CF_Title">Título de widget</resource>
+  <resource name="city">Ciudad</resource>
+  <resource name="color">Usar color</resource>
+  <resource name="colorMode">Tipo de color</resource>
+  <resource name="coverphoto">Foto de portada</resource>
+  <resource name="coverPhotoAlignment">Alineación de la foto de portada</resource>
+  <resource name="coverPhotoAlignmentDesc">Cuando la foto de portada supera sus límites, puede alinearse.</resource>
+  <resource name="coverPhotoBackgroundPalette">Segundo plano</resource>
+  <resource name="coverPhotoBackgroundPaletteDesc">Cuando se utiliza una altura de pancarta fija con la foto completa visible, se usará este color para rellenar cualquier zona que no esté cubierta por la foto.</resource>
+  <resource name="coverPhotoBlur">Desenfocar foto de portada</resource>
+  <resource name="coverPhotoBlur_desc">Cuando se selecciona, la foto de portada se desenfoca. Esto es útil para la legibilidad del texto superpuesto al utilizar una imagen compleja.</resource>
+  <resource name="coverPhotoFixedHeight">Altura de pancarta</resource>
+  <resource name="coverPhotoFixedHeightDesc">La pancarta del blog se fijará a esta altura en píxeles.</resource>
+  <resource name="coverPhotoLayout">Diseño de la foto de portada</resource>
+  <resource name="coverPhotoLayoutContain">&lt;span class="cover-layout contain"&gt;Altura de pancarta &lt;strong&gt;fija&lt;/strong&gt; con la foto completa &lt;strong&gt;escalada&lt;/strong&gt; para que sea visible dentro del espacio de la pancarta&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutCover">&lt;span class="cover-layout cover"&gt;Altura de pancarta &lt;strong&gt;fija&lt;/strong&gt; con la foto &lt;strong&gt;escalada y recortada&lt;/strong&gt; para llenar el espacio de pancarta disponible&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDesc">Seleccione la forma de colocar la foto de portada y la pancarta.</resource>
+  <resource name="coverPhotoLayoutDynamic">&lt;span class="cover-layout dynamic"&gt;Altura de pancarta &lt;strong&gt;dinámica&lt;/strong&gt; proporcional al ancho del navegador para mostrar una foto uniforme en todos los tamaños&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeight">Altura de recorte de pancarta dinámica</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeightDesc">La altura, en píxeles, a la que se cambiará de tamaño y se recortará la foto de portada. La foto recortada completa será visible en todos los tamaños de navegador.</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidth">Ancho de recorte de pancarta dinámico</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidthDesc">El ancho, en píxeles, al que se cambiará de tamaño y se recortará la foto de portada. La foto recortada completa será visible en todos los tamaños de navegador.</resource>
+  <resource name="coverPhotoLayoutDynamicHeightMode">Proporciones de altura de pancarta dinámica</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeDefined">Con unas dimensiones específicas</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeDesc">Con una altura de pancarta din%C3%A1mica, el indicador cambiará de tamaño en proporción al ancho del navegador para mantener la foto de portada totalmente visible en todos los tamaños de navegador. La proporción utilizada puede medirse a partir de las propias dimensiones de la foto o especificarse con un recorte explícito del ancho y la altura.</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeMeasured">Medidas desde la foto</resource>
+  <resource name="coverPhotoUrl_desc">Cuando se proporciona, una foto de portada se representa como el fondo del banner.</resource>
+  <resource name="custom">Personalizar</resource>
+  <resource name="customHeight">Alto</resource>
+  <resource name="customHeightDesc">Altura en píxeles</resource>
+  <resource name="cyan">Cian</resource>
+  <resource name="design">Diseño</resource>
+  <resource name="design_desc">Personaliza el diseño del banner del blog. El diseño del banner del blog anula el diseño del banner del grupo.</resource>
+  <resource name="designMode">Diseño</resource>
+  <resource name="designMode_desc">Personaliza el banner del blog con una foto de portada o paleta de colores.</resource>
+  <resource name="foregroundColor">Color de primer plano</resource>
+  <resource name="gradient">Degradado</resource>
+  <resource name="green">Verde</resource>
+  <resource name="inherit">Utilizar diseño del grupo</resource>
+  <resource name="inheritHeight">Modo de altura</resource>
+  <resource name="inheritHeightCustom">Utilizar altura personalizada</resource>
+  <resource name="inheritHeightDesc">Con el diseño de grupo, la pancarta de su blog puede conservar la altura de la pancarta del grupo o especificar la suya propia.</resource>
+  <resource name="inheritHeightInherit">Utilizar altura de pancarta de grupo</resource>
+  <resource name="leftbottom">Abajo, izquierda</resource>
+  <resource name="leftcenter">Centro, izquierda</resource>
+  <resource name="lefttop">Arriba, izquierda</resource>
+  <resource name="lightblue">Azul claro</resource>
+  <resource name="lightbluegray">Azul grisáceo claro</resource>
+  <resource name="lime">Lima</resource>
+  <resource name="limeade">Limada</resource>
+  <resource name="moonrise">Salida de luna</resource>
+  <resource name="more">Más</resource>
+  <resource name="navigation">Navegación personalizada</resource>
+  <resource name="navigation_desc">Agregar, editar, eliminar y reordenar vínculos de navegación personalizados.</resource>
+  <resource name="Options">Opciones</resource>
+  <resource name="palette">Paleta de colores</resource>
+  <resource name="palette_desc">Seleccione una paleta de colores para la pancarta de su blog. Están definidas por el tema y se pueden ajustar.</resource>
+  <resource name="peach">Melocotón</resource>
+  <resource name="photo">Utilizar foto de portada</resource>
+  <resource name="pink">Rosa</resource>
+  <resource name="purple">Violeta</resource>
+  <resource name="red">Rojo</resource>
+  <resource name="renderPoster">Imagen del artículo</resource>
+  <resource name="renderPoster_desc">Cuando se selecciona, representa la imagen del artículo como el fondo del banner en las páginas del artículo cuando está disponible, en lugar del diseño configurado.</resource>
+  <resource name="renderTitle">Título del artículo</resource>
+  <resource name="renderTitle_desc">Cuando se selecciona, representa el título del artículo en las páginas del artículo en lugar del nombre del blog.</resource>
+  <resource name="rightbottom">Abajo, derecha</resource>
+  <resource name="rightcenter">Centro, derecha</resource>
+  <resource name="righttop">Arriba, derecha</resource>
+  <resource name="river">Río</resource>
+  <resource name="scooter">Scooter</resource>
+  <resource name="shadow">Sombra inferior</resource>
+  <resource name="shadow_desc">Representa una sombra debajo del banner. Cuando el borde inferior está habilitado, solo se representa cuando se desplaza.</resource>
+  <resource name="shadowCoverPhoto">Sombrear foto de portada</resource>
+  <resource name="shadowCoverPhoto_desc">Cuando se selecciona, la foto de portada se sombrea para aumentar la legibilidad del texto en una foto clara</resource>
+  <resource name="solid">Sólido</resource>
+  <resource name="stellar">Estelar</resource>
+  <resource name="sunny">Soleado</resource>
+  <resource name="sunset">Puesta de sol</resource>
+  <resource name="teal">Verde azulado</resource>
+  <resource name="tropic">Trópico</resource>
+  <resource name="white">Blanco</resource>
+  <resource name="yellow">Amarillo</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[
+#set ($post = false)
+#set ($renderPoster = $core_v2_widget.GetBoolValue('renderPoster', true))
+#if ($renderPoster)
+	#set($post = $core_v2_blogPost.Current)
+#end
+#if ($renderPoster && $post && $post.PostImageUrl && $post.PostImageUrl.length > 0)
+	with-cover-photo with-shadow
+#else
+	#set ($designMode = $core_v2_widget.GetStringValue('designMode', 'inherit'))
+	#if ($designMode == 'photo')
+		#set ($coverPhotoLayout = $core_v2_widget.GetStringValue('coverPhotoLayout', 'cover'))
+		#set ($coverPhotoUrl = false)
+		#set ($coverPhotoUrl = $core_v2_widget.GetUrlValue('coverPhotoUrl', ''))
+		#if ($coverPhotoUrl && $coverPhotoUrl.Length > 0)
+			with-cover-photo
+		#end
+		#if ($coverPhotoLayout == 'cover')
+			#set ($blurCoverPhoto = $core_v2_widget.GetBoolValue('blurCoverPhoto', true))
+			#if ($blurCoverPhoto)
+				with-blur
+			#end
+		#end
+		#set ($shadowCoverPhoto = $core_v2_widget.GetBoolValue('shadowCoverPhoto', false))
+		#if ($shadowCoverPhoto)
+			with-shadow
+		#end
+	#end
+#end
+		]]></additionalCssScript>
+  </scriptedContentFragment>
+</scriptedContentFragments>

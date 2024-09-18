@@ -1,0 +1,81 @@
+#set ($headerTemplateId = $core_v2_widget.UniqueId('scoreSampleHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <p>
+        $core_v2_language.GetResource('samplescores_instructions') 
+    </p>
+	<ul class="filter">
+	    <li class="filter-option selected"><a href="#" data-tab="highest">$core_v2_language.GetResource('samplescores-highest')</a></li>
+	    <li class="filter-option"><a href="#" data-tab="lowest">$core_v2_language.GetResource('samplescores-lowest')</a></li>
+	    <li class="filter-option"><a href="#" data-tab="search">$core_v2_language.GetResource('samplescores-search')</a></li>
+	</ul>
+</script>
+
+<div id="$core_v2_widget.UniqueId('SampleScoresWrapper')">
+    #set($scoreSamples = $context.GetSampleScoreValues())
+    #set($weightedMetrics = $context.GetWeightedMetrics())
+    
+    <div class="tab-content" data-tab="highest">
+        #foreach($sampleScore in $scoreSamples.HighestSamples)
+            #beforeall
+                <ul class="content-list content simple sample-scores">
+            #each
+                $core_v2_widget.ExecuteFile('render-samplescore.vm')
+            #afterall
+                </ul>
+        #end
+    </div>
+    
+    <div class="tab-content" data-tab="lowest">
+        #foreach($sampleScore in $scoreSamples.LowestSamples)
+            #beforeall
+                <ul class="content-list content simple sample-scores">
+            #each
+                $core_v2_widget.ExecuteFile('render-samplescore.vm')
+            #afterall
+                </ul>
+        #end
+    </div>
+    
+    <div class="tab-content" data-tab="search">
+        <form><fieldset>
+            <ul class="field-list">
+        		<li class="field-item">
+        			<label for="$core_v2_widget.UniqueId('FindScoreContent')" class="field-item-name">$core_v2_language.GetResource("Field_FindScoreContent")</label>
+        			<span class="field-item-description">$core_v2_language.GetResource('Field_FindScoreContent_Desc')</span>
+        			<span class="field-item-input">
+        				<input type="text" name="$core_v2_widget.UniqueId('FindScoreContent')" value="" id="$core_v2_widget.UniqueId('FindScoreContent')" />
+        			</span>
+        		</li>
+            </ul>
+        </fieldset></form>
+        
+        <div id="$core_v2_widget.UniqueId('SearchSample')">
+        </div>
+    </div>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.scorePluginScoreSamples')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('score-samples.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.scorePluginScoreSamples.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    wrapper: jQuery('#$core_v2_widget.UniqueId('SampleScoresWrapper')'),
+		    fields: {
+		        findContent: jQuery('#$core_v2_widget.UniqueId('FindScoreContent')'),
+		        searchSample: jQuery('#$core_v2_widget.UniqueId('SearchSample')')
+		    },
+		    urls: {
+		        lookupContent: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('lookup-content.vm'))',
+		        getSampleScore: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-samplescore.vm'))'
+		    },
+		    text: {
+		        noSearchMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Field_FindScoreContent_NoResults'))',
+		        findContentPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Field_FindScoreContent_Placeholder'))'
+		    }
+    	});
+	});
+	</script>
+#end

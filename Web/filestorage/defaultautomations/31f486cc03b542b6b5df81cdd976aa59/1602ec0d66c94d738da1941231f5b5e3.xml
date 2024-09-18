@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="1602ec0d66c94d738da1941231f5b5e3" executeAsServiceUser="true" trigger="Event" lastModified="2019-06-10 16:25:23Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="roleuser.aftercreate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var roleId = context_v2_automationTrigger.Arguments.Id;
+if (!roleId) {
+    return;
+}
+
+var roleIdsToNotify = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('roles', '')).Values('Role');
+if (roleIdsToNotify && roleIdsToNotify.Count > 0) {
+    var valid = false;
+    for (var i = 0; i < roleIdsToNotify.Count && !valid; i++) {
+        if (parseInt(roleIdsToNotify[i], 10) == roleId) {
+            valid = true;
+        }
+    }
+    if (!valid) {
+        return;
+    }
+}
+
+var role = core_v2_role.Get(roleId);
+if (!role || role.HasErrors()) {
+    return;
+}
+
+var user = core_v2_user.Get({ Id: context_v2_automationTrigger.Arguments.UserId });
+if (!user || user.HasErrors()) {
+    return;
+}
+
+var tokens = {
+    rolename: role.Name,
+    userdisplayname: user.DisplayName
+};
+
+var notificationType = core_v2_widget.GetStringValue('notificationType', 'conversation');
+var subject = core_v2_language.FormatString(core_v2_widget.GetStringValue('subject', ''), tokens);
+var body = core_v2_language.FormatString(core_v2_widget.GetHtmlValue('body', ''), tokens);
+
+if (!body || body.length == 0) {
+    return;
+}
+
+if (notificationType != 'conversation' && (!subject || subject.length == 0)) {
+    return;
+}
+
+if (notificationType == 'conversation') {
+    core_v2_conversation.Create(body, user.Username);
+} else if (notificationType == 'system') {
+    core_v2_systemNotification.Create(subject, body, {
+       UserIds: user.Id + ''
+    });
+} else if (notificationType == 'email') {
+    core_v2_email.Send(subject, body, {
+       ToUserId: user.Id 
+    });
+}
+
+]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="roles" dataType="custom" labelResourceName="Roles" descriptionResourceName="Roles_Description" template="core_v2_roleLookup" maxSelections="20" />
+    <property id="notificationType" dataType="string" labelResourceName="NotificationType" descriptionResourceName="NotificationType_Description" defaultValue="conversation">
+        <propertyValue value="conversation" labelResourceName="NotificationType_Conversation" propertiesToShow="body" propertiesToHide="subject" />
+        <propertyValue value="system" labelResourceName="NotificationType_System" propertiesToShow="body,subject" propertiesToHide="" />
+        <propertyValue value="email" labelResourceName="NotificationType_Email" propertiesToShow="body,subject" propertiesToHide="" />
+    </property>
+    <property id="subject" dataType="string" labelResourceName="Subject" descriptionResourceName="Subject_Description" template="core_v2_customTokenizedString">
+        <propertyValue value="rolename" labelResourceName="Token_RoleName" />
+        <propertyValue value="userdisplayname" labelResourceName="Token_UserDisplayName" />
+    </property>
+    <property id="body" dataType="html" labelResourceName="Body" descriptionResourceName="Body_Description" template="core_v2_customTokenizedHtml" rows="15" columns="40">
+        <propertyValue value="rolename" labelResourceName="Token_RoleName" />
+        <propertyValue value="userdisplayname" labelResourceName="Token_UserDisplayName" />
+    </property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Message Body</resource>
+  <resource name="Body_Description">The body of the message sent to members when added to a role.</resource>
+  <resource name="Description">Sends a notification when a member is added to a role.</resource>
+  <resource name="NotificationType">Type of notification</resource>
+  <resource name="NotificationType_Conversation">Private message</resource>
+  <resource name="NotificationType_Description">Choose how you'd like to notify members when added to roles.</resource>
+  <resource name="NotificationType_Email">Email</resource>
+  <resource name="NotificationType_System">System notification</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Roles">Roles</resource>
+  <resource name="Roles_Description">Select one or more roles for which a notification should be sent. If no roles are selected, a notification will be sent when a member is added to any role.</resource>
+  <resource name="Subject">Subject</resource>
+  <resource name="Subject_Description">The subject of the notification sent to members when added to a role.</resource>
+  <resource name="Title">Notify members when they're added to a role</resource>
+  <resource name="Token_RoleName">Role Name</resource>
+  <resource name="Token_UserDisplayName">Member Display Name</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

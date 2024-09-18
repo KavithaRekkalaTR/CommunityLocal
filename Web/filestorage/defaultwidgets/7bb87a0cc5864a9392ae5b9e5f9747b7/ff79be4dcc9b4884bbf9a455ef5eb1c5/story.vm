@@ -1,0 +1,254 @@
+##
+## Renders an individual activity story
+## Requires in scope:
+##   $story instance
+##
+
+#set ($viewHtml = $story.ViewHtml('Web'))
+#if ($viewHtml && $viewHtml != '')
+
+	#set ($widgetUniqueMessageId = "${core_v2_widget.WrapperElementId}_story_${message.StoryId}")
+
+	#set ($primaryStoryUser = $story.PrimaryUser)
+
+	#set ($primaryStoryUserIsRegistered = false)
+	#set ($primaryStoryUserIsRegistered = $core_v2_user.IsRegistered($primaryStoryUser.Id))
+	#set ($primaryStoryUserIsAccessingUser = false)
+	#if ($accessingUser.Id == $primaryStoryUser.Id)
+		#set ($primaryStoryUserIsAccessingUser = true)
+	#end
+
+	#set ($commentsSupported = false)
+	#set ($accessingUserCanComment = false)
+	#set ($forumThread = false)
+	#if (!$story.TypeId && $story.ContentTypeId == $core_v2_forumThread.ContentTypeId)
+		#set($commentsSupported = true)
+		#set ($forumThread = $core_v2_forumThread.Get($story.ContentId))
+		#set ($accessingUserCanComment = $core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $core_v2_user.Accessing.Id, "%{ ContentId = $forumThread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+	#else
+		#set ($commentsSupported = $core_v2_comments.SupportsComments($story.ContentTypeId))
+		#if ($commentsSupported)
+			#set ($accessingUserCanComment = $core_v2_comments.CanCreateComment($story.ContentId, $story.ContentTypeId))
+		#end
+	#end
+
+
+	#set ($isEditablStatusMessage = false)
+	#if (!$story.TypeId && $story.ContentTypeId == $core_v2_statusMessage.ContentTypeId)
+		#set ($isEditablStatusMessage = $core_v2_statusMessage.CanUpdate($story.ContentId))
+	#end
+
+
+	#set ($widgetUniqueStoryId = "${core_v2_widget.WrapperElementId}_story_${story.StoryId}")
+	#set ($storyType = $story.StoryTypeId)
+
+	#set($activityUrl = false)
+	#if ($story.TypeId.HasValue)
+		#set($activityUrl = $story.ActivityUrl)
+	#elseif ($story.ContentTypeId)
+		#set ($applicationType = false)
+		#set ($applicationType = $core_v2_applicationType.Get($story.ContentTypeId))
+		#if ($applicationType && !$applicationType.HasErrors())
+			#set($activityUrl = $story.ActivityUrl)
+		#end
+	#end
+
+	#set($cssClass = "content-item activity activity-story $!storyType content-type-${story.ContentTypeId}")
+
+	#set($updateHtml = false)
+	#set($updateUser = false)
+	#set($updateHtml = $story.UpdateHtml('Web'))
+	#if ($updateHtml)
+		#set($updateUser = $story.PrimaryUpdateUser)
+		#set($cssClass = "$cssClass with-updateidentifier")
+	#end
+
+	<li id="$!widgetUniqueStoryId" $core_v2_contentPresence.RenderAttributes($story.ContentId, $story.ContentTypeId, "%{TypeId = $story.TypeId, CssClass=$cssClass}") data-authorid="$!primaryStoryUser.Id" data-activityid="$!story.StoryId" data-activitytype="$!storyType" data-activitydate="$!core_v2_utility.GetTimestamp($story.LastUpdate)" data-contentid="$!story.ContentId" data-contenttypeid="$!story.ContentTypeId" data-typeid="$!story.TypeId" #if ($activityUrl) data-activityurl="$!core_v2_encoding.HtmlAttributeEncode($activityUrl)"#end #if($forumThread)data-threadid="$forumThread.Id"#end>
+		#if ($updateHtml)
+			<div class="full-post updateidentifier">
+				<div class="post-author updateidentifier">
+					<span class="avatar">
+						#if($updateUser.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($updateUser.ProfileUrl)" class="internal-link view-user-profile">
+								$core_v2_ui.GetResizedImageHtml($updateUser.AvatarUrl, 50, 50, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$updateUser.DisplayName}")
+							</a>
+						#else
+							$core_v2_ui.GetResizedImageHtml($updateUser.AvatarUrl, 50, 50, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$updateUser.DisplayName}")
+						#end
+					</span>
+				</div>
+				<div class="post-content updateidentifier">
+					$updateHtml
+				</div>
+			</div>
+		#end
+		<div class="full-post-header activity"></div>
+		<div class="full-post activity">
+			<div class="post-author activity">
+				<span class="avatar">
+					#if($primaryStoryUser.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($primaryStoryUser.ProfileUrl)" class="internal-link view-user-profile">
+							$core_v2_ui.GetResizedImageHtml($primaryStoryUser.AvatarUrl, 50, 50, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$primaryStoryUser.DisplayName}")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($primaryStoryUser.AvatarUrl, 50, 50, "%{border='0',ResizeMethod = 'ZoomAndCrop', alt=$primaryStoryUser.DisplayName}")
+					#end
+				</span>
+			</div>
+
+			<div class="post-content activity">
+				$viewHtml
+			</div>
+
+			#if ($isEditablStatusMessage)
+				<span class="status editor hidden"><span class="ui-loading"></span></span>
+			#end
+
+			<div class="post-actions activity">
+
+				#set ($canBeMarkedAsAbusive = false)
+				#set ($canBeMarkedAsAbusive = $core_v2_abuseReport.CanBeMarkedAsAbusive($story.ContentTypeId))
+
+				#set($conversationUrl = false)
+				#if ($accessingUserIsRegistered && $primaryStoryUserIsRegistered && !$primaryStoryUserIsAccessingUser)
+					#set($conversationUrl = $core_v2_urls.AddConversation("%{ UserId = $primaryStoryUser.Id, Modal = 'False' }"))
+				#end
+
+				#set ($maxLinks = 1)
+				#if ($commentsSupported)
+					#set ($maxLinks = $maxLinks + 1)
+				#end
+
+				#set ($likeFormat = "{count}")
+				#if ($accessingUserIsRegistered && $core_v2_like.CanLike($story.ContentId, $story.ContentTypeId))
+					#set ($likeFormat = "{toggle} {count}")
+				#end
+				#set ($likeOptions = "%{ Format = $likeFormat, IncludeTip = 'true' }")
+				#if ($story.TypeId)
+					$likeOptions.Add('LikeTypeId', $story.TypeId)
+				#end
+				#set($likeContent = false)
+				#set($likeContent = $core_v2_ui.Like($story.ContentId, $story.ContentTypeId, $likeOptions))
+
+				#if ($likeContent && $likeContent.Length > 0)
+					#set($maxLinks = $maxLinks + 1)
+				#end
+
+				<div class="navigation-list ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+					<ul>
+
+						#if ($likeContent && $likeContent.Length > 0)
+							<li class="navigation-list-item">
+								$likeContent
+							</li>
+						#end
+
+						#if ($commentsSupported && $accessingUserCanComment)
+							<li class="navigation-list-item">
+								<a class="internal-link comment prepend-icon comment" href="#" data-messagename="start-story-comment" data-activityid="$!story.StoryId">
+									$core_v2_language.GetResource('reply')
+								</a>
+							</li>
+						#end
+
+						<li class="navigation-list-item">
+							#set ($storyUrl = false)
+							#set ($storyUrl = $story.ActivityUrl)
+							#if ($storyUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($storyUrl)" class="internal-link view-post">
+									$core_v2_ui.AgoDate($story.CreatedDate, "%{CssClass = 'post-date prepend-icon clock'}")
+								</a>
+							#else
+								$core_v2_ui.AgoDate($story.CreatedDate, "%{CssClass = 'post-date prepend-icon clock'}")
+							#end
+						</li>
+
+						#if ($conversationUrl)
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="start-private-message" data-conversationurl="$core_v2_encoding.HtmlAttributeEncode($conversationUrl)" class="internal-link start-conversation">
+									$core_v2_language.GetResource('message')
+								</a>
+							</li>
+						#end
+
+						#if ($isEditablStatusMessage)
+							<li class="navigation-list-item">
+								<a href="#" class="edit-status" data-messagename="status.edit" data-statusid="$!story.ContentId" data-activityid="$!story.StoryId">$core_v2_language.GetResource('edit')</a>
+							</li>
+						#end
+
+						#if($core_v2_activityStory.CanDelete($story.StoryId))
+							<li class="navigation-list-item">
+								<a href="#" class="delete-story" data-messagename="deletestory" data-activityid="$!story.StoryId">$core_v2_language.GetResource('delete')</a>
+							</li>
+						#end
+
+						#set($convert = false)
+						#set($convert = $core_v2_ui.ConvertContent($story.ContentId, $story.ContentTypeId))
+						#if ($convert)
+							<li class="navigation-list-item">
+								$convert
+							</li>
+						#end
+
+						#if ($accessingUserIsRegistered && $canBeMarkedAsAbusive)
+							<li class="navigation-list-item">
+								$core_v2_ui.Moderate($story.ContentId, $story.ContentTypeId)
+							</li>
+						#end
+
+						<li class="navigation-list-item">
+							<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+
+			</div>
+
+			<div class="content-list-header comments"></div>
+			<div class="content-list-name comments"></div>
+
+			## likes
+			#set ($likes = false)
+			#set ($likeListOptions = "%{ ContentId = $story.ContentId, ContentTypeId = $story.ContentTypeId, PageSize = 1 }")
+			#if ($story.TypeId)
+				$likeListOptions.Add('TypeId', $story.TypeId)
+			#end
+			#set ($likes = $core_v2_like.List($likeListOptions))
+			#set ($DQ = '"')
+			#set ($likeOptions = "%{ Format = '{message}', IncludeTip = 'true' }")
+			#if ($story.TypeId)
+				$likeOptions.Add('LikeTypeId', $story.TypeId)
+			#end
+
+			## comments
+			#set ($comments = false)
+			#if ($commentsSupported)
+				#set ($isInline = true)
+				#set ($commentPageIndex = 0)
+				#set ($commentPageSize = 2)
+				#set ($commentContent = $core_v2_widget.ExecuteFile('comments.vm'))
+			#end
+
+			<ul class="content-list comments #if (($likes && $likes.TotalCount > 0) || ($comments && $comments.Count > 0) || ($replies && $replies.Count > 0)) with-content #end">
+				#if ($likes && $likes.TotalCount > 0)
+					<li class="content-item action likes with-likes">
+						$core_v2_ui.Like($story.ContentId, $story.ContentTypeId, $likeOptions)
+					</li>
+				#else
+					<li class="content-item action likes without-likes">
+						$core_v2_ui.Like($story.ContentId, $story.ContentTypeId, $likeOptions)
+					</li>
+				#end
+				#if ($commentsSupported)
+					$commentContent
+				#end
+			</ul>
+			<div class="content-list-footer comments"></div>
+		</div>
+		<div class="full-post-footer activity"></div>
+	</li>
+#end

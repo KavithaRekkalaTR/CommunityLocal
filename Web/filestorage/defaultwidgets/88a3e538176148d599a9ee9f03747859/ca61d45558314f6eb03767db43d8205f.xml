@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WordReplacements_Name}" version="11.0.0.0" description="${resource:WordReplacements_Description}" instanceIdentifier="ca61d45558314f6eb03767db43d8205f" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2020-12-11 20:17:48Z" provider="88a3e538176148d599a9ee9f03747859">
+    <contentScript language="Velocity"><![CDATA[#set($idprefix = $core_v2_widget.UniqueId("replacements"))
+
+<div class="administration-wordreplacement">
+<div id="$core_v2_widget.UniqueId('tab')">
+
+    <p>$core_v2_language.GetResource('Instructions')</p>
+
+	<form><fieldset>
+    <ul class="field-list" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('wordList'))">
+		<li class="field-item">
+			<span class="field-item-name">$core_v2_language.GetResource('WordOrPattern')</span>
+			<span class="field-item-name">$core_v2_language.GetResource('Replacement')</span>
+		</li>
+        #foreach ($censor in $context.List())
+            <li class="field-item word#if ($censor.EnableRegex && !$context.IsValidRegex($censor.Word)) invalid#end"
+                    data-wordreplacementid="$censor.Id"
+                    data-originalword="$core_v2_encoding.HtmlAttributeEncode($censor.Word)" 
+                    data-originalregex="$censor.EnableRegex.ToString().ToLower()"
+                    data-originalreplacement="$core_v2_encoding.HtmlAttributeEncode($censor.Replacement)">
+                <span class="field-item-input">
+                    <input type="text" class="pattern" value="$core_v2_encoding.HtmlAttributeEncode($censor.Word)" />
+                    <input type="checkbox" id="${idprefix}_regex_${censor.Id}" #if ($censor.EnableRegex) checked #end />
+                    <label for="${idprefix}_regex_${censor.Id}">$core_v2_language.GetResource('EnableRegex')</label>
+                </span>
+                <span class="field-item-input">
+                    <input type="text" class="replacement" value="$core_v2_encoding.HtmlAttributeEncode($censor.Replacement)" />
+                </span>
+                <a href="#" data-messagename="wordreplacement.delete">$core_v2_language.GetResource('Delete')</a>
+            </li>
+        #end
+	</ul>
+	</fieldset></form>
+	
+    <a href="#" class="button add" data-messagename="wordreplacement.add">$core_v2_language.GetResource('AddReplacement')</a>
+</div>
+</div>
+
+#registerClientTemplate($core_v2_widget.UniqueId('templateWordReplacement'))
+    <li class="field-item word" data-wordreplacementid="" data-originalword="" data-originalregex="" data-originalreplacement="">
+        <span class="field-item-input">
+            <input type="text" class="pattern" value="" />
+            <input type="checkbox" id="${idprefix}_regex_<%= UniqueId %>" />
+            <label for="${idprefix}_regex_<%= UniqueId %>">$core_v2_language.GetResource('EnableRegex')</label>
+        </span>
+        <span class="field-item-input">
+            <input type="text" class="replacement" value="" />
+        </span>
+        <a href="#" data-messagename="wordreplacement.delete">$core_v2_language.GetResource('Delete')</a>
+    </li>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.wordReplacement')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	    (function() {
+			jQuery.telligent.evolution.widgets.wordReplacement.register({
+			    newTemplate: '$core_v2_widget.UniqueId('templateWordReplacement')',
+			    newid: 0,
+			    idPrefix: '$idprefix',
+			    wordList: jQuery('#$core_v2_widget.UniqueId('wordList')'),
+				configApi: $context.JsonApi,
+                saveConfigurationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-configuration.vm'))',
+                tabElement: jQuery('#$core_v2_widget.UniqueId('tab')'),
+                tabName: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('TabName'))',
+                urls: {
+                  add: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-addupdate.vm'))',
+                  del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.vm'))',
+                  testRegex: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-testregex.vm'))'
+                },
+				text: {
+				}
+			});
+	    })();
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddReplacement">Add Replacement</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="EnableRegex">Enable regular expressions</resource>
+  <resource name="Instructions">Global word replacements can be defined below. When enabling regular expression support for a word, &lt;a href="https://wikipedia.org/wiki/Regular_expression"&gt;regular expression syntax&lt;/a&gt; can be used in the word pattern to match prefixes, suffixes, and other variations of words.</resource>
+  <resource name="Replacement">Replacement</resource>
+  <resource name="TabName">Replacements</resource>
+  <resource name="WordOrPattern">Word / Pattern</resource>
+  <resource name="WordReplacements_Description">Enables management of word replacements / censorship.</resource>
+  <resource name="WordReplacements_Name">Censorship</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

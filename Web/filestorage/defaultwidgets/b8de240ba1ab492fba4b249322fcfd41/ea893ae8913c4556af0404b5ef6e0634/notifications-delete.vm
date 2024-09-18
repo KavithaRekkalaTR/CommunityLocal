@@ -1,0 +1,10 @@
+﻿#set ($notificationIds = $core_v2_page.GetFormValue("_w_notificationIds"))
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	$context.MarkResolved($notificationIds)
+	{
+		"success": true
+	}
+#end

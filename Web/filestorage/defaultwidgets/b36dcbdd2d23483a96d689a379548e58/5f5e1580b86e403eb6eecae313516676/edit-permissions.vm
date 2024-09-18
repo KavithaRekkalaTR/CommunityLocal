@@ -1,0 +1,59 @@
+#set($clientId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_clientid')))
+#set($roleId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_roleid')))
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('createEditHeaderTemplateId'))
+#if ($client) 
+    #set($headerTemplateId = "$headerTemplateId_$client.Id")
+#end
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input user-options">
+	                <a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('EditPermissions_Instructions')</p>
+
+<form><fieldset class="field-list">
+<ul class="field-list" id="$core_v2_widget.UniqueId('permissions')">
+    #foreach($permission in $context.GetPermissions($clientId, $roleId))   
+        <li class="field-item">
+            <span class="field-item-input">
+                #set($id = "$core_v2_widget.UniqueId('permission')_${permission.Id.ToString()}")
+                <input type="checkbox" id="$id" #if ($permission.IsAllowed) checked="checked" #end data-permissionid="$permission.Id.ToString()" />
+                <label for="$id">$permission.Name</label>
+            </span>
+            <span class="field-item-description">$!permission.Description</span>
+        </li>
+    #end
+</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.oauthClientEditPermissions')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('edit-permissions-ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+      jQuery(function(j){
+          jQuery.telligent.evolution.widgets.oauthClientsEditPermissions.register({
+            clientId: '$clientId',
+            roleId: $roleId,
+            headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+            fields: {
+                permissionList: jQuery('#$core_v2_widget.UniqueId('permissions')')
+            },
+            urls: {
+                save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-savepermissions.jsm'))'
+            },
+            text: {
+                permissionsSavedSuccessfully: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PermissionsSavedSuccessfully'))'
+            }
+          });
+      });
+	</script>
+#end

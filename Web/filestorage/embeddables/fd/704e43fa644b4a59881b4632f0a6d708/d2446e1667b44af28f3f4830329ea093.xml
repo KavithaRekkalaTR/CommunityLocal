@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<embeddables>
+  <embeddable name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" id="d2446e1667b44af28f3f4830329ea093" lastModified="2022-01-04 19:54:12Z" provider="704e43fa-644b-4a59-881b-4632f0a6d708" isCacheable="true" varyCacheByUser="true" category="">
+    <restScopes />
+    <contentScript language="Velocity"><![CDATA[#set ($navigationItems = $core_v2_customNavigation.Deserialize($core_v2_widget.GetCustomValue('navigation', '')))
+#if (!$navigationItems || $navigationItems.Count == 0)
+	$core_v2_widget.Hide()
+#end
+
+#set ($wrap = false)
+#if ($core_v2_widget.GetStringValue('layout', 'nowrap') == 'wrap')
+	#set ($wrapItems = $core_v2_widget.GetStringValue('wrapItems', '4'))
+	#set ($wrap = "wrap-${wrapItems}")
+#end
+
+#if ($context_v2_embeddable.RenderTarget == 'Web')
+	#foreach ($link in $navigationItems)
+	#beforeall
+		<ul class="navigation-tile-list #if ($wrap) $wrap #end">
+	#each
+		<li class="navigation-tile-list-item">
+			#set($avatarHtml = false)
+			#set($avatarHtml = $core_v2_ui.GetResizedImageHtml($link.AvatarUrl, 64, 64, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop' }"))
+			<a href="$core_v2_encoding.HtmlAttributeEncode($link.Url)" class="navigation-tile #if($link.IsSelected) selected#end #if($avatarHtml) with-avatar #end">
+				#if ($avatarHtml)
+					<span class="avatar">$avatarHtml</span>
+				#end
+				<h3 class="name">$link.Label</h3>
+				<span class="description">$!link.Description</span>
+			</a>
+
+			#if ($link.Children)
+				#foreach ($subLink in $link.Children)
+				#beforeall
+					<ul class="navigation-tile-link-list">
+				#each
+					<li class="navigation-tile-link-item">
+						#set($avatarHtml = false)
+						#set($avatarHtml = $core_v2_ui.GetResizedImageHtml($subLink.AvatarUrl, 64, 64, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop' }"))
+						 <a href="$core_v2_encoding.HtmlAttributeEncode($subLink.Url)" class="navigation-tile-link #if($subLink.IsSelected) selected#end #if($avatarHtml) with-avatar #end">
+							#if ($avatarHtml)
+								<span class="avatar">$avatarHtml</span>
+							#end
+							<h4 class="name">$subLink.Label</h3>
+							<span class="description">$!subLink.Description</span>
+						</a>
+					</li>
+				#afterall
+					</ul>
+				#end
+			#end
+		</li>
+	#afterall
+		</ul>
+	#end
+#else
+	#foreach ($link in $navigationItems)
+	#beforeall
+		<ul>
+	#each
+		#set($delimiter = '')
+		#if ($link.Description && $link.Description.Length > 0)
+			#set($delimiter = ': ')
+		#end
+		#if ($link.IsSelected)
+			<li>
+				${link.Label}${delimiter}
+		#else
+			<li>
+				<a href="$core_v2_encoding.HtmlAttributeEncode($link.Url)">$link.Label</a>$delimiter
+		#end
+			$!link.Description
+			#if ($link.Children)
+				#foreach ($subLink in $link.Children)
+				#beforeall
+					<ul>
+				#each
+					#set($delimiter = '')
+					#if ($link.Description && $link.Description.Length > 0)
+						#set($delimiter = ': ')
+					#end
+					#if ($link.IsSelected)
+						<li>
+							${link.Label}${delimiter}
+					#else
+						<li>
+							<a href="$core_v2_encoding.HtmlAttributeEncode($link.Url)">$link.Label</a>$delimiter
+					#end
+						$!link.Description
+					</li>
+				#afterall
+					</ul>
+				#end
+			#end
+
+		</li>
+	#afterall
+			</ul>
+		</div>
+	#end
+#end]]></contentScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="field_options">
+		<property id="navigation" labelResourceName="field_navigation" descriptionResourceName="field_navigation_description" dataType="Custom" template="core_v2_siteCustomNavigation" navigationType="site" maxDepth="2" enableAvatars="true" enableDescriptions="true" />
+	<property id="layout" labelResourceName="layout" dataType="String" defaultValue="nowrap">
+		<propertyValue value="nowrap" labelResourceName="layout_nowrap" propertiesToHide="wrapItems" />
+		<propertyValue value="wrap" labelResourceName="layout_wrap" propertiesToShow="wrapItems" />
+	</property>
+	<property id="wrapItems" labelResourceName="wrapItems" defaultValue="4" dataType="String">
+		<propertyValue value="1" labelText="1" />
+		<propertyValue value="2" labelText="2" />
+		<propertyValue value="3" labelText="3" />
+		<propertyValue value="4" labelText="4" />
+		<propertyValue value="5" labelText="5" />
+		<propertyValue value="6" labelText="6" />
+		<propertyValue value="7" labelText="7" />
+		<propertyValue value="8" labelText="8" />
+		<propertyValue value="9" labelText="9" />
+		<propertyValue value="10" labelText="10" />
+		<propertyValue value="11" labelText="11" />
+		<propertyValue value="12" labelText="12" />
+		<propertyValue value="13" labelText="13" />
+		<propertyValue value="14" labelText="14" />
+		<propertyValue value="15" labelText="15" />
+		<propertyValue value="16" labelText="16" />
+		<propertyValue value="17" labelText="17" />
+		<propertyValue value="18" labelText="18" />
+		<propertyValue value="19" labelText="19" />
+		<propertyValue value="20" labelText="20" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">A list of navigation links.</resource>
+  <resource name="field_navigation">Links</resource>
+  <resource name="field_navigation_description">Add and organize links.</resource>
+  <resource name="field_options">Options</resource>
+  <resource name="layout_wrap">Wrap multiple rows</resource>
+  <resource name="layout">Layout</resource>
+  <resource name="layout_nowrap">Single row</resource>
+  <resource name="Name">Navigation List</resource>
+  <resource name="Navigation">Navigation</resource>
+  <resource name="wrapItems">Items per row</resource>
+</language>]]></languageResources>
+    <previewImage name="navigation.png" />
+    <iconImage name="navigation.png" />
+  </embeddable>
+</embeddables>

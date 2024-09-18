@@ -1,0 +1,9 @@
+#set ($inSidebar = false)
+#set ($region = $core_v2_widget.RegionName.ToLower())
+#set ($layout = $core_v2_page.Layout.ToLower())
+
+#if ($region == 'split-sidebar-left' || $region == 'split-sidebar-right' || $region == 'left-sidebar') 
+    #set ($inSidebar = true)
+#elseif ($region == 'right-sidebar' && !$layout.Contains('split-content') && !$layout.Contains('split-sidebar'))
+    #set ($inSidebar = true)
+#end

@@ -1,0 +1,419 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_CreateEditPost_Name}" version="12.0.0.0" description="${resource:Forums_CreateEditPost_Description}" instanceIdentifier="4a28ceff9af348d8956a4e59d92ffa32" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="create-edit-post" lastModified="2021-12-15 18:35:21Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($forum = false)
+#set($forum = $core_v2_forum.Current)
+
+#set ($supportsQuestionThreads = false)
+#foreach ($threadType in $forum.AllowedThreadTypes)
+	#if ($threadType == 'QuestionAndAnswer')
+		#set($supportsQuestionThreads = true)
+	#end
+#end
+
+#set($threadOrReplyType = 'thread')
+#set($threadOrReply = false)
+#set($replyToThreadOrReply = false)
+#set($replyToThread = false)
+#set($contentTypeId = $core_v2_forumThread.ContentTypeId)
+#if($core_v2_forumReply.Current)
+	#set($threadOrReply = $core_v2_forumReply.Current)
+	#set($threadOrReplyType = 'reply')
+	#set($contentTypeId = $core_v2_forumReply.ContentTypeId)
+	#if (!$core_v3_permission.CheckPermission($core_v2_forumPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $threadOrReply.ContentId, ContentTypeId = $contentTypeId }").IsAllowed)
+		$core_v2_widget.Hide()
+	#end
+	#set($replyToThread = $core_v2_forumThread.Get($threadOrReply.ThreadId))
+#elseif($core_v2_forumThread.Current)
+	#set($threadOrReply = $core_v2_forumThread.Current)
+	#set($threadOrReplyType = 'thread')
+	#set($contentTypeId = $core_v2_forumThread.ContentTypeId)
+	#if(!$core_v3_permission.CheckPermission($core_v2_forumPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $threadOrReply.ContentId, ContentTypeId = $contentTypeId }").IsAllowed)
+		$core_v2_widget.Hide()
+	#end
+	#set($replyToThread = $core_v2_forumThread.Current)
+#elseif($core_v2_forumReply.CurrentParent)
+	#set($replyToThreadOrReply = $core_v2_forumReply.CurrentParent)
+	#set($replyToType = 'reply')
+	#set($threadOrReplyType = 'reply')
+	#set($contentTypeId = $core_v2_forumReply.ContentTypeId)
+	#if (!$core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $core_v2_user.Accessing.Id, "%{ ContentId = $replyToThreadOrReply.ContentId, ContentTypeId = $contentTypeId }").IsAllowed)
+		$core_v2_widget.Hide()
+	#end
+	#set($replyToThread = $core_v2_forumThread.Get($replyToThreadOrReply.ThreadId))
+#elseif ($core_v2_forumThread.CurrentParent)
+	#set($replyToThreadOrReply = $core_v2_forumThread.CurrentParent)
+	#set($replyToType = 'thread')
+	#set($threadOrReplyType = 'reply')
+	#set($contentTypeId = $core_v2_forumThread.ContentTypeId)
+	#if (!$core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $core_v2_user.Accessing.Id, "%{ ContentId = $replyToThreadOrReply.ContentId, ContentTypeId = $contentTypeId }").IsAllowed)
+		$core_v2_widget.Hide()
+	#end
+	#set($replyToThread = $replyToThreadOrReply)
+#elseif(!$core_v3_permission.CheckPermission($core_v2_forumPermissions.CreatePost, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+	$core_v2_widget.Hide()
+#end
+
+#if(!$replyToThreadOrReply)
+	#if($core_v2_forumReply.CurrentParent)
+		#set($replyToThreadOrReply = $core_v2_forumReply.CurrentParent)
+	#elseif ($core_v2_forumThread.CurrentParent)
+		#set($replyToThreadOrReply = $core_v2_forumThread.CurrentParent)
+	#end
+#end
+
+#set($uploadUrl = false)
+#set($uploadUrl = $core_v2_forumUrls.UploadAttachment($forum.Id))
+
+#set($tempData = false)
+#if ($core_v2_page.GetQueryStringValue('tsid'))
+	#set($tempDataString = false)
+	#set($tempDataString = $core_v2_utility.GetTemporaryData($core_v2_page.GetQueryStringValue('tsid')))
+	#if($tempDataString)
+		#set($tempData = $core_v2_page.ParseQueryString($tempDataString))
+	#end
+#end
+
+<form><fieldset>
+	#if ($threadOrReply)
+		<h1>$threadOrReply.Subject</h1>
+	#elseif ($threadOrReplyType == 'reply')
+		<h1>$core_v2_language.FormatString($core_v2_language.GetResource('ReplyTo'), $replyToThreadOrReply.Subject)</h1>
+	#elseif ($forum.AllowedThreadTypes.Count > 1)
+		<h1>$core_v2_language.FormatString($core_v2_language.GetResource('NewQuestionOrDiscussion'), $forum.Name)</h1>
+	#elseif ($forum.AllowedThreadTypes.get_Item(0) == 'QuestionAndAnswer')
+		<h1>$core_v2_language.FormatString($core_v2_language.GetResource('NewQuestion'), $forum.Name)</h1>
+	#else
+		<h1>$core_v2_language.FormatString($core_v2_language.GetResource('NewDiscussion'), $forum.Name)</h1>
+	#end
+	<ul class="field-list">
+		#if ($threadOrReplyType == 'thread' && $core_v2_forumConfiguration.EnableThreadStatus && $forum.AllowedThreadTypes.Count > 1)
+			#set($threadType = $forum.DefaultThreadType)
+			#set($threadType = $threadOrReply.ThreadType)
+			<li class="field-item post-type">
+				<label for="$core_v2_widget.UniqueId('TypeQuestionAndAnswer')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_PostType')</label>
+				<span class="field-item-input"><input type="radio" name="$core_v2_widget.UniqueId('ThreadType')" id="$core_v2_widget.UniqueId('TypeQuestionAndAnswer')" value="QuestionAndAnswer"#if($threadType == 'QuestionAndAnswer') checked="checked"#end /><label for="$core_v2_widget.UniqueId('TypeQuestionAndAnswer')">$core_v2_language.GetResource('CreateEditPost_Question')</label></span>
+				<span class="field-item-input"><input type="radio" name="$core_v2_widget.UniqueId('ThreadType')" id="$core_v2_widget.UniqueId('TypeDiscussion')" value="Discussion"#if($threadType == 'Discussion') checked="checked"#end /><label for="$core_v2_widget.UniqueId('TypeDiscussion')">$core_v2_language.GetResource('CreateEditPost_Discussion')</label></span>
+			</li>
+		#end
+
+		#if ($replyToThreadOrReply)
+			<li class="field-item reply-post">
+				<span for="$core_v2_widget.UniqueId('QuoteButton')" class="field-item-name label">
+					$core_v2_language.FormatString($core_v2_language.GetResource('CreateEditPost_ReplyFormat'), $replyToThreadOrReply.Author.DisplayName, $core_v2_language.FormatDateAndTime($replyToThreadOrReply.Date))
+				</span>
+				<span class="field-item-description user-defined-markup" id="$core_v2_widget.UniqueId('QuoteText')">$replyToThreadOrReply.Body('WebQuote')</span>
+				<span class="field-item-input"><a href="#" id="$core_v2_widget.UniqueId('QuoteButton')">$core_v2_language.GetResource('Button_Quote')</a></span>
+			</li>
+		#end
+
+		#if ($threadOrReplyType == 'thread')
+			<li class="field-item post-subject">
+				<label for="$core_v2_widget.UniqueId('PostSubject')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_Inline7')</label>
+				<span class="field-item-input">
+					<textarea maxlength="256" rows="1" class="scaled" id="$core_v2_widget.UniqueId('PostSubject')">#if($threadOrReply)$!core_v2_encoding.HtmlEncode($threadOrReply.Subject)#elseif($tempData)$!core_v2_encoding.HtmlEncode($tempData.Value('title'))#end</textarea>
+				</span>
+			   <span class="field-item-validation" style="display: none;"></span>
+			</li>
+		#end
+
+		<li class="field-item post-body">
+			<label for="$core_v2_widget.UniqueId('PostBody')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_Description')</label>
+			<span class="field-item-input">
+				#set($body = '')
+				#if($threadOrReply)
+					#set($body = $threadOrReply.Body('raw'))
+				#elseif($tempData)
+					#set($body = $tempData.Value('body'))
+				#end
+				$core_v2_editor.Render('PostBody', "%{Width='100%', Value=$body, ContentTypeId=$contentTypeId, ApplicationId=$forum.ApplicationId, ApplicationTypeId=$core_v2_forum.ApplicationTypeId}")
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+		#if ($threadOrReplyType == 'thread')
+			<li class="field-item post-tags">
+				<label for="$core_v2_widget.UniqueId('TagBox')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_Tags')</label>
+				<span class="field-item-input">
+					<input id="$core_v2_widget.UniqueId('TagBox')" type="text" value="$core_v2_utility.Join(', ', $threadOrReply.Tags)" size="70" />
+				</span>
+			</li>
+		#end
+
+		#if (!$threadOrReply && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+			<li class="field-item post-subscribe">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('SubscribeToThread')" checked="checked" />
+					<label for="$core_v2_widget.UniqueId('SubscribeToThread')">$core_v2_language.GetResource('CreateEditPost_SubscribeToThread')</label>
+				</span>
+			</li>
+		#end
+
+		#if ($threadOrReply && $core_v2_forumConfiguration.DisplayEditNotes)
+			<li class="field-item edit-notes">
+				<label for="$core_v2_widget.UniqueId('EditNotesBody')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_EditNotes')</label>
+				<span class="field-item-input">
+					<textarea id="$core_v2_widget.UniqueId('EditNotesBody')" cols="90" rows="5"></textarea>
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_widget.UniqueId('CurrentEditNotesBody')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_CurrentEditNotes')</label>
+				<span class="field-item-input">
+					<textarea readonly="readonly" id="$core_v2_widget.UniqueId('CurrentEditNotesBody')" cols="90" rows="5">$!threadOrReply.EditNotes</textarea>
+				</span>
+			</li>
+		#end
+
+		## Only show attachment form for threads/replies that already have them
+		#if ($uploadUrl && $!threadOrReply.File && ($core_v3_permission.CheckPermission($core_v2_forumPermissions.AttachFileLocal, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed || $core_v3_permission.CheckPermission($core_v2_forumPermissions.AttachFileRemote, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ContentTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed))
+			<li class="field-item post-attachment">
+				<span class="label field-item-name" for="$core_v2_widget.UniqueId('AddUpdateAttachment')">$core_v2_language.GetResource('CreateEditPost_Attachment')</span>
+				<span class="field-item-input add-attachment">
+					<span id="$core_v2_widget.UniqueId('FileName')">$!threadOrReply.File.FileName</span>
+					<a href="#" class="internal-link add-attachment" id="$core_v2_widget.UniqueId('AddUpdateAttachment')">#if ($threadOrReply && $threadOrReply.File) $core_v2_language.GetResource('CreateEditPost_UpdateAttachment')#else $core_v2_language.GetResource('CreateEditPost_AddAttachment')#end</a>
+				</span>
+				<span class="field-item-input remove-attachment"><a href="#" id="$core_v2_widget.UniqueId('RemoveAttachment')">$core_v2_language.GetResource('CreateEditPost_RemoveAttachment')</a></span>
+			</li>
+		#end
+
+		#if ($replyToThreadOrReply)
+			#if($replyToThread && $replyToThread.ThreadType == 'QuestionAndAnswer')
+				<li class="field-item post-answer-type">
+					<span class="field-item-input">
+						<input type="checkbox" id="$core_v2_widget.UniqueId('IsSuggestedAnswer')" #if(($threadOrReply && $threadOrReply.IsSuggestedAnswer) || ($tempData && $tempData.Value('issuggestion') == 'True')) checked="checked"#end />
+						<label for="$core_v2_widget.UniqueId('IsSuggestedAnswer')">$core_v2_language.GetResource('CreateEditPost_MakeSuggestedAnswer')</label>
+					</span>
+				</li>
+			#end
+		#end
+
+		#if ($threadOrReplyType == 'thread' && $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReviewAbuse, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+			<li class="field-item post-lock">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('IsLocked')"#if($threadOrReply.IsLocked) checked="checked"#end #if(!$core_v3_permission.CheckPermission($core_v2_forumPermissions.PinPost, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ContentTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed) readonly="readonly"#end />
+					<label for="$core_v2_widget.UniqueId('IsLocked')">$core_v2_language.GetResource('CreateEditPost_IsLocked')</label>
+				</span>
+			</li>
+		#end
+
+		#if ($threadOrReplyType == 'thread' && $core_v3_permission.CheckPermission($core_v2_forumPermissions.PinPost, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+			#set($daysFromToday = 0)
+			#set($daysFromToday = $threadOrReply.StickyDate.Date.Subtract($core_v2_utility.CurrentDate.Date).TotalDays)
+			#if(!$threadOrReply.IsSticky)
+				#set($daysFromToday = 0)
+			#end
+			<li class="field-item post-stickiness">
+				<label for="$core_v2_widget.UniqueId('PinnedPost')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_Stickiness')</label>
+				<span class="field-item-input">
+					<select class="ui-select" id="$core_v2_widget.UniqueId('PinnedPost')">
+						<option value="0"#if($daysFromToday <= 0) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_0')</option>
+						<option value="1"#if($daysFromToday > 0 && $daysFromToday <= 2) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_1')</option>
+						<option value="3"#if($daysFromToday > 2 && $daysFromToday <= 4) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_3')</option>
+						<option value="7"#if($daysFromToday > 4 && $daysFromToday <= 8) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_7')</option>
+						<option value="14"#if($daysFromToday > 8 && $daysFromToday <= 15) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_14')</option>
+						<option value="30"#if($daysFromToday > 16 && $daysFromToday <= 31) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_30')</option>
+						<option value="90"#if($daysFromToday > 31 && $daysFromToday <= 91) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_90')</option>
+						<option value="180"#if($daysFromToday > 91 && $daysFromToday <= 180) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_180')</option>
+						<option value="360"#if($daysFromToday > 181 && $daysFromToday <= 361) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_360')</option>
+						#if ($core_v3_permission.CheckPermission($core_v2_forumPermissions.PinPostForever, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+							<option value="999"#if($daysFromToday > 361) selected="selected"#end>$core_v2_language.GetResource('CreateEditPost_Sticky_999')</option>
+						#end
+					</select>
+				</span>
+			</li>
+		#end
+	</ul>
+</fieldset></form>
+
+<fieldset class="save-post-form">
+	<ul class="field-list">
+		<li class="field-item create-post">
+			<span class="field-item-input">
+				<a href="#" class="internal-link save-post disabled button">
+					<span></span>$core_v2_language.GetResource('CreateEditPost_PostButton')
+				</a>
+    			<a id="$core_v2_widget.UniqueId('cancel')" href="javascript:void(0);" class="internal-link inline-button cancel-post">$core_v2_language.GetResource('Cancel')</a>
+				<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.createEditPost')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(j){
+			j.telligent.evolution.widgets.createEditPost.register({
+				forumId: $forum.Id,
+				applicationId: '$forum.ApplicationId',
+				replyId: #if($threadOrReply && $threadOrReplyType == 'reply') $threadOrReply.Id#else -1#end,
+				threadId: #if($threadOrReply && $threadOrReplyType == 'thread') $threadOrReply.Id#else -1#end,
+				replyToThreadId: #if($replyToThreadOrReply && $replyToType == 'thread') $replyToThreadOrReply.Id#elseif($replyToThreadOrReply && $replyToType == 'reply') $replyToThreadOrReply.ThreadId#elseif($threadOrReplyType == 'reply' && $threadOrReply) $threadOrReply.ThreadId#else -1#end,
+				replyToReplyId: #if($replyToThreadOrReply && $replyToType == 'reply') $replyToThreadOrReply.Id#else -1#end,
+				wrapperId: '$core_v2_widget.WrapperElementId',
+				threadTypeQA: j('#$core_v2_widget.UniqueId('TypeQuestionAndAnswer')'),
+				threadTypeDiscussion: j('#$core_v2_widget.UniqueId('TypeDiscussion')'),
+				quoteText: j('#$core_v2_widget.UniqueId('QuoteText')'),
+				quoteButton: j('#$core_v2_widget.UniqueId('QuoteButton')'),
+				replyToAuthor: #if($replyToThreadOrReply) '$core_v2_encoding.JavascriptEncode($replyToThreadOrReply.Author.DisplayName)' #else ''#end,
+				quoteInvalidSelectionText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_InvalidQuoteSelection'))',
+				subjectId: '$core_v2_widget.UniqueId('PostSubject')',
+				subjectRequiredText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_MissingSubject'))',
+				getBodyContent: function() { return $core_v2_editor.GetContentScript('PostBody') },
+				saveBodyBookmark: function() { $core_v2_editor.GetBookmarkScript('PostBody') },
+				insertBodyContent: function(html) { $core_v2_editor.GetInsertContentScript('PostBody', 'html') },
+				attachBodyChangeScript: function(f) { $core_v2_editor.GetAttachOnChangeScript('PostBody', 'f'); },
+				focusBodyContent: function() { $core_v2_editor.GetFocusScript('PostBody') },
+				bodyRequiredText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_MissingBody'))',
+				tagBox: j('#$core_v2_widget.UniqueId('TagBox')'),
+				subscribe: j('#$core_v2_widget.UniqueId('SubscribeToThread')'),
+				editNotesId: '$core_v2_widget.UniqueId('EditNotesBody')',
+				editNotesRequired: #if ($core_v2_forumConfiguration.RequireEditNotes) true#else false#end,
+				editNotesRequiredText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_EditNotesRequired'))',
+				uploadFileUrl:#if ($uploadUrl) '$core_v2_encoding.JavascriptEncode($uploadUrl)'#else null#end,
+				attachmentFileName: j('#$core_v2_widget.UniqueId('FileName')'),
+				attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_AddAttachment'))',
+				attachmentUpdateText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_UpdateAttachment'))',
+				attachmentUpdate: j('#$core_v2_widget.UniqueId('AddUpdateAttachment')'),
+				attachmentRemove: j('#$core_v2_widget.UniqueId('RemoveAttachment')'),
+				lock: j('#$core_v2_widget.UniqueId('IsLocked')'),
+				suggestAnswer: j('#$core_v2_widget.UniqueId('IsSuggestedAnswer')'),
+				sticky: j('#$core_v2_widget.UniqueId('PinnedPost')'),
+				saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+				saveErrorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateEditPost_SaveError'))',
+				searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+				suggestionHeading: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('suggestionHeading'))',
+				close: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('close'))',
+				applicationId: '$forum.ApplicationId',
+				forumThreadContentType: '$core_v2_forumThread.ContentTypeId',
+				supportsQA: #if ($supportsQuestionThreads) true #else false #end,
+	       		cancelLink: jQuery('#$core_v2_widget.UniqueId('cancel')'),
+    			cancelConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CancelConfirmation'))',
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($forum = false)
+#set($forum = $core_v2_forum.Current)
+#if ($forum && $core_v2_widget.GetBoolValue('showForumInHeader', false))
+	<a class="internal-link view-application forum" href="$core_v2_encoding.HtmlAttributeEncode($forum.Url)">$forum.Name</a>
+#else
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_CreateEditPost_Name}'))
+#end
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_CreateEditPost_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="showForumInHeader" labelResourceName="CF_ShowForumInHeader" defaultValue="false" dataType="Bool" />
+	<property id="relatedContentTypeIds" labelResourceName="RelatedContentTypes" descriptionResourceName="RelatedContentTypes_Desc" defaultValue="ContentTypeId=6b577b8c-0470-4e20-9d29-b6772bf67243&amp;ContentTypeId=ab51a545-f7a4-4570-8125-283b303f9082&amp;ContentTypeId=d6391dab-5520-42d8-95a6-6e62d1c6394e" dataType="Custom" template="core_v2_contentTypeList" isSearchable="true" strictContentTypes="true" />
+	<property id="relatedContentGroups" labelResourceName="RelatedContentGroups" descriptionResourceName="RelatedContentGroups_Desc" defaultValue="" template="core_v2_groupLookup" enableCurrent="true" maxSelections="10" format="query" dataType="Custom" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">Add</resource>
+  <resource name="ask">Ask</resource>
+  <resource name="Attachment_File">Attach a file</resource>
+  <resource name="Attachment_FileOrUrl">Attach a file or URL</resource>
+  <resource name="Attachment_Url">Attach a URL</resource>
+  <resource name="Body">Body</resource>
+  <resource name="Button_Quote">Quote</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CancelConfirmation">Are you sure you want to cancel? All unsaved changes will be lost.</resource>
+  <resource name="CF_ShowForumInHeader">Display forum link in title</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="ChangeFile">Change file</resource>
+  <resource name="Characters_Over">character(s) over the recomended length.  For best results this should shortened.</resource>
+  <resource name="Characters_Remain">character(s)</resource>
+  <resource name="close">Close</resource>
+  <resource name="CreateEditPost_AddAttachment">Add Attachment</resource>
+  <resource name="CreateEditPost_Attachment">File attachment</resource>
+  <resource name="CreateEditPost_CurrentEditNotes">Current Edit Notes</resource>
+  <resource name="CreateEditPost_Description">Description</resource>
+  <resource name="CreateEditPost_Discussion">Discussion</resource>
+  <resource name="CreateEditPost_EditNotes">Edit Notes</resource>
+  <resource name="CreateEditPost_EditNotesRequired">Edit notes are required</resource>
+  <resource name="CreateEditPost_Inline7">Subject</resource>
+  <resource name="CreateEditPost_InvalidQuoteSelection">When selecting text to quote, only text from the original post can be selected. Please correct or remove your text selection.</resource>
+  <resource name="CreateEditPost_IsLocked">Lock (disable replying)</resource>
+  <resource name="CreateEditPost_MakeSuggestedAnswer">Suggest as an answer</resource>
+  <resource name="CreateEditPost_MissingBody">This field is required and quote blocks must match.</resource>
+  <resource name="CreateEditPost_MissingSubject">This field is required.</resource>
+  <resource name="CreateEditPost_PostButton"> Post </resource>
+  <resource name="CreateEditPost_PostType">This is a</resource>
+  <resource name="CreateEditPost_Question">Question</resource>
+  <resource name="CreateEditPost_RemoveAttachment">Remove</resource>
+  <resource name="CreateEditPost_ReplyFormat">{0} wrote the following post at {1}:</resource>
+  <resource name="CreateEditPost_SaveError">An error occurred while attempting to save this post.</resource>
+  <resource name="CreateEditPost_Stickiness">Prioritize at the top of lists</resource>
+  <resource name="CreateEditPost_Sticky_0">(Not prioritized)</resource>
+  <resource name="CreateEditPost_Sticky_1">1 Day</resource>
+  <resource name="CreateEditPost_Sticky_14">2 Weeks</resource>
+  <resource name="CreateEditPost_Sticky_180">6 Months</resource>
+  <resource name="CreateEditPost_Sticky_3">3 Days</resource>
+  <resource name="CreateEditPost_Sticky_30">1 Month</resource>
+  <resource name="CreateEditPost_Sticky_360">1 Year</resource>
+  <resource name="CreateEditPost_Sticky_7">1 Week</resource>
+  <resource name="CreateEditPost_Sticky_90">3 Months</resource>
+  <resource name="CreateEditPost_Sticky_999">Forever</resource>
+  <resource name="CreateEditPost_SubscribeToThread">Notify me when someone replies to this post</resource>
+  <resource name="CreateEditPost_Tags">Tags</resource>
+  <resource name="CreateEditPost_UpdateAttachment">Update</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteConfirmation">Are you sure you want to delete this post?</resource>
+  <resource name="DraftSaved">Your draft has been saved. To edit or publish it later, manage the blog and find the post in the posts list.</resource>
+  <resource name="Forums_AskAQuestion">Forums - Ask a Question</resource>
+  <resource name="Forums_AskAQuestion_Description">Creates or finds an existing question thread</resource>
+  <resource name="Forums_CreateEditPost_Description">Creates or edits a forum post.</resource>
+  <resource name="Forums_CreateEditPost_Name">Forums - Create/Edit Post</resource>
+  <resource name="Meta_Heading">Search Engine Optimization</resource>
+  <resource name="Meta_Keywords">Keywords</resource>
+  <resource name="Meta_KeywordsDescription">Comma-separated list of words that uniquely relate to this content. These can be used by search engines to improve search results.</resource>
+  <resource name="Meta_Title">Title</resource>
+  <resource name="Meta_TitleDescription">Adjust the title used by search engines when referencing this content. If not set, the blog post’s name will be used.  For best results custom titles should be 55 characters or less.</resource>
+  <resource name="NewDiscussion">Start a Discussion in {0}</resource>
+  <resource name="NewPost">New Post to {0}</resource>
+  <resource name="NewQuestion">Ask a Question in {0}</resource>
+  <resource name="NewQuestionOrDiscussion">Ask a Question or Start a Discussion in {0}</resource>
+  <resource name="noDirectMatches">No similar questions were found.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="PageEdit_PleaseEnterContent">This field is required.</resource>
+  <resource name="Post_CrossPosting">Post this entry on my other blogs</resource>
+  <resource name="Post_Subscribe">Notify me when someone comments on this post</resource>
+  <resource name="Post_Summary_Description">Post summaries are used when displaying posts in lists or RSS feeds.  Additionally this summary is exposed to search engines and facebook. For best results, custom summaries should be 155 characters or less.</resource>
+  <resource name="PostImage_Description">This image will be used as a thumbnail in blog post list view and as the image exposed to Open Graph. </resource>
+  <resource name="PostImage_File">Post Image</resource>
+  <resource name="PublicationDate">Publication Date</resource>
+  <resource name="Publish">Post</resource>
+  <resource name="question">Ask a question...</resource>
+  <resource name="RelatedContentGroups">Load Suggested Content From</resource>
+  <resource name="RelatedContentGroups_Desc">Select groups from which to load suggested content. If no groups are selected, content across the entire community could be suggested.</resource>
+  <resource name="RelatedContentTypes">Suggested Content</resource>
+  <resource name="RelatedContentTypes_Desc">Content matching the question found in other content of the following types will be presented with forum-related suggestions.</resource>
+  <resource name="relatedHeading">The following is similar. Do any of these answer your question?</resource>
+  <resource name="Remove">Remove</resource>
+  <resource name="RemoveFile">Remove file</resource>
+  <resource name="ReplyTo">Reply to {0}</resource>
+  <resource name="RequiredField">This field is required.</resource>
+  <resource name="SaveDraft">Save as Draft</resource>
+  <resource name="slug_description">The title of your post is used to create the URL. If you want to use different keywords in the URL enter it below.</resource>
+  <resource name="slug_name">Post URL</resource>
+  <resource name="suggestionHeading">The following questions were similar. Do they answer your question?</resource>
+  <resource name="Summary_Automatic">Automatic Summary</resource>
+  <resource name="Summary_Custom">Custom Summary</resource>
+  <resource name="Summary_Name">Post Summary</resource>
+  <resource name="Summary_None">No Post Summary</resource>
+  <resource name="Title">Title</resource>
+  <resource name="UploadFile">Upload file</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="Write">Write</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="ad5b66803de14b2d9ee9cfe27ecea026" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

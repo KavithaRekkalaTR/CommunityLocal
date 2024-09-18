@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="d18060af16e64ae68401cd6e67ae7661" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="api-key-management" lastModified="2022-01-31 20:27:20Z" provider="2c01315d585c4a7dad83084f05e49fba">
+    <contentScript language="Velocity"><![CDATA[
+<link rel="stylesheet" href="$core_v2_widget.GetExecutedFileUrl('style.less')" />
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" data-messagename="apikeys.add" class="button">$core_v2_language.GetResource('add')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<div id="$core_v2_widget.UniqueId('apiKeyList')">
+    $core_v2_widget.ExecuteFile('callback-list.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.manageApiKeys')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.manageApiKeys.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        list: jQuery('#$core_v2_widget.UniqueId('apiKeyList')')  
+		    },
+		    urls: {
+		        save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.jsm'))',
+		        addEdit: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-addedit.vm'))',
+		        del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.jsm'))',
+		        regenerateSecret: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-regeneratesecret.jsm'))',
+		        list: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.vm'))'
+		    },
+			text: {
+				enable: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('enable'))',
+				disable: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('disable'))',
+				enabled: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('enabled'))',
+				disabled: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('disabled'))',
+				verifyDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('verify-delete'))',
+				deletedSuccessfully: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleted-successfully'))',
+				verifyRegenerateSecret: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('verify-regenerate-secret'))',
+				secretRegeneratedSuccessfully: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('secret-regenerated-successfully'))',
+				addApiKey: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title-add'))',
+				editApiKey: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title-edit'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="add">Add</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="DefaultModify">Uncategorized Modify Endpoints</resource>
+  <resource name="DefaultModify_Description">The following endpoints do not define a specific categorization or scope and support modifying data.</resource>
+  <resource name="DefaultRead">Uncategorized Read Endpoints</resource>
+  <resource name="DefaultRead_Description">The following endpoints do not define a specific categorization or scope and support reading data.</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="deleted-successfully">'{0}' was deleted successfully.</resource>
+  <resource name="Description">Manage keys used to access the REST API.</resource>
+  <resource name="disable">Disable</resource>
+  <resource name="disabled">Disabled</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="enable">Enable</resource>
+  <resource name="enabled">Enabled</resource>
+  <resource name="Entity">Entity</resource>
+  <resource name="Find">Find...</resource>
+  <resource name="Modify">Modify</resource>
+  <resource name="Modify_Label">Modify {0}</resource>
+  <resource name="more">More</resource>
+  <resource name="Name">Name</resource>
+  <resource name="no-scopes-found">No matching scopes were found.</resource>
+  <resource name="note-secret">Note the secret for this API key. This can only be read when generated. Store it in a secure location.</resource>
+  <resource name="Read">Read</resource>
+  <resource name="Read_Label">Read {0}</resource>
+  <resource name="regenerate-secret">Regenerate Secret</resource>
+  <resource name="Save">Save</resource>
+  <resource name="saved-successfully">The API Key was saved successfully.</resource>
+  <resource name="scopes-instructions">Scopes define which APIs this API Key has access to use. Data access within specific APIs is also subject to the granted permissions of the authenticated user making use of the API Key.</resource>
+  <resource name="Secret">Secret</resource>
+  <resource name="Secret_Description">The secret used to authorize this API key to with the REST API.</resource>
+  <resource name="Secret_Hashed">The secret is stored in a secure format that prevents it from being displayed here. To generate a new key and see its value, select 'Regenerate Secret.'</resource>
+  <resource name="secret-regenerated-successfully">The secret for '{0}' has been regenerated successfully. </resource>
+  <resource name="tab-key">API Key</resource>
+  <resource name="tab-scopes">Allowed Scopes</resource>
+  <resource name="Title">API Keys</resource>
+  <resource name="title-add">Add API Key</resource>
+  <resource name="title-edit">Edit '{0}'</resource>
+  <resource name="verify-delete">Are you sure you want to delete '{0}'?</resource>
+  <resource name="verify-regenerate-secret">Are you sure you want to regenerate the secret for '{0}'? All existing usage of this key will be invalidated.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

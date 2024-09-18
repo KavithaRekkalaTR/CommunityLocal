@@ -1,0 +1,26 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+	#set($scheduleType = $core_v2_page.GetFormValue('ScheduleType'))
+	#set($options = "%{}")
+	$options.Add('ScheduleSeconds', $core_v2_page.GetFormValue('ScheduleSeconds'))
+	$options.Add('ScheduleMinutes', $core_v2_page.GetFormValue('ScheduleMinutes'))
+	$options.Add('ScheduleHours', $core_v2_page.GetFormValue('ScheduleHours'))
+	$options.Add('ScheduleDailyTime', $core_v2_page.GetFormValue('ScheduleDailyTime'))
+	$options.Add('ScheduleDailySunday', $core_v2_page.GetFormValue('ScheduleDailySunday'))
+	$options.Add('ScheduleDailyMonday', $core_v2_page.GetFormValue('ScheduleDailyMonday'))
+	$options.Add('ScheduleDailyTuesday', $core_v2_page.GetFormValue('ScheduleDailyTuesday'))
+	$options.Add('ScheduleDailyWednesday', $core_v2_page.GetFormValue('ScheduleDailyWednesday'))
+	$options.Add('ScheduleDailyThursday', $core_v2_page.GetFormValue('ScheduleDailyThursday'))
+	$options.Add('ScheduleDailyFriday', $core_v2_page.GetFormValue('ScheduleDailyFriday'))
+	$options.Add('ScheduleDailySaturday', $core_v2_page.GetFormValue('ScheduleDailySaturday'))
+
+	#set ($response = $context.Save($scheduleType, $options))
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success": true
+	}
+#end

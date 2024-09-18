@@ -1,0 +1,14 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($collectionIdString = $core_v2_page.GetQueryStringValue('w_collectionid'))
+	#set($collectionId = $core_v2_utility.ParseGuid($collectionIdString))
+
+	#set($response = $context.DeleteCollection($collectionId))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "collectionId":"$collectionId"}
+#end

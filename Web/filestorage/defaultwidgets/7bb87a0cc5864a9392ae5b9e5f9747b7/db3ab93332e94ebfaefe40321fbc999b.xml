@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SEO_Name}" version="12.0.0.0" description="${resource:SEO_Description}" instanceIdentifier="db3ab93332e94ebfaefe40321fbc999b" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="" lastModified="2022-09-12 19:42:02Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[      #set($page = false)
+      #set($page = $core_v2_customPage.Current)
+
+      #if (!$page)
+        $core_v2_widget.Hide()
+      #end
+
+      #set($pageTitle =  $core_v2_widget.GetStringValue("pageTitle",""))
+      #if($pageTitle != "")
+        $core_v2_page.SetTitle($core_v2_encoding.HtmlEncode($pageTitle),false,false)
+      #else
+        $core_v2_page.SetTitle($core_v2_encoding.HtmlEncode($page.Name),false,false)
+      #end
+
+      #set($metaKeywords =  $core_v2_widget.GetStringValue("metaKeywords",""))
+      #if($metaKeywords != "")
+        $core_v2_page.AddMetaKeywords($core_v2_encoding.HtmlAttributeEncode($metaKeywords))
+      #end
+
+      #set($metaDescription =  $core_v2_widget.GetStringValue("metaDescription",""))
+      #if($metaDescription != "")
+        $core_v2_page.AddMetaDescription($core_v2_encoding.HtmlAttributeEncode($metaDescription))
+      #end
+
+      #set($canonicalUrl =  $core_v2_widget.GetUrlValue("canonicalUrl",""))
+      #set($enableCanonicalUrlQueryStringRegistrations = $core_v2_utility.ParseBool($core_v2_widget.GetStringValue('enableCanonicalUrlQueryStringRegistrations', 'true')))
+      #if($canonicalUrl != "" || !$enableCanonicalUrlQueryStringRegistrations)
+        $core_v2_page.SetCanonicalLink($canonicalUrl, "%{ EnableQueryStringRegistrations=$enableCanonicalUrlQueryStringRegistrations }")
+      #end
+      
+      #set($canonicalUrlQueryStringKeysToIgnore = $core_v2_widget.GetStringValue('canonicalUrlQueryStringKeysToIgnore', ''))
+      #if ($enableCanonicalUrlQueryStringRegistrations && $canonicalUrlQueryStringKeysToIgnore != '')
+        #foreach($key in $core_v2_utility.Split($core_v2_utility.NewLine, $canonicalUrlQueryStringKeysToIgnore))
+            $core_v2_page.IgnoreRegisteredCanonicalQueryStringKey($key)
+        #end
+      #end
+
+      $core_v2_page.AddOpenGraphNamespace("website", "http://ogp.me/ns/website#")
+      $core_v2_page.AddOpenGraphMetaTag("og:type","website")
+      $core_v2_page.AddOpenGraphMetaTag("og:url", $core_v2_page.AbsoluteUrl($core_v2_urls.Custom($page.Name)))
+      #set($ogTitle =  $core_v2_widget.GetStringValue("openGraphTitle",""))
+      #if($ogTitle != "")
+        $core_v2_page.AddOpenGraphMetaTag("og:title", $core_v2_encoding.HtmlAttributeEncode($ogTitle))
+      #end
+
+      #set($ogDescription =  $core_v2_widget.GetStringValue("openGraphDescription",""))
+      #if($ogDescription != "")
+        $core_v2_page.AddOpenGraphMetaTag("og:description", $core_v2_encoding.HtmlAttributeEncode($ogDescription))
+      #end
+
+      #set($ogImage =  $core_v2_widget.GetUrlValue("openGraphImage",""))
+      #if($ogImage != "")
+        $core_v2_page.AddOpenGraphMetaTag("og:image",$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AbsoluteUrl($ogImage)))
+      #end]]></contentScript>
+    <headerScript language="Unknown" />
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="Title" defaultValue="${resource:Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageTitle" labelResourceName="PageTitle" descriptionResourceName="PageTitle_Description" dataType="String" />
+	<property id="metaKeywords" labelResourceName="MetaKeywords" descriptionResourceName="MetaKeywords_Description" dataType="String" />
+	<property id="metaDescription" labelResourceName="MetaDescription" descriptionResourceName="MetaDescription_Description" dataType="String" />
+	<property id="canonicalUrl" labelResourceName="CanonicalUrl" descriptionResourceName="CanonicalUrl_Description" dataType="Url" />
+	<property id="enableCanonicalUrlQueryStringRegistrations" labelResourceName="EnableCanonicalUrlQueryStringRegistrations" descriptionResourceName="EnableCanonicalUrlQueryStringRegistrations_Description" dataType="string" defaultValue="true">
+	        <propertyValue labelText="Enable" value="true" propertiesToShow="canonicalUrlQueryStringKeysToIgnore" />
+	        <propertyValue labelText="Disable" value="false" propertiesToHide="canonicalUrlQueryStringKeysToIgnore" />
+    </property>
+	<property id="canonicalUrlQueryStringKeysToIgnore" labelResourceName="CanonicalUrlQueryStringKeysToIgnore" descriptionResourceName="CanonicalUrlQueryStringKeysToIgnore_Description" dataType="String" rows="10" defaultValue="" />
+</propertyGroup>
+<propertyGroup id="openGraph" labelResourceName="OpenGraph">
+	<property id="openGraphTitle" labelResourceName="OpenGraphTitle" descriptionResourceName="OpenGraphTitle_Description" dataType="String" />
+	<property id="openGraphDescription" labelResourceName="OpenGraphDescription" descriptionResourceName="OpenGraphDescription_Description" dataType="String" />
+	<property id="openGraphImage" labelResourceName="OpenGraphImage" descriptionResourceName="OpenGraphImage_Description" dataType="Url" allowLocal="true" allowRemote="false">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CanonicalUrl">Canonical URL</resource>
+  <resource name="CanonicalUrl_Description">If specified this will set the URL used in the canonical link tag.</resource>
+  <resource name="CanonicalUrlQueryStringKeysToIgnore">Query Key Canonical URL Registrations to Ignore</resource>
+  <resource name="CanonicalUrlQueryStringKeysToIgnore_Description">Identify query string keys, one per line, to ignore when generating the canonical URL.</resource>
+  <resource name="EnableCanonicalUrlQueryStringRegistrations">Query Key Canonical URL Registrations</resource>
+  <resource name="EnableCanonicalUrlQueryStringRegistrations_Description">When enabled, widgets on the page can register query string keys to be added to the canonical URL (for example, page indexes).</resource>
+  <resource name="If specified this will override the default url used in the canonical link tag.  By default the canonical url is the page's current base url."></resource>
+  <resource name="MetaDescription">Meta Description</resource>
+  <resource name="MetaDescription_Description">Should describe the page's content and will be placed in the description meta tag.</resource>
+  <resource name="MetaKeywords">Meta Keywords</resource>
+  <resource name="MetaKeywords_Description">A comma separated list of keywords that will be placed in the keywords meta tag.</resource>
+  <resource name="OpenGraph">Open Graph</resource>
+  <resource name="OpenGraphDescription">Description</resource>
+  <resource name="OpenGraphDescription_Description">The description to be used in an Open Graph meta tag.  If not specified no tag will be rendered.</resource>
+  <resource name="OpenGraphImage">Image</resource>
+  <resource name="OpenGraphImage_Description">An image to be used in the open graph meta tag.  If not specified no tag will be rendered.</resource>
+  <resource name="OpenGraphTitle">Title</resource>
+  <resource name="OpenGraphTitle_Description">The title to be used in an Open Graph meta tag.  If not specified no tag will be rendered.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="PageTitle">Page Title</resource>
+  <resource name="PageTitle_Description">The text to be used in the title tag of this page.  If not specified the page name will be used.</resource>
+  <resource name="SEO_Description">Provides SEO Meta Data For Custom Content Pages</resource>
+  <resource name="SEO_Name">SEO Meta Data for Content Pages</resource>
+  <resource name="Title">SEO Meta Data for Content Pages</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

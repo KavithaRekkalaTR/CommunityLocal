@@ -1,0 +1,72 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set($pageSize = 20)
+
+#set($applicationOverrides = $context.ListApplicationDecayOverrides($pageIndex, $pageSize))
+#if ($applicationOverrides && $applicationOverrides.HasErrors())
+    $core_v2_page.SendJsonError($applicationOverrides.Errors)
+#end
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($applicationOverrides.PageIndex + 1) * $applicationOverrides.PageSize)
+#if ($applicationOverrides.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#foreach($applicationOverride in $applicationOverrides)
+    #beforeall
+        <ul class="content-list content expandable simple application-overrides" data-hasmore="$hasMore" data-totalitems="$applicationOverrides.TotalCount">
+    #each
+        #set($application = false)
+        #set($application = $context.GetApplication($applicationOverride.ApplicationId))
+        <li class="content-item application-override" data-applicationid="$applicationOverride.ApplicationId.ToString()" style="position:relative;">
+            <div class="application-override">
+                $core_v2_language.FormatNumber($applicationOverride.HalfLife)
+                $core_v2_language.GetResource('Field_HalfLife_Days')
+            </div>
+        	<div class="content-container">
+            	<h4 class="name">
+            	    #set($applicationName = $applicationOverride.ApplicationId)
+                    #if ($application && !$application.HasErrors())
+            	        #set($applicationName = $application.HtmlName('Web'))
+            	    #end
+            	    $applicationName
+            	</h4> 
+            	<div class="content expandable">
+            	    #if ($application && !$application.HasErrors())
+            	        $!application.HtmlDescription('Web')
+            	    #end
+            	</div>
+            	<div class="actions expandable">
+            		<div class="navigation-list ui-links" data-direction="horizontal">
+            			<ul>
+            			    #if ($application && !$application.HasErrors() && $application.Url)
+                				<li class="navigation-list-item">
+                					<a href="$core_v2_encoding.HtmlAttributeEncode($application.Url)" target="_blank">
+                						$core_v2_language.GetResource('view-application')
+                					</a>
+                				</li>
+            				#end
+            				<li class="navigation-list-item">
+            					<a href="#" data-messagename="scoreplugin.revertapplicationoverride" data-applicationid="$applicationOverride.ApplicationId.ToString()" data-applicationname="$applicationName">
+            						$core_v2_language.GetResource('revert-applicationoverride')
+            					</a>
+            				</li>
+            				<li class="navigation-list-item">
+            					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+            				</li>
+            				<li class="navigation-list-item">
+            					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+            				</li>
+            			</ul>
+            		</div>
+            	</div>
+            </div>
+        </li>
+    #afterall
+        </ul>
+    #nodata
+        #if ($pageIndex == 0)
+            <div class="message norecords">$core_v2_language.GetResource('no-application-overrides')</div>
+        #end
+#end

@@ -1,0 +1,22 @@
+##
+## Renders a list of less functions as JSON
+##
+## Requires in scope:
+##   $lessFunctions
+##
+[
+	#foreach ($lessFunction in $lessFunctions)
+	#between
+		,
+	#each
+		## $core_v2_utility.ToJson($lessFunction)
+		{
+			"Name": #if ($lessFunction.Name) "$core_v2_encoding.JavascriptEncode($lessFunction.Name)" #else "" #end,
+			"Description": #if ($lessFunction.Description) "$core_v2_encoding.JavascriptEncode($lessFunction.Description)" #else "" #end,
+			"RenderedDoc": "$core_v2_encoding.JavascriptEncode($core_v2_utility.Trim($core_v2_widget.ExecuteFile('callback-sub-serialize-less-function-rendered-doc.vm')))",
+			"Category": #if ($lessFunction.Category) "$core_v2_encoding.JavascriptEncode($lessFunction.Category)" #else "" #end,
+			"Type": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Function'))",
+			"Signature": "$core_v2_encoding.JavascriptEncode($core_v2_utility.Trim($core_v2_widget.ExecuteFile('callback-sub-serialize-less-function-signature-doc.vm')))"
+		}
+	#end
+]

@@ -1,0 +1,78 @@
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set ($conversations = $core_v2_conversation.List("%{ PageIndex = $pageIndex, PageSize = 10, ReadStatus = 'Unread' }"))
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($maxParticipantAvatars = 5)
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($conversations.PageIndex + 1) * $conversations.PageSize)
+#if ($conversations.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = true)
+#end
+
+#set ($accessingUser = $core_v2_user.Accessing)
+
+#foreach ($conversation in $conversations)
+	#if ($pageIndex == 0 && !$lastMessage)
+		<li class="content-item-header">
+			<div class="name">
+				$core_v2_language.GetResource('Conversations')
+			</div>
+			<div class="mark-all">
+				<a href="#">$core_v2_language.GetResource('Conversations_MarkAll')</a>
+			</div>
+		</li>
+	#end
+	#set ($lastMessage = $conversation.LastMessage)
+
+	## render conversation
+	<li class="content-item #if(!$conversation.HasRead) unread #end" data-contenturl="$conversation.Url" #if($hasMore) data-hasmore="true" #end data-conversationid="$conversation.Id.ToString()">
+		<div class="post-author">
+			<span class="avatar">
+				#if($lastMessage.Author.Url)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($lastMessage.Author.Url)" class="internal-link">
+						$core_v2_ui.GetResizedImageHtml($lastMessage.Author.AvatarUrl, 40, 40, "%{border='0', alt=$content.HtmlName('Web'), ResizeMethod='ZoomAndCrop',border='0'}")
+					</a>
+				#else
+					$core_v2_ui.GetResizedImageHtml($lastMessage.Author.AvatarUrl, 40, 40, "%{border='0', alt=$content.HtmlName('Web'), ResizeMethod='ZoomAndCrop',border='0'}")
+				#end
+			</span>
+		</div>
+		<div class="post-authors">
+			#set ($over = 0)
+			#set ($count = 0)
+			#set ($participantHtml = "")
+			#foreach($user in $conversation.Participants)
+				#if ($user.Id != $accessingUser.Id)
+					#set($count = $count + 1)
+					#if ($count > 5)
+						#set ($over = $over + 1)
+					#elseif ($count > 1)
+						#set ($participantHtml = "$participantHtml, $user.DisplayName")
+					#else
+						#set($participantHtml = $user.DisplayName)
+					#end
+				#end
+			#end
+			#if ($over > 0)
+				#set($over = $core_v2_language.FormatString($core_v2_language.GetResource('participants-more'), $core_v2_language.FormatNumber($over)))
+				#set($participantHtml = "$participantHtml, $over")
+			#end
+			$participantHtml
+		</div>
+		<div class="content">
+			#set ($excerpt = $core_v2_language.Truncate($lastMessage.HtmlDescription('Web'), 50, '…'))
+			#if ($excerpt.length == 0)
+				#set ($excerpt = $core_v2_language.Truncate($conversation.FirstMessage.Subject, 50, '…'))
+			#end
+			$excerpt
+		</div>
+		<div class="post-date">
+			<span class="value">$core_v2_language.FormatAgoDate($conversation.LastMessage.CreatedDate)</span>
+		</div>
+		<div class="mark">
+			<a href="#" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Conversations_Mark'))" class="ui-tip">O</a>
+		</div>
+	</li>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('Conversations_None')</div>
+#end

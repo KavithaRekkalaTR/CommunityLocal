@@ -1,0 +1,107 @@
+#set ($id = $core_v2_page.GetQueryStringValue('_w_id'))
+#set ($typeId = $core_v2_page.GetQueryStringValue('_w_typeId'))
+#set ($theme = $context.GetTheme("%{ Id = $id, TypeId = $typeId }"))
+
+<form>
+	<p>$core_v2_language.GetResource('revert-instructions')</p>
+	<fieldset class="revert-options">
+		<ul class="field-list">
+			<li class="field-item id">
+
+				<span class="field-item-input">
+					<input type="checkbox" id="pages" class="pages" />
+					<label for="pages" >$core_v2_language.GetResource('revert-pages')</label>
+				</span>
+
+				<span class="field-item-description">
+					$core_v2_language.GetResource('revert-pages-description-1')
+					<select class="pages-revert">
+						<option value="platform">$core_v2_language.GetResource('revert-platform-pages')</option>
+						<option value="platform-custom">$core_v2_language.GetResource('revert-platform-and-custom-pages')</option>
+					</select>
+					$core_v2_language.GetResource('revert-pages-description-2')
+					<select class="pages-revertto">
+						<option value="Default">$core_v2_language.GetResource('revert-to-default')</option>
+						<option value="ConfiguredDefault">$core_v2_language.GetResource('revert-to-configured-default')</option>
+					</select>
+					$core_v2_language.GetResource('revert-pages-description-3')
+				</span>
+			</li>
+
+			<li class="field-item id">
+				<span class="field-item-input">
+					<input type="checkbox" id="headers" class="headers" />
+					<label for="headers">$core_v2_language.GetResource('revert-headers')</label>
+				</span>
+
+				<span class="field-item-description">
+					$core_v2_language.GetResource('revert-headers-description-1')
+					<select class="headers-revertto">
+						<option value="Default">$core_v2_language.GetResource('revert-to-default')</option>
+						<option value="ConfiguredDefault">$core_v2_language.GetResource('revert-to-configured-default')</option>
+					</select>
+					$core_v2_language.GetResource('revert-headers-description-2')
+				</span>
+			</li>
+
+			<li class="field-item id">
+				<span class="field-item-input">
+					<input type="checkbox" id="footers" class="footers" />
+					<label for="footers">$core_v2_language.GetResource('revert-footers')</label>
+				</span>
+
+				<span class="field-item-description">
+					$core_v2_language.GetResource('revert-footers-description-1')
+					<select class="footers-revertto">
+						<option value="Default">$core_v2_language.GetResource('revert-to-default')</option>
+						<option value="ConfiguredDefault">$core_v2_language.GetResource('revert-to-configured-default')</option>
+					</select>
+					$core_v2_language.GetResource('revert-footers-description-2')
+				</span>
+			</li>
+			
+			<li class="field-item id">
+				<span class="field-item-input">
+					<input type="checkbox" id="themeconfiguration" class="themeconfiguration" />
+					<label for="themeconfiguration">$core_v2_language.GetResource('revert-theme-configuration')</label>
+				</span>
+
+				<span class="field-item-description">
+					$core_v2_language.GetResource('revert-theme-configuration-description')
+				</span>
+			</li>
+
+			<li class="field-item id">
+				<span class="field-item-input">
+					<input type="checkbox" id="scopedproperties" class="scopedproperties" />
+					<label for="scopedproperties">$core_v2_language.GetResource('revert-scoped-properties')</label>
+				</span>
+
+				<span class="field-item-description">
+					$core_v2_language.GetResource('revert-scoped-properties-description')
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</form>
+
+#set ($revertOptionsHeaderTemplateId = $core_v2_widget.UniqueId('revertOptionsHeaderTemplate'))
+#registerClientTemplate($revertOptionsHeaderTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-revert-options.vm')
+#end
+#registerEndOfPageHtml('themesPanel.revertOptions')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-revert-options.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.themes.themeAdministration.revertOptions.register({
+			revertOptionsCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revert-options.jsm'))',
+			revertOptionsHeaderTemplateId: '$core_v2_encoding.JavascriptEncode($revertOptionsHeaderTemplateId)',
+			themeTypeId: '$core_v2_encoding.JavascriptEncode($typeId)',
+			themeId: '$core_v2_encoding.JavascriptEncode($id)',
+			revertConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-confirmation'))'
+		});
+	});
+	</script>
+#end

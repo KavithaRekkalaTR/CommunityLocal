@@ -1,0 +1,33 @@
+#set ($excerptSize = 500)
+#set ($postCommentPageSize = 20)
+
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($accessingUserIsRegistered = false)
+#if ($core_v2_user.IsRegistered($accessingUser.Id))
+	#set ($accessingUserIsRegistered = true)
+#end
+
+## stories
+#set($stories = false)
+#set($query = false)
+$core_v2_widget.ExecuteFile('parse-query.vm')
+#set ($stories = $core_v2_activityStory.List($query))
+
+#foreach($story in $stories)
+#beforeall
+	<ul>
+#each
+	#set ($endDate = $story.LastUpdate)
+	$core_v2_widget.ExecuteFile("story.vm")
+#nodata
+	#if (!$query || !$query.Contains('EndDate'))
+		<ul>
+			<li id="${core_v2_widget.WrapperElementId}_message_norecords"><div class="message norecords">$core_v2_language.GetResource('no_messages')</div></li>
+		</ul>
+	#end
+#afterall
+	<li class="data" data-lastmessagedate="$core_v2_encoding.HtmlAttributeEncode($core_v2_utility.GetTimestamp($endDate))"></li>
+	</ul>
+#end
+
+

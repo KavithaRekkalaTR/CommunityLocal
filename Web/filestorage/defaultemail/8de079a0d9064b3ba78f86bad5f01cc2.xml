@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Article Feedback Received Notifications" version="13.0.0.0" description="Raises notifications when feedback is received on an article." id="8de079a0d9064b3ba78f86bad5f01cc2" lastModified="2023-05-11 19:09:08Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('article_title')
+    $context_v1_email.Context.Article.Title
+#token('articlecollection_name')
+    $context_v1_email.Context.Article.ArticleCollection.Name
+#token('group_name')
+    $context_v1_email.Context.Article.ArticleCollection.Group.Name
+#end
+]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$context_v1_email.Context.Feedback.HelpfulnessResponseType.Name]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('article_title_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Article.Url)">$context_v1_email.Context.Article.Title</a>
+#end
+</p>
+#if ($context_v1_email.Context.Feedback.Message && $context_v1_email.Context.Feedback.Message.Length > 0)
+    <p>
+	$context_v1_email.Context.Feedback.Message
+	</p>
+#end
+#set($reviewFeedbackUrl = false)
+#set($reviewFeedbackUrl = $articles_v1_articleUrls.ReviewFeedback($context_v1_email.Context.Article.ArticleCollection.Id, "%{ ArticleId=$context_v1_email.Context.Article.Id }"))
+#if ($reviewFeedbackUrl)
+    <p>
+	<a href="$core_v2_encoding.HtmlAttributeEncode($reviewFeedbackUrl)">
+	$core_v2_language.GetResource('ViewFeedback')
+	</a>
+	</p>
+#end
+]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">New feedback has been received for {article_title_link}:</resource>
+  <resource name="Subject">{group_name} - {articlecollection_name}: Feedback on {article_title}</resource>
+  <resource name="ViewFeedback">View the feedback</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

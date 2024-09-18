@@ -1,0 +1,60 @@
+﻿#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set ($contentTypeIds = $core_v2_page.GetQueryStringValue('w_contentTypeIds'))
+#if ($contentTypeIds && $contentTypeIds.Length > 0)
+	#set ($bookmarks = $core_v2_bookmark.List("%{ PageIndex = $pageIndex, PageSize = 10, SortBy = 'Date', SortOrder = 'Descending', ContentTypeIds = $contentTypeIds }"))
+#else
+	#set ($bookmarks = $core_v2_bookmark.List("%{ PageIndex = $pageIndex, PageSize = 10, SortBy = 'Date', SortOrder = 'Descending' }"))
+#end
+#set ($accessingUser = $core_v2_user.Accessing)
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($bookmarks.PageIndex + 1) * $bookmarks.PageSize)
+#if ($bookmarks.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = true)
+#end
+
+#set ($rootGroup = $core_v2_group.Root)
+
+#foreach ($bookmark in $bookmarks)
+	## render bookmark
+	#set ($content = false)
+	#set ($content = $bookmark.Content)
+	#if ($content)
+		## determine an image to use. Preferring content over application over container
+		#set ($imageUrl = false)
+		#set ($imageUrl = $content.AvatarUrl)
+		#if ((!$imageUrl || $imageUrl == '') && $content.Application)
+			#set ($imageUrl = $content.Application.AvatarUrl)
+			#if ((!$imageUrl || $imageUrl == '') && $content.Application.Container)
+				#set ($imageUrl = $content.Application.Container.AvatarUrl)
+			#end
+		#end
+		<li class="content-item" data-contenturl="$content.Url" #if($hasMore) data-hasmore="true" #end>
+			#if ($imageUrl)
+				<div class="post-author">
+					<span class="avatar">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)" class="internal-link">
+							$core_v2_ui.GetResizedImageHtml($imageUrl, 40, 40, "%{border='0', alt=$content.HtmlName('Web'), ResizeMethod='ZoomAndCrop',border='0'}")
+						</a>
+					</span>
+				</div>
+			#end
+			<div class="content">
+				#set ($name = $core_v2_language.Truncate($content.HtmlName('Web'), 50, '…'))
+				#if ($name.length == 0)
+					#set ($name = $core_v2_language.Truncate($content.HtmlDescription('Web'), 50, '…'))
+				#end
+				$name
+			</div>
+			#if ($content && $content.Application && $content.Application.Container && $content.Url != $content.Application.Container.Url)
+				#if ($rootGroup.ContainerId != $content.Application.Container.ContainerId)
+					<span class="content-group">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+					</span>
+				#end
+			#end
+		</li>
+	#end
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('Bookmarks_None')</div>
+#end

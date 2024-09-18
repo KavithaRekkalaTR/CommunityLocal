@@ -1,0 +1,13 @@
+##
+## Rendered API Type Callback
+##
+
+#set ($name = $core_v2_page.GetQueryStringValue("_w_name"))
+
+#set ($type = $shellApi.GetType($name))
+
+$core_v2_page.SetContentType('application/json')
+{
+	"index": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-type-index.vm'))",
+	"type": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-type.vm'))"
+}

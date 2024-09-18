@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ReportingConfigurationPanel_Name}"
+                           version="10.0.0.0"
+                           description="${resource:ReportingConfigurationPanel_Description}"
+                           instanceIdentifier="d9fa4ec56fed44a7b0d1a1b9bddaea76"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass="manage-reporting-configuration"
+                           provider="f98644011ef94ec79aef63c932bd94c3">
+		<contentScript><![CDATA[
+
+#set ($config = $context.Settings)
+#set ($tz = $core_v2_widget.GetStringValue('TimeZone', $context.SiteTimeZone))
+
+<div class="administration-reporting-configuration">
+<form>
+    <div class="$core_v2_widget.UniqueId('tab')" id="$core_v2_widget.UniqueId('configuration')">
+        <fieldset>
+            <ul class="field-list">
+               #if (!$context.HasLicense || !$context.HasConnectionStringConfigured || !$context.HasValidConnectionString)
+                    <li class="field-item">
+                        <label class="field-item-name">$core_v2_language.GetResource('RequiredConfiguration')</label>
+                        <span class="field-item-description">
+                        <ul class="message error">
+                        #if (!$context.HasLicense)
+                            <li>• $core_v2_language.GetResource('LicenseRequired')</li>
+                        #end
+                        #if (!$context.HasConnectionStringConfigured)
+                            <li>• $core_v2_language.GetResource('ConnectionStringRequired')</li>
+                        #end
+                        #if (!$context.HasValidConnectionString)
+                            <li>• $core_v2_language.GetResource('ConnectionStringInvalid')</li>
+                        #end
+                        </ul>
+                        </span>
+                    </li>
+                #else
+                    <li class="field-item">
+                        <label class="field-item-name" for="$core_v2_widget.UniqueId('ReportingOffset')">$core_v2_language.GetResource('ReportingOffset_Name')</label>
+                        <span class="field-item-description">$core_v2_language.GetResource('ReportingOffset_Description')</span>
+                        #foreach($timezone in $context.GetTimeZones())
+                        #beforeall
+                            <span class="field-item-input">
+                            <select id="$core_v2_widget.UniqueId('Timezone')" name="$core_v2_widget.UniqueId('Timezone')" class="ui-select">
+                        #each
+                            <option value="$timezone.Id"#if ($timezone.Id == $tz) selected="selected"#end>$timezone.Name</option>
+                        #afterall
+                        </select>
+                            </span>
+                        #end
+                    </li>
+                    <li class="field-item">
+                        <label class="field-item-name">$core_v2_language.GetResource('Reset_Name')</label>
+                        <span class="field-item-description">$core_v2_language.GetResource('Reset_Description')</span>
+                        <span class="field-item-input">
+                            <a href="#" class="reset-button button">$core_v2_language.GetResource('Reset')</a>
+                        </span>
+                    </li>
+                #end
+            </ul>
+        </fieldset>
+    </div>
+</form>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.reportingConfigurationPanel')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	    (function() {
+			jQuery.telligent.evolution.widgets.reportingConfigurationPanel.register({
+				configApi: $context.JsonApi,
+                timeZone: jQuery('#$core_v2_widget.UniqueId('Timezone')'),
+				tabClass: '$core_v2_widget.UniqueId('tab')',
+				resources: {
+					reportingReset: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ReportingReset'))',
+                },
+                urls: {
+                    saveConfiguration: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-configuration.vm'))',
+                    reset: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('reset.vm'))',
+                },
+				tabs: [
+					{ name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('options'))', element: jQuery('#$core_v2_widget.UniqueId('configuration')') }
+				],
+			});
+	    })();
+	</script>
+#end
+
+]]></contentScript>
+		<languageResources>
+      <language key="en-us">
+        <resource name="ReportingConfigurationPanel_Name">Reporting Configuration</resource>
+        <resource name="ReportingConfigurationPanel_Description">Manage Reporting configuration.</resource>
+        <resource name="options">Options</resource>
+        <resource name="ReportingOffset_Name">Timezone Offset</resource>
+        <resource name="ReportingOffset_Description">The offset value will be used when viewing report data. Timezone adjustments (i.e. Daylight Savings Time) are not used by Reporting.  If this value is changed, the Reporting Database will be reset and the next ETL run will bring over all community data.</resource>
+        <resource name="Reset">Reset</resource>
+        <resource name="Reset_Name">Reset Reporting</resource>
+        <resource name="Reset_Description">This will flag the Reporting Database to be reset and the next ETL run will bring over all community data.</resource>
+        <resource name="ReportingReset">Reporting Database has been flagged for reset.</resource>
+        <resource name="RequiredConfiguration">Required Configuration</resource>
+        <resource name="LicenseRequired">The Free Edition of Community does not include Reporting functionality, a license must be installed before Reporting can be enabled. </resource>
+        <resource name="ConnectionStringRequired">A connection string for the Reporting database is required.  A "Reporting" connection string must be added to the connectionstrings.config file before Reporting can be enabled.</resource>
+        <resource name="ConnectionStringInvalid">Unable to connect the database defined by the "Reporting" connectionstring defined in the connectionstrings.config file.</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

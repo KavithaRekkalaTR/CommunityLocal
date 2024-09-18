@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ForumThreadActivityStory_Name}" version="10.0.0.0" description="${resource:ForumThreadActivityStory_Description}" instanceIdentifier="c60e883315684130b502fc20bf460083" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="4efc106ed5ca4823bd652c86feaeb7ec">
+		<contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+	#set($thread = $core_v2_forumThread.Get($context.Story.ContentId))
+	#if(!$thread || !$thread.Author)
+		$core_v2_widget.Hide()
+	#else
+		#set($actor = $thread.Author)
+		#if ($actor.Url)
+		 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+		#else
+			#set($profile0Html = $actor.DisplayName)
+		#end
+
+		#if($isPreview)
+				#format($core_v2_language.GetResource('NewForumThread_Preview'))
+						#token('user')
+							$profile0Html
+					#token('thread')
+							<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)">$thread.Subject</a>
+					#token('forum')
+							#if ($content.Application.Container.ParentContainer)
+										<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+										<span class="group-application-separator">&gt;</span>
+								#end
+								<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+									href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+						#end
+		#else
+			<div class="activity-summary forum-thread">
+					#if ($thread.ThreadType == 'QuestionAndAnswer')
+							#format($core_v2_language.GetResource('question_in'))
+												#token('user')
+											$profile0Html
+									#token('forum')
+											#if ($content.Application.Container.ParentContainer)
+													<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+														href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+													<span class="group-application-separator">&gt;</span>
+											#end
+											<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+												href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+										#end
+					#else
+							#format($core_v2_language.GetResource('in'))
+												#token('user')
+											$profile0Html
+									#token('forum')
+											#if ($content.Application.Container.ParentContainer)
+													<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+														href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+													<span class="group-application-separator">&gt;</span>
+											#end
+											<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+												href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+										#end
+								#end
+						</div>
+
+			<span class="activity-title">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)" class="internal-link view-post"><span>$thread.Subject</span></a>
+			</span>
+
+			<div class="activity-description user-defined-markup">
+					#set($rawBody = $thread.Body('Web'))
+					#set($body = $core_v2_language.Truncate($rawBody, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+					$body
+					#if ($body.Length < $rawBody.Length)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)">$core_v2_language.GetResource('read-more')</a>
+					#end
+			</div>
+
+			#if ($thread.File && $thread.File.FileUrl != '')
+					#set ($mediaType = $core_v2_ui.GetMediaType($thread.File.FileUrl, "%{ ViewType = 'View', OutputIsPersisted='False' }"))
+								#if($mediaType == 'Audio' || $mediaType == 'Video')
+										<div class="post-attachment-viewer">
+												$core_v2_ui.GetViewHtml($thread.File.FileUrl, "%{ Width=320, Height=240, OutputIsPersisted = 'false' }")
+										</div>
+								#elseif ($mediaType == 'Image')
+										<div class="post-attachment-viewer">
+												<a href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)" class="internal-link" data-imagepreviewurl="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)">
+														$!core_v2_ui.GetPreviewHtml($thread.File.FileUrl, "%{Width=320, Height=240, OutputIsPersisted='False'}")
+												</a>
+										</div>
+								#elseif ($mediaType != 'Empty')
+										<div class="post-attachment-viewer">
+												<a href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)" class="internal-link ui-theater" data-theaterurl="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('theater-view.vm'))">
+														$!core_v2_ui.GetPreviewHtml($thread.File.FileUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+												</a>
+										</div>
+								#else
+										<div class="post-attachment-viewer">
+												<a href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)" class="internal-link">
+														$!core_v2_ui.GetPreviewHtml($thread.File.FileUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+												</a>
+										</div>
+								#end
+						#end
+		#end
+	#end
+#end
+]]></contentScript>
+		<languageResources><language key="en-us"><resource name="ForumThreadActivityStory_Description">Story for forum threads.</resource><resource name="ForumThreadActivityStory_Name">Forum Thread Activity Story</resource><resource name="in">{user} in {forum}:</resource><resource name="NewForumThread_Preview">{user} posted {thread} in {forum}.</resource><resource name="question_in">{user} asked a question in {forum}:</resource><resource name="read-more">Read more.</resource><resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource><resource name="view">View</resource></language></languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

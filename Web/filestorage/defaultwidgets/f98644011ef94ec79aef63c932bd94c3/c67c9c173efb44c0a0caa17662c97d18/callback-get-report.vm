@@ -1,0 +1,18 @@
+#set($reportid = $core_v2_page.GetQueryStringValue('w_reportid'))
+#set($id = $core_v2_utility.ParseGuid($reportid))
+
+#set ($report = $reporting.GetReport($id))
+
+$core_v2_page.SetContentType('application/json')
+
+#if ($report)
+{
+    "id": #if ($report.Id) "$report.Id" #else "" #end,
+    "name":  #if ($report.Name) "$core_v2_encoding.JavascriptEncode($report.Name)" #else "" #end,
+    "description":  #if ($report.Description) "$core_v2_encoding.JavascriptEncode($report.Description)" #else "" #end,
+    "type": "report"
+}
+#else
+
+
+#end

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:DatePeriodFilter_Name}"
+                           version="10.0.0.0"
+                           description="${resource:DatePeriodFilter_Description}"
+                           instanceIdentifier="8b69de7dd631409082212e1661163cb6"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+
+#set($datePeriod = $core_v2_widget.UniqueId("datePeriod"))
+
+<div id="$datePeriod" class="custom-filter">
+    <span></span> <b class="caret"></b>
+</div>
+
+#registerEndOfPageHtml('telligent.reporting.widgets.datePeriodFilter')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('dateperiodpicker.js')"></script>
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+      jQuery.telligent.reporting.widgets.datePeriodFilter.register({
+        tabKey: '$filterContext.TabKey',
+        fields: {
+          datePeriodId: '#$datePeriod'
+        },
+				resources: {
+					day: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Day'))',
+					week: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Week'))',
+					month: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Month'))',
+ 					year: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Year'))',
+				}
+      });
+</script>
+#end
+
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="DatePeriodFilter_Name">Date Period Filter</resource>
+        <resource name="DatePeriodFilter_Description">Displays date period filter for reports and dashboards</resource>
+        <resource name="Day">By day</resource>
+        <resource name="Week">By week</resource>
+        <resource name="Month">By month</resource>
+        <resource name="Year">By year</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

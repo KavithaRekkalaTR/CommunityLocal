@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="fec7df609edf44d189900dc139e7d8ff" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2020-02-19 19:48:21Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="media.download" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[if (core_v2_widget.GetBoolValue('ignoreIfOriginalAuthor', true) && context_v2_automationTrigger.Arguments.DownloaderId == context_v2_automationTrigger.Arguments.Author.Id)
+{
+    // file author is the same as downloader
+    return;
+}
+
+var userId = context_v2_automationTrigger.Arguments.DownloaderId;
+if (core_v2_widget.GetStringValue('awardTo', 'parent') == 'parent') {
+    userId = context_v2_automationTrigger.Arguments.Author.Id;
+}
+
+context_v1_pointsAutomation.AwardPoints(userId, context_v2_automationTrigger.Arguments.ContentId, core_v2_media.ContentTypeId);]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="awardTo" labelResourceName="AwardTo" descriptionResourceName="AwardTo_Description" dataType="string" defaultValue="parent">
+        <propertyValue labelResourceName="AwardTo_Parent" value="parent" />
+        <propertyValue labelResourceName="AwardTo_Child" value="child" />
+    </property>
+    <property id="ignoreIfOriginalAuthor" labelResourceName="IgnoreIfOriginalAuthor" descriptionResourceName="IgnoreIfOriginalAuthor_Description" dataType="bool" defaultValue="true" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AwardTo">Award points to</resource>
+  <resource name="AwardTo_Child">Member downloading the file</resource>
+  <resource name="AwardTo_Description">Select which member should receive points.</resource>
+  <resource name="AwardTo_Parent">Media file author</resource>
+  <resource name="Description">Awards points when a media file is downloaded.</resource>
+  <resource name="IgnoreIfOriginalAuthor">Ignore downloads made by the media file author</resource>
+  <resource name="IgnoreIfOriginalAuthor_Description">If enabled, downloads by the media file author will not cause points to be awarded.</resource>
+  <resource name="Title">When a media file is downloaded</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

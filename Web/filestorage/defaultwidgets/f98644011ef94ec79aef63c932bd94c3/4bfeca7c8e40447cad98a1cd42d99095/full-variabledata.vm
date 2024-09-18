@@ -1,0 +1,61 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set ($responsiveness = $context.GetResponsivenessReport($options))
+
+#if($responsiveness && !$responsiveness.HasErrors())
+    #set ($answerResponsiveness = $context.GetAnswerResponsivenessReport($options))
+    #set ($suggestedAnswerResponsiveness = $context.GetSuggestedAnswerResponsivenessReport($options))
+
+    <div class="data">
+        <ul class="cards">
+            <li class="rates-blue card multi-value four-value">
+                <div class="header">$core_v2_language.GetResource('ResponseRate')</div>
+                <div><span class="value">$responsiveness.ResponseRate1Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('1Day')</span><div>
+                <div><span class="value">$responsiveness.ResponseRate3Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('3Day')</span><div>
+                <div><span class="value">$responsiveness.ResponseRate7Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('7Day')</span><div>
+                <div><span class="value">$responsiveness.ResponseRate.ToString("0%")</span><span class="description">$core_v2_language.GetResource('Overall')</span><div>
+            </li>
+            <li class="rates-orange card multi-value four-value">
+                <div class="header">$core_v2_language.GetResource('SuggestedAnswerRate')</div>
+                <div><span class="value">$suggestedAnswerResponsiveness.SuggestedAnswerRate1Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('1Day')</span><div>
+                <div><span class="value">$suggestedAnswerResponsiveness.SuggestedAnswerRate3Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('3Day')</span><div>
+                <div><span class="value">$suggestedAnswerResponsiveness.SuggestedAnswerRate7Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('7Day')</span><div>
+                <div><span class="value">$suggestedAnswerResponsiveness.SuggestedAnswerRate.ToString("0%")</span><span class="description">$core_v2_language.GetResource('Overall')</span><div>
+            </li>
+            <li class="rates-green card multi-value four-value">
+                <div class="header">$core_v2_language.GetResource('VerifiedAnswerRate')</div>
+                <div><span class="value">$answerResponsiveness.AnswerRate1Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('1Day')</span><div>
+                <div><span class="value">$answerResponsiveness.AnswerRate3Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('3Day')</span><div>
+                <div><span class="value">$answerResponsiveness.AnswerRate7Day.ToString("0%")</span><span class="description">$core_v2_language.GetResource('7Day')</span><div>
+                <div><span class="value">$answerResponsiveness.AnswerRate.ToString("0%")</span><span class="description">$core_v2_language.GetResource('Overall')</span><div>
+            </li>
+
+            <li class="time-brown card multi-value three-value">
+                <div class="header">$core_v2_language.GetResource('AverageResponseTimes')</div>
+                <div><span class="value">#if($responsiveness.AverageResponseTime)$responsiveness.AverageResponseTime.ToString("g")#else N/A #end</span><span class="description">$core_v2_language.GetResource('ToResponse')</span><div>
+                <div><span class="value">#if($suggestedAnswerResponsiveness.AverageSuggestedAnswerTime)$suggestedAnswerResponsiveness.AverageSuggestedAnswerTime.ToString("g")#else N/A #end</span><span class="description">$core_v2_language.GetResource('ToSuggestedAnswer')</span><div>
+                <div><span class="value">#if($answerResponsiveness.AverageAnswerTime)$answerResponsiveness.AverageAnswerTime.ToString("g")#else N/A #end</span><span class="description">$core_v2_language.GetResource('ToAnswer')</span><div>
+            </li>
+
+            <li class="threads-red card multi-value two-value">
+                <div class="header">$core_v2_language.GetResource('NewThreads')</div>
+                <div><span class="value">$responsiveness.NewThreadCount.ToString("N0")</span><span class="description">$core_v2_language.GetResource('ThreadsInSelectedDates')</span><div>
+                <div><span class="value">$responsiveness.NewThreadWithReplyCount.ToString("N0")</span><span class="description">$core_v2_language.GetResource('WithResponses')</span><div>
+            </li>
+
+            <li class="questions-purple card multi-value three-value">
+                <div class="header">$core_v2_language.GetResource('NewQuestions')</div>
+                <div><span class="value">$suggestedAnswerResponsiveness.NewQuestionCount.ToString("N0")</span><span class="description">$core_v2_language.GetResource('QuestionsInSelectedDates')</span><div>
+                <div><span class="value">$suggestedAnswerResponsiveness.NewQuestionWithSuggestedAnswerCount.ToString("N0")</span><span class="description">$core_v2_language.GetResource('WithSuggestedAnswers')</span><div>
+                <div><span class="value">$answerResponsiveness.NewQuestionWithAnswerCount.ToString("N0")</span><span class="description">$core_v2_language.GetResource('WithAnswers')</span><div>
+            </li>
+        </ul>
+
+    </div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

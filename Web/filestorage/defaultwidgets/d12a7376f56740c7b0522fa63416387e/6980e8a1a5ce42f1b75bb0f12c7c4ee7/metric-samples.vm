@@ -1,0 +1,82 @@
+#set ($headerTemplateId = $core_v2_widget.UniqueId('metricSampleHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <p>
+        $core_v2_language.GetResource('samplemetrics_instructions') 
+    </p>
+	<ul class="filter">
+	    <li class="filter-option selected"><a href="#" data-tab="highest">$core_v2_language.GetResource('samplemetrics-highest')</a></li>
+	    <li class="filter-option"><a href="#" data-tab="lowest">$core_v2_language.GetResource('samplemetrics-lowest')</a></li>
+	    <li class="filter-option"><a href="#" data-tab="search">$core_v2_language.GetResource('samplemetrics-search')</a></li>
+	</ul>
+</script>
+
+<div id="$core_v2_widget.UniqueId('SampleMetricsWrapper')">
+    #set($metricId = false)
+    #set($metricId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_metricid')))
+    #set($metricSamples = $context.GetSampleMetricValues($metricId))
+    
+    <div class="tab-content" data-tab="highest">
+        #foreach($sampleMetric in $metricSamples.HighestSamples)
+            #beforeall
+                <ul class="content-list content simple sample-metrics">
+            #each
+                $core_v2_widget.ExecuteFile('render-samplemetric.vm')
+            #afterall
+                </ul>
+        #end
+    </div>
+    
+    <div class="tab-content" data-tab="lowest">
+        #foreach($sampleMetric in $metricSamples.LowestSamples)
+            #beforeall
+                <ul class="content-list content simple sample-metrics">
+            #each
+                $core_v2_widget.ExecuteFile('render-samplemetric.vm')
+            #afterall
+                </ul>
+        #end
+    </div>
+    
+    <div class="tab-content" data-tab="search">
+        <form><fieldset>
+            <ul class="field-list">
+        		<li class="field-item">
+        			<label for="$core_v2_widget.UniqueId('FindMetricContent')" class="field-item-name">$core_v2_language.GetResource("Field_FindMetricContent")</label>
+        			<span class="field-item-description">$core_v2_language.GetResource('Field_FindMetricContent_Desc')</span>
+        			<span class="field-item-input">
+        				<input type="text" name="$core_v2_widget.UniqueId('FindMetricContent')" value="" id="$core_v2_widget.UniqueId('FindMetricContent')" />
+        			</span>
+        		</li>
+            </ul>
+        </fieldset></form>
+        
+        <div id="$core_v2_widget.UniqueId('SearchMetricSample')">
+        </div>
+    </div>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.scorePluginMetricSamples')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('metric-samples.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.scorePluginMetricSamples.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    wrapper: jQuery('#$core_v2_widget.UniqueId('SampleMetricsWrapper')'),
+		    fields: {
+		        findContent: jQuery('#$core_v2_widget.UniqueId('FindMetricContent')'),
+		        searchSample: jQuery('#$core_v2_widget.UniqueId('SearchMetricSample')')
+		    },
+		    urls: {
+		        lookupContent: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('lookup-content.vm'))',
+		        getSampleMetric: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-samplemetric.vm'))'
+		    },
+		    text: {
+		        noSearchMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Field_FindMetricContent_NoResults'))',
+		        findContentPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Field_FindMetricContent_Placeholder'))'
+		    }
+    	});
+	});
+	</script>
+#end

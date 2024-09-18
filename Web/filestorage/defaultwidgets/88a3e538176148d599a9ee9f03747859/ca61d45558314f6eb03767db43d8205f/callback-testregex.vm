@@ -1,0 +1,12 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+    #set($pattern = $core_v2_page.GetFormValue('Pattern'))
+    #set($result = $context.IsValidRegex($pattern))
+
+	#if ($result)
+		{"success":true}
+	#else
+	    {"success":false}
+	#end
+#end

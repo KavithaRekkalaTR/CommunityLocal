@@ -1,0 +1,30 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($state = false)
+	#set($state = $core_v2_page.GetFormValue('State'))
+	#if ($state)
+		#set($id = false)
+		#set($id = $core_v2_page.GetFormValue('Id'))
+		#if ($id)
+			#set($item = $context.UpdateReviewState($id, $state))
+			#if ($response.HasErrors())
+				$core_v2_page.SendJsonError($item.Errors)
+			#end
+
+			{
+				"success":"true",
+				"itemHtml":"$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('item.vm'))"
+			}
+		#else
+			#foreach ($id in $core_v2_page.GetFormValues('Id[]'))
+				#set($item = $context.UpdateReviewState($id, $state))
+				#if ($response.HasErrors())
+					$core_v2_page.SendJsonError($item.Errors)
+				#end
+			#end
+
+			{ "success":"true" }
+		#end
+	#end
+#end

@@ -1,0 +1,153 @@
+#set($options = "%{}")
+
+#set ($id = $core_v2_page.GetQueryStringValue('fr_id'))
+#if($id)
+    $options.Add('selectedGroups', $id)
+#end
+
+#set ($group = $context.GetGroupSummaryDetailReport($options))
+
+#if($group && !$group.HasErrors())
+	#set ($apiGroup = $core_v2_group.Get($group.ContainerId))
+	#set ($apiParentGroup = $core_v2_group.Get("%{ Id = $apiGroup.ParentGroupId}"))
+
+	<div class="data">
+		<ul class="report-details">
+			<li class="report-name">
+				#if ($apiGroup.Url)  <a href="$apiGroup.Url">$group.Name</a> #else $group.Name #end
+			</li>
+			#if ($group.ParentContainer)
+				<li class="report-info">
+						$core_v2_language.GetResource('in')
+						#if ($apiParentGroup.Url)
+							<a href="$apiGroup.Container.Url">$group.ParentContainer.Name</a>
+						#else
+							$group.ParentContainer.Name
+						#end
+				</li>
+			#end
+		</ul>
+
+		<ul class="cards">
+			<li class="members-green card">
+				#if($group.ContainerSubType.ToLowerInvariant() == 'joinless')
+					<div class="value">$group.ViewersTotal.ToString("N0")</div>
+					<div class="description">$core_v2_language.GetResource('TotalViewers')</div>
+				#else
+					<div class="value">$group.MembersTotal.ToString("N0")</div>
+					<div class="description">#if ($group.MembersTotal == 1)$core_v2_language.GetResource('Member')#else$core_v2_language.GetResource('Members')#end</div>
+				#end
+			</li>
+            <li class="content-blue card multi-value two-value">
+                <div class="header">$core_v2_language.GetResource('Content')</div>
+                <div><span class="value">$group.ContentTotal.ToString("N0")</span><span class="description">$core_v2_language.GetResource('TotalContent')</span><div>
+                <div><span class="value">$group.NewContentPerDay.ToString("N0")</span><span class="description">$core_v2_language.GetResource('ContentPerDay')</span><div>
+            </li>
+            <li class="views-purple card multi-value two-value">
+                <div class="header">$core_v2_language.GetResource('Views')</div>
+                <div><span class="value">$group.ViewsTotal.ToString("N0")</span><span class="description">$core_v2_language.GetResource('TotalViews')</span><div>
+                <div><span class="value">$group.ViewsPerDay.ToString("N0")</span><span class="description">$core_v2_language.GetResource('ViewsPerDay')</span><div>
+            </li>
+		</ul>
+
+		<table class="content-data large-data">
+			<thead>
+				<tr>
+					<th>&nbsp;</th>
+					<th>$core_v2_language.GetResource('1Day')</th>
+					<th>$core_v2_language.GetResource('3Day')</th>
+					<th>$core_v2_language.GetResource('7Day')</th>
+					<th>$core_v2_language.GetResource('30Day')</th>
+					<th>$core_v2_language.GetResource('90Day')</th>
+					<th>$core_v2_language.GetResource('180Day')</th>
+				</tr>
+			</thead>
+			</tbody>
+				<tr>
+                	<td class="title">
+                        <div class="title"><a href="#" class="report-drilldown" data-report-id="$reporting_reports.Content" data-containerid="$group.ContainerId" data-containername="$core_v2_encoding.HtmlAttributeEncode($group.Name)">$core_v2_language.GetResource('NewContent')</a></div>
+                        <div class="description">$core_v2_language.GetResource('NewContent_Description')</div>
+                    </td>
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('1Day'), $group.NewContentCountLast1Day, $group.NewContentCount1DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('3Day'), $group.NewContentCountLast3Days, $group.NewContentCount3DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('7Day'), $group.NewContentCountLast7Days, $group.NewContentCount7DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('30Day'), $group.NewContentCountLast30Days, $group.NewContentCount30DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('90Day'), $group.NewContentCountLast90Days, $group.NewContentCount90DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('180Day'), $group.NewContentCountLast180Days, $group.NewContentCount180DayTrend)
+				</tr>
+				<tr>
+                	<td class="title">
+                        <div class="title"><a href="#" class="report-drilldown" data-report-id="$reporting_reports.ActiveContent" data-containerid="$group.ContainerId" data-containername="$core_v2_encoding.HtmlAttributeEncode($group.Name)">$core_v2_language.GetResource('ActiveContent')</a></div>
+                        <div class="description">$core_v2_language.GetResource('ActiveContent_Description')</div>
+                    </td>
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('1Day'), $group.ActiveContentCountLast1Day, $group.ActiveContentCount1DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('3Day'), $group.ActiveContentCountLast3Days, $group.ActiveContentCount3DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('7Day'), $group.ActiveContentCountLast7Days, $group.ActiveContentCount7DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('30Day'), $group.ActiveContentCountLast30Days, $group.ActiveContentCount30DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('90Day'), $group.ActiveContentCountLast90Days, $group.ActiveContentCount90DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('180Day'), $group.ActiveContentCountLast180Days, $group.ActiveContentCount180DayTrend)
+				</tr>
+				<tr>
+					<td class="title">
+                        <div class="title"><a href="#" class="report-drilldown" data-report-id="$reporting_reports.ViewedContent" data-containerid="$group.ContainerId" data-containername="$core_v2_encoding.HtmlAttributeEncode($group.Name)">$core_v2_language.GetResource('ViewedContent')</a></div>
+                        <div class="description">$core_v2_language.GetResource('ViewedContent_Description')</div>
+                    </td>
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('1Day'), $group.ViewedContentCountLast1Day, $group.ViewedContentCount1DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('3Day'), $group.ViewedContentCountLast3Days, $group.ViewedContentCount3DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('7Day'), $group.ViewedContentCountLast7Days, $group.ViewedContentCount7DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('30Day'), $group.ViewedContentCountLast30Days, $group.ViewedContentCount30DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('90Day'), $group.ViewedContentCountLast90Days, $group.ViewedContentCount90DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('180Day'), $group.ViewedContentCountLast180Days, $group.ViewedContentCount180DayTrend)
+				</tr>
+				<tr>
+					<td class="title">
+                        <div class="title"><a href="#" class="report-drilldown" data-report-id="$reporting_reports.ActiveMembers" data-containerid="$group.ContainerId" data-containername="$core_v2_encoding.HtmlAttributeEncode($group.Name)">$core_v2_language.GetResource('ActiveUsers')</a></div>
+                        <div class="description">$core_v2_language.GetResource('ActiveUsers_Description')</div>
+                    </td>
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('1Day'), $group.ActiveUserCountLast1Day, $group.ActiveUserCount1DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('3Day'), $group.ActiveUserCountLast3Days, $group.ActiveUserCount3DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('7Day'), $group.ActiveUserCountLast7Days, $group.ActiveUserCount7DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('30Day'), $group.ActiveUserCountLast30Days, $group.ActiveUserCount30DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('90Day'), $group.ActiveUserCountLast90Days, $group.ActiveUserCount90DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('180Day'), $group.ActiveUserCountLast180Days, $group.ActiveUserCount180DayTrend)
+				</tr>
+				<tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewMembers'), $core_v2_language.GetResource('NewMembers_Description'))
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('1Day'), $group.NewMemberCountLast1Day, $group.NewMemberCount1DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('3Day'), $group.NewMemberCountLast3Days, $group.NewMemberCount3DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('7Day'), $group.NewMemberCountLast7Days, $group.NewMemberCount7DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('30Day'), $group.NewMemberCountLast30Days, $group.NewMemberCount30DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('90Day'), $group.NewMemberCountLast90Days, $group.NewMemberCount90DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('180Day'), $group.NewMemberCountLast180Days, $group.NewMemberCount180DayTrend)
+				</tr>
+
+				<tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('Viewers'), $core_v2_language.GetResource('Viewers_Description'))
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('1Day'), $group.ViewerCountLast1Day, $group.ViewerCount1DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('3Day'), $group.ViewerCountLast3Days, $group.ViewerCount3DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('7Day'), $group.ViewerCountLast7Days, $group.ViewerCount7DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('30Day'), $group.ViewerCountLast30Days, $group.ViewerCount30DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('90Day'), $group.ViewerCountLast90Days, $group.ViewerCount90DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('180Day'), $group.ViewerCountLast180Days, $group.ViewerCount180DayTrend)
+				</tr>
+
+				<tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('Views'), $core_v2_language.GetResource('Views_Description'))
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('1Day'), $group.ViewCountLast1Day, $group.ViewCount1DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('3Day'), $group.ViewCountLast3Days, $group.ViewCount3DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('7Day'), $group.ViewCountLast7Days, $group.ViewCount7DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('30Day'), $group.ViewCountLast30Days, $group.ViewCount30DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('90Day'), $group.ViewCountLast90Days, $group.ViewCount90DayTrend)
+    				$reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('180Day'), $group.ViewCountLast180Days, $group.ViewCount180DayTrend)
+				</tr>
+
+			</tbody>
+		</table>
+	</div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

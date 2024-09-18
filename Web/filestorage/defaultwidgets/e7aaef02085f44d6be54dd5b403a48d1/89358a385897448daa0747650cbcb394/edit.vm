@@ -1,0 +1,231 @@
+#set($group = $context.Group)
+#set($id = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_id')))
+#set ($leaderboard = $core_v2_leaderboard.Get($id))
+
+<form><fieldset>
+	<ul class="field-list">
+
+		<li class="field-item name">
+			<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Name')" name="GroupName" maxlength="256" value="$!leaderboard.Name" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		#if($leaderboard)
+			<li class="field-item web-address">
+				<label for="$core_v2_widget.UniqueId('WebAddress')" class="field-item-name">$core_v2_language.GetResource('AddressLabel')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('AddressLabel_Desc')</span>
+				<span class="field-item-input">
+					<input type="text" maxlength="256" value="$!core_v2_encoding.HtmlAttributeEncode($leaderboard.ApplicationKey)" id="$core_v2_widget.UniqueId('WebAddress')" name="$core_v2_widget.UniqueId('WebAddress')" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		#end
+		<li class="field-item description">
+			<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+			<span class="field-item-input">
+				#set($description = $!leaderboard.Description('Raw'))
+				$core_v2_editor.Render('Description',"%{Width='100%', Height='25%', Value='$description', ContentTypeId=$core_v2_leaderboard.ContentTypeId }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		#if($leaderboard && $leaderboard.NumberOfLeaders > 0)
+			#set($numberOfLeaders = $leaderboard.NumberOfLeaders)
+		#else
+			#set($numberOfLeaders = 10)
+		#end
+		<li class="field-item number-of-leaders">
+			<label for="$core_v2_widget.UniqueId('NumberOfLeaders')" class="field-item-name">$core_v2_language.GetResource('NumberOfLeaders')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('NumberOfLeaders_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('NumberOfLeaders')" name="NumberOfLeaders" value="$numberOfLeaders" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item display-startdate">
+			<label for="$core_v2_widget.UniqueId('DisplayStartDate')" class="field-item-header">$core_v2_language.GetResource('DisplayStartDate')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DisplayStartDate_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('DisplayStartDate')" name="displayStartDate" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item display-enddate">
+			<label for="$core_v2_widget.UniqueId('DisplayEndDate')" class="field-item-header">$core_v2_language.GetResource('DisplayEndDate')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DisplayEndDate_Detail')</span>
+			<span class="field-item-input">
+			  <input type="text" id="$core_v2_widget.UniqueId('DisplayEndDate')" name="displayEndDate" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item time-period-type">
+			<label class="field-item-name">$core_v2_language.GetResource('TimePeriod')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('TimePeriod_Detail')</span>
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('TimePeriodType')" name="$core_v2_widget.UniqueId('TimePeriodType')">
+					<option value="AllTime" #if ($leaderboard.TimeSpanFilterType == "AllTime") selected #end>$core_v2_language.GetResource('TimePeriod_AllTime')</option>
+					<option value="Static" #if ($leaderboard.TimeSpanFilterType == "Static") selected #end>$core_v2_language.GetResource('TimePeriod_FixedDateRange')</option>
+					<option value="Rolling" #if ($leaderboard.TimeSpanFilterType == "Rolling") selected #end>$core_v2_language.GetResource('TimePeriod_RollingTimePeriod')</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item time-startdate" #if($leaderboard.TimeSpanFilterType != "Static") style="display: none;" #end>
+			<label for="$core_v2_widget.UniqueId('StartDate')" class="field-item-header">$core_v2_language.GetResource('StartDate')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('StartDate_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('StartDate')" name="startDate" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item time-enddate" #if($leaderboard.TimeSpanFilterType != "Static") style="display: none;" #end>
+			<label for="$core_v2_widget.UniqueId('EndDate')" class="field-item-header">$core_v2_language.GetResource('EndDate')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('EndDate_Detail')</span>
+			<span class="field-item-input">
+			  <input type="text" id="$core_v2_widget.UniqueId('EndDate')" name="endDate" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		#if ($leaderboard && $leaderboard.TimeSpanFilterType == "Rolling")
+			#set($defaultLength = $leaderboard.TimeSpanLength)
+		#else
+			#set($defaultLength = 30)
+		#end
+
+		<li class="field-item rolling-time"  #if($leaderboard.TimeSpanFilterType != "Rolling") style="display: none;" #end>
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('TimeSpanLength')">$core_v2_language.GetResource('TimeSpanLength')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('TimeSpanLength_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('TimeSpanLength')" name="$core_v2_widget.UniqueId('TimeSpanLength')" value="$defaultLength" />
+				<select id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('TimeSpanType'))" name="TimeSpanType">
+					<option value="Day" #if ($leaderboard.TimeSpanType == "Day") selected #end>$core_v2_language.GetResource('TimePeriod_Days')</option>
+					<option value="Month" #if ($leaderboard.TimeSpanType == "Month") selected #end>$core_v2_language.GetResource('TimePeriod_Months')</option>
+					<option value="Year" #if ($leaderboard.TimeSpanType == "Year") selected #end>$core_v2_language.GetResource('TimePeriod_Years')</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item roles include-roles">
+			<label for="$core_v2_widget.UniqueId('IncludeRoles')" class="field-item-name">$core_v2_language.GetResource('IncludeRoles')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('IncludeRoles_Detail')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('IncludeRoles')" />
+			</span>
+		</li>
+
+		<li class="field-item roles exclude-roles">
+			<label for="$core_v2_widget.UniqueId('ExcludeRoles')" class="field-item-name">$core_v2_language.GetResource('ExcludeRoles')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ExcludeRoles_Detail')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('ExcludeRoles')" />
+			</span>
+		</li>
+
+		#if ($leaderboard)
+			<li class="field-item identifiers">
+				<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</li>
+			<li class="field-item identifiers entityid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('EntityId')</label>
+				<span class="field-item-input">$leaderboard.Id</span>
+			</li>
+			<li class="field-item identifiers contentid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+				<span class="field-item-input">$!leaderboard.ContentId</span>
+			</li>
+			<li class="field-item identifiers contenttypeid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+				<span class="field-item-input">$!leaderboard.ContentTypeId</span>
+			</li>
+		#end
+
+	</ul>
+</fieldset></form>
+
+#if ($leaderboard && $leaderboard.TimeSpanFilterType == "Static")
+	#set($startDateValue = $core_v2_encoding.JavascriptEncode($leaderboard.StartDate))
+	#set($endDateValue = $core_v2_encoding.JavascriptEncode($leaderboard.EndDate))
+#else
+	#set($startDateValue = $core_v2_encoding.JavascriptEncode($core_v2_utility.CurrentDate))
+	#set($endDateValue = $core_v2_encoding.JavascriptEncode($core_v2_utility.CurrentDate.AddDays(30)))
+#end
+
+#set($displayStartDateValue = '')
+#set($displayEndDateValue = '')
+#if($leaderboard && $leaderboard.StartDisplayDate)
+	#set($displayStartDateValue = $core_v2_encoding.JavascriptEncode($leaderboard.StartDisplayDate))
+#end
+#if($leaderboard && $leaderboard.EndDisplayDate)
+	#set($displayEndDateValue = $core_v2_encoding.JavascriptEncode($leaderboard.EndDisplayDate))
+#end
+
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	var includeRoles = [];
+	#foreach($role in $leaderboard.IncludeRolesFilter)
+		includeRoles.push({id: '$role.Id', name: '$role.Name'});
+	#end
+
+	var excludeRoles = [];
+	#foreach($role in $leaderboard.ExcludeRolesFilter)
+		excludeRoles.push({id: '$role.Id', name: '$role.Name'});
+	#end
+
+	jQuery.telligent.evolution.widgets.leaderboardEditPanel.register({
+		leaderboardId: #if($leaderboard)$leaderboard.Id#else 0 #end,
+		applicationKey: #if($leaderboard)'$leaderboard.ApplicationKey'#else '' #end,
+		containerId: '$context.ContainerId',
+		containerTypeId: '$context.ContainerTypeId',
+		groupId: $group.Id,
+		startDate: '$startDateValue',
+		endDate: '$endDateValue',
+		displayStartDateValue: '$displayStartDateValue',
+		displayEndDateValue: '$displayEndDateValue',
+		getDescription: function() { return $core_v2_editor.GetContentScript('Description'); },
+		includeRoles: includeRoles,
+		excludeRoles: excludeRoles,
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			address: "#$core_v2_widget.UniqueId('WebAddress')",
+			numberOfLeadersId: "#$core_v2_widget.UniqueId('NumberOfLeaders')",
+			timePeriodTypeId: "#$core_v2_widget.UniqueId('TimePeriodType')",
+			startDateId: "#$core_v2_widget.UniqueId('StartDate')",
+			endDateId: "#$core_v2_widget.UniqueId('EndDate')",
+			displayStartDateId:  "#$core_v2_widget.UniqueId('DisplayStartDate')",
+			displayEndDateId:  "#$core_v2_widget.UniqueId('DisplayEndDate')",
+			timeSpanLengthId: "#$core_v2_widget.UniqueId('TimeSpanLength')",
+			timeSpanTypeId: "#$core_v2_widget.UniqueId('TimeSpanType')",
+			includeRolesId: "#$core_v2_widget.UniqueId('IncludeRoles')",
+			excludeRolesId: "#$core_v2_widget.UniqueId('ExcludeRoles')"
+		},
+		resources: {
+			save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+			delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+			fieldRequired: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('fieldRequired'))",
+			invalidDateRange: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('invalidDateRange'))",
+			leaderboardUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('leaderboardUpdated'))",
+			addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))"
+		},
+		urls: {
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			listitem: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('listitem.vm'))',
+			lookupRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-roles.vm'))',
+			groupRedirect: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Group.Id)))'
+		}
+	});
+});
+</script>

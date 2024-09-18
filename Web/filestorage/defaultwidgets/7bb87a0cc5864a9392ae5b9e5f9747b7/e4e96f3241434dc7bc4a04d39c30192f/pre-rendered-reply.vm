@@ -1,0 +1,17 @@
+##
+## Server-rendered reply node
+##
+## Expected in scope: $comment
+##
+
+<li
+	class="threaded-reply"
+	data-id="$!comment.CommentId"
+	data-parentid="$!comment.ParentCommentId"
+	data-createddate="$!core_v2_utility.GetTimestamp($comment.CreatedDate)"
+	data-yesvotes="$!comment.YesVotes"
+	data-novotes="$!comment.NoVotes"
+	data-url="$core_v2_encoding.HtmlAttributeEncode($comment.Url)"
+	>
+	<div>$core_v2_widget.ExecuteFile('common-rendered-reply-body.vm')</div>
+</li>

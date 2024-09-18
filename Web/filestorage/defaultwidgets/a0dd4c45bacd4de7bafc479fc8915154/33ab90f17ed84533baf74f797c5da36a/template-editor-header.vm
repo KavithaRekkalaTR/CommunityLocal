@@ -1,0 +1,29 @@
+##
+## Default editor view header template
+## To be overridden in specific studio
+##
+## Expects in scope:
+## nothing in particular... whatever the studio-specific model includes
+## but should include elements with class names:
+##     template-editor-components
+##     template-editor-actions
+##
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				#*
+				<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_tid=<%: Id %>&_ttid=<%: TypeId %>&_tt=overview" class="hierarchy theme-name ui-tip" data-tip="<%: Name %> $core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Overview'))"><%: Name %></a>
+				<span class="divider"> / </span>
+				<span class="hierarchy theme"><%: TypeName %></span>
+				<span class="divider"> / </span>
+				*#
+				<a href="#">Name A</a>
+				<span class="divider"> / </span>
+				<a href="#">Name B</a>
+				<div class="editor-components template-editor-components"></div>
+				<div class="editor-actions-wrapper template-editor-actions"></div>
+			</span>
+		</li>
+	</ul>
+</fieldset>

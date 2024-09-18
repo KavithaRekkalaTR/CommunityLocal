@@ -1,0 +1,11 @@
+﻿#set($clientId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('clientId')))
+#set($callbackUrl = $core_v2_page.GetFormValue('callbackUrl'))
+#set($response_type = $core_v2_page.GetFormValue('response_type'))
+#set($scope = $core_v2_page.GetFormValue('scope'))
+#set($state = $core_v2_page.GetFormValue('state'))
+
+#set($returnUrl = $core_v2_oauthClient.Deny($clientId, "$callbackUrl", "$response_type", "$scope", "$state"))
+
+
+$core_v2_page.SetContentType('application/json')
+{"returnUrl": "$core_v2_encoding.JavascriptEncode($returnUrl)"}

@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SystemNotificationsPanel_Name}" version="10.0.0.0" description="${resource:SystemNotificationsPanel_Description}" instanceIdentifier="994a702002f34fc2ba7dbe3f0febf9f9" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="system-notifications with-header-filter" provider="436be9d5584847d9941b327454428cc4">
+	<contentScript><![CDATA[#set ($notificationsListId = $core_v2_widget.UniqueId('notificationsList'))
+
+#set ($options = "%{ SortBy = 'LastOccurredDate', IsResolved = 'false' }")
+#set ($notifications = $context.List($options))
+<ul id="$core_v2_encoding.HtmlAttributeEncode($notificationsListId)" class="content-list content simple">
+	#if ($notifications && $notifications.Count > 0)
+		$core_v2_widget.ExecuteFile('notifications-render.vm')
+	#end
+</ul>
+
+<div class="message no-matches" style="#if ($notifications && $notifications.Count > 0) display: none; #else display: block; #end">$core_v2_language.GetResource('NoNotifications')</div>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('list_headerTemplateId'))
+#registerClientTemplate($headerTemplateId)
+	<fieldset>
+		<ul class="field-list">
+		   <li class="field-item panel-instructions">
+				<span class="field-item-description">
+					$core_v2_language.GetResource('Instructions')
+				</span>
+		   </li>
+	   </ul>
+
+		<ul class="filter">
+			<li class="filter-option unresolved selected">
+				<a href="#" data-messagename="widget.systemnotifications.filter" data-filter="unresolved">$core_v2_language.GetResource('UnresolvedNotifications_Only')</a>
+			</li>
+			<li class="filter-option all">
+				<a href="#" data-messagename="widget.systemnotifications.filter" data-filter="resolved">$core_v2_language.GetResource('ResolvedNotifications_Only')</a>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.panels.systemnotifications')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.systemNotificationsPanel.register({
+				headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+				list: '#$core_v2_encoding.JavascriptEncode($notificationsListId)',
+				deleteConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ResolveConfirm'))',
+				markedResolvedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MarkedResolved'))',
+				getNotificationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('notifications-query.vm'))',
+				notificationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('notification.vm'))',
+				notification: {
+					notificationid: #if ($notifications && $notifications.Count == 1) $notifications.get_item(0).Id #else 0 #end,
+					name: #if ($notifications && $notifications.Count == 1) '$core_v2_encoding.HtmlAttributeEncode($notifications.get_item(0).Subject)' #else '' #end,
+				}
+			});
+		});
+	</script>
+#end
+]]></contentScript>
+	<languageResources><language key="en-us">
+  <resource name="SystemNotificationsPanel_Name">System Notifications</resource>
+  <resource name="SystemNotificationsPanel_Description">View system notifications.</resource>
+  <resource name="MarkResolved">Mark Resolved</resource>
+  <resource name="NoNotifications">No notifications match the selected filter.</resource>
+  <resource name="Occurrences">{0} occurrences</resource>
+  <resource name="ResolveConfirm">Are you sure you want to mark this notification resolved?</resource>
+  <resource name="MarkedResolved">The selected system notification has been marked as resolved.</resource>
+  <resource name="UnresolvedNotifications_Only">Current</resource>
+  <resource name="ResolvedNotifications_Only">Previous</resource>
+  <resource name="Instructions">System notifications are sent by the site to alert about changes and pressing issues. Each notification should be reviewed and resolved.</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

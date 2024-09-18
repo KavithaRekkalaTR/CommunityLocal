@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:IdeasCreateEditIdeaStatus}" version="10.2.0.0" description="${resource:IdeasCreateEditIdeaStatus-Description}" instanceIdentifier="44d2271f1c2347c3866a5a7b44729c98" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="idea-status-create" lastModified="2018-09-04 19:44:45Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript><![CDATA[#set($userId = $core_v2_user.Accessing.Id)
+#set($group = false)
+#set($group = $core_v2_group.Current)
+#set($challenge = false)
+#set($challenge = $telligentIdeas_v1_challenges.Current)
+#set($idea = false)
+#set($idea = $telligentIdeas_v1_ideas.Current)
+
+#if(!$group || !$challenge || !$idea)
+    $core_v2_widget.Hide()
+#else
+    #set($ideaStatus = false)
+    #set($ideaStatus = $telligentIdeas_v1_ideaStatuses.Current)
+
+    #set($hasPermission = $telligentIdeas_v1_ideaPermissions.CanManageIdeaStatus($challenge.Id))
+    #if (!$ideaStatus && !$hasPermission)
+        <div id="$core_v2_widget.UniqueId('errorMessage')" class="message error">$core_v2_language.GetResource("CreateIdeaStatusPermissionDenied")</div>
+    #elseif ($ideaStatus && !$hasPermission)
+        <div id="$core_v2_widget.UniqueId('errorMessage')" class="message error">$core_v2_language.GetResource("EditIdeaStatusPermissionDenied")</div>
+    #else
+        <div id="$core_v2_widget.UniqueId('form')">
+            <form>
+            <div class="field-list-header"></div>
+            <fieldset class="field-list">
+                #if ($ideaStatus)
+                    <h1>$core_v2_language.FormatString($core_v2_language.GetResource("EditIdeaStatus"), $idea.Name)</h1>
+                #else
+                    <h1>$core_v2_language.FormatString($core_v2_language.GetResource("CreateIdeaStatus"), $idea.Name)</h1>
+                #end
+                <div class="content">
+                    <div id="$core_v2_widget.UniqueId('showless')">$core_v2_language.Truncate($idea.Description(), 500, '...')
+                        <p><a href="javascript:void(0);">$core_v2_language.GetResource('ShowMore')</a></p>
+                    </div>
+
+                    <div id="$core_v2_widget.UniqueId('showmore')" style="display:none;">$idea.Description()
+                        <p><a href="javascript:void(0);">$core_v2_language.GetResource('ShowLess')</a></p>
+                    </div>
+                </div>
+
+                <ul class="field-list">
+                    <li class="field-item required status">
+                            <label for="$core_v2_widget.UniqueId('status')" class="field-item-header">$core_v2_language.GetResource('Status')</label>
+                            <span class="field-item-input">
+                                #if ($ideaStatus)
+                                    $ideaStatus.Status.Name
+                                #else
+                                    <select id="$core_v2_widget.UniqueId('status')" name="$core_v2_widget.UniqueId('status')">
+                                        #foreach ($status in $telligentIdeas_v1_statuses.List())
+                                            <option value="$status.Key" #if($idea.Status.Key == $status.Key || ($idea.Status.Key == '' && $status.IsDefault))selected="selected"#end>$status.Name</option>
+                                        #end
+                                    </select>
+                                #end
+                            </span>
+                        <span class="field-item-validation" style="display: none;"></span>
+                    </li>
+
+                    <li class="field-item idea-notes">
+                        <label for="$core_v2_widget.UniqueId('notes')" class="field-item-header">$core_v2_language.GetResource('Notes')</label>
+                        <span class="field-item-description">$core_v2_language.GetResource('Notes-Description')</span>
+                        <span class="field-item-input">$core_v2_editor.Render('notes',"%{Width='100%', Height='250px', Value=$!ideaStatus.Note('raw'), ContentTypeId=$telligentIdeas_v1_ideas.ContentTypeId }")</span>
+                        <span class="field-item-validation" style="display:none;"></span>
+                    </li>
+
+                    <li class="field-item create-post">
+                        <span class="field-item-input">
+                            <a href="javascript:void(0);" class="internal-link save-post disabled button" id="$core_v2_widget.UniqueId('save')">
+                                <span></span>$core_v2_language.GetResource('Post')
+                            </a>
+                        <span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+                        </span>
+                    </li>
+                </ul>
+            </fieldset>
+            <div class="field-list-footer"></div>
+            </form>
+        </div>
+
+        #registerEndOfPageHtml('telligent.evolution.Ideation.widgets.addEditIdeaStatus')
+            <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+        #end
+
+        #set($successUrl = false)
+        #set($successUrl = $core_v2_page.ReturnUrl)
+        #if (!$successUrl || $successUrl == '' || $core_v2_page.UrlsAreEqual($successUrl, $core_v2_page.Url))
+            #set($successUrl = $telligentIdeas_v1_urls.Idea($idea.Id))
+        #end
+
+        #registerEndOfPageHtml()
+            <script type="text/javascript">
+            //<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+            jQuery(function(j) {
+                j.telligent.evolution.Ideation.widgets.addEditIdeaStatus.register({
+                    wrapperId:'$core_v2_widget.WrapperElementId',
+                    challengeId: '$challenge.Id',
+                    ideaId: '$idea.Id',
+                    ideaStatusId: #if ($ideaStatus) $ideaStatus.Id #else -1 #end,
+                    save: j('#$core_v2_widget.UniqueId('save')'),
+                    statusId: '$core_v2_widget.UniqueId('status')',
+                    showLessId: '$core_v2_widget.UniqueId('showless')',
+                    showMoreId: '$core_v2_widget.UniqueId('showmore')',
+                    getNotesContent: function() { return $core_v2_editor.GetContentScript('notes'); },
+                    successUrl: '$core_v2_encoding.JavascriptEncode($successUrl)'
+                });
+            });
+            //<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+            </script>
+        #end
+    #end
+#end]]></contentScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CreateIdeaStatus">Update Status for '{0}'</resource>
+  <resource name="CreateIdeaStatusPermissionDenied">You do not have permission to add idea statuses.</resource>
+  <resource name="EditIdeaStatus">Edit Status of '{0}'</resource>
+  <resource name="EditIdeaStatusPermissionDenied">You do not have permission to edit idea statuses.</resource>
+  <resource name="IdeasCreateEditIdeaStatus">Ideas - Create/Edit Idea Status</resource>
+  <resource name="IdeasCreateEditIdeaStatus-Description">Adds or edits a status on an ideation idea.</resource>
+  <resource name="Notes">Notes</resource>
+  <resource name="Notes-Description">Provide optional details about this status update.</resource>
+  <resource name="Post">Post</resource>
+  <resource name="Status">Status</resource>
+  <resource name="ShowMore">Show more</resource>
+  <resource name="ShowLess">Show less</resource>
+</language>]]></languageResources>
+    <requiredContext>
+      <context id="17db2a1129bd4739a986e65b09f7f36a" />
+    </requiredContext>
+    <restScopes>
+        <scope id="ideas.ideastatuses.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

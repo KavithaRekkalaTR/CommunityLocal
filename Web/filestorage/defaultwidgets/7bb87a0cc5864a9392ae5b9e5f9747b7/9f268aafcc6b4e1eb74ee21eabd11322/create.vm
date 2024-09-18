@@ -1,0 +1,19 @@
+﻿#if ($core_v2_page.IsPost)
+	#set($emailAddress = $core_v2_page.GetFormValue('emailAddress'))
+	#set($message = $core_v2_page.GetFormValue('message'))
+
+	$core_v2_page.SetContentType('application/json')
+
+	#if($emailAddress.IndexOf(";") > 0)
+	    #set($emailAddresses = $core_v2_utility.Split(";", $emailAddress))
+	    #set($userInvitation = $core_v2_userInvitation.Create($emailAddresses, $message))
+	#else
+	    #set($userInvitation = $core_v2_userInvitation.Create($emailAddress, $message))
+	#end
+
+	#if ($userInvitation.HasErrors())
+		$core_v2_page.SendJsonError($userInvitation.Errors)
+	#end
+
+	{"invitationCreated":true}
+#end

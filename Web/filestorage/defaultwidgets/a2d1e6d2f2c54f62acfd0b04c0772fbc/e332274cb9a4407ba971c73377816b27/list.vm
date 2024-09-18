@@ -1,0 +1,56 @@
+﻿##
+## Expects in scope: $blogId, $pageIndex
+##
+
+#set ($pageSize = 10)
+#set ($requests = $core_v2_blog.ListContactRequests($blogId, "%{ PageSize = $pageSize, PageIndex = $pageIndex }"))
+
+#foreach ($request in $requests)
+	<li class="content-item">
+		<div class="content" data-requestid="$request.Id">
+			<h4 class="name">
+				$request.Name
+			</h4>
+			<div class="post-attributes">
+				<ul class="attribute-list">
+					#if ($request.EmailAddress)
+						<li class="attribute-item from">
+							<span class="name"></span>
+							<span class="value">
+								<a href="mailto:$core_v2_encoding.HtmlAttributeEncode($request.EmailAddress)">$request.EmailAddress</a>
+							</span>
+						</li>
+					#end
+					<li class="attribute-item date">
+						<span class="name"></span>
+						<span class="value">
+					  		$core_v2_language.FormatDate($request.DateCreated)
+						</span>
+					</li>
+				</ul>
+			</div>
+			<div class="content expandable">
+				$request.Body
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="contextual-delete-request" data-requestid="$request.Id">$core_v2_language.GetResource('delete')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end

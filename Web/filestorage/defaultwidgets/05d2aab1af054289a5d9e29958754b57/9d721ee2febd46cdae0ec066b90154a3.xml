@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ManualSync}" version="10.2.0.0" description="" instanceIdentifier="9d721ee2febd46cdae0ec066b90154a3" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-03-12 21:21:20Z" provider="05d2aab1af054289a5d9e29958754b57">
+	<contentScript><![CDATA[<div id="$core_v2_widget.UniqueId('tab')" class="manual-sync">
+	<p>
+		$core_v2_language.FormatString($core_v2_language.GetResource('Instructions'), $context.IncrementalSyncUrl, $context.FullSyncUrl)
+	</p>
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button" id="$core_v2_widget.UniqueId('incrementalupdate')">$core_v2_language.GetResource('IncrementalSync')</a>
+					<a href="#" class="button" id="$core_v2_widget.UniqueId('fullupdate')">$core_v2_language.GetResource('FullSync')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+	<p>
+		$core_v2_language.GetResource('ExecutionTimeWarning')
+	</p>
+	<p>
+	    #set($run = false)
+	    #set($run = $context.LastSuccessfulSync)
+	    #set($runText = $core_v2_language.GetResource('Never'))
+	    #if($run)
+	          #set($runText = $core_v2_language.FormatDateAndTime($run))
+	    #end
+	    <strong>$core_v2_language.GetResource('LastSuccessfulRun'):</strong>$runText
+	</p>
+	<p>
+	    #set($fail = false)
+	    #set($fail = $context.LastFailedSync)
+	    #set($failText = $core_v2_language.GetResource('Never'))
+	    #if($fail)
+	          #set($failText = $core_v2_language.FormatDateAndTime($fail))
+	    #end
+	    <strong>$core_v2_language.GetResource('LastFailedRun'):</strong>$failText
+	</p>
+</div>
+
+<script type="text/javascript">
+	(function(){
+		var api = $context.JsonApi;
+		api.registerContent({
+			name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ManualSync'))',
+			orderNumber: 250,
+			selected: function() {
+				jQuery('#$core_v2_widget.UniqueId('tab')').css({
+					visibility: 'visible',
+					height: 'auto',
+					width: 'auto',
+					left: '0',
+					position: 'static',
+					overflow: 'visible',
+					top: '0'
+				});
+			},
+			unselected: function() {
+				jQuery('#$core_v2_widget.UniqueId('tab')').css({
+					visibility: 'hidden',
+					height: '100px',
+					width: '800px',
+					left: '-1000px',
+					position: 'absolute',
+					overflow: 'hidden',
+					top: '-1000px'
+				});
+			}
+		});
+
+		jQuery('#$core_v2_widget.UniqueId('incrementalupdate')').on('click', function() {
+			jQuery.telligent.evolution.post({
+				url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-sync.vm'))',
+				data: {
+					full: false
+				}
+			})
+				.then(function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('IncrementalSyncSuccess'))', { type: 'success' })
+				});
+
+			return false;
+		});
+
+		jQuery('#$core_v2_widget.UniqueId('fullupdate')').on('click', function() {
+			jQuery.telligent.evolution.post({
+				url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-sync.vm'))',
+				data: {
+					full: true
+				}
+			})
+				.then(function() {
+					jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FullSyncSuccess'))', { type: 'success' })
+				});
+			return false;
+		});
+
+	})();
+</script>]]></contentScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ExecutionTimeWarning">Note that these jobs will take a varying amount of time based on the amount of data that exists within your Verint Knowledge Management installation.</resource>
+  <resource name="FullSync">Manually run full synchronization</resource>
+  <resource name="FullSyncSuccess">The full synchronization job has been scheduled to run immediately.</resource>
+  <resource name="IncrementalSync">Manually run incremental synchronization</resource>
+  <resource name="IncrementalSyncSuccess">The incremental synchronization job has been scheduled to run immediately.</resource>
+  <resource name="Instructions">Knowledge management content is synchronized with your Verint Knowledge Management installation in two steps. The &lt;a href="{0}"&gt;incremental synchronization job&lt;/a&gt; reviews additions and updates and can run frequently while the &lt;a href="{1}"&gt;full synchronization job&lt;/a&gt; runs less frequently and also ensures that deleted documents are deleted from Telligent Community. These synchronization jobs run based on the their configured schedules, but can also be run manually below.</resource>
+  <resource name="LastFailedRun">Last Failed Sync</resource>
+  <resource name="LastSuccessfulRun">Last Successful Sync</resource>
+  <resource name="ManualSync">Sync</resource>
+  <resource name="Never">Never</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,17 @@
+﻿<scriptedContentFragments><scriptedContentFragment name="${resource:PeopleSearchRedirect_Title}" version="8.0.0.1" description="${resource:PeopleSearchRedirect_Description}" instanceIdentifier="f6380a0fcc3c4ff3b9afa32fd01fe064" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass=""><contentScript>
+
+#set($query = '')
+#set($query = "q=$!core_v2_page.GetQueryStringValue('q')")
+
+#set($url = $core_v2_urls.Search("%{ QueryString = $query }"))
+#if (!$core_v2_widget.IsInWidgetPreviewMode)
+	$core_v2_page.Redirect($url)
+#end
+    
+&lt;p&gt;$url&lt;/p&gt;</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="PeopleSearchRedirect_Title">People Search Redirect</resource>
+	<resource name="PeopleSearchRedirect_Description">For themes that do not support people search, this redirects to the main search form</resource>
+</language>
+		</languageResources></scriptedContentFragment></scriptedContentFragments>

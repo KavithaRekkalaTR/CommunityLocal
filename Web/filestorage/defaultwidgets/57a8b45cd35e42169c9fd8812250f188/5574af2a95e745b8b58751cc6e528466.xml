@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Idea_List_Name}" version="11.0.0.0" description="${resource:Idea_List_Description}" instanceIdentifier="5574af2a95e745b8b58751cc6e528466" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="idea-list" lastModified="2020-01-14 16:06:26Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($showSidebarList = false)
+#set ($region = $core_v2_widget.RegionName.ToLower())
+#set ($layout = $core_v2_page.Layout.ToLower())
+
+#if ($region == 'split-sidebar-left' || $region == 'split-sidebar-right' || $region == 'left-sidebar')
+		#set ($showSidebarList = true)
+#elseif ($region == 'right-sidebar' && !$layout.Contains('split-content') && !$layout.Contains('split-sidebar'))
+		#set ($showSidebarList = true)
+#end
+
+#if($showSidebarList)
+		$core_v2_widget.ExecuteFile('sidebar.vm')
+#else
+		$core_v2_ui.PagedContent('standard.vm')
+#end
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Idea_List_Title}'))
+]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" dataType="String" template="core_v2_tokenizedString" defaultValue="${resource:Idea_List_Title}" />
+	<property id="queryType" labelResourceName="QueryType" defaultValue="active" dataType="String">
+		<propertyValue value="all" labelResourceName="RecentIdeas" />
+		<propertyValue value="myideas" labelResourceName="MyIdeas" />
+		<propertyValue value="myvotes" labelResourceName="MyVotes" />
+	</property>
+	<property id="status" labelResourceName="FilterStatus" defaultValue="!open" dataType="String">
+		<propertyValue value="" labelResourceName="Status_All" />
+		<propertyValue value="!open" labelResourceName="Status_Open" />
+		<propertyValue value="!closed" labelResourceName="Status_Closed" />
+		<propertyValue value="!held" labelResourceName="Status_HoldsVotes" />
+	</property>
+	<property id="challengeOrGroup" labelResourceName="CF_ChallengeOrGroup" defaultValue="challenge" dataType="String">
+		<propertyValue value="challenge" labelResourceName="CF_ChallengeOrGroup_Challenge" orderNumber="1000000" propertiesToShow="selectedChallenge" propertiesToHide="selectedGroup,includeSubGroups" />
+		<propertyValue value="group" labelResourceName="CF_ChallengeOrGroup_Group" orderNumber="1000001" propertiesToShow="selectedGroup,includeSubGroups" propertiesToHide="selectedChallenge" />
+	</property>
+	<property id="selectedChallenge" labelResourceName="CF_Idea_SelectChallenge" dataType="Custom" template="telligentIdeas_v1_challengeLookup" width="95%" maxSelections="1" />
+	<property id="selectedGroup" labelResourceName="CF_Idea_SelectGroup" dataType="Custom" template="core_v2_groupLookup" width="95%" />
+	<property id="includeSubGroups" labelResourceName="IncludeSubGroups" defaultValue="false" dataType="Bool" />
+	<property id="excerptSize" labelResourceName="ExcerptSize" descriptionResourceName="ExcerptSize_Description" defaultValue="250" dataType="Int">
+		<propertyRule name="minmax" min="1" max="10000" />
+	</property>
+	<property id="sortBy" labelResourceName="SortBy" defaultValue="score" dataType="String">
+		<propertyValue value="score" labelResourceName="SortBy_Score" />
+		<propertyValue value="date" labelResourceName="SortBy_Date" />
+		<propertyValue value="statuslastupdateddate" labelResourceName="SortBy_Status" />
+	</property>
+	<property id="sortOrder" labelResourceName="SortOrder" defaultValue="descending" dataType="String">
+		<propertyValue value="descending" labelResourceName="Sort_Descending" />
+		<propertyValue value="ascending" labelResourceName="Sort_Ascending" />
+	</property>
+	<property id="pageSize" labelResourceName="CF_PageSize" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ActiveIdeas">Active ideas</resource>
+  <resource name="AnyCategory">In any category</resource>
+  <resource name="AvailableVotes_Plural">You have {1} votes available to vote on &lt;a href="{0}"&gt;open ideas&lt;/a&gt;.</resource>
+  <resource name="AvailableVotes_Singular">You have {1} vote available to vote on &lt;a href="{0}"&gt;open ideas&lt;/a&gt;.</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_ChallengeOrGroup">Select a ideation/group to pull content from</resource>
+  <resource name="CF_ChallengeOrGroup_Challenge">Ideation</resource>
+  <resource name="CF_ChallengeOrGroup_Group">Group</resource>
+  <resource name="CF_EmptyList">No matching ideas found</resource>
+  <resource name="CF_EmptyList_Link">Have a great idea?  Be the first to &lt;a href="{0}"&gt;submit an idea&lt;/a&gt;.</resource>
+  <resource name="CF_Idea_SelectChallenge">Ideation to display</resource>
+  <resource name="CF_Idea_SelectGroup">Group to display</resource>
+  <resource name="CF_PageSize">Number of ideas to display per page</resource>
+  <resource name="CF_SortBy">Sort By</resource>
+  <resource name="CF_SortOrder">Sort Order</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Comments_Plural">{0} Comments</resource>
+  <resource name="Comments_Singular">{0} Comment</resource>
+  <resource name="ExcerptSize">Excerpt Size</resource>
+  <resource name="ExcerptSize_Description">Enter the maximum number of characters to display for post excerpts.</resource>
+  <resource name="Idea_List_Description">Lists ideas</resource>
+  <resource name="Idea_List_Name">Ideas - Idea List</resource>
+  <resource name="Idea_List_Title">Ideas</resource>
+  <resource name="IdeaLinks_EditChallenge">Edit the Ideation</resource>
+  <resource name="IdeaLinks_IdeationSubscribe">Turn Ideation notifications on</resource>
+  <resource name="IdeaLinks_IdeationUnsubscribe">Turn Ideation notifications off</resource>
+  <resource name="IdeasInCategory">In '{0}'</resource>
+  <resource name="IncludeSubGroups">Include Sub Groups</resource>
+  <resource name="more">More</resource>
+  <resource name="MyIdeas">Ideas you submitted</resource>
+  <resource name="MyVotes">Ideas you voted on</resource>
+  <resource name="NotCategorized">Not categorized</resource>
+  <resource name="Options">Options</resource>
+  <resource name="QueryType">Query Type</resource>
+  <resource name="QueryType_Active">All Active</resource>
+  <resource name="QueryType_All">All Recent</resource>
+  <resource name="QueryType_My">My Ideas</resource>
+  <resource name="QueryType_MyVotes">My Votes</resource>
+  <resource name="RecentIdeas">All ideas</resource>
+  <resource name="SortOrder">Sort Order</resource>
+  <resource name="Sort_Ascending">Ascending</resource>
+  <resource name="Sort_Descending">Descending</resource>
+  <resource name="SortBy">Sort By</resource>
+  <resource name="SortBy_Date">By date</resource>
+  <resource name="SortBy_Score">By highest score</resource>
+  <resource name="SortBy_Status">By recent status change</resource>
+  <resource name="Status_All">With any status</resource>
+  <resource name="Status_Closed">With any closed status</resource>
+  <resource name="Status_HoldsVotes">With held votes</resource>
+  <resource name="Status_N">Currently '{0}'</resource>
+  <resource name="Status_Open">With any open status</resource>
+  <resource name="FilterStatus">Secondary Filter</resource>
+  <resource name="TotalVotes_Plural">You have used &lt;a href="{0}"&gt;{1} votes&lt;/a&gt;.</resource>
+  <resource name="TotalVotes_Singular">You have used &lt;a href="{0}"&gt;{1} vote&lt;/a&gt;.</resource>
+  <resource name="View">View</resource>
+  <resource name="StatusAttributeFormat">{0} on {1}</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

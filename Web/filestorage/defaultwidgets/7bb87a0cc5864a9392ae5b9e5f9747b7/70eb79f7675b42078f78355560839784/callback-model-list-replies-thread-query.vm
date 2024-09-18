@@ -1,0 +1,84 @@
+##
+##
+## Expects in scope:
+##   $threadId
+##   $parentId
+##   $flattenedDepth
+##   $endReplyId
+##   $startReplyId
+##   $sortBy
+##   $sortOrder
+##   $pageSize
+##   $flattenedSortBy
+##   $flattenedSortOrder
+##   $filter
+##
+
+#set ($listThreadedOptions = "%{}")
+$listThreadedOptions.add('ParentReplyId', $parentId)
+$listThreadedOptions.add('FlattenedDepth', $flattenedDepth)
+#set ($rootPageSize = $pageSize)
+#if ($startReplyId)
+	#set ($rootPageSize = $rootPageSize + 1)
+	$listThreadedOptions.add('StartReplyId', $startReplyId)
+#end
+#if ($endReplyId)
+	#set ($rootPageSize = $rootPageSize + 1)
+	$listThreadedOptions.add('EndReplyId', $endReplyId)
+#end
+$listThreadedOptions.add('RootPageSize', $rootPageSize)
+$listThreadedOptions.add('ChildPageSize', $pageSize)
+#if ($sortBy)
+	$listThreadedOptions.add('ThreadedSortBy', $sortBy)
+#end
+#if ($sortOrder)
+	$listThreadedOptions.add('ThreadedSortOrder', $sortOrder)
+#end
+#if ($flattenedDepth > 0)
+	#if ($flattenedSortBy)
+		$listThreadedOptions.add('FlattenedSortBy', $flattenedSortBy)
+	#end
+	#if ($flattenedSortOrder)
+		$listThreadedOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+	#end
+#else
+	#if ($sortBy)
+		$listThreadedOptions.add('FlattenedSortBy', $sortBy)
+	#end
+	#if ($sortOrder)
+		$listThreadedOptions.add('FlattenedSortOrder', $sortOrder)
+	#end
+#end
+
+## If filtering by answers, only get a flat list of answers
+#if ($filter && $filter == 'Answers')
+	#set ($filteredListOptions = "%{}")
+	$filteredListOptions.Add('PageSize', $pageSize)
+	$filteredListOptions.Add('IncludeThreadStarter', false)
+	$filteredListOptions.Add('SortBy', 'TotalVotes')
+	$filteredListOptions.Add('SortOrder', 'Descending')
+	#if ($pageIndex)
+		$filteredListOptions.Add('PageIndex', $pageIndex)
+	#end
+	#set ($thread = $core_v2_forumThread.Get($threadId))
+	#if($thread.ThreadStatus == 'Answered')
+		$filteredListOptions.Add('ForumReplyQueryType', 'verified-answers')
+	#else
+		$filteredListOptions.Add('ForumReplyQueryType', 'non-verified-answers')
+	#end
+	#set ($forumReplies = $core_v2_forumReply.List($threadId, $filteredListOptions))
+## Otherwise get thread
+#else
+	## Exclude replies matching StartReplyId or EndReplyId
+	#set ($threadedReplies = $core_v2_forumReply.ListThreaded($threadId, $listThreadedOptions))
+	#if (!$startReplyId && !$endReplyId)
+		#set ($forumReplies = $threadedReplies)
+	#else
+		#set ($forumReplies = [])
+		#foreach ($reply in $threadedReplies)
+			#if ((!$startReplyId || $reply.Id != $startReplyId) && (!$endReplyId || $reply.Id != $endReplyId))
+				#set ($addedAt = $forumReplies.Add($reply))
+			#end
+		#end
+	#end
+#end

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:IdeaManagement_Name}" version="9.0.0.0" description="${resource:IdeaManagement_Description}" instanceIdentifier="c9cdb27e8db742ce87a534749f428ff4" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-ideamanagement with-header-filter" provider="e524e1d901d94812a770dd9a575b9ba1">
+    <contentScript><![CDATA[#set ($ideasListId = $core_v2_widget.UniqueId('ideasListId'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+        <li class="field-item filters">
+            <span class="field-item-input">
+                <select class="sort-field sortby">
+                    <option value="date">$core_v2_language.GetResource('SortBy_Date')</option>
+                    <option value="score">$core_v2_language.GetResource('SortBy_HighestScore')</option>
+                    <option value="topic">$core_v2_language.GetResource('SortBy_Title')</option>
+                </select>
+                <select class="sort-field sortorder">
+                    <option value="ascending">$core_v2_language.GetResource('SortOrder_Ascending')</option>
+                    <option value="descending" selected="selected">$core_v2_language.GetResource('SortOrder_Descending')</option>
+                </select>
+            </span>
+        </li>
+	</ul>
+</fieldset></form>
+<div>
+	$core_v2_widget.ExecuteFile('paged-ideas.vm')
+</div>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.ideaManagement.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		ideasListId: '#$core_v2_encoding.JavascriptEncode($ideasListId)',
+		urls: {
+			pagedIdeas: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-ideas.vm'))',
+			deleteIdea: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete-idea.vm'))',
+			ideation: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($telligentIdeas_v1_urls.Ideas($context.Ideation.Id)))',
+			votes: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('votes.vm'))',
+			addIdea: '$!core_v2_encoding.JavascriptEncode($telligentIdeas_v1_urls.AddIdea($context.Ideation.Id))'
+		},
+		resources: {
+			showAll: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ShowAllIdeas'))',
+			confirmDelete: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ConfirmDelete'))',
+			votes: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Votes'))',
+			votesOf: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('VotesOfFormat'))',
+			showOpen: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ShowOpenForVoting'))',
+			showClosed: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ShowClosedForVoting'))',
+			showAll: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ShowAll'))',
+			ideaDeleted: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('IdeaDeleted'))',
+			addIdea: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('AddIdea'))',
+			noPosts: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('NoResults'))'
+		}
+	});
+});
+</script>
+
+]]></contentScript>
+    <languageResources><language key="en-us">
+  <resource name="IdeaManagement_Name">Ideas</resource>
+  <resource name="IdeaManagement_Description">Manage ideas.</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="ShowAllIdeas">All</resource>
+  <resource name="ViewUser">View User Profile</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="more">More</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ConfirmDelete">Are you sure you want to delete this idea?</resource>
+  <resource name="OnVoteFormat">on {0} vote</resource>
+  <resource name="OnVotesFormat">on {0} votes</resource>
+  <resource name="VoteFormat">{0} vote</resource>
+  <resource name="VotesFormat">{0} votes</resource>
+  <resource name="Votes">Votes</resource>
+  <resource name="VotesOfFormat">Votes for: {0}</resource>
+  <resource name="LatestVote">Latest vote date: {0}</resource>
+  <resource name="StartDate">Start Date</resource>
+  <resource name="EndDate">End Date</resource>
+  <resource name="View">View</resource>
+  <resource name="IdeaDeleted">Idea has been deleted.</resource>
+  <resource name="find">Find an idea...</resource>
+  <resource name="AddIdea">Add Idea</resource>
+  <resource name="NoResults">No results</resource>
+  <resource name="ShowAll">All</resource>
+  <resource name="ShowOpenForVoting">Voting Open</resource>
+  <resource name="ShowClosedForVoting">Voting Closed</resource>
+  <resource name="SortBy_HighestScore">By highest score</resource>
+  <resource name="SortBy_Date">By date</resource>
+  <resource name="SortBy_Title">By title</resource>
+  <resource name="SortOrder_Ascending">Ascending</resource>
+  <resource name="SortOrder_Descending">Descending</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

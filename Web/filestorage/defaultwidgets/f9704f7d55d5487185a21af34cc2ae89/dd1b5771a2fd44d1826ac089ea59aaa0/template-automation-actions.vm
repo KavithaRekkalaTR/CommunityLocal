@@ -1,0 +1,50 @@
+<div class="navigation-list editor-actions">
+	<ul class="ui-links actions" data-maxlinks="0">
+
+		## if staged, show actions for publishing/reverting
+		<% if(IsStaged) { %>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="studio.view.staging.publish" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('PublishStagedChanges')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="studio.view.staging.revert" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('RevertStagedChanges')</a>
+			</li>
+		<% } %>
+
+		## if saved at all...
+		<% if(State != 'NotPersisted') { %>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="ma.view.automation.initiate-new-file" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('AddFile')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="ma.view.automation.initiate-upload" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('UploadFile')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="ma.view.automation.clone" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('SaveAsCopy')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="ma.view.automation.export" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('ExportAutomation')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="ma.view.resource.export" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('ExportResources')</a>
+			</li>
+		<% } %>
+		## if there's a factory default version (call it revert to factory default) or is purely custom (call it delete)
+		<% if(State == 'Custom' || (State == 'FactoryDefault' && IsEditable)) { %>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="ma.view.automation.delete" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('Delete')</a>
+			</li>
+		<% } else if(State == 'CustomizedDefault' || (typeof IsTranslated !== 'undefined' && IsTranslated)) { %>
+			<li class="navigation-list-item">
+				<a href="#" data-messagename="ma.view.automation.delete" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('RevertToDefault')</a>
+			</li>
+		<% } %>
+
+		<li class="navigation-list-item">
+			<a class="node-actions-more" href="#" data-more>$core_v2_language.GetResource('AutomationActions')</a>
+		</li>
+		<li class="navigation-list-item">
+			<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+		</li>
+	</ul>
+</div>

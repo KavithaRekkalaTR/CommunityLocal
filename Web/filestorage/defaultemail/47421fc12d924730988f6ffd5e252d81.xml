@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Wiki Page Update" version="13.0.0.0" description="Raises notifications to users when a wiki page to which you are subscribed is updated." id="47421fc12d924730988f6ffd5e252d81" lastModified="2023-08-30 16:29:34Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('title')
+$context_v1_email.Context.WikiPage.Title
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('title')
+$context_v1_email.Context.WikiPage.Title
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p><strong>
+#format($core_v2_language.GetResource('Body_Revision'))
+#token('title')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.WikiPage.Url)">$context_v1_email.Context.WikiPage.Title</a>
+#token('revision_number')
+    $context_v1_email.Context.WikiPage.RevisionNumber
+#end
+</strong></p>
+<p>
+#format($core_v2_language.GetResource('Body_EditedBy'))
+#token('user_name')
+    #set($profileUrl = false)
+    #set($profileUrl = $context_v1_email.Context.WikiPage.User.Url)
+    #if ($profileUrl)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$context_v1_email.Context.WikiPage.User.DisplayName</a>
+    #else
+        $context_v1_email.Context.WikiPage.User.DisplayName
+    #end
+#end
+</p>
+<p>
+$context_v1_email.Context.WikiPage.Body('Email')
+</p>
+<p>
+#format($core_v2_language.GetResource('Body_ViewOnline'))
+#token('view_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.WikiPage.Url)">$core_v2_language.GetResource('ViewOnline')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer_Unsubscribe'))
+#token('unsubscribe_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.WikiPage.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+#end
+</p>
+#set($flagAsAbuseUrl = false)
+#set($flagAsAbuseUrl = $core_v2_urls.ReportAbuse($context_v1_email.Context.WikiPage.Url, $context_v1_email.Context.WikiPage.ContentId, $core_v2_wikiPage.ContentTypeId))
+#if ($flagAsAbuseUrl)
+    <p>
+    #format($core_v2_language.GetResource('Footer_FlagAsAbuse'))
+    #token('flag_as_abuse_link')
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($flagAsAbuseUrl)">$core_v2_language.GetResource('FlagAsAbuse')</a>
+    #end
+    </p>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_EditedBy">Edited by {user_name}</resource>
+  <resource name="Body_Revision">{title}: Revision {revision_number}</resource>
+  <resource name="Body_ViewOnline">{view_link}.</resource>
+  <resource name="FlagAsAbuse">Flag as spam/abuse</resource>
+  <resource name="Footer_FlagAsAbuse">{flag_as_abuse_link}.</resource>
+  <resource name="Footer_Unsubscribe">You received this notification because you subscribed to updates on the wiki page. To unsubscribe, {unsubscribe_link}.</resource>
+  <resource name="Subject">{title}: Revision</resource>
+  <resource name="Header">{title}: Revision</resource>
+  <resource name="Unsubscribe">go here</resource>
+  <resource name="ViewOnline">View this post online</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,27 @@
+#*
+    Expects $reviewableContent, $reviewableContentReadOnly
+*#
+<div class="moderated-content"><div class="moderated-content-inner">
+    <ul class="filter">
+        <li class="filter-option history">
+            <a href="#">$core_v2_language.GetResource('History')</a>
+        </li>
+        <li class="filter-option author">
+    		<a href="#" data-userid="$reviewableContent.Author.Id">
+    			$core_v2_language.GetResource('AuthorDetails')
+    		</a>
+    	</li>
+    </ul>
+    #set($groupHeaderHtmlFormat = '<fieldset class="content-tab dynamic-form" data-groupid="{GroupId}"><h3 class="dynamic-form" data-groupid="{GroupId}">{GroupName}</h3><ul class="field-list">')
+    #set($groupFooterHtmlFormat = '</ul></fieldset>')
+    #set($subGroupHeaderHtmlFormat = '</li><h3>{SubGroupName}</h3></li>')
+    #set($subGroupFooterHtmlFormat = '')
+    #set($propertyHeaderHtmlFormat = '<li class="field-item" id="{PropertyWrapperId}"><label class="field-item-name" for="{PropertyUniqueId}">{PropertyName}</label><span class="field-item-description">{PropertyDescription}</span><span class="field-item-input">')
+    #set($propertyFooterHtmlFormat = '</span></li>')
+    $context.RenderReviewableContentForm("reviewable_${reviewableContent.Id}", $reviewableContent.Id, "%{ GroupHeaderHtmlFormat = $groupHeaderHtmlFormat, GroupFooterHtmlFormat = $groupFooterHtmlFormt, SubGroupHeaderHtmlFormat = $subGroupHeaderHtmlFormat, SubGroupFooterHtmlFormat = $subGroupFooterHtmlFormat, PropertyHeaderHtmlFormat = $propertyHeaderHtmlFormat, PropertyFooterHtmlFormat = $propertyFooterHtmlFormat, ReadOnly = $reviewableContentReadOnly }")
+    <div class="content-tab history" style="display: none;"></div>
+    <div class="content-tab author" style="display: none;"></div>
+    <div class="moderated-content-viewall">
+        <a href="#" class="inline-button view-all">$core_v2_language.GetResource('ViewAll')</a>
+    </div>
+</div></div>

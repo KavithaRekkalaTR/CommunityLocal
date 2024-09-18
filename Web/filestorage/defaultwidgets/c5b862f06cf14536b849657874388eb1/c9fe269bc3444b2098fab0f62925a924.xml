@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="13.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="c9fe269bc3444b2098fab0f62925a924" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-job-server" lastModified="2023-05-08 19:51:34Z" provider="c5b862f06cf14536b849657874388eb1">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.JobsStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('affectednodes')
+	    #foreach($node in $context.Status.Nodes)
+	    #each
+		    #if ($context.Target == 'Web' || $context.Target == 'Email')
+          <strong>${node}</strong>
+        #else
+          ${node}
+        #end
+		#between
+		    ,
+		#end
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="LocalAndJobServer">The job server is running and the following web nodes have enabled RunJobsInternally: {affectednodes}. Please review every server's configuration to disable RunJobsInternally.</resource>
+  <resource name="MultipleJobServers">Multiple job servers appear to be enabled and running for this community: {affectednodes}. Please only run one instance of the job server.</resource>
+  <resource name="MultipleLocal">The job server is not running, and there are multiple running web nodes that all have each configured RunJobsInternally: {affectednodes}. Please review every server's configuration to disable RunJobsInternally and enable the job server.</resource>
+  <resource name="NotRunning">The job server is either not running or not responding. Please review the job server is installed and running.</resource>
+  <resource name="RunningJobServer">The job server is running correctly.</resource>
+  <resource name="RunningLocal">The job server is not running, but the single known web node, {affectednodes}, has enabled RunJobsInternally. This should only be enabled for development and testing.</resource>
+  <resource name="Stalled">The job server is running, but it may be stalled, as it has not processed the diagnostic job recently.</resource>
+  <resource name="Unknown">The status of the job server is not yet known.</resource>
+  <resource name="Widget-Description">Job Server System Indicator</resource>
+  <resource name="Widget-Title">Job Server</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

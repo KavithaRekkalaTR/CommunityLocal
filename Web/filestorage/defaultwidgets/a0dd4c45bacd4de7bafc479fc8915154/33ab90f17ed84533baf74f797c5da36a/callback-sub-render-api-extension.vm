@@ -1,0 +1,34 @@
+##
+## Extension Renderer
+##
+## Requires in scope:
+##   $extension
+##
+
+#if ($extension)
+
+	<h2 class="documentation_title">
+		${extension.Name}
+		#if ($extension.IsPrivate)
+			<span class="private_api">$core_v2_language.GetResource('PrivateExtension')</span>
+		#end
+		#if ($extension.MetadataType == 'AutomationEvent')
+			<span class="private_api">$core_v2_language.GetResource('AutomationEvent')</span>
+		#end
+	</h2>
+
+	#if ($extension.Description)
+		<p>$extension.Description</p>
+	#end
+
+	#if ($extension.Properties)
+		#set ($properties = $extension.Properties)
+		$core_v2_widget.ExecuteFile('callback-sub-render-api-properties.vm')
+	#end
+
+	#if ($extension.Methods)
+		#set ($methods = $extension.Methods)
+		$core_v2_widget.ExecuteFile('callback-sub-render-api-methods.vm')
+	#end
+
+#end

@@ -1,0 +1,223 @@
+#set($title = false)
+#set($title = $abusiveContent.Content.HtmlName('Web'))
+#if (!$title)
+	#set($title = $core_v2_language.GetResource('ContentTitleNotAvailable'))
+#end
+
+#set($contentTypeName = '')
+#set($contentType = false)
+#set($contentType = $core_v2_contentType.Get($abusiveContent.Content.ContentTypeId))
+#if ($abusiveContent.Content.ContentTypeId != $core_v2_utility.ParseGuid('') && $contentType && $contentType.Name)
+	#set($contentTypeName = $contentType.Name.ToLowerInvariant())
+#else
+	#set($contentTypeName = $core_v2_language.GetResource('missing-content-type-name').ToLowerInvariant())
+#end
+
+<li data-contentid="$abusiveContent.Content.ContentId" data-contenttypeid="$abusiveContent.Content.ContentTypeId" class="content-item abusive-content">
+	<div class="moderated-content-header">
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-input">
+						#if ($abusiveContent.AuthorUser && $hasModerateUsersPermission)
+							<div class="ui-links navigation-list" data-minlinks="0" data-direction="vertical" data-maxlinks="0">
+								<ul class="navigation-list">
+									#if($abusiveContent.Content.ContentTypeId != $core_v2_user.ContentTypeId)
+										<li class="navigation-list-item abuse">
+											$core_v2_ui.Moderate($abusiveContent.AuthorUser.ContentId, $core_v2_user.ContentTypeId, "%{ CssClass='appeals-moderate'}")
+										</li>
+									#end
+									<li class="navigation-list-item moderate">
+										#if($abusiveContent.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+											#set ($moderateText = $core_v2_language.GetResource('moderate_user'))
+											#set ($unmoderateText = $core_v2_language.GetResource('unmoderate_user'))
+											#set ($type = 'user')
+										#else
+											#set ($moderateText = $core_v2_language.GetResource('moderate_author'))
+											#set ($unmoderateText = $core_v2_language.GetResource('unmoderate_author'))
+											#set ($type = 'author')
+										#end
+
+										#if ($abusiveContent.AuthorUser.ModerationLevel == 'Moderated')
+											<a href="#" class="moderate-toggle" data-messagename="user-moderate-toggle" data-userid="$abusiveContent.AuthorUser.Id" data-moderated="true"  data-type="$type">
+												$unmoderateText
+											</a>
+										#else
+											<a href="#" class="moderate-toggle" data-messagename="user-moderate-toggle" data-userid="$abusiveContent.AuthorUser.Id" data-moderated="false" data-type="$type">
+												$moderateText
+											</a>
+										#end
+									</li>
+									<li class="navigation-list-item delete">
+										#if($abusiveContent.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+											#set($isAuthor = true)
+											#set($deleteText = $core_v2_language.GetResource('delete_user'))
+										#else
+											#set($isAuthor = false)
+											#set($deleteText = $core_v2_language.GetResource('delete_author'))
+										#end
+										<a href="#" class="delete-user" data-messagename="user-delete" data-userid="$abusiveContent.AuthorUser.Id" data-username="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.AuthorUser.DisplayName)">$deleteText</a>
+									</li>
+
+									<li class="navigation-list-item">
+										<a href="#" class="button" data-more>$core_v2_language.GetResource('more')</a>
+									</li>
+									<li class="navigation-list-item">
+										<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+									</li>
+								</ul>
+							</div>
+						#end
+
+						<a class="button ignore" href="javascript:void(0)" data-contentid="$abusiveContent.Content.ContentId" data-contenttypeid="$abusiveContent.Content.ContentTypeId">$core_v2_language.GetResource('IgnoreContent')</a>
+						<a class="button initiate-appeal delete" href="javascript:void(0)" data-contentid="$abusiveContent.Content.ContentId" data-contenttypeid="$abusiveContent.Content.ContentTypeId">$core_v2_language.GetResource('HideContent')</a>
+						#if ($context.CanPreview($abusiveContent.Content.ContentId, $abusiveContent.Content.ContentTypeId))
+                            <a href="#" class="preview inline-button">$core_v2_language.GetResource('Preview')</a>
+                        #end
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</div>
+	<div class="moderated-content-attributes">
+		<div class="author">
+			#if ($abusiveContent.AuthorUser)
+				#set($userUrl = false)
+				#set($userUrl = $context.ViewMember($abusiveContent.AuthorUser.Id))
+				<div class="avatar">
+          #if ($userUrl)
+            <a href="$core_v2_encoding.HtmlAttributeEncode($userUrl)" #if(!$userUrl.StartsWith('#')) target="_blank"#end>
+              $core_v2_ui.GetResizedImageHtml($abusiveContent.AuthorUser.AvatarUrl, 32, 32, "%{border='0px', alt=$abusiveContent.AuthorUser.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+            </a>
+          #else
+            $core_v2_ui.GetResizedImageHtml($abusiveContent.AuthorUser.AvatarUrl, 32, 32, "%{border='0px', alt=$abusiveContent.AuthorUser.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+          #end
+        </div>
+        <span class="user-name">
+          #if ($userUrl)
+            <a href="$core_v2_encoding.HtmlAttributeEncode($userUrl)" class="internal-link view-profile" #if(!$userUrl.StartsWith('#')) target="_blank"#end>
+              $abusiveContent.AuthorUser.DisplayName
+            </a>
+          #else
+            $abusiveContent.AuthorUser.DisplayName
+          #end
+        </span>
+			#end
+		</div>
+		<ul class="attribute-list">
+			<li class="attribute-item">
+				<span class="attribute-value">$core_v2_language.FormatDateAndTime($abusiveContent.Content.CreatedDate)</span>
+			</li>
+			#if($abusiveContent.Content.ContentTypeId != $core_v2_user.ContentTypeId)
+				#if ($abusiveContent.Content.Url)
+					<li class="attribute-item">
+						<span class="attribute-value"><a href="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.Url)">$title</a></span>
+					</li>
+				#end
+				#if ($abusiveContent.Content.Application && $abusiveContent.Content.Application.HtmlName('Web').Trim().Length > 0 && $abusiveContent.Content.Application.ApplicationId != $abusiveContent.Content.Application.Container.ContainerId)
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('InApplication'), $core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.Application.Url), $abusiveContent.Content.Application.HtmlName('Web'))</span>
+					</li>
+				#end
+				#if ($abusiveContent.Content.Application.Container && $abusiveContent.Content.Application.Container.HtmlName('Web').Trim().Length > 0)
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('InContainer'), $core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.Application.Container.Url), $abusiveContent.Content.Application.Container.HtmlName('Web'))</span>
+					</li>
+				#end
+			#end
+			<li class="attribute-item approved">
+				<span class="attribute-value">$core_v2_language.GetResource('Accepted')</span>
+			</li>
+		</ul>
+	</div>
+	<div class="moderated-content-information">
+		#if ($abusiveContent.AbuseState == 'Reported')
+			#set ($contentAbuseScoreId = $core_v2_utility.ParseGuid('2589A1EF-5C14-4E7F-9915-8A6BD8C104B9'))
+			#set ($abuseCreatorScoreId = $core_v2_utility.ParseGuid('797D79B6-AB9E-48D0-AAB2-0D13201970C6'))
+			#set ($contentAbuseScore = $core_v2_calculatedScores.Get($contentAbuseScoreId, $abusiveContent.Content.ContentId, $abusiveContent.Content.ContentTypeId))
+			#set ($abuseCreatorScore = $core_v2_calculatedScores.Get($abuseCreatorScoreId, $abusiveContent.AuthorUser.ContentId, $abusiveContent.Content.ContentTypeId))
+			#set ($contentScore = $contentAbuseScore.Value)
+
+			#if ($abuseCreatorScore && $abuseCreatorScore.Value != 0)
+				#set ($creatorScore = $abuseCreatorScore.Value)
+			#else
+				#set ($creatorScore = 1)
+			#end
+
+			#if (!$contentScore || $contentScore == 0)
+				<div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource('UndeterminedAbusiveMessage'), $contentTypeName)</div>
+			#elseif ($contentScore > $creatorScore)
+				<div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource('DefinitelyAbusiveMessage'), $contentTypeName)</div>
+			#else
+				#set ($percent = $contentScore / $creatorScore * 100)
+				<div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource('PossiblyAbusiveMessage'), $percent.ToString("0"), $contentTypeName)</div>
+			#end
+		#elseif($abusiveContent.AbuseState == 'Abusive')
+			<div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource('AbusiveMessage'), $contentTypeName)</div>
+		#end
+	</div>
+	<div class="moderated-content"><div class="moderated-content-inner">
+	    <ul class="filter">
+			<li class="filter-option content selected"><a href="#">
+				#set($contentType = 'Content')
+				#if ($abusiveContent.Content.ContentTypeId)
+					#set($contentType = $core_v2_contentType.Get($abusiveContent.Content.ContentTypeId).Name)
+				#end
+				$contentType
+			</a></li>
+			#set ($reports = $core_v2_abuseReport.List("%{ AbusiveContentId = $abusiveContent.Content.ContentId, PageIndex = 0, PageSize = 1 }"))
+			<li class="filter-option reports">
+				<a href="#" data-appealid="" data-contentid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentId.ToString())">
+					#if ($reports.TotalCount == 1)
+						$core_v2_language.FormatString($core_v2_language.GetResource('ReportCount_Singular'), '1')
+					#else
+						$core_v2_language.FormatString($core_v2_language.GetResource('ReportCount_Plural'), $core_v2_language.FormatNumber($reports.TotalCount))
+					#end
+				</a>
+			</li>
+			<li class="filter-option author">
+				<a href="#" data-contentid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentId.ToString())" data-contenttypeid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentTypeId.ToString())">
+				#if($abusiveContent.Content.ContentTypeId != $core_v2_user.ContentTypeId)
+					$core_v2_language.GetResource('AuthorDetails')
+				#else
+					$core_v2_language.GetResource('UserDetails')
+				#end
+				</a>
+			</li>
+			<li class="filter-option textcontent">
+				<a href="#" data-contentid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentId.ToString())" data-contenttypeid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentTypeId.ToString())">
+					$core_v2_language.GetResource('TextContent')
+				</a>
+			</li>
+			<li class="filter-option filecontent">
+				<a href="#" data-contentid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentId.ToString())" data-contenttypeid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentTypeId.ToString())">
+					#set ($fileCount = $context.GetFileContent($abusiveContent.Content.ContentId, $abusiveContent.Content.ContentTypeId).Count)
+					#if ($fileCount == 1)
+						$core_v2_language.FormatString($core_v2_language.GetResource('FileContent_Singular'), '1')
+					#else
+						$core_v2_language.FormatString($core_v2_language.GetResource('FileContent_Plural'), $core_v2_language.FormatNumber($fileCount))
+					#end
+				</a>
+			</li>
+		</ul>
+		<div class="content-tab content full">
+			<h3 class="name">
+				$title
+    	    </h3>
+    	    <div class="content">
+    				$!abusiveContent.Content.HtmlDescription('Web')
+    	    </div>
+    	  </div>
+		<div class="content-tab reports" style="display: none;">
+		</div>
+		<div class="content-tab author" style="display: none;">
+		</div>
+		<div class="content-tab textcontent" style="display: none;">
+		</div>
+		<div class="content-tab filecontent" style="display: none;">
+		</div>
+		<div class="moderated-content-viewall">
+            <a href="#" class="inline-button view-all">$core_v2_language.GetResource('ViewAll')</a>
+        </div>
+	</div></div>
+</li>

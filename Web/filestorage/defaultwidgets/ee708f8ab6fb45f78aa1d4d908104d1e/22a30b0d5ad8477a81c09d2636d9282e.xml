@@ -1,0 +1,179 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GalleryFileOptionsPanel_Name}" cssClass="contextual-galleryfileoptions" description="${resource:GalleryFileOptionsPanel_Description}" instanceIdentifier="22a30b0d5ad8477a81c09d2636d9282e" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<contentScript>
+<![CDATA[
+#set($gallery = $context.Gallery)
+
+<div id="$core_v2_widget.WrapperElementId">
+
+<form><fieldset>
+	<ul class="field-list">
+
+		<li class="field-item moderate">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('Moderate')" #if($gallery.IsModerated)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('Moderate')" class="field-item-name">$core_v2_language.GetResource('ModerateFiles')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('ModerateFiles_Detail')</span>
+		</li>
+
+		<li class="field-item enable-file-notifications">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableFileNotifications')" #if($gallery.EnableMediaGalleryPostNotification)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('EnableFileNotifications')" class="field-item-name">$core_v2_language.GetResource('EnableFileNotifications')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableFileNotifications_Detail')</span>
+		</li>
+
+		<li class="field-item enable-ratings">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableRatings')" #if($gallery.EnableRatings)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('EnableRatings')" class="field-item-name">$core_v2_language.GetResource('EnableRatings')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableRatings_Detail')</span>
+		</li>
+
+		<li class="field-item enable-comments">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableComments')" #if($gallery.EnableComments)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('EnableComments')" class="field-item-name">$core_v2_language.GetResource('EnableComments')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableComments_Detail')</span>
+		</li>
+
+		<li class="field-item moderate-comments">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('ModerateComments')" #if($gallery.ModerateComments)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('ModerateComments')" class="field-item-name">$core_v2_language.GetResource('ModerateComments')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('ModerateComments_Detail')</span>
+		</li>
+
+		<li class="field-item enable-comment-notifications">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableCommentNotifications')" #if($gallery.EnableCommentNotification)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('EnableCommentNotifications')" class="field-item-name">$core_v2_language.GetResource('EnableCommentNotifications')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableCommentNotifications_Detail')</span>
+		</li>
+
+		<li class="field-item enable-external-links">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableExternalLinks')" #if($gallery.EnableExternalLinks)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('EnableExternalLinks')" class="field-item-name">$core_v2_language.GetResource('EnableExternalLinks')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableExternalLinks_Detail')</span>
+		</li>
+
+		<li class="field-item enable-disclaimer">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableDisclaimer')" #if($gallery.EnableDisclaimer)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('EnableDisclaimer')" class="field-item-name">$core_v2_language.GetResource('EnableDisclaimer')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableDisclaimer_Detail')</span>
+		</li>
+
+		#if ($context.GlobalAllowedFileExtensions.Length > 0)
+			<li class="field-item">
+				<span class="field-item-validation">
+					$core_v2_language.FormatString($core_v2_language.GetResource('extension_options_subject_to_global_settings'), $context.GlobalAllowedFileExtensions)
+				</span>
+			</li>
+		#end
+
+		<li class="field-item allowed-file-extensions">
+			<label for="$core_v2_widget.UniqueId('AllowedFileExtensions')" class="field-item-name">$core_v2_language.GetResource('AllowedFileExtensions')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AllowedFileExtensions_Detail')</span>
+			<span class="field-item-input">
+				<textarea id="$core_v2_widget.UniqueId('AllowedFileExtensions')">$core_v2_encoding.HtmlDecode($!gallery.AllowedFileExtensions)</textarea>
+			</span>
+		</li>
+
+		<li class="field-item restricted-file-extensions">
+			<label for="$core_v2_widget.UniqueId('RestrictedFileExtensions')" class="field-item-name">$core_v2_language.GetResource('RestrictedFileExtensions')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('RestrictedFileExtensions_Detail')</span>
+			<span class="field-item-input">
+				<textarea id="$core_v2_widget.UniqueId('RestrictedFileExtensions')">$core_v2_encoding.HtmlDecode($!gallery.RestrictedFileExtensions)</textarea>
+			</span>
+		</li>
+
+	</ul>
+</fieldset></form>
+
+#if($canDelete)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input"><a href="#" class="button delete">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))</a></span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+</div>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.galleryFileOptionsPanel.register({
+		wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		inputs: {
+			moderateId: "#$core_v2_widget.UniqueId('Moderate')",
+			enableFileNotificationsId: "#$core_v2_widget.UniqueId('EnableFileNotifications')",
+			enableRatingsId: "#$core_v2_widget.UniqueId('EnableRatings')",
+			enableCommentsId: "#$core_v2_widget.UniqueId('EnableComments')",
+			moderateCommentsId: "#$core_v2_widget.UniqueId('ModerateComments')",
+			enableCommentNotificationsId: "#$core_v2_widget.UniqueId('EnableCommentNotifications')",
+			enableExternalLinksId: "#$core_v2_widget.UniqueId('EnableExternalLinks')",
+			enableDisclaimerId: "#$core_v2_widget.UniqueId('EnableDisclaimer')",
+			allowedFileExtensionsId: "#$core_v2_widget.UniqueId('AllowedFileExtensions')",
+			restrictedFileExtensionsId: "#$core_v2_widget.UniqueId('RestrictedFileExtensions')"
+		},
+		resources: {
+			save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+			galleryUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GalleryUpdated'))"
+		},
+		urls: {
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))'
+		}
+	});
+});
+</script>
+]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+	<resource name="GalleryFileOptionsPanel_Name">File Options</resource>
+	<resource name="GalleryFileOptionsPanel_Description">Manage gallery file options.</resource>
+	<resource name="Presentation">Presentation</resource>
+	<resource name="FileOptions">File Options</resource>
+	<resource name="RSSOptions">RSS Options</resource>
+	<resource name="ModerateFiles">Moderate Files</resource>
+	<resource name="ModerateFiles_Detail">If enabled, new files uploaded by users who are not administrators or owners of this media gallery will be moderated.</resource>
+	<resource name="EnableFileNotifications">Enable new file notifications</resource>
+	<resource name="EnableFileNotifications_Detail">If enabled, subscribers to this media gallery will receive a notification for each file uploaded to this media gallery.</resource>
+	<resource name="EnableRatings">Enable Ratings</resource>
+	<resource name="EnableRatings_Detail">If enabled, authenticated users will be able to post a 1 to 5 rating on files in this media gallery.</resource>
+	<resource name="EnableComments">Enable Comments</resource>
+	<resource name="EnableComments_Detail">If disabled, comments will not be allowed for files in this media gallery.</resource>
+	<resource name="ModerateComments">Moderate Comments</resource>
+	<resource name="ModerateComments_Detail">If enabled, comments by users who are not administrators or owners of this media gallery will be moderated.</resource>
+	<resource name="EnableCommentNotifications">Enable Owner Comment Emails</resource>
+	<resource name="EnableCommentNotifications_Detail">If enabled, owners of this media gallery will receive an email for each comment posted to this media gallery. Note: This does not affect subscription notifications and/or emails.</resource>
+	<resource name="EnableExternalLinks">Enable External Links</resource>
+	<resource name="EnableExternalLinks_Detail">Determines whether or not a link directly to the download url of a gallery file is allowed from an external website.</resource>
+	<resource name="EnableDisclaimer">Enable Download Disclaimer</resource>
+	<resource name="EnableDisclaimer_Detail">When enabled, users must accept the download disclaimer before accessing each file. The disclaimer is defined within the language resources file.</resource>
+	<resource name="AllowedFileExtensions">Allowed File Extensions</resource>
+	<resource name="AllowedFileExtensions_Detail">A comma-separated list of file extensions that should be allowed. If defined, only files with these types will be allowed to be uploaded into this media gallery. Extensions should be listed without the "." (text files should be identified simply as "txt", for example).</resource>
+	<resource name="RestrictedFileExtensions">Restricted File Extensions</resource>
+	<resource name="RestrictedFileExtensions_Detail">A comma-separated list of file extensions that should be restricted. If defined, files of these types will not be able to be uploaded into this media gallery. Extensions should be listed without the "." (text files should be identified simply as "txt", for example).</resource>
+	<resource name="Save">Save</resource>
+	<resource name="GalleryUpdated">Gallery options were successfully saved.</resource>
+	<resource name="extension_options_subject_to_global_settings">Note that allowed and restricted file extensions can only further restrict the global media gallery allowed file extension list which currently allows files with the extensions: {0}</resource>
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,113 @@
+##
+## Function Renderer
+##
+## Requires in scope:
+##   $lessFunction
+##   $lessFunctions
+##
+
+#if ($lessFunction)
+
+	<h2 class="documentation_title">
+		${lessFunction.Name}
+	</h2>
+
+	#if ($lessFunction.Description)
+		<p>$lessFunction.Description</p>
+	#end
+
+	<div class="methods">
+
+		<div class="documentation-member">
+
+			<div class="documentation-section example">
+				<span class="label">$core_v2_language.GetResource('Example')</span>
+				<div class="value">
+					## Required-only
+					#set ($requiredParameters = [])
+					#foreach ($parameter in $lessFunction.Parameters)
+						#if ($parameter.IsRequired)
+							#set ($addedAt = $requiredParameters.Add($parameter))
+						#end
+					#end
+
+					#set ($requiredParameterSignature = "")
+					#foreach ($parameter in $requiredParameters)
+					#each
+						#set ($requiredParameterSignature = "${requiredParameterSignature}@${parameter.Name}")
+					#between
+						#set ($requiredParameterSignature = "${requiredParameterSignature}, ")
+					#end
+
+					#set ($allParameters = "")
+					#foreach ($parameter in $lessFunction.Parameters)
+					#each
+						#set ($allParameters = "${allParameters}@${parameter.Name}")
+					#between
+						#set ($allParameters = "${allParameters}, ")
+					#end
+
+					<pre>// Required arguments
+@result: ${lessFunction.Name}($requiredParameterSignature);
+
+// All arguments
+@result: ${lessFunction.Name}($allParameters);</pre>
+				</div>
+			</div>
+
+			#if ($lessFunction.Parameters && $lessFunction.Parameters.Count > 0)
+				<div class="documentation-section parameters">
+					<span class="label">$core_v2_language.GetResource('Parameters')</span>
+
+					<div class="value">
+						#foreach ($parameter in $lessFunction.Parameters)
+						#beforeall
+							<table cellspacing="0">
+								<thead>
+									<tr>
+										<th>$core_v2_language.GetResource('Name')</th>
+										<th>$core_v2_language.GetResource('Type')</th>
+										<th>$core_v2_language.GetResource('Description')</th>
+										<th>$core_v2_language.GetResource('Required')</th>
+										<th>$core_v2_language.GetResource('Default')</th>
+										<th>$core_v2_language.GetResource('Options')</th>
+									</tr>
+								</thead>
+								<tbody>
+						#each
+								<tr>
+									<td>$parameter.Name</td>
+									<td>$!parameter.Type</td>
+									<td>$parameter.Description</td>
+									<td>
+										#if ($parameter.IsRequired)
+											$core_v2_language.GetResource('Required')
+										#else
+											$core_v2_language.GetResource('Optional')
+										#end
+									</td>
+									<td>$!parameter.DefaultValue</td>
+									<td>
+										#if ($parameter.Options)
+											#foreach ($opt in $parameter.Options)
+												$opt
+											#between
+												,
+											#end
+										#end
+									</td>
+								</tr>
+						#afterall
+								</tbody>
+							</table>
+						#end
+					</div>
+
+				</div>
+
+			#end
+
+		</div>
+	</div>
+
+#end

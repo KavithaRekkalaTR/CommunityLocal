@@ -1,0 +1,63 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($enableComments = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableComments')))
+	#set ($enableRating = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableRating')))
+	#set ($displayTrackbacks = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('displayTrackbacks')))
+	#set ($commentExpirationDays = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('commentExpirationDays')))
+	#set ($aggregatePosts = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('aggregatePosts')))
+	#set ($enableExcerpts = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableExcerpts')))
+	#set ($excerptLength = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('excerptLength')))
+	#set ($enableAutoName = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableAutoName')))
+	#set ($commentModeration = $core_v2_page.GetFormValue('commentModeration'))
+    #set($reviewWorkflowId = false)
+    #if ($core_v2_page.GetFormValue('reviewWorkflowId') && $core_v2_page.GetFormValue('reviewWorkflowId').Length > 0)
+        #set($reviewWorkflowId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('reviewWorkflowId')))
+    #end
+    #set($reviewWorkflowConfigurationData = false)
+    #set($reviewWorkflowConfigurationData = $core_v2_page.ParseQueryString($core_v2_page.GetFormValue('reviewWorkflowConfiguration')))
+
+
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 1/0
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+	#set($fileRemoved = $core_v2_page.GetFormValue('FileRemoved')) ## 1/0
+
+	$options.Add('enableComments', $enableComments)
+	$options.Add('enableRating', $enableRating)
+	$options.Add('displayTrackbacks', $displayTrackbacks)
+	$options.Add('commentExpirationDays', $commentExpirationDays)
+	$options.Add('aggregatePosts', $aggregatePosts)
+	$options.Add('enableExcerpts', $enableExcerpts)
+	$options.Add('excerptLength', $excerptLength)
+	$options.Add('enableAutoName', $enableAutoName)
+	$options.Add('commentModeration', $commentModeration)
+	#if ($reviewWorkflowId)
+    	$options.Add('reviewWorkflowId', $reviewWorkflowId)
+    	$options.Add('reviewWorkflowConfigurationData', $reviewWorkflowConfigurationData)
+    #end
+
+	#if ($fileChanged == '1')
+		#set($file = false)
+		#set($file = $core_v2_uploadedFile.Get($fileContextId, $fileName))
+		#if ($file)
+			$options.Add('defaultImageFileUploadContext', $fileContextId)
+			$options.Add('defaultImageFileName',$file.Name)
+		#end
+	#elseif ($fileRemoved == '1')
+		$options.Add('defaultImageRemoveImage', 'true')
+	#end
+
+	#set($response = $context.Update($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

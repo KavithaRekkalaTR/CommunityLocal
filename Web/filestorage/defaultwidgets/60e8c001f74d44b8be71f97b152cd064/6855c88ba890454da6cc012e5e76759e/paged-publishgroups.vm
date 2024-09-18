@@ -1,0 +1,117 @@
+#set($query = "%{SortBy = 'Name', SortOrder = 'Ascending'}")
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$query.Add('PageIndex', $pageIndex)
+$query.Add('PageSize', 20)
+
+#set($filter = false)
+#set($filter = $core_v2_page.GetQueryStringValue('w_filter'))
+#if ($filter == 'inactive') 
+    $query.Add('IsPublished', 'True')
+#elseif ($filter == 'deleted')
+    $query.Add('OnlyDeleted', 'True')
+#else
+    $query.Add('IsPublished', 'False')
+#end
+
+#set($find = false)
+#set($find = $core_v2_page.GetQueryStringValue('w_query'))
+#if ($find)
+    $query.Add('NameSearch', $find)
+#end
+
+#set($publishGroups = $context.ListPublishGroups($query))
+#set ($hasMore = 'false')
+#if ($publishGroups.PageIndex == $pageIndex)
+    #set ($currentPagedQuantity = ($publishGroups.PageIndex + 1) * $publishGroups.PageSize)
+    #if ($publishGroups.TotalCount > $currentPagedQuantity)
+    	#set ($hasMore = 'true')
+    #end
+#else
+    #set($members = [])
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore">
+#foreach($publishGroup in $publishGroups)
+#each
+    <li class="content-item" data-publishgroupid="$publishGroup.Id">
+    	<h4 class="name">$publishGroup.Name</h4>
+    	<div class="post-attributes">
+    		<ul class="attribute-list">
+    		    #if ($publishGroup.IsDeleted)
+        			<li class="attribute-item">
+        				<span class="value">
+        					$core_v2_language.FormatString($core_v2_language.GetResource('PublishGroup_DeletedDate'), $core_v2_language.FormatAgoDate($publishGroup.DeleteDate))
+        				</span>
+        			</li>
+        		#elseif ($publishGroup.IsPublished)
+        		    <li class="attribute-item">
+        				<span class="value">
+        					$core_v2_language.FormatString($core_v2_language.GetResource('PublishGroup_PublishedDate'), $core_v2_language.FormatAgoDate($publishGroup.PublishDate))
+        				</span>
+        			</li>
+         			#if ($publishGroup.PublishEndDate)
+        			    <li class="attribute-item">
+            			    <span class="value">
+            			        $core_v2_language.FormatString($core_v2_language.GetResource('PublishGroup_UnpublishingDate'), $core_v2_language.FormatDateAndTime($publishGroup.PublishEndDate))
+            			    </span>
+            			</li>
+        			#end
+        		#else 
+        			#if ($publishGroup.PublishDate)
+        			    <li class="attribute-item">
+            			    <span class="value">
+            			        $core_v2_language.FormatString($core_v2_language.GetResource('PublishGroup_PublishingDate'), $core_v2_language.FormatDateAndTime($publishGroup.PublishDate))
+            			    </span>
+            			</li>
+        			#end
+        		#end
+    		</ul>
+    	</div>
+    	<div class="content expandable">
+    	    <p>$core_v2_language.FormatString($core_v2_language.GetResource('PublishGroup_Description'), $core_v2_language.FormatNumber($publishGroup.UnpublishedVersionCount), $core_v2_language.FormatNumber($publishGroup.PublishedVersionCount))</p>
+    	</div>
+    	<div class="actions expandable">
+    		<div class="navigation-list ui-links" data-direction="horizontal">
+    			<ul>
+    			    #if ($publishGroup.UnpublishedVersionCount > 0 || $publishGroup.PublishedVersionCount > 0)
+        			    <li class="navigation-list-item">
+        					<a href="$core_v2_encoding.HtmlAttributeEncode($context.ViewPublishGroupArticles($publishGroup.Id))">$core_v2_language.GetResource('PublishGroup_ViewArticles')</a>
+        				</li>
+        			#end
+    			    <li class="navigation-list-item">
+    					<a href="#" data-messagename="publishgroups.edit" data-publishgroupid="$publishGroup.Id" data-publishgroupname="$publishGroup.Name">$core_v2_language.GetResource('PublishGroup_Edit')</a>
+    				</li>
+    				#if (!$publishGroup.IsDeleted && !$publishGroup.IsPublished)
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="publishgroups.publish" data-publishgroupid="$publishGroup.Id" data-publishgroupname="$publishGroup.Name">$core_v2_language.GetResource('PublishGroup_Publish')</a>
+        				</li>
+        			#end
+        			#if (!$publishGroup.IsDeleted && $publishGroup.IsPublished)
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="publishgroups.unpublish" data-publishgroupid="$publishGroup.Id" data-publishgroupname="$publishGroup.Name">$core_v2_language.GetResource('PublishGroup_Unpublish')</a>
+        				</li>
+        			#end
+        			#if (!$publishGroup.IsDeleted)
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="publishgroups.delete" data-publishgroupid="$publishGroup.Id" data-publishgroupname="$publishGroup.Name">$core_v2_language.GetResource('PublishGroup_Delete')</a>
+        				</li>
+        			#end
+        			#if ($publishGroup.IsDeleted)
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="publishgroups.undelete" data-publishgroupid="$publishGroup.Id" data-publishgroupname="$publishGroup.Name">$core_v2_language.GetResource('PublishGroup_Undelete')</a>
+        				</li>
+        			#end
+    				<li class="navigation-list-item">
+    					<a href="#" class="more" data-more>$core_v2_language.GetResource('More')</a>
+    				</li>
+    				<li class="navigation-list-item">
+    					<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+    				</li>
+    			</ul>
+    		</div>
+    	</div>
+    </li>
+#end
+</ul>

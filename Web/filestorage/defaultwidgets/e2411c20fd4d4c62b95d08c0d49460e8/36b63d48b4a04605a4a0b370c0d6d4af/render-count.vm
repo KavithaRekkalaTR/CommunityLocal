@@ -1,0 +1,11 @@
+##
+## Expects in scope: $events, $inProcess
+##
+
+#if ($events.TotalItems == 1)
+    $core_v2_language.FormatString($core_v2_language.GetResource('Events_Singular'), $events.TotalItems.ToString())
+#elseif($events.TotalItems == 0)
+    <div style="display:hidden"></div>
+#else
+    $core_v2_language.FormatString($core_v2_language.GetResource('Events_Plural'), $events.TotalItems.ToString())
+#end

@@ -1,0 +1,66 @@
+#set ($appealId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_appealid')))
+#set ($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentid')))
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+
+#set($queryOptions = "%{ AbusiveContentId = $contentId, PageIndex = $pageIndex, PageSize = 10 }")
+#if ($appealId != $core_v2_utility.ParseGuid(''))
+	$queryOptions.Add('AppealId', $appeal.AppealId)
+#end
+
+#set ($reports = $core_v2_abuseReport.List($queryOptions))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($reports.PageIndex + 1) * $reports.PageSize)
+#if ($reports.TotalCount > $currentPagedQuantity)
+		#set ($hasMore = 'true')
+#end
+
+#foreach ($report in $reports)
+#beforeall
+	<table class="reports" data-hasmore="$hasMore">
+		<thead>
+			<th>$core_v2_language.GetResource('reporter')</th>
+			<th>$core_v2_language.GetResource('reported')</th>
+			<th>$core_v2_language.GetResource('reputation')</th>
+		</thead>
+		<tbody>
+#each
+	<tr>
+		<td>
+      <div class="author">
+        <div class="avatar">
+          #if ($report.CreatedUser.ProfileUrl)
+            <a href="$core_v2_encoding.HtmlAttributeEncode($report.CreatedUser.ProfileUrl)">
+              $core_v2_ui.GetResizedImageHtml($report.CreatedUser.AvatarUrl, 32, 32, "%{border='0px', alt=$report.CreatedUser.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+            </a>
+          #else
+            $core_v2_ui.GetResizedImageHtml($report.CreatedUser.AvatarUrl, 32, 32, "%{border='0px', alt=$report.CreatedUser.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+          #end
+        </div>
+        <span class="user-name">
+					#if ($report.CreatedUser.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($report.CreatedUser.ProfileUrl)">
+							$report.CreatedUser.DisplayName
+						</a>
+					#else
+						$report.CreatedUser.DisplayName
+					#end
+        </span>
+      </div>
+		</td>
+		<td>
+				$core_v2_language.FormatDateAndTime($report.CreatedDate)
+    </td>
+		<td>
+			#set($top = (100 - $report.CreatedUser.QualityPercentile))
+			#if ($top <= 0)
+				#set($top = 1)
+			#end
+			$core_v2_language.FormatString($core_v2_language.GetResource('reputation_value'), $core_v2_language.FormatNumber($top))
+		</td>
+	</tr>
+#afterall
+		</tbody>
+	</table>
+#nodata
+	<p>$core_v2_language.GetResource('no_abuse_reports')</p>
+#end

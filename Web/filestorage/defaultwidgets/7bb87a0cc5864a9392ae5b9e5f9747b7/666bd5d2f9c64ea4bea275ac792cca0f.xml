@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ArticlesBreadCrumb_Title}" version="12.0.0.0" description="${resource:ArticlesBreadCrumb_Description}" instanceIdentifier="666bd5d2f9c64ea4bea275ac792cca0f" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="article-breadcrumbs" lastModified="2022-10-06 19:31:59Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+#set($crumbs = $api.listCrumbs())
+#if ($crumbs.Length == 0)
+    $core_v2_widget.Hide()
+#end
+
+<ul class="breadcrumbs">
+    #foreach($crumb in $crumbs)
+        <li class="breadcrumb $crumb.CssClass"><a href="$core_v2_encoding.HtmlAttributeEncode($crumb.Url)">$crumb.Label</a></li>
+    #end
+</ul>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ArticlesBreadCrumb_Description">Provides breadcrumbs for navigation through the category/article hierarchy.</resource>
+  <resource name="ArticlesBreadCrumb_Title">Articles - Breadcrumbs</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+    <requiredContext>
+      <context id="9f1ce29b973d472e965fc224ce88bc64" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

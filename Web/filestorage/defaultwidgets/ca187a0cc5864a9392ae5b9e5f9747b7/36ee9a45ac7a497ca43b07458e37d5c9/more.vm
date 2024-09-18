@@ -1,0 +1,95 @@
+﻿#set($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=calendarSubscribe&amp;Link=calendarEdit&amp;Link=calendarRss')))
+#set($hasLinks = false)
+#set($currentGroup = $core_v2_group.Current)
+#set($currentCalendar = $calendar_v1_calendars.Current)
+
+<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="0">
+	<ul>
+		#foreach($link in $links.Values('Link'))
+			#set($url = false)
+
+			#if($link == 'calendarRss')
+				#if ($currentCalendar)
+					#if( $calendar_v1_calendars.HasPermission($currentCalendar.Id,$calendar_v1_permissions.ViewCalendar))
+						#set($url = $calendar_v1_urls.CalendarRss($currentCalendar.Id))
+						#if($url)
+							<li class="navigation-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link rss"><span></span>$core_v2_language.GetResource('calendar_CalendarLinks_Rss')</a></li>
+							#set($hasLinks = true)
+						#end
+					#end
+				#end
+
+			#elseif($link == 'calendarSubscribe')
+				#if($currentCalendar)
+					#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $calendar_v1_calendars.HasPermission($currentCalendar.Id,$calendar_v1_permissions.ViewCalendar))
+						
+						<li class="navigation-item">
+							<a data-messagename="widget.${core_v2_widget.WrapperElementId}.calendarSubscribe" data-calendarid="$currentCalendar.Id" data-subscribed="false" href="#" #if($calendar_v1_calendars.IsSubscribed($currentCalendar.Id)) style="display:none" #end>$core_v2_language.GetResource('calendar_Subscribe_Off')</a>
+						</li>
+						<li class="navigation-item">
+							<a data-messagename="widget.${core_v2_widget.WrapperElementId}.calendarSubscribe" data-calendarid="$currentCalendar.Id" data-subscribed="true" href="#" #if(!$calendar_v1_calendars.IsSubscribed($currentCalendar.Id)) style="display:none" #end>$core_v2_language.GetResource('calendar_Subscribe_On')</a>
+						</li>
+
+						#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.calendarSubscribe") 
+							<script type="text/javascript">
+								jQuery(function(j){
+									function update(value, link) {
+										j.telligent.evolution.post({
+											url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+											data: {
+												subscribe: value,
+												calendarId: link.data('calendarid')
+											},
+											dataType: 'json',
+											success: function(response) {
+												if (response.subscribe) {
+													link.closest('ul').find('a[data-subscribed="false"]').hide();
+													link.closest('ul').find('a[data-subscribed="true"]').show();
+												} else {
+													link.closest('ul').find('a[data-subscribed="false"]').show();
+													link.closest('ul').find('a[data-subscribed="true"]').hide();
+												}
+
+												if (response.warnings && response.warnings.length > 0) {
+													j.telligent.evolution.notifications.show(response.warnings[0], { type: 'warning' });
+												}
+											}
+										});
+									}
+									j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.calendarSubscribe', function(data){
+										update(!j(data.target).data('subscribed'), j(data.target));
+									});
+								});
+							</script>
+						#end
+						#set($hasLinks = true)
+					#end
+				#end
+
+			#elseif($link == 'calendarEdit')
+				#if ($currentCalendar)
+					#if($calendar_v1_calendars.HasPermission($currentCalendar.Id,$calendar_v1_permissions.EditCalendar))
+						#set($url = $calendar_v1_urls.EditCalendar($currentCalendar.Id))
+						#if($url)
+							<li class="navigation-item">
+							  <a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-post">
+								<span></span>$core_v2_language.GetResource('calendar_CalendarLinks_Edit')
+							  </a>
+							</li>
+							#set($hasLinks = true)
+						#end
+					#end
+				#end
+			#end
+		#end
+
+		#if($hasLinks)
+			<li class="navigation-list-item">
+				<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+			</li>
+		#end
+	</ul>
+</div>

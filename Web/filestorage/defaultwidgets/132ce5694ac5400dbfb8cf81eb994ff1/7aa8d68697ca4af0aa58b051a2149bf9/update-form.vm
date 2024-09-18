@@ -1,0 +1,10 @@
+﻿#set ($feedId = false)
+#set ($feedId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('feedId')))
+
+#set ($response = $context.GetFeed($feedId))
+#set ($feed = false)
+#if (!$response.HasErrors())
+	#set ($feed = $response.Value)
+#end
+
+$core_v2_widget.ExecuteFile('form.vm')

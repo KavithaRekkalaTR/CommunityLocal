@@ -1,0 +1,25 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 2/1/0
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+	#set($fileRemoved = $core_v2_page.GetFormValue('FileRemoved')) ## 1/0	
+
+	#if ($fileChanged == '1')
+		#set($response = $context.Set($fileContextId, $fileName))
+	#elseif ($fileChanged == '2')
+	    #set($response = $context.Set($fileName))
+	#elseif ($fileRemoved == '1')
+	    #set($response = $context.Remove())
+    #end
+    
+    #if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+    
+	{"success":true, "redirectUrl":"$response.Url"}
+
+#end

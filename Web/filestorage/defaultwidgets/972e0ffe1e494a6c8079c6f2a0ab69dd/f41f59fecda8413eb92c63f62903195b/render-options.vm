@@ -1,0 +1,433 @@
+#set($config = $context.GetConfiguration())
+#set($globalConfig = $context.GetGlobalConfiguration())
+
+<p>$core_v2_language.FormatString($core_v2_language.GetResource('Instructions'), $context.ContentType.ContentTypeName.ToLowerInvariant(), $context.GlobalConfigurationUrl())</p>
+
+<form><fieldset>
+<h3>$core_v2_language.GetResource('PlatformFeatures_Header')</h3>
+<ul class="field-list">
+
+    #if ($context.SupportsMentions)
+        <li class="field-item #if(!$globalConfig.Mentions) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+		    <span class="field-item-input">
+                <input type="checkbox" id="$core_v2_widget.UniqueId('Mentions')" name="$core_v2_widget.UniqueId('Mentions')" #if($config.Mentions) checked="checked"#end #if(!$globalConfig.Mentions) disabled="disabled"#end />
+			    <label for="$core_v2_widget.UniqueId('Mentions')" class="field-item-name">$core_v2_language.GetResource('Field_Mentions')</label>
+			</span>
+			<span class="field-item-description">
+			    $core_v2_language.GetResource('Field_Mentions_Desc')
+			</span>
+		</li>
+	#end
+	
+	#if ($context.SupportsHashtags)
+		<li class="field-item #if(!$globalConfig.Hashtags) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+		    <span class="field-item-input">
+                <input type="checkbox" id="$core_v2_widget.UniqueId('Hashtags')" name="$core_v2_widget.UniqueId('Hashtags')" #if($config.Hashtags) checked="checked"#end #if(!$globalConfig.Hashtags) disabled="disabled"#end />
+			    <label for="$core_v2_widget.UniqueId('Hashtags')" class="field-item-name">$core_v2_language.GetResource('Field_Hashtags')</label>
+			</span>
+			<span class="field-item-description">
+			    $core_v2_language.GetResource('Field_Hashtags_Desc')
+			</span>
+		</li>
+    #end
+
+	<li class="field-item #if(!$globalConfig.Emoticons) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Emoticons')" name="$core_v2_widget.UniqueId('Emoticons')" #if($config.Emoticons) checked="checked"#end #if(!$globalConfig.Emoticons) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Emoticons')" class="field-item-name">$core_v2_language.GetResource('Field_Emoticons')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Emoticons_Desc')
+		</span>
+	</li>
+	
+</ul>
+    
+<h3>$core_v2_language.GetResource('FileAndUrlEmbedding_Header')</h3>
+<ul class="field-list">
+
+    <li class="field-item #if(!$globalConfig.UrlEmbedding) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('UrlEmbedding')" name="$core_v2_widget.UniqueId('UrlEmbedding')" #if($config.UrlEmbedding) checked="checked"#end #if(!$globalConfig.UrlEmbedding) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('UrlEmbedding')" class="field-item-name">$core_v2_language.GetResource('Field_UrlEmbedding')</label>
+		</span>
+		<span class="field-item-description">
+		    #set($criteria = false)
+	        #set($criteria = $context.EmbedUrlCriteriaDescriptionHtml)
+	        #if ($criteria)
+	            $core_v2_language.FormatString($core_v2_language.GetResource('Field_UrlEmbedding_Desc_WithCriteria'), $criteria)
+	        #else
+	            $core_v2_language.GetResource('Field_UrlEmbedding_Desc')
+	        #end
+		</span>
+	</li>
+    
+    #if ($context.SupportsEmbeddedFiles)
+        <li class="field-item #if(!$globalConfig.FileEmbedding) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+    	    <span class="field-item-input">
+                <input type="checkbox" id="$core_v2_widget.UniqueId('FileEmbedding')" name="$core_v2_widget.UniqueId('FileEmbedding')" #if($config.FileEmbedding) checked="checked"#end #if(!$globalConfig.FileEmbedding) disabled="disabled"#end />
+    		    <label for="$core_v2_widget.UniqueId('FileEmbedding')" class="field-item-name">$core_v2_language.GetResource('Field_FileEmbedding')</label>
+    		</span>
+    		<span class="field-item-description">
+    		    #set($criteria = false)
+		        #set($criteria = $context.EmbedFileCriteriaDescriptionHtml)
+		        #if ($criteria)
+		            $core_v2_language.FormatString($core_v2_language.GetResource('Field_FileEmbedding_Desc_WithCriteria'), $criteria)
+		        #else
+		            $core_v2_language.GetResource('Field_FileEmbedding_Desc')
+		        #end
+    		</span>
+    	</li>
+    #end
+	
+	<li class="field-item #if(!$globalConfig.Links) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Links')" name="$core_v2_widget.UniqueId('Links')" #if($config.Links) checked="checked"#end #if(!$globalConfig.Links) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Links')" class="field-item-name">$core_v2_language.GetResource('Field_Links')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Links_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.Frames) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Frames')" name="$core_v2_widget.UniqueId('Frames')" #if($config.Frames) checked="checked"#end #if(!$globalConfig.Frames) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Frames')" class="field-item-name">$core_v2_language.GetResource('Field_Frames')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Frames_Desc')
+		</span>
+	</li>
+	
+</ul>
+
+<h3>$core_v2_language.GetResource('FileValidation_Header')</h3>
+<ul class="field-list">	
+	
+	#if ($globalConfig.AllowedFileExtensions.Length > 0)
+    	<li class="field-item">
+            <label class="field-item-name">$core_v2_language.GetResource('Field_AllowedFileExtensions')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Field_AllowedFileExtensions_Desc')</span>
+            <span class="field-item-input" id="$core_v2_widget.UniqueId('AllowedFileExtensions')">
+                <div style="display: flex; align-items: flex-start; flex-wrap: wrap;">
+                #set($i = 0)
+                #foreach($extension in $globalConfig.AllowedFileExtensions)
+                    #set($selected = false)
+                    #set($selected = $config.AllowedFileExtensions.Contains($extension))
+                    <div style="width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <input type="checkbox" id="$core_v2_widget.UniqueId("afe$i")" name="$core_v2_widget.UniqueId("afe$i")" #if($selected) checked="checked"#end value="$core_v2_encoding.HtmlAttributeEncode($extension)" />
+            		    <label for="$core_v2_widget.UniqueId("afe$i")" class="field-item-name">$core_v2_encoding.HtmlEncode($extension)</label>
+            		</div>
+        		    #set($i = $i + 1)
+        		#end
+        		</div>
+            </span>
+        </li>
+    #end
+    
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('DisallowedFileExtensions')" class="field-item-name">$core_v2_language.GetResource('Field_DisallowedFileExtensions')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_DisallowedFileExtensions_Desc')</span>
+        <span class="field-item-input">
+            #set($addedFileExtensions = '')
+            #foreach($extension in $config.DisallowedFileExtensions)
+                #if($globalConfig.DisallowedFileExtensions.Contains($extension))
+                    <p><code>$core_v2_encoding.HtmlEncode($extension)</code></p>
+                #else
+                    #set($addedFileExtensions = "${addedFileExtensions}${core_v2_utility.NewLine}${extension}")
+                #end
+    		#end
+            <textarea id="$core_v2_widget.UniqueId('DisallowedFileExtensions')" rows="10">$addedFileExtensions</textarea>
+        </span>
+    </li>
+
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('MaxFileSizeMegaBytes')" class="field-item-name">$core_v2_language.GetResource('Field_MaxFileSizeMegaBytes')</label>
+        <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Field_MaxFileSizeMegaBytes_Desc'), $core_v2_language.FormatNumber($globalConfig.MaxFileSizeMegaBytes))</span>
+        <span class="field-item-input">
+            <input type="number" id="$core_v2_widget.UniqueId('MaxFileSizeMegaBytes')" value="$config.MaxFileSizeMegaBytes" min="1" max="$globalConfig.MaxFileSizeMegaBytes" />
+        </span>
+    </li>
+
+</ul>
+
+<h3>$core_v2_language.GetResource('UrlValidation_Header')</h3>
+<ul class="field-list">	
+
+	<li class="field-item">
+        <label class="field-item-name">$core_v2_language.GetResource('Field_AllowedProtocols')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_AllowedProtocols_Desc')</span>
+        <span class="field-item-input" id="$core_v2_widget.UniqueId('AllowedProtocols')">
+            <div style="display: flex; align-items: flex-start; flex-wrap: wrap;">
+            #set($i = 0)
+            #foreach($protocol in $globalConfig.AllowedProtocols)
+                #set($selected = false)
+                #set($selected = $config.AllowedProtocols.Contains($protocol))
+                <div style="width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <input type="checkbox" id="$core_v2_widget.UniqueId("p$i")" name="$core_v2_widget.UniqueId("p$i")" #if($selected) checked="checked"#end value="$core_v2_encoding.HtmlAttributeEncode($protocol)" />
+        		    <label for="$core_v2_widget.UniqueId("p$i")" class="field-item-name">$core_v2_encoding.HtmlEncode($protocol)</label>
+        		</div>
+    		    #set($i = $i + 1)
+    		#end
+    		</div>
+        </span>
+    </li>
+    
+    <li class="field-item #if(!$globalConfig.AllowIpHosts) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('AllowIpHosts')" name="$core_v2_widget.UniqueId('AllowIpHosts')" #if($config.AllowIpHosts) checked="checked"#end #if(!$globalConfig.AllowIpHosts) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('AllowIpHosts')" class="field-item-name">$core_v2_language.GetResource('Field_AllowIpHosts')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_AllowIpHosts_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.AllowLocalNetworkHosts) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('AllowLocalNetworkHosts')" name="$core_v2_widget.UniqueId('AllowLocalNetworkHosts')" #if($config.AllowLocalNetworkHosts) checked="checked"#end #if(!$globalConfig.AllowLocalNetworkHosts) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('AllowLocalNetworkHosts')" class="field-item-name">$core_v2_language.GetResource('Field_AllowLocalNetworkHosts')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_AllowLocalNetworkHosts_Desc')
+		</span>
+	</li>
+    
+    #if ($globalConfig.AllowedHosts.Length > 0)
+        <li class="field-item">
+            <label for="$core_v2_widget.UniqueId('AllowedHosts')" class="field-item-name">$core_v2_language.GetResource('Field_AllowedHosts')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Field_AllowedHosts_Desc')</span>
+            <span class="field-item-input" id="$core_v2_widget.UniqueId('AllowedHosts')">
+            #set($i = 0)
+            #foreach($host in $globalConfig.AllowedHosts)
+                #set($selected = false)
+                #set($selected = $config.AllowedHosts.Contains($host))
+                <div>
+                    <input type="checkbox" id="$core_v2_widget.UniqueId("ah$i")" name="$core_v2_widget.UniqueId("ah$i")" #if($selected) checked="checked"#end value="$core_v2_encoding.HtmlAttributeEncode($host)" />
+        		    <label for="$core_v2_widget.UniqueId("ah$i")" class="field-item-name">$core_v2_encoding.HtmlEncode($host)</label>
+        		</div>
+    		    #set($i = $i + 1)
+    		#end
+        </span>
+        </li>
+    #end
+    
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('DisallowedHosts')" class="field-item-name">$core_v2_language.GetResource('Field_DisallowedHosts')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_DisallowedHosts_Desc')</span>
+        <span class="field-item-input">
+            #set($addedHosts = '')
+            #foreach($host in $config.DisallowedHosts)
+                #if($globalConfig.DisallowedHosts.Contains($host))
+                    <p><code>$core_v2_encoding.HtmlEncode($host)</code></p>
+                #else
+                    #set($addedHosts = "${addedHosts}${core_v2_utility.NewLine}${host}")
+                #end
+    		#end
+            <textarea id="$core_v2_widget.UniqueId('DisallowedHosts')" rows="10">$addedHosts</textarea>
+        </span>
+    </li>
+	
+</ul>
+
+#if ($context.SupportsEmbeddedContent)
+    #foreach($embedType in $context.GetEmbeddableContentTypes())
+    #beforeall
+        <h3>$core_v2_language.GetResource('ContentEmbedding_Header')</h3>
+        <ul class="field-list" id="$core_v2_widget.UniqueId('EmbeddableContent')">
+    #each
+        #set($selected = true)
+        #if($config.DisallowedEmbeddableContentTypeIds.Contains($embedType.EmbeddedContentFragmentTypeId))
+            #set($selected = false)
+        #end
+        #set($disabled = false)
+        #if ($globalConfig.DisallowedEmbeddableContentTypeIds.Contains($embedType.EmbeddedContentFragmentTypeId))
+            #set($disabled = true)
+        #end
+        #set($id = $core_v2_widget.UniqueId($embedType.EmbeddedContentFragmentTypeId.ToString()))
+    	<li class="field-item #if($disabled) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+    	    <span class="field-item-input">
+                <input type="checkbox" id="$id" value="$embedType.EmbeddedContentFragmentTypeId.ToString()" name="$id" #if($selected) checked="checked"#end #if($disabled) disabled="disabled"#end />
+    		    <label for="$id" class="field-item-name">$embedType.ContentFragmentName</label>
+    		</span>
+            <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Field_ConentEmbedding_Desc'), $embedType.ContentFragmentName.ToLowerInvariant())</span>
+        </li>
+    #afterall
+        </ul>
+    #end
+#end
+	
+<h3>$core_v2_language.GetResource('Html_Header')</h3>
+<ul class="field-list">
+    
+    <li class="field-item #if(!$globalConfig.Font) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Font')" name="$core_v2_widget.UniqueId('Font')" #if($config.Font) checked="checked"#end #if(!$globalConfig.Font) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Font')" class="field-item-name">$core_v2_language.GetResource('Field_Font')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Font_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.FontDecoration) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('FontDecoration')" name="$core_v2_widget.UniqueId('FontDecoration')" #if($config.FontDecoration) checked="checked"#end #if(!$globalConfig.FontDecoration) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('FontDecoration')" class="field-item-name">$core_v2_language.GetResource('Field_FontDecoration')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_FontDecoration_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.FontSize) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('FontSize')" name="$core_v2_widget.UniqueId('FontSize')" #if($config.FontSize) checked="checked"#end #if(!$globalConfig.FontSize) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('FontSize')" class="field-item-name">$core_v2_language.GetResource('Field_FontSize')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_FontSize_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.ForegroundColor) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('ForegroundColor')" name="$core_v2_widget.UniqueId('ForegroundColor')" #if($config.ForegroundColor) checked="checked"#end #if(!$globalConfig.ForegroundColor) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('ForegroundColor')" class="field-item-name">$core_v2_language.GetResource('Field_ForegroundColor')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_ForegroundColor_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.Background) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Background')" name="$core_v2_widget.UniqueId('Background')" #if($config.Background) checked="checked"#end #if(!$globalConfig.Background) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Background')" class="field-item-name">$core_v2_language.GetResource('Field_Background')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Background_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.BordersAndLines) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('BordersAndLines')" name="$core_v2_widget.UniqueId('BordersAndLines')" #if($config.BordersAndLines) checked="checked"#end #if(!$globalConfig.BordersAndLines) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('BordersAndLines')" class="field-item-name">$core_v2_language.GetResource('Field_BordersAndLines')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_BordersAndLines_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.Lists) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Lists')" name="$core_v2_widget.UniqueId('Lists')" #if($config.Lists) checked="checked"#end #if(!$globalConfig.Lists) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Lists')" class="field-item-name">$core_v2_language.GetResource('Field_Lists')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Lists_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.Paragraphs) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Paragraphs')" name="$core_v2_widget.UniqueId('Paragraphs')" #if($config.Paragraphs) checked="checked"#end #if(!$globalConfig.Paragraphs) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Paragraphs')" class="field-item-name">$core_v2_language.GetResource('Field_Paragraphs')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Paragraphs_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.Tables) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Tables')" name="$core_v2_widget.UniqueId('Tables')" #if($config.Tables) checked="checked"#end #if(!$globalConfig.Tables) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Tables')" class="field-item-name">$core_v2_language.GetResource('Field_Tables')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Tables_Desc')
+		</span>
+	</li>
+    
+    <li class="field-item #if(!$globalConfig.CustomStyles) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('CustomStyles')" name="$core_v2_widget.UniqueId('CustomStyles')" #if($config.CustomStyles) checked="checked"#end #if(!$globalConfig.CustomStyles) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('CustomStyles')" class="field-item-name">$core_v2_language.GetResource('Field_CustomStyles')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_CustomStyles_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.SemanticMarkup) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('SemanticMarkup')" name="$core_v2_widget.UniqueId('SemanticMarkup')" #if($config.SemanticMarkup) checked="checked"#end #if(!$globalConfig.SemanticMarkup) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('SemanticMarkup')" class="field-item-name">$core_v2_language.GetResource('Field_SemanticMarkup')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_SemanticMarkup_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.Microformats) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Microformats')" name="$core_v2_widget.UniqueId('Microformats')" #if($config.Microformats) checked="checked"#end #if(!$globalConfig.Microformats) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Microformats')" class="field-item-name">$core_v2_language.GetResource('Field_Microformats')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Microformats_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item #if(!$globalConfig.Data) disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_Disabled')#end">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('Data')" name="$core_v2_widget.UniqueId('Data')" #if($config.Data) checked="checked"#end #if(!$globalConfig.Data) disabled="disabled"#end />
+		    <label for="$core_v2_widget.UniqueId('Data')" class="field-item-name">$core_v2_language.GetResource('Field_Data')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_Data_Desc')
+		</span>
+	</li>
+	
+	<li class="field-item disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_GlobalOnly')">
+	    <label class="field-item-name">$core_v2_language.GetResource('Field_AllowedClassNames')</label>
+		<span class="field-item-description">
+		    #if (!$config.AllowedClassNames)
+		        $core_v2_language.GetResource('Field_AllowedClassNames_All')
+		    #elseif ($config.AllowedClassNames.Length == 0)
+		        $core_v2_language.GetResource('Field_AllowedClassNames_None')
+		    #else
+		        #set($allowedClassNames = '')
+		        #foreach($n in $config.AllowedClassNames)
+	                #set($allowedClassNames = "${allowedClassNames}<code>${n}</code>")
+		            #between
+		                #set($allowedClassNames = "${allowedClassNames}, ")
+		        #end
+		        $core_v2_language.FormatString($core_v2_language.GetResource('Field_AllowedClassNames_Selection'), $allowedClassNames)
+		    #end
+		</span>
+	</li>
+	
+	<li class="field-item disabled ui-tip" data-tiphorizontal="left" title="$core_v2_language.GetResource('Option_GlobalOnly')">
+	    <label class="field-item-name">$core_v2_language.GetResource('Field_AllowedIdPrefixes')</label>
+		<span class="field-item-description">
+		    #if (!$config.AllowedIdPrefixes)
+		        $core_v2_language.GetResource('Field_AllowedIdPrefixes_All')
+		    #elseif ($config.AllowedIdPrefixes.Length == 0)
+		        $core_v2_language.GetResource('Field_AllowedIdPrefixes_None')
+		    #else
+		        #set($allowedIdPrefixes = '')
+		        #foreach($n in $config.AllowedIdPrefixes)
+	                #set($allowedIdPrefixes = "${allowedIdPrefixes}<code>${n}</code>")
+		            #between
+		                #set($allowedIdPrefixes = "${allowedIdPrefixes}, ")
+		        #end
+		        $core_v2_language.FormatString($core_v2_language.GetResource('Field_AllowedIdPrefixes_Selection'), $allowedIdPrefixes)
+		    #end
+		</span>
+	</li>
+
+</ul>
+</fieldset></form>

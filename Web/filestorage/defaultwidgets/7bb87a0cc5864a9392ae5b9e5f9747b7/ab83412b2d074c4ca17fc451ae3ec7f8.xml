@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_BlogTitle_Name}" version="12.0.0.0" description="${resource:Blogs_BlogTitle_Description}" instanceIdentifier="ab83412b2d074c4ca17fc451ae3ec7f8" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="blog-title" lastModified="2023-03-02 20:38:19Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($seoTitle = false)
+#set($title = false)
+#set($page = $core_v2_blogUrls.Current)
+#if($page == 'BlogPost')
+    #set($blogPost = $core_v2_blogPost.Current)
+    #set($title = $blogPost.Title)
+    #set($seoTitle = $blogPost.MetaTitle)
+#elseif ($page == 'AddBlogPost')
+    #set($title = $core_v2_language.GetResource('CF_BlogTitle_AddPost'))
+#elseif ($page == 'EditBlogPost')
+    #set($title = $core_v2_language.FormatString($core_v2_language.GetResource('CF_BlogTitle_EditPost'), $core_v2_blogPost.Current.Title))
+#elseif ($page == 'UserBlogs')
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('CF_BlogTitle_UsersBlogPosts'), $core_v2_user.Current.DisplayName))
+#elseif ($page == 'AddBlog')
+	#set($title = $core_v2_language.GetResource('CF_CreateBlog'))
+#elseif ($page == 'Day')
+	#set($title = $core_v2_language.FormatDate($core_v2_utility.ParseDate($core_v2_page.GetQueryStringValue('y'), $core_v2_page.GetQueryStringValue('m'), $core_v2_page.GetQueryStringValue('d'))))
+#elseif ($page == 'Month')
+	#set($title = $core_v2_utility.ParseDate( $core_v2_page.GetQueryStringValue("y"), $core_v2_page.GetQueryStringValue("m"), $core_v2_page.GetQueryStringValue('d')).ToString('MMMM, yyyy'))
+#elseif ($page == 'Bloggers')
+	#set($title = $core_v2_language.GetResource('Blog_Breadcrumbs_Bloggers'))
+#elseif ($page == 'Contact')
+	#set($title = $core_v2_language.GetResource('Contact'))
+#elseif ($page == 'About')
+	#set($title = $core_v2_blog.Current.AboutTitle)
+#elseif ($page == 'LinkList')
+	#set($title = $core_v2_language.GetResource('Weblog_Link_Links'))
+#elseif ($page == 'Tags')
+	#set($title = $core_v2_language.GetResource('TagBrowser_Title'))
+#elseif ($page == 'Search')
+	#set($title = $core_v2_language.GetResource('Search'))
+#elseif ($page == 'CustomPage')
+	#set($title = $core_v2_customPage.Current.Title)
+#end
+#if ($page == 'Blog')
+	$core_v2_page.SetTitle('', true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$core_v2_blog.Current.Name</h1>
+	#end
+#elseif ($title)
+    #if (!$seoTitle || $seoTitle == '')
+        #set($seoTitle = $title)
+    #end
+	$core_v2_page.SetTitle($seoTitle, true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_page.SetTitle($core_v2_language.GetResource('Core_ApplicationNavigation_Blogs'), true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$core_v2_language.GetResource('Core_ApplicationNavigation_Blogs')</h1>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Blogs_BlogTitle_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blogs_BlogTitle_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Blog_Breadcrumbs_Bloggers">Bloggers</resource>
+  <resource name="Blogs_BlogTitle_Description">Displays the title for blog pages.</resource>
+  <resource name="Blogs_BlogTitle_Name">Blog - Title</resource>
+  <resource name="CF_BlogTitle_AddPost">Add Post</resource>
+  <resource name="CF_BlogTitle_EditPost">Edit '{0}'</resource>
+  <resource name="CF_BlogTitle_UsersBlogPosts">{0}'s Blog Posts</resource>
+  <resource name="CF_CreateBlog">Create Blog</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Contact">Contact</resource>
+  <resource name="Core_ApplicationNavigation_Blogs">Blogs</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Search">Search</resource>
+  <resource name="TagBrowser_Title">Browse by Tags</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+  <resource name="Weblog_Link_Links">Links</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="a4e1c4b7f9ce44eeb558d06fcc50c2cc" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,13 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($roleId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('RoleId')))
+
+	#set($response = $context.DeleteRole($roleId))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+#end

@@ -1,0 +1,30 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	$core_v2_widget.SetIntValue('minFlags', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('minFlags')))
+	$core_v2_widget.SetIntValue('maxFlags', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('maxFlags')))
+	$core_v2_widget.SetIntValue('appealTimeWindow', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('appealTimeWindow')))
+	$core_v2_widget.SetIntValue('moderateTimeWindow', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('moderateTimeWindow')))
+	$core_v2_widget.SetIntValue('expungeTimeWindow', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('expungeTimeWindow')))
+	$core_v2_widget.SetIntValue('exemptReputationPercentile', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('exemptReputationPercentile')))
+	$core_v2_widget.SetCustomValue('exemptRoles', $core_v2_page.GetFormValue('exemptRoles'))
+	$core_v2_widget.SetIntValue('userExpungeAgeThreshold', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('userExpungeAgeThreshold')))
+	$core_v2_widget.SetIntValue('userExpungePostsThreshold', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('userExpungePostsThreshold')))
+	$core_v2_widget.SetCustomValue('moderationToAbuseContentTypes', $core_v2_page.GetFormValue('moderationToAbuseContentTypes'))
+	$core_v2_widget.SetCustomValue('throttlingExempt', $core_v2_page.GetFormValue('throttlingExempt'))
+
+	{
+		"minFlags": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('minFlags', 2).ToString())",
+		"maxFlags": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('maxFlags', 100).ToString())",
+		"appealTimeWindow": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('appealTimeWindow', 5).ToString())",
+		"moderateTimeWindow": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('moderateTimeWindow', 60).ToString())",
+		"expungeTimeWindow": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('expungeTimeWindow', 30).ToString())",
+		"exemptReputationPercentile": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('exemptReputationPercentile', 2).ToString())",
+		"exemptRoles": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetCustomValue('exemptRoles', ''))",
+		"userExpungeAgeThreshold": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('userExpungeAgeThreshold', 45).ToString())",
+		"userExpungePostsThreshold": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetIntValue('userExpungePostsThreshold', 4).ToString())",
+		"moderationToAbuseContentTypes": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetCustomValue('moderationToAbuseContentTypes', 'all'))",
+		"throttlingExempt": "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetCustomValue('throttlingExempt', ''))"
+	}
+
+#end

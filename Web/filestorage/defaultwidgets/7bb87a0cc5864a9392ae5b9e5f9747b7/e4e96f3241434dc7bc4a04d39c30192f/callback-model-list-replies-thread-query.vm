@@ -1,0 +1,59 @@
+##
+##
+## Expects in scope: $content, $parentId, $flattenedDepth, $endReplyId, $startReplyId, $sortBy, $sortOrder, $pageSize, $flattenedSortBy, $flattenedSortOrder
+##
+
+#set ($listThreadedOptions = "%{}")
+$listThreadedOptions.add('ContentId', $content.ContentId)
+$listThreadedOptions.add('ContentTypeId', $content.ContentTypeId)
+$listThreadedOptions.add('ParentCommentId', $parentId)
+$listThreadedOptions.add('FlattenedDepth', $flattenedDepth)
+$listThreadedOptions.add('IsApproved', 'True')
+#set ($rootPageSize = $pageSize)
+#if ($startReplyId)
+	#set ($rootPageSize = $rootPageSize + 1)
+	$listThreadedOptions.add('StartCommentId', $startReplyId)
+#end
+#if ($endReplyId)
+	#set ($rootPageSize = $rootPageSize + 1)
+	$listThreadedOptions.add('EndCommentId', $endReplyId)
+#end
+$listThreadedOptions.add('RootPageSize', $rootPageSize)
+$listThreadedOptions.add('ChildPageSize', $pageSize)
+#if ($sortBy)
+	$listThreadedOptions.add('ThreadedSortBy', $sortBy)
+#end
+#if ($sortOrder)
+	$listThreadedOptions.add('ThreadedSortOrder', $sortOrder)
+#end
+#if ($flattenedDepth > 0)
+	#if ($flattenedSortBy)
+		$listThreadedOptions.add('FlattenedSortBy', $flattenedSortBy)
+	#end
+	#if ($flattenedSortOrder)
+		$listThreadedOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+	#end
+#else
+	#if ($sortBy)
+		$listThreadedOptions.add('FlattenedSortBy', $sortBy)
+	#end
+	#if ($sortOrder)
+		$listThreadedOptions.add('FlattenedSortOrder', $sortOrder)
+	#end
+#end
+#if ($commentTypeId)
+	$listThreadedOptions.add('CommentTypeId', $commentTypeId)
+#end
+
+## Exclude replies matching StartCommentId or EndCommentId
+#set ($threadedComments = $core_v2_comments.ListThreaded($listThreadedOptions))
+#if (!$startReplyId && !$endReplyId)
+	#set ($comments = $threadedComments)
+#else
+	#set ($comments = [])
+	#foreach ($comment in $threadedComments)
+		#if ((!$startReplyId || $comment.CommentId != $startReplyId) && (!$endReplyId || $comment.CommentId != $endReplyId))
+			#set ($addedAt = $comments.Add($comment))
+		#end
+	#end
+#end

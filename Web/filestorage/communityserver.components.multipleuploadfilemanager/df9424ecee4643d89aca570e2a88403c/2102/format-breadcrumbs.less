@@ -1,0 +1,36 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.breadcrumbs {
+	display: inline-flex;
+	flex-wrap: wrap;
+	color: -evo-decrease-contrast(@color-background, 30%, @color-foreground, @color-contrast);
+	background-color: -evo-decrease-contrast(@color-background, 4%, @color-foreground, @color-contrast);
+	font-size: @font-size * .9;
+	padding: @spacing (@spacing * 1.3) @spacing (@spacing * 1.3);
+	border-radius: 3px;
+	margin-bottom: @spacing;
+	.breadcrumb {
+		margin-right: @spacing;
+		.prepend_icon(@right-open-mini, @font-size * .9, -2px);
+		&:first-child {
+			&:before {
+				display: none;
+			}
+		}
+		&:last-child {
+			margin-right: 0;
+		}
+		a {
+			color: -evo-decrease-contrast(@color-foreground, 20%, @color-background, @color-contrast);
+			&:hover {
+				color: @color-link;
+			}
+		}
+	}
+}

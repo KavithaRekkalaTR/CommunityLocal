@@ -1,0 +1,77 @@
+#set ($hierarchyApi = $core_v2_widget.ExecuteFile('hierarchy-api.jsm'))
+#set ($nodes = $hierarchyApi.listFlattenedHierarchy($currentCollection.Id, $currentCategory.Id))
+
+<div id="$core_v2_widget.UniqueId('hierarchy')">
+	#set($currentLevel = 0)
+	#foreach($node in $nodes)
+
+		#set ($nodeLevel = $core_v2_utility.ParseInt($node.Level.ToString()))
+
+		#if($nodeLevel > $currentLevel)
+			#foreach($i in [$currentLevel..$nodeLevel])
+				#if($i != $currentLevel)
+					<div class="hierarchy-children">
+						<ul class="hierarchy-list">
+				#end
+			#end
+		#elseif ($nodeLevel < $currentLevel)
+			#foreach($i in [$nodeLevel..$currentLevel])
+				#if($i != $currentLevel)
+							</li>
+						</ul>
+					</div>
+				#end
+			#end
+		#else
+			</li>
+		#end
+
+		<li data-categoryid="$node.Id">
+			<div class="hierarchy-item
+				#if (!($includeArticles && $currentArticle) && $currentCategory && $currentCategory.Id == $node.Id)
+					selected
+				#elseif ($includeArticles && $currentArticle && $currentArticle.Id == $node.Id)
+					selected
+				#end
+				#if ($node.HasChildren)
+					with-children
+				#else
+					without-children
+				#end">
+				#if ($node.HasChildren)
+					#if ($node.IsExpanded)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($node.Url)"><span class="expand-collapse expanded">-</span>$node.Name</a>
+					#else
+						<a href="$core_v2_encoding.HtmlAttributeEncode($node.Url)"><span class="expand-collapse collapsed">+</span>$node.Name</a>
+					#end
+				#else
+					<a href="$core_v2_encoding.HtmlAttributeEncode($node.Url)">$node.Name</a>
+				#end
+			</div>
+
+		#set($currentLevel = $nodeLevel)
+	#end
+	#if ($currentLevel > 0)
+		#foreach($i in [1..$currentLevel])
+					</li>
+				</ul>
+			</div>
+		#end
+	#end
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.articleCategoryList')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("hierarchy.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.articleCategoryList.register({
+				hierarchy: jQuery('#$core_v2_widget.UniqueId('hierarchy')'),
+				callbackCategoriesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-categories.vm'))',
+				articleCollectionId: '$currentCollection.Id',
+				wrapper: '#$core_v2_widget.WrapperElementId'
+			});
+		});
+	</script>
+#end

@@ -1,0 +1,5 @@
+## collect content features
+#set ($group = $core_v2_group.Current)
+#if ($customFeatureStrategy != 'includeOnly')
+	#set ($contentFeatures = $core_v3_feature.List("%{TargetContainerId = $group.ContainerId, PageIndex = 0, PageSize = $pageSize, SortBy = 'StartDate', SortOrder = 'Ascending' }"))
+#end

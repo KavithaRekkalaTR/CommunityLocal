@@ -1,0 +1,9 @@
+#set($commentStartDate = false)
+#set($rawTimestamp = false)
+#set($rawTimestamp = $core_v2_page.GetQueryStringValue('w_commentTimestamp'))
+#if ($rawTimestamp)
+    #set ($commentStartDate = $core_v2_utility.ParseTimestamp($rawTimestamp))
+#end
+#set ($storyId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_storyId')))
+#set ($commentPageSize = 10)
+$core_v2_widget.ExecuteFile('comments.vm')

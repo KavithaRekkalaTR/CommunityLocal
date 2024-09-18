@@ -1,0 +1,53 @@
+#if ($context.UserId < 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+    $core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('impersonateHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button impersonate">$core_v2_language.GetResource('Impersonate')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+    #set($userTitle = $user.DisplayName)
+    #if ($user.Username != $user.DisplayName)
+        #set($userTitle = "$userTitle ($user.Username)")
+    #end
+#end
+
+<p>$core_v2_language.FormatString($core_v2_language.GetResource('ImpersonateInstructions'), $userTitle)</p>
+<p>$core_v2_language.FormatString($core_v2_language.GetResource('ImpersonateInstructions2'), $userTitle)</p>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationImpersonate')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('impersonate.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministrationImpersonate.register({
+		    userId: $context.UserId,
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    urls: {
+		        impersonate: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-impersonate.vm'))'
+		    },
+		    text: {
+		        impersonateSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('ImpersonateSuccessful'), $userTitle))'
+		    }
+    	});
+	});
+	</script>
+#end

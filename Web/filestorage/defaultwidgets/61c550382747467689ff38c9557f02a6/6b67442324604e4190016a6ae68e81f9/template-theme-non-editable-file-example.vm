@@ -1,0 +1,16 @@
+<em>$core_v2_language.GetResource('FileLessExample')</em>
+<% if(extension == 'woff' || extension == 'woff2' || extension == 'ttf' || extension == 'otf' || extension == 'eot') { %>
+	<pre class="ui-code" style="height: 10em" data-mode="less" data-enablefullscreen="false">@font-face {
+  font-family: "My Font";
+  src: url(-evo-themefile-url('<%: Name %>')) format("<%: extension %>");
+}
+.selector {
+  font-family: "My Font";
+}</pre>
+<% } else if(extension == 'jpg' || extension == 'png' || extension == 'gif' || extension == 'svg') { %>
+	<pre class="ui-code" style="height: 5em" data-mode="less" data-enablefullscreen="false">.selector {
+  background-image: url(-evo-themefile-url('<%: Name %>'));
+}</pre>
+<% } else { %>
+	<pre class="ui-code" style="height: 3em" data-mode="less" data-enablefullscreen="false">-evo-themefile-url('<%: Name %>')</pre>
+<% } %>

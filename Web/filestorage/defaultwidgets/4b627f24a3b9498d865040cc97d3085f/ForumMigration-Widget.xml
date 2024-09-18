@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MergeApplication_Title}" version="10.2.0.0" description="${resource:MergeApplication_Description}" instanceIdentifier="2f384b9e377342389d02c39343e32535" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="contextual-content-conversion" lastModified="2018-07-19 16:04:13Z" provider="4b627f24a3b9498d865040cc97d3085f">
+    <contentScript><![CDATA[#set($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+#set($asField = $core_v2_widget.UniqueId('as'))
+#set($inGroupField = $core_v2_widget.UniqueId('group'))
+#set($inApplicationField = $core_v2_widget.UniqueId('application'))
+#set($applicationWrapper = $core_v2_widget.UniqueId('applicationWrapper'))
+#set($optionsWrapper = $core_v2_widget.UniqueId('optionsWrapper'))
+#set($application = false)
+#set($application = $core_v2_application.Get($context.ApplicationId, $context.ApplicationTypeId))
+#set($targetApplicationTypes = false)
+#set($targetApplicationTypes = $core_v2_applicationMerge.ListTargetApplicationTypes($context.ApplicationTypeId, $context.ApplicationId))
+
+#if ($targetApplicationTypes.Count == 0)
+    <div class="message error">
+        $core_v2_language.FormatString($core_v2_language.GetResource('NoMergeOptions'), $application.HtmlName('Web'))
+    </div>
+#else
+    <form><fieldset>
+        <p>
+            $core_v2_language.GetResource('MergeApplication_Instructions')
+        </p>
+    	<ul class="field-list">
+    	    <li class="field-item">
+    			<label class="field-item-name">$core_v2_language.GetResource('From')</label>
+    			<span class="field-item-input">
+    				$application.HtmlName('Web')
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+        
+            <li class="field-item" #if($targetApplicationTypes.Count == 1 && $targetApplicationTypes.get_Item(0).Id == $context.ApplicationTypeId) style="display:none;" #end>
+    			<label for="$core_v2_encoding.HtmlAttributeEncode($asField)" class="field-item-name">$core_v2_language.GetResource('As')</label>
+    			<span class="field-item-input">
+    				<select id="$core_v2_encoding.HtmlAttributeEncode($asField)" name="$core_v2_encoding.HtmlAttributeEncode($asField)" >
+    				    #foreach($applicationType in $targetApplicationTypes)
+    				        <option value="$applicationType.Id.ToString()" #if ($applicationType.Id == $context.ApplicationTypeId) selected#end>$applicationType.Name</option>
+    				    #end
+    				</select>
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+    		
+    		<li class="field-item">
+    			<label class="field-item-name">$core_v2_language.GetResource('To')</label>
+    			<span class="field-item-input">
+    				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($inGroupField)" name="$core_v2_encoding.HtmlAttributeEncode($inGroupField)" />
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+    		
+    		<li class="field-item" id="$core_v2_encoding.HtmlAttributeEncode($applicationWrapper)" style="display: none;">
+    			<label class="field-item-name">$core_v2_language.GetResource('InApplication')</label>
+    			<span class="field-item-input">
+    				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($inApplicationField)" name="$core_v2_encoding.HtmlAttributeEncode($inApplicationField)" />
+    			</span>
+    			<span class="field-item-validation" style="display:none;"></span>
+    		</li>
+    	</ul>
+    </fieldset></form>
+    
+    <div id="$core_v2_encoding.HtmlAttributeEncode($optionsWrapper)" style="display: none;">
+        <fieldset>
+            <ul class="field-list">
+                <li class="field-item options">
+                    <span class="field-item-name">$core_v2_language.GetResource('MergeOptions')</span>
+                    <span class="field-item-description">
+                        $core_v2_language.GetResource('MergeOptions_Description')
+                    </span>
+                </li>
+            </ul>
+        </fieldset>
+    </div>
+    
+    <script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    	<fieldset>
+    		<ul class="field-list">
+    			<li class="field-item">
+    				<span class="field-item-input">
+    					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Merge')</a>
+    				</span>
+    			</li>
+    		</ul>
+    	</fieldset>
+    </script>
+    
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+    <script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+    	jQuery.telligent.evolution.widgets.forumMergePanel.register({
+    	    sourceApplicationId: '$context.ApplicationId.ToString()',
+    	    sourceApplicationTypeId: '$context.ApplicationTypeId.ToString()',
+    	    currentContainerId: '$!application.Container.ContainerId.ToString()',
+    	    currentContainerName: '$!core_v2_encoding.JavascriptEncode($!application.Container.HtmlName('Web'))',
+    	    headerTemplate: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+    	    optionsPrefix: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('options'))',
+    	    nodes: {
+                contentType: jQuery('#$core_v2_encoding.JavascriptEncode($asField)'),
+                group: jQuery('#$core_v2_encoding.JavascriptEncode($inGroupField)'),
+                application: jQuery('#$core_v2_encoding.JavascriptEncode($inApplicationField)'),
+                applicationWrapper: jQuery('#$core_v2_encoding.JavascriptEncode($applicationWrapper)'),
+                optionsWrapper: jQuery('#$core_v2_encoding.JavascriptEncode($optionsWrapper)')
+    	    },
+    	    urls: {
+    		    findGroups:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-groups.vm'))',
+    		    findApplications:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-applications.vm'))',
+    		    getOptionsForm:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('get-options-form.vm'))',
+    		    merge:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('merge.vm'))',
+    		    groupRedirect:  '$core_v2_encoding.JavascriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Forum.Group.Id)))'
+    	    },
+    		text: {
+    		    findGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FindGroup'))',
+    		    noGroupsFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoGroupsFound'))',
+    		    findApplication: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FindApplication'))',
+    		    noApplicationsFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('NoApplicationsFound'), $core_v2_user.Accessing.DisplayName))',
+    		    success: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success'))'
+    		}
+    	});
+    });
+    </script>
+#end]]></contentScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="As">As a</resource>
+  <resource name="FindApplication">Find an application...</resource>
+  <resource name="FindGroup">Find a group...</resource>
+  <resource name="From">From</resource>
+  <resource name="InApplication">In</resource>
+  <resource name="Merge">Merge</resource>
+  <resource name="MergeApplication_Description">Merge all threads and replies to another forum</resource>
+  <resource name="MergeApplication_Instructions">Schedules a background job to merge all threads and replies from the current forum to another forum.  Depending on the number of threads to merge, this job may run for a significant amount of time.  While the merge is running, each thread is converted individually and redirects are created to the new forum location.  Once all threads and replies are merged successfully, the current forum will be deleted.</resource>
+  <resource name="MergeApplication_Title">Merge Forum</resource>
+  <resource name="MergeOptions">With options</resource>
+  <resource name="MergeOptions_Description">The following options can be set to customize forum merge options:</resource>
+  <resource name="NoApplicationsFound">No applications were found where {0} had permission to create content.</resource>
+  <resource name="NoGroupsFound">No groups were found.</resource>
+  <resource name="NoMergeOptions">'{0}' cannot be moved.</resource>
+  <resource name="Success">The forum merge has been scheduled to run as a background job.  Would you like to view the forum the content will be moving to?</resource>
+  <resource name="To">To</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

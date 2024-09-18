@@ -1,0 +1,32 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+	#set($enableDecay = false)
+	#set($enableDecay = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enabledecay')))
+	
+	#set($halfLife = false)
+	#set($halfLife = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('halflife')))
+	
+	#set($enableOverrides = false)
+	#set($enableOverrides = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableoverrides')))
+	
+	#set($result = false)
+    #set($result = $context.SaveDecayConfiguration($enableDecay, $halfLife, $enableOverrides))
+    #if ($result.Errors.Count > 0)
+        $core_v2_page.SendJsonError($result.Errors)
+    #end
+    
+    #foreach($weightedMetric in $context.GetWeightedMetrics())
+        #set($weight = false)
+        #set($weightId = "weight-$weightedMetric.Metric.Id.ToString()")
+        #set($weight = $context.ParseFromHtml($core_v2_page.GetFormValue($weightId)))
+        #if ($weight && $weight != $weightedMetric.Weight)
+            #set($result = $context.SaveMetricWeight($weightedMetric.Metric.Id, $weight))
+            #if ($result.Errors.Count > 0)
+                $core_v2_page.SendJsonError($result.Errors)
+            #end
+        #end
+    #end
+    
+    {"success":true}
+#end

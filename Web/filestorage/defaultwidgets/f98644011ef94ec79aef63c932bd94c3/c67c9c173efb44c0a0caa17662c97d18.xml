@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ReportingPanel_Name}"
+                           version="10.0.0.0"
+                           description="${resource:ReportingPanel_Description}"
+                           instanceIdentifier="c67c9c173efb44c0a0caa17662c97d18"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass="manage-reporting"
+                           provider="f98644011ef94ec79aef63c932bd94c3">
+		<contentScript><![CDATA[
+$core_v2_widget.ExecuteFile('callback-load-home.vm')
+
+$reporting.RenderShellTemplates()
+
+#set ($browseViewItemTemplate = $core_v2_widget.UniqueId('browseViewItemTemplate'))
+#registerClientTemplate($browseViewItemTemplate)
+	$core_v2_widget.ExecuteFile('template-browse-view-item.vm')
+#end
+
+#registerEndOfPageHtml('Telligent.Reporting.Widgets.highcharts')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('highcharts.js')"></script>
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('moment.min.js')"></script>
+  <script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('ui.js.vm'))"></script>
+
+  <script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+      jQuery.telligent.evolution.widgets.reporting.register({
+        hasSiteReportingPermission: '$reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id).ToString().ToLowerInvariant()',
+        hasGroupReportingPermission: '$reporting.HasGroupReportingPermission($core_v2_user.Accessing.Id).ToString().ToLowerInvariant()',
+        templates: {
+          browseViewItemTemplate: '$core_v2_encoding.JavascriptEncode($browseViewItemTemplate)'
+        },
+        urls: {
+          listReports: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-list-reports.vm'))',
+          loadHome: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-load-home.vm'))',
+          loadReport: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-load-report.vm'))',
+          getReport: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-report.vm'))'
+        },
+        resources: {
+          search: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Search'))',
+          report: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Report'))',
+          dashboard: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Dashboard'))'
+        }
+      });
+    });
+  </script>
+#end
+
+]]></contentScript>
+		<languageResources>
+      <language key="en-us">
+        <resource name="ReportingPanel_Name">Reporting Panel</resource>
+        <resource name="ReportingPanel_Description">Displays reporting admin panel.</resource>
+        <resource name="NoDashboardsMatchFilter">No dashboards match the filter.</resource>
+        <resource name="Search">Search</resource>
+        <resource name="Welcome">Select a dashboard or report to view.</resource>
+        <resource name="Report">Report</resource>
+        <resource name="Dashboard">Dashboard</resource>
+        <resource name="Actions">Actions</resource>
+        <resource name="Cancel">Cancel</resource>
+        <resource name="OpenNew">Open in New Tab</resource>
+        <resource name="ReturnToDashboard">Back to dashboard</resource>
+        <resource name="AsOf">As of</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

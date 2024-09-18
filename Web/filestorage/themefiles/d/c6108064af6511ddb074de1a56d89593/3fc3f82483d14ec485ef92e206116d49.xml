@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<themes>
+  <theme name="Social" version="13.0.0.29206" description="'Social' Group Theme" id="3fc3f82483d14ec485ef92e206116d49" themeTypeId="c6108064af6511ddb074de1a56d89593" lastModified="2024-05-30 15:01:27Z" isFactoryDefault="true" mediaMaxHeightPixels="" mediaMaxWidthPixels="">
+    <headScript language="Velocity"><![CDATA[$context_v2_themeHeader.RenderStylesheetFiles()
+$context_v2_themeHeader.RenderJavascriptFiles()
+]]></headScript>
+    <bodyScript language="Velocity"><![CDATA[
+#set ($minWidthUnit = $core_v2_theme.GetUnitValue('minWidth', '670px', 10))
+#set ($minWidth = $core_v2_utility.ParseInt($core_v2_utility.Replace($minWidthUnit, 'px', '')))
+
+#set ($wrappingFormats = [])
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-NoBorderWithNoSpacing'),CssClass='no-wrapper',IncludeHeader='false'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-NoBorderWithSpacing'),CssClass='no-wrapper with-spacing',IncludeHeader='false'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-NoBorderWithSpacingAndHeader'),CssClass='no-wrapping with-spacing with-header',IncludeHeader='true'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-TopBorder'),CssClass='top-border with-spacing',IncludeHeader='false'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-TopBorderAndHeader'),CssClass='top-border with-spacing with-header',IncludeHeader='true'}"))
+#set ($options = "%{ WrappingFormats = $wrappingFormats, DefaultWrappingFormatWithHeader = 'top-border with-spacing with-header reponsive-1', DefaultWrappingFormatWithoutHeader = 'no-wrapper responsive-1', LayoutReflowMinWidth = $minWidth }")
+
+$context_v2_themeBody.RenderHeader($options)
+$context_v2_themeBody.RenderPage($options)
+$context_v2_themeBody.RenderFooter($options)
+		]]></bodyScript>
+    <configuration><![CDATA[<propertyGroup id="fontsAndColors" labelResourceName="fontsAndColors" visible="true">
+	<propertySubGroup id="fontsAndColorsGeneral" labelResourceName="colors" visible="true">
+		<property id="colorLabel" descriptionResourceName="fontsAndColorsDesc" dataType="String" editable="false" visible="true" />
+		<property id="bannerColorLabel" labelResourceName="banners" descriptionResourceName="bannersDesc" dataType="String" editable="false" visible="true" />
+		<property id="backgroundColor" labelResourceName="background" dataType="Color" />
+		<property id="foregroundColor" labelResourceName="foreground" dataType="Color" />
+		<property id="accentColor" labelResourceName="accent" descriptionResourceName="accentDesc" dataType="Color" />
+		<property id="linkFontColor" labelResourceName="link" descriptionResourceName="linkDesc" dataType="Color" />
+		<property id="contrast" labelResourceName="contrast" descriptionResourceName="contrastDesc" defaultValue="0" dataType="Double" inputType="range" min="-1" max="1" step=".1" rangeTicks="5" rangeLabel="true" rangeLabelFormat="Percent" />
+	</propertySubGroup>
+	<propertySubGroup id="fontsAndColorsBaseFont" labelResourceName="fonts" visible="true">
+		<property id="fontsAndColorsBaseFontLabel" descriptionResourceName="fontsDesc" dataType="String" editable="false" visible="true" />
+		<property id="baseFont" labelResourceName="font" dataType="String">
+			<propertyValue value="system" labelResourceName="system" propertiesToHide="baseFontCustom" />
+			<propertyValue value="helvetica" labelResourceName="helvetica" propertiesToHide="baseFontCustom" />
+			<propertyValue value="source-sans-pro" labelResourceName="sourceSansPro" propertiesToHide="baseFontCustom" />
+			<propertyValue value="open-sans" labelResourceName="spenSans" propertiesToHide="baseFontCustom" />
+			<propertyValue value="fira-sans" labelResourceName="firaSans" propertiesToHide="baseFontCustom" />
+			<propertyValue value="custom" labelResourceName="customFont" propertiesToShow="baseFontCustom" />
+		</property>
+		<property id="baseFontCustom" labelResourceName="custom" descriptionResourceName="customFontDesc" dataType="Url" allowedFileExtensions="woff" allowLocal="true" enablePreview="true" />
+		<property id="baseFontSizeValue" labelResourceName="size" dataType="Unit" />
+		<property id="baseFontWeight" labelResourceName="weight" dataType="Int">
+			<propertyValue value="100" labelText="100" />
+			<propertyValue value="200" labelText="200" />
+			<propertyValue value="300" labelText="300" />
+			<propertyValue value="400" labelText="400" />
+			<propertyValue value="500" labelText="500" />
+			<propertyValue value="600" labelText="600" />
+			<propertyValue value="700" labelText="700" />
+			<propertyValue value="800" labelText="800" />
+			<propertyValue value="900" labelText="900" />
+		</property>
+		<property id="baseFontStyle" labelResourceName="style" dataType="String">
+			<propertyValue value="normal" labelResourceName="normal" />
+			<propertyValue value="italic" labelResourceName="italic" />
+		</property>
+		<property id="baseFontLineHeight" labelResourceName="lineHeight" dataType="Unit" />
+	</propertySubGroup>
+	<propertySubGroup id="fontsAndColorsStateColors" labelResourceName="specialtyColors" visible="true">
+		<property id="fontsAndColorsStateColorsLabel" descriptionResourceName="specialtyColorsDesc" dataType="String" editable="false" visible="true" />
+		<property id="statePositive" labelResourceName="positive" descriptionResourceName="positiveDesc" dataType="Color" />
+		<property id="statePending" labelResourceName="pending" descriptionResourceName="pendingDesc" dataType="Color" />
+		<property id="stateAttention" labelResourceName="attention" descriptionResourceName="attentionDesc" dataType="Color" />
+		<property id="stateNegative" labelResourceName="negative" descriptionResourceName="negativeDesc" dataType="Color" />
+	</propertySubGroup>
+</propertyGroup>
+<propertyGroup id="favicon" labelResourceName="favicon" visible="true">
+	<property id="favicon" labelResourceName="favicon" descriptionResourceName="faviconDesc" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false" />
+</propertyGroup>
+<propertyGroup id="dimensions" labelResourceName="dimensions" visible="true">
+	<property id="layoutsLabel" labelResourceName="layouts" descriptionResourceName="layoutsDesc" dataType="String" editable="false" visible="true" />
+	<property id="minWidth" labelResourceName="minimumWidth" descriptionResourceName="minimumWidthDesc" dataType="Unit" />
+	<property id="maxWidth" labelResourceName="maximumWidth" descriptionResourceName="maximumWidthDesc" dataType="Unit" />
+	<property id="siteHeader" labelResourceName="siteHeaderBehavior" descriptionResourceName="siteHeaderBehaviorDesc" dataType="String">
+		<propertyValue value="adaptive" labelResourceName="siteHeaderAdaptiveDesc" />
+		<propertyValue value="static" labelResourceName="siteHeaderStaticDesc" />
+	</property>
+	<property id="sidebar" labelResourceName="sidebarBehavior" descriptionResourceName="sidebarBehaviorDesc" dataType="String">
+		<propertyValue value="adaptive" labelResourceName="sidebarBehaviorAdaptive" />
+		<propertyValue value="static" labelResourceName="sidebarBehaviorStatic" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="accent">Accent</resource>
+  <resource name="accentDesc">Used for buttons, borders, and some links</resource>
+  <resource name="attention">Attention State</resource>
+  <resource name="attentionDesc">Used when indicating both warning states as well as toggled active button states.</resource>
+  <resource name="background">Background</resource>
+  <resource name="banners">Banners</resource>
+  <resource name="bannersDesc">Group, and blog banner color palettes can be selected directly within the configuration of those widgets.</resource>
+  <resource name="colors">Colors</resource>
+  <resource name="contrast">Contrast adjustment</resource>
+  <resource name="contrastDesc">Contrast adjustments influence generated colors.</resource>
+  <resource name="custom">Custom</resource>
+  <resource name="customFont">Custom Font</resource>
+  <resource name="customFontDesc">Web Open Font Format (WOFF) File</resource>
+  <resource name="dimensions">Layout</resource>
+  <resource name="favicon">Favicon</resource>
+  <resource name="faviconDesc">The favicon displays on browser tabs and home screens. PNG format and high resolution (256x256) are recommended.</resource>
+  <resource name="firaSans">Fira Sans</resource>
+  <resource name="font">Font</resource>
+  <resource name="fonts">Fonts</resource>
+  <resource name="fontsAndColors">Fonts and Colors</resource>
+  <resource name="fontsAndColorsDesc">These colors represent a baseline and will be slightly adjusted by the theme as necessary.</resource>
+  <resource name="fontsDesc">These font settings represent a baseline and will be adjusted by the theme as necessary.</resource>
+  <resource name="foreground">Foreground</resource>
+  <resource name="helvetica">Helvetica, Arial</resource>
+  <resource name="italic">Italic</resource>
+  <resource name="layouts">Page Layouts</resource>
+  <resource name="layoutsDesc">Page, header, and footer layouts can be edited by visiting the page and selecting Manage Theme &gt; Edit this Page.</resource>
+  <resource name="lineHeight">Line Height</resource>
+  <resource name="link">Link</resource>
+  <resource name="linkDesc">Used for most links</resource>
+  <resource name="maximumWidth">Maximum Width</resource>
+  <resource name="maximumWidthDesc">Maximum width, in pixels, beyond which the layout will not expand.</resource>
+  <resource name="minimumWidth">Minimum Width</resource>
+  <resource name="minimumWidthDesc">Minimum width, in pixels, beyond which the layout will transition to a single-column mobile-friendly layout.</resource>
+  <resource name="negative">Negative</resource>
+  <resource name="negativeDesc">Used when indicating problematic states such as rejecting an answer.</resource>
+  <resource name="normal">Normal</resource>
+  <resource name="palette_dark_blue">Dark Blue</resource>
+  <resource name="palette_dark_gray">Dark Gray</resource>
+  <resource name="palette_light_gray">Gray</resource>
+  <resource name="palette_green">Green</resource>
+  <resource name="pending">Pending State</resource>
+  <resource name="pendingDesc">Used when indicating pending states such as suggested answers.</resource>
+  <resource name="positive">Positive State</resource>
+  <resource name="positiveDesc">Used when indicating approved states such as verified answers.</resource>
+  <resource name="sidebarBehavior">Sidebar Behavior</resource>
+  <resource name="sidebarBehaviorAdaptive">Attempt to keep the sidebar visible.</resource>
+  <resource name="sidebarBehaviorDesc">When the page scrolls,</resource>
+  <resource name="sidebarBehaviorStatic">Allow the sidebar to scroll out of view.</resource>
+  <resource name="siteHeaderAdaptiveDesc">Shrink the site header and keep it visible.</resource>
+  <resource name="siteHeaderBehavior">Site Header Behavior</resource>
+  <resource name="siteHeaderBehaviorDesc">When the page scrolls,</resource>
+  <resource name="siteHeaderStaticDesc">Allow the site header to scroll out of view.</resource>
+  <resource name="size">Size</resource>
+  <resource name="sourceSansPro">Source Sans Pro</resource>
+  <resource name="specialtyColors">Specialty Colors</resource>
+  <resource name="specialtyColorsDesc">These colors are used to convey specific messages.</resource>
+  <resource name="spenSans">Open Sans</resource>
+  <resource name="style">Style</resource>
+  <resource name="system">System</resource>
+  <resource name="weight">Weight</resource>
+  <resource name="WrappingFormat-NoBorderWithNoSpacing">No Border with No Spacing</resource>
+  <resource name="WrappingFormat-NoBorderWithSpacing">No Border with Spacing</resource>
+  <resource name="WrappingFormat-NoBorderWithSpacingAndHeader">No Border with Spacing and Header</resource>
+  <resource name="WrappingFormat-TopBorder">Top Border</resource>
+  <resource name="WrappingFormat-TopBorderAndHeader">Top Border and Header</resource>
+</language>]]></languageResources>
+    <previewImage name="social-group.png" />
+  </theme>
+</themes>

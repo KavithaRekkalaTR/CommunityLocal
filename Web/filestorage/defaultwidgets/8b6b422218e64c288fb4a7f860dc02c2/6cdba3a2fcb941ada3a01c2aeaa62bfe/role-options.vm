@@ -1,0 +1,49 @@
+#if ($isADMapped)
+	<p>$core_v2_language.FormatString($core_v2_language.GetResource('MappedFormat'), $adGroup.Name)</p>
+#end
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item name">
+			<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+			<span class="field-item-input">
+				#if($role.IsSystemRole)
+					$core_v2_encoding.HtmlDecode($roleName)
+				#else
+					<input type="text" id="$core_v2_widget.UniqueId('Name')" name="RoleName" maxlength="256" value="$roleName" #if($isADMapped) readonly #end /> 
+				#end
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item description">
+			<label for="$core_v2_widget.UniqueId('Description')" class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+			<span class="field-item-input">
+				<textarea name="Description" maxlength="1000" style="width: 90%" id="$core_v2_widget.UniqueId('Description')" #if($isADMapped) readonly #end>$!role.Description</textarea>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false">
+			<label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('RoleAvatar')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('RoleAvatar_Detail')</span>
+			<span class="field-item-input preview">
+			</span>
+			<span class="field-item-input upload">
+				<a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+				<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		
+		<li class="field-item private">
+		    <label for="$core_v2_widget.UniqueId('IsPrivate')" class="field-item-private">$core_v2_language.GetResource('Private')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('Private_Detail')</span>
+		    <span class="field-item-input">
+		        <input type="checkbox" id="$core_v2_widget.UniqueId('IsPrivate')" name="IsPrivate" #if($role.isPrivate) checked #end />
+		    </span>
+		</li>
+	</ul>
+</fieldset></form>

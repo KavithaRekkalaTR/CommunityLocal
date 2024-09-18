@@ -1,0 +1,90 @@
+$core_v2_widget.RenderFile('jquery-ui.min.js')
+
+$core_v2_widget.RenderFile('shell-require.js')
+
+$core_v2_widget.RenderFile('model-queue.js')
+$core_v2_widget.RenderFile('model-series.js')
+$core_v2_widget.RenderFile('model-uploader.js')
+$core_v2_widget.RenderFile('model-api-data-provider.js')
+$core_v2_widget.RenderFile('model-api-model.js')
+$core_v2_widget.RenderFile('model-api-script-model.js')
+$core_v2_widget.RenderFile('model-api-less-model.js')
+$core_v2_widget.RenderFile('model-api-template-model.js')
+$core_v2_widget.RenderFile('model-api-rule-model.js')
+$core_v2_widget.RenderFile('model-api-config-model.js')
+$core_v2_widget.RenderFile('model-api-palette-model.js')
+$core_v2_widget.RenderFile('model-api-model-provider.js')
+
+$core_v2_widget.RenderFile('shell-environment.js')
+$core_v2_widget.RenderFile('shell-util.js')
+$core_v2_widget.RenderFile('shell-navigator.js')
+$core_v2_widget.RenderFile('shell-sticky.js')
+$core_v2_widget.RenderFile('shell-storageproxy.js')
+$core_v2_widget.RenderFile('shell-settings.js')
+$core_v2_widget.RenderFile('shell-quick-search.js')
+$core_v2_widget.RenderFile('shell-client-resources.js')
+$core_v2_widget.RenderFile('shell-client-callbackurls.js')
+$core_v2_widget.RenderFile('shell-tab-list-store.js')
+$core_v2_widget.RenderFile('shell-keyed-queue.js')
+
+$core_v2_widget.RenderFile('view-settings.js')
+$core_v2_widget.RenderFile('view-edit-view-wrapper.js')
+$core_v2_widget.RenderFile('view-staging.js')
+$core_v2_widget.RenderFile('view-browse.js')
+$core_v2_widget.RenderFile('view-tab-list.js')
+$core_v2_widget.RenderFile('view-tab-content.js')
+$core_v2_widget.RenderFile('view-tab-switch.js')
+
+$core_v2_widget.RenderFile('controller-browse.js')
+$core_v2_widget.RenderFile('controller-tab-list.js')
+$core_v2_widget.RenderFile('controller-tab-content.js')
+$core_v2_widget.RenderFile('controller-dock.js')
+$core_v2_widget.RenderFile('controller-shortcuts.js')
+
+$core_v2_widget.RenderFile('shell-script-console.js')
+$core_v2_widget.RenderFile('view-dock-script-console.js')
+$core_v2_widget.RenderFile('shell-documentation.js')
+$core_v2_widget.RenderFile('view-dock-documentation.js')
+
+$core_v2_widget.RenderFile('view-editor-resources.js')
+$core_v2_widget.RenderFile('view-editor-code.js')
+$core_v2_widget.RenderFile('view-editor-file-viewer.js')
+
+require(['StudioClientResources', 'StudioClientCallbackUrls'], function(clientResources, clientCallbackUrls, j, global, undef) {
+
+	## Registered shell-defined callback urls
+	j.extend(clientCallbackUrls, {
+		evaluateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-eval.vm'))',
+		listApiUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-list-api.vm'))',
+		renderedExtensionUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-extension.vm'))',
+		renderedRestResourceUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-restresource.vm'))',
+		renderedTypeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-type.vm'))',
+		renderedExtensionIndexUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-extension-index.vm'))',
+		renderedStaticDocUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-static-doc.vm'))',
+
+		listLessFunctionsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-list-less-fn.vm'))',
+		renderedFunctionUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-function.vm'))',
+
+		listTemplatesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-list-template.vm'))',
+		renderedTemplateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-template.vm'))',
+
+		listRulesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-list-rule.vm'))',
+		renderedRuleUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-data-api-rendered-rule.vm'))'
+	});
+
+	## Register shared studio shell-provided client resources for use by studio shell modules
+	j.extend(clientResources, {
+		shortcutsTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ShortcutsTitle'))',
+		tabSwitchTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SwitchTitle'))',
+		shortcutSwitch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SwitchDesc'))',
+		shortcutSwitchLeft: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SwitchLeftDesc'))',
+		shortcutSwitchRight: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SwitchRightDesc'))',
+		shortcutCloseTab: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CloseTabDesc'))',
+		shortcutCloseOtherTabs: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CloseOtherTabsDesc'))',
+		shortcutRepositionLeft: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RepositionLeftDesc'))',
+		shortcutRepositionRight: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RepositionRightDesc'))',
+		shortcutRevealInTree: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevealInTreeDesc'))',
+		uploadingLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadingLabel'))'
+	});
+
+}, jQuery, window);

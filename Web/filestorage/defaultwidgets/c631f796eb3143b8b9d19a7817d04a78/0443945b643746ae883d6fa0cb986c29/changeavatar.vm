@@ -1,0 +1,133 @@
+#if ($context.UserId < 0)
+	$core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+	$core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('changeAvatarHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button changeavatar">$core_v2_language.GetResource('ChangeAvatar')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#if ($user.AvatarUrl)
+	<p>$core_v2_language.GetResource('ChangeAvatarInstructions_WithAvatar1')</p>
+	$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 64, 64, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop', alt='$user.DisplayName'}")
+	<p>$core_v2_language.GetResource('ChangeAvatarInstructions_WithAvatar2')</p>
+#else
+	<p>$core_v2_language.GetResource('ChangeAvatarInstructions')</p>
+#end
+
+<form><fieldset>
+	<ul class="field-list" id="$core_v2_widget.UniqueId('AvatarOptions')">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="radio" name="$core_v2_widget.UniqueId('AvatarOptions')" value="default" id="$core_v2_widget.UniqueId('AvatarOptions_Default')" />
+				<label for="$core_v2_widget.UniqueId('AvatarOptions_Default')">$core_v2_language.GetResource("Field_AvatarOptions_Default")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_AvatarOptions_Default_Desc')</span>
+			<span class="field-item-input options">
+				$core_v2_ui.GetResizedImageHtml($context.DefaultAvatarUrl, 64, 64, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt = '' }")
+			</span>
+		</li>
+
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="radio" name="$core_v2_widget.UniqueId('AvatarOptions')" value="select" id="$core_v2_widget.UniqueId('AvatarOptions_Select')" />
+				<label for="$core_v2_widget.UniqueId('AvatarOptions_Select')">$core_v2_language.GetResource("Field_AvatarOptions_Select")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_AvatarOptions_Select_Desc')</span>
+			<span class="field-item-input options">
+				#set($isFirst = true)
+				#foreach ($avatarUrl in $context.SelectableAvatarUrls)
+					#each
+						<span class="selectable-avatar #if($isFirst) selected#end" data-url="$core_v2_encoding.HtmlAttributeEncode($avatarUrl)">
+							$core_v2_ui.GetResizedImageHtml($avatarUrl, 64, 64, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt = '' }")
+						</span>
+						#set($isFirst = false)
+					#nodata
+						<div class="message norecords">$core_v2_language.GetResource('NoSelectableAvatars')</div>
+				#end
+			</span>
+		</li>
+
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="radio" name="$core_v2_widget.UniqueId('AvatarOptions')" value="upload" id="$core_v2_widget.UniqueId('AvatarOptions_Upload')" />
+				<label for="$core_v2_widget.UniqueId('AvatarOptions_Upload')">$core_v2_language.GetResource("Field_AvatarOptions_Upload")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_AvatarOptions_Upload_Desc')</span>
+			<span class="field-item-input preview options">
+			</span>
+			<span class="field-item-input upload options">
+				<a href="#" class="upload add" id="$core_v2_widget.UniqueId('Upload')">$core_v2_language.GetResource('UploadAvatar')</a>
+				<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveAvatar')</a>
+			</span>
+		</li>
+
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="radio" name="$core_v2_widget.UniqueId('AvatarOptions')" value="link" id="$core_v2_widget.UniqueId('AvatarOptions_Link')" />
+				<label for="$core_v2_widget.UniqueId('AvatarOptions_Link')">$core_v2_language.GetResource("Field_AvatarOptions_Link")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_AvatarOptions_Link_Desc')</span>
+			<span class="field-item-input preview options">
+			</span>
+			<span class="field-item-input options">
+				<input type="text" placeholder="Enter URL..." id="$core_v2_widget.UniqueId('Url')" />
+			</span>
+		</li>
+
+	</ul>
+</fieldset></form>
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+	#set($userTitle = $user.DisplayName)
+	#if ($user.Username != $user.DisplayName)
+		#set($userTitle = "$userTitle ($user.Username)")
+	#end
+#end
+
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationChangeAvatar')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('changeavatar.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministrationChangeAvatar.register({
+			userId: $context.UserId,
+			headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+			fields: {
+				options: jQuery('#$core_v2_widget.UniqueId('AvatarOptions')'),
+				upload: jQuery('#$core_v2_widget.UniqueId('Upload')'),
+				url: jQuery('#$core_v2_widget.UniqueId('Url')')
+			},
+			urls: {
+				uploadFile : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+				preview: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-upload.vm'))',
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-changeavatar.vm'))'
+			},
+			text: {
+				changeAvatarSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('ChangeAvatarSuccessful'), $userTitle))',
+				uploadProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+				uploadChange: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeUploadedAvatar'))',
+				uploadAdd: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadAvatar'))',
+			}
+		});
+	});
+	</script>
+#end

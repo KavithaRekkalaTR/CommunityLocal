@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Recurring Jobs" version="11.0.0.0" description="" instanceIdentifier="7e36517412024155a00bbd8c3414e1d2" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2020-03-18 21:02:10Z" provider="42432213016c48db93660da36111797f">
+    <contentScript language="Velocity"><![CDATA[<div id="$core_v2_widget.UniqueId('tab')">
+    <p>$core_v2_language.GetResource('Schedule_Instructions')</p>
+    <form><fieldset>
+    <ul class="field-list">
+        <li class="field-item">
+            <label for="$core_v2_widget.UniqueId('ScheduleType')" class="field-item-name">$core_v2_language.GetResource('Field_ScheduleType')</label>
+            <span class="field-item-input">
+                <select id="$core_v2_widget.UniqueId('ScheduleType')">
+                    <option value="Seconds" #if ($context.ScheduleType == 'Seconds') selected="selected"#end>$core_v2_language.GetResource('Field_ScheduleType_Seconds')</option>
+                    <option value="Minutes" #if ($context.ScheduleType == 'Minutes') selected="selected"#end>$core_v2_language.GetResource('Field_ScheduleType_Minutes')</option>
+                    <option value="Hours" #if ($context.ScheduleType == 'Hours') selected="selected"#end>$core_v2_language.GetResource('Field_ScheduleType_Hours')</option>
+                    <option value="Daily" #if ($context.ScheduleType == 'Daily') selected="selected"#end>$core_v2_language.GetResource('Field_ScheduleType_Daily')</option>
+                </select>
+            </span>
+        </li>
+		<li class="field-item schedule-type-dependent schedule-type-Seconds">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('ScheduleSeconds')">$core_v2_language.GetResource('Field_ScheduleSeconds')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_ScheduleSeconds_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('ScheduleSeconds')" style="width: 100px;" value="$!context.ScheduleSeconds" /> $core_v2_language.GetResource('Field_ScheduleSeconds_Input')
+			</span>
+			<span class="field-item-validation" style="display:none;">$core_v2_language.GetResource('Validate_NumberGreaterThanZero')</span>
+		</li>
+		<li class="field-item schedule-type-dependent schedule-type-Minutes">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('ScheduleMinutes')">$core_v2_language.GetResource('Field_ScheduleMinutes')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_ScheduleMinutes_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('ScheduleMinutes')" style="width: 100px;" value="$!context.ScheduleMinutes" /> $core_v2_language.GetResource('Field_ScheduleMinutes_Input')
+			</span>
+			<span class="field-item-validation" style="display:none;">$core_v2_language.GetResource('Validate_NumberGreaterThanZero')</span>
+		</li>
+		<li class="field-item schedule-type-dependent schedule-type-Hours">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('ScheduleHours')">$core_v2_language.GetResource('Field_ScheduleHours')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_ScheduleHours_Desc')</span>
+			<span class="field-item-input">
+			    <input type="text" id="$core_v2_widget.UniqueId('ScheduleHours')" style="width: 100px;" value="$!context.ScheduleHours" /> $core_v2_language.GetResource('Field_ScheduleHours_Input')
+			</span>
+			<span class="field-item-validation" style="display:none;">$core_v2_language.GetResource('Validate_NumberGreaterThanZero')</span>
+		</li>
+		<li class="field-item schedule-type-dependent schedule-type-Daily">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('ScheduleDailyTime')">$core_v2_language.GetResource('Field_ScheduleDailyTime')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_ScheduleDailyTime_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('ScheduleDailyTime')" style="width:100px" value="$core_v2_encoding.JavascriptEncode($!context.ScheduleDailyTime)" />
+			</span>
+			<span class="field-item-validation" style="display:none;">$core_v2_language.GetResource('Validate_Time')</span>
+		</li>
+		<li class="field-item schedule-type-dependent schedule-type-Daily">
+		    <label class="field-item-name">$core_v2_language.GetResource('Field_ScheduleDailyDays')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('Field_ScheduleDailyDays_Desc')</span>
+			<span class="field-item-input">
+			    <input type="checkbox" id="$core_v2_widget.UniqueId('ScheduleDailySunday')" #if($context.ScheduleDailySunday) checked="checked"#end /> <label for="$core_v2_widget.UniqueId('ScheduleDailySunday')">$core_v2_language.GetResource('Field_ScheduleDailyDays_Sunday')</label>
+			</span>
+			<span class="field-item-input">
+			    <input type="checkbox" id="$core_v2_widget.UniqueId('ScheduleDailyMonday')" #if($context.ScheduleDailyMonday) checked="checked"#end /> <label for="$core_v2_widget.UniqueId('ScheduleDailyMonday')">$core_v2_language.GetResource('Field_ScheduleDailyDays_Monday')</label>
+			</span>
+			<span class="field-item-input">
+			    <input type="checkbox" id="$core_v2_widget.UniqueId('ScheduleDailyTuesday')" #if($context.ScheduleDailyTuesday) checked="checked"#end /> <label for="$core_v2_widget.UniqueId('ScheduleDailyTuesday')">$core_v2_language.GetResource('Field_ScheduleDailyDays_Tuesday')</label>
+			</span>
+			<span class="field-item-input">
+			    <input type="checkbox" id="$core_v2_widget.UniqueId('ScheduleDailyWednesday')" #if($context.ScheduleDailyWednesday) checked="checked"#end /> <label for="$core_v2_widget.UniqueId('ScheduleDailyWednesday')">$core_v2_language.GetResource('Field_ScheduleDailyDays_Wednesday')</label>
+			</span>
+			<span class="field-item-input">
+			    <input type="checkbox" id="$core_v2_widget.UniqueId('ScheduleDailyThursday')" #if($context.ScheduleDailyThursday) checked="checked"#end /> <label for="$core_v2_widget.UniqueId('ScheduleDailyThursday')">$core_v2_language.GetResource('Field_ScheduleDailyDays_Thursday')</label>
+			</span>
+			<span class="field-item-input">
+			    <input type="checkbox" id="$core_v2_widget.UniqueId('ScheduleDailyFriday')" #if($context.ScheduleDailyFriday) checked="checked"#end /> <label for="$core_v2_widget.UniqueId('ScheduleDailyFriday')">$core_v2_language.GetResource('Field_ScheduleDailyDays_Friday')</label>
+			</span>
+			<span class="field-item-input">
+			    <input type="checkbox" id="$core_v2_widget.UniqueId('ScheduleDailySaturday')" #if($context.ScheduleDailySaturday) checked="checked"#end /> <label for="$core_v2_widget.UniqueId('ScheduleDailySaturday')">$core_v2_language.GetResource('Field_ScheduleDailyDays_Saturday')</label>
+			</span>
+			<span class="field-item-validation" style="display:none;">$core_v2_language.GetResource('Validate_Days')</span>
+        </li>
+	</ul>
+	</fieldset></form>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.pluginScheduling')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+    jQuery(function(){
+        var api = $context.JsonApi;
+		jQuery.telligent.evolution.widgets.pluginScheduling.register({
+			api: api,
+			wrapper: jQuery('#$core_v2_widget.UniqueId('tab')'),
+			inputs: {
+			    scheduleType: jQuery('#$core_v2_widget.UniqueId('ScheduleType')'),
+			    scheduleMinutes: jQuery('#$core_v2_widget.UniqueId('ScheduleMinutes')'),
+			    scheduleHours: jQuery('#$core_v2_widget.UniqueId('ScheduleHours')'),
+			    scheduleSeconds: jQuery('#$core_v2_widget.UniqueId('ScheduleSeconds')'),
+			    scheduleDailyTime: jQuery('#$core_v2_widget.UniqueId('ScheduleDailyTime')'),
+			    scheduleDailySunday: jQuery('#$core_v2_widget.UniqueId('ScheduleDailySunday')'),
+			    scheduleDailyMonday: jQuery('#$core_v2_widget.UniqueId('ScheduleDailyMonday')'),
+			    scheduleDailyTuesday: jQuery('#$core_v2_widget.UniqueId('ScheduleDailyTuesday')'),
+			    scheduleDailyWednesday: jQuery('#$core_v2_widget.UniqueId('ScheduleDailyWednesday')'),
+			    scheduleDailyThursday: jQuery('#$core_v2_widget.UniqueId('ScheduleDailyThursday')'),
+			    scheduleDailyFriday: jQuery('#$core_v2_widget.UniqueId('ScheduleDailyFriday')'),
+			    scheduleDailySaturday: jQuery('#$core_v2_widget.UniqueId('ScheduleDailySaturday')')
+			},
+			urls: {
+			  save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))'
+			},
+			text: {
+			    schedule: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Schedule'))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Field_ScheduleDailyDays">Days on which to execute</resource>
+  <resource name="Field_ScheduleDailyDays_Desc">The days on which this process should be scheduled.</resource>
+  <resource name="Field_ScheduleDailyDays_Friday">Friday</resource>
+  <resource name="Field_ScheduleDailyDays_Monday">Monday</resource>
+  <resource name="Field_ScheduleDailyDays_Saturday">Saturday</resource>
+  <resource name="Field_ScheduleDailyDays_Sunday">Sunday</resource>
+  <resource name="Field_ScheduleDailyDays_Thursday">Thursday</resource>
+  <resource name="Field_ScheduleDailyDays_Tuesday">Tuesday</resource>
+  <resource name="Field_ScheduleDailyDays_Wednesday">Wednesday</resource>
+  <resource name="Field_ScheduleDailyTime">Time to execute</resource>
+  <resource name="Field_ScheduleDailyTime_Desc">The time at which this process should start on days it is scheduled.</resource>
+  <resource name="Field_ScheduleHours">Hours between executions</resource>
+  <resource name="Field_ScheduleHours_Desc">The process will be rescheduled, when it completes, this number of hours in the future.</resource>
+  <resource name="Field_ScheduleHours_Input"> hours</resource>
+  <resource name="Field_ScheduleMinutes">Minutes between executions</resource>
+  <resource name="Field_ScheduleMinutes_Desc">The process will be rescheduled, when it completes, this number of minutes in the future.</resource>
+  <resource name="Field_ScheduleMinutes_Input"> minutes</resource>
+  <resource name="Field_ScheduleSeconds">Seconds between executions</resource>
+  <resource name="Field_ScheduleSeconds_Desc">The process will be rescheduled, when it completes, this number of seconds in the future.</resource>
+  <resource name="Field_ScheduleSeconds_Input"> seconds</resource>
+  <resource name="Field_ScheduleType">Schedule this background process</resource>
+  <resource name="Field_ScheduleType_Daily">Once daily, at a specific time, on specific days</resource>
+  <resource name="Field_ScheduleType_Hours">Every few hours</resource>
+  <resource name="Field_ScheduleType_Minutes">Every few minutes</resource>
+  <resource name="Field_ScheduleType_Seconds">Every few seconds</resource>
+  <resource name="Schedule">Schedule</resource>
+  <resource name="Schedule_Instructions">Set the schedule for the background processing associated to this functionality.</resource>
+  <resource name="Validate_Days">Please select one or more days.</resource>
+  <resource name="Validate_NumberGreaterThanZero">Please enter a number greater than zero. Decimals are not allowed.</resource>
+  <resource name="Validate_Time">Please enter a valid time.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

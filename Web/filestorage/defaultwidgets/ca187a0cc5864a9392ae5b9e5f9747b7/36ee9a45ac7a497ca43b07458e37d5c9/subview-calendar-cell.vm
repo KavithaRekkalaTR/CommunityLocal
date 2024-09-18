@@ -1,0 +1,57 @@
+#set($isCalendarDay = ($cell >= ($startDay +1) && $cell <= $endDay + ($startDay)))
+#set($cssClassCell = "empty_cell")
+#if($isCalendarDay)
+	  #set($day = $cell - $startDay)
+	  #set($cellDate = $core_v2_utility.ParseDate($beginDate.Year.ToString(),$beginDate.Month.ToString(),$day.ToString()))
+	  #set($filteredEvents = $calendar_v1_UI.ApplyDateFilter($cellDate,$events))
+	  #set($cssClassCell = "calendar_day")
+	  #if($filteredEvents && $filteredEvents.Count >0)
+		#set($cssClassCell = "$cssClassCell has_events")
+	  #end
+	  #if($cellDate == $core_v2_utility.CurrentDate.Date)
+		#set($cssClassCell = "$cssClassCell event_calendar_today")
+	  #end
+#end
+
+<td class="$cssClassCell" data-date="$calendar_v1_UI.ToCultureSafeString($cellDate.Date)">
+#if($isCalendarDay)
+	<span #if($cellDate == $core_v2_utility.CurrentDate.Date) class="ui-tip" title="$core_v2_language.GetResource('Today')" #end>$day</span>
+#end
+#set($count = 0)
+#if($isCalendarDay)
+	#foreach($event in $filteredEvents)
+	#beforeall
+	  <ul class="event_list">
+	#each
+		#if ($count < 3)
+			#set($liClassString = "event_li")
+			#if($event.IsCancelled)
+				#set($liClassString = "$liClassString cancelled_event")
+			#end
+			#if ($event.EventStartDate.Date != $event.EventEndDate.Date)
+				#set($liClassString = "$liClassString multi_day_event")
+				#if($cellDate.Date == $event.EventStartDate.Date)
+					#set($liClassString = "$liClassString multi_day_event_start")
+				#end
+				#if ($cellDate.Date == $event.EventEndDate.Date)
+					#set($liClassString = "$liClassString multi_day_event_end")
+				#end
+			#end
+			<li class="$liClassString ui-tip" title="$event.EventTitle"><a href="$calendar_v1_urls.Event($event.Id)" class="event_link" >$event.EventTitle</a></li>
+		#end
+		#set($count = $count + 1)
+	#afterall
+		#if ($count > 3)
+			#set($count = $count - 3)
+			<li class="more">
+				#if ($count == 1)
+					$core_v2_language.FormatString($core_v2_language.GetResource('AndMore_Singular'), $core_v2_language.FormatNumber($count))
+				#else
+					$core_v2_language.FormatString($core_v2_language.GetResource('AndMore_Plural'), $core_v2_language.FormatNumber($count))
+				#end
+			</li>
+		#end
+	  </ul>
+	#end
+#end
+</td>

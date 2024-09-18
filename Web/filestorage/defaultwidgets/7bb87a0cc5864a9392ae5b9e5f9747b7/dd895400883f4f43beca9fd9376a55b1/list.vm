@@ -1,0 +1,196 @@
+﻿##
+## Render Filtering and Sorting
+##
+$core_v2_widget.ExecuteFile('query.vm')
+
+#set ($currentBlog = $core_v2_blog.Current)
+
+#if ($core_v2_widget.GetBoolValue('enableFiltering', true))
+	#if ($currentBlog)
+		<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="0">
+			<ul>
+				#set ($blogTagsUrl = $core_v2_blogUrls.Tags($currentBlog.Id))
+				#if ($blogTagsUrl)
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($blogTagsUrl)" class="internal-link">
+							$core_v2_language.GetResource('tags')
+						</a>
+					</li>
+				#end
+
+				#set($url = false)
+				#set($url = $core_v2_blogUrls.About($currentBlog.Id))
+				#if($url)
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-user-profile">
+							$core_v2_language.GetResource('Weblog_Link_AboutAuthor')
+						</a>
+					</li>
+					#set($hasLinks = true)
+				#end
+
+				#set($url = false)
+				#set($url = $core_v2_blogUrls.Contact($currentBlog.Id))
+				#if($url)
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-contact">
+							$core_v2_language.GetResource('Weblog_Link_Contact')
+						</a>
+					</li>
+					#set($hasLinks = true)
+				#end
+
+				#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+					<li class="navigation-list-item">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.weblogSubscribe" data-blogid="$currentBlog.Id" data-subscribed="true" href="#" #if(!$core_v2_blog.IsSubscribed($currentBlog.Id)) style="display:none" #end>
+							$core_v2_language.GetResource('Weblog_Subscribed')
+						</a>
+					</li>
+					<li class="navigation-list-item">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.weblogSubscribe" data-blogid="$currentBlog.Id" data-subscribed="false" href="#" #if($core_v2_blog.IsSubscribed($currentBlog.Id)) style="display:none" #end>
+							$core_v2_language.GetResource('Weblog_Unsubscribed')
+						</a>
+					</li>
+					#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.weblogSubscribe")
+						<script type="text/javascript">
+						jQuery(function(j){
+							function update(value, link) {
+								j.telligent.evolution.post({
+									url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+									data: {
+										type: 'blog',
+										subscribe: value,
+										blogId: link.data('blogid')
+									},
+									dataType: 'json',
+									success: function(response) {
+										if (response.subscribe) {
+											link.closest('ul').find('a[data-subscribed="false"]').hide();
+											link.closest('ul').find('a[data-subscribed="true"]').show();
+										} else {
+											link.closest('ul').find('a[data-subscribed="false"]').show();
+											link.closest('ul').find('a[data-subscribed="true"]').hide();
+										}
+
+										if (response.warnings && response.warnings.length > 0) {
+											j.telligent.evolution.notifications.show(response.warnings[0], { type: 'warning' });
+										}
+									}
+								});
+							}
+							j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.weblogSubscribe', function(data){
+								update(!j(data.target).data('subscribed'), j(data.target));
+							});
+						});
+						</script>
+					#end
+				#else
+					<li class="navigation-list-item">
+						<a href="#" onclick="jQuery.glowModal('$core_v2_encoding.JavascriptEncode($core_v2_page.AdjustQueryString($core_v2_widget.GetExecutedFileUrl('subscribebyemail.vm'), "BlogId=$currentBlog.Id"))', { width: 400, height: 200 }); return false;">
+							$core_v2_language.GetResource('Subscribe_ByEmail')
+						</a>
+					</li>
+				#end
+
+				<li class="navigation-list-item">
+					<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+
+	<div class="sort" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sort'))">
+		<form>
+		#if ($postFilter == 'all')
+			<span class="by">
+				<select class="ui-select" data-querykey="PostSortBy">
+					<option value="MostRecent" #if($postSortBy == 'MostRecent') selected #end>$core_v2_language.GetResource('MostRecent')</option>
+					<option value="MostViewed" #if($postSortBy == 'MostViewed') selected #end>$core_v2_language.GetResource('MostViews')</option>
+					<option value="MostComments" #if($postSortBy == 'MostComments') selected #end>$core_v2_language.GetResource('MostComments')</option>
+				</select>
+			</span>
+		#end
+		<span class="order">
+			<select class="ui-select" data-querykey="PostSortOrder">
+				<option value="Descending" #if ($postSortOrder == 'Descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+				<option value="Ascending" #if ($postSortOrder == 'Ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+			</select>
+		</span>
+		</form>
+	</div>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery(function(j){
+			var sort = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort'))');
+			sort.on('change', 'select', function(e) {
+				var select = j(this), hashAdjustment = {};
+				hashAdjustment[select.data('querykey')] = select.val();
+				j.telligent.evolution.url.hashData(hashAdjustment, {
+					prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+				});
+			});
+		});
+		</script>
+	#end
+#end
+
+
+##
+## Render Posts
+##
+
+
+#set ($excerptSize = $core_v2_widget.GetIntValue('excerptSize', 250))
+#set ($displayPostImage = $core_v2_widget.GetBoolValue('displayPostImage', true))
+#set ($viewLayout = $core_v2_widget.GetStringValue('viewLayout', 'list'))
+
+#if ($posts)
+	#foreach($post in $posts)
+	#beforeall
+		<ul class="content-list ${viewLayout} content margin-bottom">
+	#each
+		$core_v2_widget.ExecuteFile('listitem.vm')
+	#afterall
+		</ul>
+	#nodata
+		<div class="message norecords">
+			#set ($addUrl = $core_v2_blogUrls.AddBlogPost($currentBlog.Id, true))
+			#if ($currentBlog && $addUrl)
+				$core_v2_language.FormatString($core_v2_language.GetResource("Weblog_NoPosts_Created_Link"), $addUrl)
+			#else
+				$core_v2_language.GetResource("Weblog_NoPosts_Created")
+			#end
+		</div>
+	#end
+#elseif ($featuredContents)
+	#foreach($featuredContent in $featuredContents)
+	#beforeall
+		<ul class="content-list ${viewLayout} content margin-bottom">
+	#each
+		#set ($post = $core_v2_blogPost.Get($featuredContent.Content.ContentId))
+		$core_v2_widget.ExecuteFile('listitem.vm')
+	#afterall
+		</ul>
+	#nodata
+		<div class="message norecords">
+			#set ($addUrl = $core_v2_blogUrls.AddBlogPost($currentBlog.Id, true))
+			#if ($currentBlog && $addUrl)
+				$core_v2_language.FormatString($core_v2_language.GetResource("Weblog_NoPosts_Created_Link"), $addUrl)
+			#else
+				$core_v2_language.GetResource("Weblog_NoPosts_Created")
+			#end
+		</div>
+	#end
+#end
+
+#if ($core_v2_widget.GetBoolValue('enablePaging', true))
+	#if ($posts)
+		$core_v2_ui.Pager($posts.PageIndex, $posts.PageSize, $posts.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")
+	#elseif ($featuredContents)
+		$core_v2_ui.Pager($featuredContents.PageIndex, $featuredContents.PageSize, $featuredContents.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")
+	#end
+#end

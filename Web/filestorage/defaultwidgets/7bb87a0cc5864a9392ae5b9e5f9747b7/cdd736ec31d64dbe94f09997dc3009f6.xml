@@ -1,0 +1,266 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Articles_Links_Name}" version="11.0.0.0" description="${resource:Articles_Links_Description}" instanceIdentifier="cdd736ec31d64dbe94f09997dc3009f6" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="article-links" lastModified="2021-01-04 21:52:55Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=articleNotifications,feature')))
+#set($hasLinks = false)
+#set($user = $core_v2_user.Accessing)
+#set($currentArticle = $articles_v1_articles.Current)
+#set($currentCollection = $articles_v1_articleCollections.Current)
+#set($currentGroup = $core_v2_group.Current)
+
+#set ($isRegistered = $core_v2_user.IsRegistered($user.Id))
+
+#set ($collapse = $core_v2_widget.GetBoolValue('collapsed', false))
+#set ($articleLinks = $links.Values('Link'))
+
+#set ($canReadArticles = false)
+#if ($currentCollection)
+  #set($canReadArticles = $core_v2_permission.Get($articles_v1_permissions.ReadArticleCollection, $user.Id, $currentCollection.Id, $articles_v1_articleCollections.ApplicationTypeId).IsAllowed)
+#end
+
+#set ($linksToShow = $articleLinks.Count)
+#if ($collapse)
+	#set ($linksToShow = 0)
+#end
+
+#set ($layout = $core_v2_widget.GetStringValue('layout', 'vertical'))
+#if ($layout == 'horizontal')
+	#set ($linksToShow = $core_v2_widget.GetIntValue('horizontalMax', 20))
+#end
+
+#foreach($link in $articleLinks)
+#beforeall
+	#if ($layout == 'horizontal')
+		<div class="content full text">
+			<div class="actions">
+				<div class="ui-links navigation-list links" data-direction="horizontal" min-links="$linksToShow" data-maxlinks="$linksToShow">
+	#else
+		<div class="ui-links navigation-list links" data-direction="vertical" data-minlinks="$linksToShow" data-maxlinks="$linksToShow">
+	#end
+
+		<ul class="navigation-list">
+#each
+		#set($url = false)
+		#if($link == 'collectionBookmark')
+			#if ($currentCollection && $core_v2_bookmark.SupportsBookmarks($articles_v1_articleCollections.ApplicationTypeId) && $core_v2_bookmark.CanBookmark($currentCollection.ContentId, $articles_v1_articleCollections.ApplicationTypeId) && $core_v2_bookmark.CanUnBookmark($currentCollection.ContentId, $articles_v1_articleCollections.ApplicationTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($currentCollection.ContentId, $articles_v1_articleCollections.ApplicationTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'articleNotifications')
+			#set ($collectionSubscription = $core_v2_applicationSubscription.Get($currentCollection.Id, "%{}"))
+			#set ($articleSubscription = $core_v2_contentSubscription.Get($currentArticle.Id, "%{IncludeApplicationSubscriptions='false'}"))
+			#set ($commentsSubscription = $core_v2_contentSubscription.Get($currentArticle.Id, "%{IncludeApplicationSubscriptions='false', TypeId='$articles_v1_subscriptionTypes.ArticleComments'}"))
+
+			#if($isRegistered && $canReadArticles)
+				#if($collectionSubscription.IsSubscribed || $articleSubscription.IsSubscribed || $commentsSubscription.IsSubscribed)
+					#set ($notificationsText = "$core_v2_language.GetResource('NotificationsTipOn')  ")
+					#set ($notificationsListText = '')
+
+					#if($collectionSubscription.IsSubscribed)
+						#set ($notificationsListText = $core_v2_language.FormatString($core_v2_language.GetResource('Tip_Subscription_Collection'), $currentCollection.Name))
+					#elseif($articleSubscription.IsSubscribed)
+						#set ($notificationsListText = $core_v2_language.FormatString($core_v2_language.GetResource('Tip_Subscription_Article'), $currentArticle.Title))
+					#end
+
+					#if($commentsSubscription.IsSubscribed)
+						#if ($notificationsListText != '')
+							#set($notificationsListText = "$notificationsListText $core_v2_language.GetResource('or')")
+						#end
+						#set ($notificationsListText = "$notificationsListText $core_v2_language.FormatString($core_v2_language.GetResource('Tip_Subscription_ArticleComments'), $currentArticle.Title)")
+					#end
+					#if($collectionSubscription.IsSubscribed || $articleSubscription.IsSubscribed || $commentsSubscription.IsSubscribed)
+						#set($notificationsListText = "$notificationsListText.")
+					#end
+
+					#if($articleSubscription.IsMuted)
+						#set ($notificationsListText = "$notificationsListText $core_v2_language.FormatString($core_v2_language.GetResource('Tip_MuteArticle'), $currentArticle.Title)")
+					#end
+
+					#set ($notificationsText = "$notificationsText${notificationsListText}")
+					#set ($notificationStatus = 'on')
+				#else
+
+					#if ($currentArticle)
+						#set ($notificationsText = $core_v2_language.FormatString($core_v2_language.GetResource('NotificationsTipOff'), $currentArticle.Title))
+					#else
+						#set ($notificationsText = $core_v2_language.FormatString($core_v2_language.GetResource('NotificationsTipOff'), $currentCollection.Name))
+					#end
+					#set ($notificationStatus = 'off')
+				#end
+				<li class="navigation-list-item"><a data-messagename="widget.${core_v2_widget.UniqueId('notifications')}" href="#" class="internal-link manage-subscriptions ui-tip $notificationStatus" data-tip="$notificationsText">$core_v2_language.GetResource('CF_ArticleLinks_ManageNotifications')</a></li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'articleBookmark')
+			#if ($currentArticle && $core_v2_bookmark.SupportsBookmarks($articles_v1_articles.ContentTypeId) && $core_v2_bookmark.CanBookmark($currentArticle.ContentId, $articles_v1_articles.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($currentArticle.ContentId, $articles_v1_articles.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($currentArticle.ContentId, $articles_v1_articles.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'articleManageCollection')
+			#if ($currentCollection)
+				#set($url = $articles_v1_articleUrls.ManageCollection($currentCollection.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link manage-application"><span></span>$core_v2_language.GetResource('CF_ArticleLinks_ManageCollection')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'articleNewArticle')
+			#if ($currentCollection)
+				#set($url = $articles_v1_articleUrls.CreateArticle($currentCollection.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link add-article"><span></span>$core_v2_language.GetResource('CF_ArticleLinks_NewArticle')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+
+		#elseif($link == 'articleEditArticle')
+			#if ($currentArticle)
+				#set($url = $articles_v1_articleUrls.EditArticle($currentArticle.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-article"><span></span>$core_v2_language.GetResource('CF_ArticleLinks_EditArticle')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'feature')
+			#if ($core_v3_feature.CanFeature($currentArticle.ContentId, $currentArticle.ContentTypeId))
+				  <li class="navigation-list-item">$core_v2_ui.Feature($currentArticle.ContentId, $currentArticle.ContentTypeId)</li>
+			  #set($hasLinks = true)
+			#end
+		#elseif ($link == 'convert' && $currentArticle)
+			#set($convert = false)
+			#set($convert = $core_v2_ui.ConvertContent($currentArticle.ContentId, $currentArticle.ContentTypeId))
+			#if ($convert)
+				<li class="navigation-list-item">
+					$convert
+				</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'reportAbuse')
+			#if ($currentArticle && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+				<li class="navigation-list-item">
+					$core_v2_ui.Moderate($currentArticle.ContentId, $currentArticle.ContentTypeId, "%{ }")
+				</li>
+				#set($hasLinks = true)
+			#end
+		#end
+#afterall
+			<li class="navigation-list-item">
+				<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+			</li>
+		</ul>
+	</div>
+
+	#if ($layout == 'horizontal')
+			</div>
+		</div>
+	#end
+#end
+
+#if($hasLinks == false && !$core_v2_widget.GetBoolValue('showNoLinks', false))
+	$core_v2_widget.Hide()
+#end
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(jQuery){
+				jQuery.telligent.evolution.messaging.subscribe('$core_v2_encoding.JavascriptEncode("widget.${core_v2_widget.UniqueId('notifications')}")', function() {
+					jQuery.glowModal({
+						title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ManageNotifications'))',
+						html: jQuery.telligent.evolution.get({
+							url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscriptions.vm'))'
+						}),
+						width: 400,
+						height: 250,
+						onClose: function() {
+							jQuery.fn.evolutionTip.hide();
+							jQuery.telligent.evolution.get({
+								url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-subscriptions.vm'))',
+								data: {  },
+								success: function(response) {
+									$('a.internal-link.manage-subscriptions.ui-tip').attr('data-tip', response.tip);
+									$('a.internal-link.manage-subscriptions.ui-tip').removeClass('on off').addClass(response.status);
+									$('a.internal-link.manage-subscriptions.ui-tip').html(response.text);
+								}
+							})
+						}
+					});
+				});
+			});
+		</script>
+	#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Articles_Links_Title_Options}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Articles_Links_Title_Options}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="layout" labelResourceName="layout" descriptionResourceName="layoutDesc" defaultValue="vertical" dataType="String">
+		<propertyValue value="vertical" labelResourceName="vertical" propertiesToShow="collapsed" propertiesToHide="horizontalMax" />
+		<propertyValue value="horizontal" labelResourceName="horizontal" propertiesToShow="horizontalMax" propertiesToHide="collapsed" />
+	</property>
+	<property id="collapsed" labelResourceName="collapsed" defaultValue="false" dataType="Bool" />
+	<property id="horizontalMax" labelResourceName="horizontalMax" descriptionResourceName="horizontalMaxDesc" defaultValue="20" dataType="Int" />
+	<property id="links" labelResourceName="Articles_Links_Links" defaultValue="Link=articleNotifications" dataType="Custom" template="core_v2_sortableList" height="300" key="Link">
+		<propertyValue value="articleNotifications" labelResourceName="CF_ArticleLinks_Notifications" orderNumber="1000001" />
+		<propertyValue value="collectionBookmark" labelResourceName="CF_ArticleLinks_BookmarkCollection" orderNumber="1000002" />
+		<propertyValue value="articleBookmark" labelResourceName="CF_ArticleLinks_BookmarkArticle" orderNumber="1000003" />
+		<propertyValue value="articleManageCollection" labelResourceName="CF_ArticleLinks_ManageCollection" orderNumber="1000004" />
+		<propertyValue value="articleNewArticle" labelResourceName="CF_ArticleLinks_NewArticle" orderNumber="1000005" />
+		<propertyValue value="articleEditArticle" labelResourceName="CF_ArticleLinks_EditArticle" orderNumber="1000006" />
+		<propertyValue value="feature" labelResourceName="CF_feature" orderNumber="1000007" />
+		<propertyValue value="convert" labelResourceName="Convert" orderNumber="1000008" />
+		<propertyValue value="reportAbuse" labelResourceName="reportAbuse" orderNumber="1000009" />
+	</property>
+	<property id="showNoLinks" labelResourceName="showNoLinks" defaultValue="false" dataType="bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Articles_Links_Description">Displays a list of common links.</resource>
+  <resource name="Articles_Links_Links">Select, rearrange, and enable the links to be displayed</resource>
+  <resource name="Articles_Links_Name">Articles - Links</resource>
+  <resource name="Articles_Links_Title_Options">Options</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_ArticleLinks_BookmarkArticle">Bookmark Article</resource>
+  <resource name="CF_ArticleLinks_BookmarkCollection">Bookmark Collection</resource>
+  <resource name="CF_ArticleLinks_DeleteArticle">Delete Article</resource>
+  <resource name="CF_ArticleLinks_EditArticle">Edit Article</resource>
+  <resource name="CF_ArticleLinks_ManageCollection">Manage Collection</resource>
+  <resource name="CF_ArticleLinks_ManageNotifications">Manage Notifications</resource>
+  <resource name="CF_ArticleLinks_NewArticle">New Article</resource>
+  <resource name="CF_ArticleLinks_Notifications">Notifications</resource>
+  <resource name="CF_feature">Feature Article</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="collapsed">Collapsed</resource>
+  <resource name="Convert">Move article</resource>
+  <resource name="horizontal">Horizontal</resource>
+  <resource name="horizontalMax">Maximum links to show</resource>
+  <resource name="horizontalMaxDesc">When horizontal, the number of links shown will not exceed the maximum nor the space available before collapsing.</resource>
+  <resource name="layout">Layout</resource>
+  <resource name="layoutDesc">Horizontal renders as an automatically-collapsing row of links while vertical renders a column of buttons.</resource>
+  <resource name="ManageNotifications">Manage Notifications</resource>
+  <resource name="more">More</resource>
+  <resource name="Mute_Article">But don't notify me when {0} is updated</resource>
+  <resource name="NotificationsTipOff">All notifications for {0} are disabled</resource>
+  <resource name="NotificationsTipOn">You will be notified when</resource>
+  <resource name="NotifyMeWhen">Notify me when:</resource>
+  <resource name="Options">Options</resource>
+  <resource name="or">or</resource>
+  <resource name="reportAbuse">Report as abusive</resource>
+  <resource name="Save">Save</resource>
+  <resource name="showNoLinks">Show when no links are accessible</resource>
+  <resource name="Subscription_Article">{0} is updated</resource>
+  <resource name="Subscription_ArticleComments">Someone comments on {0}</resource>
+  <resource name="Subscription_Collection">Any article is created or updated in {0}</resource>
+  <resource name="Tip_MuteArticle">updates on {0} are muted.</resource>
+  <resource name="Tip_Subscription_Article">{0} is updated</resource>
+  <resource name="Tip_Subscription_ArticleComments">someone comments on {0}</resource>
+  <resource name="Tip_Subscription_Collection">any article is created or updated in {0}</resource>
+  <resource name="vertical">Vertical</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="9f1ce29b973d472e965fc224ce88bc64" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

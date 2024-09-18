@@ -1,0 +1,84 @@
+#set ($query = $core_v2_page.ParseQueryString($context.TabKey))
+
+#if($query.Value("tab"))
+	#set($reportContainerId = $core_v2_widget.UniqueId($query.Value("tab")))
+
+	<div id="$reportContainerId" class="application-summary-report gallery-summary-report">
+		#set ($parent = $reporting.GetReport($context.ParentId))
+		#set ($report = $reporting.GetReport($context.Id))
+
+		<div class="view-header">
+			<span class="view-title">
+				#if($parent)
+					<a href="#" data-messagename="reporting.drill.up" class="hierarchy name">$parent.Name</a> <span class="divider">/</span>
+				#end
+				<span class="hierarchy name">$report.Name</span>
+			</span>
+			<span class="actions-container">
+				<ul class="ui-links export-actions" data-maxlinks="0">
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="reporting.export.list.csv">$core_v2_language.GetResource('ExportListasCSV')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a class="export-actions-more" href="#" data-more>$core_v2_language.GetResource('Export')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+					</li>
+				</ul>
+			</span>
+			<div class="description">$core_v2_encoding.HtmlAttributeEncode($report.Description)</div>
+			<div class="filter-container">
+				<ul class="global-filters">
+					<li>$reporting.RenderFilter($reporting_filters.DateRangeFilter, "%{tabKey=$context.TabKey}")</li>
+					<li>$reporting.RenderFilter($reporting_filters.SingleApplicationFilter, "%{tabKey=$context.TabKey, applicationTypeId='$core_v2_gallery.ApplicationTypeId'}")</li>
+					<li>$reporting.RenderFilter($reporting_filters.DatePeriodFilter, "%{tabKey=$context.TabKey}")</li>
+					<li>$reporting.RenderFilter($reporting_filters.ResetFilter, "%{tabKey=$context.TabKey}")</li>
+				</ul>
+			</div>
+		</div>
+		<div class="view-body report-body full">
+            <div class="errors"></div>
+
+			#set($options = "%{target = 'large-tile'}")
+			$options.Add("parentId", $context.Id)
+			$options.Add("tabKey", $context.TabKey)
+
+			<div class="application-data" style="display: none;">
+				<div class="report-details"></div>
+				<div class="cards"></div>
+				<div class="content-contributions">$reporting.RenderReport($reporting_reports.Content, $options)</div>
+				<div class="interactions">$reporting.RenderReport($reporting_reports.Interactions, $options)</div>
+                <hr />
+				<div class="responsive-wrapper">
+					<div class="gallery-data"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	#registerEndOfPageHtml()
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('full-ui.js'))"></script>
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.reporting.widgets.gallerySummaryReport.register({
+				target: '$context.Target',
+				tabKey: '$context.TabKey',
+				fields: {
+					reportContainerId: '#$reportContainerId',
+				},
+				resources: {
+					title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GallerySummaryReport_Name'))',
+                    noGalleryError: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoGallerySelected'))',
+				},
+				urls: {
+					fixedData: '$core_v2_widget.GetExecutedFileUrl('full-fixeddata.vm')',
+		            export: '$core_v2_widget.GetExecutedFileUrl('full-export.vm')'
+				}
+			});
+		});
+	</script>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end

@@ -1,0 +1,238 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Comments_Name}" version="12.0.0.0" description="${resource:Comments_Description}" instanceIdentifier="e4e96f3241434dc7bc4a04d39c30192f" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="threaded-comments" lastModified="2022-10-06 20:30:24Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+$core_v2_widget.ExecuteFile('common-config.vm')
+#if ($hidden)
+	$core_v2_widget.Hide()
+#end
+
+$core_v2_widget.ExecuteFile('templates.vm')
+
+#registerEndOfPageHtml('telligent.evolution.widgets.threadedComments')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#if ($commentFormVisible)
+	$core_v2_widget.ExecuteFile('content-form.vm')
+#else
+	$core_v2_widget.ExecuteFile('content-statistics.vm')
+#end
+$core_v2_widget.ExecuteFile('content-thread-best.vm')
+$core_v2_widget.ExecuteFile('content-thread.vm')
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.comments.register({
+			commentId: #if ($commentId) '$commentId' #else null #end,
+			preFocus: #if ($preFocus) true #else false #end,
+			wrapperId: '${core_v2_widget.WrapperElementId}',
+			wrapper: '#${core_v2_widget.WrapperElementId}',
+			container: '#${preRenderedWrapperId}',
+			bestRepliesWrapperId: '$core_v2_encoding.JavascriptEncode($bestRepliesWrapperId)',
+			contentId: '$content.ContentId',
+			contentTypeId: '$content.ContentTypeId',
+			commentTypeId: #if ($commentTypeId) '$commentTypeId' #else '' #end,
+			sortOrder: '$core_v2_encoding.JavascriptEncode($sortOrder)',
+			sortBy: '$core_v2_encoding.JavascriptEncode($sortBy)',
+			flattenedSortBy: '$core_v2_encoding.JavascriptEncode($flattenedSortBy)',
+			flattenedSortOrder: '$core_v2_encoding.JavascriptEncode($flattenedSortOrder)',
+			flattenedDepth: $flattenedDepth,
+			pageSize: $pageSize,
+			contentUrl: '$core_v2_encoding.JavascriptEncode($content.Url)',
+			#if ($replyOffsetId)
+				replyOffsetId: '$replyOffsetId',
+			#end
+			#if ($replyOffsetDirection)
+				replyOffsetDirection: '$core_v2_encoding.JavascriptEncode($replyOffsetDirection)',
+			#end
+			highlightNewSeconds: $highlightNewSeconds,
+			endlessScroll: #if ($endlessScroll) true #else false #end,
+			listRepliesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-list-replies.vm'))',
+			addReplyUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-add-reply.vm'))',
+			editReplyUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-edit-reply.vm'))',
+			getReplyUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-get-reply.vm'))',
+			listBestUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-list-best.vm'))',
+			loadMoreTemplate: '$core_v2_encoding.JavascriptEncode($loadMoreTemplateId)',
+			newRepliesTemplate: '$core_v2_encoding.JavascriptEncode($newRepliesTemplateId)',
+			replyTemplate: '$core_v2_encoding.JavascriptEncode($replyTemplateId)',
+			typingIndicatorTemplate: '$core_v2_encoding.JavascriptEncode($typingIndicatorTemplateId)',
+			replyListTemplate: '$core_v2_encoding.JavascriptEncode($replyListTemplateId)',
+			replyFormTemplate: '$core_v2_encoding.JavascriptEncode($replyFormTemplateId)',
+			emptyGuid: '$core_v2_encoding.JavascriptEncode($emptyGuid)',
+			deleteCommentPanelUrl: '$core_v2_encoding.JavascriptEncode($deleteCommentPanelUrl)',
+			loginUrl: '$core_v2_encoding.JavascriptEncode($core_v2_urls.LogIn())',
+			headerTemplate: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			filterWrapper: '#$core_v2_widget.UniqueId('filter')',
+			noRepliesMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noRepliesMessage'))',
+			replyEditor: {
+				appendTo: function(container) {
+					$core_v2_submittableEditor.GetMoveScript($replyEditorId, 'container');
+					var contextId = 'comment-' + (container.closest('.content-item').data('id') || '');
+					$core_v2_submittableEditor.SetContextScript($replyEditorId, 'contextId');
+					$core_v2_submittableEditor.GetAttachOnKeyDownScript($replyEditorId, "function(e) { jQuery.telligent.evolution.messaging.publish('widgets.threadedComments.typing', { container: container }) }");
+				},
+				remove: function() {
+					// removing the editor technically just moves it back to a hidden location
+					var wrapper = '#$editorWrapperWrapperId';
+					$core_v2_submittableEditor.GetMoveScript($replyEditorId, 'wrapper');
+				},
+				val: function(val) {
+					if (typeof(val) !== 'undefined') {
+						$core_v2_submittableEditor.GetUpdateContentScript($replyEditorId, 'val')
+						return val;
+					}
+					return $core_v2_submittableEditor.GetContentScript($replyEditorId)
+				},
+				focus: function() {
+					$core_v2_submittableEditor.GetFocusScript($replyEditorId)
+				}
+			},
+			text: {
+				more: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('more'))',
+				peopleWhoVoted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('People_Who_Voted'))',
+				noVotes: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noVotes'))',
+				successMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Comment_SuccessMessage'))',
+				moderateMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Comment_ModeratedMessaage'))'
+			},
+			statisticsWrapper: '#$statisticsWrapperId',
+			statisticsTemplate: '$core_v2_encoding.JavascriptEncode($statisticsTemplateId)',
+			totalComments: $totalComments,
+			presentUsers: $presentUsers,
+			loginUrl: '$core_v2_encoding.JavascriptEncode($core_v2_urls.LogIn())',
+			tempBody: '$core_v2_encoding.JavascriptEncode($tempBody)',
+			createEditor: {
+				attachOnChange: function() {
+					$core_v2_submittableEditor.GetAttachOnKeyDownScript($createEditorId, "function(e) { jQuery.telligent.evolution.messaging.publish('widgets.comments.typing', { from: '$core_v2_widget.WrapperElementId' }) }");
+				},
+				val: function(val) {
+					if (typeof(val) !== 'undefined') {
+						$core_v2_submittableEditor.GetUpdateContentScript($createEditorId, 'val')
+					}
+					return $core_v2_submittableEditor.GetContentScript($createEditorId)
+				},
+				focus: function() {
+					$core_v2_submittableEditor.GetFocusScript($createEditorId)
+				}
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Comments_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="linkArea" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Comments_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="endlessScroll" labelResourceName="endlessScroll" descriptionResourceName="endlessScrollDesc" defaultValue="true" dataType="Bool" />
+	<property id="pageSize" labelResourceName="CF_Comment_PageSize" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="50" />
+	</property>
+	<property id="defaultSortOrder" labelResourceName="SortOrder" defaultValue="Best" dataType="String">
+		<propertyValue value="Oldest" labelResourceName="SortOrder_Oldest" />
+		<propertyValue value="Best" labelResourceName="SortOrder_Best" />
+		<propertyValue value="Newest" labelResourceName="SortOrder_Newest" />
+	</property>
+	<property id="depth" labelResourceName="depth" descriptionResourceName="depthDesc" defaultValue="3" dataType="Int">
+		<propertyValue value="1" labelResourceName="depth_1" />
+		<propertyValue value="2" labelResourceName="depth_2" />
+		<propertyValue value="3" labelResourceName="depth_3" />
+		<propertyValue value="4" labelResourceName="depth_4" />
+		<propertyValue value="5" labelResourceName="depth_5" />
+		<propertyRule name="minmax" min="1" max="5" />
+	</property>
+	<property id="includeBest" labelResourceName="includeBest" descriptionResourceName="includeBestDesc" defaultValue="true" dataType="Bool">
+		<propertyValue value="True" labelResourceName="includeBest_include" orderNumber="1000000" propertiesToHide="" propertiesToShow="bestSize" />
+		<propertyValue value="False" labelResourceName="includeBest_exclude" orderNumber="1000001" propertiesToHide="bestSize" propertiesToShow="" />
+	</property>
+	<property id="bestSize" labelResourceName="bestSize" descriptionResourceName="bestSizeDesc" defaultValue="3" dataType="Int">
+		<propertyRule name="minmax" min="1" max="10" />
+	</property>
+	<property id="highlightNewSeconds" labelResourceName="highlightNewSeconds" descriptionResourceName="highlightNewSecondsDesc" defaultValue="4" dataType="Int" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="best">Best</resource>
+  <resource name="bestSize">Best Comments to Display</resource>
+  <resource name="bestSizeDesc">(1-10)</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Comment_PageSize">Number of comments to load at a time</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="children">Children</resource>
+  <resource name="comment">Comment</resource>
+  <resource name="comment_deleted">This comment was deleted.</resource>
+  <resource name="Comment_EnterToComment">Enter to Comment</resource>
+  <resource name="Comment_EnterToLogin">Enter to Login and Comment</resource>
+  <resource name="Comment_Login">Login and Comment</resource>
+  <resource name="Comment_ModeratedMessaage">Thank you, your comment requires moderation so it may take a while to appear.</resource>
+  <resource name="Comment_Multilple">comments</resource>
+  <resource name="Comment_PublishError">There was an error saving your comment.</resource>
+  <resource name="Comment_Publishing">Posting</resource>
+  <resource name="Comment_Single">comment</resource>
+  <resource name="Comment_SuccessMessage">Your comment has been posted.</resource>
+  <resource name="comment_underreview">This comment is under review.</resource>
+  <resource name="CommentForm_EnterCommentWarning">Please enter a comment</resource>
+  <resource name="Comments_Description">Displays content comments</resource>
+  <resource name="Comments_Name">Comment List</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="depth">Thread Depth</resource>
+  <resource name="depth_1">1 (Flat)</resource>
+  <resource name="depth_2">2</resource>
+  <resource name="depth_3">3</resource>
+  <resource name="depth_4">4</resource>
+  <resource name="depth_5">5</resource>
+  <resource name="depthDesc">Visible threading depth, beyond which comments are flattened.</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="endlessScroll">Endless Stream</resource>
+  <resource name="endlessScrollDesc">Automatically load more comments when scrolled near the end</resource>
+  <resource name="EnterToSubmitPrompt">Enter to Reply</resource>
+  <resource name="highlightNewSeconds">New Highlight Duration</resource>
+  <resource name="highlightNewSecondsDesc">Seconds to highlight visible new replies</resource>
+  <resource name="in_reply_to">in reply to</resource>
+  <resource name="includeBest">Include Best</resource>
+  <resource name="includeBest_exclude">Exclude</resource>
+  <resource name="includeBest_include">Include</resource>
+  <resource name="includeBestDesc">When enabled, displays a summary of top-voted comments</resource>
+  <resource name="is_typing">is typing a reply...</resource>
+  <resource name="load_prev">View More</resource>
+  <resource name="load_previous">View More</resource>
+  <resource name="login_to_reply">Sign in to reply</resource>
+  <resource name="more">More</resource>
+  <resource name="new_reply_multiple">new replies</resource>
+  <resource name="new_reply_single">new reply</resource>
+  <resource name="newest">Newest</resource>
+  <resource name="no_data">No Data</resource>
+  <resource name="noRepliesMessage">There are no remaining comments.</resource>
+  <resource name="noVotes">No Votes</resource>
+  <resource name="oldest">Oldest</resource>
+  <resource name="Options">Options</resource>
+  <resource name="parents">Parents</resource>
+  <resource name="People_Who_Voted">People who voted on this reply</resource>
+  <resource name="placeholder">Leave a comment...</resource>
+  <resource name="reply">Reply</resource>
+  <resource name="ReplyDeleted">The comment has been deleted.</resource>
+  <resource name="SortOrder">Default Sort Order</resource>
+  <resource name="SortOrder_Best">Best</resource>
+  <resource name="SortOrder_Newest">Newest</resource>
+  <resource name="SortOrder_Oldest">Oldest</resource>
+  <resource name="SubmitLabel">Reply</resource>
+  <resource name="TopReplies">Top Comments</resource>
+  <resource name="User_Multiple">members are here</resource>
+  <resource name="User_Single">member is here</resource>
+  <resource name="view_parent">View Parent Reply</resource>
+  <resource name="view_voters">View Voters</resource>
+  <resource name="ViewReply">View Comments</resource>
+  <resource name="vote_down">Vote Down</resource>
+  <resource name="vote_up">Vote Up</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="comments.comments.readonly" />
+      <scope id="comments.comments.modify" />
+      <scope id="comments.votes.readonly" />
+      <scope id="comments.votes.modify" />
+      <scope id="content.presence.readonly" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,65 @@
+<% if (TriggerTypes.indexOf('Manual') > -1) { %>
+	$core_v2_language.GetResource('ManualExecutionOnly')
+	<br />
+<% } %>
+
+<% if (TriggerTypes.indexOf('Http') > -1) { %>
+	$core_v2_language.GetResource('HttpExecutionOnly'),
+	<% if (HttpAuthentication == 'None') { %>
+		$core_v2_language.GetResource('NoAuthentication')
+	<% } else if (HttpAuthentication == 'Rest') { %>
+		$core_v2_language.GetResource('Rest')
+	<% } %>
+	<br />
+<% } %>
+
+<% if (TriggerTypes.indexOf('Event') > -1) { %>
+	<% if (Events.length == 1) { %>
+		$core_v2_language.GetResource('OnEvent'): <%: Events[0].Entity %>.<%: Events[0].Event %>
+	<% } else { %>
+		$core_v2_language.GetResource('OnEvents'):
+		<% if (Events.length == 0) { %>
+			$core_v2_language.GetResource('NoEvents')
+		<% } else { %>
+			<% foreach(Events, function(event) { %>
+				<%: event.Entity %>.<%: event.Event %>,
+			<% }); %>
+		<% } %>
+	<% } %>
+	<br />
+<% } %>
+
+<% if (TriggerTypes.indexOf('Job') > -1) { %>
+	<% if (ScheduleType == 'Seconds') { %>
+		<% if (ScheduleSeconds == 1) { %>
+			$core_v2_language.GetResource('EverySecond')
+		<% } else { %>
+			$core_v2_language.GetResource('Every') <%: ScheduleSeconds %> $core_v2_language.GetResource('seconds')
+		<% } %>
+	<% } else if (ScheduleType == 'Minutes') { %>
+		<% if (ScheduleMinutes == 1) { %>
+			$core_v2_language.GetResource('EveryMinute')
+		<% } else { %>
+			$core_v2_language.GetResource('Every') <%: ScheduleMinutes %> $core_v2_language.GetResource('minutes')
+		<% } %>
+	<% } else if (ScheduleType == 'Hours') { %>
+		<% if (ScheduleHours == 1) { %>
+			$core_v2_language.GetResource('EveryHour')
+		<% } else { %>
+			$core_v2_language.GetResource('Every') <%: ScheduleHours %> $core_v2_language.GetResource('hours')
+		<% } %>
+	<% } else if (ScheduleType == 'Daily') { %>
+		$core_v2_language.GetResource('ScheduledDaily') <%= jQuery.telligent.evolution.parseDate(ScheduleDailyTime).toLocaleTimeString() %>
+		<% if (ScheduleDailySunday || ScheduleDailyMonday || ScheduleDailyTuesday || ScheduleDailyWednesday || ScheduleDailyThursday || ScheduleDailyFriday || ScheduleDailySaturday) { %>
+			on
+			<% if (ScheduleDailySunday) { %> $core_v2_language.GetResource('Sunday'), <% } %>
+			<% if (ScheduleDailyMonday) { %> $core_v2_language.GetResource('Monday'), <% } %>
+			<% if (ScheduleDailyTuesday) { %> $core_v2_language.GetResource('Tuesday'), <% } %>
+			<% if (ScheduleDailyWednesday) { %> $core_v2_language.GetResource('Wednesday'), <% } %>
+			<% if (ScheduleDailyThursday) { %> $core_v2_language.GetResource('Thursday'), <% } %>
+			<% if (ScheduleDailyFriday) { %> $core_v2_language.GetResource('Friday'), <% } %>
+			<% if (ScheduleDailySaturday) { %> $core_v2_language.GetResource('Saturday') <% } %>
+		<% } %>
+	<% } %>
+<% } %>
+

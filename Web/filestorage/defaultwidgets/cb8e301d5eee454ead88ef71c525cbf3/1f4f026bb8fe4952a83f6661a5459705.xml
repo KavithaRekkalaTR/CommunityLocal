@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WikiPageActivityStory_Name}" version="10.0.0.0" description="${resource:WikiPageActivityStory_Description}" instanceIdentifier="1f4f026bb8fe4952a83f6661a5459705" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="cb8e301d5eee454ead88ef71c525cbf3">
+    <contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+	#set($wikiPage = $core_v2_wikiPage.Get($context.Story.ContentId))
+	#if(!$wikiPage)
+		$core_v2_widget.Hide()
+	#else
+		#set($user = $context.Story.PrimaryUser)
+		#if ($user.Url)
+		 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $user.DisplayName, $user.Url))
+		#else
+			#set($profile0Html = $user.DisplayName)
+		#end
+
+		#if($isPreview)
+			#if ($wikiPage.RevisionCount > 0)
+					#format($core_v2_language.GetResource('UpdatedWikiPage_Preview'))
+								#token('user')
+									$profile0Html
+							#token('page')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($wikiPage.Url)">$wikiPage.Title</a>
+							#token('wiki')
+									#if ($content.Application.Container.ParentContainer)
+												<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+													href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+												<span class="group-application-separator">&gt;</span>
+										#end
+										<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+								#end
+						#else
+								#format($core_v2_language.GetResource('NewWikiPage_Preview'))
+								#token('user')
+									$profile0Html
+							#token('page')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($wikiPage.Url)">$wikiPage.Title</a>
+							#token('wiki')
+									#if ($content.Application.Container.ParentContainer)
+												<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+													href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+												<span class="group-application-separator">&gt;</span>
+										#end
+										<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+								#end
+			#end
+		#else
+				<div class="activity-summary wiki-page">
+				#format($core_v2_language.GetResource('in'))
+								#token('user')
+								$profile0Html
+						#token('wiki')
+								#if ($content.Application.Container.ParentContainer)
+										<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+										<span class="group-application-separator">&gt;</span>
+								#end
+								<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+									href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+						#end
+				</div>
+			<span class="activity-title">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($wikiPage.Url)" class="internal-link view-post"><span>$wikiPage.Title</span></a>
+			</span>
+			<div class="activity-description user-defined-markup">
+					#set($rawBody = $wikiPage.Body('Web'))
+					#set($body = $core_v2_language.Truncate($rawBody, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+					$body
+					#if ($body.Length < $rawBody.Length)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($wikiPage.Url)">$core_v2_language.GetResource('read-more')</a>
+					#end
+			</div>
+		#end
+	#end
+#end
+]]></contentScript>
+    <languageResources><language key="en-us"><resource name="in">{user} in {wiki}:</resource><resource name="NewWikiPage_Preview">{user} added {page} to {wiki}.</resource><resource name="read-more">Read more.</resource><resource name="UpdatedWikiPage_Preview">{user} edited {page} in {wiki}.</resource><resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource><resource name="WikiPageActivityStory_Description">Story for wiki pages.</resource><resource name="WikiPageActivityStory_Name">Wiki Page Activity Story</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

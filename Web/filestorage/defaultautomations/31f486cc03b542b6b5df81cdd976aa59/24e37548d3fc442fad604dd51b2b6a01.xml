@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="24e37548d3fc442fad604dd51b2b6a01" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-06-04 14:02:29Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="statusmessage.aftercreate" />
+      <event key="statusmessage.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var statusRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('statusCountRange', ''));
+var minStatusCount= core_v2_utility.ParseInt(statusRangeQuery.Value('Minimum'));
+var maxStatusCount = core_v2_utility.ParseInt(statusRangeQuery.Value('Maximum'));
+
+var userId = context_v2_automationTrigger.Arguments.Author.Id;
+if (!userId) {
+    return;
+}
+
+var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+var totalCount = core_v2_statusMessage.GetCount(userId);
+
+if (totalCount >= minStatusCount && (maxStatusCount === 0 || totalCount <= maxStatusCount)) {
+    if (!hasAchievement) {
+        context_v1_achievementAutomation.Award(userId);
+    }
+} else {
+    if (hasAchievement) {
+        context_v1_achievementAutomation.Revoke(userId);
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="statusCountRange" labelResourceName="StatusCountRange" descriptionResourceName="StatusCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Grants or revokes an achievement based on the number of status messages an author has created.</resource>
+  <resource name="StatusCountRange">Status message count range</resource>
+  <resource name="StatusCountRange_Description">The minimum and maximum number of status messages authored by a member required to award the achievement.  Maximum value is optional, if set the achievement will be removed once the maximum value is exceeded.</resource>
+  <resource name="Title">Award to authors of status messages by their total status message count</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

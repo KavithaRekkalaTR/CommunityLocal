@@ -1,0 +1,13 @@
+#set ($containerId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue("containerId")))
+#set ($group = false)
+#set ($group = $core_v2_group.Get("%{ ContainerId = $containerId }"))
+#set ($accessingUser = $core_v2_user.Accessing)
+$core_v2_widget.ExecuteFile('load-group-selection-mode.vm')
+$core_v2_widget.ExecuteFile('detect-status-enabled.vm')
+
+$core_v2_page.SetContentType('application/json')
+
+{
+    "statusEnabled": #if($enableStatus) true #else false #end,
+    "newPostLinks": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('new-post-links.vm'))"
+}

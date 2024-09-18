@@ -1,0 +1,65 @@
+﻿##
+## Expects in scope: $contentId, $contentTypeId, $pageIndex
+##
+
+#set ($pageSize = 10)
+#if ($contentId && $contentTypeId)
+	#set ($comments = $core_v2_comments.List("%{ ContentId = $contentId, ContentTypeId = $contentTypeId, PageSize = $pageSize, PageIndex = $pageIndex, OrderBy = 'CreatedUtcDate', SortOrder = 'Descending', CommentType = $context.TrackBackCommentTypeId, IncludeChildren = 'True' }"))
+#elseif ($applicationId)
+	#set ($comments = $core_v2_comments.List("%{ ApplicationId = $applicationId, PageSize = $pageSize, PageIndex = $pageIndex, OrderBy = 'CreatedUtcDate', SortOrder = 'Descending', CommentType = $context.TrackBackCommentTypeId, IncludeChildren = 'True' }"))
+#end
+
+#foreach ($comment in $comments)
+	<li class="content-item">
+
+		<div class="content comment" data-commentid="$comment.CommentId">
+			<div class="post-attributes">
+				<ul class="attribute-list">
+					#set ($commentContent = false)
+					#set ($commentContent = $comment.Content)
+					#if ($commentContent)
+						<li class="attribute-item blog">
+							<span class="name"></span>
+							<span class="value">
+								#if ($commentContent.Url)
+									<a href="$core_v2_encoding.HtmlAttributeEncode($commentContent.Url)">$commentContent.HtmlName('Web')</a>
+								#else
+									$commentContent.HtmlName('Web')
+								#end
+							</span>
+						</li>
+					#end
+				</ul>
+			</div>
+			<div class="content">
+				$comment.Body('Web')
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($comment.Content.Url)" class="internal-link view-post">
+								<span class="post-date">$core_v2_language.FormatAgoDate($comment.CreatedDate)</span>
+							</a>
+						</li>
+						#if ($core_v2_comments.CanDeleteComment($comment.CommentId))
+							<li class="navigation-list-item">
+								<a href="/" data-messagename="contextual-delete-comment" data-commentid="$comment.CommentId">$core_v2_language.GetResource('delete')</a>
+							</li>
+						#end
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end

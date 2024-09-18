@@ -1,0 +1,10 @@
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1" />
+
+#set ($favIconUrl = $core_v2_theme.GetUrlValue('favicon', '', 10))
+#if (!$favIconUrl || $favIconUrl.length == 0)
+	#set ($favIconUrl = $core_v2_widget.GetFileUrl('favicon.png'))
+#end
+#if ($favIconUrl && $favIconUrl.length > 0)
+	<link rel="icon" type="image/png" href="$core_v2_encoding.HtmlAttributeEncode($favIconUrl)">
+	<link rel="apple-touch-icon" href="$core_v2_encoding.HtmlAttributeEncode($favIconUrl)">
+#end

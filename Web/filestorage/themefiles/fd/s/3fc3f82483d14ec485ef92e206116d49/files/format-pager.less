@@ -1,0 +1,190 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+// pager
+.pager {
+	clear: both;
+	font-size: .9em;
+	display: table;
+	.previous, .next {
+		display: table-cell;
+		padding: 6px 12px 6px 12px;
+		background-color: @color-accent;
+		color: @color-background;
+		min-width: 88px;
+		text-align: center;
+		border-radius: 3px;
+		background-color: fade(@color-accent, 100%);
+		&:hover {
+			background-color: fade(@color-accent, 80%);
+		}
+		&.disabled {
+			background-color: -evo-decrease-contrast(@color-background, 25%, @color-foreground, @color-contrast);
+			cursor: default;
+		}
+	}
+	.previous {
+		.replace_with_icon(@left-open-big, 20px);
+		&:before {
+			top: 12px;
+			left: 32px;
+		}
+		height: 44px;
+	}
+	.next {
+		.replace_with_icon(@right-open-big, 20px);
+		&:before {
+			left: auto;
+			top: 12px;
+			right: 32px;
+		}
+		height: 44px;
+	}
+	.ends {
+		a {
+			color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+			&:hover {
+				color: @color-accent;
+			}
+		}
+		display: table-cell;
+		width: 100%;
+		text-align: center;
+		vertical-align: top;
+		top: 0px;
+		div {
+			.page {
+				line-height: 20px;
+				font-size: @font-size;
+				display: inline-block;
+				position: relative;
+				top: 12px;
+				height: 20px;
+				overflow: hidden;
+				padding: 0 (@spacing / 2);
+				&.selected {
+					color: -evo-decrease-contrast(@color-foreground, 36%, @color-background, @color-contrast);
+					font-weight: 700;
+				}
+			}
+			.first {
+				.replace_with_icon(@fast-backward, 20px);
+				position: relative;
+				top: 12px;
+				right: 6px;
+			}
+			.last {
+				.replace_with_icon(@fast-forward, 20px);
+				position: relative;
+				top: 12px;
+				left: 6px;
+			}
+		}
+	}
+}
+.single-column,
+.layout-region.right-sidebar,
+.layout-region.left-sidebar {
+	.pager {
+		.previous, .next {
+			min-width: 44px;
+			padding: 0px;
+		}
+		.previous {
+			.replace_with_icon(@left-open-big, 20px);
+			&:before {
+				top: 6px;
+				left: 12px;
+			}
+			height: 33px;
+		}
+		.next {
+			.replace_with_icon(@right-open-big, 20px);
+			&:before {
+				top: 6px;
+				left: 12px;
+			}
+			height: 33px;
+		}
+		.ends {
+			div {
+				.page {
+					display: none;
+				}
+				.first {
+					top: 8px;
+				}
+				.last {
+					top: 8px;
+				}
+			}
+		}
+	}
+}
+.layout-region.right-sidebar,
+.layout-region.left-sidebar {
+	.pager {
+		.previous, .next {
+			min-width: 44px;
+			padding: 0px;
+		}
+		.previous {
+			background-color: transparent;
+			color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+			&:hover {
+				color: @color-accent;
+			}
+			&.disabled {
+				color: -evo-decrease-contrast(@color-background, 9%, @color-foreground, @color-contrast);
+			}
+			&:before {
+				left: 0px;
+			}
+		}
+		.next {
+			background-color: transparent;
+			color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+			&:hover {
+				color: @color-accent;
+			}
+			&.disabled {
+				color: -evo-decrease-contrast(@color-background, 9%, @color-foreground, @color-contrast);
+			}
+			&:before {
+				right: 0px;
+				left: auto;
+			}
+		}
+		&:hover {
+			.previous {
+				color: @color-accent;
+				&.disabled {
+					color: -evo-decrease-contrast(@color-background, 9%, @color-foreground, @color-contrast);
+				}
+			}
+			.next {
+				color: @color-accent;
+				&.disabled {
+					color: -evo-decrease-contrast(@color-background, 9%, @color-foreground, @color-contrast);
+				}
+			}
+		}
+		.ends {
+			div {
+				.page { display: none; }
+				.first, .last {
+					left: 0px;
+					color: -evo-decrease-contrast(@color-background, 14%, @color-foreground, @color-contrast);
+					&:hover {
+						color: -evo-decrease-contrast(@color-accent, 10%, @color-background, @color-contrast);
+					}
+				}
+			}
+		}
+	}
+}

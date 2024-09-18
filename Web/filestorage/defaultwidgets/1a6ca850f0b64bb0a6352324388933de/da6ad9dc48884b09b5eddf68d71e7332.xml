@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="da6ad9dc48884b09b5eddf68d71e7332" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-08-23 15:20:25Z" provider="1a6ca850f0b64bb0a6352324388933de">
+    <contentScript language="Velocity"><![CDATA[#set($value = false)
+#set($value = $context.Value)
+
+#if ($context.Editable)
+    #set($luValue = '')
+    #if ($value)
+        #foreach($tag in $core_v2_page.ParseQueryString($value).Values('Tag'))
+            #if($luValue.Length > 0)
+                #set($luValue = "${luValue},")
+            #end
+            #set($tag = $core_v2_encoding.HtmlEncode($tag))
+            #set($luValue = "${luValue}${tag}")
+        #end
+    #end
+
+    <input type="text" columns="40" id="$context.UniqueId" value="$luValue" />
+
+    <script type="text/javascript">
+        jQuery(function() {
+            var api = $context.JsonApi,
+                input = jQuery('#$context.UniqueId'),
+                getValue = function() {
+                    var v = [], c = input.evolutionTagTextBox('val').split(/,/g);
+                    for (var i = 0; i < c.length; i++) {
+                        if (c[i].length > 0) {
+                            if (v.length > 0) {
+                                v.push('&');
+                            }
+                            v.push('Tag=')
+                            v.push(encodeURIComponent(c[i]));
+                        }
+                    }
+
+                    return v.join('');
+                },
+                setValue = function(v) {
+                    var newValue = [];
+                    var kvPairs = (v || '').split('&');
+                    jQuery.each(kvPairs, function(i, kvPair) {
+                        var kv = kvPair.split('=');
+                        if (kv.length == 2 && kv[0] == 'Tag' && kv[1].length > 0) {
+                            newValue.push(kv[1]);
+                        }
+                    });
+                    input.evolutionTagTextBox('val', newValue.join(','));
+                };
+            
+            #if ($context.ApplicationId) 
+                input.evolutionTagTextBox({ applicationId: '$context.ApplicationId' });
+            #else
+                input.evolutionTagTextBox({});
+            #end
+
+            api.register({
+                val: function(val) { return (typeof val == 'undefined') ? getValue() : setValue(val); },
+                hasValue: function() { return getValue() != ''; }
+            });
+
+            input.on('change', function() {
+		       api.changed(getValue());
+            });
+        });
+    </script>
+#else
+    #if ($value)
+        #set ($first = true)
+        #foreach($tag in $core_v2_page.ParseQueryString($value).Values('Tag'))
+            #if ($first)
+                #set($first = false)
+            #else
+                ,
+            #end
+            $core_v2_encoding.HtmlEncode($tag)
+        #end
+    #end
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enables tag selection using type-ahead search.</resource>
+  <resource name="Title">Tags Lookup</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Groups_GroupList_Name}" version="11.0.0.0" description="${resource:Groups_GroupList_Description}" instanceIdentifier="b89c5ca74a5d4904a06695ace5917fac" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="group-list" lastModified="2020-01-14 16:08:47Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($enablePaging = $core_v2_widget.GetBoolValue('enablePaging', true))
+$core_v2_widget.ExecuteFile('inSidebar.vm')
+
+#set($queryType = $core_v2_widget.GetStringValue('queryType',''))
+#if($queryType=='currentUser')
+	#set($user = false)
+	#set($user = $core_v2_user.Current)
+	#if(!$user)
+		$core_v2_widget.Hide()
+	#end
+
+	#set ($filter = false)
+	#if (!$inSidebar && $enablePaging && ($user.EnableFavoriteSharing || $user.Id == $core_v2_user.Accessing.Id))
+		#set ($filter = $core_v2_page.GetQueryStringValue('group-filter'))
+		<div class="view">
+		    <div>
+                <form>
+		        <select class="ui-select" data-update="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($core_v2_page.Url, "group-filter=OPTIONVALUE"))">
+		            <option value="all"#if(!$filter || $filter == 'all') selected #end>$core_v2_language.GetResource('filter_allgroups')</option>
+					<option value="bookmarks"#if($filter == 'bookmarks') selected #end>$core_v2_language.GetResource('filter_bookmarkedgroups')</option>
+		        </select>
+                </form>
+		    </div>
+		</div>
+
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+				jQuery(function(j) {
+					j('#$core_v2_widget.WrapperElementId select').on('change', function() {
+						var s = j(this);
+						var url = s.data('update');
+						if (url) {
+							window.location = url.replace('OPTIONVALUE', s.val());
+						}
+					});
+
+					#if ($core_v2_urls.Current == 'UserGroups')
+						j.telligent.evolution.messaging.subscribe('search.registerFilters', function(data) {
+							if (data.scope.key == 'anywhere') {
+								data.register({
+									name: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('search_filter'), $user.DisplayName))',
+									query: function(query, complete) {
+										j.telligent.evolution.get({
+											url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+											data: {
+												w_query: query.query,
+												w_pageIndex: query.pageIndex
+											},
+											success: function(response) {
+												complete(response);
+											}
+										});
+									},
+									advancedSearchUrl: function(query) {
+										return null;
+									},
+									isDefault: #if ($core_v2_urls.Current == 'UserGroups') true #else false #end
+								});
+							}
+						});
+					#end
+				});
+			</script>
+		#end
+	#end
+#elseif ($queryType=='accessingUser' && !$inSidebar && $enablePaging)
+	#set ($filter = false)
+	#set ($filter = $core_v2_page.GetQueryStringValue('group-filter'))
+	<div class="view">
+	    <div>
+	        <select class="ui-select" data-update="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($core_v2_page.Url, "group-filter=OPTIONVALUE"))">
+	            <option value="all"#if(!$filter || $filter == 'all') selected #end>$core_v2_language.GetResource('filter_allgroups')</option>
+				<option value="bookmarks"#if($filter == 'bookmarks') selected #end>$core_v2_language.GetResource('filter_bookmarkedgroups')</option>
+	        </select>
+	    </div>
+	</div>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(j) {
+				j('#$core_v2_widget.WrapperElementId select').on('change', function() {
+					var s = j(this);
+					var url = s.data('update');
+					if (url) {
+						window.location = url.replace('OPTIONVALUE', s.val());
+					}
+				});
+			});
+		</script>
+	#end
+#end
+
+$core_v2_ui.PagedContent('pagedContent.vm')
+
+#if ($inSidebar || !$enablePaging)
+    #if ($queryType == 'accesingUser')
+        #set($remaining = $groups.TotalCount - $groups.PageSize)
+        #set($url = false)
+        #set($url = $core_v2_urls.UserGroups($core_v2_user.Acessing.Id))
+        #if ($url)
+            #if ($remaining == 1)
+                <a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+            #elseif ($remaining > 1)
+                <a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+            #end
+        #end
+    #elseif($queryType == 'currentUser')
+        #set($remaining = $groups.TotalCount - $groups.PageSize)
+        #set($url = false)
+        #set($url = $core_v2_urls.UserGroups($core_v2_user.Current.Id))
+        #if ($url)
+            #if ($remaining == 1)
+                <a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+            #elseif ($remaining > 1)
+                <a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+            #end
+        #end
+    #end
+    #registerEndOfPageHtml ()
+        <script type="text/javascript">
+		jQuery(function(j){
+			j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))').on('click', '.content-item', function(e){
+				window.location = j(this).data('url');
+			});
+		});
+		</script>
+    #end
+#else
+    #if ($viewType == 'thumbnails')
+    	#registerEndOfPageHtml()
+    		<script type="text/javascript">
+    		jQuery(function(j){
+    			var isLoadingMore = false, pageIndex = 0, hasMore =#if($hasMore) true#else false#end;
+    			j(document).on('scrollend', function(e){
+    				if(isLoadingMore || !hasMore)
+    					return;
+    
+    				isLoadingMore = true;
+    
+    				var data = {}
+    				data['$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'] = pageIndex + 2;
+    
+    				j.telligent.evolution.get({
+    					url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('pagedContent.vm'))',
+    					data: data
+    				}).then(function(response){
+    					var items = $(response).find('div.content-item.thumbnail');
+    					hasMore = items.data('hasmore') == 'True';
+    					j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))').evolutionMasonry('append', items);
+    					pageIndex++;
+    					isLoadingMore = false;
+    				});
+    			});
+    
+    			j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))').on('click', '.content-item', function(e){
+    				window.location = j(this).data('url');
+    			});
+    
+    		});
+    		</script>
+    	#end
+    #else
+    	$core_v2_ui.Pager($groups.PageIndex, $groups.PageSize, $groups.TotalCount, "%{ PagedContentFile = 'pagedContent.vm' }")
+    #end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+#if($header == '')
+	#if($core_v2_urls.Current == 'Home')
+		#set ($header = '${resource:Groups_GroupList_Name_ForAccessingUser}')
+	#elseif($core_v2_user.Current)
+		#set ($header = $core_v2_language.FormatString($core_v2_language.GetResource('Groups_GroupList_Name_ForContextualUser'), $core_v2_user.Current.DisplayName))
+	#else
+		#set ($header = '${resource:Groups_GroupList_Name}')
+	#end
+#end
+$core_v2_widget.ApplyTokens($header)
+            ]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" dataType="String" template="core_v2_tokenizedString" />
+	<property id="queryType" labelResourceName="CF_GroupList_QueryType" dataType="String">
+		<propertyValue value="subGroups" labelResourceName="CF_GroupList_QueryType_SubGroups" orderNumber="1000000" propertiesToShow="groupSelectionCustom,sortByCustom,sortOrderCustom" propertiesToHide="sortBy,sortOrder" />
+		<propertyValue value="currentUser" labelResourceName="CF_GroupList_QueryType_CurrentUser" orderNumber="1000001" propertiesToShow="sortBy,sortOrder" propertiesToHide="groupSelectionCustom,sortByCustom,sortOrderCustom" />
+		<propertyValue value="accessingUser" labelResourceName="CF_GroupList_QueryType_AccessingUser" orderNumber="1000002" propertiesToShow="sortBy,sortOrder" propertiesToHide="groupSelectionCustom,sortByCustom,sortOrderCustom" />
+	</property>
+	<property id="viewType" labelResourceName="Groups_GroupList_ViewType" defaultValue="standard" dataType="String">
+		<propertyValue value="list" labelResourceName="Groups_GroupList_ListView" />
+		<propertyValue value="thumbnails" labelResourceName="Groups_GroupList_ThumbnailView" />
+	</property>
+	<property id="sortByCustom" labelResourceName="CF_SortBy" defaultValue="alphabetical" dataType="String">
+		<propertyValue value="alphabetical" labelResourceName="CF_GroupList_QueryType_SortBy_Alphabetical" />
+		<propertyValue value="lastupdate" labelResourceName="CF_GroupList_QueryType_SortBy_LastUpdate" />
+		<propertyValue value="containeridsorder" labelResourceName="CF_GroupList_QueryType_SortBy_ContainerIdsOrder" />
+	</property>
+	<property id="groupSelectionCustom" labelResourceName="GroupInclusion" dataType="Custom" template="core_v2_groupOrder" key="group" visibilityPropertyId="sortByCustom" visibilityPropertyValue="containeridsorder" visibilityHideOtherIds="sortOrderCustom" />
+	<property id="sortOrderCustom" labelResourceName="CF_SortOrder" defaultValue="ascending" dataType="String">
+		<propertyValue value="ascending" labelResourceName="SortOrderDropDownList_Asc" />
+		<propertyValue value="descending" labelResourceName="SortOrderDropDownList_Desc" />
+	</property>
+	<property id="sortBy" labelResourceName="CF_SortBy" defaultValue="alphabetical" dataType="String">
+		<propertyValue value="alphabetical" labelResourceName="CF_GroupList_QueryType_SortBy_Alphabetical" />
+		<propertyValue value="lastupdate" labelResourceName="CF_GroupList_QueryType_SortBy_LastUpdate" />
+	</property>
+	<property id="sortOrder" labelResourceName="CF_SortOrder" defaultValue="ascending" dataType="String">
+		<propertyValue value="ascending" labelResourceName="SortOrderDropDownList_Asc" />
+		<propertyValue value="descending" labelResourceName="SortOrderDropDownList_Desc" />
+	</property>
+	<property id="pageSize" labelResourceName="Pagesize" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="enablePaging" labelResourceName="EnablePaging" defaultValue="True" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="And_Multiple_More">And {0} more...</resource>
+  <resource name="And_One_More">And 1 more...</resource>
+  <resource name="CF_GroupList_QueryType">Show</resource>
+  <resource name="CF_GroupList_QueryType_AccessingUser">Accessing user's groups</resource>
+  <resource name="CF_GroupList_QueryType_CurrentUser">Current contextual user's groups</resource>
+  <resource name="CF_GroupList_QueryType_SortBy_Alphabetical">Alphabetical</resource>
+  <resource name="CF_GroupList_QueryType_SortBy_ContainerIdsOrder">Custom order</resource>
+  <resource name="CF_GroupList_QueryType_SortBy_LastUpdate">Last Updated Date</resource>
+  <resource name="CF_GroupList_QueryType_SubGroups">Current contextual group's sub-groups</resource>
+  <resource name="CF_SortBy">Sort By</resource>
+  <resource name="CF_SortOrder">Sort Order</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="EnablePaging">Enable paging</resource>
+  <resource name="filter_allgroups">All Groups</resource>
+  <resource name="filter_bookmarkedgroups">Bookmarked Groups</resource>
+  <resource name="GroupInclusion">Include Groups</resource>
+  <resource name="Groups_GroupList_Description">Displays a list of groups.</resource>
+  <resource name="Groups_GroupList_ListView">List</resource>
+  <resource name="Groups_GroupList_Name">Group - List</resource>
+  <resource name="Groups_GroupList_Name_ForAccessingUser">My Groups</resource>
+  <resource name="Groups_GroupList_Name_ForContextualUser">{0}'s Group Membership</resource>
+  <resource name="Groups_GroupList_NoGroups">No groups</resource>
+  <resource name="Groups_GroupList_ThumbnailView">Thumbnails</resource>
+  <resource name="Groups_GroupList_ViewType">View Type</resource>
+  <resource name="Latest_Format">Last Activity: {0}&lt;br /&gt;</resource>
+  <resource name="Members_PluralFormat">{0} members</resource>
+  <resource name="Members_SingleFormat">{0} member</resource>
+  <resource name="no_search_matches_found">No matching groups were found.</resource>
+  <resource name="on">on</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Pagesize">Number of items to display</resource>
+  <resource name="search_filter">{0}'s Groups</resource>
+  <resource name="SortOrderDropDownList_Asc">Ascending</resource>
+  <resource name="SortOrderDropDownList_Desc">Descending</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

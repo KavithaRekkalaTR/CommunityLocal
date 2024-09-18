@@ -1,0 +1,17 @@
+#*
+Renders exceptions
+
+Expects In Scope:
+	$exceptions
+*#
+
+#foreach ($exception in $exceptions)
+	<li class="content-item" data-exceptionid="$exception.ExceptionId">
+		$core_v2_widget.ExecuteFile('render-item.vm')
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end
+

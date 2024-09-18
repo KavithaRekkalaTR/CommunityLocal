@@ -1,0 +1,100 @@
+<p>$core_v2_language.GetResource('Licenses-Instructions')</p>
+
+#foreach ($license in $context.GetLicenses())
+    #beforeall
+        <ul class="content-list content expandable simple license">
+    #each
+        <li class="content-item product-usage">
+            <div class="expiration #if ($license.ExpiresDate < $core_v2_utility.CurrentDate) expired#end">
+                #if ($license.ExpiresDate)
+                    #if ($license.ExpiresDate < $core_v2_utility.CurrentDate)
+                        $core_v2_language.FormatString($core_v2_language.GetResource('Expired'), $core_v2_language.FormatDate($license.ExpiresDate))
+                    #else
+                        $core_v2_language.FormatString($core_v2_language.GetResource('Expires'), $core_v2_language.FormatDate($license.ExpiresDate))
+                    #end
+                #end
+            </div>
+            <div class="content-container">
+                <h4 class="name">
+                    $license.Name
+                </h4>
+                <div class="attributes">
+    		        <ul class="attribute-list">
+    			        <li class="attribute-item">
+    				        <span class="attribute-value">
+    				            $core_v2_language.FormatString($core_v2_language.GetResource('Installed'), $core_v2_language.FormatDate($license.InstalledDate))
+    				        </span>
+    				    </li>
+    				    #if ($license.Environment)
+        				    <li class="attribute-item">
+        				        <span class="attribute-value">
+        				            $license.Environment
+        				        </span>
+        				    </li>
+        				#end
+        			</ul>
+        		</div>
+                <div class="content expandable">
+                    <p>
+                        $core_v2_language.FormatString($core_v2_language.GetResource('LicenseDetails'), $license.Id.ToString(), $license.Company, $license.Email)
+                    </p>
+                    #foreach($product in $license.Products)
+                        <div class="licensed-product#if (!$product.IsActive) inactive#end#if(!$product.Errors.Count > 0) with-errors#end">
+                            <div class="expiration #if ($product.ExpiresDate < $core_v2_utility.CurrentDate) expired#end">
+                                #if ($product.ExpiresDate)
+                                    #if ($product.ExpiresDate < $core_v2_utility.CurrentDate)
+                                        $core_v2_language.FormatString($core_v2_language.GetResource('Expired'), $core_v2_language.FormatDate($product.ExpiresDate))
+                                    #else
+                                        $core_v2_language.FormatString($core_v2_language.GetResource('Expires'), $core_v2_language.FormatDate($product.ExpiresDate))
+                                    #end
+                                #end
+                            </div>
+                            <div class="content-container">
+                                <h5 class="license-label">
+                                    #if (!$product.IsActive)
+                                        $core_v2_language.FormatString($core_v2_language.GetResource('ProductName_Inactive'), $product.Name, $product.Version)
+                                    #else
+                                        $core_v2_language.FormatString($core_v2_language.GetResource('ProductName'), $product.Name, $product.Version)
+                                    #end
+                                </h5>
+                                <div class="content">
+                                    #foreach($error in $product.Errors)
+                                        <div class="message error">$error</div>
+                                    #end
+                                    <div class="license-attributes">
+                                        #foreach($capability in $product.Capabilities)
+                                            <span class="license-attribute ui-tip" title="$capability.Name">
+                                                <span class="attribute-name">$capability.Name</span>
+                                                <span class="attribute-value">$capability.Value</span>
+                                            </span>  
+                                        #end
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    #end
+                </div>
+                <div class="actions expandable">
+                    <div class="navigation-list ui-links " data-direction="horizontal">
+                        <ul>
+                            <li class="navigation-list-item">
+                                <a href="#" data-messagename="licensing.uninstalllicense" data-licenseid="$license.Id.ToString()" data-licensename="$license.Name">
+                                    $core_v2_language.GetResource('Uninstall')
+                                </a>
+                            </li>
+                            <li class="navigation-list-item">
+                                <a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+                            </li>
+                            <li class="navigation-list-item">
+                                <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </li>
+    #afterall
+        </ul>
+    #nodata
+        <div class="message norecords">$core_v2_language.GetResource('NoLicenses')</div>
+#end

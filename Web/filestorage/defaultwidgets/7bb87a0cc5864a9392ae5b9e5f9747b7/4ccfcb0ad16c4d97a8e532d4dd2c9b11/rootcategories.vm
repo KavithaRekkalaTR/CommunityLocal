@@ -1,0 +1,24 @@
+#if (!$currentCollection)
+	$core_v2_widget.Hide()
+#end
+
+#set($rootCategories = $articles_v1_categories.List($currentCollection.Id, "%{ RootLevelOnly = 'True', CategoryOrChildrenHaveArticles = $excludeEmpty }"))
+
+#foreach ($category in $rootCategories)
+#beforeall
+	<ul class="navigation-tile-list #if ($wrap) $wrap #end">
+#each
+	<li class="navigation-tile-list-item #if ($roundIcons) round #end">
+		#set($avatarHtml = false)
+		#set($avatarHtml = $core_v2_ui.GetResizedImageHtml($category.ImageUrl, 64, 64, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt = '' }"))
+		<a href="$core_v2_encoding.HtmlAttributeEncode($category.Url)" class="navigation-tile #if($avatarHtml) with-avatar #end">
+			#if ($avatarHtml)
+				<span class="avatar">$avatarHtml</span>
+			#end
+			<h3 class="name">$category.Name</h3>
+			<span class="description">$!category.Description</span>
+		</a>
+	</li>
+#afterall
+	</ul>
+#end

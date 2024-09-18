@@ -1,0 +1,51 @@
+<% if(State == 'FactoryDefault' || State == 'Custom' || State == 'CustomizedDefault' || (typeof IsTranslated !== 'undefined' && IsTranslated)) { %>
+	<span class="state <% if(State == 'CustomizedDefault' && (typeof Compare === 'undefined' || Compare)) { %> with-comparison <% } %>">
+		<% if(State == 'FactoryDefault') { %>
+			$core_v2_language.GetResource('Default')
+		<% } else if(State == 'Custom') { %>
+			$core_v2_language.GetResource('Custom')
+		<% } else if(State == 'CustomizedDefault') { %>
+			$core_v2_language.GetResource('CustomizedDefault')
+		<% }  %>
+	</span>
+	<% if((State == 'CustomizedDefault' || (typeof IsTranslated !== 'undefined' && IsTranslated)) && (typeof Compare === 'undefined' || Compare)) { %>
+		<% if(typeof Compare === 'undefined' || Compare) { %>
+			<a href="#" class="compare compare-default ui-tip"
+				data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CompareCurrentWithFactory'))"
+				data-showlabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CompareChanges'))"
+				data-hidelabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('HideComparison'))"
+				data-fromlabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Default'))"
+				data-tolabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('current'))"
+				data-varianttype="default">
+				$core_v2_language.GetResource('CompareChanges')
+			</a>
+		<% } %>
+	<% } %>
+<% } %>
+<% if(IsStaged) { %>
+	<span class="staged-changes ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SavedButNotPublished'))">
+		$core_v2_language.GetResource('ChangesStaged')
+	</span>
+	<% if(typeof Compare === 'undefined' || Compare) { %>
+		<a href="#" class="compare compare-staged ui-tip"
+			data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CompareStagedWithPublished'))"
+			data-showlabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CompareChanges'))"
+			data-hidelabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('HideComparison'))"
+			data-fromlabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('published'))"
+			data-tolabel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Staged'))"
+			data-varianttype="nonstaged">
+			$core_v2_language.GetResource('CompareChanges')
+		</a>
+	<% } %>
+<% }  %>
+<% if(typeof IsTranslated !== 'undefined' && IsTranslated) { %>
+	<span class="state">$core_v2_language.GetResource('Translated')</span>
+<% } %>
+<% if(typeof IsReverted !== 'undefined' && IsReverted) { %>
+	## Deletion is a specific case of reversion
+	<% if(typeof IsDeleted !== 'undefined' && IsDeleted) { %>
+		<span class="state ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('deleted_desc'))">$core_v2_language.GetResource('deleted')</span>
+	<% } else  { %>
+		<span class="state ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('reverted_desc'))">$core_v2_language.GetResource('reverted')</span>
+	<% } %>
+<% } %>

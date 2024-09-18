@@ -1,0 +1,23 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_searchText'))
+#set($achievementId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_achievementId')))
+#set($matchingUsers = $core_v2_user.Lookup($searchText, "%{ }"))
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+	#foreach($user in $matchingUsers)
+	    #set($hasAchievement = false)
+	    #set($hasAchievement = $core_v2_userAchievement.Get($achievementId, $user.Id))
+	    #if($hasAchievement && !$hasAchievement.HasErrors())
+	        #set($hasAchievement = true)
+	    #else
+	        #set($hasAchievement = false)
+        #end
+        {
+            "userId":"$user.Id",
+            "title":"$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+            "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 16, 16, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop', alt='$user.DisplayName'}")) $core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+            "hasAchievement":#if ($hasAchievement) true #else false #end
+        },
+	#end
+null]}

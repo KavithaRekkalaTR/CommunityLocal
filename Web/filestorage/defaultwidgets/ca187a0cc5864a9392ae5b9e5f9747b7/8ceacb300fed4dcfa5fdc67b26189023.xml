@@ -1,0 +1,261 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_EventRegistrationAdd_Name}" version="11.0.0.0" description="${resource:Calendar_EventRegistrationAdd_Description}" instanceIdentifier="8ceacb300fed4dcfa5fdc67b26189023" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="true" cssClass="event-registration-add-form" lastModified="2020-01-14 16:09:35Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($event = false)
+#set ($event = $calendar_v1_events.Current)
+
+#set ($userId = $core_v2_user.Accessing.Id)
+#set ($user = $core_v2_user.Accessing)
+#set ($userIsRegistered = $core_v2_user.IsRegistered($userId))
+
+#if (!$event || $event.IsCancelled || $event.EventEndDate <= $calendar_v1_UI.AdjustForUserTime($core_v2_utility.CurrentDate))
+		$core_v2_widget.Hide()
+#end
+
+#if(!$userIsRegistered)
+		#set ($userId =-1)
+#end
+
+#set ($firstName = "")
+#set ($lastName = "")
+#if ($userIsRegistered)
+		#set ($nameArray = $core_v2_utility.Split(" ", $user.DisplayName).ToArray())
+		#set ($firstName = $nameArray.get(0))
+		#if ($nameArray.Count > 1)
+				#set ($lastName = $core_v2_utility.Trim($user.DisplayName.Substring($firstName.Length)))
+		#end
+#end
+
+#set($group = false)
+#set($group = $core_v2_group.Current)
+
+#set ($calendar = false)
+#set ($calendar = $calendar_v1_calendars.Current)
+
+#set ($registration = false)
+#set ($registration = $calendar_v1_registrations.Current)
+#if (!$registration)
+		#set ($registration = $calendar_v1_registrations.Get($event.Id, $user.Id))
+#end
+
+#if($event.RegistrationType == 'NotSet' || (!$event.AllowAnonymousRegistrations && !$userIsRegistered) || ($event.RegistrationType == 'InvitationOnly' && !$registration))
+	$core_v2_widget.Hide()
+#end
+
+#if($event.RegistrationType != "InvitationOnly" && !$registration)
+		#if(($event.TotalRegistrations >= $event.MaximumRegistrationsAllowed) &&  $event.MaximumRegistrationsAllowed > 0)
+				$core_v2_widget.Hide()
+		#end
+#end
+
+<div id="$core_v2_widget.UniqueId('successMessage')" class="message success" style="display:none">$core_v2_language.GetResource("RegistrationSavingSuccess")</div>
+<div id="$core_v2_widget.UniqueId('errorMessage')" class="message error" style="display:none">$core_v2_language.GetResource("calendar_GenericError")</div>
+
+#if ($registration && $registration.Status == 'Confirmed')
+		<div class="message success">$core_v2_language.GetResource("Registration_AttendingEvent")</div>
+#elseif ($registration && $registration.Status == 'Invited')
+		<div class="message success">$core_v2_language.GetResource("Registration_Invited")</div>
+#elseif (($registration && $registration.Status == 'Cancelled') || $core_v2_page.GetQueryStringValue('cancelled') == 'true')
+		<div class="message error">$core_v2_language.GetResource("Registration_Cancelled")</div>
+#elseif ($core_v2_page.GetQueryStringValue('registered') == 'NotApproved')
+		<div class="message success">$core_v2_language.GetResource("Registration_RequestSuccessful")</div>
+#end
+
+<div id="$core_v2_widget.UniqueId('infoMessageWrapper')" class="message success" style="display:none" ></div>
+
+<div id="$core_v2_widget.UniqueId('form')">
+	<div class="field-list-header"></div>
+	<form><fieldset class="field-list">
+		<ul class="field-list">
+			<li class="field-item email-address">
+				<label class="field-item-header" for="$core_v2_widget.UniqueId('email')">$core_v2_language.GetResource("EmailAddress")</label>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('email')" size="60" name="$core_v2_widget.UniqueId('email')" value="#if($registration && $registration.EmailAddress.length > 0)$registration.EmailAddress#elseif($core_v2_user.IsRegistered($userId))$user.PrivateEmail#end" />
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+			</li>
+			<li class="field-item first-name">
+				<label class="field-item-header" for="$core_v2_widget.UniqueId('firstName')">$core_v2_language.GetResource("FirstName")</label>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('firstName')" size="60" name="$core_v2_widget.UniqueId('firstName')" value="#if($registration && $registration.FirstName.length > 0)$registration.FirstName#else$firstName#end" />
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+			</li>
+			<li class="field-item last-name">
+				<label class="field-item-header" for="$core_v2_widget.UniqueId('lastName')">$core_v2_language.GetResource("LastName")</label>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('lastName')" size="60" name="$core_v2_widget.UniqueId('lastName')" value="#if($registration && $registration.LastName.length > 0)$registration.LastName#else$lastName#end" />
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+			</li>
+			<li class="field-item registration-buttons">
+#if ($registration == false || $registration.Status == 'Cancelled')
+				<span class="field-item-input">
+					<a id="$core_v2_widget.UniqueId('save')" onclick="return false;" class="internal-link submit-button save" href="#"><span></span>$core_v2_language.GetResource('AddRegistration')</a>
+					<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</span>
+#elseif ($registration && ($registration.Status == 'Confirmed' || $registration.Status == 'NotApproved'))
+				<span class="field-item-input">
+					<a id="$core_v2_widget.UniqueId('update')" onclick="return false;" class="internal-link submit-button update" href="#"><span></span>$core_v2_language.GetResource('UpdateRegistration')</a>
+					<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</span> |
+				<span class="field-item-input">
+					<a id="$core_v2_widget.UniqueId('cancel')" onclick="return false;" class="internal-link submit-button cancel-button" href="#"><span></span>$core_v2_language.GetResource('CancelRegistration')</a>
+					<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</span>
+#elseif ($registration && $registration.Status == 'Invited')
+				<span class="field-item-input">
+					<a id="$core_v2_widget.UniqueId('update')" onclick="return false;" class="internal-link submit-button update" href="#"><span></span>$core_v2_language.GetResource('AcceptInvitation')</a>
+					<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</span> |
+				<span class="field-item-input">
+					<a id="$core_v2_widget.UniqueId('cancel')" onclick="return false;" class="internal-link submit-button cancel-button" href="#"><span></span>$core_v2_language.GetResource('RejectInvitation')</a>
+					<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</span>
+#end
+
+			</li>
+		</ul>
+	</fieldset></form>
+	<div class="field-list-footer"></div>
+</div>
+
+
+#if (!$userIsRegistered)
+<div id="$core_v2_widget.UniqueId('cancelForm')">
+<div class="field-list-header"></div>
+<form><fieldset class="field-list">
+	<ul class="field-list">
+		<li class="field-item registration-code">
+			<label class="field-item-header" for="$core_v2_widget.UniqueId('code')">$core_v2_language.GetResource("RegistrationCode")</label>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('code')" size="60" name="$core_v2_widget.UniqueId('registrationCode')" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+			<li class="field-item registration-cancel">
+					<span class="field-item-input">
+						<a id="$core_v2_widget.UniqueId('cancelWithCode')" onclick="return false;" class="internal-link submit-button cancel-button" href="#"><span></span>$core_v2_language.GetResource('CancelRegistration')</a>
+						<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+					</span>
+				</li>
+		</ul>
+	</fieldset></form>
+	<div class="field-list-footer"></div>
+</div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.Calendar.widgets.eventregistrationadd')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	jQuery(function(j)
+	{
+		j.telligent.evolution.Calendar.widgets.eventRegistrationAdd.register({
+			wrapperId:'$core_v2_widget.WrapperElementId',
+			resultMessageWrapper:'#$core_v2_widget.UniqueId('infoMessageWrapper')',
+			elements : {
+				save : '#$core_v2_widget.UniqueId('save')',
+				update: '#$core_v2_widget.UniqueId('update')',
+				cancel: '#$core_v2_widget.UniqueId('cancel')',
+				cancelWithCode: '#$core_v2_widget.UniqueId('cancelWithCode')',
+				accept: '#$core_v2_widget.UniqueId('accept')',
+				reject: '#$core_v2_widget.UniqueId('reject')'
+		},
+			inputs: {
+					email:'#$core_v2_widget.UniqueId('email')',
+					firstName:'#$core_v2_widget.UniqueId('firstName')',
+					lastName:'#$core_v2_widget.UniqueId('lastName')',
+					code:'#$core_v2_widget.UniqueId('code')',
+			},
+			eventId:#if($event)$event.Id#else-1#end,
+			eventRegistrationType:#if($event)'$event.RegistrationType'#else'NotSet'#end,
+			token:#if($registration)'$registration.Token'#else-1#end,
+			status:#if($registration)'$registration.Status'#else'NotSet'#end,
+			user:$userId,
+			userIsRegistered:#if($userIsRegistered == 'True')true #else false #end,
+			resources: {
+					emailRequiredMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_validator_emailRequired'))',
+					emailLengthMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_validator_emailLength'))',
+					emailFormatMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_validator_emailFormat'))',
+					firstNameRequiredMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_validator_firstNameRequired'))',
+					firstNameLengthMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_validator_firstNameLength'))',
+					lastNameRequiredMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_validator_lastNameRequired'))',
+					lastNameLengthMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_validator_lastNameLength'))',
+					saveProcessingMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RegistrationSaving'))',
+					updateProcessingMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RegistrationUpdating'))',
+					cancelprocessingMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RegistrationCancelling'))',
+					saveSuccessMessage:j('#$core_v2_widget.UniqueId('RegistrationSavingSuccess')'),
+					updateSuccessMessage:j('#$core_v2_widget.UniqueId('RegistrationUpdatingSuccess')'),
+					cancelSuccessMessage:j('#$core_v2_widget.UniqueId('RegistrationCancellingSuccess')'),
+					saveErrorMessage:j('#$core_v2_widget.UniqueId('RegistrationSavingError')'),
+					updateErrorMessage:j('#$core_v2_widget.UniqueId('RegistrationUpdatingError')'),
+					cancelErrorMessage:j('#$core_v2_widget.UniqueId('RegistrationCancellingError')'),
+					registrationSuccessMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Registration_RequestSuccessful'))',
+					updateRegSuccessMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RegistrationUpdatingSuccess'))',
+					invalidGuidMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('invalid_Guid'))'
+			},
+			saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			cancelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('cancel.vm'))',
+		});
+	});
+
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+	</script>
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${Calendar_EventRegistrationAdd_Title}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="linkArea" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_EventRegistrationAdd_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AcceptInvitation">Accept Invitation</resource>
+  <resource name="AddRegistration">Register for this Event</resource>
+  <resource name="Calendar_EventRegistrationAdd_Description">Allows a user to register for an event and displays the status of that registration</resource>
+  <resource name="Calendar_EventRegistrationAdd_Name">Event Calendar - Add/Edit Registration</resource>
+  <resource name="Calendar_EventRegistrationAdd_Title">Registration</resource>
+  <resource name="calendar_GenericError">An error occurred.</resource>
+  <resource name="calendar_validator_emailFormat">Invalid Email Address</resource>
+  <resource name="calendar_validator_emailLength">Email Address Length should not exceed 256 characters</resource>
+  <resource name="calendar_validator_emailRequired">Email Address is required</resource>
+  <resource name="calendar_validator_firstNameLength">First Name should not exceed 128 characters</resource>
+  <resource name="calendar_validator_firstNameRequired">First Name is required</resource>
+  <resource name="calendar_validator_lastNameLength">Last Name should not exceed 128 characters</resource>
+  <resource name="calendar_validator_lastNameRequired">Last Name is required</resource>
+  <resource name="CancelRegistration">Cancel Registration</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="EmailAddress">Email Address</resource>
+  <resource name="FirstName">First Name</resource>
+  <resource name="invalid_Guid">Registration code is not valid</resource>
+  <resource name="LastName">Last Name</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Registration_AttendingEvent">You are currently attending this event.</resource>
+  <resource name="Registration_Cancelled">Your registration has been cancelled.</resource>
+  <resource name="Registration_Invited">You have been invited to attend this event.</resource>
+  <resource name="Registration_RequestSuccessful">Your registration request has been received. You will receive further information soon.</resource>
+  <resource name="RegistrationCancelling">Cancelling Registration...</resource>
+  <resource name="RegistrationCancellingError">An error occurred cancelling Event Registration</resource>
+  <resource name="RegistrationCancellingSuccess">Registration cancelled successfully</resource>
+  <resource name="RegistrationCode">Registration Code</resource>
+  <resource name="RegistrationSaving">Saving Registration...</resource>
+  <resource name="RegistrationSavingError">An error occurred creating Event Registration</resource>
+  <resource name="RegistrationSavingSuccess">Registration created successfully</resource>
+  <resource name="RegistrationUpdating">Updating Registration...</resource>
+  <resource name="RegistrationUpdatingError">An error occurred updating Event Registration</resource>
+  <resource name="RegistrationUpdatingSuccess">Registration updated successfully</resource>
+  <resource name="RejectInvitation">Reject Invitation.</resource>
+  <resource name="UpdateRegistration">Update Registration</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="ca14a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

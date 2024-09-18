@@ -1,0 +1,67 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Id = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('Id')))
+
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#set($Description = $core_v2_page.GetFormValue('Description'))
+	#set($NumberOfLeaders = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('NumberOfLeaders')))
+	#set($ApplicationKey = $core_v2_page.GetFormValue('ApplicationKey'))
+	#set($PeriodType = $core_v2_page.GetFormValue('PeriodType'))
+	#set($StartDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('StartDate')))
+	#set($EndDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('EndDate')))
+	#set($TimeSpanType = $core_v2_page.GetFormValue('TimeSpanType'))
+	#set($TimeSpanLength = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('TimeSpanLength')))
+	#set($IncludeRoleIds = $core_v2_page.GetFormValue('IncludeRoleIds'))
+	#set($ExcludeRoleIds = $core_v2_page.GetFormValue('ExcludeRoleIds'))
+
+	$options.Add('Description', $Description)
+	$options.Add('PeriodType', $PeriodType)
+	$options.Add('ApplicationKey', $ApplicationKey)
+
+	#if($PeriodType == "Static")
+		$options.Add('StartDate', $StartDate)
+		$options.Add('EndDate', $EndDate)
+	#elseif($PeriodType == "Rolling")
+		$options.Add('TimeSpanType', $TimeSpanType)
+		$options.Add('TimeSpanValue', $TimeSpanLength)
+	#end
+
+	#if($core_v2_page.GetFormValue('DisplayStartDate'))
+		#set($DisplayStartDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('DisplayStartDate')))
+		$options.Add('StartDisplayDate', $DisplayStartDate)
+	#else
+		$options.Add('StartDisplayDate', '')
+	#end
+	
+	#if($core_v2_page.GetFormValue('DisplayEndDate'))
+		#set($DisplayEndDate = $core_v2_utility.ParseDate($core_v2_page.GetFormValue('DisplayEndDate')))
+		$options.Add('EndDisplayDate', $DisplayEndDate)
+	#else
+		$options.Add('EndDisplayDate', '')
+	#end
+	
+	#if($IncludeRoleIds)
+		$options.Add('IncludeRolesFilter', $IncludeRoleIds)
+	#end
+	#if($ExcludeRoleIds)
+		$options.Add('ExcludeRolesFilter', $ExcludeRoleIds)
+	#end
+		
+	#if($Id > 0)
+		$options.Add('Name', $Name)
+		$options.Add('NumberOfLeaders', $NumberOfLeaders)
+		#set($response = $core_v2_leaderboard.Update($Id, $options))
+	#else
+		#set($response = $core_v2_leaderboard.Create($Name, $NumberOfLeaders, $options))
+	#end
+	
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "Id": "$response.Id"}
+
+#end

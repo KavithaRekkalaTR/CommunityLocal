@@ -1,0 +1,62 @@
+#set ($notificationId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('_w_id')))
+#set ($notification = $context.Get($notificationId))
+
+<div class="attributes">
+	<ul class="attribute-list">
+		#if($notification.PluginType)
+			#if($notification.PluginType && $notification.PluginName)
+				<li class="attribute-item">
+					#set ($pluginUrl = $context.GetPluginUrl($notification.PluginType))
+					#if ($pluginUrl)
+						<span class="attribute-value"><a href="$context.GetPluginUrl($notification.PluginType)">$notification.PluginName</a></span>
+					#else
+						<span class="attribute-value">$notification.PluginName</span>
+					#end
+				</li>
+			#end
+		#end
+		<li class="attribute-item">
+			<span class="attribute-value">$core_v2_language.FormatDateAndTime($notification.LastOccurredDate)</span>
+		</li>
+		#if( $notification.TotalOccurrences > 1)
+			<li class="attribute-item">
+				<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('Occurrences'), $notification.TotalOccurrences.ToString())</span>
+			</li>
+		#end
+	</ul>
+</div>
+
+<div class="content">
+	$notification.Message
+</div>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('resolveNotification_headerTemplate'))
+#registerClientTemplate($headerTemplateId)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input notification-options">
+					<a href="#" class="button" data-messagename="widget.systemnotifications.resolve" data-notificationid="<%= id %>">$core_v2_language.GetResource('MarkResolved')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.panels.systemnotifications.preformatting')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('preformatting.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.systemNotificationsNotificationPanel.register({
+				notificationId: '$notificationId',
+				isResolvable: #if ($notification.IsResolvable) true #else false #end,
+				headerTemplateId: #if (!$notification.IsResolved)'$headerTemplateId'#else null #end,
+				deleteNotificationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('notifications-delete.vm'))',
+				deleteConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ResolveConfirm'))',
+				markedResolvedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MarkedResolved'))',
+			});
+		});
+	</script>
+#end

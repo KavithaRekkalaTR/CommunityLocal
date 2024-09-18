@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UrlListProperty}" version="10.0.0.0" description="" instanceIdentifier="1ae0e3c9d15c4b5193aa2e81f272103e" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2018-05-23 19:48:04Z" provider="db9b8127a53a4a4eb681377abb98876a">
+    <contentScript><![CDATA[#set($value = false)
+#set($value = $core_v2_utility.Split($core_v2_utility.NewLine, $context.Value))
+
+#set($defaultProtocol = false)
+#set($defaultProtocol = $context.DefaultProtocol)
+#if (!$defaultProtocol)
+    #set($defaultProtocol = 'http')
+#end
+
+#set($canUpload = $context.CanStoreUrlContents)
+#if (!$context.AllowLocal)
+    #set($canUpload = false)
+#end
+
+#if ($context.Editable)
+    #if ($canUpload)
+        $core_v2_widget.ExecuteFile('with-upload.vm')
+    #else
+        $core_v2_widget.ExecuteFile('without-upload.vm')
+    #end
+#else
+    $core_v2_widget.ExecuteFile('read-only.vm')
+#end]]></contentScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">Link</resource>
+  <resource name="Error">An error occurred while uploading the file.</resource>
+  <resource name="Link_Instructions">Enter the URL to link.</resource>
+  <resource name="MoveDown">Move down</resource>
+  <resource name="MoveUp">Move up</resource>
+  <resource name="NoItemSelected">Please select an item.</resource>
+  <resource name="Remove">Remove</resource>
+  <resource name="Upload">Upload</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="UrlListProperty">URL List</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

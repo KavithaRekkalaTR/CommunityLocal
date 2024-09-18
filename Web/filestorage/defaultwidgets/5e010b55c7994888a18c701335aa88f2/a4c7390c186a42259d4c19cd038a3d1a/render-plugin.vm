@@ -1,0 +1,35 @@
+﻿#*
+Renders a single plugin
+
+Expects In Scope:
+	$pluginPanel
+	$pluginTypesPanel
+*#
+
+#set ($hasRootParents = false)
+#set ($parentPanels = $core_v2_administrationPanels.GetParentPluginPanels($pluginPanel.TypeName))
+#if ($parentPanels && $parentPanels.Count > 0)
+	#set ($hasRootParents = true)
+#end
+
+#set ($d = "$")
+
+<script>
+jQuery.telligent.evolution.administration.on('panel.loaded', function(d){
+	jQuery.telligent.evolution.widgets.administrativePanelShell.plugin.register({
+		name: '$core_v2_encoding.JavascriptEncode($pluginPanel.Name)',
+		description: '$core_v2_encoding.JavascriptEncode($pluginPanel.Description)',
+		pluginTypeName: '$core_v2_encoding.JavascriptEncode($pluginPanel.TypeName)',
+		pluginTypesPanelTypeName: '$core_v2_encoding.JavascriptEncode($pluginTypesPanel.TypeName)',
+		state: '$pluginPanel.State',
+		editorHtml: '$core_v2_encoding.JavascriptEncode($pluginPanel.RenderEditorHtml("({registerSave:function(f){${d}.telligent.evolution.messaging.publish('prs',f)},registerContent:function(d){${d}.telligent.evolution.messaging.publish('prc',d)},validate:function(){var d={isValid:true};${d}.telligent.evolution.messaging.publish('pv',d);return d.isValid}})"))',
+		disableable: #if ($pluginPanel.IsCore) false #else true #end,
+		hasParents: #if ($hasRootParents) true #else false #end,
+		savedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PluginsSaved'))',
+		updatedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PluginUpdated'))',
+		misconfiguredText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PluginMisconfigured'))',
+		enabledText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PluginEnabled'))',
+		disabledText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PluginDisabled'))'
+	});
+});
+</script>

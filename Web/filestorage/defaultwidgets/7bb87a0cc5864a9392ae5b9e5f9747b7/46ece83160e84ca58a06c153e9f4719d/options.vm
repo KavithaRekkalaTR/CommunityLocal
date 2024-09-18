@@ -1,0 +1,175 @@
+<div class="filter-selector">
+	<form>
+	<h2>
+		#set ($searchResultCount = $searchResultCount.ToString("F0"))
+		#if ($searchResultCount == 1)
+			$core_v2_language.FormatString($core_v2_language.GetResource('Core_SearchResults_Result'), $searchResultCount)
+		#else
+			$core_v2_language.FormatString($core_v2_language.GetResource('Core_SearchResults_Results'), $searchResultCount)
+		#end
+	</h2>
+	<div>
+		<select data-parameter="sort" class="ui-select">
+			<option value="">$core_v2_language.GetResource('Core_SearchResults_MostRelevant')</option>
+			<option value="date desc" #if ($sort == "date desc") selected#end>$core_v2_language.GetResource('Core_SearchResults_MostRecent')</option>
+			<option value="titlesort" #if ($sort == "titlesort") selected#end>$core_v2_language.GetResource('Core_SearchResults_Alphabetical')</option>
+			<option value="rating desc" #if ($sort == "rating desc") selected#end>$core_v2_language.GetResource('Core_SearchResults_HighestRating')</option>
+		</select>
+	</div>
+
+    #if ($searchResultCount > 0)
+    	#foreach ($facet in $categoryFacets)
+    		#beforeall
+    			<div>
+    				<select data-parameter="category" class="ui-select">
+    					<option value="">$core_v2_language.GetResource('Anything')</option>
+    		#each
+    	            #if ($facet.DocumentCount > 0)
+    					<option #if ($categoryFilter == $facet.FieldValue) selected #end value="$core_v2_encoding.HtmlAttributeEncode($facet.FieldValue)">
+    	                    	#set ($categoryName = $facet.FieldValue)
+    	                        #set ($category = false)
+    	                        #set ($category = $core_v2_searchCategory.Get($facet.FieldValue))
+    	                    	#if ($category)
+    	                    	    #set ($categoryName = $category.HtmlName)
+    	                    	#end
+    					$categoryName ($core_v2_language.FormatNumber($facet.DocumentCount))
+    					</option>
+    				#end
+    		#afterall
+    			</select>
+    		</div>
+    	#end
+    #end
+
+	#foreach ($facet in $groupFacets)
+		#beforeall
+			#if ($core_v2_utility.ParseBool($includeSubGroups) == true && $groupFilter && $groupFilter != '' && $groupFilter != $core_v2_group.Root.Id) 
+				#set ($indent = '&nbsp;')
+				#set ($stopIndent = false)
+			#else
+				#set ($indent = '')
+				#set ($stopIndent = true)
+			#end
+			<div>
+				<select data-parameter="group" class="ui-select">
+					<option value="">$core_v2_language.GetResource('InAnyGroup')</option>
+		#each
+			#set ($group = false)
+			#set ($group = $core_v2_group.Get("%{ Id = $core_v2_utility.ParseInt($facet.FieldValue) }"))
+			#if ($group)
+				<option #if ($groupFilter == $facet.FieldValue) selected #end value="$core_v2_encoding.HtmlAttributeEncode($facet.FieldValue)">
+					$indent$core_v2_language.FormatString($core_v2_language.GetResource('In'), $core_v2_language.Truncate($group.Name, 30, '...')) ($core_v2_language.FormatNumber($facet.DocumentCount))
+				</option>
+
+				#if ($core_v2_utility.ParseBool($includeSubGroups) == true) 
+					#if (!$stopIndent)
+						#set ($indent = "$indent&nbsp;")
+					#end
+					#if ($groupFilter == $facet.FieldValue)
+						#set ($stopIndent = true)
+					#end
+				#end
+			#end
+		#afterall
+				</select>
+			</div>
+	#end
+	
+	#foreach ($facet in $applicationFacets)
+		#beforeall
+			<div>
+				<select data-parameter="application" class="ui-select">
+					<option value="">$core_v2_language.GetResource('InAnyApplication')</option>
+		#each
+			#set ($application = false)
+			#set ($application = $core_v2_application.Get($core_v2_utility.ParseGuid($facet.FieldValue)))
+			#if ($application && !$application.HasErrorsOrWarnings())
+				<option #if ($applicationFilter == $facet.FieldValue) selected #end value="$core_v2_encoding.HtmlAttributeEncode($facet.FieldValue)">
+				    #set($applicationName = $core_v2_language.Truncate($application.HtmlName('Web'), 30, '...'))
+				    #if ($groupFilter == $core_v2_group.Root.Id || $core_v2_utility.ParseBool($includeSubGroups) == true)
+				        #if($application.Container && !$application.Container.HasErrorsOrWarnings())
+				            #set($applicationName = $core_v2_language.FormatString($core_v2_language.GetResource('ApplicationInContainer'), $applicationName, $core_v2_language.Truncate($application.Container.HtmlName('Web'), 30, '...')))
+				        #end
+				    #end
+					$core_v2_language.FormatString($core_v2_language.GetResource('In'), $applicationName) ($core_v2_language.FormatNumber($facet.DocumentCount))
+				</option>
+			#end
+		#afterall
+				</select>
+			</div>
+	#end
+
+	#foreach ($facet in $userFacets)
+		#beforeall
+			<div>
+				<select data-parameter="author" class="ui-select">
+						<option value="">$core_v2_language.GetResource('ByAnyone')</option>
+		#each
+			#set ($user = false)
+			#set ($user = $core_v2_user.Get("%{ Id = $core_v2_utility.ParseInt($facet.FieldValue) }"))
+			#if ($user)
+				<option #if ($userFilter == $facet.FieldValue) selected #end value="$core_v2_encoding.HtmlAttributeEncode($facet.FieldValue)">
+					$core_v2_language.FormatString($core_v2_language.GetResource('By'), $core_v2_language.Truncate($user.DisplayName, 30, '...')) ($core_v2_language.FormatNumber($facet.DocumentCount))
+				</option>
+			#end
+		#afterall
+				</select>
+			</div>
+	#end
+
+	#foreach ($facet in $tagFacets)
+		#beforeall
+			<div>
+				<select data-parameter="tag" class="ui-select">
+					<option value="">$core_v2_language.GetResource('AllTags')</option>
+		#each
+			<option #if ($tagFilter == $core_v2_encoding.HtmlDecode($facet.FieldValue)) selected #end value="$core_v2_encoding.HtmlAttributeEncode($facet.FieldValue)">
+				$core_v2_language.FormatString($core_v2_language.GetResource('Tagged'), $core_v2_language.Truncate($core_v2_encoding.HtmlEncode($facet.FieldValue), 30, '...')) ($core_v2_language.FormatNumber($facet.DocumentCount))
+			</option>
+		#afterall
+				</select>
+			</div>
+	#end
+
+	#if ($dateKeys)
+		## date range facets need to be ToArray()'d first due to an NVelocity direct element referencing issue
+		#set ($dateRangeFacets = $searchResults.DateRangeFacets.ToArray())
+        		#set ($maxFacetIndex = $dateRangeFacets.length - 1)
+		#foreach($dateFacetIndex in [0..$maxFacetIndex])
+			#beforeall
+				<div>
+					<select data-parameter="date" class="ui-select">
+						<option value="">$core_v2_language.GetResource('Anytime')</option>
+			#each
+				#if ($dateKeys.length > $dateFacetIndex && $dateRangeFacets.length > $dateFacetIndex)
+					#set ($dateKey = false)
+					#set ($dateKey = $dateKeys.get($dateFacetIndex))
+					<option #if ($dateRangeFilter == $dateKey) selected #end value="$core_v2_encoding.JavascriptEncode($dateKey)">
+						$core_v2_language.GetResource("Core_SearchResults_${dateKey}") ($core_v2_language.FormatNumber($dateRangeFacets.get($dateFacetIndex).DocumentCount))
+					</option>
+				#end
+			#afterall
+					</select>
+				</div>
+		#end
+	#end
+	</form>
+</div>
+
+#if ($searchResultCount > 0 && ($core_v2_configuration.EnableRssSearch || $defaultAskForumId > 0))
+	<div class="ui-links navigation-list links margin-top" data-minlinks="2" data-direction="vertical">
+		<ul class="navigation-list">
+			#set ($defaultForum = $core_v2_forum.Get($defaultAskForumId))
+			#if ($defaultForum && $defaultForum.Enabled && $core_v2_forumConfiguration.IsEnabled)
+				<li class="navigation-list-item">
+					<a href="#" onclick="jQuery.glowModal('$core_v2_encoding.JavascriptEncode($core_v2_page.AdjustQueryString($core_v2_widget.GetExecutedFileUrl('askform.vm'), $core_v2_page.MakeQueryString($askQuery).ToString()))', { width: 400, height: 500}); return false;" class="internal-link ask-a-question" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Core_SearchResults_NoResultsLink'))">$core_v2_language.GetResource('Core_SearchResults_NoResultsLink')</a>
+				</li>
+			#end
+			#if ($core_v2_configuration.EnableRssSearch)
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.SearchRss($rssQuery))" class="internal-link rss" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SearchResults_RSS'))">$core_v2_language.GetResource('SearchResults_RSS')</a>
+				</li>
+			#end
+		</ul>
+	</div>
+#end

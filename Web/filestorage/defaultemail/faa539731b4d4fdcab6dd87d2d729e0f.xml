@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Forum No Permission" version="13.0.0.0" description="Sends an email when a user tries to post via email to a forum but doesn't have permission." id="faa539731b4d4fdcab6dd87d2d729e0f" lastModified="2023-05-08 20:28:49Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Subject')]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Header')]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+$core_v2_language.GetResource('Body_Introduction')
+</p>
+<p>
+#if ($context_v1_email.Context.Forum.Group.GroupType == 'Joinless')
+    #format($core_v2_language.GetResource('Body_JoinlessGroup'))
+    #token('contact_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Forum.Group.Url)">$core_v2_language.GetResource('Contact')</a>
+	#end
+#elseif ($context_v1_email.Context.Forum.Group.GroupType == 'PublicOpen')
+	#format($core_v2_language.GetResource('Body_PublicOpenGroup'))
+	#token('group_name_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Forum.Group.Url)">$context_v1_email.Context.Forum.Group.Name</a>
+	#end
+#else
+	#format($core_v2_language.GetResource('Body_OtherGroup'))
+	#token('group_name_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Forum.Group.Url)">$context_v1_email.Context.Forum.Group.Name</a>
+	#end
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Introduction">Unfortunately, you don't currently have permission to post in this forum, so your message doesn't appear in it.</resource>
+  <resource name="Body_JoinlessGroup">If you think you should have permission to post here, please {contact_link} for further options.</resource>
+  <resource name="Body_OtherGroup">You can obtain group membership by going to {group_name_link} and applying to join the group.</resource>
+  <resource name="Body_PublicOpenGroup">You can obtain group membership by going to {group_name_link} and clicking "Join Group" in its banner.</resource>
+  <resource name="Contact">contact the group owner</resource>
+  <resource name="Subject">Message not posted: permission denied</resource>
+  <resource name="Header">Message not posted: permission denied</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

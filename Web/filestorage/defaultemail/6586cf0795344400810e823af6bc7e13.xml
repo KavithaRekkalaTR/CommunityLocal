@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Calendar Registration Cancelled Notifications" version="13.0.0.0" description="Raises notification to user whose event registration has been cancelled." id="6586cf0795344400810e823af6bc7e13" lastModified="2023-09-15 19:52:14Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('event_title')
+    $context_v1_email.Context.CalendarEvent.EventTitle
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('event_title')
+    $context_v1_email.Context.CalendarEvent.EventTitle
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body_Introduction'))
+#token('event_title_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.CalendarEvent.Url)">$context_v1_email.Context.CalendarEvent.EventTitle</a>
+#end
+</p>
+<p>
+$context_v1_email.Context.CalendarEvent.EventDateString
+#if ($context_v1_email.Context.CalendarEvent.EventLocation && $context_v1_email.Context.CalendarEvent.EventLocation.Length > 0)
+    <br />
+    $context_v1_email.Context.CalendarEvent.EventLocation
+#end
+</p>
+$context_v1_email.Context.CalendarEvent.HtmlDescription('Email')]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('unsubscribe_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.CalendarEvent.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Introduction">Your registration to {event_title_link} has been cancelled or not accepted by the event organizer.</resource>
+  <resource name="Footer">You were sent this email because you opted to receive calendar notifications. If you no longer wish to receive updates, you can {unsubscribe_link}.</resource>
+  <resource name="Subject">{site_name}: {event_title} registration cancelled</resource>
+  <resource name="Header">{event_title} registration cancelled</resource>
+  <resource name="Unsubscribe">unsubscribe</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,40 @@
+## Global Search Result Template
+<% foreach(results, function(result){ %>
+	<li class="search-result-item" data-request="_tid=<%: result.Id %>&_ttid=<%: (result.TypeId || '') %>&_tt=<%: result.ComponentType.toLowerCase() %>&_tn=<%: (result.FileName || '') %>&_tl=<%: (result.LineNumber || '') %>">
+		<div class="search-result-meta">
+			<% if(result.IsStaged) { %>
+				<span data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Staged'))" class="ui-tip staged-indicator">$core_v2_language.GetResource('Staged')</span>
+			<% } %>
+			#*
+			<span class="ui-tip type-indicator <%: result.ComponentType.toLowerCase() %>" data-tip="<% if(result.ComponentType == 'Overview') { %>
+				$core_v2_language.GetResource('Overview')
+			<% } else if(result.ComponentType == 'HeadScript') { %>
+				$core_v2_language.GetResource('HeadScript')
+			<% } else if(result.ComponentType == 'BodyScript') { %>
+				$core_v2_language.GetResource('BodyScript')
+			<% } else if(result.ComponentType == 'Configuration') { %>
+				$core_v2_language.GetResource('Configuration')
+			<% } else if(result.ComponentType == 'Resources') { %>
+				$core_v2_language.GetResource('Resources')
+			<% } else if(result.ComponentType == 'Palettes') { %>
+				$core_v2_language.GetResource('Palettes')
+			<% } %>"><%: result.ComponentType %></span>
+			*#
+			<span class="search-result-name"><%: result.Name %></span>
+			<span class="search-result-name type-name"><%: result.TypeName %></span>
+			<% if (result.ComponentType === 'Style' && result.FileName) { %>
+				<span class="search-result-attachment-name"><%: result.FileName %></span>
+			<% } else if (result.ComponentType === 'Script' && result.FileName) { %>
+				<span class="search-result-attachment-name"><%: result.FileName %></span>
+			<% } else if (result.ComponentType === 'File' && result.FileName) { %>
+				<span class="search-result-attachment-name"><%: result.FileName %></span>
+			<% } else { %>
+				<span class="search-result-component-type"><%: result.ComponentType %></span>
+			<% } %>
+			<% if (result.ComponentType !== 'Resources' && result.ComponentType !== 'Overview') { %>
+				<span class="search-result-line-number">: <%= result.LineNumber %></span>
+			<% } %>
+		</div>
+		<div class="search-result-excerpt"><%= result.Excerpt %></div>
+	</li>
+<% }); %>

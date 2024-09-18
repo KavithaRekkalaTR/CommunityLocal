@@ -1,0 +1,17 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	#set ($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ContentId')))
+	#set ($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ContentTypeId')))
+
+	#set ($appeal = false)
+	#set ($appeal = $core_v2_abuseAppeal.Create($contentId, $contentTypeId))
+	#if ($appeal) 
+	    #if ($appeal.HasErrors())
+	        $core_v2_page.SendJsonError($appeal.Errors);
+	    #else
+		    {"success":true}
+		#end
+	#else
+		{"success":false}
+	#end
+#end

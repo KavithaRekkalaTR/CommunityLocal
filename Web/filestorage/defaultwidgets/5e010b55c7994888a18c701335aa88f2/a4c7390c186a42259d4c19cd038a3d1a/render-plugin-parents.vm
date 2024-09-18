@@ -1,0 +1,42 @@
+#*
+Renders a plugin's parents
+
+Expects In Scope:
+	$pluginPanel
+*#
+
+#set ($parentPanels = $core_v2_administrationPanels.GetParentPluginPanels($pluginPanel.TypeName))
+#foreach ($parentPanel in $parentPanels)
+#beforeall
+<div><form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-description">
+				#if ($enabling)
+					$core_v2_language.FormatString($core_v2_language.GetResource('ParentsMessageEnable'), $pluginPanel.Name)
+				#else
+					$core_v2_language.FormatString($core_v2_language.GetResource('ParentsMessageDisable'), $pluginPanel.Name)
+				#end
+			</span>
+		</li>
+#each
+		<li class="field-item">
+			<label class="field-item-name" for="parent-${core_v2_encoding.HtmlAttributeEncode($parentPanel.TypeName)}">$parentPanel.Name</label>
+			<span class="field-item-description">$parentPanel.Description</span>
+			<span class="field-item-input">
+				<input type="checkbox" id="parent-${core_v2_encoding.HtmlAttributeEncode($parentPanel.TypeName)}" data-plugintypename="$core_v2_encoding.HtmlAttributeEncode($parentPanel.TypeName)" #if ($parentPanel.State != 'Disabled') checked #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+#afterall
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+			</span>
+			<span class="field-item-input">
+				<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset></form></div>
+#end

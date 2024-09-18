@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MembershipOptions_Name}" version="12.0.0.0" description="${resource:MembershipOptions_Description}" instanceIdentifier="08f20a45ba744ffc8dedcccacc79f9df" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="membership-options" lastModified="2019-10-18 18:53:32Z" provider="f66f130576bd4baf8983996350194f96">
+    <contentScript language="Velocity"><![CDATA[
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('AllowSignatures')" id="$core_v2_widget.UniqueId('AllowSignatures')" value="true" #if($context.Settings.AllowUserSignatures)checked="checked"#end />
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('AllowSignatures')">$core_v2_language.GetResource('AllowSignatures_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('AllowSignatures_Description')</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('DisplaySignatures')" id="$core_v2_widget.UniqueId('DisplaySignatures')" value="true" #if($context.Settings.EnableUserSignatures)checked="checked"#end />
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('DisplaySignatures')">$core_v2_language.GetResource('DisplaySignatures_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('DisplaySignatures_Description')</span>
+		</li>
+		<li class="field-item signature-max-length">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('SignatureMaxLength')">$core_v2_language.GetResource('SignatureMaxLength_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('SignatureMaxLength_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('SignatureMaxLength')" name="signature-max-length" style="width: 100px;" value="$!context.Settings.UserSignatureMaxLength" />
+			</span>
+            <span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('EnableDisplayNames')" id="$core_v2_widget.UniqueId('EnableDisplayNames')" value="true" #if($context.Settings.EnableDisplayNames)checked="checked"#end />
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('EnableDisplayNames')">$core_v2_language.GetResource('EnableDisplayNames_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableDisplayNames_Description')</span>
+		</li>
+		<li class="field-item status-message-length">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('StatusMessageMaxLength')">$core_v2_language.GetResource('StatusMessageMaxLength_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('StatusMessageMaxLength_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('StatusMessageMaxLength')" name="status-message-length" style="width: 100px;" value="$!context.Settings.StatusMessageCharLimit" />
+			</span>
+            <span class="field-item-validation" style="display:none;"></span>
+		</li>        
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('EnableConversations')" id="$core_v2_widget.UniqueId('EnableConversations')" value="true" #if($context.Settings.EnableConversations)checked="checked"#end />
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('EnableConversations')">$core_v2_language.GetResource('EnableConversations_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableConversations_Description')</span>
+		</li> 
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('EnablePresenceTracking')" id="$core_v2_widget.UniqueId('EnablePresenceTracking')" value="true" #if($context.Settings.EnableUserPresenceTracking)checked="checked"#end />
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('EnablePresenceTracking')">$core_v2_language.GetResource('EnablePresenceTracking_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnablePresenceTracking_Description')</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('AllowMemberPresenceToggle')" id="$core_v2_widget.UniqueId('AllowMemberPresenceToggle')" value="true" #if($context.Settings.EnableUsersToTogglePresenceTracking)checked="checked"#end />
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('AllowMemberPresenceToggle')">$core_v2_language.GetResource('AllowMemberPresenceToggle_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('AllowMemberPresenceToggle_Description')</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('PresenceTrackingDefault')" id="$core_v2_widget.UniqueId('PresenceTrackingDefault')" value="true" #if($context.Settings.DefaultUserPresenceToggleValue)checked="checked"#end />
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('PresenceTrackingDefault')">$core_v2_language.GetResource('PresenceTrackingDefault_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('PresenceTrackingDefault_Description')</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('RequireEmailVerification')" id="$core_v2_widget.UniqueId('RequireEmailVerification')" value="true" #if($context.Settings.RequireEmailVerification)checked="checked"#end />
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('RequireEmailVerification')">$core_v2_language.GetResource('RequireEmailVerification_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('RequireEmailVerification_Description')</span>		</li>
+    </ul>
+</fieldset></form>
+
+#set($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+        <fieldset>
+            <ul class="field-list">
+                <li class="field-item"><a href="#" class="button save">$core_v2_language.GetResource('save')</a></li>
+            </ul>
+        </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.membershipOptions')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.membershipOptions.register({
+           		wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+                headerTemplate: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+                saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+                signatureMaxLengthId: '#$core_v2_widget.UniqueId('SignatureMaxLength')',
+                statusMessageMaxLengthId: '#$core_v2_widget.UniqueId('StatusMessageMaxLength')',
+                allowSignaturesId: '#$core_v2_widget.UniqueId('AllowSignatures')',
+                displaySignaturesId: '#$core_v2_widget.UniqueId('DisplaySignatures')',
+                enableDisplayNamesId: '#$core_v2_widget.UniqueId('EnableDisplayNames')',
+                enableConversationsId: '#$core_v2_widget.UniqueId('EnableConversations')',
+                enablePresenceTrackingId: '#$core_v2_widget.UniqueId('EnablePresenceTracking')',
+                allowMemberPresenceToggleId: '#$core_v2_widget.UniqueId('AllowMemberPresenceToggle')',
+                presenceTrackingDefaultId: '#$core_v2_widget.UniqueId('PresenceTrackingDefault')',
+                requireEmailVerificationId: '#$core_v2_widget.UniqueId('RequireEmailVerification')',
+                text: {
+                    save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+                    saveSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save_successful'))'
+                }
+			});
+		});
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="MembershipOptions_Description">Manage general membership options.</resource>
+  <resource name="MembershipOptions_Name">Membership Options</resource>
+  <resource name="save">Save</resource>
+  <resource name="save_successful">Membership options has been saved.  Due to caching it may take up to 15 minutes for changes to be reflected through-out your site.</resource>
+  <resource name="AllowSignatures_Name">Allow Signatures</resource>
+  <resource name="AllowSignatures_Description">Allow user to edit a message that appears on their user popup.</resource>
+  <resource name="DisplaySignatures_Name">Display Signatures</resource>
+  <resource name="DisplaySignatures_Description">When enabled signatures may be displayed.</resource>
+  <resource name="SignatureMaxLength_Name">Signature Maximum Length</resource>
+  <resource name="SignatureMaxLength_Description">The maximum number of characters allowed for a user's signature.</resource>
+  <resource name="EnableDisplayNames_Name">Enable Display Names</resource>
+  <resource name="EnableDisplayNames_Description">Display Names enable a user to choose a name other than their username to be displayed with their posts and other content. These names do not need to be unique. Note, it can take a while before Display Names are viewable. In some cases, values attached to older posts will not be updated unless a new post is made or the older post is updated.</resource>
+  <resource name="StatusMessageMaxLength_Name">Status &#x26; Reply Message Maximum Length</resource>
+  <resource name="StatusMessageMaxLength_Description">The maximum number of characters allowed in status messages and replies.</resource>
+  <resource name="EnableConversations_Name">Enable Conversations</resource>
+  <resource name="EnableConversations_Description">When enabled, users can start conversations with each other.</resource>
+  <resource name="EnablePresenceTracking_Name">Enable Presence Tracking</resource>
+  <resource name="EnablePresenceTracking_Description">Enables tracking of user presence to enable showing online members and typing indicators.</resource>
+  <resource name="AllowMemberPresenceToggle_Name">Allow Members To Toggle Presence Tracking Enablement</resource>
+  <resource name="AllowMemberPresenceToggle_Description">When enabled, members can select whether they want to share their presence information.</resource>
+  <resource name="PresenceTrackingDefault_Name">Default Presence Tracking Enablement Value</resource>
+  <resource name="PresenceTrackingDefault_Description">The default value for member presence tracking. Members can then customize this value.</resource>
+  <resource name="RequireEmailVerification_Name">Require User Email Verification</resource>
+  <resource name="RequireEmailVerification_Description">When enabled, email address changes must be confirmed via a link sent to that email prior to being used on the site.
+&#x9;New accounts will not be able to log in until at least one email address is verified.
+&#x9;If new accounts do not verify an email address within the &#x3C;a href=&#x22;/administration#_aptype=panel&#x26;amp;_appanelid=5a458966-4c87-4acd-9afd-c3f7800a4235&#x22;&#x3E;Abuse Expunge Time Window&#x3C;/a&#x3E;, the account will be removed.
+&#x9;If your &#x3C;a href=&#x22;/administration#_aptype=panel&#x26;amp;_appanelid=f55959dd-ec89-46b1-92b9-40b8ae72b75a&#x22;&#x3E;Account Activation Mode&#x3C;/a&#x3E; is &#x27;Email&#x27;, verification only applies to users updating their email(s).</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

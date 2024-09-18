@@ -1,0 +1,54 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:FontFileViewer_Name}" cssClass="font-file-viewer" description="${resource:FontFileViewer_Description}" instanceIdentifier="8af35953b43d4c9b9f1154fc36eaf94b" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+#registerEndOfPageHtml('telligent.evolution.fileViewers.fontSupport')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('detect.js'))"></script>
+#end
+
+#set ($fontId = $core_v2_widget.UniqueId($context.FileName))
+
+<style>
+@font-face {
+	font-family: ffv-${fontId};
+	src: url($context.FontUrl);
+}
+.${fontId} .font-file-viewer .ffv-styled {
+	font-family: ffv-${fontId} !important;
+}
+</style>
+
+<div class="$core_v2_encoding.HtmlAttributeEncode($fontId)">
+	#if ($context.ViewType == 'View')
+		$core_v2_widget.ExecuteFile('view.vm')
+	#else
+		$core_v2_widget.ExecuteFile('preview.vm')
+	#end
+</div>
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="FontFileViewer_Name">Font File Viewer</resource>
+	<resource name="FontFileViewer_Description">Renders views and previews of font files</resource>
+	<resource name="Unsupported">Unsupported Web Font</resource>
+	<resource name="font">Font</resource>
+	<resource name="characters">Characters</resource>
+	<resource name="Sample">Sample</resource>
+	<resource name="Interactive">Interactive</resource>
+	<resource name="CharacterList">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz‘?’“!”(%)[#]{@}/&amp;\&lt;-+÷×=&gt;®©$€£¥¢:;,.*0123456789</resource>
+	<resource name="SampleContent">
+<![CDATA[<h2 class="ffv-styled">The quick brown fox jumped over the lazy dog.</h2>
+<p class="ffv-styled">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin luctus felis vitae vulputate tristique. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam interdum dui sed tempor luctus. Sed diam metus, mattis eu vehicula at, sollicitudin in turpis. Nullam ac lorem risus. Morbi in venenatis magna. Morbi fermentum molestie diam, nec aliquam magna tincidunt eu. Praesent id ex at quam malesuada interdum. Aliquam erat volutpat. Etiam sit amet tellus quis sapien pretium hendrerit id at nisl. Vestibulum eros nibh, imperdiet at ultrices id, lobortis et mi. Morbi pulvinar nibh vitae laoreet congue. Suspendisse sodales eleifend tellus eget gravida. Ut rutrum rutrum cursus. Fusce lobortis consectetur dui non maximus. Nullam venenatis elit a magna aliquam congue.</p>
+<p class="ffv-styled">Nullam ac tellus ut orci faucibus viverra. Donec blandit in nibh nec scelerisque. Etiam enim eros, vestibulum at pulvinar quis, bibendum ut ipsum. Nullam in enim iaculis, bibendum dui et, venenatis justo. Etiam finibus, odio in tincidunt facilisis, nisl nulla cursus dolor, sed consequat diam turpis interdum purus. Pellentesque ullamcorper suscipit turpis, et rhoncus quam venenatis in. Duis sagittis enim vel lacus euismod, ac venenatis metus euismod. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
+]]></resource>
+	<resource name="Placeholder">Try it out</resource>
+	<resource name="Normal">Normal</resource>
+	<resource name="Bold">Bold</resource>
+	<resource name="Bolder">Bolder</resource>
+	<resource name="Lighter">Lighter</resource>
+	<resource name="Italic">Italic</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

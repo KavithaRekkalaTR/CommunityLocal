@@ -1,0 +1,26 @@
+﻿<div class="tourtip">
+	<div class="tourtip-message">
+		<%: message %>
+	</div>
+	<ul class="tourtip-actions">
+		<% if(state.index() > 0) { %>
+			<li>
+				<a href="#" class="tourtip-previous">$core_v2_language.GetResource('previous')</a>
+			</li>
+		<% } %>
+		<% if(state.index() < (state.count() - 1)) { %>
+			<li>
+				<a href="#" class="tourtip-next">$core_v2_language.GetResource('next')</a>
+			</li>
+		<% } %>
+		<% if(state.index() === (state.count() - 1)) { %>
+			<li>
+				<a href="#" class="tourtip-finish">$core_v2_language.GetResource('complete')</a>
+			</li>
+		<% } else { %>
+			<li>
+				<a href="#" class="ui-tip tourtip-skip" title="$core_v2_encoding.HtmlAttributeEncode($skipTitle)">$core_v2_language.GetResource('skip')</a>
+			</li>
+		<% } %>
+	</ul>
+</div>

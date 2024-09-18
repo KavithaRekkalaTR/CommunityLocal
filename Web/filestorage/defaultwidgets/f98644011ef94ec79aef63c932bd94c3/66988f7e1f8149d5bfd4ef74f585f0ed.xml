@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:DateRangeFilter_Name}"
+                           version="10.0.0.0"
+                           description="${resource:DateRangeFilter_Description}"
+                           instanceIdentifier="66988f7e1f8149d5bfd4ef74f585f0ed"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+
+#set($dateRange = $core_v2_widget.UniqueId("dateRange"))
+
+<div id="$dateRange" class="custom-filter">
+    <i class="calendar-icon"></i>&nbsp;
+    <span></span> <b class="caret"></b>
+</div>
+
+#registerEndOfPageHtml('telligent.reporting.widgets.dateRangeFilter')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('daterangepicker.js')"></script>
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+      jQuery.telligent.reporting.widgets.dateRangeFilter.register({
+        tabKey: '$filterContext.TabKey',
+        fields: {
+          dateRangeId: '#$dateRange'
+        }
+      });
+</script>
+#end
+
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="DateRangeFilter_Name">Date Range Filter</resource>
+        <resource name="DateRangeFilter_Description">Displays date range filter for reports and dashboards</resource>
+        <resource name="FromDateRange">from</resource>
+        <resource name="ToDateRange">to</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

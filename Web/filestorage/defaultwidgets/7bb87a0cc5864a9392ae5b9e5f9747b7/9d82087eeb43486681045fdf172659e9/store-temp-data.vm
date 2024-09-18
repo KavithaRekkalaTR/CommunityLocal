@@ -1,0 +1,33 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($data = $core_v2_page.MakeQueryString("%{}"))
+
+	#set($body = false)
+	#set($body = $core_v2_page.GetFormValue('body'))
+	#if($body)
+		$data.Add('body', $body)
+	#end
+
+	#set($filename = false)
+	#set($filename = $core_v2_page.GetFormValue('filename'))
+	#if($filename)
+		$data.Add('filename', $filename)
+	#end
+
+	#set($filecontextid = false)
+	#set($filecontextid = $core_v2_page.GetFormValue('filecontextid'))
+	#if($filecontextid)
+		$data.Add('filecontextid', $filecontextid)
+	#end
+
+	#set($fileurl = false)
+	#set($fileurl = $core_v2_page.GetFormValue('fileurl'))
+	#if($fileurl)
+		$data.Add('fileurl', $fileurl)
+	#end
+
+	#set($storeId = $core_v2_utility.StoreTemporaryData($data.ToString()))
+
+	{"temporaryData":"$core_v2_encoding.JavascriptEncode($storeId)"}
+#end

@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Plugin Widgets" version="9.0.0.0" description="" instanceIdentifier="e10077bc14aa47659759426ad9b39b37" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="0fddd4db141c4d6e8cc4ec689e0927fe">
+    <contentScript><![CDATA[<div id="$core_v2_widget.UniqueId('tab')">
+	#set ($scriptedContentFragments = $core_v2_administrationPanels.GetEditableContentFragments($context.PluginType))
+
+	#foreach ($scriptedContentFragment in $scriptedContentFragments)
+	#beforeall
+		<p>$core_v2_language.GetResource('ScriptedContentFragments_Instructions')</p>
+		<ul class="content-list expandable" style="margin-top: 0px">
+	#each
+		<li class="content-item">
+			<h4 class="name">
+				$scriptedContentFragment.Name
+				#if ($scriptedContentFragment.Theme)
+					($scriptedContentFragment.Theme)
+				#end
+			</h4>
+
+			<div class="content">
+				$scriptedContentFragment.Description
+			</div>
+
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($scriptedContentFragment.EditUrl)">
+								$core_v2_language.GetResource('Edit')
+							</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</li>
+	#afterall
+		</ul>
+	#nodata
+	    $core_v2_widget.Hide()
+	#end
+</div>
+
+<script type="text/javascript">
+	(function(){
+		var api = $context.JsonApi;
+		api.registerContent({
+			name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Widgets'))',
+			orderNumber: 500,
+			selected: function() {
+				jQuery('#$core_v2_widget.UniqueId('tab')').css({
+					visibility: 'visible',
+					height: 'auto',
+					width: 'auto',
+					left: '0',
+					position: 'static',
+                    overflow: 'visible',
+                    top: '0'
+				});
+			},
+			unselected: function() {
+				jQuery('#$core_v2_widget.UniqueId('tab')').css({
+					visibility: 'hidden',
+					height: '100px',
+					width: '800px',
+					left: '-1000px',
+					position: 'absolute',
+                    overflow: 'hidden',
+                    top: '-1000px'
+				});
+			}
+		});
+	})();
+</script>]]></contentScript>
+    <languageResources><language key="en-us">
+  <resource name="Widgets">Widgets</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="more">More</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ScriptedContentFragments_Instructions">The following widgets are used to provide user experiences for this functionality and can be customized within the widget editor.</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

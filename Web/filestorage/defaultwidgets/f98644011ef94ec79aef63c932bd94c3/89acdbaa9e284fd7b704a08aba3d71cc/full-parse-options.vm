@@ -1,0 +1,106 @@
+#set($options = "%{}")
+
+#set ($endDate = $core_v2_page.GetFormValue('fr_endDate'))
+#if($endDate)
+    $options.Add('endDate', $endDate)
+#end
+
+#set ($startDate = $core_v2_page.GetFormValue('fr_startDate'))
+#if($startDate)
+    $options.Add('startDate', $startDate)
+#end
+
+#set ($includeUsers = $core_v2_page.GetFormValue('fr_includeUsers'))
+#if($includeUsers)
+    $options.Add('includeUsers', $includeUsers)
+#end
+
+#set ($includeRoles = $core_v2_page.GetFormValue('fr_includeRoles'))
+#if($includeRoles)
+    $options.Add('includeRoles', $includeRoles)
+#end
+
+#set ($includeAnonymous = $core_v2_page.GetFormValue('fr_includeAnonymous'))
+#if($includeAnonymous)
+    $options.Add('includeAnonymous', $includeAnonymous)
+#end
+
+#set ($selectedUsers = $core_v2_page.GetFormValue('fr_selectedUsers'))
+#if($selectedUsers)
+    $options.Add('selectedUsers', $selectedUsers)
+#end
+
+#set ($selectedRoles = $core_v2_page.GetFormValue('fr_selectedRoles'))
+#if($selectedRoles)
+    $options.Add('selectedRoles', $selectedRoles)
+#end
+
+#set ($includeGroups = $core_v2_page.GetFormValue('fr_includeGroups'))
+#if($includeGroups)
+    $options.Add('includeGroups', $includeGroups)
+#end
+
+#set ($includeSubGroups = $core_v2_page.GetFormValue('fr_includeSubGroups'))
+#if($includeSubGroups)
+    $options.Add('includeSubGroups', $includeSubGroups)
+#end
+
+#set ($selectedGroups = $core_v2_page.GetFormValue('fr_selectedGroups'))
+#if($selectedGroups)
+    $options.Add('selectedGroups', $selectedGroups)
+#end
+
+#set ($includeApplications = $core_v2_page.GetFormValue('fr_includeApplications'))
+#if($includeApplications)
+    $options.Add('includeApplications', $includeApplications)
+#end
+
+#set ($selectedApplications = $core_v2_page.GetFormValue('fr_selectedApplications'))
+#if($selectedApplications)
+    $options.Add('selectedApplications', $selectedApplications)
+#end
+
+#set ($includeApplicationTypes = $core_v2_page.GetFormValue('fr_includeApplicationTypes'))
+#if($includeApplicationTypes)
+    $options.Add('includeApplicationTypes', $includeApplicationTypes)
+#end
+
+#set ($selectedApplicationTypes = $core_v2_page.GetFormValue('fr_selectedApplicationTypes'))
+#if($selectedApplicationTypes)
+    $options.Add('selectedApplicationTypes', $selectedApplicationTypes)
+#end
+
+#set ($contentTypes = $core_v2_page.GetFormValue('fr_contentTypes'))
+#if($contentTypes)
+    $options.Add('contentTypes', $contentTypes)
+    $options.Add('includeContentTypes', 'true')
+#end
+
+#set ($datePeriod = $core_v2_page.GetFormValue('fr_datePeriod'))
+#if($datePeriod)
+    $options.Add('datePeriod', $datePeriod)
+#end
+
+#set ($sortBy = $core_v2_page.GetFormValue('sortBy'))
+#if($sortBy)
+    $options.Add('SortBy', $sortBy)
+#end
+
+#set ($sortOrder = $core_v2_page.GetFormValue('sortOrder'))
+#if($sortOrder)
+    $options.Add('SortOrder', $sortOrder)
+#end
+
+#set ($localStartDate = $core_v2_page.GetFormValue('localStartDate'))
+#if($localStartDate)
+    $options.Add('localStartDate', $localStartDate)
+#elseif($startDate)
+    $options.Add('localStartDate', $startDate)
+#end
+
+#set ($localEndDate = $core_v2_page.GetFormValue('localEndDate'))
+#if($localEndDate)
+    $options.Add('localEndDate', $localEndDate)
+#elseif($endDate)
+    $options.Add('localEndDate', $endDate)
+#end

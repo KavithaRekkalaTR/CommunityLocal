@@ -1,0 +1,129 @@
+$core_v2_page.SetContentType('application/javascript')
+
+(function() {
+
+	$core_v2_widget.RenderFile('shell-require.js')
+
+	$core_v2_widget.RenderFile('model-model.js')
+
+	$core_v2_widget.RenderFile('shell-util.js')
+	$core_v2_widget.RenderFile('shell-controller.js')
+	$core_v2_widget.RenderFile('shell-plugin-controller.js')
+	$core_v2_widget.RenderFile('shell-quick-search.js')
+	$core_v2_widget.RenderFile('shell-navigator.js')
+	$core_v2_widget.RenderFile('shell-handlestate.js')
+
+	$core_v2_widget.RenderFile('view-categories.js')
+	$core_v2_widget.RenderFile('view-category.js')
+	$core_v2_widget.RenderFile('view-panel.js')
+	$core_v2_widget.RenderFile('view-plugin.js')
+	$core_v2_widget.RenderFile('view-global-search.js')
+	$core_v2_widget.RenderFile('view-shortcuts.js')
+	$core_v2_widget.RenderFile('view-logout-warning.js')
+
+	$core_v2_widget.RenderFile('ui-tourtips.js')
+	$core_v2_widget.RenderFile('ui-moderate.js')
+	$core_v2_widget.RenderFile('ui-overrides.js')
+
+	require(['Controller',
+		'Model',
+		'Navigator',
+		'CategoriesView',
+		'CategoryView',
+		'PanelView',
+		'PluginView',
+		'PluginController',
+		'UiModerate',
+		'UiTourTips',
+		'UiOverrides',
+		'ShortcutsView',
+		'LogoutWarningView'],
+	function(
+		Controller,
+		Model,
+		Navigator,
+		CategoriesView,
+		CategoryView,
+		PanelView,
+		PluginView,
+		PluginController,
+		UiModerate,
+		UiTourTips,
+		UiOverrides,
+		ShortcutsView,
+		LogoutWarningView,
+		j, global, undef)
+	{
+		var api = {
+			register: function(context) {
+				delete j.telligent.evolution.ui.components.select;
+
+				var model = new Model({
+					categoriesUrl: context.categoriesUrl,
+					categoryUrl: context.categoryUrl,
+					panelUrl: context.panelUrl,
+					pluginUrl: context.pluginUrl,
+					searchUrl: context.searchUrl,
+					pluginSaveUrl: context.pluginSaveUrl,
+					rootParentPluginsUrl: context.rootParentPluginsUrl
+				});
+
+				var logoutWarningView = new LogoutWarningView({
+					template: context.logoutWarningTemplateId,
+					absoluteTemplate: context.logoutWarningAbsoluteTemplateId,
+					titleText: context.logoutWarningTitleText
+				});
+
+				var controller = new Controller(j.extend(context, {
+					model: model,
+					logoutWarningView: logoutWarningView
+				}));
+
+				this.plugin = {
+					registerRoot: function(pluginContext) {
+						PluginController.registerRoot(j.extend(pluginContext, {
+							model: model,
+							pluginHeaderTemplateId: context.pluginHeaderTemplateId,
+							childPluginSearchResultTemplateId: context.childPluginSearchResultTemplateId,
+							noResultsMessage: context.noResultsMessage
+						}));
+					},
+					register: function(pluginContext) {
+						PluginController.register(j.extend(pluginContext, {
+							model: model,
+							pluginHeaderTemplateId: context.pluginHeaderTemplateId,
+							childPluginSearchResultTemplateId: context.childPluginSearchResultTemplateId,
+							noResultsMessage: context.noResultsMessage
+						}));
+					}
+				};
+
+				controller.start();
+
+				var shortcuts = new ShortcutsView({
+					template: context.shortcutsTemplateId,
+					notificationsTemplate: context.shortcutsNotificationTemplateId,
+					titleText: context.keyboardShortcutsText,
+					listShortcutsText: context.listShortcutsText
+				});
+			}
+		}
+
+		j.telligent = j.telligent || {};
+		j.telligent.evolution = j.telligent.evolution || {};
+		j.telligent.evolution.widgets = j.telligent.evolution.widgets || {};
+		j.telligent.evolution.widgets.administrativePanelShell = api;
+
+		// override notifications defualt to show in top right, with long error durations
+		(function(j){
+			j.extend(j.telligent.evolution.notifications.defaults, {
+				errorDuration: 60 * 1000,
+				verticalOffset: 45,
+				horizontalOffset: 5,
+				placement: 'topright'
+			});
+		})(jQuery);
+
+	}, jQuery, window);
+
+})();

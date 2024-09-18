@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WikiActivityStory_Name}" version="12.0.0.0" description="${resource:WikiActivityStory_Description}" instanceIdentifier="145d4e13e5e34f3480dbbe410b6d86bd" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2022-10-03 20:45:16Z" provider="6ff504fc039f406db8823f718adec7d4">
+    <contentScript language="Velocity"><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content)
+	$core_v2_widget.Hide()
+#else
+		#format($core_v2_language.GetResource('Created_Wiki'))
+				#token('user')
+					<span class="user-name">
+						#if ($context.Story.PrimaryUser.ProfileUrl)
+							<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($context.Story.PrimaryUser.ProfileUrl)">$context.Story.PrimaryUser.DisplayName</a>
+						#else
+							$context.Story.PrimaryUser.DisplayName
+						#end
+					</span>
+				#token('wiki')
+					    <a $core_v2_ui.ContentPeek($content.ContentId, $content.ContentTypeId)
+					    	href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">$content.HtmlName('Web')</a>
+				#token('group')
+						<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+							href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+		#end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Created_Wiki">{user} created {wiki} in {group}.</resource>
+  <resource name="WikiActivityStory_Description">Story for new wikis.</resource>
+  <resource name="WikiActivityStory_Name">Wiki Activity Story</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

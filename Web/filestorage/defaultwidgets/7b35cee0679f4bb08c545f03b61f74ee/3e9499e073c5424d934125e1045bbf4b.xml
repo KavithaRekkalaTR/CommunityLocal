@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:EventSearchResult_Name}" version="11.0.0.0" description="${resource:EventSearchResult_Description}" instanceIdentifier="3e9499e073c5424d934125e1045bbf4b" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="event-search-result" lastModified="2021-01-08 09:14:33Z" provider="7b35cee0679f4bb08c545f03b61f74ee">
+    <contentScript language="Velocity"><![CDATA[#set ($content = $context.Content)
+#set ($post = $calendar_v1_events.Show("%{ContentId = '$content.ContentId'}"))
+
+#if ($content && $post)
+
+	#set ($typeCssClass = "event")
+	#set ($avatarSize = 24)
+	#set ($id = $core_v2_widget.UniqueId("searchresult"))
+
+	#set ($target = $context.Target)
+	#set ($title = $content.HtmlName($target))
+	#set ($body = $content.HtmlDescription($target))
+
+	#if($content.CreatedByUserId)
+		#set($user = $core_v2_user.Get("%{Id = $context.Content.CreatedByUserId}"))
+	#end
+
+	#if($content.Application)
+		#set($applicationName = $content.Application.HtmlName($target))
+		#set($applicationUrl = $content.Application.Url)
+
+		#if($applicationName != '' && $applicationUrl != '')
+			#set($hasApplication = true)
+		#end
+	#end
+
+	#if($content.Application && $content.Application.Container)
+		#set ($containerName = $content.Application.Container.HtmlName($target))
+		#set ($containerUrl = $content.Application.Container.Url)
+		#set ($containerAvatarUrl = $content.Application.Container.AvatarUrl)
+
+		#if($containerName != '' && $containerUrl != '')
+			#set($hasContainer = true)
+		#end
+	#end
+
+	<div class="content abbreviated rendered $typeCssClass" id="$id">
+		<div class="summary">
+
+			<h3 class="name">
+				<a class="internal-link" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 250, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 250, '...')
+				</a>
+			</h3>
+
+			#if($user)
+				<div class="author">
+					<div class="avatar">
+					#if (!$user.IsSystemAccount && $user.Url)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)" class="internal-link view-user-profile">
+							$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, $avatarSize, $avatarSize, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$user.DisplayName' }")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, $avatarSize, $avatarSize, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$user.DisplayName' }")
+					#end
+					</div>
+
+					<span class="username">
+					#if (!$user.IsSystemAccount && $user.Url)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)" class="internal-link view-user-profile activity-summary-user">$user.DisplayName</a>
+					#else
+						$user.DisplayName
+					#end
+					</span>
+				</div>
+			#elseif ($containerAvatarUrl && $containerAvatarUrl != '')
+				<div class="author">
+					<div class="avatar">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+							$core_v2_ui.GetResizedImageHtml($containerAvatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$containerName' }")
+						</a>
+					</div>
+				</div>
+			#end
+
+			#if ($core_v2_user.Accessing.DateFormat)
+				#set($eventDateTimeFormatString = "$core_v2_user.Accessing.DateFormat $core_v2_configuration.TimeFormat")
+			#else
+				#set($eventDateTimeFormatString = "yyyy-M-d $core_v2_configuration.TimeFormat")
+			#end
+
+			#if($post.EventStartDate.Date == $post.EventEndDate.Date)
+				#set($eventEndTimeFormatString = $core_v2_configuration.TimeFormat)
+			#else
+				#set($eventEndTimeFormatString = $eventDateTimeFormatString)
+			#end
+
+			<div class="content">
+			    $post.EventDateString
+				<span class="event-timezone">
+                    $!core_v2_configuration.GetTimeZone($core_v2_user.Accessing.TimeZoneId, $post.EventStartDate).NameWithoutOffset
+				</span><br />
+				$!post.EventLocation<br />
+				$core_v2_language.Truncate($body, 250, '...')
+			</div>
+
+		</div>
+
+		#if ($post.EventStartDate || $hasApplication || $hasContainer)
+			<div class="attributes">
+				<ul class="attribute-list">
+					#if ($post.EventStartDate)
+						<li class="attribute-item date">$core_v2_language.FormatAgoDate($post.EventStartDate, true)</li>
+					#end
+					#if ($hasContainer)
+						<li class="attribute-item container">
+							<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+							    href="$core_v2_encoding.HtmlAttributeEncode($containerUrl)">$containerName</a>
+						</li>
+					#end
+					#if ($hasApplication)
+						<li class="attribute-item application">
+							<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+							    href="$core_v2_encoding.HtmlAttributeEncode($applicationUrl)">$applicationName</a>
+						</li>
+					#end
+				</ul>
+			</div>
+		#end
+
+	</div>
+#else
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="EventSearchResult_Description">Displays default rendering for an event.</resource>
+  <resource name="EventSearchResult_Name">Rendered Event</resource>
+  <resource name="to">to</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

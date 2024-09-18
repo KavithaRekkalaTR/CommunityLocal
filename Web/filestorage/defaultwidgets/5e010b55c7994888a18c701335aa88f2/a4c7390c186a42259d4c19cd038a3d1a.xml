@@ -1,0 +1,309 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:AdministrativePanelShell_Name}" version="12.0.0.0" description="${resource:AdministrativePanelShell_Description}" instanceIdentifier="a4c7390c186a42259d4c19cd038a3d1a" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="administrative-panel-shell" lastModified="2022-06-15 20:56:08Z" provider="5e010b55c7994888a18c701335aa88f2">
+    <contentScript language="Velocity"><![CDATA[<!DOCTYPE html>
+
+#set ($returnUrl = false)
+#set ($returnUrl = $core_v2_page.ReturnUrl)
+
+#if (!$returnUrl || $returnUrl.Length == 0 || $returnUrl.StartsWith($core_v2_administrationPanels.RootUrl))
+	#set ($returnUrl = $core_v2_urls.Home)
+#end
+
+#set ($suppressDuration = 86400)
+
+#set ($skipTitle = '')
+#if ($suppressDuration == 0)
+	#set ($skipTitle = $core_v2_language.GetResource('skip_title'))
+#elseif($suppressDuration < 60)
+	#set ($skipTitle = $core_v2_language.FormatString($core_v2_language.GetResource('skip_title_seconds'), $suppressDuration.ToString()))
+#elseif($suppressDuration < 7200)
+	#set ($minutes = $suppressDuration / 60)
+	#set ($skipTitle = $core_v2_language.FormatString($core_v2_language.GetResource('skip_title_minutes'), $minutes.ToString()))
+#else
+	#set ($hours = $suppressDuration / 3600)
+	#set ($skipTitle = $core_v2_language.FormatString($core_v2_language.GetResource('skip_title_hours'), $hours.ToString()))
+#end
+
+#set ($siteName = '')
+#set ($siteName = $core_v2_encoding.HtmlDecode($core_v2_configuration.SiteName))
+
+<html style="height:100%">
+<head>
+	<title>$core_v2_language.FormatString($core_v2_language.GetResource('Title'), $siteName)</title>
+	$core_v2_page.RenderPlatformHeaders()
+	#set ($menuIconUrl = $core_v2_widget.GetFileUrl('icon-menu.svg'))
+	#set ($darkMenuIconUrl = $core_v2_widget.GetFileUrl('icon-menu-dark.svg'))
+	#set ($backIconUrl = $core_v2_widget.GetFileUrl('icon-back-light.svg'))
+	#set ($searchIconUrl = $core_v2_widget.GetFileUrl('icon-search-light.svg'))
+	<style>
+		body.administration .toggle-categories a::after {
+			background-image: url('$core_v2_encoding.UriEscape($menuIconUrl)');
+		}
+		body.administration .administration-panel-shell-wrapper .administration-panel-categories-wrapper .administration-panel-site-links .user-links>ul .community-name a::after {
+			background-image: url('$core_v2_encoding.UriEscape($backIconUrl)');
+		}
+		body.administration .administration-panel-shell-wrapper .administration-panel-categories-wrapper .administration-panel-site-links .user-links>ul .search a::after {
+			background-image: url('$core_v2_encoding.UriEscape($searchIconUrl)');
+		}
+
+		@media (max-width: 1024px) {
+			body.administration .administration-panel-shell-wrapper .administration-panel-content-wrapper.without-category .toggle-categories a::after {
+				background-image: url('$core_v2_encoding.UriEscape($darkMenuIconUrl)');
+			}
+		}
+	</style>
+</head>
+
+<body class="administration">
+
+	#set ($user = $core_v2_user.Accessing)
+	#set ($isRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#if (!$isRegistered)
+		$core_v2_widget.Hide()
+	#end
+	#set ($categoriesContainerId = $core_v2_widget.UniqueId('categoriesContainer'))
+	#set ($categoryContainerId = $core_v2_widget.UniqueId('categoryContainer'))
+	#set ($contentContainerId = $core_v2_widget.UniqueId('contentContainer'))
+	#set ($loadingIndicatorId = $core_v2_widget.UniqueId('loadingIndicator'))
+	#set ($loadingMessageId = $core_v2_widget.UniqueId('loadingMessage'))
+	#set ($userLinksContainerId = $core_v2_widget.UniqueId('userLinksContainer'))
+
+	#if ($core_v2_administrationPanels.EnableLegacyRendering)
+		<form class="administration-panel-shell-wrapper-form">
+	#else
+		<div class="administration-panel-shell-wrapper-form">
+	#end
+		<div $core_v2_servicePresence.RenderAttributes($core_v2_administrationPanels.BadgeableServicePresenceId, "%{ CssClass = 'administration-panel-shell-wrapper' }")>
+			<div class="administration-panel-categories-wrapper administration-pane-wrapper">
+				<div class="toggle-categories hide">
+					<a href="#" data-messagename="toggle-categories">$core_v2_language.GetResource('HideCategories')</a>
+				</div>
+				<div class="administration-panel-site-links" id="$core_v2_encoding.HtmlAttributeEncode($userLinksContainerId)">
+					<ul class="navigation-list site-links">
+						## User links
+						<li class="navigation-list-item user-links">
+							<ul class="navigation-list">
+								## Site Link
+								#if ($returnUrl && $siteName)
+									<li class="navigation-list-item community-name">
+										<a href="$core_v2_encoding.HtmlAttributeEncode($returnUrl)" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.FormatString($core_v2_language.GetResource('BackToCommunity'), $core_v2_language.Truncate($siteName, 50, '...')))">
+											$core_v2_language.FormatString($core_v2_language.GetResource('BackToCommunity'), $core_v2_language.Truncate($siteName, 25, '...'))
+										</a>
+									</li>
+								#end
+
+								## Search
+								<li class="navigation-list-item search">
+									<a href="#" data-messagename="search-panels" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Search'))">$core_v2_language.GetResource('Search')</a>
+								</li>
+
+								## User Links
+								#set($logoutUrl = $core_v2_urls.LogOut())
+								#if ($logoutUrl)
+									<li class="navigation-list-item user">
+										<ul class="ui-links" data-minlinks="0" data-maxlinks="0" data-direction="vertical" >
+
+											## View Profile
+											#if ($user.ProfileUrl)
+												<li class="navigation-list-item">
+													<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)">$core_v2_language.GetResource('Profile')</a>
+												</li>
+											#end
+
+											## Return to Site
+											#if ($returnUrl && $siteName)
+												<li class="navigation-list-item">
+													<a href="$core_v2_encoding.HtmlAttributeEncode($returnUrl)">$core_v2_language.FormatString($core_v2_language.GetResource('BackToCommunity'), $core_v2_language.Truncate($siteName, 25, '...'))</a>
+												</li>
+											#end
+
+											## Sign Out
+											<li class="navigation-list-item">
+												<a href="$core_v2_encoding.HtmlAttributeEncode($logoutUrl)">$core_v2_language.GetResource('SignOut')</a>
+											</li>
+
+											## Avatar
+											<li class="navigation-list-item">
+												<span class="avatar" data-more>
+													#if ($user.ProfileUrl)
+														<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($user.DisplayName)">
+															$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 16, 16, "%{border='0px', alt=$user.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+														</a>
+													#else
+														$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 16, 16, "%{border='0px', alt=$user.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+													#end
+												</span>
+											</li>
+
+											<li class="navigation-list-item">
+												<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+											</li>
+										</ul>
+									</li>
+								#end
+							</ul>
+						</li>
+					</ul>
+				</div>
+				<div class="administration-pane" id="$core_v2_encoding.HtmlAttributeEncode($categoriesContainerId)"></div>
+			</div>
+			<div class="administration-panel-category-wrapper administration-pane-wrapper">
+				<div class="toggle-categories show">
+					<a href="#" data-messagename="toggle-categories">$core_v2_language.GetResource('ShowCategories')</a>
+				</div>
+				<div class="administration-pane" id="$core_v2_encoding.HtmlAttributeEncode($categoryContainerId)"></div>
+			</div>
+			<div class="administration-panel-content-wrapper administration-pane-wrapper">
+				<div class="toggle-categories show">
+					<a href="#" data-messagename="toggle-categories">$core_v2_language.GetResource('ShowCategories')</a>
+				</div>
+				<div class="administration-pane" id="$core_v2_encoding.HtmlAttributeEncode($contentContainerId)"></div>
+			</div>
+			<div class="administration-panel-loading" id="$core_v2_encoding.HtmlAttributeEncode($loadingIndicatorId)">
+				<div class="spinner">
+					<div class="bounce1"></div>
+					<div class="bounce2"></div>
+					<div class="bounce3"></div>
+				</div>
+			</div>
+			<div class="administration-panel-loading-message" id="$core_v2_encoding.JavascriptEncode($loadingMessageId)"></div>
+		</div>
+	#if ($core_v2_administrationPanels.EnableLegacyRendering)
+		</form>
+	#else
+		</div>
+	#end
+
+	$core_v2_widget.ExecuteFile('templates.vm')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('ui.js.vm'))"></script>
+	<script>
+	jQuery.telligent.evolution.administration.isAdminShell = true;
+	jQuery(function(){
+		jQuery.telligent.evolution.widgets.administrativePanelShell.register({
+			categoriesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-categories.vm'))',
+			categoryUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-category.vm'))',
+			panelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-panel.vm'))',
+			pluginUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-plugin.vm'))',
+			pluginSaveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-plugin-save.vm'))',
+			rootParentPluginsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-plugin-parents.vm'))',
+			searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-search.vm'))',
+			categoriesContainerId: '#$core_v2_encoding.JavascriptEncode($categoriesContainerId)',
+			categoryContainerId: '#$core_v2_encoding.JavascriptEncode($categoryContainerId)',
+			contentContainerId: '#$core_v2_encoding.JavascriptEncode($contentContainerId)',
+			loadingIndicatorId: '#$core_v2_encoding.JavascriptEncode($loadingIndicatorId)',
+			loadingMessageId: '#$core_v2_encoding.JavascriptEncode($loadingMessageId)',
+			customPanelTemplateId: '$core_v2_encoding.JavascriptEncode($customPanelTemplateId)',
+			pluginHeaderTemplateId: '$core_v2_encoding.JavascriptEncode($pluginHeaderTemplateId)',
+			userLinksContainerId: '#$core_v2_encoding.JavascriptEncode($userLinksContainerId)',
+			globalSearchResultTemplateId: '$core_v2_encoding.JavascriptEncode($globalSearchResultTemplateId)',
+			pluginTypesPanelSearchResultTemplateId: '$core_v2_encoding.JavascriptEncode($pluginTypesPanelSearchResultTemplateId)',
+			childPluginSearchResultTemplateId: '$core_v2_encoding.JavascriptEncode($childPluginSearchResultTemplateId)',
+			globalSearchTemplateId: '$core_v2_encoding.JavascriptEncode($globalSearchTemplateId)',
+			shortcutsTemplateId: '$core_v2_encoding.JavascriptEncode($shorcutsTemplateId)',
+			shortcutsNotificationTemplateId: '$core_v2_encoding.JavascriptEncode($shortcutsNotificationTemplateId)',
+			logoutWarningTemplateId: '$core_v2_encoding.JavascriptEncode($logoutWarningTemplateId)',
+			logoutWarningAbsoluteTemplateId: '$core_v2_encoding.JavascriptEncode($logoutWarningAbsoluteTemplateId)',
+			enabledText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Enabled'))',
+			disabledText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Disabled'))',
+			misconfiguredText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Misconfigured'))',
+			searchText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Search'))',
+			noResultsMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+			titleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title'), $siteName))',
+			pluginsRefreshedNotificationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PluginsRefreshedNotification'))',
+			keyboardShortcutsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('keyboard_shortcuts'))',
+			listShortcutsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('list_shortcuts'))',
+			searchAdministrationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('search_administration'))',
+			navigationConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('navigationConfirmation'))',
+			logoutWarningTitleText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('StillThere'))'
+		});
+		jQuery.telligent.evolution.widgets.tourTips.register({
+			tipTemplate: '$core_v2_encoding.JavascriptEncode($tipTemplateId)',
+			minWidth: 570,
+			suppressDuration: $suppressDuration
+		});
+	});
+	</script>
+</body>
+</html>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AdministrativePanelShell_Description">Supports rendering admin panels.</resource>
+  <resource name="AdministrativePanelShell_Name">Administrative Panel Shell</resource>
+  <resource name="Back">Back</resource>
+  <resource name="BackTip">Back</resource>
+  <resource name="BackToCommunity">Return to {0}</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="complete">Ok, got it!</resource>
+  <resource name="Disabled">Disabled</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="Enabled">Enabled</resource>
+  <resource name="Exceptions">Exceptions</resource>
+  <resource name="Filter">Filter</resource>
+  <resource name="HideCategories">Hide Categories</resource>
+  <resource name="keyboard_shortcuts">Keyboard Shortcuts</resource>
+  <resource name="KeyComma">,</resource>
+  <resource name="KeyDown">Down</resource>
+  <resource name="KeyLeft">Left</resource>
+  <resource name="KeyPeriod">.</resource>
+  <resource name="KeyRight">Right</resource>
+  <resource name="KeySlash">/</resource>
+  <resource name="KeyTab">Tab</resource>
+  <resource name="KeyUp">Up</resource>
+  <resource name="list_shortcuts">List available shortcuts</resource>
+  <resource name="Misconfigured">Misconfigured</resource>
+  <resource name="MisconfiguredDesc">Enabled but inactive. Please review configuration.</resource>
+  <resource name="ModifierAlt">Alt</resource>
+  <resource name="ModifierCommand">Command</resource>
+  <resource name="ModifierControl">Control</resource>
+  <resource name="ModifierMeta">Meta</resource>
+  <resource name="ModifierOption">Option</resource>
+  <resource name="ModifierShift">Shift</resource>
+  <resource name="ModifierWindows">Windows</resource>
+  <resource name="more">More</resource>
+  <resource name="navigationConfirmation">Are you sure you want to leave? Changes you made may not be saved.</resource>
+  <resource name="next">Next</resource>
+  <resource name="NoResources">No Resources found.</resource>
+  <resource name="NoResults">No Results</resource>
+  <resource name="Options">Options</resource>
+  <resource name="or">or</resource>
+  <resource name="ParentsMessageDisable">'{0}' is a component of larger functionality that prevents it from being disabled directly. Choose one or more sets of functionality below to disable '{0}'</resource>
+  <resource name="ParentsMessageEnable">'{0}' is a component of larger functionality that prevents it from being enabled directly. Choose one or more sets of functionality below to enable '{0}'</resource>
+  <resource name="PluginDisabled">&lt;%: plugin %&gt; has been disabled</resource>
+  <resource name="PluginEnabled">&lt;%: plugin %&gt; has been enabled</resource>
+  <resource name="PluginMisconfigured">&lt;%: plugin %&gt; is misconfigured and inactive. Please review the configuration.</resource>
+  <resource name="PluginsRefreshedNotification">Extensions have been updated. Refreshing is recommended. &lt;div&gt;&lt;a href="#" class="inline-button" data-messagename="plugins-refresh-immediate"&gt;Refresh&lt;/a&gt;</resource>
+  <resource name="PluginsSaved">Extension Updated Successfully</resource>
+  <resource name="PluginUpdated">&lt;%: plugin %&gt; has been updated</resource>
+  <resource name="previous">Previous</resource>
+  <resource name="Profile">Profile</resource>
+  <resource name="Property_Suppress">Suppress Duration</resource>
+  <resource name="Property_Suppress_Description">Time (in seconds) to suppress tour tips if 'Later' is selected</resource>
+  <resource name="Save">Save</resource>
+  <resource name="ScriptedContentFragments">Widgets</resource>
+  <resource name="ScriptedContentFragments_Instructions">The following widgets are used to provide user experiences for this functionality and can be customized within the widget editor.</resource>
+  <resource name="Search">Search</resource>
+  <resource name="search_administration">Search Administration</resource>
+  <resource name="ShortcutTip">Press {shortcut} to view current shortcuts.</resource>
+  <resource name="ShowCategories">Show Categories</resource>
+  <resource name="SignOut">Sign Out</resource>
+  <resource name="skip">Later</resource>
+  <resource name="skip_title">Continue this tour later.</resource>
+  <resource name="skip_title_hours">Continue this tour in {0} hours.</resource>
+  <resource name="skip_title_minutes">Continue this tour in {0} minutes.</resource>
+  <resource name="skip_title_seconds">Continue this tour in {0} seconds.</resource>
+  <resource name="Stay">Keep me signed in</resource>
+  <resource name="StillThere">Are you still there?</resource>
+  <resource name="SubPlugins">Related</resource>
+  <resource name="Title">Administration - {0}</resource>
+  <resource name="Translations">Translation</resource>
+  <resource name="WarningMessage">Due to a period of inactivity, you will be signed out in {seconds} seconds.</resource>
+  <resource name="WarningMessageAbsolute">For your security, you will be signed out in {seconds} seconds. Please save your work.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="abuse.reports.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

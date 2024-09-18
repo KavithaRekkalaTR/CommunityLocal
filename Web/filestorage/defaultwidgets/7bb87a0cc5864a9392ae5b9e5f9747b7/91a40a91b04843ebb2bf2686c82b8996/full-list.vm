@@ -1,0 +1,59 @@
+#set($group = $core_v2_group.Current)
+
+#set($options = "%{PageSize=20,SortBy='DisplayName',SortOrder='Ascending'}")
+
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($query = false)
+#set($query = $core_v2_page.GetQueryStringValue('w_query'))
+#if ($query)
+		$options.Add('UserNameFilter', $query)
+#end
+
+#set($membershipType = false)
+#set($membershipType = $core_v2_page.GetQueryStringValue('w_membershiptype'))
+#if ($membershipType && $membershipType.Length > 0)
+		$options.Add('MembershipType', $membershipType)
+#else
+		$options.Add('MembershipType', 'Owner,Manager,Member')
+#end
+
+#set($members = $core_v2_groupUserMember.ListEffectiveGroupMembers($group.Id, $options))
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($members.PageIndex + 1) * $members.PageSize)
+#if ($members.TotalCount > $currentPagedQuantity)
+		#set ($hasMore = true)
+#end
+
+#foreach ($member in $members)
+#beforeall
+	<div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+#each
+	<div class="content-item content thumbnail" data-hasmore="$hasMore" data-url="$core_v2_encoding.HtmlAttributeEncode($!member.User.ProfileUrl)">
+		<div class="avatar">
+			$core_v2_ui.GetResizedImageHtml($member.User.AvatarUrl, 140, 140, "%{alt=$member.User.DisplayName,border='0',ResizeMethod = 'ZoomAndCrop'}")
+					</div>
+					<h2 class="name">
+							$member.User.DisplayName
+					</h2>
+		<div class="status">
+			#if($member.MembershipType == 'Owner')
+				$core_v2_language.GetResource('owner')
+			#elseif ($member.MembershipType == 'Manager')
+				$core_v2_language.GetResource('manager')
+			#end
+		</div>
+	</div>
+#afterall
+	</div>
+#nodata
+	<div class="message norecords">
+			#if (($query && $query.Length > 0) || ($membershipType && $membershipType.Length > 0))
+					$core_v2_language.GetResource('Groups_Membership_NoMembers_WithCriteria')
+			#else
+					$core_v2_language.GetResource('Groups_Membership_NoMembers')
+		 #end
+	</div>
+#end

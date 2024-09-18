@@ -1,0 +1,31 @@
+##
+## Renders a comment as generic reply JSON object
+##
+## Requires in scope:
+##   $comment
+##
+#if ($comment)
+	#if (!$excludeContainer)
+		{
+	#end
+		"id": "$comment.CommentId",
+		"parentId": #if ($comment.ParentCommentId) "$comment.ParentCommentId" #else null #end,
+		"createdDate": #if ($comment.CreatedDate) "$core_v2_utility.GetTimestamp($comment.CreatedDate)" #else null #end,
+		"createdDateTicks": #if ($comment.CreatedDate && $comment.CreatedDate.Ticks > 0) $comment.CreatedDate.Ticks #else null #end,
+		"url": "$core_v2_encoding.JavascriptEncode($comment.Url)",
+		"body": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('common-rendered-reply-body.vm'))",
+		"rawBody": "$core_v2_encoding.JavascriptEncode($comment.Body('raw'))",
+		"yesVotes": $comment.YesVotes,
+		"noVotes": $comment.NoVotes,
+		"isDeleted": #if ($comment.IsDeleted) true #else false #end,
+		"isApproved": #if ($comment.IsApproved) true #else false #end,
+		"EffectiveDepth": #if ($comment.EffectiveDepth) $comment.EffectiveDepth #else null #end,
+		"PreviousSiblingCount": #if ($comment.PreviousSiblingCount) $comment.PreviousSiblingCount #else null  #end,
+		"NextSiblingCount": #if ($comment.NextSiblingCount) $comment.NextSiblingCount #else null #end,
+		"ChildCount": #if ($comment.ChildCount) $comment.ChildCount #else null #end
+	#if (!$excludeContainer)
+		}
+	#end
+#else
+	null
+#end

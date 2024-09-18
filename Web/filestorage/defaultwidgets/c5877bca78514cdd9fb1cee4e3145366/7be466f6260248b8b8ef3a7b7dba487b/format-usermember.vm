@@ -1,0 +1,71 @@
+<li class="content-item with-avatar member" data-userid="$member.User.Id" data-membershiptype="$member.MembershipType">
+  <div class="author">
+	<div class="avatar">
+		$core_v2_ui.GetResizedImageHtml($member.User.AvatarUrl, 44, 44, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt='$member.User.DisplayName'}")
+	</div>
+  </div>
+	<h4 class="name">$member.User.DisplayName</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item membership-type">
+				<span class="value">
+					#set($membershipType = $core_v2_language.GetResource('membershiptype-unknown'))
+					#if ($member.MembershipType == 'Member')
+						#set($membershipType = $core_v2_language.GetResource('membershiptype-member'))
+					#elseif ($member.MembershipType == 'Manager')
+						#set($membershipType = $core_v2_language.GetResource('membershiptype-manager'))
+					#elseif ($member.MembershipType == 'Owner')
+						#set($membershipType = $core_v2_language.GetResource('membershiptype-owner'))
+					#end
+					#if ($member.IsRoleMember && $member.IsDirectMember)
+						$core_v2_language.FormatString($core_v2_language.GetResource('roleanddirectmember'), $membershipType)
+					#elseif ($member.IsRoleMember)
+						$core_v2_language.FormatString($core_v2_language.GetResource('role-member'), $membershipType)
+					#else
+						$membershipType
+					#end
+				</span>
+			</li>
+		</ul>
+	</div>
+	<div class="content expandable">
+		$core_v2_language.Truncate($member.User.Bio, 100, '...')
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				#if ($member.User.ProfileUrl)
+					<li class="navigation-list-item view-page">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($member.User.ProfileUrl)">$core_v2_language.GetResource('view-user')</a>
+					</li>
+				#end
+				#if ($context.Group.GroupType != 'Joinless')
+					#if ($member.MembershipType != 'Member')
+						<li class="navigation-list-item edit">
+							<a href="#" data-messagename="groupmembers.edit" data-to="Member" data-userid="$member.User.Id">$core_v2_language.GetResource('edit-to-member')</a>
+						</li>
+					#end
+					#if ($member.MembershipType != 'Manager')
+						<li class="navigation-list-item edit">
+							<a href="#" data-messagename="groupmembers.edit" data-to="Manager" data-userid="$member.User.Id">$core_v2_language.GetResource('edit-to-manager')</a>
+						</li>
+					#end
+				#end
+				#if ($member.MembershipType != 'Owner')
+					<li class="navigation-list-item edit">
+						<a href="#" data-messagename="groupmembers.edit" data-to="Owner" data-userid="$member.User.Id">$core_v2_language.GetResource('edit-to-owner')</a>
+					</li>
+				#end
+				<li class="navigation-list-item delete">
+					<a href="#" data-messagename="groupmembers.delete" data-userid="$member.User.Id" #if($member.IsRoleMember) data-isrolemember="true" #end #if($member.IsDirectMember) data-isdirectmember="true" #end>$core_v2_language.GetResource('delete-user')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</li>

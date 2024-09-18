@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupReportsPanel_Name}" version="13.0.0.0" description="${resource:GroupReportsPanel_Description}" instanceIdentifier="45e9f8816bb5489b93f0c23f2217ec1b" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-groupreports" lastModified="2023-09-12 06:16:08Z" provider="98322f79b56f475f91be518208de2489">
+    <contentScript language="Velocity"><![CDATA[
+<fieldset>
+    <ul class="field-list">
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.GroupDetail("%{groupId  = '$context.ContainerId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+        #if ($reportUrl)
+            <li class="field-item">
+                <span class="field-item-name">
+                    <a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)" target="_blank">
+                        $core_v2_language.GetResource('GroupDetailReport')
+                    </a>
+                </span>
+                <span class="field-item-description">
+                    $core_v2_language.GetResource('GroupDetailReport_Description')
+                </span>
+            </li>
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.Interactions("%{groupIds  = '$context.ContainerId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+        #if ($reportUrl)
+            <li class="field-item">
+                <span class="field-item-name">
+                    <a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)" target="_blank">
+                        $core_v2_language.GetResource('InteractionsReport')
+                    </a>
+                </span>
+                <span class="field-item-description">
+                    $core_v2_language.GetResource('InteractionsReport_Description')
+                </span>
+            </li>
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.ActiveContent("%{groupIds  = '$context.ContainerId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+        #if ($reportUrl)
+            <li class="field-item">
+                <span class="field-item-name">
+                    <a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)" target="_blank">
+                        $core_v2_language.GetResource('ActiveContentReport')
+                    </a>
+                </span>
+                <span class="field-item-description">
+                    $core_v2_language.GetResource('ActiveContentReport_Description')
+                </span>
+            </li>
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.Content("%{groupIds  = '$context.ContainerId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+        #if ($reportUrl)
+            <li class="field-item">
+                <span class="field-item-name">
+                    <a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)" target="_blank">
+                        $core_v2_language.GetResource('NewContentReport')
+                    </a>
+                </span>
+                <span class="field-item-description">
+                    $core_v2_language.GetResource('NewContentReport_Description')
+                </span>
+            </li>
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.ViewedContent("%{groupIds  = '$context.ContainerId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+        #if ($reportUrl)
+            <li class="field-item">
+                <span class="field-item-name">
+                    <a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)" target="_blank">
+                        $core_v2_language.GetResource('ViewedContentReport')
+                    </a>
+                </span>
+                <span class="field-item-description">
+                    $core_v2_language.GetResource('ViewedContentReport_Description')
+                </span>
+            </li>
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.Participation("%{groupIds  = '$context.ContainerId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+        #if ($reportUrl)
+            <li class="field-item">
+                <span class="field-item-name">
+                    <a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)" target="_blank">
+                        $core_v2_language.GetResource('ParticipationReport')
+                    </a>
+                </span>
+                <span class="field-item-description">
+                    $core_v2_language.GetResource('ParticipationReport_Description')
+                </span>
+            </li>
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.ActiveMembers("%{groupIds  = '$context.ContainerId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+        #if ($reportUrl)
+        <li class="field-item">
+            <span class="field-item-name">
+                <a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)" target="_blank">
+                    $core_v2_language.GetResource('ActiveMembersReport')
+                </a>
+            </span>
+            <span class="field-item-description">
+                $core_v2_language.GetResource('ActiveMembersReport_Description')
+            </span>
+        </li>
+        #end
+    </ul>
+</fieldset>
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ActiveContentReport">Active Content</resource>
+  <resource name="ActiveContentReport_Description">Report displaying content that is active.</resource>
+  <resource name="ActiveMembersReport">Active Members</resource>
+  <resource name="ActiveMembersReport_Description">Report detailing members who were active.</resource>
+  <resource name="GroupDetailReport">${group_propercase} Detail</resource>
+  <resource name="GroupDetailReport_Description">Report providing overview of this ${group_lowercase}.</resource>
+  <resource name="GroupReportsPanel_Description">View ${group_lowercase} reports.</resource>
+  <resource name="GroupReportsPanel_Name">Reporting</resource>
+  <resource name="InteractionsReport">Interactions</resource>
+  <resource name="InteractionsReport_Description">Report detailing the interactions that occurred.</resource>
+  <resource name="NewContentReport">New Content</resource>
+  <resource name="NewContentReport_Description">Report displaying content that is new.</resource>
+  <resource name="ParticipationReport">Participation</resource>
+  <resource name="ParticipationReport_Description">Report detailing the level of participation of members.</resource>
+  <resource name="ViewedContentReport"> Viewed Content</resource>
+  <resource name="ViewedContentReport_Description"> Report displaying content that was viewed.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

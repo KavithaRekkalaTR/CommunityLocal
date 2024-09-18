@@ -1,0 +1,26 @@
+#if ($core_v2_page.IsPost)
+	## Options are parsed via put into temp storage for subsequent GET
+
+	$core_v2_page.SetContentType('application/json')
+
+	#if (!$core_v2_page.IsPost)
+		{ "success": false }
+	#end
+
+	## adds $options variable to scope
+	$core_v2_widget.ExecuteFile('full-parse-options.vm')
+	#set ($storageKey = $context.StoreTemporaryExportFilter($options))
+
+	{
+		"success": true,
+		"key": "${storageKey}"
+	}
+#else
+	## Download gets previously-parsed options from temp storage
+
+	#set ($filterKey = false)
+	#set ($filterKey = $core_v2_page.GetQueryStringValue('_temp_filter_key'))
+	#if ($filterKey)
+		$context.HandleDownloadCsvRequest($filterKey)
+	#end
+#end

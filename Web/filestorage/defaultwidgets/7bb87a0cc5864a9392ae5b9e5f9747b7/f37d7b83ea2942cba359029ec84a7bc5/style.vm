@@ -1,0 +1,134 @@
+#set ($coverPhotoAlignment = $core_v2_widget.GetStringValue('coverPhotoAlignment', 'center center'))
+#set ($coverPhotoLayout = $core_v2_widget.GetStringValue('coverPhotoLayout', 'cover'))
+
+## Defaults
+#set ($background = false)
+#set ($backgroundColor = '#ffffff')
+#set ($foregroundColor = '#263238')
+#set ($shadow =  $core_v2_widget.GetBoolValue('shadowCoverPhoto', false))
+
+#set ($hasCoverPhoto = false)
+#set ($coverPhotoUrl = $user.CoverPhotoUrl)
+#if ($coverPhotoUrl && $coverPhotoUrl.Length > 0)
+	#set ($hasCoverPhoto = true)
+#end
+
+## Background color used for photos in modes where background would still show through
+#if ($coverPhotoLayout == 'contain')
+	#set ($paletteId = $core_v2_widget.GetCustomValue('coverPhotoBackgroundPaletteId', ''))
+
+	#set ($backgroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color', '#2196F3', 10))
+	#set ($backgroundColorTo = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color-to', '', 10))
+	#set ($foregroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'foreground-color', '#ffffff', 10))
+
+	#if ($backgroundColorTo && $backgroundColorTo.length > 0)
+		#set ($background = "linear-gradient(to right, ${backgroundColor}, ${backgroundColorTo})")
+	#else
+		#set ($background = $backgroundColor)
+	#end
+#end
+
+## Photo defaults
+#set ($definedDynamicHeight = false)
+#set ($coverPhotoWidth = 1500)
+#set ($coverPhotoHeight = 0)
+
+## Fixed Heights
+#set ($coverPhotoFixedHeightHome = false)
+#set ($coverPhotoFixedHeightOther = false)
+#if ($coverPhotoLayout == 'cover' || $coverPhotoLayout == 'contain')
+	#set ($coverPhotoFixedHeightHome = $core_v2_widget.GetIntValue('coverPhotoFixedHeightHome', 176))
+	#set ($coverPhotoFixedHeightOther = $core_v2_widget.GetIntValue('coverPhotoFixedHeightOther', 88))
+#end
+
+#if ($coverPhotoLayout == 'dynamic')
+	## Defined Dynamic Dimensions
+	#set ($coverPhotoWidth = $core_v2_widget.GetDoubleValue('coverPhotoLayoutDynamicDefinedWidth', 1500))
+	#set ($coverPhotoHeight = $core_v2_widget.GetDoubleValue('coverPhotoLayoutDynamicDefinedHeight', 375))
+	#set ($definedDynamicHeight = 100 * $coverPhotoHeight / $coverPhotoWidth)
+	#set ($definedDynamicHeight = $core_v2_utility.Round($definedDynamicHeight))
+	#set ($coverPhotoWidth = $core_v2_utility.Round($coverPhotoWidth))
+	#set ($coverPhotoHeight = $core_v2_utility.Round($coverPhotoHeight))
+#elseif ($coverPhotoLayout == 'contain')
+	#set ($coverPhotoWidth = 0)
+	#set ($coverPhotoHeight = $coverPhotoFixedHeightHome)
+#end
+
+#set ($resizedCoverPhotoUrl = $core_v2_ui.GetResizedImageUrl($coverPhotoUrl, $coverPhotoWidth, $coverPhotoHeight, "%{ ResizeMethod='ZoomAndCrop' }"))
+
+<style>
+.with-cover-photo .cover-photo,
+.header-fragments .layout .header-top-content .layout-region.content .layout-region-inner .content-fragment.group-banner .cover-photo {
+
+	#if ($coverPhotoLayout == 'contain')
+		background-size: contain;
+	#elseif ($coverPhotoLayout == 'cover' || $coverPhotoLayout == 'dynamic')
+		background-size: cover;
+	#end
+
+	#if ($background)
+		background: url($resizedCoverPhotoUrl), $background;
+	#else
+		background-image: url($resizedCoverPhotoUrl);
+	#end
+	background-repeat: no-repeat;
+	background-position: $coverPhotoAlignment;
+}
+#if ($coverPhotoLayout == 'contain')
+	.single-column .with-cover-photo .cover-photo,
+	.single-column .header-fragments .layout .header-top-content .layout-region.content .layout-region-inner .content-fragment.group-banner .cover-photo {
+		background-size: cover;
+	}
+#end
+
+#if ($coverPhotoLayout == 'dynamic')
+	#if ($definedDynamicHeight)
+		.with-cover-photo .banner.context,
+		.with-cover-photo .banner.context.home {
+			height: ${definedDynamicHeight}vw;
+			padding-top: calc(${definedDynamicHeight}vw - 91px);
+		}
+	#end
+	.scrolled .with-cover-photo .banner.context,
+	.scrolled .with-cover-photo .banner.context.home {
+		height: 44px !important;
+		padding-top: 0 !important;
+	}
+#elseif ($coverPhotoLayout == 'contain' || $coverPhotoLayout == 'cover')
+	#if ($coverPhotoFixedHeightHome)
+		.with-cover-photo .banner.context.home {
+			min-height: ${coverPhotoFixedHeightHome}px;
+			padding-top: calc(${coverPhotoFixedHeightHome}px - 91px);
+		}
+		.scrolled .with-cover-photo .banner.context.home {
+			padding-top: 0;
+		}
+	#end
+	#if ($coverPhotoFixedHeightOther)
+		.with-cover-photo .banner.context {
+			min-height: ${coverPhotoFixedHeightOther}px;
+			padding-top: calc(${coverPhotoFixedHeightOther}px - 91px);
+		}
+		.scrolled .with-cover-photo .banner.context {
+			min-height: initial;
+			padding-top: 0;
+		}
+	#end
+#end
+
+## when only shadow, always shows shadow
+#if ($shadow)
+	.content-fragment.user-banner.with-cover-photo .cover-photo::after {
+		content:" ";
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		background: linear-gradient(to bottom, rgba(0,0,0,.1), rgba(0,0,0,.6));
+		opacity: 1;
+		transition: .1s;
+	}
+#end
+</style>
+

@@ -1,0 +1,599 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget_Name}" version="12.0.0.0" description="${resource:Widget_Description}" instanceIdentifier="55becfb445514bc09aab76428adf7d48" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="article-create-edit" lastModified="2022-11-03 18:55:40Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($collection = $articles_v1_articleCollections.Current)
+#set($tabsContainerId = $core_v2_widget.UniqueId('tabsContainer'))
+#set($writeTabId = $core_v2_widget.UniqueId('writeTab'))
+#set($optionsTabId = $core_v2_widget.UniqueId('optionsTab'))
+#set($helpfulnessTabId = $core_v2_widget.UniqueId('helpfulnessTab'))
+#set($historyTabId = $core_v2_widget.UniqueId('historyTab'))
+#set($article = false)
+#set($article = $articles_v1_articles.Current)
+#set($canOrder = false)
+#set($publishGroup = false)
+#if ($core_v2_page.GetQueryStringValue('publishGroupId'))
+	#set($publishGroup = $articles_v1_publishGroups.Get($core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('publishGroupId'))))
+	#if ($publishGroup.HasErrors())
+		#set($publishGroup = false)
+	#end
+#end
+
+#set($temporaryDataJson = false)
+#set($temporaryDataId = false)
+#set($temporaryDataId = $core_v2_page.GetQueryStringValue('tid'))
+#if ($temporaryDataId)
+	#set($temporaryDataJson = $core_v2_utility.ParseJson($core_v2_utility.GetTemporaryData($temporaryDataId)))
+	#if ($temporaryDataJson)
+		#set($temporaryDataJson = $core_v2_utility.ToJson($temporaryDataJson))
+	#end
+#end
+
+#set($permissionContext = "%{ ApplicationId = $collection.ApplicationId, ApplicationTypeId = $articles_v1_articleCollections.ApplicationTypeId }")
+#if($article)
+	$permissionContext.Add('ContentId', $article.ContentId)
+	$permissionContext.Add('ContentTypeId', $articles_v1_articles.ContentTypeId)
+	#if (!$core_v3_permission.CheckPermission($articles_v1_permissions.EditArticles, $core_v2_user.Accessing.Id, $permissionContext).IsAllowed)
+		$core_v2_widget.Hide()
+	#end
+	#set($canOrder = $core_v3_permission.CheckPermission($articles_v1_permissions.ManageArticleOrdering, $core_v2_user.Accessing.Id, $permissionContext).IsAllowed)
+#elseif(!$core_v3_permission.CheckPermission($articles_v1_permissions.CreateArticles, $core_v2_user.Accessing.Id, $permissionContext).IsAllowed)
+	$core_v2_widget.Hide()
+#else
+	#set($canOrder = $core_v3_permission.CheckPermission($articles_v1_permissions.ManageArticleOrdering, $core_v2_user.Accessing.Id, $permissionContext).IsAllowed)
+#end
+
+#set($hasPublishGroups = false)
+#if ($articles_v1_publishGroups.List($collection.Id, "%{ PageSize = 1, PageIndex = 0, IsPublished = '' }").Count > 0)
+	#set($hasPublishGroups = true)
+#end
+
+#if ($hasPublishGroups)
+	<div class="filter">
+		<form><fieldset>
+			<ul class="field-list">
+				<li class="field-item required view-publish-group">
+					<span class="field-item-input">
+						<input type="text" id="$core_v2_widget.UniqueId('viewpublishgroup')" placeholder="$core_v2_language.GetResource('ViewPublishGroup')" />
+					</span>
+				</li>
+			</ul>
+		</fieldset></form>
+	</div>
+#end
+
+#if ($article)
+	#set ($heading = $article.Title)
+#else
+	#set ($heading = $core_v2_language.FormatString($core_v2_language.GetResource('NewArticle'), $collection.Name))
+#end
+<h1 id="$core_v2_widget.UniqueId('formtitle')">$heading</h1>
+
+<div class="message warning" id="$core_v2_widget.UniqueId('version')" style="display: none;"></div>
+
+#set ($versionTemplateId = $core_v2_widget.UniqueId('versionTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($versionTemplateId)">
+	#set($versionToken = "<%= version.version ? '(' + version.version + ')' : '' %>")
+	#set($versionInfoTokens = "%{ version = $versionToken, publishDate = '<%= version.formattedPublishDate %>', publishEndDate = '<%= version.formattedPublishEndDate %>', publishGroup = '<%= version.publishGroup.name %>' }")
+	<% if(version.id && !version.sourceIsPublished) { %>
+		<% if (version.readyToPublish) { %>
+			<% if (version.isPendingReview) { %>
+				<% if (version.formattedPublishDate) { %>
+					<% if (version.formattedPublishEndDate) { %>
+						$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PendingReview_PublishDate_PublishEndDate'), $versionInfoTokens)
+					<% } else { %>
+						$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PendingReview_PublishDate'), $versionInfoTokens)
+					<% } %>
+				<% } else if (version.publishGroup) { %>
+					<% if (version.formattedPublishEndDate) { %>
+						$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PendingReview_PublishGroup_PublishEndDate'), $versionInfoTokens)
+					<% } else { %>
+						$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PendingReview_PublishGroup'), $versionInfoTokens)
+					<% } %>
+				<% } else { %>
+					$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PendingReview'), $versionInfoTokens)
+				<% } %>
+			<% } else if (version.formattedPublishDate) { %>
+				<% if (version.formattedPublishEndDate) { %>
+					$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PublishDate_PublishEndDate'), $versionInfoTokens)
+				<% } else { %>
+					$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PublishDate'), $versionInfoTokens)
+				<% } %>
+			<% } else if (version.publishGroup) { %>
+				<% if (version.formattedPublishEndDate) { %>
+					$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PublishGroup_PublishEndDate'), $versionInfoTokens)
+				<% } else { %>
+					$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_PublishGroup'), $versionInfoTokens)
+				<% } %>
+			<% } %>
+		<% } else { %>
+			<% if (version.publishGroup) { %>
+				$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_Draft_PublishGroup'), $versionInfoTokens)
+			<% } else { %>
+				$core_v2_language.FormatString($core_v2_language.GetResource('VersionInfo_Draft'), $versionInfoTokens)
+			<% } %>
+		<% } %>
+	<% } %>
+</script>
+
+#set ($orderingTemplateId = $core_v2_widget.UniqueId('orderingTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($orderingTemplateId)">
+	<li class="field-item" data-categoryid="<%= category.id %>">
+		<label for="" class="field-item-name"><%= category.name %></label>
+		<span class="field-item-description">$core_v2_language.GetResource('CategoryOrder_Description')</span>
+		<span class="field-item-input">
+			<select size="10"></select>
+		</span>
+		<span class="field-item-input">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item"><a href="#" data-messagename="articles-category-movefirst">$core_v2_language.GetResource('Move_First')</a></li>
+					<li class="navigation-list-item"><a href="#" data-messagename="articles-category-moveup">$core_v2_language.GetResource('Move_Up')</a></li>
+					<li class="navigation-list-item"><a href="#" data-messagename="articles-category-movedown">$core_v2_language.GetResource('Move_Down')</a></li>
+					<li class="navigation-list-item"><a href="#" data-messagename="articles-category-movelast">$core_v2_language.GetResource('Move_Last')</a></li>
+				</ul>
+			</div>
+		</span>
+		<span class="field-item-validation" style="display: none;"></span>
+	</li>
+</script>
+
+<form><fieldset>
+	<div id="$core_v2_encoding.HtmlAttributeEncode($tabsContainerId)">
+		<div id="$core_v2_encoding.HtmlAttributeEncode($writeTabId)">
+			<ul class="field-list">
+				<li class="field-item required post-type">
+					<label for="$core_v2_widget.UniqueId('type')" class="field-item-name">$core_v2_language.GetResource('Type')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Type_Description')</span>
+					<span class="field-item-input">
+						#set($typeHtml = '')
+						<select id="$core_v2_widget.UniqueId('type')" name="$core_v2_widget.UniqueId('type')">
+							<option value=""></option>
+							#foreach ($type in $articles_v1_articleTypes.List())
+								<option value="$type.Id">$type.Name</option>
+								#if ($typeHtml.Length > 0)
+									#set($typeHtml = "${typeHtml},")
+								#end
+								#set($imageHtml = '')
+								#if ($type.ImageUrl && $type.ImageUrl.Length > 0)
+									#set($imageHtml = $core_v2_ui.GetResizedImageHtml($type.ImageUrl, 32, 32, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt = '' }"))
+								#end
+								#set($typeHtml = "${typeHtml}'<div class=article-type><div class=article-type-icon>${core_v2_encoding.JavascriptEncode($imageHtml)}</div>${core_v2_encoding.JavascriptEncode($type.Name)}</div>'")
+							#end
+						</select>
+					</span>
+					<span class="field-item-validation" style="display: none;"></span>
+				</li>
+				<li class="field-item required post-name">
+					<label for="$core_v2_widget.UniqueId('title')" class="field-item-name">$core_v2_language.GetResource('Title')</label>
+					<span class="field-item-input">
+						<textarea maxlength="256" rows="1" id="$core_v2_widget.UniqueId('title')" class="scaled" name="$core_v2_widget.UniqueId('title')" size="90"></textarea>
+					</span>
+					<span class="field-item-validation" style="display: none;"></span>
+				</li>
+				<li class="field-item required categories">
+					<label for="$core_v2_widget.UniqueId('categories')" class="field-item-name">$core_v2_language.GetResource('Categories')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Categories_Description')</span>
+					<span class="field-item-input">
+						<input type="text" id="$core_v2_widget.UniqueId('categories')" name="$core_v2_widget.UniqueId('categories')" size="90" />
+					</span>
+					<span class="field-item-validation" style="display: none;"></span>
+					<span class="field-item-description default-for"></span>
+				</li>
+				<li class="field-item required post-body">
+					<label for="$core_v2_widget.UniqueId('body')" class="field-item-name">$core_v2_language.GetResource('Body')</label>
+					<span class="field-item-input"><textarea id="$core_v2_widget.UniqueId('body')" name="$core_v2_widget.UniqueId('body')" style="width: 100%;"></textarea></span>
+					<span class="field-item-validation" style="display:none;"></span>
+				</li>
+				<li class="field-item required tags">
+					<label for="$core_v2_widget.UniqueId('tags')" class="field-item-name">$core_v2_language.GetResource('Tags')</label>
+					<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('tags')" /></span>
+					<span class="field-item-validation" style="display:none;"></span>
+				</li>
+			</ul>
+			<h3>$core_v2_language.GetResource('Notifications')</h3>
+			<ul class="field-list">
+				<li class="field-item suppress-notifications">
+					<span class="field-item-input">
+						<input type="checkbox" class="suppress-notifications" #if($article.SuppressNotifications) checked="" #end id="$core_v2_widget.UniqueId('suppressNotifications')" name="$core_v2_widget.UniqueId('suppressNotifications')">
+						<label for="$core_v2_widget.UniqueId('suppressNotifications')">$core_v2_language.GetResource('SuppressNotifications')</label>
+					</span>
+					<div class="field-item-description">$core_v2_language.GetResource('SuppressNotifications_Description')</div>
+				</li>
+			</ul>			
+		</div>
+		<div id="$core_v2_encoding.HtmlAttributeEncode($optionsTabId)">
+			<h3>$core_v2_language.GetResource('Scheduling_Heading')</h3>
+			<ul class="field-list">
+				#if ($hasPublishGroups)
+					<li class="field-item required publish-group">
+						<label for="$core_v2_widget.UniqueId('publishgroup')" class="field-item-name">$core_v2_language.GetResource('PublishGroup')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('PublishGroup_Description')</span>
+						<span class="field-item-input">
+							<input type="text" id="$core_v2_widget.UniqueId('publishgroup')" />
+						</span>
+						<span class="field-item-validation" style="display: none;"></span>
+					</li>
+				#end
+				<li class="field-item publish-date">
+					<label for="$core_v2_widget.UniqueId('publishDate')" class="field-item-name">$core_v2_language.GetResource('PublishDate')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('PublishDate_Description')</span>
+					<span class="field-item-input">
+						<input type="text" id="$core_v2_widget.UniqueId('publishDate')" />
+					</span>
+					 <span class="field-item-valiation"></span>
+				</li>
+				<li class="field-item publish-end-date">
+					<label for="$core_v2_widget.UniqueId('publishEndDate')" class="field-item-name">$core_v2_language.GetResource('PublishEndDate')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('PublishEndDate_Description')</span>
+					<span class="field-item-input">
+						<input type="text" id="$core_v2_widget.UniqueId('publishEndDate')" />
+					</span>
+					 <span class="field-item-valiation"></span>
+				</li>
+			</ul>
+			<div id="$core_v2_widget.UniqueId('ordering_wrapper')">
+				<h3>$core_v2_language.GetResource('Ordering_Heading')</h3>
+				<ul class="field-list" id="$core_v2_widget.UniqueId('ordering')">
+				</ul>
+			</div>
+			<h3>$core_v2_language.GetResource('Meta_Heading')</h3>
+			<ul class="field-list">
+				<li class="field-item meta-title">
+					<label for="$core_v2_widget.UniqueId('metaTitle')" class="field-item-name">$core_v2_language.GetResource('Meta_Title')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Meta_TitleDescription')</span>
+					<span class="field-item-input">
+						<textarea maxlength="128" rows="1" id="$core_v2_widget.UniqueId('metaTitle')" class="scaled" name="$core_v2_widget.UniqueId('metaTitle')" size="90"></textarea>
+					</span>
+					 <span class="field-item-description character-count"></span>
+				</li>
+				<li class="field-item meta-keywords">
+					   <label for="$core_v2_widget.UniqueId('metaKeywords')" class="field-item-name">$core_v2_language.GetResource('Meta_Keywords')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Meta_KeywordsDescription')</span>
+					<span class="field-item-input">
+						<textarea maxlength="512" rows="1" id="$core_v2_widget.UniqueId('metaKeywords')" class="scaled" name="$core_v2_widget.UniqueId('metaKeywords')" size="90"></textarea>
+					</span>
+				</li>
+				<li class="field-item">
+					<label class="field-item-name">$core_v2_language.GetResource('Meta_Description')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Meta_DescriptionDescription')</span>
+					<span class="field-item-input">
+						<textarea maxlength="512" type="text" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('metaDescription'))"></textarea>
+					</span>
+					<span class="field-item-description character-count"></span>
+				</li>
+			</ul>
+		</div>
+		<div id="$core_v2_encoding.HtmlAttributeEncode($helpfulnessTabId)">
+			<p class="instructions">$core_v2_language.GetResource('Helpfulness_Instructions')</p>
+			<ul class="content-list content full helpfulness-list" id="$core_v2_widget.UniqueId('helpfulness')">
+			</ul>
+	   </div>
+		<div id="$core_v2_encoding.HtmlAttributeEncode($historyTabId)">
+			<div class="view">
+				<div>
+					<select class="ui-select" id="$core_v2_widget.UniqueId('history_filter')">
+						<option value="all">$core_v2_language.GetResource('Filter_AllVersions')</option>
+						<option value="draft">$core_v2_language.GetResource('Filter_Drafts')</option>
+						<option value="published">$core_v2_language.GetResource('Filter_Published')</option>
+						<option value="deleted">$core_v2_language.GetResource('Filter_Deleted')</option>
+					</select>
+				</div>
+			</div>
+			<div class="content full version-list" id="$core_v2_widget.UniqueId('history_wrapper')">
+				<div class="content margin-bottom">
+					<table class="table-list scrollable-ignore">
+						<thead>
+							<tr class="table-header">
+								<th class="table-header-column" colspan="2">$core_v2_language.GetResource('Header_Version')</th>
+								<th class="table-header-column">$core_v2_language.GetResource('Header_PublishedDate')</th>
+								<th class="table-header-column">$core_v2_language.GetResource('Header_UnpublishedDate')</th>
+								#if ($hasPublishGroups)
+									<th class="table-header-column">$core_v2_language.GetResource('Header_PublishGroup')</th>
+								#end
+							</tr>
+						</thead>
+						<tbody id="$core_v2_widget.UniqueId('history')">
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<ul class="field-list version-actions">
+				<li class="field-item meta-title">
+					<span class="field-item-input">
+						<a href="#" class="inline-button disabled" id="$core_v2_widget.UniqueId('history_clearselection')">$core_v2_language.GetResource('History_ClearSelection')</a>
+						<a href="#" class="inline-button disabled" id="$core_v2_widget.UniqueId('history_view')">$core_v2_language.GetResource('History_View')</a>
+						<a href="#" class="inline-button disabled" id="$core_v2_widget.UniqueId('history_open')">$core_v2_language.GetResource('History_Open')</a>
+						<a href="#" class="inline-button disabled" id="$core_v2_widget.UniqueId('history_diff')">$core_v2_language.GetResource('History_ViewChanges')</a>
+						<a href="#" class="inline-button disabled" id="$core_v2_widget.UniqueId('history_delete')">$core_v2_language.GetResource('History_Delete')</a>
+						<a href="#" class="inline-button disabled" id="$core_v2_widget.UniqueId('history_undelete')">$core_v2_language.GetResource('History_Undelete')</a>
+					</span>
+				</li>
+			</ul>
+			<div id="$core_v2_widget.UniqueId('history_view_wrapper')" class="history-viewer"></div>
+	   </div>
+	</div>
+
+	<ul class="field-list buttons" id="$core_v2_widget.UniqueId('form_buttons')">
+		<li class="field-item">
+			<span class="field-item-input">
+				<a id="$core_v2_widget.UniqueId('draft')" href="#" class="button internal-link save-draft"><span></span>$core_v2_language.GetResource('SaveDraft')</a>
+				<a id="$core_v2_widget.UniqueId('publish')" href="#" class="button internal-link save-publish"><span></span>$core_v2_language.GetResource('SavePublish')</a>
+				<a id="$core_v2_widget.UniqueId('cancel')" href="#" class="internal-link inline-button cancel-post">$core_v2_language.GetResource('Cancel')</a>
+				<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+			</span>
+		</li>
+	</ul>
+
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.articleCreateEdit')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.articleCreateEdit.register({
+			wrapperId: '$core_v2_widget.WrapperElementId',
+			applicationId: '$collection.Id',
+			collectionId: '$collection.Id',
+			contentTypeId: '$articles_v1_articles.ContentTypeId',
+			applicationTypeId: '$articles_v1_articleCollections.ApplicationTypeId',
+			#if ($article)
+				articleId: '$article.Id',
+			#else
+				articleId: null,
+			#end
+			#if ($publishGroup)
+				publishGroup: {
+					id: $publishGroup.Id,
+					name: '$core_v2_encoding.JavascriptEncode($publishGroup.Name)'
+				},
+			#else
+				publishGroup: null,
+			#end
+			canOrder: #if($canOrder) true #else false #end,
+			hasPublishGroups: #if($hasPublishGroups) true #else false #end,
+			typeHtml: ['<div class=article-type><div class=article-type-icon></div></div>',$typeHtml],
+			tempData: #if ($temporaryDataJson)
+				$temporaryDataJson
+			#else
+				null
+			#end,
+			helpfulnessEnabled: #if($collection.EnableHelpfulness) true #else false #end,
+			templates: {
+				versionInfo: '$core_v2_encoding.JavascriptEncode($versionTemplateId)',
+				orderingItem: '$core_v2_encoding.JavascriptEncode($orderingTemplateId)'
+			},
+			selectors: {
+				type: '#$core_v2_widget.UniqueId('type')',
+				title: '#$core_v2_widget.UniqueId('title')'
+			},
+			urls: {
+				getVersion: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getversion.jsm'))',
+				getCategories: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcategories.jsm'))',
+				getPublishGroups: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getpublishgroups.jsm'))',
+				getArticlesInCategory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getarticlesincategory.jsm'))',
+				getHelpfulness: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-pagedhelpfulness.vm'))',
+				viewCollection: '$core_v2_encoding.JavascriptEncode($collection.Url)',
+				getVersions: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-pagedarticlehistory.vm'))',
+				diffVersions: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-diffversions.vm'))',
+				viewVersion: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-viewversion.vm'))',
+				selectPublishGroup: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('modal-selectpublishgroup.vm'))'
+			},
+			fields: {
+				formTitle: jQuery('#$core_v2_widget.UniqueId('formtitle')'),
+				viewPublishGroup: jQuery('#$core_v2_widget.UniqueId('viewpublishgroup')'),
+				type: jQuery('#$core_v2_widget.UniqueId('type')'),
+				title: jQuery('#$core_v2_widget.UniqueId('title')'),
+				categories: jQuery('#$core_v2_widget.UniqueId('categories')'),
+				body: jQuery('#$core_v2_widget.UniqueId('body')'),
+				tags: jQuery('#$core_v2_widget.UniqueId('tags')'),
+				publishGroup: jQuery('#$core_v2_widget.UniqueId('publishgroup')'),
+				publishDate: jQuery('#$core_v2_widget.UniqueId('publishDate')'),
+				publishEndDate: jQuery('#$core_v2_widget.UniqueId('publishEndDate')'),
+				orderingWrapper: jQuery('#$core_v2_widget.UniqueId('ordering_wrapper')'),
+				ordering: jQuery('#$core_v2_widget.UniqueId('ordering')'),
+				metaTitle:jQuery('#$core_v2_widget.UniqueId('metaTitle')'),
+				metaKeywords:jQuery('#$core_v2_widget.UniqueId('metaKeywords')'),
+				metaDescription:jQuery('#$core_v2_widget.UniqueId('metaDescription')'),
+				publish: jQuery('#$core_v2_widget.UniqueId('publish')'),
+				draft: jQuery('#$core_v2_widget.UniqueId('draft')'),
+				cancel: jQuery('#$core_v2_widget.UniqueId('cancel')'),
+				versionInfo: jQuery('#$core_v2_widget.UniqueId('version')'),
+				helpfulness: jQuery('#$core_v2_widget.UniqueId('helpfulness')'),
+				historyFilter: jQuery('#$core_v2_widget.UniqueId('history_filter')'),
+				historyWrapper: jQuery('#$core_v2_widget.UniqueId('history_wrapper')'),
+				history: jQuery('#$core_v2_widget.UniqueId('history')'),
+				historyClearSelection: jQuery('#$core_v2_widget.UniqueId('history_clearselection')'),
+				historyView: jQuery('#$core_v2_widget.UniqueId('history_view')'),
+				historyOpen: jQuery('#$core_v2_widget.UniqueId('history_open')'),
+				historyDiff: jQuery('#$core_v2_widget.UniqueId('history_diff')'),
+				historyDelete: jQuery('#$core_v2_widget.UniqueId('history_delete')'),
+				historyUndelete: jQuery('#$core_v2_widget.UniqueId('history_undelete')'),
+				historyViewWrapper: jQuery('#$core_v2_widget.UniqueId('history_view_wrapper')'),
+				suppressNotifications: jQuery('#$core_v2_widget.UniqueId('suppressNotifications')'),
+				formButtons: jQuery('#$core_v2_widget.UniqueId('form_buttons')')
+			},
+			tabs: {
+				wrapper: jQuery('#$core_v2_encoding.JavascriptEncode($tabsContainerId)'),
+				writeId: '$core_v2_encoding.JavascriptEncode($writeTabId)',
+				writeLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Write'))',
+				optionsId: '$core_v2_encoding.JavascriptEncode($optionsTabId)',
+				optionsLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Options'))',
+				helpfulnessId: '$core_v2_encoding.JavascriptEncode($helpfulnessTabId)',
+				helpfulnessLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Helpfulness'))',
+				historyId: '$core_v2_encoding.JavascriptEncode($historyTabId)',
+				historyLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('History'))'
+			},
+			text: {
+				draftSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_Draft'))',
+				publishSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_Publish'))',
+				publishPendingReviewSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_PublishPendingReview'))',
+				futurePublishSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_PublishFutureDate'))',
+				requiredField: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RequiredField'))',
+				charactersRemain: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Characters_Remain'))',
+				charactersOver: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Characters_Over'))',
+				publish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SavePublish'))',
+				saveAsDraft: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SaveDraft'))',
+				readyToPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SaveReadyToPublish'))',
+				noCategoryMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingCategories'))',
+				noPublishGroupMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingPublishGroups'))',
+				sortOrderPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Ordering_Placeholder'))',
+				saveProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SaveSaving'))',
+				confirmIgnoreUnsavedChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ConfirmIgnoreUnsavedChanges'))',
+				draftAlreadyExists: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DraftAlreadyExists'))',
+				newArticle: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('NewArticle'), $collection.Name))',
+				versionDeleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VersionDeleteConfirmation'))',
+				versionDeletedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VersionDeletedSuccess'))',
+				versionUndeleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VersionUndeleteConfirmation'))',
+				versionUndeletedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VersionUndeleteSuccessful'))',
+				versionDraftAlreadyExists: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VersionDraftAlreadyExists'))',
+				selectPublishGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectPublishGroup'))',
+				ignoreConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('IgnoreConfirmation'))',
+				uncategorizedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UncategorizedConfirmation'))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_PageEdit_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Widget_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Action_Ignore">Ignore</resource>
+  <resource name="and_x_more">and {0} more</resource>
+  <resource name="anonymous">Anonymous</resource>
+  <resource name="Body">Body</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="Categories">Categories</resource>
+  <resource name="Categories_Description">Add this article to categories to include it in default navigation. An uncategorized article can be linked to or used as the default article for a category but is otherwise hidden from navigation.</resource>
+  <resource name="CategoryOrder_Description">Reorder this article amongst its siblings within this category.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Characters_Over">character(s) over the recomended length.  For best results this should be shortened.</resource>
+  <resource name="Characters_Remain">character(s)</resource>
+  <resource name="ConfirmIgnoreUnsavedChanges">You have unsaved changes. If you continue, these changes will be lost. Are you sure you want to load the selected version?</resource>
+  <resource name="default_for">This article is defined as the default article for {0}</resource>
+  <resource name="DifferencesCouldNotBeLoaded">Neither selected version could be loaded.</resource>
+  <resource name="DraftAlreadyExists">An unpublished version of this article already exists for the selected publish group. Please edit that version directly.</resource>
+  <resource name="Filter_AllVersions">Published versions and drafts</resource>
+  <resource name="Filter_Deleted">Deleted versions</resource>
+  <resource name="Filter_Drafts">Drafts</resource>
+  <resource name="Filter_Published">Published versions</resource>
+  <resource name="Header_PublishedDate">Published</resource>
+  <resource name="Header_PublishGroup">Publish Group</resource>
+  <resource name="Header_UnpublishedDate">Unpublished</resource>
+  <resource name="Header_Version">Version</resource>
+  <resource name="Helpfulness">Feedback</resource>
+  <resource name="Helpfulness_ByLine">Created {0} by {1}</resource>
+  <resource name="Helpfulness_Instructions">The following feedback has been provided for this article. Check the feedback that is resolved by edits made to this article.</resource>
+  <resource name="History">History</resource>
+  <resource name="History_ClearSelection">Clear selection</resource>
+  <resource name="History_Delete">Delete</resource>
+  <resource name="History_Open">Open in editor</resource>
+  <resource name="History_Undelete">Undelete</resource>
+  <resource name="History_View">View</resource>
+  <resource name="History_ViewChanges">View changes</resource>
+  <resource name="IgnoreConfirmation">Are you sure you want to ignore this feedback?</resource>
+  <resource name="Meta_Description">Description</resource>
+  <resource name="Meta_DescriptionDescription">If specified, search engines will use this description to provide an excerpt of this article.</resource>
+  <resource name="Meta_Heading">Search Engine Optimization</resource>
+  <resource name="Meta_Keywords">Keywords</resource>
+  <resource name="Meta_KeywordsDescription">Comma-separated list of words that uniquely relate to this content. These can be used by search engines to improve search results.</resource>
+  <resource name="Meta_Title">Title</resource>
+  <resource name="Meta_TitleDescription">Adjust the title used by search engines when referencing this content. If not set, the article's title will be used.</resource>
+  <resource name="Move_Down">Down</resource>
+  <resource name="Move_First">First</resource>
+  <resource name="Move_Last">Last</resource>
+  <resource name="Move_Up">Up</resource>
+  <resource name="NewArticle">Add to {0}</resource>
+  <resource name="NewVersion">New</resource>
+  <resource name="NoHistoryRecords">No versions match the current filter.</resource>
+  <resource name="NoMatchingCategories">No matching categories were found.</resource>
+  <resource name="NoMatchingPublishGroups">No matching publish groups were found.</resource>
+  <resource name="Notifications">Notifications</resource>
+  <resource name="NoUnresolvedHelpfulness">There is no unresolved feedback for this article.</resource>
+  <resource name="Open">Open</resource>
+  <resource name="OpenIn_Instructions">The selected version is currently published and is not directly editable. To open it in the editor, select the publish group (or none) to start a new draft with the content from this version.</resource>
+  <resource name="OpenInPublishGroup">Open in publish group</resource>
+  <resource name="OpenInPublishGroup_Description">Optional publish group to open this version in for editing.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Ordering_Heading">Ordering</resource>
+  <resource name="Ordering_Placeholder">This article</resource>
+  <resource name="PublishDate">Publish Date</resource>
+  <resource name="PublishDate_Description">Optionally identify the date at which this article should be published.</resource>
+  <resource name="PublishEndDate">Unpublish Date</resource>
+  <resource name="PublishEndDate_Description">Optionally identify the date at which this article should be unpublished.</resource>
+  <resource name="PublishGroup">Publish Group</resource>
+  <resource name="PublishGroup_Description">Optionally select a publish group to orchestrate the publishing of this article with others.</resource>
+  <resource name="RequiredField">This field is required.</resource>
+  <resource name="ResolvedTip">Resolved by edits</resource>
+  <resource name="SaveDraft">Save as Draft</resource>
+  <resource name="SavePublish">Publish</resource>
+  <resource name="SaveReadyToPublish">Ready to Publish</resource>
+  <resource name="SaveSaving">Saving ({0}%)...</resource>
+  <resource name="Scheduling_Heading">Scheduling</resource>
+  <resource name="SelectPublishGroup">Select publish group</resource>
+  <resource name="Showing_DifferenceBetweenVersions">Showing differences between version '{0}' from {1} and version '{2}' from {3}.</resource>
+  <resource name="Showing_Version">Showing version '{0}' from {1}.</resource>
+  <resource name="ShowRawContent">Show raw content.</resource>
+  <resource name="ShowRenderedContent">Show rendered content.</resource>
+  <resource name="Status_Draft">Draft</resource>
+  <resource name="Status_PendingReview">Pending review</resource>
+  <resource name="Status_Published">Published</resource>
+  <resource name="Status_ReadyToPublish">Ready to publish</resource>
+  <resource name="Status_Unpublished">Unpublished</resource>
+  <resource name="Success_Draft">The article was saved as a draft successfully.</resource>
+  <resource name="Success_Publish">The article was published successfully.</resource>
+  <resource name="Success_PublishFutureDate">The article was scheduled to be published successfully.</resource>
+  <resource name="Success_PublishPendingReview">The article was published successfully pending review.</resource>
+  <resource name="SuppressNotifications">Suppress Notifications</resource>
+  <resource name="SuppressNotifications_Description">If this option is enabled, members will not receive notifications and activity stories will not be created or updated for this article.</resource>
+  <resource name="TagEditor_SelectTags">Select Tags...</resource>
+  <resource name="Tags">Tags</resource>
+  <resource name="Title">Title</resource>
+  <resource name="Type">Type</resource>
+  <resource name="Type_Description">Select the type of this article.</resource>
+  <resource name="UncategorizedConfirmation">This article is uncategorized and will not be shown by default. It can be selected as the default article for the collection or a category or can be included manually, but will otherwise not be visible when published. Are you sure you want to continue?</resource>
+  <resource name="VersionByline">Last updated {0} by {1}</resource>
+  <resource name="VersionCouldNotBeLoaded">The selected version could not be loaded.</resource>
+  <resource name="VersionDeleteConfirmation">Are you sure you want to delete the selected versions?</resource>
+  <resource name="VersionDeletedSuccess">The selected versions were deleted successfully.</resource>
+  <resource name="VersionDraftAlreadyExists">A draft already exists. Please edit the existing draft and merge desired changes from this version manually.</resource>
+  <resource name="VersionInfo_Draft">This version is a draft. It is not yet scheduled to be published.</resource>
+  <resource name="VersionInfo_Draft_PublishGroup">This version is a draft for {publishGroup}. It is not yet scheduled to be published.</resource>
+  <resource name="VersionInfo_PendingReview">This version is pending review to be published.</resource>
+  <resource name="VersionInfo_PendingReview_PublishDate">This version is pending review to be published on {publishDate}.</resource>
+  <resource name="VersionInfo_PendingReview_PublishDate_PublishEndDate">This version is pending review to be published from {publishDate} through {publishEndDate}.</resource>
+  <resource name="VersionInfo_PendingReview_PublishGroup">This version is pending review to be published with {publishGroup}.</resource>
+  <resource name="VersionInfo_PendingReview_PublishGroup_PublishEndDate">This version is pending review to be published with {publishGroup} and expire on {publishEndDate}.</resource>
+  <resource name="VersionInfo_PublishDate">This version is scheduled to be published on {publishDate}.</resource>
+  <resource name="VersionInfo_PublishDate_PublishEndDate">This version is scheduled to be published from {publishDate} through {publishEndDate}.</resource>
+  <resource name="VersionInfo_PublishGroup">This version is scheduled to be published with {publishGroup}.</resource>
+  <resource name="VersionInfo_PublishGroup_PublishEndDate">This version is scheduled to be published with {publishGroup} and expire on {publishEndDate}.</resource>
+  <resource name="VersionUndeleteConfirmation">Are you sure you want to undelete the selected versions?</resource>
+  <resource name="VersionUndeleteSuccessful">The selected versions were undeleted successfully.</resource>
+  <resource name="View_Categories">Categories:</resource>
+  <resource name="View_Tags">Tags:</resource>
+  <resource name="ViewPublishGroup">View for publish group</resource>
+  <resource name="Widget_Description">Creates or edits an article.</resource>
+  <resource name="Widget_Name">Articles - Create/Edit Article</resource>
+  <resource name="Write">Write</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="9f1ce29b973d472e965fc224ce88bc64" />
+    </requiredContext>
+    <restScopes>
+      <scope id="articlecollections.helpfulness.modify" />
+      <scope id="articlecollections.articles.modify" />
+      <scope id="articlecollections.versions.modify" />
+      <scope id="articlecollections.articlecategories.modify" />
+      <scope id="articlecollections.versioncategories.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

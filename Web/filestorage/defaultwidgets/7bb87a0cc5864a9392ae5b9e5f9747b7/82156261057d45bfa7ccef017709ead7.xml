@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MediaGalleries_MediaGallerySlideshow_Name}" version="11.0.0.0" description="${resource:MediaGalleries_MediaGallerySlideshow_Description}" instanceIdentifier="82156261057d45bfa7ccef017709ead7" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="media-gallery-slideshow" lastModified="2020-01-14 16:07:57Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($gallery = false)
+#set ($gallery = $core_v2_gallery.Current)
+#if (!$gallery)
+	$core_v2_widget.Hide()
+#end
+#if ($gallery.PostCount == 0)
+	<div class="message norecords">$core_v2_language.GetResource('MediaGallery_NoMedia')</div>
+#else
+	<div id="$core_v2_widget.UniqueId('slideshow')" class="wrapper">
+		<div id="$core_v2_widget.UniqueId('currentmedia')" class="view-wrapper">
+			$core_v2_widget.ExecuteFile('view.vm')
+		</div>
+		<div class="page-wrapper">
+			<form>
+			<div class="inner" id="$core_v2_widget.UniqueId('allmedia')">
+				$core_v2_widget.ExecuteFile('page.vm')
+			</div>
+			</form>
+		</div>
+	</div>
+
+	#registerEndOfPageHtml('telligent.evolution.widgets.MediaGallerySlideshow')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	#end
+	#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	jQuery(function(j)
+	{
+		j.telligent.evolution.widgets.mediaGallerySlideshow.register({
+			wrapper: '#$core_v2_widget.WrapperElementId',
+			currentMedia:j('#$core_v2_widget.UniqueId('currentmedia')'),
+			allMedia:j('#$core_v2_widget.UniqueId('allmedia')'),
+			itemWidth:90,
+			itemsPerPage:10,
+			itemDuration:9999,
+			totalItems:#if($medias) $medias.TotalCount #else 0 #end,
+			pageUrl:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('page.vm'))',
+			viewUrl:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('view.vm'))',
+		});
+	});
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+		</script>
+	#end
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:MediaGalleries_MediaGallerySlideshow_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:MediaGalleries_MediaGallerySlideshow_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="MediaGalleries_MediaGallerySlideshow_Description">Displays the slideshow of media gallery files.</resource>
+  <resource name="MediaGalleries_MediaGallerySlideshow_Name">Media Gallery - Slideshow</resource>
+  <resource name="MediaGalleries_MediaGallerySlideshow_Title_Slideshow">Slideshow</resource>
+  <resource name="MediaGallery_FileNotViewableNoDownload">This file cannot be viewed.</resource>
+  <resource name="MediaGallery_NoMedia">No files have been uploaded to this gallery.</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="a51614fd19f7416ca89453788ac15794" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

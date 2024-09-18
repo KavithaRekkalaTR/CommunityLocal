@@ -1,0 +1,80 @@
+#set ($userSelection = $core_v2_widget.GetStringValue('userSelection', 'accessing'))
+#if($userSelection == 'contextual')
+    #set ($userId = $core_v2_user.Current.Id)
+#else
+    #set ($userId = $core_v2_user.Accessing.Id)
+#end
+#set ($query = "%{UserId=$userId}")
+
+$query.Add('PageSize', $core_v2_widget.GetIntValue('pageSize', 5))
+$query.Add('PageIndex', $core_v2_ui.GetCurrentPageIndex())
+
+#set ($qsContainerId = $core_v2_page.GetQueryStringValue("containerId"))
+#set ($qsApplicationId = $core_v2_page.GetQueryStringValue("applicationId"))
+#set ($qsStartDate = $core_v2_page.GetQueryStringValue("startDate"))
+#set ($qsEndDate = $core_v2_page.GetQueryStringValue("endDate"))
+
+#if ($qsContainerId || $qsApplicationId || $qsStartDate || $qsEndDate)
+    #if ($qsContainerId)
+        $query.Add("ContainerId", $qsContainerId)
+        #set ($container = $core_v2_container.Get($core_v2_utility.ParseGuid($qsContainerId), $core_v2_group.ContainerTypeId))
+    #elseif ($qsApplicationId)
+        $query.Add("ApplicationId", $qsApplicationId)
+    #end
+    
+    #if ($qsStartDate)
+        $query.Add("StartDate", $qsStartDate)
+    #end
+    #if ($qsEndDate)
+        $query.Add("EndDate", $qsEndDate)
+    #end
+#else
+    #set ($filterSelection = $core_v2_widget.GetStringValue('filterSelection', 'all'))
+    #if ($filterSelection == 'container')
+        $query.Add("ContainerId", $core_v2_container.Current.ContainerId)
+    #elseif  ($filterSelection == 'application')
+        $query.Add("ApplicationId", $core_v2_application.Current.ApplicationId)
+    #end
+#end
+
+#set ($pointTransactions = $core_v2_pointTransaction.List($query))
+
+#if($container || $qsStartDate || $qsEndDate)
+<div>
+    #if($container)
+    From <a href='$container.Url'>'$container.HtmlName("Web")'</a>
+    #end
+    
+    #if($qsStartDate && $qsEndDate)
+        #if($container) between#else Between#end $core_v2_language.FormatDateAndTime($core_v2_utility.ParseDate($query.StartDate)) and $core_v2_language.FormatDateAndTime($core_v2_utility.ParseDate($query.EndDate))
+    #elseif($qsStartDate)
+        #if($container) after#else After#end $core_v2_language.FormatDateAndTime($core_v2_utility.ParseDate($query.StartDate))
+    #elseif($qsEndDate)
+        #if($container) before#else Before#end $core_v2_language.FormatDateAndTime($core_v2_utility.ParseDate($query.EndDate))
+    #end
+</div>
+#end
+
+
+
+#foreach($transaction in $pointTransactions)
+#beforeall
+<ul class="content-list content simple margin-bottom tabular">
+#each
+    <li class="content-item">
+        <div class="minimal name cell points#if($transaction.Value < 0) negative#else positive#end">$transaction.Value</div>
+        <div class="cell name">$transaction.Description</div>
+        <div class="minimal cell supplementary nowrap">$core_v2_language.FormatDateAndTime($transaction.CreatedDate)</div>
+        <div class="cell supplementary">
+        #if($transaction.Content && !$transaction.Content.HasErrors())
+            <a href='$transaction.Content.Url'>$transaction.Content.HtmlName("Web")</a>
+        #end
+        </div>
+    </li>
+#afterall
+</ul>
+#nodata
+<div class="message norecords">$core_v2_language.GetResource('PointTransactionList_PointsList_NoResults')</div>
+#end
+
+$core_v2_ui.Pager($pointTransactions.PageIndex, $pointTransactions.PageSize, $pointTransactions.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

@@ -1,0 +1,21 @@
+<div class="conversation-statusheader">
+    <div class="conversation-statusheader">
+        <div class="status">
+            <% if (TypingNames.length > 0) { %>
+                <% var i = 0; %>
+                <% foreach(TypingNames, function(name) { %><% if (i > 0) { %>$core_v2_language.GetResource('typing-nameseparator')<% } %><%= name %><% i++; %><% }); %>
+                <% if (TypingNames.length > 1) { %>
+                    $core_v2_language.GetResource('typing-plural')
+                <% } else { %>
+                    $core_v2_language.GetResource('typing-singluar')
+                <% } %>
+            <% } %>
+            <% if (HasNewMessages) { %>
+                $core_v2_language.GetResource('new-message-below')
+            <% } %>
+            <% if (Status) { %>
+                <%= Status %>
+            <% } %>
+        </div>
+    </div>
+</div>

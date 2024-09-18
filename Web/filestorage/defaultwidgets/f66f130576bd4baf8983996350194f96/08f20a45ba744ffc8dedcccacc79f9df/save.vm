@@ -1,0 +1,36 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($allowSignatures = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('allowSignatures')))
+	#set($displaySignatures = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('displaySignatures')))
+	#set($enableDisplayNames = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableDisplayNames')))
+	#set($enableConversations = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableConversations')))
+	#set($enablePresenceTracking = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enablePresenceTracking')))
+	#set($allowMemberPresenceToggle = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('allowMemberPresenceToggle')))
+	#set($presenceTrackingDefault = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('presenceTrackingDefault')))
+	#set($requireEmailVerification = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('requireEmailVerification')))
+	#set($signatureMaxLength = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('signatureMaxLength')))
+	#set($statusMessageMaxLength = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('statusMessageMaxLength')))
+
+	$options.Add('AllowSignatures', $allowSignatures)
+	$options.Add('displaySignatures', $displaySignatures)
+	$options.Add('enableDisplayNames', $enableDisplayNames)
+	$options.Add('enableConversations', $enableConversations)
+	$options.Add('enablePresenceTracking', $enablePresenceTracking)
+	$options.Add('allowMemberPresenceToggle', $allowMemberPresenceToggle)
+	$options.Add('presenceTrackingDefault', $presenceTrackingDefault)
+	$options.Add('requireEmailVerification', $requireEmailVerification)
+	$options.Add('signatureMaxLength', $signatureMaxLength)
+	$options.Add('statusMessageMaxLength', $statusMessageMaxLength)
+
+	#set($response = $context.Save($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

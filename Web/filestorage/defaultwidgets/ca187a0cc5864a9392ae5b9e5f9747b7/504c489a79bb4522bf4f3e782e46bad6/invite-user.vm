@@ -1,0 +1,41 @@
+﻿#if ($core_v2_page.IsPost)
+    $core_v2_page.SetContentType('application/json')
+
+	#set($allowAnonymous = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('AllowAnonymous')))
+	#set($hasEmail = false)
+
+    #set($eventId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('EventId')))
+	#set($status = $core_v2_page.GetFormValue('Status'))
+
+	#set($response = false)
+
+	#set($userIdOrEmail = $core_v2_page.GetFormValue('UserId'))
+	#set($userId = $core_v2_utility.ParseInt($userIdOrEmail))
+
+	#set($options = false)
+
+	#if ($userId > 0)
+		#set($user = $core_v2_user.Get("%{Id = $userId}"))
+		#set($options = "%{UserId=$userId, Email=$user.PrivateEmail, Status=$status}")
+	#elseif ($core_v2_utility.IsMatch($userIdOrEmail, '^.+@.+\..+$'))
+		#set($options = "%{Email=$userIdOrEmail, Status=$status}")
+		#set($hasEmail = true)
+	#end
+
+	#if ($options)
+		#set($response = $calendar_v1_registrations.Create($eventId, $options))
+	
+		#if($response && $response.Errors.Count > 0)
+			$core_v2_page.SendJsonError($response.Errors)
+		#else
+			$core_v2_page.SetCookieValue('Calendar-InviteSuccess', 'true')
+			{"success":true}
+		#end
+	#else
+		#if ($hasEmail && !$allowAnonymous)
+			$core_v2_page.SendJsonError("$core_v2_language.GetResource('AllowAnonymous_Off') ($userIdOrEmail)")
+		#else
+			$core_v2_page.SendJsonError("$core_v2_language.GetResource('Groups_ManageMembers_AjaxError') ($userIdOrEmail)")
+		#end
+	#end
+#end

@@ -1,0 +1,32 @@
+﻿<% if(stagedItems && (stagedItems.length || 0) > 0) { %>
+	<div class="studio-shell staged-items">
+		<div class="staged-header ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SavedButNotPublished'))">
+			<span class="staged-indicator">$core_v2_language.GetResource('Staged')</span>
+			$core_v2_language.GetResource('StagedChanges') <span class="count"><%= stagedItems.length %></span>
+			<div class="navigation-list staging-all ui-links" data-maxlinks="0">
+				<ul>
+					<li>
+						<a href="#" data-messagename="studio.view.staging.publish.all">$core_v2_language.GetResource('PublishAll')</a>
+					</li>
+					<li>
+						<a href="#" data-messagename="studio.view.staging.revert.all">$core_v2_language.GetResource('RevertAll')</a>
+					</li>
+					<li class="navigation-list-item" data-more>
+						<a href="#" data-more class="ui-tip staging-actions" data-tip="Actions">$core_v2_language.GetResource('Actions')</a>
+					</li>
+					<li class="navigation-list-item" data-cancel>
+						<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+					</li>
+				</ul>
+
+			</div>
+		</div>
+		<div class="results">
+			<ul class="navigation-list">
+			<% foreach(stagedItems, function(stagedItem){ %>
+				<%= template('studioShell-stagingItem', stagedItem) %>
+			<% }); %>
+			</ul>
+		</div>
+	</div>
+<% } %>

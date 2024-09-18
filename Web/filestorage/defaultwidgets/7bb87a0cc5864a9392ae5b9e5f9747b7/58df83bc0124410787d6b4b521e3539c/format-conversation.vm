@@ -1,0 +1,57 @@
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($over = 0)
+#set ($count = 0)
+#set ($participantHtml = "")
+#foreach($user in $conversation.Participants)
+    #if ($user.Id != $accessingUser.Id)
+        #set($count = $count + 1)
+        #if ($count > 5)
+            #set ($over = $over + 1)
+        #elseif ($count > 1)
+            #set ($participantHtml = "$participantHtml, $user.DisplayName")
+        #else
+            #set($participantHtml = $user.DisplayName)
+        #end
+    #end
+#end
+#if ($over > 0)
+    #set($over = $core_v2_language.FormatString($core_v2_language.GetResource('participants-more'), $core_v2_language.FormatNumber($over)))
+    #set($participantHtml = "$participantHtml, $over")
+#end
+
+{
+    "Id": "$conversation.Id.ToString()",
+    "CreatedDate": "$core_v2_utility.GetTimestamp($conversation.CreatedDate)",
+    "AgoDate": "$core_v2_encoding.JavascriptEncode($core_v2_ui.AgoDate($conversation.LastMessage.CreatedDate))",
+    "LastMessage": {
+        "Id": "$conversation.LastMessage.Id.ToString()",
+        "Author": {
+            "DisplayName": "$core_v2_encoding.JavascriptEncode($conversation.LastMessage.Author.DisplayName)",
+            "AvatarHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($conversation.LastMessage.Author.AvatarUrl, 44, 44, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt='$conversation.LastMessage.Author.DisplayName'}"))"
+        },
+        "Excerpt": "$core_v2_encoding.JavascriptEncode($core_v2_language.Truncate($conversation.LastMessage.RenderedBody, 100, '...'))",
+        "CreatedDate": "$core_v2_utility.GetTimestamp($conversation.LastMessage.CreatedDate)"
+    },
+    "Participants": [
+        #set($firstParticipant = true)
+        #foreach($user in $conversation.Participants)
+            #if ($user.Id != $accessingUser.Id)
+                #if ($firstParticipant)
+                    #set($firstParticipant = false)
+                #else
+                    ,
+                #end
+                {
+                    "Id": $user.Id,
+                    "DisplayName": "$core_v2_encoding.JavascriptEncode($user.DisplayName)",
+                    "PresenceHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.UserPresence($user.Id))",
+                    "ProfileUrl": "$!core_v2_encoding.JavascriptEncode($!user.ProfileUrl)",
+                    "HasLeft": #if($core_v2_conversation.HasLeft($conversation.Id, $user.Id)) true #else false #end
+                }
+            #end
+        #end
+    ],
+    "ParticipantHtml": "$core_v2_encoding.JavascriptEncode($participantHtml)",
+    "HasRead": #if($conversation.HasRead) true #else false #end,
+    "AvatarHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($conversation.AvatarUrl, 44, 44, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt='', role='presentation'}"))"
+}

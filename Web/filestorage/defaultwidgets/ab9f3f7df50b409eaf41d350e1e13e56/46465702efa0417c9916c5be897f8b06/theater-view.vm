@@ -1,0 +1,6 @@
+#set($media = $core_v2_media.Get($context.Story.ContentId))
+#if(!$media)
+	$core_v2_widget.Hide()
+#elseif ($media.File && $media.File.FileUrl != '')
+	$core_v2_ui.GetViewHtml($media.File.FileUrl, "%{ OutputIsPersisted = 'false', AdjustToContainer = 'true' }")
+#end

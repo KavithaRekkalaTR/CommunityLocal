@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Forum Reply Author" version="13.0.0.0" description="Raises notifications to the author of a forum reply." id="b32bcef6214f442da6d1e7096515decb" lastModified="2023-08-30 16:29:34Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#set($thread = $core_v2_forumThread.Get($context_v1_email.Context.ForumReply.ThreadId))
+#set($forum = $core_v2_forum.Get($thread.ForumId))
+#if ($forum.MailingListName && $forum.MailingListName.Length > 0)
+	#format($core_v2_language.GetResource('Subject_WithMailingList'))
+	#token('mailing_list_name')
+	    $forum.MailingListName
+    #token('thread_subject')
+        $thread.Subject
+    #end
+#else
+    #format($core_v2_language.GetResource('Subject'))
+    #token('thread_subject')
+        $thread.Subject
+    #end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ForumReply.Url)">$context_v1_email.Context.ForumReply.Subject</a>]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+#set($authorUrl = $context_v1_email.Context.ForumReply.Author.Url)
+#if ($authorUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($authorUrl)">
+	<div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.ForumReply.Author.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+	</div>
+	</a>
+#else
+    <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.ForumReply.Author.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+	</div>
+#end
+</td>
+<td style="padding-left: 10px;">
+#if ($authorUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($authorUrl)">$context_v1_email.Context.ForumReply.Author.DisplayName</a>
+#else
+    $context_v1_email.Context.ForumReply.Author.DisplayName
+#end
+</td>
+</tr>
+</tbody>
+</table>
+$context_v1_email.Context.ForumReply.Body('Email')]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[#set($thread = $core_v2_forumThread.Get($context_v1_email.Context.ForumReply.ThreadId))
+#set($forum = $core_v2_forum.Get($thread.ForumId))
+#if ($forum.EmailFooter && $forum.EmailFooter.Length > 0)
+	$forum.EmailFooter
+#end
+<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('settings_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Settings(false))">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>
+#set($reportAbuseUrl = $core_v2_urls.ReportAbuse($context_v1_email.Context.ForumReply.Url, $context_v1_email.Context.ForumReply.ContentId, $core_v2_forumReply.ContentTypeId))
+#if ($reportAbuseUrl)
+    <p>
+    #format($core_v2_language.GetResource('Footer_ReportAbuse'))
+    #token('report_abuse_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($reportAbuseUrl)">$core_v2_language.GetResource('ReportAbuse')</a>
+	#end
+	</p>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Footer">You received this email because you have this notification enabled in your settings. To stop receiving notifications update your {settings_link}.</resource>
+  <resource name="Footer_ReportAbuse">{report_abuse_link}.</resource>
+  <resource name="ReportAbuse">Flag as spam/abuse</resource>
+  <resource name="Settings">settings</resource>
+  <resource name="Subject">Re: {thread_subject}</resource>
+  <resource name="Subject_WithMailingList">Re: [{mailing_list_name}] {thread_subject}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

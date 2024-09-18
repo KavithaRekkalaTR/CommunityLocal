@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Name}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="582e055d79ff4dd49667105674d15e4e" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-07-22 20:18:54Z" provider="bb855b5f3adc46f1bcaabb5598b47404">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.PluginStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('plugins')
+	    #foreach($p in $context.Status.Plugins)
+	    #each
+		    <strong><a href="$core_v2_encoding.HtmlAttributeEncode($p.Url)">$core_v2_encoding.HtmlEncode($p.Name)</a></strong>
+		#between
+		    ,
+		#end
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ExcessiveExceptions">Multiple errors have occurred related to the following plugins: {plugins}. The specific exceptions should be reviewed to determine the severity and resolution of these errors.</resource>
+  <resource name="Healthy">Plugins are healthy.</resource>
+  <resource name="InitializationExceptions">Multiple errors have occurred related to initializing plugins. The specific exceptions should be reviewed to determine the severity and resolution of these errors.</resource>
+  <resource name="InvalidConfiguration">The following plugins are enabled but have invalid configuration: {plugins}. These plugins are currently considered disabled and will not be used within the community until their configuration issues are resolved.</resource>
+  <resource name="ObsoletePlugins">The following plugins are currently supported but implement obsolete plugin types: {plugins}. When these obsolete plugin types are removed in a future version, these plugins will no longer function and could prevent the community from functioning as expected. Please consider stopping the use of these plugins or contacting the developers of these plugins to update them.</resource>
+  <resource name="Unknown">The status of plugins is not yet known.</resource>
+  <resource name="Widget-Description">Plugin System Indicator</resource>
+  <resource name="Widget-Name">Plugins</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

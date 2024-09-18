@@ -1,0 +1,17 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+  #set($pageName = $core_v2_page.GetFormValue('PageName'))
+  #set($pageTitle = $core_v2_page.GetFormValue('PageTitle'))
+  #set($copyFrom = $core_v2_page.GetFormValue('CopyFrom'))
+  #set($roleIds = $core_v2_page.GetFormValue('RoleIds'))
+
+  #set($response = $context.Create($pageName, $pageTitle, "%{ CopyFrom = $copyFrom, RoleIds = $roleIds }"))
+
+  #if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+  {"success":true}
+
+#end

@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupApplications_Name}" version="11.0.0.0" description="${resource:GroupApplications_Description}" instanceIdentifier="c43155667dcc46b39ab77715d05498ad" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-group-application-list" lastModified="2020-10-08 18:41:11Z" provider="ddc2457ce881411e9006a29abc51d9b5">
+    <contentScript language="Velocity"><![CDATA[#set($applications = $core_v2_application.List($context.ContainerTypeId, $context.ContainerId))
+#set($isDeleted = false)
+<form><fieldset class="filter-form">
+	<ul class="field-list">
+		<li class="field-item filters">
+		    <span class="field-item-input">
+				<select class="sort-field">
+				    <option value="0">$core_v2_language.GetResource('Filter_Applications')</option>
+				    <option value="1">$core_v2_language.GetResource('Filter_DeletedApplications')</option>
+				</select>
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+<div id="$core_v2_widget.UniqueId('list')">
+	#set($noItemsMessage = $core_v2_language.GetResource('no-applications'))
+	$core_v2_widget.ExecuteFile('list.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.groupApplications')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.groupApplications.register({
+			canCreate: #if ($context.CreatableApplicationTypes.Count > 0) true#else false#end,
+			list: jQuery('#$core_v2_widget.UniqueId('list')'),
+			searchResultList: jQuery('#$core_v2_widget.UniqueId('searchresultlist')'),
+			urls: {
+			    list: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.vm'))',
+			    setEnabled: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('set-enabled.vm'))',
+			    del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+			    restore: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('restore.vm'))',
+				addApplication: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('add-application.vm'))',
+				getApplicationCreationForm: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getapplicationcreationform.jsm'))',
+				createApplication: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-saveapplication.jsm'))'
+			},
+			text: {
+				enable: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('enable'))',
+				disable: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('disable'))',
+				deleteSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete-success'))',
+				deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete-confirmation'))',
+				restorableDeleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete-confirmation-restorable'))',
+				addApplication: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('add-application'))',
+				addApplicationWithName: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('add-application-withname'))',
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+				createSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('create-successful'))',
+				createFailed: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('create-failed'))',
+				restoreSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('restore-success'))',
+				restoreConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('restore-confirmation'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="add-application">Add Application</resource>
+  <resource name="add-application-description">Create a new {0} in this group.</resource>
+  <resource name="add-application-withname">Add {0}</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="create-failed">An unknown error occurred while creating the application.</resource>
+  <resource name="create-successful">The application was created successfully.</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="delete-confirmation">Are you sure you want to permanently delete '{0}'?</resource>
+  <resource name="delete-confirmation-restorable">Are you sure you want to delete '{0}'?</resource>
+  <resource name="delete-success">'{0}' has been deleted.</resource>
+  <resource name="deleted">Deleted</resource>
+  <resource name="disable">Disable</resource>
+  <resource name="disabled">Disabled</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="enable">Enable</resource>
+  <resource name="enabled">Enabled</resource>
+  <resource name="Filter_Applications">Applications</resource>
+  <resource name="Filter_DeletedApplications">Deleted applications</resource>
+  <resource name="find">Matching...</resource>
+  <resource name="GroupApplications_Description">Manage applications within this group.</resource>
+  <resource name="GroupApplications_Name">Applications</resource>
+  <resource name="more">More</resource>
+  <resource name="no-applications">This group does not yet have any applications.</resource>
+  <resource name="no-deleted-results">No deleted applications were found.</resource>
+  <resource name="no-search-results">No matching applications were found.</resource>
+  <resource name="restore-confirmation">Are you sure you want to undelete '{0}'?</resource>
+  <resource name="restore-success">'{0}' has been undeleted.</resource>
+  <resource name="save">Save</resource>
+  <resource name="undelete">Undelete</resource>
+  <resource name="view">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

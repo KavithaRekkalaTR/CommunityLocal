@@ -1,0 +1,98 @@
+#set ($fragmentId = false)
+#set ($fragmentIdQuery = $core_v2_page.GetQueryStringValue('_w_id'))
+#if ($fragmentIdQuery)
+	#set ($fragmentId = $core_v2_utility.ParseGuid($fragmentIdQuery))
+#end
+
+#set ($options = "%{}")
+#set ($fragment = false)
+
+#if ($fragmentId)
+	$options.Add('InstanceIdentifier', $fragmentId)
+#end
+
+#set ($fragment = $context.GetFragment($options))
+#set ($fragmentSelect = $core_v2_widget.UniqueId('FragmentSelect'))
+#set ($configForm = $core_v2_widget.UniqueId('FragmentConfiguration'))
+#set ($themes = $context.ListThemes())
+#set ($themeSelect = $core_v2_widget.UniqueId('ReplacementThemeSelect'))
+
+<form>
+
+	<fieldset>
+		<ul class="field-list">
+
+			<li class="field-item" #if ($themes.Count <= 1) style="display:none" #end>
+				<label class="field-item-name">$core_v2_language.GetResource('Theme')</label>
+				<span class="field-item-input">
+					<select id="$core_v2_encoding.HtmlAttributeEncode($themeSelect)">
+						#foreach ($theme in $themes)
+							<option value="$theme.Id">$theme.Title</option>
+						#end
+					</select>
+				</span>
+			</li>
+
+			<li class="field-item">
+				<label class="field-item-name">
+					#format($core_v2_language.GetResource('ReplacementWidget'))
+						#token('target')
+							$fragment.ProcessedName
+					#end
+				</label>
+				<span class="field-item-input">
+					#set ($fragments = $context.ListFragments("%{ }"))
+					<select id="$core_v2_encoding.HtmlAttributeEncode($fragmentSelect)">
+						<option value="">Select a Widget</option>
+						#foreach ($fragment in $fragments)
+							<option value="$fragment.InstanceIdentifier">$fragment.ProcessedName</option>
+						#end
+					</select>
+				</span>
+			</li>
+
+			<div id="$core_v2_encoding.HtmlAttributeEncode($configForm)" class="fragment-configuration-form"></div>
+		</ul>
+	</fieldset>
+</form>
+
+#set ($replacementHeaderTemplate = $core_v2_widget.UniqueId('replacementHeaderTemplate'))
+#registerClientTemplate($replacementHeaderTemplate)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button internal-link save disabled">$core_v2_language.GetResource('StageAndPreviewReplacement')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+#registerEndOfPageHtml('fragmentsPanel.replacement')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-replace.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.widgets.fragmentAdministration.replacement.register({
+			fragmentId: #if ($fragment) '$fragment.InstanceIdentifier' #else null #end,
+			replaceCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-replace.jsm'))',
+			listFragmentsCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+			configurationCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-configuration.jsm'))',
+			headerTemplateId: '$core_v2_encoding.JavascriptEncode($replacementHeaderTemplate)',
+			themeSelect: '#$core_v2_encoding.JavascriptEncode($themeSelect)',
+			fragmentSelect: '#$core_v2_encoding.JavascriptEncode($fragmentSelect)',
+			configForm: '#$core_v2_encoding.JavascriptEncode($configForm)',
+			replacedMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('replacedMessage'))',
+			getConfigurationValues: function() {
+				try {
+					return ($core_v2_dynamicForm.GetValuesScript($configForm));
+				} catch (e) {
+					return null;
+				}
+			}
+		});
+	});
+	</script>
+#end

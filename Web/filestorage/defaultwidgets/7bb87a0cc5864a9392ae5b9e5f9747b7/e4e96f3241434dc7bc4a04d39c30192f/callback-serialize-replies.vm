@@ -1,0 +1,26 @@
+##
+## Recursively renders a list of comments as generic replies serialized to JSON
+##
+## Requires in scope:
+##   $comments
+##
+[
+	#foreach ($comment in $comments)
+	#between
+		,
+	#each
+		{
+			#set ($excludeContainer = true)
+			$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+			#set ($excludeContainer = false)
+
+			## Render children recursively
+			#if ($comment.Children && $comment.Children.Count > 0)
+				#set ($originalComments = $comments)
+				#set ($comments = $comment.Children)
+				,"children": $core_v2_widget.ExecuteFile('callback-serialize-replies.vm')
+				#set ($comments = $originalComments)
+			#end
+		}
+	#end
+]

@@ -1,0 +1,109 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('pageIndex')))
+
+#set($articleId = false)
+#set($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('articleId')))
+
+#set($hasPublishGroups = false)
+#set($hasPublishGroups = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('hasPublishGroups')))
+
+#set($filter = false)
+#set($filter = $core_v2_page.GetFormValue('filter'))
+
+#set($query = "%{ PageIndex = $pageIndex, PageSize = 20, SortOrder = 'Descending', InCategory = '' }")
+
+#if ($filter == 'draft')
+    $query.Add('IsPublished', 'False')
+    $query.Add('IsDeleted', 'False')
+    $query.Add('SortBy', 'LastUpdateDate')
+#elseif($filter == 'published')
+    $query.Add('IsPublished', 'True')
+    $query.Add('IsDeleted', 'False')
+    $query.Add('SortBy', 'PublishDate')
+#elseif($filter == 'deleted')
+    $query.Add('IsDeleted', 'True')
+    $query.Add('SortBy', 'DeleteDate')
+#else
+    $query.Add('SortBy', 'PublishDate')
+#end
+
+#set($versions = $articles_v1_articleVersions.List($articleId, $query))
+
+#foreach ($version in $versions)
+#nodata
+    #if($pageIndex == 0)
+        <tr class="table-item">
+            <td class="" colspan="#if($hasPublishGroups) 6 #else 5 #end">
+                <div class="message norecords">$core_v2_language.GetResource('NoHistoryRecords')</div>
+            </td>
+        </tr>
+    #end
+#each
+    <tr class="table-item" data-version="$version.Version.ToString()" #if($version.IsPublished) data-ispublished="1" #else data-ispublished="0" #end data-publishgroupid="$!version.PublishGroup.Id" data-publishgroupname="$!version.PublishGroup.Name">
+	    <td class="table-column">
+			#set ($id = "${core_v2_widget.UniqueId('Version')}-${version.Version.ToString()}")
+			<input type="checkbox" name="$id" id="$id" />
+		</td>
+		<td class="table-column">
+			<label for="$id">$version.Title</label>
+			#if ($version.IsPublished)
+		        #if ($version.PublishEndDate && $core_v2_utility.CompareDates($version.PublishEndDate, 'EarlierThan', $core_v2_utility.CurrentDate))
+		            <span class="status unpublished">$core_v2_language.GetResource('Status_Unpublished')</span>
+		        #else
+		            <span class="status published">$core_v2_language.GetResource('Status_Published')</span>
+		        #end
+		    #elseif ($version.ReadyToPublish)
+		        #if ($version.IsPendingReview)
+		            <span class="status pendingreview">$core_v2_language.GetResource('Status_PendingReview')</span>
+		        #else
+		            <span class="status readytopublish">$core_v2_language.GetResource('Status_ReadyToPublish')</span>
+		        #end
+		    #else
+		        <span class="status draft">$core_v2_language.GetResource('Status_Draft')</span>
+		    #end
+			#store($author)
+    			#if ($version.Author.ProfileUrl)
+    				<a href="$core_v2_encoding.HtmlAttributeEncode($version.Author.ProfileUrl)" class="internal-link view-user-profile">$version.Author.DisplayName</a>
+    			#else
+    				$version.Author.DisplayName
+    			#end
+    	    #end
+			<div class="byline">$core_v2_language.FormatString($core_v2_language.GetResource('VersionByline'), $core_v2_language.FormatDateAndTime($version.LastUpdateDate), $author)</div>
+		</td>
+		<td class="table-column secondary">
+		    #set($published = false)
+		    #set($published = $version.PublishDate)
+		    #if (!$published && $version.PublishGroup && $version.PublishGroup.PublishDate)
+		        #set($published = $version.PublishGroup.PublishDate)
+		    #end
+		    #if ($published)
+		        #if ($version.IsPublished)
+			        $core_v2_language.FormatDateAndTime($published)
+			    #elseif ($version.ReadyToPublish)
+			        <em>$core_v2_language.FormatDateAndTime($published)</em>
+			    #end
+			#end
+		</td>
+		<td class="table-column secondary">
+		    #set($unpublished = false)
+		    #set($unpublished = $version.PublishEndDate)
+		    #if (!$unpublished && $version.PublishGroup && $version.PublishGroup.PublishEndDate)
+		        #set($unpublished = $version.PublishGroup.PublishEndDate)
+		    #end
+		    #if ($unpublished)
+		        #if ($core_v2_utility.CompareDates($unpublished, 'EarlierThan', $core_v2_utility.CurrentDate))
+			        $core_v2_language.FormatDateAndTime($unpublished)
+			    #elseif ($version.ReadyToPublish)
+			        <em>$core_v2_language.FormatDateAndTime($unpublished)</em>
+			    #end
+			#end
+		</td>
+		#if ($hasPublishGroups)
+		    <td class="table-column secondary">
+		        #if ($version.PublishGroup)
+		            $version.PublishGroup.Name
+		        #end
+		    </td>
+		#end
+	</tr>
+#end

@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:EditPage_Name}" version="10.2.0.0" description="${resource:EditPage_Description}" instanceIdentifier="c701b116c31d42abb4c1582c1824d5ff" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-edit-page with-header-filter" lastModified="2018-10-25 14:28:22Z" provider="b555f9614b8349cbbbc86404e00c1734">
+    <contentScript><![CDATA[#set ($editDescription = '')
+#set ($editTitle = '')
+#if ($context.CurrentPage)
+	#set($editDescription = $context.CurrentPage.Description)
+	#set($editTitle = $context.CurrentPage.Title)
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.editThemePage')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.editThemePage.register({
+			isDefault: #if($context.ForceDefault) true#else false#end,
+			previewUrl: '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)',
+			hasRelatedStagedItems: #if($context.HasRelatedStagedChanges) true #else false #end,
+			#set($scopedProperties = $context.GetRevertableScopedProperties())
+            #if ($scopedProperties.Count == 0)
+            	hasReversionOptions: false,
+            #else
+            	hasReversionOptions: true,
+            	reversionHtml: "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('render-reversion-options.vm'))",
+            #end
+			urls: {
+			    setRevert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('set-revert.vm'))',
+			    publishRevert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('publish-revert.vm'))',
+			    updateReversionOptions: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-updatereversionoptions.vm'))'
+			},
+			text: {
+				saveAndPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('saveAndPublish'))',
+				saveAndPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('saveAndPreview'))',
+				revert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert'))',
+				page: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('page'))',
+				header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('header'))',
+				footer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('footer'))',
+				modified: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('modified'))',
+				customized: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('customized'))',
+				notModified: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('not-modified'))',
+				notCustomized: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('not-customized'))',
+				staged: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('staged'))',
+				revertInstructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-instructions'))',
+				searchPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('find'))',
+				layout: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('layout'))',
+				widgets: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('widgets'))',
+				saveAndPublishSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-publish-successful'))',
+				saveAndPreviewSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-preview-successful'))',
+				saveAndPublishNoChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-publish-nochanges'))',
+				saveAndPreviewNoChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-preview-nochanges'))',
+				publishContainsStagedItems: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('publish-failed-stagedchanges'))',
+				layoutInstructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('layout-instructions'))',
+				widgetInstructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('widget-instructions'))',
+				revertOptions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-options'))',
+				containsStagedChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('contains-staged-changes'))',
+				reviewRelatedStagedChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('review-related-staged-changes'))',
+				previewEnabled: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview-enabled'))',
+				openPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('open-preview'))',
+				editingNotAllowedOnSmallScreens: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('no-editing-on-small-screen'))',
+				contextSpecific: {
+					nodefault: {
+						revertToPublished: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-nodefault'))',
+						revertToPublishedDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-description-nodefault'))',
+						revertToPublishedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-confirmation-nodefault'))',
+						revertToPublishedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-success-nodefault'))',
+						revertToParentConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-factory-confirmation-nodefault'))',
+						revertToParentSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-factory-successful-nodefault'))',
+						revertToParent: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-factory-default-nodefault'))',
+						revertToParentDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-factory-default-description-nodefault'))',
+						containerTitle: {
+							page: '$core_v2_encoding.JavascriptEncode($editTitle)',
+							header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-title-header'))',
+							footer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-title-footer'))',
+						},
+						containerDescription: {
+							#if ($editDescription)
+								page: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('container-description-page-withdescription-nodefault'), $editDescription, '{0}', '{1}'))',
+							#else
+								page: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('container-description-page-withoutdescription-nodefault'), $editDescription, '{0}', '{1}'))',
+							#end
+							header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-description-header-nodefault'))',
+							footer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-description-footer-nodefault'))',
+						}
+					},
+					'default': {
+						revertToPublished: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-default'))',
+						revertToPublishedDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-description-default'))',
+						revertToPublishedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-confirmation-default'))',
+						revertToPublishedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-success-default'))',
+						revertToParentConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-factory-confirmation'))',
+						revertToParentSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-factory-successful'))',
+						revertToParent: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-factory-default'))',
+						revertToParentDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-factory-default-description'))',
+						containerTitle: {
+							page: '$core_v2_encoding.JavascriptEncode($editTitle)',
+							header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-title-header'))',
+							footer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-title-footer'))',
+						},
+						containerDescription: {
+						#if ($editDescription)
+							page: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('container-description-page-withdescription-default'), $editDescription, '{0}', '{1}'))',
+						#else
+							page: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('container-description-page-withoutdescription-default'), $editDescription, '{0}', '{1}'))',
+						#end
+						header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-description-header-default'))',
+							footer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-description-footer-default'))',
+						}
+					},
+					contextual: {
+						revertToPublished: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-contextual'))',
+						revertToPublishedDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-description-contextual'))',
+						revertToPublishedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-confirmation-contextual'))',
+						revertToPublishedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-success-contextual'))',
+						revertToParent: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-default'))',
+						revertToParentDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-default-description'))',
+						revertToParentConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-confirmation'))',
+						revertToParentSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-successful'))',
+						containerTitle: {
+							page: '$core_v2_encoding.JavascriptEncode($editTitle)',
+							header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-title-header'))',
+							footer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-title-footer'))',
+						},
+						containerDescription: {
+						#if ($editDescription)
+							page: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('container-description-page-withdescription-contextual'), $editDescription, '{0}', '{1}'))',
+						#else
+							page: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('container-description-page-withoutdescription-contextual'), $editDescription, '{0}', '{1}'))',
+						#end
+						header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-description-header-contextual'))',
+							footer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('container-description-footer-contextual'))',
+						}
+					}
+				},
+				reset: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reset'))',
+				resetDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reset-description'))',
+				resetSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reset-successful'))',
+				noRevertOptions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('no-revert-options'))',
+				notEditable: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('not-editable'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="container-description-footer-contextual">The footer applied to all pages within '{1}'. Locked widgets will be inherited by any child themes that are configured to inherit footers.</resource>
+  <resource name="container-description-footer-default">The default footer applied to all {0} pages. Locked widgets will be inherited by every {0} and any child themes that are configured to inherit footers.</resource>
+  <resource name="container-description-footer-nodefault">The footer applied to all pages within the {0} theme.</resource>
+  <resource name="container-description-header-contextual">The header applied to all pages within '{1}'. Locked widgets will be inherited by any child themes that are configured to inherit headers.</resource>
+  <resource name="container-description-header-default">The default header applied to all {0} pages. Locked widgets will be inherited by every {0} and any child themes that are configured to inherit headers.</resource>
+  <resource name="container-description-header-nodefault">The header applied to all pages within the {0} theme.</resource>
+  <resource name="container-description-page-withdescription-contextual">{0} Changes apply to '{2}' only.</resource>
+  <resource name="container-description-page-withdescription-default">{0} This page is used as the default for every {1}. Locked widgets will be included on customizations made by each {1}.</resource>
+  <resource name="container-description-page-withdescription-nodefault">{0}</resource>
+  <resource name="container-description-page-withoutdescription-contextual">Changes apply to '{2}' only.</resource>
+  <resource name="container-description-page-withoutdescription-default">This page is used as the default for every {1}. Locked widgets will be included on customizations made by each {1}.</resource>
+  <resource name="container-description-page-withoutdescription-nodefault">(This page has no description)</resource>
+  <resource name="container-title-footer">Footer</resource>
+  <resource name="container-title-header">Header</resource>
+  <resource name="contains-staged-changes">Note: This page contains staged changes.</resource>
+  <resource name="customized">Published edits</resource>
+  <resource name="EditPage_Description">Edit the layout of the current page.</resource>
+  <resource name="EditPage_Name">Edit this Page</resource>
+  <resource name="find">Find a widget...</resource>
+  <resource name="footer">Footer</resource>
+  <resource name="header">Header</resource>
+  <resource name="layout">Layout</resource>
+  <resource name="layout-instructions">Select a layout to arrange content within.</resource>
+  <resource name="modified">Unsaved edits</resource>
+  <resource name="no-editing-on-small-screen">&lt;p&gt;Editing is not allowed when in single-column mode. Please use a desktop browser with a larger window to layout the page.&lt;/p&gt;</resource>
+  <resource name="no-revert-options">There is nothing to revert. You're working with the latest version already and there are no variations to revert to.</resource>
+  <resource name="not-customized">No published edits</resource>
+  <resource name="not-editable">Not editable</resource>
+  <resource name="not-modified">No unpublished edits</resource>
+  <resource name="open-preview">Open preview window</resource>
+  <resource name="page">Page</resource>
+  <resource name="preview-enabled">Previewing is now enabled. All browsers/devices you are signed into will now show staged changes.</resource>
+  <resource name="publish-failed-stagedchanges">The changes cannot be published because there are pending staged changes that should be reviewed prior to publishing. Please preview instead.</resource>
+  <resource name="reset">Undo all unsaved changes</resource>
+  <resource name="reset-description">All changes that have not yet been saved in this edit session will be reverted.</resource>
+  <resource name="reset-successful">Unsaved changes have been reverted.</resource>
+  <resource name="revert">Revert</resource>
+  <resource name="revert-confirmation">Are you sure you want to revert to the default layout?</resource>
+  <resource name="revert-factory-confirmation">Are you sure you want to revert to the factory default layout?</resource>
+  <resource name="revert-factory-confirmation-nodefault">Are you sure you want to revert to the factory default layout?</resource>
+  <resource name="revert-factory-successful">The reversion to the factory default is complete. The reversion has been staged for review.</resource>
+  <resource name="revert-factory-successful-nodefault">The reversion to the factory default is complete. The reversion has been staged for review.</resource>
+  <resource name="revert-instructions">Select the portion of the page to revert.</resource>
+  <resource name="revert-options">Reversion Options</resource>
+  <resource name="revert-options-instructions">The following shared widget options are customized. Choose which options to revert. Changes will be staged for previewing and can be published with other page edits.</resource>
+  <resource name="revert-successful">The reversion is complete.</resource>
+  <resource name="revert-to-default">Revert to default</resource>
+  <resource name="revert-to-default-description">Any changes made only for '{1}' will be removed and the default for every {0} will be used by '{1}'.</resource>
+  <resource name="revert-to-factory-default">Revert to the factory default</resource>
+  <resource name="revert-to-factory-default-description">Revert the default for every {0} to the factory default.</resource>
+  <resource name="revert-to-factory-default-description-nodefault">Any changes made will be removed and the factory default will be used.</resource>
+  <resource name="revert-to-factory-default-nodefault">Revert to the factory default</resource>
+  <resource name="revert-to-published-confirmation-contextual">Are you sure you want to revert staged changes?</resource>
+  <resource name="revert-to-published-confirmation-default">Are you sure you want to revert staged changes?</resource>
+  <resource name="revert-to-published-confirmation-nodefault">Are you sure you want to revert staged changes?</resource>
+  <resource name="revert-to-published-contextual">Revert staged changes</resource>
+  <resource name="revert-to-published-default">Revert staged changes</resource>
+  <resource name="revert-to-published-description-contextual">Any staged changes made for '{1}' will be removed and the currently published version will be loaded for editing.</resource>
+  <resource name="revert-to-published-description-default">Any staged changes made for the default for every '{0}' will be removed and the currently published version will be loaded for editing.</resource>
+  <resource name="revert-to-published-description-nodefault">Any staged changes will be removed and the currently published version will be loaded for editing.</resource>
+  <resource name="revert-to-published-nodefault">Revert staged changes</resource>
+  <resource name="revert-to-published-success-contextual">Staged changes have been reverted.</resource>
+  <resource name="revert-to-published-success-default">Staged changes have been reverted.</resource>
+  <resource name="revert-to-published-success-nodefault">Staged changes have been reverted.</resource>
+  <resource name="review-related-staged-changes">Previewing is now enabled, however, there are other related changes to review. Would you like to view all of your related staged changes now?</resource>
+  <resource name="saveAndPreview">Preview</resource>
+  <resource name="saveAndPublish">Publish</resource>
+  <resource name="save-preview-nochanges">There are no changes to stage for previewing.</resource>
+  <resource name="save-preview-successful">Your changes have been staged for previewing.</resource>
+  <resource name="save-publish-nochanges">There are no changes to publish.</resource>
+  <resource name="save-publish-successful">Your changes are now published.</resource>
+  <resource name="staged">Changes staged</resource>
+  <resource name="widget-instructions">Drag widgets onto the page to add content.</resource>
+  <resource name="widgets">Widgets</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

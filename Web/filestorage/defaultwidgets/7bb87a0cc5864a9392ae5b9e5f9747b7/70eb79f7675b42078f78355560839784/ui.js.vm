@@ -1,0 +1,12 @@
+$core_v2_page.SetContentType('application/javascript')
+#set ($isFlat = false)
+#set ($depth = $core_v2_widget.GetIntValue('depth', 3))
+#if ($depth == 1)
+	#set ($isFlat = true)
+#end
+(function(){
+	#if ($isFlat)
+		var FlattenedReplies = $core_v2_widget.RenderFile('threadFlattenedReplies.js');
+	#end
+	$core_v2_widget.RenderFile('ui.js')
+})();

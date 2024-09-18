@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:AchievementActivityStory_Name}" cssClass="" description="${resource:AchievementActivityStory_Description}"
+		instanceIdentifier="4f5929e69ac742b3a0c59a715dceba80" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content)
+	$core_v2_widget.Hide()
+#else
+	#set($achievement = $core_v2_achievement.Get($context.Story.ContentId))
+
+	#if (!$achievement)
+		$core_v2_widget.Hide()
+	#else
+		#set($isPreview = $context.IsPreview)
+
+		#if ($context.Story.Actors.Count == 1)
+			#set($actor0 = $context.Story.Actors.get_item(0).User)
+			#if ($actor0.Url)
+			 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor0.DisplayName, $actor0.Url))
+			#else
+				#set($profile0Html = $actor0.DisplayName)
+			#end
+
+			$core_v2_language.FormatString($core_v2_language.GetResource('Story_Single'), $profile0Html, $achievement.Title, $achievement.Url)
+		#elseif ($context.Story.Actors.Count == 2)
+			#set($actor0 = $context.Story.Actors.get_item(0).User)
+			#set($actor1 = $context.Story.Actors.get_item(1).User)
+			#if ($actor0.Url)
+			 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor0.DisplayName, $actor0.Url))
+			#else
+				#set($profile0Html = $actor0.DisplayName)
+			#end
+			#if ($actor1.Url)
+			 #set($profile1Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor1.DisplayName, $actor1.Url))
+			#else
+				#set($profile1Html = $actor1.DisplayName)
+			#end
+
+			$core_v2_language.FormatString($core_v2_language.GetResource('Story_Double'), $profile0Html, $profile1Html, $achievement.Title, $achievement.Url)
+		#elseif ($context.Story.Actors.Count > 2)
+			#set($actor0 = $context.Story.PrimaryUser)
+			#if ($actor0.Url)
+			 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor0.DisplayName, $actor0.Url))
+			#else
+				#set($profile0Html = $actor0.DisplayName)
+			#end
+			#set($count = $context.Story.Actors.Count - 1)
+
+			$core_v2_language.FormatString($core_v2_language.GetResource('Story_Multiple'), $profile0Html, $count.ToString(), $achievement.Title, $achievement.Url)
+		#end
+
+		#if (!$isPreview)
+			<div class="activity-achievement">
+				<div class="achievement-badge post-attachment-viewer">
+					$!core_v2_ui.GetResizedImageHtml($achievement.BadgeIconUrl, 100, 100, "%{border='0px', alt='$achievement.Title', ResizeMethod='ScaleDown'}")
+				</div>
+			</div>
+		#end
+	#end
+#end
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="AchievementActivityStory_Name">Achievement Activity Story</resource>
+	<resource name="AchievementActivityStory_Description">Story for achievements.</resource>
+	<resource name="UserProfile_Html"><![CDATA[<span class="username"><a href="{1}" class="internal-link view-user-profile">{0}</a></span>]]></resource>
+	<resource name="Story_Single"><![CDATA[{0} earned the <a class="internal-link" href="{2}">{1}</a> achievement.]]></resource>
+	<resource name="Story_Double"><![CDATA[{0} and {1} earned the <a class="internal-link" href="{3}">{2}</a> achievement.]]></resource>
+	<resource name="Story_Multiple"><![CDATA[{0} and {1} others earned the <a class="internal-link" href="{3}">{2}</a> achievement.]]></resource>
+</language>
+</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

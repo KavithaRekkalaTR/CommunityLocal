@@ -1,0 +1,161 @@
+##
+## Import selection form.
+## Expects in scope: $importResult, $uploadContext, $fileName
+##
+<form>
+	<fieldset>
+		<ul class="field-list">
+		#if ($importResult.NewAutomations.Count == 0 && $importResult.UpdatedAutomations.Count == 0 && $importResult.NewConfiguredAutomations.Count == 0 && $importResult.UpdatedConfiguredAutomations.Count == 0)
+			<p class="message error">$core_v2_language.GetResource('ImportEmpty')</p>
+		#elseif ($context.IsDeveloperModeEnabled("%{}") && ($importResult.NewAutomations.Count > 0 || $importResult.UpdatedAutomations.Count > 0))
+			<p class="message error">
+				#format($core_v2_language.GetResource('ImportDevMode'))
+					#token('studio')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">$core_v2_language.GetResource('AutomationStudio')</a>
+				#end
+			</p>
+		#else
+
+			#if ($importResult.NewAutomations.Count > 0)
+				<li class="field-item importable-automations new-automations">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('NewAutomationResources')
+						#else
+							$core_v2_language.GetResource('NewAutomations')
+						#end
+					</label>
+					<span class="field-item-description">$core_v2_language.GetResource('TheFollowingAutomationsAreNew')</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($automation in $importResult.NewAutomations)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${automation.Id}" class="importable-automation" data-id="$automation.Id" data-model="automation" checked />
+							<label  for="cb${automation.Id}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($automation.ProcessedName)
+							</label>
+						</span>
+						#if ($automation.ProcessedDescription)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($automation.ProcessedDescription)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.UpdatedAutomations.Count > 0)
+				<li class="field-item importable-automations updated-automations">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('UpdatedAutomationResources')
+						#else
+							$core_v2_language.GetResource('UpdatedAutomations')
+						#end
+					</label>
+					<span class="field-item-description">
+						#format ($core_v2_language.GetResource('UpdatedAutomationDesc'))
+							#token ('studio-begin-link')
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">
+							#token ('studio-end-link')
+								</a>
+						#end
+					</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($automation in $importResult.UpdatedAutomations)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${automation.Id}" class="importable-automation" data-id="$automation.Id" data-model="automation" />
+							<label  for="cb${automation.Id}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($automation.ProcessedName)
+							</label>
+						</span>
+						#if ($automation.ProcessedDescription)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($automation.ProcessedDescription)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.NewConfiguredAutomations.Count > 0)
+				<li class="field-item importable-automations new-configured-automations">
+					<label class="field-item-name heading">
+						$core_v2_language.GetResource('NewConfiguredAutomations')
+					</label>
+					<span class="field-item-description">$core_v2_language.GetResource('TheFollowingConfiguredAutomationsAreNew')</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($configuredAutomation in $importResult.NewConfiguredAutomations)
+						#set ($description = $core_v2_language.Truncate($configuredAutomation.Description, 280, '…'))
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb:config:${configuredAutomation.Id}" class="importable-automation" data-automationid="$configuredAutomation.AutomationId" data-id="$configuredAutomation.Id" data-model="configuration" checked />
+							<label  for="cb:config:${configuredAutomation.Id}" class="field-item-namep">
+								<span class="name">$configuredAutomation.Name</span>
+							</label>
+							#if ($description)
+								<span class="field-item-description">$description</span>
+							#end
+						</span>
+					#end
+				</li>
+			#end
+
+			#if ($importResult.UpdatedConfiguredAutomations.Count > 0)
+				<li class="field-item importable-automations updated-configured-automations">
+					<label class="field-item-name heading">
+						$core_v2_language.GetResource('UpdatedConfiguredAutomations')
+					</label>
+					<span class="field-item-description">$core_v2_language.GetResource('UpdatedConfiguredAutomationDesc')</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($configuredAutomation in $importResult.UpdatedConfiguredAutomations)
+						#set ($description = $core_v2_language.Truncate($configuredAutomation.Description, 280, '…'))
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb:config:${configuredAutomation.Id}" class="importable-automation" data-automationid="$configuredAutomation.AutomationId"  data-id="$configuredAutomation.Id" data-model="configuration" />
+							<label  for="cb:config:${configuredAutomation.Id}" class="field-item-name">
+								<span class="name">$configuredAutomation.Name</span>
+							</label>
+							#if ($description)
+								<span class="field-item-description">$description</span>
+							#end
+						</span>
+					#end
+				</li>
+			#end
+
+			#if ($importResult.MatchingAutomations.Count > 0 || $importResult.MatchingConfiguredAutomations.Count > 0)
+				<li class="field-item importable-automations updated-configured-automations">
+					<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+				</li>
+			#end
+		#end
+		</ul>
+	</fieldset>
+</form>
+
+#set ($importTemplateId = $core_v2_widget.UniqueId('importTemplate'))
+#registerClientTemplate($importTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-import.vm')
+#end
+#registerEndOfPageHtml('configuredAutomationsPanel.import')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-import.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.widgets.automationAdministration.import.register({
+			importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+			importTemplateId: '$core_v2_encoding.JavascriptEncode($importTemplateId)',
+			uploadContext: '$core_v2_encoding.JavascriptEncode($uploadContext)',
+			fileName: '$core_v2_encoding.JavascriptEncode($fileName)',
+			importCompleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportComplete'))'
+		});
+	});
+	</script>
+#end

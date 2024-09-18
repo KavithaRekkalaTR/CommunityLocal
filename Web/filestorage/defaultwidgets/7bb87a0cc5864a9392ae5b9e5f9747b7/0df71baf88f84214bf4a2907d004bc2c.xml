@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MoreContent_Name}" version="12.0.0.0" description="${resource:MoreContent_Description}" instanceIdentifier="0df71baf88f84214bf4a2907d004bc2c" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="more-content" lastModified="2022-05-11 19:33:07Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+#set ($delayedPagedContentWrapperId = $core_v2_widget.UniqueId('delayedPagedContentWrapper'))
+<div id="$core_v2_encoding.HtmlAttributeEncode($delayedPagedContentWrapperId)"></div>
+#set ($useSlider = false)
+#if ($core_v2_widget.GetStringValue('display', 'as-list') == 'as-slider')
+	#set ($useSlider = true)
+#end
+#set ($slideAt = '0.8')
+#if ($core_v2_widget.GetStringValue('slideAt', 'bottom') == 'middle')
+	#set ($slideAt = '0.3')
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.moreContent')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#set ($sliderTemplate = 'telligent.evolution.widgets.moreContent.sliderTemplate')
+#registerClientTemplate($sliderTemplate)
+	<div class="recommended-content-slider-content">
+		<a href="#" data-messagename="telligent.evolution.widgets.more.slider.close" class="close replace-with-icon cancel-circled">$core_v2_language.GetResource('close')</a>
+		<% foreach(contents, function(content) { %>
+			<h2><%= content.title %></h2>
+			<%= content.content %>
+		<% }); %>
+	</div>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.moreContent.register({
+			wrapper: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.WrapperElementId)',
+			useSlider: #if ($useSlider) true #else false #end,
+			title: '$core_v2_encoding.JavascriptEncode($core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:MoreContent_Name}')))',
+			content: '#$core_v2_ui.PagedContentWrapperElementId',
+			sliderTemplate: '$core_v2_encoding.JavascriptEncode($sliderTemplate)',
+			slideAt: $slideAt,
+			delayedPagedContentWrapper: '$core_v2_encoding.JavascriptEncode($delayedPagedContentWrapperId)',
+			delayedPagedContentUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('content.vm'))",
+			isPreview: #if($core_v2_widget.IsInWidgetPreviewMode) true#else false#end
+		});
+	});
+	</script>
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:MoreContent_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="options">
+	<property id="fragmentHeader" labelResourceName="title" defaultValue="${resource:MoreContent_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="moreType" labelResourceName="type" defaultValue="related" dataType="String">
+		<propertyValue value="related" labelResourceName="Related" orderNumber="1000000" propertiesToShow="groups,includeSubGroups,includeBlogPost,includeWikiPage,includeMedia,includeForumThread,includeGroup" />
+		<propertyValue value="recommended" labelResourceName="Recommended" orderNumber="1000001" propertiesToShow="groups,includeSubGroups,includeBlogPost,includeWikiPage,includeMedia,includeForumThread,includeGroup" />
+		<propertyValue value="users" labelResourceName="Users" orderNumber="1000002" propertiesToHide="groups,includeSubGroups,includeBlogPost,includeWikiPage,includeMedia,includeForumThread,includeGroup" />
+	</property>
+	<property id="display" labelResourceName="display" descriptionResourceName="display_description" defaultValue="as-list" dataType="String">
+		<propertyValue value="as-list" labelResourceName="list" orderNumber="1000000" propertiesToShow="pageSize" propertiesToHide="slideAt" />
+		<propertyValue value="as-slider" labelResourceName="slider" orderNumber="1000001" propertiesToShow="slideAt" propertiesToHide="pageSize" />
+	</property>
+	<property id="slideAt" labelResourceName="slideAt" descriptionResourceName="sildeAt_description" defaultValue="bottom" dataType="String">
+		<propertyValue value="middle" labelResourceName="middle" />
+		<propertyValue value="bottom" labelResourceName="bottom" />
+	</property>
+	<property id="includeContentTypeIds" labelResourceName="includeContentTypes" defaultValue="all" dataType="Custom" template="core_v2_contentTypeList" isSearchable="true" strictContentTypes="true" />
+	<property id="includeGroup" labelResourceName="includeGroup" defaultValue="true" dataType="Bool" />
+	<property id="groups" labelResourceName="groups" defaultValue="Group=-1" dataType="Custom" template="core_v2_groupLookup" enableCurrent="True" />
+	<property id="includeSubGroups" labelResourceName="includeSubGroups" defaultValue="true" dataType="Bool" />
+	<property id="daysBack" labelResourceName="daysBack" descriptionResourceName="daysBack_description" defaultValue="60" dataType="Int">
+	    <propertyRule name="minmax" min="0" />
+	</property>
+	<property id="pageSize" labelResourceName="pageSize" defaultValue="5" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="bottom">Bottom</resource>
+  <resource name="close">Close</resource>
+  <resource name="daysBack">Content Age</resource>
+  <resource name="daysBack_description">Returns only content create within the last (x) number of days.  0 for all time.</resource>
+  <resource name="display">Display</resource>
+  <resource name="display_description">By selecting 'slider', suggestions will be shown in a popup that slides in when the page is scrolled. On narrow targets, 'list' is used even if 'slider' is selected.</resource>
+  <resource name="groups">Filter content by groups</resource>
+  <resource name="Header_RecommendedContent">Recommended For You</resource>
+  <resource name="Header_RecommendedUsers">People You May Know</resource>
+  <resource name="Ignore">Ignore</resource>
+  <resource name="IgnoreRecommendation">Ignore Recommendation</resource>
+  <resource name="includeContentTypes">Show content</resource>
+  <resource name="includeGroup">Show groups</resource>
+  <resource name="includeSubGroups">Include sub groups' content</resource>
+  <resource name="list">List</resource>
+  <resource name="middle">Middle</resource>
+  <resource name="MoreContent_Description">Suggests related or recommended content the accessing user may be interested in.</resource>
+  <resource name="MoreContent_Name">More Content</resource>
+  <resource name="options">Options</resource>
+  <resource name="pageSize">Number of items to show</resource>
+  <resource name="Recommended">Recommended</resource>
+  <resource name="Related">Related</resource>
+  <resource name="sildeAt_description">Selects at roughly which scroll position the suggestions should reveal</resource>
+  <resource name="slideAt">Slide in when scrolled to:</resource>
+  <resource name="slider">Slider</resource>
+  <resource name="title">Title</resource>
+  <resource name="type">Type</resource>
+  <resource name="Users">Recommended People</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[
+			$core_v2_widget.GetStringValue('display', 'as-list')
+		]]></additionalCssScript>
+    <restScopes>
+      <scope id="content.recommendations.modify" />
+      <scope id="users.recommendations.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

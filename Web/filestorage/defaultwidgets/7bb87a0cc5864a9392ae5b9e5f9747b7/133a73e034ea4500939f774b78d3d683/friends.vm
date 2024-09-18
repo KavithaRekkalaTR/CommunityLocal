@@ -1,0 +1,56 @@
+#set ($friendships = $core_v2_friendship.List("%{ FriendshipState = 'Approved', RequestorId = $targetUser.Id, PageIndex = $pageIndex, PageSize = $pageSize, SortBy = 'DisplayName', SortOrder = 'Ascending' }"))
+#set($total = $friendships.TotalCount)
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($friendships.PageIndex + 1) * $friendships.PageSize)
+#if ($friendships.TotalCount > $currentPagedQuantity)
+		#set ($hasMore = true)
+#end
+
+#foreach ($friendship in $friendships)
+#beforeall
+	<form>
+	<div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+#each
+	#set ($user = false)
+	#if ($friendship.Recipient && $friendship.Recipient.Id == $targetUser.Id)
+		#set ($user = $friendship.Requestor)
+	#else
+		#set ($user = $friendship.Recipient)
+	#end
+	#if ($user)
+		<div class="content-item content thumbnail" data-hasmore="$hasMore" data-userid="$user.Id" style="cursor: pointer;" data-url="$!core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 140, 140, "%{alt=$user.DisplayName,border='0',ResizeMethod = 'ZoomAndCrop'}")
+						</div>
+						<h2 class="name">
+								$user.DisplayName
+						</h2>
+			<div class="actions">
+				<div class="navigation-list ui-links" data-minlinks="0" data-maxlinks="0" data-direction="horizontal">
+					<ul>
+						#foreach($action in $core_v2_user.ListActionLinks($user.Id))
+							<li class="navigation-list-item">$action.Html</li>
+						#end
+						<li class="navigation-list-item">
+											<a href="#" data-more>$core_v2_language.GetResource('Connect')</a>
+									</li>
+						<li class="navigation-list-item">
+																<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+														</li>
+					</ul>
+				</div>
+			</div>
+			<div class="edit-mode" style="display: none;">
+				<input type="checkbox" />
+			</div>
+		</div>
+	#end
+#afterall
+	</div>
+	</form>
+#nodata
+	<div class="message norecords">
+		$core_v2_language.FormatString($core_v2_language.GetResource('EditProfile_Friends_None'), $targetUser.DisplayName)
+	</div>
+#end

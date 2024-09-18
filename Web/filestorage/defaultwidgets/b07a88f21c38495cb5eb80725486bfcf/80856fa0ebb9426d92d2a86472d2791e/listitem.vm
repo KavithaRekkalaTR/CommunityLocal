@@ -1,0 +1,77 @@
+## Expects in scope:
+##  $document
+<li class="content-item" data-filestorekey="$document.FileStoreKey" data-path="$document.Path" data-filename="$document.FileName">
+	<div class="content">
+		<h4 class="name">$document.FileName</h4>
+
+		<div class="attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<span class="attribute-value">
+						#if ($document.Status == 'NotConverted')
+							$core_v2_language.GetResource('NotConverted')
+						#elseif ($document.Status == 'Converted')
+							$core_v2_language.GetResource('Converted')
+						#elseif ($document.Status == 'Error')
+							$core_v2_language.GetResource('Error')
+						#end
+					</span>
+				</li>
+				<li class="attribute-item">
+				    <span class="attribute-value">
+				        $core_v2_language.FormatDateAndTime($document.Timestamp)
+				    </span>
+				</li>
+			</ul>
+		</div>
+		
+		<div class="content expandable">
+		    #if ($document.Status == 'Error' && $document.Message && $document.Message.Length > 0)
+		        <pre>$core_v2_encoding.HtmlEncode($document.Message)</pre>
+		    #end
+		</div>
+
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+				    #if ($document.Status == 'Converted')
+				        #set($theaterUrl = false)
+				        #set($theaterUrl = $context.GetTheaterViewUrl($document.FileStoreKey, $document.Path, $document.FileName))
+				        #if ($theaterUrl)
+    				        <li class="navigation-list-item">
+    				            <a href="#" data-messagename="administration.documentViewer.theater" data-theaterurl="$core_v2_encoding.HtmlAttributeEncode($theaterUrl)"><span>$core_v2_language.GetResource('View')</span></a>
+    				        </li>
+    				    #end
+				    #end
+				    #set($downloadUrl = false)
+				    #set($downloadUrl = $context.GetDownloadUrl($document.FileStoreKey, $document.Path, $document.FileName))
+				    #if ($downloadUrl)
+    				    <li class="navigation-list-item">
+				            <a href="$core_v2_encoding.HtmlAttributeEncode($downloadUrl)" target="_blank">$core_v2_language.GetResource('Download')</a>
+				        </li>
+				    #end
+					#if ($document.Status == 'Converted' || $document.Status == 'Error')
+						<li class="navigation-list-item reconvert">
+							<a href="#" data-messagename="administration.documentViewer.reConvert"
+								data-filestorekey="$core_v2_encoding.HtmlAttributeEncode($document.FileStoreKey)"
+								data-path="$core_v2_encoding.HtmlAttributeEncode($document.Path)"
+								data-filename="$core_v2_encoding.HtmlAttributeEncode($document.FileName)">
+								$core_v2_language.GetResource('reconvert')
+							</a>
+						</li>
+					#end
+					#if ($document.Status == 'NotConverted')
+						<li class="navigation-list-item reconvert">
+							<a href="#" data-messagename="administration.documentViewer.cancel"
+								data-filestorekey="$core_v2_encoding.HtmlAttributeEncode($document.FileStoreKey)"
+								data-path="$core_v2_encoding.HtmlAttributeEncode($document.Path)"
+								data-filename="$core_v2_encoding.HtmlAttributeEncode($document.FileName)">
+								$core_v2_language.GetResource('Cancel')
+							</a>
+						</li>
+					#end
+				</ul>
+			</div>
+		</div>
+	</div>
+</li>

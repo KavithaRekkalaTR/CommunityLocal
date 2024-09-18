@@ -1,0 +1,46 @@
+#set($treeData = $util.getEditableRendering())
+#set($uploadContext = $core_v2_uploadedFile.CreateContextId())
+
+<select id="$context.UniqueId" style="width: 300px; height: 300px;">
+    $treeData.html
+</select>
+<div>
+    <a href="#" id="${context.UniqueId}_add" style="margin-right: 1em;">$core_v2_language.GetResource('Add')</a>
+    <a href="#" id="${context.UniqueId}_edit" style="margin-right: 1em;">$core_v2_language.GetResource('Edit')</a>
+    <a href="#" id="${context.UniqueId}_delete">$core_v2_language.GetResource('Delete')</a>
+</div>
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery(function() {
+    var api = $context.JsonApi;
+    jQuery.telligent.evolution.templates.customNavigationEditor.register({
+        api: api,
+        id: '$context.UniqueId',
+        uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContext)',
+        treeItemHtml: $core_v2_utility.ToJson($treeData.treeItemHtml),
+        maxDepth: $context.MaxDepth,
+        enableDescriptions: #if($context.EnableDescriptions) true #else false #end,
+        enableAvatars: #if($context.EnableAvatars) true #else false #end,
+        urls: {
+            getForm: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getconfigurationform.jsm'))',
+            parseNavigationItems: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-parsenavigationitems.jsm'))',
+            parseNavigationItem: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-parsenavigationitem.jsm'))',
+            addEditModal: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('modal-createeditnavigationitem.vm'))',
+            upload: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContext))',
+            preview: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-previewimage.jsm'))',
+            resolveTokens: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-processtokens.jsm'))'
+        },
+        text: {
+            add: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Add'))',
+            edit: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Edit'))',
+            confirmDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ConfirmDelete'))',
+            change: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Avatar_Change'))',
+		    upload: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Avatar_Upload'))',
+		    progress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Avatar_Progress'))',
+		    groupNamePlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Current_Group'))',
+		    applicationNamePlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Current_Application'))',
+		    userNamePlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Current_User'))'
+        }
+    });
+});
+</script>

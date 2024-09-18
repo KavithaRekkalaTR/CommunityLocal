@@ -1,0 +1,47 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($stage = false)
+	#set($stage = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('stage')))
+
+	#set($revert = "%{}")
+	#foreach ($id in $core_v2_page.GetFormValues('properties[]'))
+		$revert.Add($id, 'true')
+	#end
+
+	#if ($revert.Count > 0)
+		#set($response = $context.RevertThemeConfigurationProperties($revert, $stage))
+		#if ($response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+	#end
+
+	#set($revert = "%{}")
+	#foreach ($id in $core_v2_page.GetFormValues('files[]'))
+		$revert.Add($id, 'true')
+	#end
+
+	#if ($revert.Count > 0)
+		#set($response = $context.RevertThemeFiles($revert, $stage))
+		#if ($response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+	#end
+
+	#set($revert = "%{}")
+	#foreach ($id in $core_v2_page.GetFormValues('scopedproperties[]'))
+		$revert.Add($id, 'true')
+	#end
+
+	#if ($revert.Count > 0)
+		#set($response = $context.RevertScopedProperties($revert, $stage))
+		#if ($response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+	#end
+
+	{
+		"success":true,
+		"hasRelatedStagedItems": #if($context.HasRelatedStagedItems) true #else false #end
+	}
+#end

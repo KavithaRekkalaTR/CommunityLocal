@@ -1,0 +1,58 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS 
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+@import "-evo-themefile-url('variables.less')";
+@import "-evo-themefile-url('icons.less')";
+@import "-evo-themefile-url('mixins.less')";
+
+.touch {
+	.layout-content.content-left-sidebar-right,
+	.layout-content.sidebar-left-content-right,
+	.layout-content.sidebar-left-content-center-sidebar-right,
+	.layout-content.header-top-content-left-sidebar-right,
+	.layout-content.header-top-sidebar-left-content-right {
+		.layout-region.left-sidebar,
+		.layout-region.right-sidebar {
+			width: @sidebar-width-tablet - @spacing;
+		}
+	}
+
+	// page editing off in tablet
+	.admin-bar,
+	.page-editing,
+	.page-editing *,
+	.page-management-edit-link,
+	.page-management-edit-link *,
+	.content-fragment-management,
+	.content-fragment-management-header,
+	.content-fragment-management-header-inner,
+	.page-editing,
+	.page-management-edit-link {
+		display: none;
+	}
+
+
+	.tourtip {
+		.tourtip-actions {
+			a {
+			}
+		}
+	}
+
+	.links-popup-panel {
+		ul {
+			> li > span > a,
+			a {
+			}
+		}
+	}
+
+	.banner.site {
+		position: static !important;
+	}
+}

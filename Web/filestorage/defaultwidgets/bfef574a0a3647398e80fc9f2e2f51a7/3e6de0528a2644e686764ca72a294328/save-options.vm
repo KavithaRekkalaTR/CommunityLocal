@@ -1,0 +1,16 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($indexPerRun = false)
+	#set($indexPerRun = $core_v2_page.GetFormValue('IndexPerRun'))
+  #if ($indexPerRun)
+		$core_v2_widget.SetIntValue('IndexPerRun', $core_v2_utility.ParseInt($core_v2_page.GetFormValue('IndexPerRun')))
+  #end
+
+	{
+		"success": true,
+		"IndexPerRun": $indexPerRun,
+	 }
+#end

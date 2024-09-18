@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:SearchFlagsFilter_Name}"
+                           version="10.0.0.0"
+                           description="${resource:SearchFlagsFilter_Description}"
+                           instanceIdentifier="4e8f8e19858d4d0592c6b4b0c4add3bd"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+
+#set($searchFlags = $core_v2_widget.UniqueId("searchFlags"))
+
+<div id="$searchFlags" class="custom-filter">
+    <span></span> <b class="caret"></b>
+</div>
+
+#registerEndOfPageHtml('telligent.reporting.widgets.searchFlagsFilter')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('searchflagspicker.js')"></script>
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	var searchFlags = [];
+	#foreach($flag in $filterContext.GetSearchFlags())
+        searchFlags.push({key: '$flag.SearchFlagKey', name: '$core_v2_encoding.JavascriptEncode($flag.Name)'});
+	#end
+
+      jQuery.telligent.reporting.widgets.searchFlagsFilter.register({
+        tabKey: '$filterContext.TabKey',
+        searchFlagOptions: searchFlags,
+        fields: {
+          searchFlagsId: '#$searchFlags'
+        },
+        resources: {
+            searchTypeIs: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('searchTypeIs'))',
+            allFlags: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('allFlags'))',
+        }
+      });
+</script>
+#end
+
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="SearchFlagsFilter_Name">Date Period Filter</resource>
+        <resource name="SearchFlagsFilter_Description">Displays date period filter for reports and dashboards</resource>
+        <resource name="searchTypeIs">For {0} searches</resource>
+        <resource name="allFlags">For all searches</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

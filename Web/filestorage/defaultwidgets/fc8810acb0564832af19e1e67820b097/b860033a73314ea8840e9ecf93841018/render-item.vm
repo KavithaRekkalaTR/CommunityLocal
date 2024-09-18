@@ -1,0 +1,62 @@
+##
+## Expects in scope: $action
+##
+
+<div class="content action">
+    #set($user = false)
+    #set($user = $core_v2_user.Get("%{Id = $action.ExecutingUserId}"))
+
+    <div class="avatar">
+        #if ($user.AvatarUrl)
+            $core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 45, 45, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$user.DisplayName' }")
+        #end
+    </div>
+
+    <div class="content-container">
+        <h3 class="name">$action.Title</h3>
+
+        <div class="attributes">
+            <ul class="attribute-list">
+                <li class="attribute-item">
+                    <span class="attribute-name">$action.Action</span>
+                </li>
+                <li class="attribute-item">
+                    <span class="attribute-value">$core_v2_language.FormatDateAndTime($action.Timestamp)</span>
+                </li>
+                <li class="attribute-item">
+                    <span class="attribute-name">$action.IpAddress</span>
+                </li>
+                <li class="attribute-item">
+                    <span class="attribute-name">$action.MachineName ($action.ServiceType)</span>
+                </li>
+                <li class="attribute-item">
+                    <span class="attribute-name">$action.Source</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content description expandable">
+            #if(!$action.Message || $action.Message == '')
+                $core_v2_language.GetResource('NoDetails')
+            #else
+                $action.Message
+            #end
+        </div>
+
+        <div class="actions expandable">
+            <div class="navigation-list ui-links" data-direction="horizontal">
+                <ul>
+                    <li class="navigation-list-item">
+                        <a href="#" data-messagename="audit-export" data-Id="$action.Id">$core_v2_language.GetResource('Export')</a>
+                    </li>
+                    <li class="navigation-list-item">
+                        <a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+                    </li>
+                    <li class="navigation-list-item">
+                        <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

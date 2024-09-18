@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Moderation Appeal Expiration" version="13.0.0.0" description="Sends an notification to review board members when content is about to be expired from the moderation queue." id="a60472321ea44bfd8c481681a8431acd" lastModified="2023-04-20 16:07:28Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	#format($core_v2_language.GetResource('Body_Introduction_User'))
+	#token('user_name')
+	    $context_v1_email.Context.Content.HtmlName('Web')
+	#token('appeal_expires')
+	    $core_v2_language.FormatDateAndTime($context_v1_email.Context.AbuseAppeal.AppealExpires)
+	#end
+#else
+	#format($core_v2_language.GetResource('Body_Introduction_Content'))
+	#token('content_name')
+	    $context_v1_email.Context.Content.HtmlName('Web')
+	#token('application_name_link')
+	    #set($url = false)
+    	#set($url = $context_v1_email.Context.Content.Application.Url)
+    	#if ($url)
+    		<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$context_v1_email.Context.Content.Application.HtmlName('Web')</a>
+    	#end
+    #token('appeal_expires')
+		$core_v2_language.FormatDateAndTime($context_v1_email.Context.AbuseAppeal.AppealExpires)
+	#end
+#end
+</p>
+
+<p>
+#format($core_v2_language.GetResource('Body_Action'))
+#token('moderation_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.AppealQueue(false))">$core_v2_language.GetResource('Moderation')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Action">Please visit the {moderation_link} to make your decision.</resource>
+  <resource name="Body_Introduction_Content">You were previously notified that the content, {content_name} in {application_name_link}, was moderated and required review. You have until {appeal_expires} to review this content before it is permanently deleted.</resource>
+  <resource name="Body_Introduction_User">You were previously notified that the user account, {user_name} was moderated and required review. You have until {appeal_expires} to review this account before it is permanently deleted.</resource>
+  <resource name="Moderation">moderation queue</resource>
+  <resource name="Subject">Final chance to review moderated content on {site_name}</resource>
+  <resource name="Header">Final chance to review moderated content on {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

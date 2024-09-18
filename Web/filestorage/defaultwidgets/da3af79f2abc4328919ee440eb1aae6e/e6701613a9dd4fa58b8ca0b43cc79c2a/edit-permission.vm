@@ -1,0 +1,69 @@
+#set ($permissionId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_permissionId')))
+
+#set ($roles = false)
+#set ($roles = $context.ListRolesForPermission($context.ApplicationId, $context.ApplicationTypeId, $permissionId))
+
+#set($applicationType = $core_v2_applicationType.Get($context.ApplicationTypeId))
+#set ($permission = $context.GetPermission($permissionId))
+
+<p>$permission.Description</p>
+
+#set ($currentGroup = -1)
+
+#foreach ($role in $roles)
+#beforeall
+    <fieldset class="form-wrapper">
+#each
+	#if($currentGroup != $role.Role.GroupId && $currentGroup != -1)
+		</ul>
+	#end
+
+	#if($currentGroup != $role.Role.GroupId)
+        <div class="role-type-header">
+            #if ($role.Role.GroupId > 0)
+   				$core_v2_language.GetResource('group_roles')
+            #else
+   				$core_v2_language.FormatString($core_v2_language.GetResource('Allowed'), $core_v2_language.GetResource('site_roles'))
+            #end
+        </div>
+       <ul class="field-list">
+    #end
+
+    #set($id = "")
+    #set($id = "${permissionId}-${role.Role.Id}")
+    <li class="field-list-item">
+        <input type="checkbox" name="role" class="role" id="$id" data-roleId="$role.Role.Id" #if($role.IsAllowed) checked="checked" #end
+            data-roleName="$core_v2_encoding.HtmlAttributeEncode($role.Role.Name)" data-value="$role.IsAllowed.ToString().ToLowerInvariant()" />
+        <label for="$id">$role.Role.Name</label>
+    </li>
+
+    #set($currentGroup = $role.Role.GroupId)
+#afterall
+    </ul>
+    </fieldset>
+#end
+
+<div class="message norecords" #if($roles.Count > 0) style="display: none;"#end>$core_v2_language.GetResource("NoRolesAllowed")</div>
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.contextualRolesEditPermission.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		permissionId: '$permissionId',
+        permissionName: '$applicationType.Name - $permission.Name',
+		urls: {
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+            updateRoles: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update-permission-roles.vm'))'
+		},
+		text: {
+			permissionsUpdated: '$core_v2_language.GetResource('PermissionsUpdated')',
+			unsavedCustomization: '$core_v2_language.GetResource('UnsavedCustomization')',
+            roleRemovalMessage: '$core_v2_language.GetResource('RoleRemovalMessage')'
+		}
+	});
+});
+</script>
+
+
+

@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="e586eab5a1cf434aa2a3b5ecf2a5a245" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-06-03 16:28:31Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="media.aftercreate" />
+      <event key="media.afterdelete" />
+      <event key="media.download" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var userId = context_v2_automationTrigger.Arguments.Author.Id;
+if (!userId) {
+    return;
+}
+
+var ranges = core_v2_widget.GetStringValue('ranges', '');
+if (ranges === '') {
+    var minDownloadCount = core_v2_widget.GetIntValue('minDownloadCount', 0);
+    var maxDownloadCount = 0;
+    var minMediaCount = core_v2_widget.GetIntValue('minMediaCount', 1);
+    var maxMediaCount = 0;
+} else if (ranges == 'downloads') {
+    var downloadCountRange = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('downloadCountRange', ''));
+    var minDownloadCount = core_v2_utility.ParseInt(downloadCountRange.Value('Minimum'));
+    var maxDownloadCount = core_v2_utility.ParseInt(downloadCountRange.Value('Maximum'));
+    var minMediaCount = core_v2_widget.GetIntValue('minMediaCount', 1);
+    var maxMediaCount = 0;
+} else if (ranges == 'files') {
+    var minDownloadCount = core_v2_widget.GetIntValue('minDownloadCount', 0);
+    var maxDownloadCount = 0;
+    var mediaRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('mediaCountRange', ''));
+    var minMediaCount = core_v2_utility.ParseInt(mediaRangeQuery.Value('Minimum'));
+    var maxMediaCount = core_v2_utility.ParseInt(mediaRangeQuery.Value('Maximum'));
+}
+
+var result = null;
+
+//remove achievement if range has been selected and exceeded
+if (ranges == 'comments' && maxCommentCount > 0) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId,
+        MinimumDownloadCount: maxDownloadCount + 1
+    };
+
+    var totalCount = core_v2_media.List(query).TotalCount;
+    if (totalCount >= minDownloadCount) {
+        result = 'revoke';
+    }
+}
+
+if (result === null) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId
+    };
+if (minDownloadCount > 0) {
+    query.MinimumDownloadCount = minDownloadCount;
+}
+if (maxDownloadCount > 0) {
+    query.MaximumDownloadCount = maxDownloadCount;
+}
+
+    var totalCount = core_v2_media.List(query).TotalCount;
+    if (totalCount >= minMediaCount && (maxMediaCount === 0 || totalCount <= maxMediaCount)) {
+        result = 'award';
+    } else {
+        result = 'revoke';
+    }
+}
+
+if (result !== null) {
+    var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+
+    if (result == 'award') {
+        if (!hasAchievement) {
+            context_v1_achievementAutomation.Award(userId);
+        }
+    } else if (result == 'revoke') {
+        if (hasAchievement) {
+            context_v1_achievementAutomation.Revoke(userId);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="ranges" resourceName="Ranges" descriptionResourceName="Ranges_Description" dataType="string" defaultValue="" controlType="Telligent.Evolution.Controls.PropertyVisibilityValueSelectionControl, Telligent.Evolution.Platform">
+            <propertyValue value="" resourceName="Ranges_None" propertiesToShow="minDownloadCount,minMediaCount" propertiesToHide="downloadCountRange,mediaCountRange" />
+            <propertyValue value="files" resourceName="Ranges_Files" propertiesToShow="minDownloadCount,mediaCountRange" propertiesToHide="minMediaCount,downloadCountRange" />
+            <propertyValue value="downloads" resourceName="Ranges_Downloads" propertiesToShow="minMediaCount,downloadCountRange" propertiesToHide="minDownloadCount,mediaCountRange" />
+    </property>
+    <property id="minMediaCount" labelResourceName="MediaCount" descriptionResourceName="MediaCount_Description" dataType="Int" defaultValue="5" >
+        <propertyRule name="minmax" min="1" />
+    </property>
+    <property id="mediaCountRange" labelResourceName="MediaCountRange" descriptionResourceName="MediaCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+    <property id="minDownloadCount" labelResourceName="DownloadCount" descriptionResourceName="DownloadCount_Description" dataType="Int" defaultValue="0" >
+        <propertyRule name="minmax" min="0" />
+    </property>
+    <property id="downloadCountRange" labelResourceName="DownloadCountRange" descriptionResourceName="DownloadCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="0" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Grants or revokes an achievement based on the number of uploaded media files an author has created and their level of interaction.</resource>
+  <resource name="DownloadCount">Required download count per file</resource>
+  <resource name="DownloadCount_Description">The required minimum number of downloads, per media file, to include the file in the total count.</resource>
+  <resource name="DownloadCountRange">Download count range</resource>
+  <resource name="DownloadCountRange_Description">The minimum and maximum number of downloads required on media files by the author to award the achievement.</resource>
+  <resource name="MediaCount">Required total media file count</resource>
+  <resource name="MediaCount_Description">The required minimum number of media files uploaded by a member to award the achievement.</resource>
+  <resource name="MediaCountRange">Media count range</resource>
+  <resource name="MediaCountRange_Description">The minimum and maximum count of media files by the author that must have the required download count to award the achievement.</resource>
+  <resource name="Ranges">Range</resource>
+  <resource name="Ranges_Description">A range allows a minimum and maximum value to be set for the selected item.  If the maximum or minimum value is no longer met, the achievement will be removed.  If 'No range' is selected, the achievement will only be removed if the minimum values are no longer met.</resource>
+  <resource name="Ranges_Downloads">On download count</resource>
+  <resource name="Ranges_Files">On file count</resource>
+  <resource name="Ranges_None">No range</resource>
+  <resource name="Title">Award to authors of media files by their total file and download count</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

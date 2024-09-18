@@ -1,0 +1,48 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($ApplicationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ApplicationId')))
+
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#if ($Name && $Name != '')
+		$options.Add('Name', $Name)
+	#end
+
+    #set($GroupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupId')))	
+	#if ($GroupId > 0)
+		$options.Add('GroupId', $GroupId)
+	#end
+
+    #set($Description = $core_v2_page.GetFormValue('Description'))
+	$options.Add('Description', $Description)
+
+    #set($Address = $core_v2_page.GetFormValue('Address'))	
+	$options.Add('Address', $Address)
+	
+	#set($Languages = $core_v2_page.GetFormValue('Languages'))
+	$options.Add('Languages', $Languages)
+	
+	#set($Languages = $core_v2_page.GetFormValue('Categories'))
+	$options.Add('Categories', $Languages)
+	
+	#set($Languages = $core_v2_page.GetFormValue('NavigationTagId'))
+	$options.Add('NavigationTagId', $Languages)
+	
+	#foreach ($tag in $context.TopLevelTags)
+        #set($TagFilter = false)
+        #set($TagFilter = $core_v2_page.GetFormValue("TagFilter_$tag.Id"))
+        #if ($TagFilter)
+            $options.Add("TagFilter_$tag.Id", $TagFilter)
+        #end
+	#end
+	
+	#set($response = $context.Update($options))
+	#if ($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	#set($collection = $km_v1_knowledgeCollections.Get($ApplicationId))
+	{"success":true, "redirectUrl":"$collection.Url"}
+#end

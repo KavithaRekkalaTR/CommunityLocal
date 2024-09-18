@@ -1,0 +1,33 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($siteName = false)
+	#set($siteName = $core_v2_page.GetFormValue('SiteName'))
+	#if ($siteName)
+		$options.Add('SiteName', $siteName)
+	#end
+
+	#set($siteDescription = false)
+	#set($siteDescription = $core_v2_page.GetFormValue('SiteDescription'))
+	#if ($siteDescription)
+		$options.Add('SiteDescription', $siteDescription)
+	#end
+
+	#set($logoFileName = false)
+	#set($logoFileName = $core_v2_page.GetFormValue('LogoFileName'))
+	#set($logoFileContext = false)
+	#set($logoFileContext = $core_v2_page.GetFormValue('LogoFileContext'))
+	#if ($logoFileName && $logoFileContext)
+		$options.Add('LogoFileName', $logoFileName)
+		$options.Add('LogoUploadContext', $logoFileContext)
+	#end	
+
+	#set($response = $core_v2_configuration.Update($options))
+	#if (!$response || ($response.Errors && $response.HasErrors()))
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+		{"success":"True"}
+	#end
+#end

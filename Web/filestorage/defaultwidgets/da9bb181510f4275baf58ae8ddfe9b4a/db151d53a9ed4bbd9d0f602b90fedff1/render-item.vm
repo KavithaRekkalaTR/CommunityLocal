@@ -1,0 +1,180 @@
+##
+## Expects in scope: $theme
+##
+#if ($theme)
+
+	#set ($supportsSetAsDefault = false)
+	#set ($isDefaultThemeOfType = false)
+	#if ($theme.TypeId != $core_v2_configuration.SiteThemeTypeId && !$theme.IsStaged)
+		#set ($allThemesOfType = $context.ListThemes("%{ TypeId = $theme.TypeId, Staged = 'false', PageSize = 1, PageIndex = 0 }"))
+		#if ($allThemesOfType.TotalCount > 1)
+			#set ($supportsSetAsDefault = true)
+
+			#set ($themeType = $context.GetThemeType($theme.TypeId))
+			#if ($theme.Id == $themeType.DefaultThemeId)
+				#set ($isDefaultThemeOfType = true)
+			#end
+		#end
+	#end
+
+	<div class="content theme">
+		<input type="checkbox" class="multiselect" data-id="$theme.Id" data-typeid="$!theme.TypeId" />
+
+		#if ($theme.PreviewImage && $theme.PreviewImage.Url)
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($theme.PreviewImage.Url, 120, 120, "%{ alt='$theme.Name' }")
+			</div>
+		#end
+
+		<div class="details">
+			<h4 class="name">$core_v2_encoding.HtmlEncode($theme.Name)</h4>
+
+			<div class="attributes">
+				<ul class="attribute-list">
+					#if ($theme.IsStaged)
+						<li class="attribute-item staged">
+							<span class="attribute-value">
+								#if ($theme.IsDeleted)
+									<span class="pill negative ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('DeletedDesc'))">$core_v2_language.GetResource('Staged') $core_v2_language.GetResource('Deleted')</span>
+								#elseif ($theme.IsReverted)
+									<span class="pill negative ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('RevertedDesc'))">$core_v2_language.GetResource('Staged') $core_v2_language.GetResource('Reverted')</span>
+								#else
+									<span class="pill negative">$core_v2_language.GetResource('Staged')</span>
+								#end
+							</span>
+						</li>
+					#end
+
+					<li class="attribute-item state">
+						<span class="attribute-value">
+							#set ($pillContent = '')
+							#set ($pillTip = '')
+							#if ($theme.State == 'FactoryDefault')
+								#set ($pillContent = $core_v2_language.GetResource('FactoryDefault'))
+								#set ($pillTip = $core_v2_language.GetResource('FactoryDefaultDescription'))
+							#elseif ($theme.State == 'Custom')
+								#set ($pillContent = $core_v2_language.GetResource('Custom'))
+								#set ($pillTip = $core_v2_language.GetResource('CustomDescription'))
+							#elseif ($theme.State == 'CustomizedDefault')
+								#set ($pillContent = $core_v2_language.GetResource('CustomizedDefault'))
+								#set ($pillTip = $core_v2_language.GetResource('CustomizedDefaultDescription'))
+							#end
+							<span class="ui-tip pill" data-tip="$core_v2_encoding.HtmlAttributeEncode($pillTip)">$pillContent</span>
+						</span>
+					</li>
+
+					#if ($theme.IsTranslated)
+						<li class="attribute-item translated">
+							<span class="attribute-value">
+								<span class="pill">$core_v2_language.GetResource('Translated')</span>
+							</span>
+						</li>
+					#end
+
+					<li class="attribute-item type">
+						<span class="attribute-value">
+							<span class="pill">$!theme.TypeName</span>
+						</span>
+					</li>
+
+				</ul>
+			</div>
+
+			#if ($!theme.Description)
+				<div class="content description expandable">
+					$core_v2_encoding.HtmlEncode($core_v2_language.Truncate($!theme.Description, 500, "…"))
+				</div>
+			#end
+
+			#if ($supportsSetAsDefault)
+				<div class="content default-state #if ($isDefaultThemeOfType) is-default #end">
+					#format($core_v2_language.GetResource('default-state'))
+						#token ('theme-type-name')
+							$core_v2_language.Lowercase($themeType.Name)
+					#end
+				</div>
+			#end
+
+			<div class="actions expandable">
+				#set ($maxLinks = 3)
+				#if ($theme.IsStaged)
+					#set ($maxLinks = 5)
+				#end
+				<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="$maxLinks">
+					<ul>
+
+						#if ($theme.IsStaged)
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="theme-publish" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('PublishStagedChanges')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="theme-revert" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('RevertStagedChanges')</a>
+							</li>
+						#end
+
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="theme-export" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('Export')</a>
+						</li>
+
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="theme-exportresources" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('ExportResources')</a>
+						</li>
+
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="theme-preview" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('Preview')</a>
+						</li>
+
+						#if ($supportsSetAsDefault)
+							<li class="navigation-list-item set-default">
+								#store($setDefaultTip)
+									#format($core_v2_language.GetResource('SetDefaultTip'))
+										#token ('theme-type-name')
+											$core_v2_language.Lowercase($themeType.Name)
+									#end
+								#end
+								<a href="#" class="set-default ui-tip" data-messagename="set-default" data-id="$theme.Id" data-typeid="$!theme.TypeId" title="$core_v2_encoding.HtmlAttributeEncode($setDefaultTip)">$core_v2_language.GetResource('SetDefault')</a>
+							</li>
+						#end
+
+						#if ($theme.State == 'Custom' || ($theme.State == 'FactoryDefault' && $theme.IsEditable))
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="theme-delete" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('Delete')</a>
+							</li>
+						#elseif ($theme.State == 'CustomizedDefault')
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="theme-delete" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('RevertToDefault')</a>
+							</li>
+						#end
+						#if ($theme.State != 'NotPersisted')
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="theme-revert-options" data-id="$theme.Id" data-typeid="$!theme.TypeId">$core_v2_language.GetResource('RevertLayoutAndOptions')</a>
+							</li>
+						#end
+
+						#set ($editUrl = false)
+						#if ($theme.TypeId)
+							#set ($editUrl = $context.EditUrl("%{ Id = $theme.Id, TypeId = $theme.TypeId }"))
+						#else
+							#set ($editUrl = $context.EditUrl("%{ Id = $theme.Id }"))
+						#end
+						#if ($editUrl)
+							<li class="navigation-list-item">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($editUrl)">$core_v2_language.GetResource('EditTheme')</a>
+							</li>
+						#end
+
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+#end

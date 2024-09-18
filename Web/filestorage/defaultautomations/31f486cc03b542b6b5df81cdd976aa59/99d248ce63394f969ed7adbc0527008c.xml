@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="99d248ce63394f969ed7adbc0527008c" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-06-03 14:47:42Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="like.aftercreate" />
+      <event key="like.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var contentTypeIds = core_v2_widget.GetCustomValue('contentTypeIds', 'all');
+var valid = false;
+
+if (contentTypeIds == 'all') {
+    contentTypeIds = null;
+    valid = true;
+} else {
+    var contentTypeIdList = core_v2_page.ParseQueryString(contentTypeIds).Values('ContentTypeId');
+    if (contentTypeIdList !== null && contentTypeIdList.Count > 0) {
+        var i;
+        for (i = 0; i < contentTypeIdList.Count; i++) {
+            var contentTypeId = core_v2_utility.ParseGuid(contentTypeIdList[i]);
+            if (contentTypeId && contentTypeId == context_v2_automationTrigger.Arguments.ContentTypeId) {
+                valid = true;
+                break;
+            }
+        }
+    }
+}
+
+if (!valid) {
+    // not a valid content type
+    return;
+}
+
+var content = core_v2_content.Get(context_v2_automationTrigger.Arguments.ContentId, context_v2_automationTrigger.Arguments.ContentTypeId);
+if (!content || !content.CreatedByUserId) {
+    // invalid content or no author
+    return;
+}
+
+var userId = content.CreatedByUserId;
+
+//read min/max configuration values
+var ranges = core_v2_widget.GetStringValue('ranges', '');
+if (ranges === '') {
+    var minLikeCount = core_v2_widget.GetIntValue('minLikeCount', 0);
+    var maxLikeCount = 0;
+    var minContentCount = core_v2_widget.GetIntValue('minContentCount', 1);
+    var maxContentCount = 0;
+} else if (ranges == 'likes') {
+    var likeRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('likeCountRange', ''));
+    var minLikeCount = core_v2_utility.ParseInt(likeRangeQuery.Value('Minimum'));
+    var maxLikeCount = core_v2_utility.ParseInt(likeRangeQuery.Value('Maximum'));
+    var minContentCount = core_v2_widget.GetIntValue('minContentCount', 1);
+    var maxContentCount = 0;
+} else if (ranges == 'content') {
+    var minLikeCount = core_v2_widget.GetIntValue('minLikeCount', 0);
+    var maxLikeCount = 0;
+    var contentRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('contentCountRange', ''));
+    var minContentCount = core_v2_utility.ParseInt(contentRangeQuery.Value('Minimum'));
+    var maxContentCount = core_v2_utility.ParseInt(contentRangeQuery.Value('Maximum'));
+}
+
+var result = '';
+
+//remove achievement if range has been selected and exceeded
+if (ranges == 'likes' && maxLikeCount > 0) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId,
+        MinimumLikeCount: maxLikeCount + 1
+    };
+    if (contentTypeIds) {
+        query.ContentTypeIds = contentTypeIds;
+    }
+
+    var totalCount = core_v2_likedItem.List(query).TotalCount;
+    if (totalCount >= minContentCount) {
+        result = 'revoke';
+    }
+}
+
+if (result == '') {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId
+    };
+    if (contentTypeIds) {
+        query.ContentTypeIds = contentTypeIds;
+    }
+    if (minLikeCount > 0) {
+        query.MinimumLikeCount = minLikeCount;
+    }
+    if (maxLikeCount > 0) {
+        query.MaximumLikeCount = maxLikeCount;
+    }
+
+    var totalCount = core_v2_likedItem.List(query).TotalCount;
+    if (totalCount >= minContentCount && (maxContentCount === 0 || totalCount <= maxContentCount)) {
+        result = 'award';
+    } else {
+        result = 'revoke';
+    }
+}
+
+if (result != '') {
+    var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+
+    if (result == 'award') {
+        if (!hasAchievement) {
+            context_v1_achievementAutomation.Award(userId);
+        }
+    } else if (result == 'revoke') {
+        if (hasAchievement) {
+            context_v1_achievementAutomation.Revoke(userId);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="contentTypeIds" labelResourceName="ContentToReview" descriptionResourceName="ContentToReview_Description" dataType="Custom" template="core_v2_contentTypeList" strictContentTypes="true" isLikeable="true" />
+    <property id="ranges" resourceName="Ranges" descriptionResourceName="Ranges_Description" dataType="string" defaultValue="" controlType="Telligent.Evolution.Controls.PropertyVisibilityValueSelectionControl, Telligent.Evolution.Platform">
+            <propertyValue value="" resourceName="Ranges_None" propertiesToShow="minLikeCount,minContentCount" propertiesToHide="likeCountRange,contentCountRange" />
+            <propertyValue value="likes" resourceName="Ranges_Likes" propertiesToShow="minContentCount,likeCountRange" propertiesToHide="minLikeCount,contentCountRange" />
+            <propertyValue value="content" resourceName="Ranges_Content" propertiesToShow="minLikeCount,contentCountRange" propertiesToHide="minContentCount,likeCountRange" />
+    </property>
+    <property id="minContentCount" labelResourceName="ContentCount" descriptionResourceName="ContentCount_Description" dataType="Int" defaultValue="1">
+        <propertyRule name="minmax" min="1" />
+    </property>
+    <property id="contentCountRange" labelResourceName="ContentCountRange" descriptionResourceName="ContentCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+    <property id="minLikeCount" labelResourceName="LikeCount" descriptionResourceName="LikeCount_Description" dataType="Int" defaultValue="5" >
+        <propertyRule name="minmax" min="0" />
+    </property>
+    <property id="likeCountRange" labelResourceName="LikeCountRange" descriptionResourceName="LikeCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="0" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ContentCount">Minimum count of content with required like count</resource>
+  <resource name="ContentCount_Description">The minimum count of content by the author that must have the required like count to award the achievement.</resource>
+  <resource name="ContentCountRange">Content count range</resource>
+  <resource name="ContentCountRange_Description">The minimum and maximum count of content by the author that must have the required like count to award the achievement.</resource>
+  <resource name="ContentToReview">Types of content to count</resource>
+  <resource name="ContentToReview_Description">Optionally select the types of contents to review when evaluating comment counts.</resource>
+  <resource name="Description">Grants or revokes an achievement based on the number of likes on an author's content.</resource>
+  <resource name="LikeCount">Required like count</resource>
+  <resource name="LikeCount_Description">The minimum number of likes required on content by the author to award the achievement.</resource>
+  <resource name="LikeCountRange">Like count range</resource>
+  <resource name="LikeCountRange_Description">The minimum and maximum number of likes required on content by the author to award the achievement.</resource>
+  <resource name="Ranges">Range</resource>
+  <resource name="Ranges_Content">On content count</resource>
+  <resource name="Ranges_Description">A range allows a minimum and maximum value to be set for the selected item.  If the maximum or minimum value is no longer met, the achievement will be removed.  If 'No range' is selected, the achievement will only be removed if the minimum values are no longer met.</resource>
+  <resource name="Ranges_Likes">On like count</resource>
+  <resource name="Ranges_None">No range</resource>
+  <resource name="Title">Award to authors of content by the like count on their content</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

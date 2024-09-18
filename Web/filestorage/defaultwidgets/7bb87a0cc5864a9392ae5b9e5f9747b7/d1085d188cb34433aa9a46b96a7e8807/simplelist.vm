@@ -1,0 +1,22 @@
+﻿##
+## Render Posts
+##
+
+$core_v2_widget.ExecuteFile('query.vm')
+#set ($excerptSize = $core_v2_widget.GetIntValue('excerptSize', 250))
+#set ($displayTypeImage = $core_v2_widget.GetBoolValue('displayTypeImage', true))
+
+#if ($articles)
+	#foreach($article in $articles)
+	#beforeall
+		<div class="avatar-list">
+		<ul class="content-list">
+	#each
+		$core_v2_widget.ExecuteFile('simplelistitem.vm')
+	#afterall
+		</ul>
+		</div>
+	#nodata
+		$core_v2_widget.Hide()
+	#end
+#end

@@ -1,0 +1,37 @@
+##
+## Renders an individual blog post
+## Expects in context: $post
+##
+
+#set($author = $post.Author)
+
+<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">
+	<div class="author">
+		<div class="avatar">
+			#if ($post.PostImageUrl && $post.PostImageUrl != '')
+				#if($post.PostImageAlternateText && $post.PostImageAlternateText.length > 0)
+					#set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($post.PostImageAlternateText))
+				#else
+					#set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($post.HtmlName('web')))
+				#end
+
+				<a $core_v2_ui.ContentPeek($post.ContentId, $core_v2_blogPost.ContentTypeId, 'internal-link')
+					href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">
+					$core_v2_ui.GetResizedImageHtml($post.PostImageUrl, 35, 35, "%{border='0px', alt=$postImageAltText, ResizeMethod='ZoomAndCrop'}")
+				</a>
+			#else
+				$core_v2_ui.GetResizedImageHtml($author.AvatarUrl, 35, 35, "%{border='0px', alt=$author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+			#end
+		</div>
+		<a $core_v2_ui.ContentPeek($post.ContentId, $core_v2_blogPost.ContentTypeId, 'internal-link view-full-post navigable')
+			href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">
+			<div class="content">$core_v2_language.Truncate($post.HtmlName('Web'), 200, "...")</div>
+		</a>
+		<div class="meta">
+			<a $core_v2_ui.ContentPeek($post.ContentId, $core_v2_blogPost.ContentTypeId, 'internal-link view-post navigable')
+				href="$core_v2_encoding.HtmlAttributeEncode($post.Url)">
+				$core_v2_ui.AgoDate($post.CreatedDate)
+			</a>
+		</div>
+	</div>
+</li>

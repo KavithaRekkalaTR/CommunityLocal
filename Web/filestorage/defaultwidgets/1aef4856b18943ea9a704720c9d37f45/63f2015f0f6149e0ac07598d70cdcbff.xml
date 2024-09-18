@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ConvertContent_Title}" version="11.0.0.0" description="${resource:ConvertContent_Description}" instanceIdentifier="63f2015f0f6149e0ac07598d70cdcbff" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="contextual-content-conversion" lastModified="2020-10-20 16:42:05Z" provider="1aef4856b18943ea9a704720c9d37f45">
+    <contentScript language="Velocity"><![CDATA[#set($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+#set($asField = $core_v2_widget.UniqueId('as'))
+#set($inGroupField = $core_v2_widget.UniqueId('group'))
+#set($inApplicationField = $core_v2_widget.UniqueId('application'))
+#set($applicationWrapper = $core_v2_widget.UniqueId('applicationWrapper'))
+#set($optionsWrapper = $core_v2_widget.UniqueId('optionsWrapper'))
+#set($targetContentTypes = false)
+#set($targetContentTypes = $core_v2_contentConversion.ListTargetContentTypes($context.Content.ContentTypeId, $context.Content.ContentId))
+#set($author = $core_v2_user.Get("%{Id = $context.Content.CreatedByUserId}"))
+
+#if ($targetContentTypes.Count == 0)
+	<div class="message error">
+		$core_v2_language.FormatString($core_v2_language.GetResource('NoConversionOptions'), $context.Content.HtmlName('Web'))
+	</div>
+#else
+	<form><fieldset>
+		<ul class="field-list">
+
+			<li class="field-item">
+				<label class="field-item-name">$core_v2_language.GetResource('Move')</label>
+				<span class="field-item-input">
+					$context.Content.HtmlName('Web')
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item" #if($targetContentTypes.Count == 1 && $targetContentTypes.get_Item(0).Id == $context.Content.ContentTypeId) style="display:none;" #end>
+				<label for="$core_v2_encoding.HtmlAttributeEncode($asField)" class="field-item-name">$core_v2_language.GetResource('As')</label>
+				<span class="field-item-input">
+					<select id="$core_v2_encoding.HtmlAttributeEncode($asField)" name="$core_v2_encoding.HtmlAttributeEncode($asField)" >
+						#foreach($contentType in $targetContentTypes)
+							<option value="$contentType.Id.ToString()" #if ($contentType.Id == $context.Content.ContentTypeId) selected#end>$contentType.Name</option>
+						#end
+					</select>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item">
+				<label class="field-item-name">$core_v2_language.GetResource('To')</label>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($inGroupField)" name="$core_v2_encoding.HtmlAttributeEncode($inGroupField)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item" id="$core_v2_encoding.HtmlAttributeEncode($applicationWrapper)" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('InApplication')</label>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($inApplicationField)" name="$core_v2_encoding.HtmlAttributeEncode($inApplicationField)" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		</ul>
+	</fieldset></form>
+
+	<div id="$core_v2_encoding.HtmlAttributeEncode($optionsWrapper)" style="display: none;">
+		<fieldset>
+			<ul class="field-list">
+			</ul>
+		</fieldset>
+	</div>
+
+	<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-input">
+						<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Save')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</script>
+
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.convertContentPanel.register({
+			sourceContentId: '$context.Content.ContentId.ToString()',
+			sourceContentTypeId: '$context.Content.ContentTypeId.ToString()',
+			currentContainerId: '$!context.Content.Application.Container.ContainerId.ToString()',
+			currentContainerName: '$!core_v2_encoding.JavascriptEncode($!context.Content.Application.Container.HtmlName('Web'))',
+			headerTemplate: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			optionsPrefix: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('options'))',
+			nodes: {
+				contentType: jQuery('#$core_v2_encoding.JavascriptEncode($asField)'),
+				group: jQuery('#$core_v2_encoding.JavascriptEncode($inGroupField)'),
+				application: jQuery('#$core_v2_encoding.JavascriptEncode($inApplicationField)'),
+				applicationWrapper: jQuery('#$core_v2_encoding.JavascriptEncode($applicationWrapper)'),
+				optionsWrapper: jQuery('#$core_v2_encoding.JavascriptEncode($optionsWrapper)')
+			},
+			urls: {
+				findGroups:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-groups.vm'))',
+				findApplications:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-applications.vm'))',
+				getOptionsForm:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('get-options-form.vm'))'
+			},
+			text: {
+				findGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FindGroup'))',
+				noGroupsFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoGroupsFound'))',
+				findApplication: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FindApplication'))',
+				noApplicationsFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('NoApplicationsFound'), $core_v2_user.Accessing.DisplayName))',
+				success: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ApplicationInGroup">{application} (in {group})</resource>
+  <resource name="As">As a</resource>
+  <resource name="ConvertContent_Description">Moves content from one application to another.</resource>
+  <resource name="ConvertContent_Title">Move</resource>
+  <resource name="FindApplication">Find an application...</resource>
+  <resource name="FindGroup">Find a group...</resource>
+  <resource name="InApplication">In</resource>
+  <resource name="Move">Move</resource>
+  <resource name="NoApplicationsFound">No applications were found where {0} had permission to create content.</resource>
+  <resource name="NoConversionOptions">'{0}' cannot be moved.</resource>
+  <resource name="NoGroupsFound">No groups were found.</resource>
+  <resource name="Save">Move</resource>
+  <resource name="Success">The content was successfully moved. Would you like to view it now?</resource>
+  <resource name="To">To</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="content.conversion.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

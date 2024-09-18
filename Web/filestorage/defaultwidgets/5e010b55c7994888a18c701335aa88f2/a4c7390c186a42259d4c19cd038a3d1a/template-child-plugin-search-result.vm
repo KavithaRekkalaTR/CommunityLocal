@@ -1,0 +1,16 @@
+﻿<ul class="navigation-list administration-links plugin-types">
+	<% foreach(results, function(result) { %>
+		<% if(result.Type == 'Plugin') { %>
+			<li class="navigation-list-item plugin-type"
+				data-name="<%: result.Name %>"
+				data-url="<%: result.Url %>">
+				<a href="<%: result.Url %>" data-messagename="search-selected-dependent">
+					<div>
+						<span class="name"><%: result.Name %></span>
+						<span class="description"><%: result.Description %></span>
+					</div>
+				</a>
+			</li>
+		<% } %>
+	<% }); %>
+</ul>

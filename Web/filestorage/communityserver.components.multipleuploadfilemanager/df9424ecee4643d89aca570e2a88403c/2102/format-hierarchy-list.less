@@ -1,0 +1,77 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.hierarchy-list {
+	@indent: 20px;
+	.hierarchy-item {
+		position: relative;
+		a {
+			font-size: @font-size * .9;
+			display: block;
+			padding-top: 4px;
+			padding-bottom: 4px;
+			padding-right: 4px;
+			color: @color-foreground;
+			&:hover {
+				background-color: -evo-decrease-contrast(@color-background, 6%, @color-foreground, @color-contrast);
+			}
+			.round(3px);
+		}
+		.expand-collapse {
+			position: absolute !important;
+			&.expanded {
+				.replace_with_icon(@down-open-mini, @indent);
+				top: 2px;
+			}
+			&.collapsed {
+				.replace_with_icon(@right-open-mini, @indent);
+				top: 2px;
+			}
+		}
+		&.selected {
+			a {
+				background-color: @color-accent;
+				color: @color-background;
+			}
+		}
+	}
+
+	@indent-left-padding: 4px;
+	li {
+		a { padding-left: @indent * 1 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 0 + @indent-left-padding; }
+	}
+	li li {
+		a { padding-left: @indent * 2 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 1 + @indent-left-padding; }
+	}
+	li li li {
+		a { padding-left: @indent * 3 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 2 + @indent-left-padding; }
+	}
+	li li li li {
+		a { padding-left: @indent * 4 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 3 + @indent-left-padding; }
+	}
+	li li li li li {
+		a { padding-left: @indent * 5 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 4 + @indent-left-padding; }
+	}
+	li li li li li li {
+		a { padding-left: @indent * 6 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 5 + @indent-left-padding; }
+	}
+	li li li li li li li {
+		a { padding-left: @indent * 7 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 6 + @indent-left-padding; }
+	}
+	li li li li li li li li {
+		a { padding-left: @indent * 8 + @indent-left-padding; }
+		.expand-collapse { left: @indent * 7 + @indent-left-padding; }
+	}
+}

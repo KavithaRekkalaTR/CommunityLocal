@@ -1,0 +1,106 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:BlogSnippetsApplicationPanel_Name}" cssClass="blog-snippets" description="${resource:BlogSnippetsApplicationPanel_Description}" instanceIdentifier="c535048afccd4ce7b4a725be5927b528" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+
+#set ($snippets = false)
+#set ($snippets = $context.ListSnippets)
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+
+<div class="content-list-name"></div>
+<div class="content-list-description"></div>
+<ul class="content-list content simple margin-bottom expandable">
+#foreach ($snippet in $snippets)
+	<li class="content-item snippet" data-snippetid="$core_v2_encoding.HtmlAttributeEncode($snippet.TokenID.ToString())">
+		<div class="content snippet">
+			<h4 class="name">$snippet.Token</h4>
+			<div class="content">
+				#if ($snippet.Link && $snippet.Link.length > 0)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($snippet.Link)">$snippet.Link</a><br />
+				#end
+				$snippet.Text
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="edit-snippet">$core_v2_language.GetResource('edit')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="delete-snippet">$core_v2_language.GetResource('delete')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#nodata
+#end
+</ul>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save"><%= label %></a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogSnippetsApplicationPanel.register({
+		headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		createUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('create.vm'))',
+		updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update.vm'))',
+		createFormUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('create-form.vm'))',
+		updateFormUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update-form.vm'))',
+		deleteUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+		text: {
+			addLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Add'))',
+			createLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Create'))',
+			saveLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))',
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Updated'))',
+			createSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Created'))',
+			invalidToken: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('InvalidToken'))'
+		}
+	});
+});
+</script>
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="BlogSnippetsApplicationPanel_Name">Snippets</resource>
+	<resource name="BlogSnippetsApplicationPanel_Description">Manage blog snippets.</resource>
+	<resource name="edit">Edit</resource>
+	<resource name="delete">Delete</resource>
+	<resource name="more">More</resource>
+	<resource name="cancel">Cancel</resource>
+	<resource name="Add">New Snippet</resource>
+	<resource name="Create">Create Snippet</resource>
+	<resource name="Save">Save Snippet</resource>
+	<resource name="Updated">Snippet Updated</resource>
+	<resource name="Created">Snippet Created</resource>
+	<resource name="InvalidToken">The name must be 2-50 alphanumeric characters</resource>
+	<resource name="TokenLabel">Name</resource>
+	<resource name="TokenLabel_Desc">The name that you will type in the blog post, which will be replaced with the text value below when the post is saved.</resource>
+	<resource name="LinkLabel">Link URL</resource>
+	<resource name="LinkLabel_Desc">This field is optional. If a URL is entered then the TextPart will be replaced with a hyperlink instead of plain text.</resource>
+	<resource name="TextLabel">Text</resource>
+	<resource name="TextLabel_Desc">The text that will replace the snippet name when a post is saved.</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>
+

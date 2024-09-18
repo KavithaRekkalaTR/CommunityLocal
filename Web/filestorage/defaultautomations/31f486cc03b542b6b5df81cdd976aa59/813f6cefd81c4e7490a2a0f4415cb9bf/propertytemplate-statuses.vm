@@ -1,0 +1,81 @@
+#set($value = false)
+#set($value = $context_v2_propertyTemplate.Value)
+
+#if ($context_v2_propertyTemplate.Property.Editable)
+    #set($hasStatuses = false)
+    #set($values = "%{}")
+    
+    #foreach($status in $core_v2_page.ParseQueryString($value).Values('Key'))
+        $values.Add($status, 'true')
+    #end
+    
+    <div id="${context_v2_propertyTemplate.UniqueId}_wrapper">
+    #foreach ($status in $telligentIdeas_v1_statuses.List())
+        #if ($status.IsClosed)
+            #set($hasStatuses = true)
+            <div>
+                <input type="checkbox" value="$core_v2_encoding.HtmlAttributeEncode($status.Key)" id="${context_v2_propertyTemplate.UniqueId}_${core_v2_encoding.HtmlAttributeEncode($status.Key)}" #if($values.get_Item($status.Key) == 'true') checked="checked"#end />
+                <label for="${context_v2_propertyTemplate.UniqueId}_${core_v2_encoding.HtmlAttributeEncode($status.Key)}">$status.Name</label>
+            </div>
+        #end
+    #end
+    #if (!$hasStatuses)
+        <div class="message warning">$core_v2_language.GetResource('NoClosedStatuses')</div>
+    #end
+    </div>
+
+    <script type="text/javascript">
+        jQuery(function() {
+            var api = $context_v2_propertyTemplate.JsonApi,
+                wrapper = jQuery('#${context_v2_propertyTemplate.UniqueId}_wrapper'),
+                getValue = function() {
+                    var v = [];
+                    wrapper.find('input:checked').each(function() {
+                        var cb = $(this);
+                        if (v.Length > 0) {
+                            v.push('&');
+                        }
+                        v.push('Key=')
+                        v.push(cb.prop('value'));
+                    });
+                    return v.join('');
+                },
+                setValue = function(v) {
+                    wrapper.find('input:checked').prop('checked', false);
+                    var kvPairs = (v || '').split('&');
+                    jQuery.each(kvPairs, function(i, kvPair) {
+                        var kv = kvPair.split('=');
+                        if (kv.length == 2 && kv[0] == 'Key') {
+                            wrapper.find('input[value="' + kv[1] + '"]').prop('checked', true);
+                        }
+                    });
+                };
+
+            api.register({
+                val: function(val) { return (typeof val == 'undefined') ? getValue() : setValue(val); },
+                hasValue: function() { return getValue() != ''; }
+            });
+
+            wrapper.on('change', 'input', function() {
+                api.changed(getValue());
+            });
+        });
+    </script>
+#else
+    #set($hasStatuses = false)
+    #set($values = "%{}")
+    #foreach($status in $core_v2_page.ParseQueryString($value).Values('Key'))
+        $values.Add($status, 'true')
+    #end
+    
+    #foreach ($status in $telligentIdeas_v1_statuses.List())
+        #if ($status.IsClosed && $values.get_Item($status.Key) == 'true')
+            #if ($hasStatuses)
+                ,
+            #else
+                #set($hasStatuses = true)
+            #end
+            $status.Name
+        #end
+    #end
+#end

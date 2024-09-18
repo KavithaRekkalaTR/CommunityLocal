@@ -1,0 +1,14 @@
+##
+## Renders a list of search results as JSON
+##
+## Requires in scope:
+##   $searchResults
+##
+[
+	#foreach ($searchResult in $searchResults)
+	#between
+		,
+	#each
+		$core_v2_widget.ExecuteFile('callback-sub-serialize-search-result.vm')
+	#end
+]

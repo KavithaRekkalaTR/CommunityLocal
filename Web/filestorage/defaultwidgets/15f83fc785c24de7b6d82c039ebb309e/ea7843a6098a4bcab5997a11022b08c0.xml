@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:Title}" description="${resource:Description}" instanceIdentifier="ea7843a6098a4bcab5997a11022b08c0" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+#set ($templateId = $core_v2_widget.UniqueId('template'))
+
+#registerClientTemplate($templateId)
+	$core_v2_widget.ExecuteFile('template.vm')
+#end
+#registerEndOfPageHtml('telligent.evolution.widgets.offlineIndicator')
+	<link rel="stylesheet" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('style.less'))" />
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+		jQuery(function(j){
+			j.telligent.evolution.widgets.offlineIndicator.register({
+				template: '$core_v2_encoding.JavascriptEncode($templateId)',
+				disconnect: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('disconnect'))',
+				permanentDisconnect: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('permanent_disconnect'))',
+				reconnect: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reconnect'))'
+			});
+		});
+	</script>
+#end
+
+]]></contentScript>
+<languageResources>
+<language key="en-us">
+	<resource name="Title">Offline Indicator</resource>
+	<resource name="Description">Indicates the state of socket connections</resource>
+	<resource name="disconnect">You've gone offline. Attempting to reconnect…</resource>
+	<resource name="permanent_disconnect">You've gone offline.</resource>
+	<resource name="reconnect">Successfully reconnected.</resource>
+</language>
+</languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

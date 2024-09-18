@@ -1,0 +1,33 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#set($ApplicationKey = $core_v2_page.GetFormValue('ApplicationKey'))
+	#set($Description = $core_v2_page.GetFormValue('Description'))
+	#set($GroupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupId')))
+	#set($Enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enabled')))
+
+	#if ($Name && $Name != '')
+		$options.Add('Name', $Name)
+	#end
+	#if ($ApplicationKey && $ApplicationKey != '')
+		$options.Add('Key', $ApplicationKey)
+	#end
+	#if ($GroupId > 0)
+		$options.Add('GroupId', $GroupId)
+	#end	
+
+	$options.Add('Description', $Description)
+	$options.Add('Enabled', $Enabled)
+
+	#set($response = $core_v2_wiki.Update($context.Wiki.ID, $options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "redirectUrl":"$response.Url"}
+
+#end

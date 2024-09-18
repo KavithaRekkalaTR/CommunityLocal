@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:LegacyControlPanel_Name}" version="10.0.0.0" description="${resource:LegacyControlPanel_Description}" instanceIdentifier="023e8eb50a6b428a84d93021019c5c98" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="legacy-control-panel" provider="c3a1b1865e9c4be29023db97a776ac3e">
+    <contentScript><![CDATA[#registerEndOfPageHtml('telligent.evolution.widgets.legacyAdministrationPanel')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.legacyAdministrationPanel.register({
+			url: '$core_v2_encoding.JavascriptEncode($context.url)',
+			reset: true
+		});
+	});
+	</script>
+#end
+				]]></contentScript>
+    <languageResources><language key="en-us">
+  <resource name="LegacyControlPanel_Name">Legacy Control Panel Support</resource>
+  <resource name="LegacyControlPanel_Description">Enables legacy control panels to be included in the administration panel UI.</resource>
+</language>
+</languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,86 @@
+##
+## Loads the ancestors of a reply, including its topmost ancestors up to the flatten depth
+## and a page of its immediate parents up to the page size.
+## If these do not meet, then they are spliced together
+##
+## Expects in scope: $parents (array), $child (forumreply)
+##
+
+#if ($child)
+
+	## If thread is not fully flattened, load topmost threaded ancestors
+	#set ($topMostAncestors = false)
+	#if ($flattenedDepth > 0)
+		## Get topmost threaded ancestors
+		#set ($listTopMostThreadedForRepliesOptions = "%{}")
+		$listTopMostThreadedForRepliesOptions.add('ReplyId', $child.Id)
+		$listTopMostThreadedForRepliesOptions.add('PageSize', $flattenedDepth)
+		$listTopMostThreadedForRepliesOptions.add('Direction', 'FromRootReply')
+		$listTopMostThreadedForRepliesOptions.add('FlattenedDepth', $flattenedDepth)
+		#if ($sortBy)
+			$listTopMostThreadedForRepliesOptions.add('ThreadedSortBy', $sortBy)
+		#end
+		#if ($sortOrder)
+			$listTopMostThreadedForRepliesOptions.add('ThreadedSortOrder', $sortOrder)
+		#end
+		#if ($flattenedSortBy)
+			$listTopMostThreadedForRepliesOptions.add('FlattenedSortBy', $flattenedSortBy)
+		#end
+		#if ($flattenedSortOrder)
+			$listTopMostThreadedForRepliesOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+		#end
+		#set ($topMostThreadedForReplies = $core_v2_forumReply.ListThreadedForReply($child.ThreadId, $listTopMostThreadedForRepliesOptions))
+
+		## Flatten
+		#set ($iterationCount = 0)
+		#set ($maxIterations = $flattenedDepth + 1)
+		#set ($flattenedReplies = [])
+		#set ($threadedReplies = $topMostThreadedForReplies)
+		$core_v2_widget.ExecuteFile('common-recurse-threaded.vm')
+		#set ($topMostAncestors = $flattenedReplies)
+	#end
+
+	## Load nearest threaded ancestors
+	#set ($listNearestThreadedForRepliesOptions = "%{}")
+	$listNearestThreadedForRepliesOptions.add('ReplyId', $child.Id)
+	$listNearestThreadedForRepliesOptions.add('PageSize', $pageSize)
+	$listNearestThreadedForRepliesOptions.add('Direction', 'FromReply')
+	$listNearestThreadedForRepliesOptions.add('FlattenedDepth', $flattenedDepth)
+	#if ($sortBy)
+		$listNearestThreadedForRepliesOptions.add('ThreadedSortBy', $sortBy)
+	#end
+	#if ($sortOrder)
+		$listNearestThreadedForRepliesOptions.add('ThreadedSortOrder', $sortOrder)
+	#end
+	#if ($flattenedSortBy)
+		$listNearestThreadedForRepliesOptions.add('FlattenedSortBy', $flattenedSortBy)
+	#end
+	#if ($flattenedSortOrder)
+		$listNearestThreadedForRepliesOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+	#end
+	#set ($nearestThreadedForReplies = $core_v2_forumReply.ListThreadedForReply($child.ThreadId, $listNearestThreadedForRepliesOptions))
+
+	## Flatten
+	#set ($iterationCount = 0)
+	#set ($maxIterations = $flattenedDepth + 1)
+	#set ($flattenedReplies = [])
+	#set ($threadedReplies = $nearestThreadedForReplies)
+	$core_v2_widget.ExecuteFile('common-recurse-threaded.vm')
+	#set ($nearestAncestors = $flattenedReplies)
+
+	## Merge the top down and bottom-up lists into the single ancestor list
+	#set ($topMostAncestorHash = "%{}")
+	#if ($topMostAncestors)
+		#foreach ($topMostAncestor in $topMostAncestors)
+			#set ($addedAt = $parents.Add($topMostAncestor))
+			## track that this ancestor was added in case it's also included in the bottom-up recursed list
+			$topMostAncestorHash.Add($topMostAncestor.Id.ToString(), $topMostAncestor)
+		#end
+	#end
+
+	#foreach ($nearestParent in $nearestAncestors)
+		#if (!$topMostAncestorHash.Contains($nearestParent.Id.ToString()))
+			#set ($addedAt = $parents.Add($nearestParent))
+		#end
+	#end
+#end

@@ -1,0 +1,36 @@
+##
+## Expects in scope: $configuredAutomation
+##
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" class="button internal-link save">$core_v2_language.GetResource('Save')</a>
+			</span>
+		</li>
+	</ul>
+	#if ($configuredAutomation)
+		<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="1">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredautomation-export" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('Export')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredautomation-exportresources" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('ExportResources')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($context.EditAutomationUrl($configuredAutomation.Automation.Id))">$core_v2_language.GetResource('edit-automation')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredautomation-delete" data-configuredautomationid="$configuredAutomation.Id">$core_v2_language.GetResource('Delete')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+</fieldset>

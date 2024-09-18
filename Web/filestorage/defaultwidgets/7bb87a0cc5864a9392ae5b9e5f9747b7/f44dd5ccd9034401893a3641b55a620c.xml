@@ -1,0 +1,406 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Wikis_PageEdit_Name}" version="11.0.0.0" description="${resource:Wikis_PageEdit_Description}" instanceIdentifier="f44dd5ccd9034401893a3641b55a620c" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="page-edit" lastModified="2021-08-19 21:24:09Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($page = false)
+#set($page = $core_v2_wikiPage.Current)
+#set($parentPage = false)
+#set($pageTitle = '')
+#set($pageBody = '')
+#set($pageRevision = -1)
+#set($wiki = $core_v2_wiki.Current)
+#set ($tabsContainerId = $core_v2_widget.UniqueId('tabsContainer'))
+#set ($writeTabId = $core_v2_widget.UniqueId('writeTab'))
+#set ($optionsTabId = $core_v2_widget.UniqueId('optionsTab'))
+#set($parentPage = $core_v2_wikiPage.CurrentParent)
+#if (!$parentPage && $page && $page.ParentPageId > 0)
+	#set($parentPage = $core_v2_wikiPage.Get("%{Id=$page.ParentPageId}"))
+#end
+
+##This logic handles retrieving a current page, a temporarily stored page from the quick post widget, or a stubbed page from an existing wiki page
+#if($page)
+	#set($pageTitle = $page.Title)
+	#set($pageBody = $page.Body('raw'))
+	#set($pageRevision = $page.RevisionNumber)
+#elseif($core_v2_page.GetQueryStringValue('tsid'))
+	#set($tempData = $core_v2_page.ParseQueryString($core_v2_utility.GetTemporaryData($core_v2_page.GetQueryStringValue('tsid'))))
+	#set($pageTitle = '')
+	#set($pageTitle = $tempData.Value('Subject'))
+	#set($pageBody = '')
+	#set($pageBody = $tempData.Value('Body'))
+	#if (!$pageBody || $pageBody.length == 0)
+		#set($pageBody = $tempData.Value('body'))
+	#end
+#else
+	#set($pageTitle = $core_v2_wikiPage.CurrentPageKey)
+#end
+
+#set($thread = false)
+#set($thread = $core_v2_forumThread.Current)
+#if($thread && $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReadForum, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+	#set($pageTitle = $thread.Subject)
+	#if($thread.ThreadType == 'Discussion')
+		#if ($thread.Author.ProfileUrl)
+			#set($pageBody="$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Original_Template'), $thread.Subject, $thread.Body('Raw'), $thread.Author.DisplayName, $thread.Url, $thread.Author.ProfileUrl)")
+		#else
+			#set($pageBody="$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Original_Template_Anonymous'), $thread.Subject, $thread.Body('Raw'), $thread.Author.DisplayName, $thread.Url)")
+		#end
+	#else
+		#if ($thread.Author.ProfileUrl)
+			#set($pageBody="$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_OriginalQuestion_Template'), $thread.Subject, $thread.Body('Raw'), $thread.Author.DisplayName, $thread.Url, $thread.Author.ProfileUrl)")
+		#else
+			#set($pageBody="$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_OriginalQuestion_Template_Anonymous'), $thread.Subject, $thread.Body('Raw'), $thread.Author.DisplayName, $thread.Url)")
+		#end
+	#end
+	#if ($thread.File && $thread.File.FileUrl && $thread.File.FileName)
+		#set ($temporaryWikiFileContextId = $core_v2_uploadedFile.CreateContextId())
+		#if ($thread.File.SaveToTemporaryFiles($temporaryWikiFileContextId, $thread.File.FileName))
+			#set ($wikiFile = $core_v2_wikiFiles.Create($wiki.Id, $thread.File.FileName, $temporaryWikiFileContextId))
+			#set ($wikiFileUrl = $core_v2_encoding.HtmlAttributeEncode($wikiFile.FileUrl))
+			#set ($wikiFilePreview = $core_v2_ui.GetPreviewHtml($wikiFile.FileUrl, "%{Width = 40, Height = 40}"))
+			#set ($attachment = $core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Attachment'), $wikiFileUrl, $wikiFilePreview, $wikiFile.FileName))
+			#set ($pageBody = "${pageBody}${attachment}")
+		#end
+	#end
+	#set($forumReplies = $core_v2_forumReply.List($thread.Id, "%{PageSize=100,PageIndex=0}"))
+	#if ($thread.ThreadType == 'Discussion')
+		#foreach ($forumReply in $forumReplies)
+			#if ($forumReply.Author.ProfileUrl)
+				#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Template'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url, $forumReply.Author.ProfileUrl)")
+			#else
+				#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Template_Anonymous'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url)")
+			#end
+			#if ($forumReply.File && $forumReply.File.FileUrl && $forumReply.File.FileName)
+				#set ($temporaryWikiFileContextId = $core_v2_uploadedFile.CreateContextId())
+				#if ($forumReply.File.SaveToTemporaryFiles($temporaryWikiFileContextId, $forumReply.File.FileName))
+					#set ($wikiFile = $core_v2_wikiFiles.Create($wiki.Id, $forumReply.File.FileName, $temporaryWikiFileContextId))
+					#set ($wikiFileUrl = $core_v2_encoding.HtmlAttributeEncode($wikiFile.FileUrl))
+					#set ($wikiFilePreview = $core_v2_ui.GetPreviewHtml($wikiFile.FileUrl, "%{Width = 40, Height = 40}"))
+					#set ($attachment = $core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Attachment'), $wikiFileUrl, $wikiFilePreview, $wikiFile.FileName))
+					#set ($pageBody = "${pageBody}${attachment}")
+				#end
+			#end
+		#end
+	#else
+		#foreach($forumReply in $forumReplies)
+			#if($forumReply.IsAnswer)
+				#if ($forumReply.Author.ProfileUrl)
+					#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Answer_Template'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url, $forumReply.Author.ProfileUrl)")
+				#else
+					#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Answer_Template_Anonymous'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url)")
+				#end
+			#end
+			#if ($forumReply.File && $forumReply.File.FileUrl && $forumReply.File.FileName)
+				#set ($temporaryWikiFileContextId = $core_v2_uploadedFile.CreateContextId())
+				#if ($forumReply.File.SaveToTemporaryFiles($temporaryWikiFileContextId, $forumReply.File.FileName))
+					#set ($wikiFile = $core_v2_wikiFiles.Create($wiki.Id, $forumReply.File.FileName, $temporaryWikiFileContextId))
+					#set ($wikiFileUrl = $core_v2_encoding.HtmlAttributeEncode($wikiFile.FileUrl))
+					#set ($wikiFilePreview = $core_v2_ui.GetPreviewHtml($wikiFile.FileUrl, "%{Width = 40, Height = 40}"))
+					#set ($attachment = $core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Attachment'), $wikiFileUrl, $wikiFilePreview, $wikiFile.FileName))
+					#set ($pageBody = "${pageBody}${attachment}")
+				#end
+			#end
+		#end
+		#foreach($forumReply in $forumReplies)
+			#if ($forumReply.IsSuggestedAnswer)
+				#if ($forumReply.Author.ProfileUrl)
+					#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_SuggestedAnswer_Template'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url, $forumReply.Author.ProfileUrl)")
+				#else
+					#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_SuggestedAnswer_Template_Anonymous'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url)")
+				#end
+			#elseif (!$forumReply.IsAnswer)
+				#if ($forumReply.Author.ProfileUrl)
+					#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Question_Template'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url, $forumReply.Author.ProfileUrl)")
+				#else
+					#set($pageBody="$pageBody$core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Question_Template_Anonymous'), $forumReply.Subject, $forumReply.Body('Raw'), $forumReply.Author.DisplayName, $forumReply.Url)")
+				#end
+			#end
+			#if ($forumReply.File && $forumReply.File.FileUrl && $forumReply.File.FileName)
+				#set ($temporaryWikiFileContextId = $core_v2_uploadedFile.CreateContextId())
+				#if ($forumReply.File.SaveToTemporaryFiles($temporaryWikiFileContextId, $forumReply.File.FileName))
+					#set ($wikiFile = $core_v2_wikiFiles.Create($wiki.Id, $forumReply.File.FileName, $temporaryWikiFileContextId))
+					#set ($wikiFileUrl = $core_v2_encoding.HtmlAttributeEncode($wikiFile.FileUrl))
+					#set ($wikiFilePreview = $core_v2_ui.GetPreviewHtml($wikiFile.FileUrl, "%{Width = 40, Height = 40}"))
+					#set ($attachment = $core_v2_language.FormatString($core_v2_language.GetResource('Wiki_Thread_Attachment'), $wikiFileUrl, $wikiFilePreview, $wikiFile.FileName))
+					#set ($pageBody = "${pageBody}${attachment}")
+				#end
+			#end
+		#end
+	#end
+#end
+
+#set($userCanMovePage = true)
+#if($page)
+	#if (!$core_v3_permission.CheckPermission($core_v2_wikiPermissions.ModifyPage, $core_v2_user.Accessing.Id, "%{ ContentId = $page.ContentId, ContentTypeId = $core_v2_wikiPage.ContentTypeId }").IsAllowed)
+		$core_v2_widget.Hide()
+	#elseif($page.IsLocked && !$core_v3_permission.CheckPermission($core_v2_wikiPermissions.LockPage, $core_v2_user.Accessing.Id, "%{ ContentId = $page.ContentId, ContentTypeId = $core_v2_wikiPage.ContentTypeId }").IsAllowed)
+		$core_v2_widget.Hide()
+	#end
+	#set($userCanMovePage = $core_v3_permission.CheckPermission($core_v2_wikiPermissions.MovePage, $core_v2_user.Accessing.Id, "%{ ContentId = $page.ContentId, ContentTypeId = $core_v2_wikiPage.ContentTypeId }").IsAllowed)
+#elseif(!$core_v3_permission.CheckPermission($core_v2_wikiPermissions.CreatePage, $core_v2_user.Accessing.Id, "%{ ApplicationId = $wiki.ApplicationId, ApplicationTypeId = $core_v2_wiki.ApplicationTypeId }").IsAllowed)
+	$core_v2_widget.Hide()
+#end
+
+<div class="message warning" id="$core_v2_widget.UniqueId('warning')" style="display: none;"></div>
+
+<form><fieldset>
+
+	#if ($page)
+		#set ($heading = $page.Title)
+	#else
+		#set ($heading = $core_v2_language.FormatString($core_v2_language.GetResource('NewPage'), $wiki.Name))
+	#end
+	<h1>$heading</h1>
+
+	<div id="$core_v2_encoding.HtmlAttributeEncode($tabsContainerId)">
+		<div id="$core_v2_encoding.HtmlAttributeEncode($writeTabId)">
+		    <ul class="field-list">
+   				## Only allow parent to be defined/edited if the page is new or not the default page and the user has move permission
+ 			    #set($canParentPageBeChanged = (!$page || (!$page.IsDefaultPage && $userCanMovePage)))
+			    ## only show parent section if page has a parent, or can be edited
+			    #if($parentPage || $canParentPageBeChanged)
+    				<li class="field-item post-parent">
+    					<label for="$core_v2_widget.UniqueId('parent')" class="field-item-name">$core_v2_language.GetResource('Wikis_ParentPage')</label>
+    					<span class="field-item-description">$core_v2_language.GetResource('Parent_Description')</span>
+        				#if($canParentPageBeChanged)
+    						<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('parent')" value="$!parentPage.Id" /></span>
+    					#else
+    						<span class="field-item-input">$!parentPage.Title</span>
+    				    #end
+    				</li>
+				#end
+				<li class="field-item required post-name">
+					<label for="$core_v2_widget.UniqueId('title')" class="field-item-name">$core_v2_language.GetResource('Title')</label>
+					<span class="field-item-input">
+						<textarea maxlength="256" rows="1" id="$core_v2_widget.UniqueId('title')" class="scaled" name="$core_v2_widget.UniqueId('title')" size="90">$!core_v2_encoding.HtmlEncode($pageTitle)</textarea>
+					</span>
+					<span class="field-item-validation" style="display: none;"></span>
+				</li>
+				<li class="field-item required post-body">
+					<label for="$core_v2_widget.UniqueId('body')" class="field-item-name">$core_v2_language.GetResource('Body')</label>
+					<span class="field-item-input">$core_v2_editor.Render('body',"%{Width='100%', Value='$!pageBody', ContentTypeId=$core_v2_wikiPage.ContentTypeId, ApplicationId=$wiki.ApplicationId, ApplicationTypeId=$core_v2_wiki.ApplicationTypeId}")</span>
+					<span class="field-item-validation" style="display:none;"></span>
+				</li>
+				<li class="field-item post-tags">
+					<label for="$core_v2_widget.UniqueId('tags')" class="field-item-name">$core_v2_language.GetResource('CreateEditPost_Tags')</label>
+					<span class="field-item-input">
+						<input type="text" id="$core_v2_widget.UniqueId('tags')" value="$core_v2_utility.Join(', ', $page.Tags)" size="60" />
+					</span>
+				</li>
+				#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+					<li class="field-item post-subscribe">
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('subscribe')"#if(!$page || $core_v2_wikiPage.IsSubscribed($page.Id)) checked="checked"#end />
+							<label for="$core_v2_widget.UniqueId('subscribe')">$core_v2_language.GetResource('Wikis_Page_Subscribe')</label>
+						</span>
+					</li>
+				#end
+			</ul>
+		</div>
+		<div id="$core_v2_encoding.HtmlAttributeEncode($optionsTabId)">
+			#if (!$page || !$page.IsDefaultPage)
+				<h3>$core_v2_language.GetResource('Toc_Heading')</h3>
+				<ul class="field-list">
+					#if($userCanMovePage)
+						<li class="field-item post-ordering">
+							<label for="$core_v2_widget.UniqueId('ordering')" class="field-item-name">$core_v2_language.GetResource('Wikis_Order')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('Wikis_Order_Description')</span>
+							<span class="field-item-input">
+								<select id="$core_v2_widget.UniqueId('ordering')" size="10"></select>
+								<a href="#" id="$core_v2_widget.UniqueId('ordering-up')" style="margin-right:1em;">$core_v2_language.GetResource('Order_MoveUp')</a>
+								<a href="#" id="$core_v2_widget.UniqueId('ordering-down')">$core_v2_language.GetResource('Order_MoveDown')</a>
+							</span>
+						</li>
+
+					#end
+					<li class="field-item post-hiding">
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('tochiding')" #if($page && $page.HiddenInTableOfContents) checked="checked" #end />
+							<label for="$core_v2_widget.UniqueId('tochiding')">$core_v2_language.GetResource('Wikis_HideFromToc')</label>
+						</span>
+						<span class="field-item-description">$core_v2_language.GetResource('Wikis_HideFromToc_Description')</span>
+					</li>
+
+				</ul>
+			#end
+
+			<h3>$core_v2_language.GetResource('Meta_Heading')</h3>
+			<ul class="field-list">
+				<li class="field-item meta-title">
+					<label for="$core_v2_widget.UniqueId('metaTitle')" class="field-item-name">$core_v2_language.GetResource('Meta_Title')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Meta_TitleDescription')</span>
+					<span class="field-item-input">
+						<textarea maxlength="128" rows="1" id="$core_v2_widget.UniqueId('metaTitle')" class="scaled" name="$core_v2_widget.UniqueId('metaTitle')" size="90">$!page.MetaTitle</textarea>
+					</span>
+					 <span class="field-item-description character-count"></span>
+				</li>
+				<li class="field-item meta-keywords">
+					   <label for="$core_v2_widget.UniqueId('metaKeywords')" class="field-item-name">$core_v2_language.GetResource('Meta_Keywords')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Meta_KeywordsDescription')</span>
+					<span class="field-item-input">
+						<textarea maxlength="512" rows="1" id="$core_v2_widget.UniqueId('metaKeywords')" class="scaled" name="$core_v2_widget.UniqueId('metaKeywords')" size="90">$!page.MetaKeywords</textarea>
+					</span>
+				</li>
+				<li class="field-item">
+					<label class="field-item-name">$core_v2_language.GetResource('Meta_Description')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('Meta_DescriptionDescription')</span>
+					<span class="field-item-input">
+						<textarea maxlength="512" type="text" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('metaDescription'))">$!page.MetaDescription</textarea>
+					</span>
+					<span class="field-item-description character-count"></span>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<ul class="field-list">
+		<li class="field-item submit-button">
+			<span class="field-item-input">
+				<a id="$core_v2_widget.UniqueId('save')" href="javascript:void(0);" class="button internal-link save-post disabled"><span></span>$core_v2_language.GetResource('Save')</a>
+				<a id="$core_v2_widget.UniqueId('cancel')" href="javascript:void(0);" class="internal-link inline-button cancel-post">$core_v2_language.GetResource('Cancel')</a>
+				<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+			</span>
+			<span class="field-item-input"><a id="$core_v2_widget.UniqueId('viewchanges')" href="javascript:void(0);" class="internal-link view-post" style="display: none;"><span></span>$core_v2_language.GetResource('Wiki_PageEdit_ViewChanges')</a></span>
+		</li>
+	</ul>
+</fieldset></form>
+#registerEndOfPageHtml('telligent.evolution.widgets.PageEdit')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	jQuery(function()
+	{
+		jQuery.telligent.evolution.widgets.pageEdit.register({
+			tags:$('#$core_v2_widget.UniqueId('tags')'),
+			applicationId: '$wiki.applicationId',
+			#if($parentPage)
+				parentPageTitle:'$core_v2_encoding.JavascriptEncode($core_v2_language.Truncate($parentPage.Title, 60, "..."))',
+			#end
+			parent:$('#$core_v2_widget.UniqueId('parent')'),
+			tochiding:$('#$core_v2_widget.UniqueId('tochiding')'),
+			ordering: $('#$core_v2_widget.UniqueId('ordering')'),
+			orderingUp: $('#$core_v2_widget.UniqueId('ordering-up')'),
+			orderingDown: $('#$core_v2_widget.UniqueId('ordering-down')'),
+			getChildrenUrl: '$core_v2_widget.GetExecutedFileUrl('get-children.vm')',
+			subscribe:$('#$core_v2_widget.UniqueId('subscribe')'),
+			lookupPagesUrl:'$core_v2_widget.GetExecutedFileUrl('LookupPages.vm')',
+			subscribeUrl:'$core_v2_widget.GetExecutedFileUrl('Subscribe.vm')',
+			noPageMatchesText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('WikiPageLookUpTextBox_NoMatches'))',
+			save:jQuery('#$core_v2_widget.UniqueId('save')'),
+			title:jQuery('#$core_v2_widget.UniqueId('title')'),
+			metaTitle:jQuery('#$core_v2_widget.UniqueId('metaTitle')'),
+			metaKeywords:jQuery('#$core_v2_widget.UniqueId('metaKeywords')'),
+			metaDescription:jQuery('#$core_v2_widget.UniqueId('metaDescription')'),
+			wikiId: $wiki.Id,
+			getBody: function() { return $core_v2_editor.GetContentScript('body'); },
+			#if($page)
+				pageId:$page.Id,
+				parentPageId:$page.ParentPageId,
+				originalRevision:#if($page)$page.RevisionNumber#else-1#end,
+				overwriteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wiki_PageEdit_Overwrite'))',
+				lockedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wikis_Page_LockMessage'))',
+				viewChanges: $('#$core_v2_widget.UniqueId('viewchanges')'),
+				mergeMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Wikis_Page_MergeMessage'), '{AuthorUrl}', '{AuthorName}', '{MergeUrl}'))',
+				message: $('#$core_v2_widget.UniqueId('warning')'),
+				mergeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_wikiUrls.PageMerge($page.Id, 998877, 778899))',
+				userCanLock :#if($core_v3_permission.CheckPermission($core_v2_wikiPermissions.LockPage, $core_v2_user.Accessing.Id, "%{ ContentId = $page.ContentId, ContentTypeId = $core_v2_wikiPage.ContentTypeId }").IsAllowed) true#else false#end,
+			#else
+				pageId:-1,
+				parentPageId:-1,
+			#end
+			threadId:#if($thread) $thread.Id#else -1#end,
+			wrapperId: '$core_v2_widget.WrapperElementId',
+			titleSelector: '#$core_v2_widget.UniqueId('title')',
+			tabsSelector: '#$core_v2_encoding.JavascriptEncode($tabsContainerId)',
+			writeTabId: '$core_v2_encoding.JavascriptEncode($writeTabId)',
+			writeTabLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Write'))',
+			optionsTabId: '$core_v2_encoding.JavascriptEncode($optionsTabId)',
+			optionsTabLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Options'))',
+			requiredFieldText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RequiredField'))',
+			pageExistsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wiki_WikiPageKeyDuplicate'))',
+			attachBodyChangeHandler: function(h) { $core_v2_editor.GetAttachOnChangeScript('body', 'h') },
+			userCanMovePage: #if($userCanMovePage) true#else false#end,
+	        charactersRemain: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Characters_Remain'))',
+		    charactersOver: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Characters_Over'))',
+		    orderPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Order_Placeholder'))',
+			titleHidden: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_Hidden'))',
+			wikiPageContentTypeId: '$core_v2_wikiPage.ContentTypeId.ToString()',
+    		cancelLink: jQuery('#$core_v2_widget.UniqueId('cancel')'),
+			cancelConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CancelConfirmation'))'
+		});
+	});
+	//</script>
+	#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_PageEdit_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Wikis_PageEdit_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Body</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CancelConfirmation">Are you sure you want to cancel? All unsaved changes will be lost.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Characters_Over">character(s) over the recomended length.  For best results this should be shortened.</resource>
+  <resource name="Characters_Remain">character(s)</resource>
+  <resource name="CreateEditPost_Tags">Tags</resource>
+  <resource name="Meta_Description">Description</resource>
+  <resource name="Meta_DescriptionDescription">If specified, search engines will use this description to provide an excerpt of this page.</resource>
+  <resource name="Meta_Heading">Search Engine Optimization</resource>
+  <resource name="Meta_Keywords">Keywords</resource>
+  <resource name="Meta_KeywordsDescription">Comma-separated list of words that uniquely relate to this content. These can be used by search engines to improve search results.</resource>
+  <resource name="Meta_Title">Title</resource>
+  <resource name="Meta_TitleDescription">Adjust the title used by search engines when referencing this content. If not set, the page’s title will be used.</resource>
+  <resource name="NewPage">New Page to {0}</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Order_MoveDown">Move down</resource>
+  <resource name="Order_MoveUp">Move up</resource>
+  <resource name="Order_Placeholder">(This Page)</resource>
+  <resource name="Parent_Description">The parent page for this page in this wiki's table of contents</resource>
+  <resource name="RequiredField">This field is required.</resource>
+  <resource name="Save">Post</resource>
+  <resource name="TagEditor_SelectTags">Select Tags...</resource>
+  <resource name="Title">Title</resource>
+  <resource name="Title_Hidden">&lt;i&gt;Hidden: {0}&lt;/i&gt;</resource>
+  <resource name="Toc_Heading">Table of Contents</resource>
+  <resource name="Wiki_PageEdit_Overwrite">Overwrite</resource>
+  <resource name="Wiki_PageEdit_ViewChanges">View Changes</resource>
+  <resource name="Wiki_Thread_Answer_Template">Verified Answer: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by &lt;a href="{4}"&gt;{2}&lt;/a&gt;{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_Answer_Template_Anonymous">Verified Answer: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by {2}{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_Attachment">&lt;div class="post-attachment-container"&gt;&lt;div class="post-attachment-viewer"&gt;&lt;a href="{0}" class="internal-link download-attachment"&gt;{1}&lt;/a&gt;&lt;/div&gt;&lt;div class="post-attachment"&gt;&lt;span class="value"&gt;&lt;a href="{0}" class="internal-link download-attachment"&gt;{2}&lt;/a&gt;&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;</resource>
+  <resource name="Wiki_Thread_Original_Template">&lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by &lt;a href="{4}"&gt;{2}&lt;/a&gt;{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_Original_Template_Anonymous">&lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by {2}{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_OriginalQuestion_Template">Original Question: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by &lt;a href="{4}"&gt;{2}&lt;/a&gt;{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_OriginalQuestion_Template_Anonymous">Original Question: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by {2}{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_Question_Template">Question: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by &lt;a href="{4}"&gt;{2}&lt;/a&gt;{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_Question_Template_Anonymous">Question: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by {2}{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_SuggestedAnswer_Template">Suggested Answer: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by &lt;a href="{4}"&gt;{2}&lt;/a&gt;{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_SuggestedAnswer_Template_Anonymous">Suggested Answer: &lt;strong&gt;&lt;a href="{3}"&gt;{0}&lt;/a&gt;&lt;/strong&gt; by {2}{1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_Template">&lt;strong&gt;{0}&lt;/strong&gt; by &lt;a href="{4}"&gt;{2}&lt;/a&gt;: {1}&lt;br/&gt;</resource>
+  <resource name="Wiki_Thread_Template_Anonymous">&lt;strong&gt;{0}&lt;/strong&gt; by {2}: {1}&lt;br/&gt;</resource>
+  <resource name="Wiki_WikiPageKeyDuplicate">A page by this name exists in this wiki already. Please choose another name for this page.</resource>
+  <resource name="WikiPageLookUpTextBox_NoMatches">A matching page could not be found.</resource>
+  <resource name="Wikis_HideFromToc">Hide this page from the table of contents</resource>
+  <resource name="Wikis_HideFromToc_Description">When hidden, the page will not be represented in the wiki's table of contents.</resource>
+  <resource name="Wikis_Order">Order</resource>
+  <resource name="Wikis_Order_Description">Set the order of this page and its siblings within the wiki's table of contents.</resource>
+  <resource name="Wikis_Page_LockMessage">Wiki page is locked and changes are not able to be saved.</resource>
+  <resource name="Wikis_Page_MergeMessage">&lt;a href='{0}' target='_blank' class='internal-link view-user-profile'&gt;&lt;span&gt;&lt;/span&gt;{1}&lt;/a&gt; posted a &lt;a href="#" onclick="{2}" class='internal-link wiki'&gt;&lt;span&gt;&lt;/span&gt;new version&lt;/a&gt; while you were editing.</resource>
+  <resource name="Wikis_Page_Subscribe">Notify me when this page is edited</resource>
+  <resource name="Wikis_PageEdit_Description">Edits a wiki page.</resource>
+  <resource name="Wikis_PageEdit_Name">Wikis - Edit Page</resource>
+  <resource name="Wikis_ParentPage">Parent</resource>
+  <resource name="Write">Write</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="578aa547a44c45d39159cab85e3002cc" />
+    </requiredContext>
+		<restScopes>
+			<scope id="wikis.pages.readonly" />
+			<scope id="wikis.pages.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

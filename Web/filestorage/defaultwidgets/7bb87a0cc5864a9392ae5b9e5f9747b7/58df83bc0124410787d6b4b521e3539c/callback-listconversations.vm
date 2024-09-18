@@ -1,0 +1,27 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('PageIndex')))
+#set($readStatus = $core_v2_page.GetQueryStringValue('ReadStatus'))
+#set($pageSize = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('PageSize')))
+
+#set($conversations = $core_v2_conversation.List("%{PageIndex = $pageIndex, PageSize = $pageSize, ReadStatus = $readStatus}"))
+#if ($conversations.HasErrors())
+    $core_v2_page.SendJsonError($conversations.Errors)
+#end
+
+{
+    "Conversations": [
+        #set($first = true)
+        #foreach($conversation in $conversations)
+            #if ($first)
+                #set($first = false)
+            #else
+                ,
+            #end
+            $core_v2_widget.ExecuteFile('format-conversation.vm')
+        #end
+    ],
+    "PageIndex": $conversations.PageIndex,
+    "PageSize": $conversations.PageSize,
+    "TotalCount": $conversations.TotalCount
+}

@@ -1,0 +1,70 @@
+#set ($headerTemplateId = $core_v2_widget.UniqueId('addRemovePointsHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button addremovepoints">$core_v2_language.GetResource('AddRemovePoints')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('AddRemovePointsInstructions')</p>
+
+<form><fieldset>
+    <ul class="field-list">
+		<li class="field-item user">
+			<label for="$core_v2_widget.UniqueId('User')" class="field-item-name">$core_v2_language.GetResource('Field_User')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_User_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('User')" />
+			</span>
+		</li>
+
+		<li class="field-item">
+			<label for="$core_v2_widget.UniqueId('PointsReason')" class="field-item-name">$core_v2_language.GetResource("Field_PointsReason")</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_PointsReason_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('PointsReason')" value="" id="$core_v2_widget.UniqueId('PointsReason')" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+        <li class="field-item">
+			<label for="$core_v2_widget.UniqueId('PointsToAdd')" class="field-item-name">$core_v2_language.GetResource("Field_PointsToAdd")</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_PointsToAdd_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('PointsToAdd')" value="" id="$core_v2_widget.UniqueId('PointsToAdd')" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationAddRemovePoints')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('addremovepoints.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.pointAdministrationAddRemovePoints.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        user: jQuery('#$core_v2_widget.UniqueId('User')'),
+		        pointsReason: jQuery('#$core_v2_widget.UniqueId('PointsReason')'),
+		        pointsToAdd: jQuery('#$core_v2_widget.UniqueId('PointsToAdd')')
+		    },
+		    text: {
+		        addRemotePointsSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("AddRemovePointsSuccessful"))',
+		        pointsRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_PointsRequired'))',
+       			userLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('find'))',
+    			noUsersMatchText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserLookUp_NoMatches'))",
+		    },
+            urls: {
+                findUsersUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))'
+            }
+    	});
+	});
+	</script>
+#end

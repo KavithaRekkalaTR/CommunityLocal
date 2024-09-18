@@ -1,0 +1,328 @@
+#set ($popularOnly = $core_v2_widget.GetBoolValue('popularOnly', false))
+#set ($hideEmpty = $core_v2_widget.GetBoolValue('hideEmpty', false))
+#set ($includeQuestions = $core_v2_widget.GetBoolValue('includeQuestions', true))
+#set ($supportUserFiltering = $core_v2_widget.GetBoolValue('supportUserFiltering', true))
+#set ($includeDiscussions = $core_v2_widget.GetBoolValue('includeDiscussions', true))
+
+#set ($forumOrGroup = $core_v2_page.ParseQueryString($core_v2_widget.GetStringValue('selectedForumOrGroup', '')))
+#set ($currentForum = $core_v2_forum.Current)
+#set ($forumId = false)
+#set ($groupId =  false)
+#set ($includeSubGroups = false)
+#set ($isRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+#set ($areStickyPostsOnTop = false)
+#set ($contextualUser = $core_v2_user.Current)
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($accessingUserIsRegistered = $core_v2_user.IsRegistered($accessingUser.Id))
+
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 15))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+
+## Get Widget-default filters and sorting
+#set ($filter = $core_v2_widget.GetStringValue('filter', 'active'))
+#set ($sortBy = $core_v2_widget.GetStringValue('sortBy', 'datetime'))
+#set ($sortOrder = $core_v2_widget.GetStringValue('sortOrder', 'descending'))
+#set ($age = $core_v2_widget.GetIntValue('age', 0))
+
+#if ($forumOrGroup.Value('Forum'))
+	#set ($parsedForumId = $core_v2_utility.ParseInt($forumOrGroup.Value('Forum')))
+	#if($parsedForumId && $parsedForumId == -1 && $core_v2_forum.Current)
+	   	#set ($forumId = $core_v2_forum.Current.Id)
+	#elseif($parsedForumId && $parsedForumId > 0)
+		#set ($forumId = $parsedForumId)
+	#end
+
+	#if (!$showSidebarList)
+		#set ($areStickyPostsOnTop = true)
+	#end
+#elseif ($forumOrGroup.Value('Group'))
+	#set ($includeSubGroups = $core_v2_utility.ParseBool($forumOrGroup.Value('IncludeSubGroups')))
+	#set ($groupId = $core_v2_utility.ParseInt($forumOrGroup.Value('Group')))
+	#if($groupId && $groupId < 0 && $core_v2_group.Current)
+	   	#set ($groupId =$core_v2_group.Current.Id)
+	#end
+#end
+
+#if ($parsedForumId != -1 && $forumId == false && $groupId == false)
+	#if ($core_v2_forum.Current)
+		#set ($forum = $core_v2_forum.Current)
+		#set ($forumId = $forum.Id)
+
+		#if (!$showSidebarList)
+			#set ($areStickyPostsOnTop = true)
+		#end
+	#elseif ($core_v2_group.Current)
+		#set ($groupId = $core_v2_group.Current.Id)
+		#set ($areStickyPostsOnTop = false)
+	#end
+#end
+
+#set ($hasQaForums = false)
+#set ($hasDiscussionForums = false)
+#if ($forumId)
+	#set($forum = $core_v2_forum.Get($forumId))
+	#foreach ($threadType in $forum.AllowedThreadTypes)
+		#if ($threadType == 'QuestionAndAnswer')
+		#set ($hasQaForums = true)
+	#elseif ($threadType == 'Discussion')
+		#set($hasDiscussionForums = true)
+		#end
+	#end
+#elseif($groupId > 0)
+	#set ($hasQaForums = true)
+	#set ($hasDiscussionForums = true)
+#end
+
+## Only honor query strings if user filtering is supported
+#if ($supportUserFiltering && !$showSidebarList)
+	## Cookie-stored filters override widget defaults
+ 	## But they could use their own, legacy, non-standard names which need to be mapped to normalized API options
+ 	#set ($cookieFilter = $core_v2_page.GetCookieValue("ThreadFilter"))
+ 	#if ($cookieFilter)
+ 		#set ($cookieFilter = $cookieFilter.ToLower())
+ 		#if ($cookieFilter == 'answerednotverified')
+ 		    ## we need to check if this is valid for this forum
+ 		    #if($includeQuestions && $hasQaForums)
+ 		        #set($filter = 'answerednotverified')
+			#end
+ 		#elseif ($cookieFilter == 'unreadonly')
+ 			#set ($filter = 'Unread')
+ 		#elseif ($cookieFilter == 'unansweredonly')
+ 			#set ($filter = 'Unanswered')
+ 		#elseif ($cookieFilter == 'userfilter')
+ 			#set ($filter = 'MyThreads')
+ 		#else
+ 			## other legacy options included: active
+ 			## which is still valid alongside any new options
+ 			#set ($filter = $cookieFilter)
+ 		#end
+ 	#end
+
+    ## Current QueryStrings override both widget defaults
+	## But they could also user their own, legacy, non-standard names which need to be mapped to normalized API options
+	#set ($queryStringFilter = $core_v2_page.GetQueryStringValue("Sort"))
+	#if ($queryStringFilter)
+		#set ($queryStringFilter = $queryStringFilter.ToLower())
+		#if ($queryStringFilter == 'unreadonly')
+			#set ($filter = 'Unread')
+		#else
+			## other legacy options included: active, unanswered, and your,
+			## each of which is still valid alongside any new options
+			#set ($filter = $queryStringFilter)
+		#end
+
+		## re-apply the current filter back to the cookie
+ 		$core_v2_page.SetCookieValue("ThreadFilter", $filter)
+	#end
+
+    #set($cookieSortOrder = $core_v2_page.GetCookieValue("ThreadSortOrder"))
+ 	#if ($cookieSortOrder)
+ 	    #set($sortOrder = $cookieSortOrder)
+ 	#end
+	#set ($queryStringSortOrder = $core_v2_page.GetQueryStringValue("SortOrder"))
+	#if ($queryStringSortOrder)
+	    #set ($sortOrder = $queryStringSortOrder)
+     	$core_v2_page.SetCookieValue("ThreadSortOrder", $sortOrder)
+	#end
+
+	#set($cookieSortBy = $core_v2_page.GetCookieValue("ThreadSortBy"))
+ 	#if ($cookieSortBy)
+ 	    #set($sortBy = $cookieSortBy)
+ 	#end
+	#set ($queryStringSortBy = $core_v2_page.GetQueryStringValue("ThreadSortBy"))
+	#if ($queryStringSortBy)
+		#set ($sortBy = $queryStringSortBy)
+		$core_v2_page.SetCookieValue("ThreadSortBy", $sortBy)
+	#end
+
+	#if ($sortBy.ToLower() == 'datetime')
+		#set ($sortBy = 'LastPost')
+	#end
+
+	<div class="sort">
+		<form>
+		<span class="by">
+			<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sortBy'))" data-querykey="ThreadSortBy">
+				#set ($sortBy = $sortBy.ToLower())
+				<option value="Topic" #if($sortBy == "topic") selected #end>$core_v2_language.GetResource('ViewThreads_FilterByTopic')</option>
+				<option value="LastPost" #if($sortBy == "lastpost") selected #end>$core_v2_language.GetResource('CF_ForumThreadList_Sort_DateTime')</option>
+				<option value="Date" #if($sortBy == "date") selected #end>$core_v2_language.GetResource('CF_ForumThreadList_Sort_ThreadDate')</option>
+				<option value="Replies" #if($sortBy == "replies") selected #end>$core_v2_language.GetResource('CF_ForumThreadList_Sort_Replies')</option>
+				<option value="Views" #if($sortBy == "views") selected #end>$core_v2_language.GetResource('CF_ForumThreadList_Sort_Views')</option>
+				<option value="Votes" #if($sortBy == "votes") selected #end>$core_v2_language.GetResource('CF_ForumThreadList_Sort_Votes')</option>
+				<option value="TotalQualityVotes" #if($sortBy == "totalqualityvotes") selected #end>$core_v2_language.GetResource('CF_ForumThreadList_Sort_QualityVotes')</option>
+				<option value="QualityScore" #if($sortBy == "qualityscore") selected #end>$core_v2_language.GetResource('CF_ForumThreadList_Sort_Quality')</option>
+			</select>
+		</span>
+		<span class="order">
+			<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sortOrder'))" data-querykey="SortOrder">
+				#set ($sortOrder = $sortOrder.ToLower())
+				<option value="Descending" #if($sortOrder == "descending") selected #end>$core_v2_language.GetResource('SortOrderDropDownList_Desc')</option>
+				<option value="Ascending" #if($sortOrder == "ascending") selected #end>$core_v2_language.GetResource('SortOrderDropDownList_Asc')</option>
+			</select>
+		</span>
+		</form>
+	</div>
+
+	<div class="view">
+		<div>
+			<form>
+			<select class="ui-select" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('filter'))" data-querykey="Sort">
+				#set ($filter = $filter.ToLower())
+				<option value="Active" #if ($filter == "active") selected #end>
+					#if ($hasDiscussionForums && $hasQaForums)
+						$core_v2_language.GetResource('AllRecent')
+					#elseif ($hasQaForums)
+						$core_v2_language.GetResource('AllRecent_Questions')
+					#else
+						$core_v2_language.GetResource('AllRecent_Discussions')
+					#end
+				</option>
+				#if ($accessingUserIsRegistered)
+    				<option value="Unread" #if ($filter == "unread") selected #end>
+    					#if ($hasDiscussionForums && $hasQaForums)
+    						$core_v2_language.GetResource('Unread')
+    					#elseif ($hasQaForums)
+    						$core_v2_language.GetResource('Unread_Questions')
+    					#else
+    						$core_v2_language.GetResource('Unread_Discussions')
+    					#end
+    				</option>
+    			#end
+    			#if ($accessingUserIsRegistered && !$contextualUser)
+    				<option value="MyThreads" #if ($filter == "mythreads") selected #end>
+    					#if ($hasDiscussionForums && $hasQaForums)
+    						$core_v2_language.GetResource('Your')
+    					#elseif ($hasQaForums)
+    						$core_v2_language.GetResource('Your_Questions')
+    					#else
+    						$core_v2_language.GetResource('Your_Discussions')
+    					#end
+    				</option>
+    				<option value="Authored" #if ($filter == "authored") selected #end>
+    					#if ($hasDiscussionForums && $hasQaForums)
+    						$core_v2_language.GetResource('Authored')
+    					#elseif ($hasQaForums)
+    						$core_v2_language.GetResource('Authored_Questions')
+    					#else
+    						$core_v2_language.GetResource('Authored_Discussions')
+    					#end
+    				</option>
+    			#end
+    			#if ($contextualUser)
+					<option value="ContextualMyThreads" #if ($filter == "contextualmythreads") selected #end>
+						#if ($hasDiscussionForums && $hasQaForums)
+							$core_v2_language.GetResource('Contextual_Your')
+						#elseif ($hasQaForums)
+							$core_v2_language.GetResource('Contextual_Your_Questions')
+						#else
+							$core_v2_language.GetResource('Contextual_Your_Discussions')
+						#end
+					</option>
+					<option value="ContextualAuthored" #if ($filter == "contextualauthored") selected #end>
+						#if ($hasDiscussionForums && $hasQaForums)
+							$core_v2_language.GetResource('Contextual_Authored')
+						#elseif ($hasQaForums)
+							$core_v2_language.GetResource('Contextual_Authored_Questions')
+						#else
+							$core_v2_language.GetResource('Contextual_Authored_Discussions')
+						#end
+					</option>
+				#end
+
+				<option value="Unanswered" #if ($filter == "unanswered") selected #end>
+					#if ($hasDiscussionForums && $hasQaForums)
+						$core_v2_language.GetResource('Unanswered')
+					#elseif ($hasQaForums)
+						$core_v2_language.GetResource('Unanswered_Questions')
+					#else
+						$core_v2_language.GetResource('Unanswered_Discussions')
+					#end
+				</option>
+				<option value="AnsweredWithNotVerified" #if ($filter == "answeredwithnotverified" || $filter == "answered") selected #end>
+					#if ($hasDiscussionForums && $hasQaForums)
+						$core_v2_language.GetResource('AnsweredWithNotVerified')
+					#elseif ($hasQaForums)
+						$core_v2_language.GetResource('AnsweredWithNotVerified_Questions')
+					#else
+						$core_v2_language.GetResource('AnsweredWithNotVerified_Discussions')
+					#end
+				</option>
+				#if ($includeQuestions && $hasQaForums)
+					<option value="AnsweredNotVerified" #if ($filter == "answerednotverified") selected #end>
+						$core_v2_language.GetResource('AnsweredNotVerified')
+					</option>
+				#end
+
+    				<option value="NoResponse" #if ($filter == "noresponse") selected #end>
+    					#if ($hasDiscussionForums && $hasQaForums)
+    						$core_v2_language.GetResource('NoResponse')
+    					#elseif ($hasQaForums)
+    						$core_v2_language.GetResource('NoResponse_Questions')
+    					#else
+    					    $core_v2_language.GetResource('NoResponse_Discussions')
+    					#end
+    				</option>
+
+			</select>
+			</form>
+		</div>
+	</div>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery(function(j){
+			var filterSelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('filter'))'),
+				sortBySelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sortBy'))'),
+				sortOrderSelect = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sortOrder'))');
+
+			function adjustHash() {
+				var select = j(this);
+				var hashAdjustment = {};
+				hashAdjustment[select.data('querykey')] = select.val();
+				j.telligent.evolution.url.hashData(hashAdjustment, {
+					prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+				});
+			}
+
+			filterSelect.on('change', adjustHash);
+			sortBySelect.on('change', adjustHash);
+			sortOrderSelect.on('change', adjustHash);
+		});
+		</script>
+	#end
+
+#end
+
+
+## Any request for content quality sorting should be translated to the API-ready Score:ID format
+#if ($sortBy.ToLower() == 'contentquality')
+	#set ($sortBy = "Score:${core_v2_contentQualityScore.ScoreId}")
+#end
+
+
+## Query for threads
+#set ($options = "%{SortBy = '$sortBy', SortOrder = '$sortOrder', PopularOnly = $popularOnly, IncludeSubGroups = $includeSubGroups, PageSize = $pageSize, PageIndex = $pageIndex, IncludeDiscussions = $includeDiscussions, IncludeQuestions = $includeQuestions, AreStickyPostsOnTop = $areStickyPostsOnTop }")
+#if ($groupId && $groupId > 0)
+    $options.Add('GroupId',$groupId)
+#elseif($forumId && $forumId >0)
+    $options.Add('ForumId',$forumId)
+#end
+
+
+#if ($filter.ToLower() == 'contextualmythreads' || $filter.ToLower() == 'contextualauthored')
+	#set ($currentUser = $core_v2_user.Current)
+	#if ($currentUser)
+		$options.Add('AuthorId', $currentUser.Id)
+		#if ($filter.ToLower() == 'contextualmythreads')
+			#set ($filter = 'MyThreads')
+		#elseif($filter.ToLower() == 'contextualauthored')
+			#set ($filter = 'Authored')
+		#end
+	#end
+#end
+
+
+#if ($age < 0)
+    $options.Add('CreatedAfterDate', $core_v2_utility.CurrentDate.AddMonths($age))
+#end

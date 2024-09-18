@@ -1,0 +1,53 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:IdeaVotes_Name}" cssClass="contextual-ideavotes" description="${resource:IdeaVotes_Description}" instanceIdentifier="7d9b3258b65d4b25996147830770e1c4" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<headerScript>
+<![CDATA[
+$!core_v2_language.FormatString($core_v2_language.GetResource('VotesOn'), $context.Idea.Name)
+]]>
+		</headerScript>
+		<contentScript>
+<![CDATA[
+#set ($votesListId = $core_v2_widget.UniqueId('votesListId'))
+
+$core_v2_widget.ExecuteFile('paged-votes.vm')
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.ideaVotes.register({
+   		ideaId: '$context.Id',
+		votes: $userVotes.TotalCount,
+		votesList: jQuery('#$votesListId'),
+		showCsvDownloadsLink: #if($userVotes.TotalCount > 0) true#else false#end,
+		urls: {
+			csvDownload: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('csv-download.vm'))',
+			pagedVotes: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('paged-votes.vm'))'
+		},
+		text: {
+			downloadCSV: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('DownloadCSV'))'
+		}
+	});
+});
+</script>
+
+]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+	<resource name="IdeaVotes_Name">Idea Votes</resource>
+	<resource name="IdeaVotes_Description">Lists votes on a specific idea and allows that report to be downloaded.</resource>
+
+	<resource name="VotesOn">Votes on '{0}'</resource>
+	<resource name="ViewUser">View User Profile</resource>
+	<resource name="NoVotes">No one has voted on this idea yet.</resource>
+	<resource name="by"> by </resource>
+    <resource name="VoteFormat">{0} vote</resource>
+    <resource name="VotesFormat">{0} votes</resource>
+    <resource name="VoterFormat">{0} voter</resource>
+    <resource name="VotersFormat">{0} voters</resource>
+    <resource name="LatestVote">Latest vote date: {0}</resource>
+  	<resource name="DownloadCSV">Download as CSV</resource>
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,29 @@
+##
+## Rendered Static API Documentation
+##
+
+#set ($resource = $core_v2_page.GetQueryStringValue("_w_resource"))
+
+$core_v2_page.SetContentType('application/json')
+
+#set ($resourceHtml = $core_v2_language.GetResource($resource))
+
+#if ($resource == 'dynamic_configuration')
+	#store($scopeHtml)
+		#foreach($scope in $shellApi.ListContextScopes())
+			<li>
+				<span class="code">$scope.ScopeName</span>
+				#if ($scope.ScopeName == 'site')
+					$core_v2_language.GetResource('dynamic_configuration_scope_description_site')
+				#else
+					$core_v2_language.FormatString($core_v2_language.GetResource('dynamic_configuration_scope_description'), $scope.Name.ToLower())
+				#end
+			</li>
+		#end
+	#end
+	#set($resourceHtml = $core_v2_language.FormatString($resourceHtml, $scopeHtml))
+#end
+
+{
+	"content": "$core_v2_encoding.JavascriptEncode($resourceHtml)"
+}

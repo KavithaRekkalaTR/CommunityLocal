@@ -1,0 +1,96 @@
+##
+## API Type Renderer
+##
+## Requires in scope:
+##   $type
+##
+#if ($type)
+
+	<h2 class="documentation_title">$type.Name</h2>
+
+	#if ($type.Description)
+		<p>$type.Description</p>
+	#end
+
+	#if ($type.EnumValues)
+		#foreach ($enumValue in $type.EnumValues)
+		#beforeall
+			<div class="properties">
+				<h4 class="members_heading">$core_v2_language.GetResource('Values')</h4>
+				<table cellspacing="0">
+					<thead>
+						<tr>
+							<th>$core_v2_language.GetResource('Name')</th>
+							<th>$core_v2_language.GetResource('Description')</th>
+						</tr>
+					</thead>
+					<tbody>
+		#each
+						<tr>
+							<td>$enumValue.Name</td>
+							<td>$!enumValue.Description</td>
+						</tr>
+		#afterall
+					</tbody>
+				</table>
+			</div>
+		#end
+	#end
+
+	#if ($type.Properties)
+		#foreach ($property in $type.Properties)
+		#beforeall
+			<div class="properties">
+				<h4 class="members_heading">$core_v2_language.GetResource('Properties')</h4>
+				<table cellspacing="0">
+					<thead>
+						<tr>
+							<th>$core_v2_language.GetResource('Name')</th>
+							<th>$core_v2_language.GetResource('Access')</th>
+							<th>$core_v2_language.GetResource('Type')</th>
+							<th>$core_v2_language.GetResource('Description')</th>
+						</tr>
+					</thead>
+					<tbody>
+		#each
+						<tr>
+							<td>$property.Name</td>
+							<td>
+								#if ($property.CanRead)
+									${core_v2_language.GetResource('Read')}#if ($property.CanWrite), #end
+								#end
+								#if ($property.CanWrite)
+									$core_v2_language.GetResource('Write')
+								#end
+							</td>
+							<td>
+								#set ($existingType = $type)
+								#set ($type = false)
+								#foreach ($typeOverload in $property.Types)
+									#set ($type = $typeOverload.Type)
+									$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+								#between
+									,
+								#end
+								#set ($type = $existingType)
+							</td>
+							<td>$!property.Description</td>
+						</tr>
+		#afterall
+					</tbody>
+				</table>
+			</div>
+		#end
+	#end
+
+	#if ($type.Properties)
+		#set ($properties = $type.Properties)
+		$core_v2_widget.ExecuteFile('callback-sub-render-api-properties.vm')
+	#end
+
+	#if ($type.Methods)
+		#set ($methods = $type.Methods)
+		$core_v2_widget.ExecuteFile('callback-sub-render-api-methods.vm')
+	#end
+
+#end

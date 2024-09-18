@@ -1,0 +1,53 @@
+#set($group = $context.Group)
+
+<p>
+    $core_v2_language.GetResource('InviteMembers_Instructions')
+</p>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item required user-name">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('InviteMemberByNameUserName')">$core_v2_language.GetResource('UserNamesOrEmailAddresses')</label>
+			<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('InviteMemberByNameUserName')" name="$core_v2_widget.UniqueId('InviteMemberByNameUserName')" /></span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item membership-type">
+			<label for="$core_v2_widget.UniqueId('InviteMemberByNameMembershipType')" class="field-item-name">$core_v2_language.GetResource('MembershipType')</label>
+			<span class="field-item-name"><select id="$core_v2_widget.UniqueId('InviteMemberByNameMembershipType')" name="$core_v2_widget.UniqueId('InviteMemberByNameMembershipType')">
+				<option value="Owner">$core_v2_language.GetResource('membershiptype-owner')</option>
+				#if ($group.GroupType != 'Joinless')
+					<option value="Manager">$core_v2_language.GetResource('membershiptype-manager')</option>
+					<option value="Member" selected="selected">$core_v2_language.GetResource('membershiptype-member')</option>
+				#end
+			</select></span>
+		</li>
+		<li class="field-item invite-message">
+			<label for="$core_v2_widget.UniqueId('InviteMemberByNameInviteMessage')" class="field-item-name">$core_v2_language.GetResource('Message')</label>
+			<span class="field-item-input"><textarea id="$core_v2_widget.UniqueId('InviteMemberByNameInviteMessage')" name="$core_v2_widget.UniqueId('InviteMemberByNameInviteMessage')"  rows="5" cols="50"></textarea></span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.groupMembershipListInvite')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("invite-ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.groupMembershipListInvite.register({
+				groupId: '$!core_v2_group.Current.Id',
+				userNamesOrEmails : jQuery('#$core_v2_widget.UniqueId('InviteMemberByNameUserName')'),
+				membershipType : jQuery('#$core_v2_widget.UniqueId('InviteMemberByNameMembershipType')'),
+				message : jQuery('#$core_v2_widget.UniqueId('InviteMemberByNameInviteMessage')'),
+				inviteText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SendInvitation'))',
+				userNameOrEmailMissingText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MissingInviteUserNames'))',
+				sendInvitationUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('send-invitation.vm'))',
+				findUsersOrRolesUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users-or-roles.vm'))',
+				noUserOrEmailMatchesText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatches_AllUsers'))',
+				inviteSentText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('InvitationSent'))',
+				alreadySelectedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadyInvited'))',
+				alreadyAMemberText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadyAMember'))'
+			});
+		});
+	</script>
+#end

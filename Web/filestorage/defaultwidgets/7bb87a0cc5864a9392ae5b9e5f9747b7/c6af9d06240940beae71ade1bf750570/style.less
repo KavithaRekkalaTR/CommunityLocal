@@ -1,0 +1,136 @@
+.scale_replaced_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @padding: 0px) {
+	width: @size + (@padding * 2);
+	height: @size + (@padding * 2);
+	&:before {
+		width: @size + (@padding * 2);
+		height: @size + (@padding * 2);
+		top: @padding;
+		font-size: @size;
+		line-height: @size;
+	}
+}
+.content-fragment.thread-list {
+    .content-list.tabular {
+		table-layout: fixed;
+		width: 100%;
+        > .content-item {
+    		.cell { width: 10% }
+    		.cell.icon { width: 3% }
+    		.cell.name { width: 57%; }
+    		.cell.latest { width: 20%; max-width: none; }
+
+    		.cell.name .identifier.locked {
+    		    top: 4px;
+    			.scale_replaced_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2, 0);
+    		}
+        }
+	}
+
+	.content-list.content > .content-item {
+		&.preview { display: none; }
+		&.preview.previewing { display: table-row; }
+		.icon {
+			span, a {
+				&.discussion {
+					color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 17%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+					.scale_replaced_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2, 10px / 2);
+				}
+				&.verified {
+					color: -evo-themeconfig-color('statePositive', #9CCC65);
+					.scale_replaced_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.5, 10px / 2);
+					top: -3px;
+				}
+				&.suggested {
+					color: -evo-themeconfig-color('statePending', #FFB300);
+					.scale_replaced_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.5, 10px / 2);
+					top: -3px;
+				}
+				&.unanswered {
+					color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 17%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+					.scale_replaced_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2, 10px / 2);
+				}
+			}
+		}
+		.content.abbreviated  {
+			.name {
+				font-size: 24px;
+				margin-right: 255px;
+			}
+			.author {
+				top: -6px;
+				.avatar {
+					top: 6px;
+				}
+			}
+			.author,
+			.content-fragment.thread-list .content.abbreviated .attributes {
+				width: 240px;
+			}
+			.attributes {
+				position: relative;
+				top: -6px;
+			}
+			.reply-votes {
+				a {
+					color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+					&:before {
+						font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .9;
+					}
+				}
+			}
+		}
+	}
+	.ui-forumqualityvotes {
+		&[data-score="0"] {
+			display: none;
+		}
+		.thread-vote {
+			display: inline;
+		}
+		a.vote, .vote-indicator {
+			display: none;
+		}
+		.score {
+			cursor: pointer;
+			position: relative;
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) *.8;
+			top: -1px;
+			padding-left: 5px;
+			white-space: nowrap;
+			margin-left: 1px;
+			color: -evo-themeconfig-color('foregroundColor', #11171A);
+		}
+	}
+}
+
+@media only screen and (max-width: -evo-themeconfig-unit('minWidth', 670px)) {
+	.content-fragment.thread-list {
+		.content-list.tabular .content-item {
+			position: relative;
+			display: block;
+
+			&.previewing {
+				border-bottom: 1px solid -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 9%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			}
+
+			&.preview { display: none; }
+			&.preview.previewing {
+				display: block;
+				.cell.content {
+					.content.inline {
+						margin: 0;
+					}
+					border-bottom-width: 0;
+				}
+				border-bottom: 1px solid -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 15%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			}
+
+			.cell { padding-left: (-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2) + (10px * 1.5); width: auto; }
+			.cell.icon { position: absolute; top: 5px; left: 0; padding-left: 0; width: auto; }
+			.cell.name { min-height: (-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2) + 10px; padding-top: 0; width: auto; }
+			.cell.supplementary { display: none; }
+			.cell.latest { width: auto; }
+			.cell.latest br { display: inline; margin: 0 .33ex 0 0; padding: 0; content: ' '; }
+		}
+	}
+}

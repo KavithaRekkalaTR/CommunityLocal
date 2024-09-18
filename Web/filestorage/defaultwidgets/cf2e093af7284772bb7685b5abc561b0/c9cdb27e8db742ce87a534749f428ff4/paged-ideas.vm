@@ -1,0 +1,130 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('w_sortOrder'))
+#set ($sortBy = $core_v2_page.GetQueryStringValue('w_sortBy'))
+
+#set($options = "%{PageSize = $pageSize, PageIndex = $pageIndex}")
+#if ($core_v2_page.GetQueryStringValue('w_filter') == "open")
+	$options.Add('ReleasesVotes', 'false')
+#elseif ($core_v2_page.GetQueryStringValue('w_filter') == "closed")
+	$options.Add('ReleasesVotes', 'true')
+#end
+
+$options.Add('QueryType', 'All')
+
+#if ($sortBy && $sortBy != '')
+    $options.Add('SortBy', $sortBy)
+#else
+    $options.Add('SortBy', 'date')
+#end
+#if ($sortOrder && $sortOrder != '')
+    $options.Add('SortOrder', $sortOrder)
+#else
+    $options.Add('SortOrder', 'descending')
+#end
+
+#set($queryText = '')
+#set($queryText = $core_v2_page.GetQueryStringValue('w_queryText'))
+#if ($queryText != '')
+    $options.Add('Query', $queryText)
+#end
+
+#set($ideation = $context.Ideation)
+
+#set($ideas = $context.ListIdeas($options))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($ideas.PageIndex + 1) * $ideas.PageSize)
+#if ($ideas.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#set($canEdit = false)
+#set($canDelete = false)
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" id="$core_v2_encoding.HtmlAttributeEncode($ideasListId)">
+
+#foreach($idea in $ideas)
+#each
+    #set($deletePerm  = false)
+    #set($deletePerm = $core_v2_permission.Get($telligentIdeas_v1_ideaPermissions.DeleteIdeas,$core_v2_user.Accessing.Id,$idea.Id,$telligentIdeas_v1_ideas.ContentTypeId))
+    #set($editPerm = false)
+    #set($editPerm = $core_v2_permission.Get($telligentIdeas_v1_ideaPermissions.EditIdeas,$core_v2_user.Accessing.Id,$idea.Id,$telligentIdeas_v1_ideas.ContentTypeId))
+    #set ($canEdit = $editPerm && $editPerm.IsAllowed)
+    #set ($canDelete = $deletePerm && $deletePerm.IsAllowed)
+
+    #set($redirect = false)
+    #if($telligentIdeas_v1_ideas.Current && $telligentIdeas_v1_ideas.Current.Id == $idea.Id)
+        #set($redirect = true)
+    #end
+
+    #set($direction = 'neutral')
+    #set($sign = '')
+    #if($idea.Score > 0 )
+        #set($direction = 'positive')
+        #set($sign = '+')
+    #elseif ($idea.Score < 0)
+        #set($direction = 'negative')
+    #end
+
+  <li class="content-item idea">
+	<h4 class="name">$idea.Name</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item votes">
+                <span class="value $direction">$sign$core_v2_language.FormatNumber($idea.Score)</span>
+				#if($idea.TotalVotes == 1)
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('OnVoteFormat'), $core_v2_language.FormatNumber($idea.TotalVotes))</span>
+				#else
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('OnVotesFormat'), $core_v2_language.FormatNumber($idea.TotalVotes))</span>
+				#end
+			</li>
+			<li class="attribute-item status">
+               <span class="value idea-status status-$idea.Status.Key">$idea.Status.Name</span>
+            </li>
+			<li class="attribute-item date">
+               <span class="value">$core_v2_language.FormatDateAndTime($idea.CreatedDate)</span>
+            </li>
+		</ul>
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				<li class="navigation-list-item view-file">
+					<a href="$core_v2_page.AbsoluteUrl($telligentIdeas_v1_urls.Idea($idea.Id))">$core_v2_language.GetResource('View')</a>
+				</li>
+				#if($idea.TotalVotes > 0)
+                    #set($voteUrl = false)
+                    #set($voteUrl = $telligentIdeas_v1_urls.ViewIdeaVotes($idea.Id))
+                    #if ($voteUrl)
+                        <li class="navigation-list-item votes">
+                            <a href="$core_v2_encoding.HtmlAttributeEncode($voteUrl)">$core_v2_language.GetResource('Votes')</a>
+                        </li>
+                    #end
+				#end
+				#if ($canEdit)
+					<li class="navigation-list-item edit">
+						<a href="$core_v2_page.AbsoluteUrl($telligentIdeas_v1_urls.EditIdea($idea.Id))">$core_v2_language.GetResource('Edit')</a>
+					</li>
+				#end
+				#set($convert = false)
+        		#set($convert = $core_v2_ui.ConvertContent($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId))
+        		#if ($convert)
+        		    <li class="navigation-list-item">
+        		        $convert
+        		    </li>
+        		#end
+				#if ($canDelete)
+					<li class="navigation-list-item edit">
+						<a href="#" data-messagename="idea.delete" data-id="$idea.Id.ToString()" data-ideationid="$ideation.Id.ToString()" data-redirect="$redirect">$core_v2_language.GetResource('Delete')</a>
+					</li>
+				#end
+			</ul>
+		</div>
+	</div>
+  </li>
+
+#end
+
+</ul>

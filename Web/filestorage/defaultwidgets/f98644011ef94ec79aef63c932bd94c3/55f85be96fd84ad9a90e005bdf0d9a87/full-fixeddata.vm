@@ -1,0 +1,64 @@
+#set($options = "%{}")
+
+#set ($id = $core_v2_page.GetQueryStringValue('fr_id'))
+#if($id)
+    $options.Add('selectedApplications', $id)
+#end
+
+#set ($ideation = $context.GetIdeationSummaryDetailReport($options))
+#if($ideation && !$ideation.HasErrors())
+    #set ($apiIdeation = $telligentIdeas_v1_challenges.Get($ideation.ApplicationId))
+
+    <div class="data">
+        <ul class="report-details">
+            <li class="report-name">
+                #if ($apiIdeation.Url) <a href="$apiIdeation.Url">$ideation.Name</a> #else $ideation.Name #end
+            </li>
+            <li class="report-info">
+                    $core_v2_language.GetResource('in')
+                    #if ($apiIdeation.Container.Url) <a href="$apiIdeation.Container.Url">$ideation.Container.Name</a> #else $ideation.Container.Name #end
+            </li>
+        </ul>
+
+        <table class="ideation-data large-data">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>$core_v2_language.GetResource('Last1Day')</th>
+                    <th>$core_v2_language.GetResource('Last3Day')</th>
+                    <th>$core_v2_language.GetResource('Last7Day')</th>
+                    <th>$core_v2_language.GetResource('Last30Day')</th>
+                    <th>$core_v2_language.GetResource('Last90Day')</th>
+                    <th>$core_v2_language.GetResource('Last180Day')</th>
+                </tr>
+            </thead>
+            </tbody>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewIdeas'), $core_v2_language.GetResource('NewIdeas_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $ideation.NewIdeaCountLast1Day, $ideation.NewIdeaCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $ideation.NewIdeaCountLast3Days, $ideation.NewIdeaCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $ideation.NewIdeaCountLast7Days, $ideation.NewIdeaCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $ideation.NewIdeaCountLast30Days, $ideation.NewIdeaCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $ideation.NewIdeaCountLast90Days, $ideation.NewIdeaCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $ideation.NewIdeaCountLast180Days, $ideation.NewIdeaCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewComments'), $core_v2_language.GetResource('NewComments_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $ideation.NewCommentCountLast1Day, $ideation.NewCommentCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $ideation.NewCommentCountLast3Days, $ideation.NewCommentCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $ideation.NewCommentCountLast7Days, $ideation.NewCommentCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $ideation.NewCommentCountLast30Days, $ideation.NewCommentCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $ideation.NewCommentCountLast90Days, $ideation.NewCommentCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $ideation.NewCommentCountLast180Days, $ideation.NewCommentCount180DayTrend)
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

@@ -1,0 +1,134 @@
+<div class="editor-header">
+	<form>
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-input name">
+						<% if(ThemeTitle && ThemeTitle.length > 0) { %>
+							<span class="hierarchy theme ui-tip" data-tip="<%: ThemeTitle %>"><%: ThemeTitle %></span>
+							<span class="divider"> / </span>
+						<% } %>
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_fid=<%: InstanceIdentifier %>&_ftid=<%: (ThemeId || '') %>&_ft=overview" class="hierarchy managed-item-name ui-tip" data-tip="<%: ProcessedName %> Overview"><%: ProcessedName %></a>
+						<span class="divider"> / </span>
+						<div class="editor-components">
+							#set ($selectedTab = "overview")
+							#set ($selectedTabName = $core_v2_language.GetResource('Overview'))
+							$core_v2_widget.ExecuteFile('template-fragment-components.vm')
+							#set ($selectedTab = false)
+							#set ($selectedTabName = false)
+						</div>
+						<div class="editor-actions-wrapper"></div>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+	<div class="editor-state">
+		$core_v2_widget.ExecuteFile('template-fragment-editor-state.vm')
+	</div>
+</div>
+<div class="editor-content overview">
+	<div class="components">
+		<div class="fragment-versions">
+			$core_v2_widget.ExecuteFile('template-fragment-overview-versions.vm')
+		</div>
+		<div class="managed-items">
+			$core_v2_widget.ExecuteFile('template-fragment-overview-components.vm')
+		</div>
+		<div class="fragment-attachments">
+			$core_v2_widget.ExecuteFile('template-fragment-overview-attachments.vm')
+		</div>
+	</div>
+	<div class="metadata">
+		<form>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item name">
+						<label class="field-item-name">$core_v2_language.GetResource('Name')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('NameDesc')</span>
+						<span class="field-item-input name">
+							<div class="token-editor">
+								<span class="processed"><%: ProcessedName %></span>
+								<input type="text" tabindex="0" class="raw name" size="40" class="name" value="<%: Name %>" />
+							</div>
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+
+					<li class="field-item description">
+						<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('DescriptionDesc')</span>
+						<span class="field-item-input description">
+							<div class="token-editor">
+								<span class="processed"><%: ProcessedDescription %></span>
+								<input type="text" tabindex="1" class="raw description" value="<%: Description %>" />
+							</div>
+						</span>
+						<span class="field-item-description was"></span>
+					</li>
+					<% if(HasHeader) { %>
+						<li class="field-item">
+							<label class="field-item-name">$core_v2_language.GetResource('Header')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('HeaderDesc')</span>
+							<span class="field-item-input ShowHeaderByDefault">
+								<input id="cb-<%: InstanceIdentifier %>-header" type="checkbox" tabindex="2" class="show-header" <% if(ShowHeaderByDefault) { %> checked="checked" <% } %> />
+								<label for="cb-<%: InstanceIdentifier %>-header">$core_v2_language.GetResource('ShowHeaderbyDefault')</label>
+							</span>
+						</li>
+					<% } %>
+					<li class="field-item">
+						<label class="field-item-name">$core_v2_language.GetResource('Caching')</label>
+						<span class="field-item-input IsCacheable">
+							<input id="cb-<%: InstanceIdentifier %>-cacheable" type="checkbox" tabindex="3" class="is-cacheable" <% if(IsCacheable) { %> checked="checked" <% } %> />
+							<label for="cb-<%: InstanceIdentifier %>-cacheable">$core_v2_language.GetResource('IsCacheable')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('IsCacheableDesc')</span>
+						</span>
+						<span class="field-item-input VaryCacheByUser">
+							<input id="cb-<%: InstanceIdentifier %>-vary-by-user" type="checkbox" tabindex="4" class="vary-cache" <% if(VaryCacheByUser) { %> checked="checked" <% } %> />
+							<label for="cb-<%: InstanceIdentifier %>-vary-by-user">$core_v2_language.GetResource('VaryByUser')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('VaryByUserDesc')</span>
+						</span>
+					</li>
+					<% if(HasWrapperCss) { %>
+						<li class="field-item cssclass">
+							<label class="field-item-name">$core_v2_language.GetResource('CssClassName')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('CssClassNameDesc')</span>
+							<span class="field-item-input">
+								<input type="text" tabindex="5" class="css-class" size="40" value="<%: (CssClass || '') %>" />
+							</span>
+							<span class="field-item-validation" style="display:none;"></span>
+							<span class="field-item-description was"></span>
+						</li>
+					<% } %>
+					<li class="field-item available-contexts">
+						<label class="field-item-name">$core_v2_language.GetResource('AvailableContexts')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('AvailableContextsDesc')</span>
+						<span class="field-item-input">
+							<input type="text" class="available-contexts" id="available-contexts-<%= InstanceIdentifier %>" />
+						</span>
+						<span class="field-item-validation" style="display:none;"></span>
+						<span class="field-item-description was"></span>
+					</li>
+					<li class="field-item rest-scopes">
+						<label class="field-item-name">$core_v2_language.GetResource('RestScopes')</label>
+						<span class="field-item-description">$core_v2_language.GetResource('RestScopesDesc')</span>
+						<span class="field-item-input">
+							<input type="text" class="rest-scopes" id="rest-scopes-<%= InstanceIdentifier %>" />
+						</span>
+						<span class="field-item-validation" style="display:none;"></span>
+						<span class="field-item-description was"></span>
+					</li>
+				</ul>
+			</fieldset>
+		</form>
+		<div class="content full details">
+			<div>
+				<a href="#" class="show">$core_v2_language.GetResource('ShowDetails')</a>
+				<a href="#" class="hide">$core_v2_language.GetResource('HideDetails')</a>
+			</div>
+			<div class="attributes">
+				$core_v2_widget.ExecuteFile('template-fragment-overview-details.vm')
+			</div>
+		</div>
+	</div>
+</div>

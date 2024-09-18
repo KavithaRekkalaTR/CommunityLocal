@@ -1,0 +1,55 @@
+$core_v2_widget.ExecuteFile("SetQuery.vm")
+
+#if(($totalDays + $startDay) % 7 == 0)
+#set($totalCells = $totalDays + $startDay)
+#else
+#set($totalCells = ($totalDays +($startDay)) + (7 - ( ($totalDays +($startDay)) % 7)))
+#end
+
+#set($noFollowNavigation = $core_v2_utility.CurrentDate.Subtract($beginDate).TotalDays)
+#if ($noFollowNavigation < 0)
+	#set($noFollowNavigation = 0 - $noFollowNavigation)
+#end
+#if ($noFollowNavigation > 365)
+	#set($noFollowNavigation = true)
+#else
+	#set($noFollowNavigation = false)
+#end
+
+<table class="event_calendar" cellpadding="0" cellspacing="0">
+	<thead>
+	<tr class="month_head">
+		<th colspan="7">
+			<div class="month_wrapper">
+				#set($monthFormat =  $core_v2_language.GetResource("calendar_CalendarMonthLabelFormat"))
+				<a href="#" class="prev_link replace-with-icon left-open" #if($noFollowNavigation) rel="nofollow"#end title="$core_v2_language.GetResource("calendar_CalendarPreviousLinkText")"></a>
+				<span class="month_label">$core_v2_language.FormatDate($beginDate, "%{AdjustTimeZone = 'false', Format = '$monthFormat'}")</span>
+				<a href="#" class="next_link replace-with-icon right-open" #if($noFollowNavigation) rel="nofollow"#end title="$core_v2_language.GetResource("calendar_CalendarNextLinkText")"></a>
+			</div>
+			$core_v2_widget.ExecuteFile('more.vm')
+		</th>
+	</tr>
+	<tr class="month_weekday">
+		#foreach($weekday in [0..6])
+			<th>
+				<span class="full_day">$calendar_v1_UI.TranslateDayOfWeek($weekday,false)</span>
+				<span class="short_day">$calendar_v1_UI.TranslateDayOfWeek($weekday,true)</span>
+			</th>
+		#end
+	</tr>
+	</thead>
+
+	<tbody class="month_cells">
+	#foreach($cell in [1..$totalCells])
+		#if($cell ==1 || $cell % 7 ==1)
+		<tr>
+		#end
+
+		$core_v2_widget.ExecuteFile("subview-calendar-cell.vm")
+
+		#if($cell % 7 == 0)
+		</tr>
+		#end
+	#end
+	</tbody>
+</table>

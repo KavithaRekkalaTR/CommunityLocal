@@ -1,0 +1,10 @@
+#if ($core_v2_page.IsPost)
+	#set($threadId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('threadId')))
+	#set($response = $core_v2_forumThread.DeleteWikiPageAssociation($threadId))
+	#if ($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+		$core_v2_page.SetContentType('application/json')
+		{"isSuccess":"true"}
+	#end
+#end

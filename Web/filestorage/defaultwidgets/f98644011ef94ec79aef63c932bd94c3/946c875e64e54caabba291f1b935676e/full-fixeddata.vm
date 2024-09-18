@@ -1,0 +1,73 @@
+#set($options = "%{}")
+
+#set ($id = $core_v2_page.GetQueryStringValue('fr_id'))
+#if($id)
+    $options.Add('selectedApplications', $id)
+#end
+
+#set ($articleCollection = $context.GetArticleCollectionSummaryDetailReport($options))
+#if($articleCollection && !$articleCollection.HasErrors())
+    #set ($apiArticleCollection = $articles_v1_articleCollections.Get("%{ Id=$articleCollection.ApplicationId }"))
+
+    <div class="data">
+        <ul class="report-details">
+            <li class="report-name">
+                #if ($apiArticleCollection.Url) <a href="$apiArticleCollection.Url">$articleCollection.Name</a> #else $articleCollection.Name #end
+            </li>
+            <li class="report-info">
+                    $core_v2_language.GetResource('in')
+                    #if ($apiArticleCollection.Container.Url) <a href="$apiArticleCollection.Container.Url">$articleCollection.Container.Name</a> #else $articleCollection.Container.Name #end
+            </li>
+        </ul>
+
+        <table class="article-collection-data large-data">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>$core_v2_language.GetResource('Last1Day')</th>
+                    <th>$core_v2_language.GetResource('Last3Day')</th>
+                    <th>$core_v2_language.GetResource('Last7Day')</th>
+                    <th>$core_v2_language.GetResource('Last30Day')</th>
+                    <th>$core_v2_language.GetResource('Last90Day')</th>
+                    <th>$core_v2_language.GetResource('Last180Day')</th>
+                </tr>
+            </thead>
+            </tbody>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewArticles'), $core_v2_language.GetResource('NewArticles_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $articleCollection.NewArticleCountLast1Day, $articleCollection.NewArticleCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $articleCollection.NewArticleCountLast3Days, $articleCollection.NewArticleCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $articleCollection.NewArticleCountLast7Days, $articleCollection.NewArticleCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $articleCollection.NewArticleCountLast30Days, $articleCollection.NewArticleCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $articleCollection.NewArticleCountLast90Days, $articleCollection.NewArticleCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $articleCollection.NewArticleCountLast180Days, $articleCollection.NewArticleCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('EditedArticles'), $core_v2_language.GetResource('EditedArticles_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $articleCollection.EditArticleCountLast1Day, $articleCollection.EditArticleCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $articleCollection.EditArticleCountLast3Days, $articleCollection.EditArticleCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $articleCollection.EditArticleCountLast7Days, $articleCollection.EditArticleCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $articleCollection.EditArticleCountLast30Days, $articleCollection.EditArticleCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $articleCollection.EditArticleCountLast90Days, $articleCollection.EditArticleCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $articleCollection.EditArticleCountLast180Days, $articleCollection.EditArticleCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewComments'), $core_v2_language.GetResource('NewComments_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $articleCollection.NewCommentCountLast1Day, $articleCollection.NewCommentCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $articleCollection.NewCommentCountLast3Days, $articleCollection.NewCommentCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $articleCollection.NewCommentCountLast7Days, $articleCollection.NewCommentCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $articleCollection.NewCommentCountLast30Days, $articleCollection.NewCommentCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $articleCollection.NewCommentCountLast90Days, $articleCollection.NewCommentCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $articleCollection.NewCommentCountLast180Days, $articleCollection.NewCommentCount180DayTrend)
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

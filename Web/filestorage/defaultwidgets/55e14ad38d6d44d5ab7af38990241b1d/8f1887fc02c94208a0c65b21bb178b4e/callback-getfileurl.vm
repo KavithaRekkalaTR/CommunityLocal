@@ -1,0 +1,20 @@
+$core_v2_page.SetContentType('application/json')
+
+#set ($filename = false)
+#set ($filename = $core_v2_page.GetFormValue('filename'))
+#set ($contextId = false)
+#set ($contextId = $core_v2_page.GetFormValue('contextid'))
+#set ($file = false)
+#if ($filename && $contextId)
+	#set($file = $core_v2_uploadedFile.Get($contextId, $filename))
+#end
+#if ($file)
+    {
+        "url": "$core_v2_encoding.JavascriptEncode($core_v2_page.AbsoluteUrl($file.Url))",
+        "fileName": "$core_v2_encoding.JavascriptEncode($filename)"
+    }
+#else
+    {
+        "error": "not found"
+    }
+#end

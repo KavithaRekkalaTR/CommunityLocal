@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_TemporaryRssFeedList_Name}" version="11.0.0.0" description="${resource:Core_TemporaryRssFeedList_Description}" instanceIdentifier="76353b15e99d4e619b0fda589505a222" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="temporary-rss-feed-list" lastModified="2020-01-14 16:07:51Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($user = false)
+#set($user = $core_v2_user.Current)
+#if (!$user)
+	$core_v2_widget.Hide()
+#end
+
+#set($readOnly = false)
+#if (!$core_v2_editableGroup.IsEditable('User') || $user.Id != $core_v2_user.Accessing.Id || !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#set($readOnly = true)
+#end
+
+#if ($readOnly)
+	<div class="content full">
+		<h2 class="name">$core_v2_language.GetResource('RssFeeds')</h2>
+	</div>
+	#set ($pageSize = $core_v2_widget.GetIntValue('rssPageSize', 5))
+	#foreach ($feed in $user.RssFeeds)
+		<div class="feed">
+			<ul class="content-list">
+				<div class="content abbreviated">
+					<div class="summary">
+						<h3 class="name">
+							<a class="external-link rss" href="$core_v2_encoding.HtmlAttributeEncode($feed)">$core_v2_encoding.HtmlEncode($feed)</a>
+						</h3>
+					</div>
+				</div>
+			</ul>
+		</div>
+	#nodata
+		$core_v2_widget.Hide()
+	#end
+
+	#registerEndOfPageHtml('telligent.evolution.widgets.temporaryRssFeedList')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+	#end
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(){
+				jQuery.telligent.evolution.widgets.temporaryRssFeedList.register({
+					wrapperId: '$core_v2_widget.WrapperElementId',
+					feedItemsUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('feeditems.vm'))",
+					pageSize: $pageSize
+				});
+			});
+		</script>
+	#end
+#else
+	<form><fieldset>
+		<h3>$core_v2_language.GetResource('RssFeeds')</h3>
+		<ul class="field-list">
+			<li class="field-item">
+				<label for="$core_v2_widget.UniqueId('rssfeeds')" class="field-item-name">$core_v2_language.GetResource('RssFeeds_Label')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('RssFeeds_Description')</span>
+				<span class="field-item-input">
+					<textarea id="$core_v2_widget.UniqueId('rssfeeds')">$!core_v2_utility.Join($core_v2_utility.NewLine, $user.RSSFeeds)</textarea>
+				</span>
+				<span class="field-item-validation" style="display: none;">$core_v2_language.GetResource('RssFeeds_ValidationError')</span>
+			</li>
+		</ul>
+	</fieldset></form>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+		jQuery(function() {
+			var feeds = jQuery('#$core_v2_widget.UniqueId('rssfeeds')');
+			var originalValue = jQuery.telligent.evolution.html.decode('$!core_v2_encoding.JavascriptEncode($core_v2_utility.Join($core_v2_utility.NewLine, $user.RSSFeeds))');
+			var save = function(success, failure)
+			{
+				var rssFeeds = [];
+				var currentValue = feeds.val();
+				var allFeeds = currentValue;
+				if (currentValue != originalValue) {
+					if (allFeeds)
+					{
+						allFeeds = allFeeds.split('\n');
+						for (var i = 0; i < allFeeds.length; i++)
+						{
+							var feedUrl = jQuery.trim(allFeeds[i]);
+							if (feedUrl)
+							{
+								rssFeeds[rssFeeds.length] = feedUrl;
+							}
+						}
+					}
+
+					jQuery.telligent.evolution.put({
+						url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/users/{UserId}.json?IncludeFields=Id',
+						data: {
+							UserId: $user.Id,
+							RssFeeds: rssFeeds.join(',')
+						},
+						success: function(response) {
+							originalValue = currentValue;
+							success();
+						},
+						error: function(xhr, desc, ex) { jQuery.telligent.evolution.notifications.show(desc,{type:'error'}); failure(); }
+					});
+				} else {
+					success();
+				}
+			},
+			validate = function(success, failure) {
+				var allFeeds = feeds.val();
+				if (allFeeds) {
+					var regexp = new RegExp("^(http|https)\://.*", "i");
+					allFeeds = allFeeds.split("\n");
+					for (var i = 0; i < allFeeds.length; i++) {
+						if (!regexp.test(jQuery.trim(allFeeds[i]))) {
+							feeds.parents('.field-item').find('.field-item-validation').show();
+							failure();
+							return;
+						}
+					}
+				}
+
+				feeds.parents('.field-item').find('.field-item-validation').hide();
+				success();
+			};
+
+			feeds.on('change blur', function() {
+				validate(function() { }, function() {});
+			}).evolutionResize();
+
+			$core_v2_editableGroup.GetRegistrationScript('User', 'save', 'validate')
+		});
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_TemporaryRssFeedList_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_TemporaryRssFeedList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="rssPageSize" labelResourceName="Core_TemporaryRssFeedList_PageSize" defaultValue="5" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_TemporaryRssFeedList_Description">Displays a list of items in various RSS feeds.</resource>
+  <resource name="Core_TemporaryRssFeedList_Name">User - Shared RSS Feeds</resource>
+  <resource name="Core_TemporaryRssFeedList_PageSize">Number of items per RSS feed to display</resource>
+  <resource name="Options">Options</resource>
+  <resource name="RssFeeds">Shared Feeds</resource>
+  <resource name="RssFeeds_Description">Enter one RSS feed URL per line</resource>
+  <resource name="RssFeeds_Label">Shared RSS Feed URLs</resource>
+  <resource name="RssFeeds_ValidationError">One or more of your feeds appears to be invalid or in an incorrect format</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="0233cbb383784e11a1e5e541f3b0a795" />
+    </requiredContext>
+		<restScopes>
+			<scope id="users.users.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

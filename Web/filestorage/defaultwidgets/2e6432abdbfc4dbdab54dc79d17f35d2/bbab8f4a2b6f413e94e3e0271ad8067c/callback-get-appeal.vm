@@ -1,0 +1,25 @@
+#set($hasPermission = false)
+
+#set($appealId = false)
+#set($appealId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_appealid')))
+
+#set($appeal = $core_v2_abuseAppeal.Get($appealId))
+
+#if ($appeal.Content && $appeal.Content.Application)
+	#set ($hasPermission = $core_v2_abuseAppeal.CanReviewAppealsInApplication($appeal.Content.Application.ApplicationId, $appeal.Content.Application.ApplicationTypeId))
+#else
+	#set ($hasPermission = true)
+#end
+
+#set($hasModerateUsersPermission = false)
+#set ($hasModerateUsersPermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+
+#if ($hasPermission && $appeal)
+	<ul class="content-list abuse" data-hasmore="$hasMore">
+	$core_v2_widget.ExecuteFile('appeal.vm')
+	</ul>
+#else
+	<div class="message error" data-hasmore="false">
+		$core_v2_language.GetResource('No_Permission')
+	</div>
+#end

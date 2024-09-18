@@ -1,0 +1,1 @@
+return core_v2_urls.RejectFriendship(core_v2_utility.ParseInt(core_v2_widget.GetExecutionParameterValue('UserId')), false);

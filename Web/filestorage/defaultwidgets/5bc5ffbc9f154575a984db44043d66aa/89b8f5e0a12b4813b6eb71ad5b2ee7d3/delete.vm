@@ -1,0 +1,11 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($pointFactorId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('PointFactorId')))
+
+    #if($pointFactorId)
+    	$context.DeletePointFactor($pointFactorId)
+    #end
+
+    {"success":true}
+#end

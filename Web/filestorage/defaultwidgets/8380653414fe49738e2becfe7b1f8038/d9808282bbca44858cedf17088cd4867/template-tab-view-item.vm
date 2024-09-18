@@ -1,0 +1,32 @@
+##
+## Tab Item Template
+##
+<% if(request.type === 'file') { %>
+	<span class="primary ui-tip" data-tip="<%: model.EmbeddableProcessedName %>">
+		<% if(model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% } %>
+		<%: model.EmbeddableProcessedName %>
+	</span>
+	<span class="secondary <%: request.type %> attachment ui-tip" data-tip="<%: model.Name %>">
+		<%: model.Name %>
+	</span>
+<% } else { %>
+	<span class="primary ui-tip" data-tip="<%: model.ProcessedName %>">
+		<% if(model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% } %>
+		<%: model.ProcessedName %>
+	</span>
+	<span class="secondary <%: request.type %>">
+	<% if(request.type == 'overview') { %>
+		$core_v2_language.GetResource('Overview')
+	<% } else if(request.type == 'configuration') { %>
+		$core_v2_language.GetResource('Configuration')
+	<% } else if(request.type == 'contentscript') { %>
+		$core_v2_language.GetResource('Implementation')
+	<% } else if(request.type == 'resources') { %>
+		$core_v2_language.GetResource('Resources')
+	<% } %>
+	</span>
+<% } %>

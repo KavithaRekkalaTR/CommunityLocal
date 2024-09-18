@@ -1,0 +1,46 @@
+﻿
+#set ($queryType = $core_v2_widget.GetStringValue('queryType', 'currentUser'))
+#set ($targetUser = false)
+#if ($queryType == "accessingUser")
+	#set ($targetUser = $core_v2_user.Accessing)
+#elseif ($queryType == "currentUser")
+	#set ($targetUser = $core_v2_user.Current)
+#end
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+
+#set($query = '')
+#set($query = $core_v2_page.GetQueryStringValue('w_query'))
+
+#set ($friendships = $core_v2_friendship.List("%{ FriendshipState = 'Approved', RequestorId = $targetUser.Id, PageIndex = $pageIndex, PageSize = 10, SortBy = 'DisplayName', SortOrder = 'Ascending', SearchText = $query }"))
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($friendships.PageIndex + 1) * $friendships.PageSize)
+#if ($friendships.TotalCount > $currentPagedQuantity)
+    #set ($hasMore = true)
+#end
+
+#foreach ($friendship in $friendships)
+#each
+	#set ($user = false)
+	#if ($friendship.Recipient && $friendship.Recipient.Id == $targetUser.Id)
+		#set ($user = $friendship.Requestor)
+	#else
+		#set ($user = $friendship.Recipient)
+	#end
+	#if ($user)
+		#set($content = false)
+		#set($content = $core_v2_content.Get($user.ContentId, $core_v2_user.ContentTypeId))
+		#if ($content)
+			<li class="content-item" data-contenturl="$core_v2_encoding.HtmlAttributeEncode($content.Url)" #if($hasMore) data-hasmore="true" #end>
+				$content.ViewHtml('Web')
+			</li>
+		#end
+	#end
+#nodata
+	<div class="message norecords">
+		$core_v2_language.GetResource('no_search_matches_found')
+	</div>
+#end
+

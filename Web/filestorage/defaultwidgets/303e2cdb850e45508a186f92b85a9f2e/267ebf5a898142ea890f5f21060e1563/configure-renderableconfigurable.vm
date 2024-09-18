@@ -1,0 +1,31 @@
+#set($entityId = 'configurablePluginApi')
+
+<script type="text/javascript">
+    (function(global) {
+        var internalApi = $context.JsonApi;
+
+        global.$entityId = {
+            registerSave: function(saveFunction) {
+                internalApi.registerSave(saveFunction);
+            },
+            registerContent: function(contentDetails) {
+                jQuery.each(contentDetails, function() {
+                    internalApi.registerContent(jQuery.extend({
+                            name: '???',
+                            selected: function() {},
+                            unselected: function() {},
+                            validate: function() { return true; }
+                        }, 
+                        this, 
+                        { orderNumber: 100 }
+                        ));
+                });
+            },
+            validate: function() {
+                return internalApi.validate();
+            }
+        }
+    })(window);
+</script>
+
+$context.RenderRenderableConfigurable("window.$entityId")

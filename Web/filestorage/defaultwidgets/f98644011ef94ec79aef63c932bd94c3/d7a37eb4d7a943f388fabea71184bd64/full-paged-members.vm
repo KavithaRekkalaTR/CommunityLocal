@@ -1,0 +1,50 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($members = $context.GetDetail($options))
+
+#foreach($member in $members)
+#beforeall
+<div class="responsive-wrapper">
+	<table>
+	<thead>
+		<tr>
+            $reporting_ui.SortableTableHeader("", "Name", "ascending", $core_v2_language.GetResource('Name'), $sortBy, $sortOrder)
+			<th>$core_v2_language.GetResource('EmailAddress')</th>
+            $reporting_ui.SortableTableHeader("", "CreatedDate", "descending", $core_v2_language.GetResource('CreatedDate'), $sortBy, $sortOrder)
+		</tr>
+	</thead>
+	<tbody>
+#each
+	#set ($apiUser = false)
+	#set ($apiUser = $core_v2_user.Get("%{ContentId = $member.MembershipId}"))
+
+	<tr data-id="$member.MembershipId">
+        #if($apiUser && !$apiUser.HasErrors() && $apiUser.Url) 
+            #set ($url = $apiUser.Url)
+        #else 
+            #set ($url = '')
+        #end
+        $reporting_ui.UserNameTableCellWithActions($member.UserId, $member.ExpandedName, $url)
+
+		<td data-title="$core_v2_language.GetResource('EmailAddress')">$!apiUser.PrivateEmail</td>
+		<td data-title="$core_v2_language.GetResource('CreatedDate')">$core_v2_language.FormatDateAndTime($member.CreatedDate, "%{AdjustTimeZone = 'false'}")</td>
+	</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$members.PageSize" data-totalitems="$members.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

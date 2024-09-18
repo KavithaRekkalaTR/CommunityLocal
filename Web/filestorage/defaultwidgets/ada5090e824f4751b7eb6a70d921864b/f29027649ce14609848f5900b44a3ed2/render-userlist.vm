@@ -1,0 +1,16 @@
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($users.PageIndex + 1) * $users.PageSize)
+#if ($users.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="users.TotalCount">
+#set($isExact = true)
+#foreach($user in $exactUsers)
+    $core_v2_widget.ExecuteFile('render-user.vm')
+#end
+#set($isExact = false)
+#foreach($user in $users)
+    $core_v2_widget.ExecuteFile('render-user.vm')
+#end
+</ul>

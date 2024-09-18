@@ -1,0 +1,35 @@
+##
+## List Theme Layouts Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#set ($options = "%{}")
+
+#set ($idQuery = $core_v2_page.GetQueryStringValue("_w_id"))
+#if ($idQuery)
+	$options.Add('Id', $idQuery)
+#end
+
+#set ($typeIdQuery = $core_v2_page.GetQueryStringValue("_w_typeId"))
+#if ($typeIdQuery)
+	$options.Add('TypeId', $typeIdQuery)
+#end
+
+#set ($stagedQuery = $core_v2_page.GetQueryStringValue("_w_staged"))
+#if ($stagedQuery)
+	$options.Add('Staged', $core_v2_utility.ParseBool($stagedQuery))
+#end
+
+#set ($factoryDefaultQuery = $core_v2_page.GetQueryStringValue("_w_factoryDefault"))
+#if ($factoryDefaultQuery)
+	$options.Add('FactoryDefault', $core_v2_utility.ParseBool($factoryDefaultQuery))
+#end
+
+#set ($layouts = $context.ListLayouts($options))
+#if ($layouts && $layouts.HasErrors())
+	$core_v2_page.SendJsonError($layouts.Errors)
+#end
+
+{
+	"layouts": $core_v2_utility.ToJson($layouts)
+}

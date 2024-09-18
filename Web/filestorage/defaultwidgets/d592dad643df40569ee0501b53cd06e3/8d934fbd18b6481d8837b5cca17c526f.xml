@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ConfigureTheme_Name}" version="11.0.0.0" description="${resource:ConfigureTheme_Description}" instanceIdentifier="8d934fbd18b6481d8837b5cca17c526f" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-configure-theme with-header-filter" lastModified="2020-01-16 21:19:20Z" provider="d592dad643df40569ee0501b53cd06e3">
+    <contentScript language="Velocity"><![CDATA[$context.RenderConfigurationForm($core_v2_widget.UniqueId('configuration'))
+
+#set($paletteTypes = false)
+#set($paletteTypes = $context.GetPaletteTypes())
+#if ($paletteTypes && $paletteTypes.Count > 0)
+	<div id="$core_v2_widget.UniqueId('palettetypes')">
+		<p>$core_v2_language.GetResource('palettetypes-instructions')</p>
+		<form><fieldset>
+			<ul class="field-list">
+			#foreach($paletteType in $paletteTypes)
+				<li class="field-item">
+					<label class="field-item-name" for="">$paletteType.Name</label>
+					<span class="field-item-input">
+						<select id="$core_v2_widget.UniqueId($paletteType.Id)" data-palettetypeid="$paletteType.Id">
+							<option value="">$core_v2_language.GetResource('palette_inherit')</option>
+							#foreach($palette in $paletteType.Palettes)
+								<option value="$palette.Id" #if($palette.IsDefault) selected="selected" #end data-previewcss="$core_v2_encoding.HtmlAttributeEncode($palette.PreviewCss)">$palette.Name</option>
+							#end
+						</select>
+					</span>
+				</li>
+			#end
+		</ul>
+		</fieldset></form>
+	</div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.configureTheme')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.configureTheme.register({
+			frame: jQuery('#$core_v2_widget.UniqueId('frame')'),
+			form: jQuery('#$core_v2_widget.UniqueId('configuration')'),
+			revertOptionsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-options.vm'))',
+			revertUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert.vm'))',
+			saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			savePalettesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('savepalettes.vm'))',
+			revertChangesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-stagedchanges.vm'))',
+			previewUrl: '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)',
+			isStaged: #if($context.IsStaged) true #else false#end,
+			revertToPublishedUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-to-published.vm'))',
+			configurationUrl: '$core_v2_encoding.JavascriptEncode($context.ConfigureFormUrl)',
+			paletteTypesWrapper: jQuery('#$core_v2_widget.UniqueId('palettetypes')'),
+			text: {
+				saveAndPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('saveAndPublish'))',
+				saveAndPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('saveAndPreview'))',
+				saveAndPublishSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-publish-successful'))',
+				saveAndPreviewSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-preview-successful'))',
+				saveFailed: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-failed'))',
+				revert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert'))',
+				revertAndPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-and-preview'))',
+				revertAndPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-and-publish'))',
+				revertOptions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-options'))',
+				revertConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-confirmation'))',
+				revertSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-success'))',
+				revertSuccessReload: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-success-reload'))',
+				selectAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-all'))',
+				selectNone: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-none'))',
+				preview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview'))',
+				saveBeforePreviewConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-before-preview-confirmation'))',
+				stopPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('stop-preview'))',
+				reset: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reset'))',
+				resetDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reset-description'))',
+				resetSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reset-successful'))',
+				instructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('instructions'))',
+				containsStagedChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('contains-staged-changes'))',
+				reviewRelatedStagedChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('review-related-staged-changes'))',
+				previewEnabled: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview-enabled'))',
+				openPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('open-preview'))',
+				paletteTypes: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('paletteTypes-tab'))',
+				#if (!$context.SupportsDefault)
+					revertToPublished: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-description-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-confirmation-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-success-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToParent: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-factory-default-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToParentDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-factory-default-description-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))'
+				#elseif ($context.ForceDefault)
+					revertToPublished: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-default'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-description-default'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-confirmation-default'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-success-default'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToParent: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-factory-default'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToParentDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-factory-default-description'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))'
+				#else
+					revertToPublished: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-contextual'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-description-contextual'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-confirmation-contextual'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToPublishedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-published-success-contextual'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToParent: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-default'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+					revertToParentDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('revert-to-default-description'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))'
+				#end
+			}
+		})
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ConfigureTheme_Description">Edit options for the current theme.</resource>
+  <resource name="ConfigureTheme_Name">Theme Options</resource>
+  <resource name="contains-staged-changes">Note: These options are currently staged.</resource>
+  <resource name="file-delete">Delete this file (it is not incuded in the original version of this theme).</resource>
+  <resource name="file-restore-original">Restore this deleted file.</resource>
+  <resource name="file-revert-to-original">Revert to the original version of this file.</resource>
+  <resource name="files">Theme Files</resource>
+  <resource name="instructions">Set options to configure the behavior and content of all pages rendered by the theme.</resource>
+  <resource name="no-revert-options">There are no theme options to revert.</resource>
+  <resource name="open-preview">Open preview window</resource>
+  <resource name="palette_inherit">(Inherit)</resource>
+  <resource name="palettetypes-instructions">Select default palettes to be used when a specific option is not selected within widgets. Palette definitions can be changed by editing this theme.</resource>
+  <resource name="paletteTypes-tab">Palettes</resource>
+  <resource name="preview">Preview Drafts</resource>
+  <resource name="preview-enabled">Previewing is now enabled. All browsers/devices you are signed into will now show staged changes.</resource>
+  <resource name="properties">Theme Options</resource>
+  <resource name="property_description">Defined in '{0}'</resource>
+  <resource name="reset">Undo all unsaved changes</resource>
+  <resource name="reset-description">All changes that have not yet been saved in this edit session will be reverted.</resource>
+  <resource name="reset-successful">Unsaved changes have been reverted.</resource>
+  <resource name="revert">Revert</resource>
+  <resource name="revert-and-preview">Preview Reversion</resource>
+  <resource name="revert-and-publish">Revert and Publish</resource>
+  <resource name="revert-confirmation">Are you sure you want to revert the selected theme options?</resource>
+  <resource name="revert-options">Reversion Options</resource>
+  <resource name="revert-options-instructions">Select the options you'd like to revert from the list below.</resource>
+  <resource name="revert-success">The selected theme options have been reverted successfully.</resource>
+  <resource name="revert-success-reload">The selected theme options have been reverted successfully. Some changes may affect the currently displayed page. Would you like to refresh the page now to see those changes?</resource>
+  <resource name="revert-to-default">Revert to factory default</resource>
+  <resource name="revert-to-default-description">Select options you'd like to revert to the default for every {0}.</resource>
+  <resource name="revert-to-factory-default">Revert to the factory default</resource>
+  <resource name="revert-to-factory-default-description">Select options to revert to the factory default.</resource>
+  <resource name="revert-to-factory-default-description-nodefault">Select options to revert to the factory default.</resource>
+  <resource name="revert-to-factory-default-nodefault">Revert to the factory default</resource>
+  <resource name="revert-to-published-confirmation-contextual">Are you sure you want to revert staged changes?</resource>
+  <resource name="revert-to-published-confirmation-default">Are you sure you want to revert staged changes?</resource>
+  <resource name="revert-to-published-confirmation-nodefault">Are you sure you want to revert staged changes?</resource>
+  <resource name="revert-to-published-contextual">Revert staged changes</resource>
+  <resource name="revert-to-published-default">Revert staged changes</resource>
+  <resource name="revert-to-published-description-contextual">Any staged changes made for '{1}' will be removed and the currently published version will be loaded for editing.</resource>
+  <resource name="revert-to-published-description-default">Any staged changes made for the default for every '{0}' will be removed and the currently published version will be loaded for editing.</resource>
+  <resource name="revert-to-published-description-nodefault">Any staged changes will be removed and the currently published version will be loaded for editing.</resource>
+  <resource name="revert-to-published-nodefault">Revert staged changes</resource>
+  <resource name="revert-to-published-success-contextual">Staged changes have been reverted.</resource>
+  <resource name="revert-to-published-success-nodefault">Staged changes have been reverted.</resource>
+  <resource name="revert-to-published-sucess-default">Staged changes have been reverted.</resource>
+  <resource name="review-related-staged-changes">Previewing is now enabled, however, there are other related changes to review. Would you like to view all of your related staged changes now?</resource>
+  <resource name="saveAndPreview">Preview</resource>
+  <resource name="saveAndPublish">Publish</resource>
+  <resource name="save-before-preview-confirmation">You have unsaved changes. Would you like to save your changes before previewing?</resource>
+  <resource name="save-failed">An error occurred while saving the theme's configuration.</resource>
+  <resource name="save-preview-successful">Your changes have been staged for previewing.</resource>
+  <resource name="save-publish-successful">Your changes are now published.</resource>
+  <resource name="scoped-properties">Shared Widget Options</resource>
+  <resource name="select-all">Select all</resource>
+  <resource name="select-none">Select none</resource>
+  <resource name="stop-preview">Disable Draft Previewing</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

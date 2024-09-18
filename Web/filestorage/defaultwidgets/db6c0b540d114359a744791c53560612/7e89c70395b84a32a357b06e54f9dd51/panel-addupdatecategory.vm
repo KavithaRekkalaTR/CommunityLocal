@@ -1,0 +1,123 @@
+#set($id = false)
+#set($id = $core_v2_page.GetFormValue('id'))
+#if (!$id) 
+    #set($id = "NEW:${core_v2_utility.NewGuid().ToString('N')}")
+#end
+#set($name = false)
+#set($name = $core_v2_page.GetFormValue('name'))
+#set($description = '')
+#set($description = $core_v2_page.GetFormValue('description'))
+#set($imageUrl = false)
+#set($imageUrl = $core_v2_page.GetFormValue('imageUrl'))
+#set($imageFilename = false)
+#set($imageFilename = $core_v2_page.GetFormValue('imageFilename'))
+#set($defaultArticleId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('defaultArticleId')))
+#if ($defaultArticleId == $core_v2_utility.ParseGuid('')) 
+    #set($defaultArticleId = false)
+#else
+    #set($defaultArticle = false)
+    #set($defaultArticle = $articles_v1_articles.Get("%{ Id=$defaultArticleId }"))
+    #if (!$defaultArticle || $defaultArticle.HasErrors())
+        #set($defaultArticleId = false)
+        #set($defaultArticle = false)
+    #end
+#end
+#set($uploadContextId = $core_v2_page.GetFormValue('uploadContextId'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item name">
+		    <label for="$core_v2_widget.UniqueId('name')" class="field-item-name">$core_v2_language.GetResource('category-name')</label>
+		    <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('name')" #if($name) value="$core_v2_encoding.HtmlEnsureEncoded($name)" #end />
+            </span>
+            <span class="field-item-validation" style="display: none;" id="$core_v2_widget.UniqueId('name-validation')"></span>
+        </li>
+        <li class="field-item description">
+            <label for="$core_v2_widget.UniqueId('description')" class="field-item-name">$core_v2_language.GetResource('category-description')</label>
+		    <span class="field-item-input">
+                <textarea name="Description" id="$core_v2_widget.UniqueId('description')">$!core_v2_encoding.HtmlEnsureEncoded($description)</textarea>
+            </span>
+        </li>
+        <li class="field-item upload-with-preview" id="$core_v2_widget.UniqueId('image')">
+			<label class="field-item-name">$core_v2_language.GetResource('category-image')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('category-image-description')</span>
+			<span class="field-item-input preview" id="$core_v2_widget.UniqueId('preview')">
+			</span>
+			<span class="field-item-input upload">
+			    <a href="#" style="margin-right: 1em;" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('image-upload')</a>
+				<a href="#" class="remove" id="$core_v2_widget.UniqueId('remove')">$core_v2_language.GetResource('image-remove')</a>
+			</span>
+		</li>
+        <li class="field-item default-article">
+		    <label for="$core_v2_widget.UniqueId('defaultarticle')" class="field-item-name">$core_v2_language.GetResource('category-defaultarticle')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('category-defaultarticle-description')</span>
+		    <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('defaultarticle')" #if($defaultArticleId) value="$defaultArticleId" #end />
+            </span>
+        </li>
+	</ul>
+</fieldset></form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('addUpdateHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input"><a href="#" class="button save disabled">$core_v2_language.GetResource('save')</a></span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.addUpdateCategoryPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui-addupdatecategory.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.addUpdateCategoryPanel.register({
+			articleCollectionId: '$context.ArticleCollection.Id',
+			articleCategoryId: '$id',
+			uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+			values: {
+			    image: #if ($imageFilename && $imageFilename.Length > 0) 
+			        { name: '$core_v2_encoding.JavascriptEncode($imageFilename)' }
+			    #elseif ($imageUrl && $imageUrl.Length > 0)
+			        { url: '$core_v2_encoding.JavascriptEncode($imageUrl)' }
+			    #else
+			        null 
+			    #end,
+			    defaultArticleName: #if ($defaultArticle) '$core_v2_encoding.JavascriptEncode($defaultArticle.Title)' #else null #end
+			},
+			selectors: {
+			    name: '#$core_v2_widget.UniqueId('name')',
+			    nameValidation: '#$core_v2_widget.UniqueId('name-validation')'
+			},
+			inputs: {
+			    name: jQuery('#$core_v2_widget.UniqueId('name')'),
+			    description: jQuery('#$core_v2_widget.UniqueId('description')'),
+			    image: jQuery('#$core_v2_widget.UniqueId('image')'),
+			    upload: jQuery('#$core_v2_widget.UniqueId('upload')'),
+			    remove: jQuery('#$core_v2_widget.UniqueId('remove')'),
+			    preview: jQuery('#$core_v2_widget.UniqueId('preview')'),
+			    defaultArticle: jQuery('#$core_v2_widget.UniqueId('defaultarticle')'),
+			},
+			templates: {
+                header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)' 
+			},
+			urls: {
+			    getArticles: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getarticles.jsm'))',
+			    upload: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			    preview: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-previewimage.jsm'))'
+			},
+			text: {
+			    change: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('image-change'))',
+			    upload: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('image-upload'))',
+			    progress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('image-progress'))',
+			    noMatchingArticles: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('info-nomatchingarticles'))'
+			}
+		});
+	});
+	</script>
+#end

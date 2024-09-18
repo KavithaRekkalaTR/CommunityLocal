@@ -1,0 +1,52 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($article = $articles_v1_articles.Current)
+#set($collection = $articles_v1_articleCollections.Current)
+
+#set ($collectionSubscription = $core_v2_applicationSubscription.Get($collection.Id, "%{ TypeId='$articles_v1_subscriptionTypes.AllArticles' }"))
+#set ($articleSubscription = $core_v2_contentSubscription.Get($article.Id, "%{IncludeApplicationSubscriptions='false', TypeId='$articles_v1_subscriptionTypes.ArticleUpdates' }"))
+#set ($commentsSubscription = $core_v2_contentSubscription.Get($article.Id, "%{IncludeApplicationSubscriptions='false', TypeId='$articles_v1_subscriptionTypes.ArticleComments'}"))
+
+#if($collectionSubscription.IsSubscribed || $articleSubscription.IsSubscribed || $commentsSubscription.IsSubscribed)
+    #set ($notificationsText = "$core_v2_language.GetResource('NotificationsTipOn')  ")
+    #set ($notificationsListText = '')
+
+    #if($collectionSubscription.IsSubscribed)
+        #set ($notificationsListText = $core_v2_language.FormatString($core_v2_language.GetResource('Tip_Subscription_Collection'), $collection.Name))
+    #elseif($articleSubscription.IsSubscribed)
+        #set ($notificationsListText = $core_v2_language.FormatString($core_v2_language.GetResource('Tip_Subscription_Article'), $article.Title))
+    #end
+
+    #if($commentsSubscription.IsSubscribed)
+        #if ($notificationsListText != '')
+            #set($notificationsListText = "$notificationsListText $core_v2_language.GetResource('or')")
+        #end
+        #set ($notificationsListText = "$notificationsListText $core_v2_language.FormatString($core_v2_language.GetResource('Tip_Subscription_ArticleComments'), $article.Title)")
+    #end
+    #if($collectionSubscription.IsSubscribed || $articleSubscription.IsSubscribed || $commentsSubscription.IsSubscribed)
+        #set($notificationsListText = "$notificationsListText.")
+    #end
+
+    #if($articleSubscription.IsMuted)
+        #set ($notificationsListText = "$notificationsListText $core_v2_language.FormatString($core_v2_language.GetResource('Tip_MuteArticle'), $article.Title)")
+    #end
+
+    #set ($notificationsText = "$notificationsText${notificationsListText}")
+    #set ($notificationStatus = 'on')
+#else
+	#if ($article)
+		#set ($notificationsText = $core_v2_language.FormatString($core_v2_language.GetResource('NotificationsTipOff'), $article.Title))
+	#else
+		#set ($notificationsText = $core_v2_language.FormatString($core_v2_language.GetResource('NotificationsTipOff'), $collection.Name))
+	#end
+    #set ($notificationStatus = 'off')
+#end
+
+
+{"collectionSubscription":"$collectionSubscription.IsSubscribed.ToString().ToLowerInvariant()"
+,"articleSubscription":"$articleSubscription.IsSubscribed.ToString().ToLowerInvariant()"
+,"articleMuted":"$articleSubscription.IsMuted.ToString().ToLowerInvariant()"
+,"commentSubscription":"$commentsSubscription.IsSubscribed.ToString().ToLowerInvariant()"
+,"tip":"$!notificationsText"
+,"status":"$notificationStatus"
+,"text": "$core_v2_language.GetResource('CF_ArticleLinks_ManageNotifications')" }

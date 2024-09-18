@@ -1,0 +1,23 @@
+##
+## Renders a search result as JSON
+##
+## Requires in scope:
+##   $searchResult
+##
+#if ($searchResult)
+	{
+		"LineNumber": #if ($searchResult.LineNumber) $searchResult.LineNumber #else 0 #end,
+		"TypeId": #if ($searchResult.TypeId) "$searchResult.TypeId" #else "" #end,
+		"Id": "$searchResult.Id",
+		"ComponentType": "$core_v2_encoding.JavascriptEncode($searchResult.ComponentType.ToString())",
+		"FileName": #if ($searchResult.FileName) "$core_v2_encoding.JavascriptEncode($searchResult.FileName)" #else "" #end,
+		"Excerpt": #if ($searchResult.Excerpt)	"$core_v2_encoding.JavascriptEncode($core_v2_encoding.HtmlEncode($searchResult.Excerpt))" #else "" #end,
+		"Name": #if ($searchResult.Name) "$core_v2_encoding.JavascriptEncode($searchResult.Name)" #else "" #end,
+		"TypeName": #if ($searchResult.TypeName) "$core_v2_encoding.JavascriptEncode($searchResult.TypeName)" #else "" #end,
+		"State": "$core_v2_encoding.JavascriptEncode($searchResult.State.ToString())",
+		"IsStaged": #if ($searchResult.IsStaged) true #else false #end,
+		"IsTranslated": #if ($searchResult.IsTranslated) true #else false #end
+	}
+#else
+	null
+#end

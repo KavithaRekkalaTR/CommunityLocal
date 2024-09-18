@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_Message_Name}" version="11.0.0.0" description="${resource:Core_Message_Description}" instanceIdentifier="4532f631b5944ff3ab105bda9569ee99" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="core-message" lastModified="2021-08-18 18:50:09Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($message = false)
+#set($message = $core_v2_message.Current)
+#if (!$message)
+    $core_v2_widget.Hide()
+#end
+
+<h2>$message.HtmlName('web')</h2>
+$message.HtmlBody('web')
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_Message_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_Message_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_Message_Description">Used for displaying common site messages.</resource>
+  <resource name="Core_Message_Name">Core - Message</resource>
+  <resource name="Core_Message_Title_Message">Message</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Return_Url_BackTo">Back to</resource>
+  <resource name="Return_Url_Label">valid page</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="48e0297561ad46b98fdcbcd01e8857a3" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

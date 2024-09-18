@@ -1,0 +1,33 @@
+$core_v2_widget.ExecuteFile('tile-parse-options.vm')
+
+#set ($current = $context.GetAggregate($options))
+#set ($trend = $context.GetTrend($options))
+#set ($graph = $context.GetAggregateByPeriodSeries($options))
+
+#set($applicationTypeIds = $context.ApplicationTypeIds)
+#set ($ids = "")
+#set ($names = "")
+#foreach ($applicationTypeId in $applicationTypeIds)
+    #set($appType = $reporting.GetApplicationType($applicationTypeId))
+    #if ($appType)
+        #if ($ids == "")
+            #set ($ids = $appType.ApplicationTypeId)
+            #set ($names = $appType.ApplicationTypeName)
+        #else
+            #set ($ids = "${ids},$appType.ApplicationTypeId")
+            #set ($names = "${names},$appType.ApplicationTypeName")
+        #end
+    #end
+#end
+
+<div class="report-tile" data-report-id="$context.Id" data-applicationTypeId="$ids" data-applicationType="$names">
+    <div class="report-summary-container">
+        <div class="title">$core_v2_language.GetResource('Report_Title')</div>
+        <div class="report-summary">
+            <div class="total">$current.Aggregate.ToString("N0")</div>
+            $reporting_ui.TrendHtml($trend)
+        </div>
+    </div>
+
+    <div class="sparkline" data-sparkline="$graph"></div>
+</div>

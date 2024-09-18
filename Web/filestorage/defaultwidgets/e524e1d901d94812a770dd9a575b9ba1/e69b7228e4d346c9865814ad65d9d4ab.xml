@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GalleryFileManagement_Name}" version="11.0.0.0" description="${resource:GalleryFileManagement_Description}" instanceIdentifier="e69b7228e4d346c9865814ad65d9d4ab" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-galleryfilemanagement with-header-filter" lastModified="2020-08-21 20:17:24Z" provider="e524e1d901d94812a770dd9a575b9ba1">
+    <contentScript language="Velocity"><![CDATA[#set ($filesListId = $core_v2_widget.UniqueId('filesListId'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+<div>
+	$core_v2_widget.ExecuteFile('paged-files.vm')
+</div>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.galleryFileManagement.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		filesListId: '#$core_v2_encoding.JavascriptEncode($filesListId)',
+		urls: {
+			pagedFiles: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-files.vm'))',
+			publishFile: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('publish-file.vm'))',
+			deleteFile: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete-file.vm'))',
+			mediaGallery: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_mediaUrls.ManageFiles($context.Gallery.SectionID)))',
+			downloads: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('downloads.vm'))',
+			addFile: '$!core_v2_encoding.JavascriptEncode($!core_v2_mediaUrls.AddMedia($context.Gallery.SectionID))'
+		},
+		resources: {
+			unpublish: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Unpublish'))',
+			publish: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Publish'))',
+			published: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Published'))',
+			unpublished: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('NotPublished'))',
+			showUnpublished: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ShowUnpublished'))',
+			showAll: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ShowAllFiles'))',
+			confirmDelete: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('ConfirmDelete'))',
+			downloads: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Downloads'))',
+			downloadsOf: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('DownloadsOfFormat'))',
+			fileDeleted: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('FileDeleted'))',
+			addFile: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('AddFile'))',
+			noPosts: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('NoResults'))'
+		}
+	});
+});
+</script>
+
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddFile">Add File</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ConfirmDelete">Are you sure you want to delete this file?</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DownloadCSV">Export as CSV</resource>
+  <resource name="DownloadFormat">{0} download</resource>
+  <resource name="Downloads">Downloads</resource>
+  <resource name="DownloadsFormat">{0} downloads</resource>
+  <resource name="DownloadsOfFormat">Downloads of {0}</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="EndDate">End Date</resource>
+  <resource name="FileDeleted">File has been deleted.</resource>
+  <resource name="find">Find a file...</resource>
+  <resource name="GalleryFileManagement_Description">Manage files.</resource>
+  <resource name="GalleryFileManagement_Name">Files</resource>
+  <resource name="LatestDownload">Latest download date: {0}</resource>
+  <resource name="more">More</resource>
+  <resource name="NoResults">No results</resource>
+  <resource name="NotPublished">Unpublished</resource>
+  <resource name="Publish">Publish</resource>
+  <resource name="Published">Published</resource>
+  <resource name="RecordFormat">{0} result.</resource>
+  <resource name="RecordsFormat">{0} results.</resource>
+  <resource name="ShowAllFiles">All</resource>
+  <resource name="ShowUnpublished">Unpublished</resource>
+  <resource name="StartDate">Start Date</resource>
+  <resource name="Unpublish">Unpublish</resource>
+  <resource name="View">View</resource>
+  <resource name="ViewUser">View User Profile</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

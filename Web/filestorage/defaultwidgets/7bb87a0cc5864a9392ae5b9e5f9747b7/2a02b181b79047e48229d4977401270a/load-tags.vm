@@ -1,0 +1,25 @@
+#set($parentTagId = false)
+#set($parentTagId = $core_v2_page.GetQueryStringValue('w_parentTagId'))
+#set($knowledgeCollectionId = false)
+#set($knowledgeCollectionId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_knowledgeCollectionId')))
+#if ($knowledgeCollectionId && $parentTagId)
+	#foreach($tag in $$km_v1_tags.List($knowledgeCollectionId, $parentTagId))
+	#beforeall
+		<div class="hierarchy-children">
+			<ul class="hierarchy-list">
+	#each
+		<li data-tagid="$tag.Id">
+			<div class="hierarchy-item#if($tag.Children.Count > 0) with-children#else without-children#end">
+			#if ($tag.HasChildren)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($tag.Url)"><span class="expand-collapse collapsed">+</span>$tag.Name</a>
+				</div>
+			#else
+					<a href="$core_v2_encoding.HtmlAttributeEncode($tag.Url)">$tag.Name</a>
+				</div>
+			#end
+		</li>
+	#afterall
+			</ul>
+		</div>
+	#end
+#end

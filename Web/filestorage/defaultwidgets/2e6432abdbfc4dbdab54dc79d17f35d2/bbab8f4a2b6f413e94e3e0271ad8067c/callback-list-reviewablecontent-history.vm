@@ -1,0 +1,65 @@
+#set ($reviewableContentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ReviewableContentId')))
+#set($reviewableContent = false)
+#set($reviewableContent = $context.GetReviewableContent($reviewableContentId))
+#if ($reviewableContent && !$reviewableContent.HasErrors())
+    #foreach ($history in $reviewableContent.History)
+    #beforeall
+    	<table class="history">
+    		<thead>
+    			<th>$core_v2_language.GetResource('member')</th>
+    			<th>$core_v2_language.GetResource('date')</th>
+    			<th>$core_v2_language.GetResource('action')</th>
+    		</thead>
+    		<tbody>
+    #each
+    	<tr>
+    		<td>
+          <div class="author">
+            <div class="avatar">
+              #if ($history.User.ProfileUrl)
+                <a href="$core_v2_encoding.HtmlAttributeEncode($history.User.ProfileUrl)">
+                  $core_v2_ui.GetResizedImageHtml($history.User.AvatarUrl, 32, 32, "%{border='0px', alt=$history.User.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+                </a>
+              #else
+                $core_v2_ui.GetResizedImageHtml($history.User.AvatarUrl, 32, 32, "%{border='0px', alt=$history.User.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+              #end
+            </div>
+            <span class="user-name">
+				#if ($history.User.ProfileUrl)
+					<a href="$core_v2_encoding.HtmlAttributeEncode($history.User.ProfileUrl)">
+						$history.User.DisplayName
+					</a>
+				#else
+					$history.User.DisplayName
+				#end
+            </span>
+          </div>
+		</td>
+		<td>
+			$core_v2_language.FormatDateAndTime($history.Date)
+        </td>
+		<td>
+		    #if ($history.Action == 'Create')
+		        $core_v2_language.GetResource('action_create')
+		    #elseif ($history.Action == 'Approve')
+		        $core_v2_language.GetResource('action_approve')
+		    #elseif ($history.Action == 'Deny')
+		        $core_v2_language.GetResource('action_deny')
+		    #elseif ($history.Action == 'Publish')
+		        $core_v2_language.GetResource('action_publish')
+		    #elseif ($history.Action == 'Update')
+		        $core_v2_language.GetResource('action_update')
+		    #elseif ($history.Action == 'Delete')
+		        $core_v2_language.GetResource('action_delete')
+		    #else
+		        $history.Action
+		    #end
+		</td>
+	</tr>
+    #afterall
+    		</tbody>
+    	</table>
+    #nodata
+    	<p>$core_v2_language.GetResource('no_history')</p>
+    #end
+#end

@@ -1,0 +1,88 @@
+#if ($context.UserId < 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+    $core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('addRemovePointsHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button addremovepoints">$core_v2_language.GetResource('AddRemovePoints')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('AddRemovePointsInstructions')</p>
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+    #set($userTitle = $user.DisplayName)
+    #if ($user.Username != $user.DisplayName)
+        #set($userTitle = "$userTitle ($user.Username)")
+    #end
+#end
+
+<form><fieldset>
+    <ul class="field-list">
+        <li class="field-item">
+			<span class="field-item-name">$core_v2_language.GetResource('Field_CurrentPoints')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_CurrentPoints_Desc')</span>
+			<span class="field-item-input">
+				#if ($user.Points == 1)
+		            $core_v2_language.FormatString($core_v2_language.GetResource('PointCount'), $core_v2_language.FormatNumber($user.Points))
+		        #else
+		            $core_v2_language.FormatString($core_v2_language.GetResource('PointsCount'), $core_v2_language.FormatNumber($user.Points))
+		        #end
+			</span>
+		</li>
+		<li class="field-item">
+			<label for="$core_v2_widget.UniqueId('PointsReason')" class="field-item-name">$core_v2_language.GetResource("Field_PointsReason")</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_PointsReason_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('PointsReason')" value="" id="$core_v2_widget.UniqueId('PointsReason')" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+        <li class="field-item">
+			<label for="$core_v2_widget.UniqueId('PointsToAdd')" class="field-item-name">$core_v2_language.GetResource("Field_PointsToAdd")</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_PointsToAdd_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('PointsToAdd')" value="" id="$core_v2_widget.UniqueId('PointsToAdd')" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationAddRemovePoints')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('addremovepoints.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministrationAddRemovePoints.register({
+		    userId: $context.UserId,
+		    contentId: '$user.ContentId.ToString()',
+		    contentTypeId: '$core_v2_user.ContentTypeId.ToString()',
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        pointsReason: jQuery('#$core_v2_widget.UniqueId('PointsReason')'),
+		        pointsToAdd: jQuery('#$core_v2_widget.UniqueId('PointsToAdd')')
+		    },
+		    text: {
+		        addRemotePointsSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('AddRemovePointsSuccessful'), $userTitle))',
+		        pointsRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_PointsRequired'))'
+		    }
+    	});
+	});
+	</script>
+#end

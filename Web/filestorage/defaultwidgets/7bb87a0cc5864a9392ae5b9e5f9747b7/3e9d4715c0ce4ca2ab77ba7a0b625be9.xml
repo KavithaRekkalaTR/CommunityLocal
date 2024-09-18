@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeManagementCollectionList}" version="13.0.0.0" description="${resource:KnowledgeManagementCollectionList_Description}" instanceIdentifier="3e9d4715c0ce4ca2ab77ba7a0b625be9" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="browse-knowledge-collections" lastModified="2022-09-02 20:26:57Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_widget.ExecuteFile('inSidebar.vm')
+
+<div class="margin-bottom">
+	$core_v2_ui.PagedContent('list.vm')
+</div>
+$core_v2_ui.Pager($collections.PageIndex, $collections.PageSize, $collections.TotalCount, "%{ShowIndividualPages = 'false', ShowPrevious = 'true', ShowNext = 'true', PagedContentFile = 'list.vm', ShowFirst = 'true', ShowLast = 'true' }")]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:KnowledgeManagementCollectionList}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:KnowledgeManagementCollectionList}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="showPostsColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowPosts" defaultValue="true" dataType="Bool" />
+	<property id="showLastPostColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowLatest" defaultValue="true" dataType="Bool" />
+	<property id="group" labelResourceName="UIFragment_Core_BrowseApplication_Group" defaultValue="Group=-1" dataType="Custom" template="core_v2_groupLookup" enableCurrent="true" />
+	<property id="itemsBeforeScroll" labelResourceName="UIFragment_Core_BrowseApplication_ItemsToShow" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="KnowledgeManagementCollectionList">Knowledge Management - Browse Knowledge Collections</resource>
+  <resource name="KnowledgeManagementCollectionList_Description">Displays a list of knowledge collections.</resource>
+  <resource name="LastUpdated">Latest: {0}</resource>
+  <resource name="Options">Options</resource>
+  <resource name="post_plural">documents</resource>
+  <resource name="post_singular">document</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Group">Group</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ItemsToShow">Number of results to display</resource>
+  <resource name="UIFragment_Core_BrowseApplication_NoResults">No results could be found.</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowLatest">Show Last Update</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowPosts">Show Post Count</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

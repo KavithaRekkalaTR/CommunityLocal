@@ -1,0 +1,35 @@
+#set($categories = $telligentIdeas_v1_ideaCategories.List($context.Challenge.Id))
+
+#foreach($category in $categories)
+#beforeall
+	<ul class="content-list content simple">
+#each
+	<li class="content-item category" data-categoryid="$category.Id" data-text="$category.Name">
+		<div class="content">
+		<h4 class="name">
+			$category.Name
+		</h4>
+		<div class="actions">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="contextual-edit-category" data-categoryid="$category.Id" data-categoryname="$category.Name">$core_v2_language.GetResource('edit')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="contextual-delete-category" data-categoryid="$category.Id" data-categoryname="$category.Name">$core_v2_language.GetResource('delete')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('no_categories')</div>
+#afterall
+	</ul>
+#end

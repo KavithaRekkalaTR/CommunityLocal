@@ -1,0 +1,127 @@
+#set($group = $core_v2_group.Current)
+
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize',10))
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($isRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+#set($filter = $core_v2_widget.GetStringValue('queryType', 'all'))
+#set($filter = $core_v2_page.GetQueryStringValue("filter"))
+#set($sortBy = $core_v2_widget.GetStringValue('sortBy', 'score'))
+#set($sortOrder = $core_v2_widget.GetStringValue('sortOrder', 'descending'))
+#set($isClosed = '')
+#set($releasesVotes = '')
+#set($status = $core_v2_widget.GetStringValue('status', '!open'))
+#set($status = $core_v2_page.GetQueryStringValue('status'))
+#if ($status)
+    #if ($status == '')
+        #set($isClosed = '')
+        #set($status = '')
+        #set($releasesVotes = '')
+    #elseif ($status == '!closed')
+        #set($isClosed = true)
+        #set($status = '')
+        #set($releasesVotes = '')
+    #elseif ($status == '!open')
+        #set($isClosed = false)
+        #set($status = '')
+        #set($releasesVotes = '')
+    #elseif ($status == '!held')
+        #set($isClosed = '')
+        #set($status = '')
+        #set($releasesVotes = false)
+    #else
+        #set($isClosed = '')
+        #set($releasesVotes = '')
+    #end
+#end
+
+#set($categoryId = false)
+#if ($core_v2_page.GetQueryStringValue('category') && $core_v2_page.GetQueryStringValue('category') != '')
+    #set($categoryId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('category')))
+#end
+
+#set ($queryStringSortOrder = $core_v2_page.GetQueryStringValue("sortOrder"))
+#if ($queryStringSortOrder)
+    #set ($sortOrder = $queryStringSortOrder)
+#end
+#set ($queryStringSortBy = $core_v2_page.GetQueryStringValue("sortBy"))
+#if ($queryStringSortBy)
+    #set ($sortBy = $queryStringSortBy)
+#end
+
+#if (!$filter && $core_v2_user.Current)
+    #set($queryType="myideas")
+#end
+
+#if($filter == "all" || $filter == "myideas" || $filter == "myvotes")
+    #set ($queryType = $filter)
+#else
+    #set ($queryType = 'all')
+#end
+
+#set($query = "%{PageSize=$pageSize,PageIndex=$pageIndex,QueryType=$queryType,Status='$status',SortOrder='$sortOrder',SortBy='$sortBy'}")
+
+#if ($isClosed != '')
+    $query.Add('IsClosed', $isClosed)
+#end
+
+#if ($releasesVotes != '')
+    $query.Add('ReleasesVotes', $releasesVotes)
+#end
+
+#if (($queryType == "myideas" || $queryType == "myvotes") && $core_v2_user.Current)
+    $query.Add('UserId', $core_v2_user.Current.Id)
+#end
+
+#if ($categoryId)
+    $query.Add('CategoryId', $categoryId)
+#end
+
+#set($challengeOrGroup = $core_v2_widget.GetStringValue("challengeOrGroup", 'group'))
+#set($selectedChallenge = $core_v2_widget.GetStringValue("selectedChallenge", ""))
+#set($parsedChallenge = $core_v2_page.ParseQueryString($selectedChallenge))
+
+#set($challenges = $parsedChallenge.Values('challenge'))
+#if (!$challenges)
+    #set($challenges = $parsedChallenge.Values('ideation'))
+#end
+
+#set($challenge = false)
+#if ($challengeOrGroup == 'challenge')
+
+    #if ($challenges.Count > 0)
+        #set($challengeId = $challenges.get_Item(0))
+    #end
+
+	#if (!$challengeId || $challengeId == '00000000-0000-0000-0000-000000000000')
+		#set($challenge = $telligentIdeas_v1_challenges.Current)
+		#if ($challenge)
+			#set($challengeId = $challenge.Id)
+		#end
+	#else
+	    #set($challenge = $telligentIdeas_v1_challenges.Get($challengeId))
+	#end
+
+	#if ($challengeId && $challengeId != '00000000-0000-0000-0000-000000000000')
+		$query.Add('ChallengeId', $challengeId)
+	#end
+#end
+
+#if (!$challengeId || $challengeId == '00000000-0000-0000-0000-000000000000')
+    #set($selectedGroup = $core_v2_widget.GetStringValue("selectedGroup", ""))
+    #set($parsedGroup = $core_v2_page.ParseQueryString($selectedGroup))
+    #set($groups = $parsedGroup.Values('Group'))
+
+    #set($groupId = false)
+
+    #if ($groups.Count > 0)
+        #set($groupId = $core_v2_utility.ParseInt($groups.get_Item(0)))
+    #end
+
+	#if ((!$groupId || $groupId < 1) && $core_v2_group.Current)
+		#set ($groupId = $core_v2_group.Current.Id)
+	#end
+
+	#set($includeSubGroups =  $core_v2_widget.GetBoolValue('includeSubGroups', false))
+	$query.Add('includeSubGroups', $includeSubGroups)
+	$query.Add('GroupId', $groupId)
+#end

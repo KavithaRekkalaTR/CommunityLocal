@@ -1,0 +1,19 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+	#set($enable = true)
+	#set($enable = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('revert')))
+
+    #if ($enable)
+        #set($response = $context.StageScopedPropertyReversion($core_v2_page.GetFormValue('scopedpropertyid')))
+    #else
+	    #set($reponse = $context.RevertStagedScopedPropertyReversion($core_v2_page.GetFormValue('scopedpropertyid')))
+	#end
+	#if ($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success":true
+	}
+#end

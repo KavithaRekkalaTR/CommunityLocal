@@ -1,0 +1,45 @@
+<li class="content-item conversation-message" data-conversationid="<%= ConversationId %>" data-messageid="<%= Id %>" data-createddate="<%= CreatedDate %>">
+	<div class="content conversation-message">
+		<div class="attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<span class="attribute-value"><%= Time %></span>
+				</li>
+			</ul>
+		</div>
+		<% if (CanDelete) { %>
+			<div class="actions">
+				<div class="ui-links navigation-list" data-minlinks="0" data-direction="horizontal" data-maxlinks="0">
+					<ul class="navigation-list">
+						<li class="navigation-list-item delete">
+							<a href="#" data-messagename="conversations.deletemessage" data-messageid="<%= Id %>">$core_v2_language.GetResource('delete-message')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" class="replace-with-icon down-open" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		<% } %>
+		<div class="author">
+			<div class="avatar">
+				<% if (Author.ProfileUrl) { %>
+					<a href="<%= Author.ProfileUrl %>" class="internal-link view-profile"><%= Author.AvatarHtml %></a>
+				<% } else { %>
+					<%= Author.AvatarHtml %>
+				<% } %>
+			</div>
+			<span class="user-name">
+				<% if (Author.ProfileUrl) { %>
+					<a href="<%= Author.ProfileUrl %>" class="internal-link view-profile"><%= Author.DisplayName %></a>
+				<% } else { %>
+					<%= Author.DisplayName %>
+				<% } %>
+			</span>
+		</div>
+		<div class="content"><%= Body %></div>
+	</div>
+</li>

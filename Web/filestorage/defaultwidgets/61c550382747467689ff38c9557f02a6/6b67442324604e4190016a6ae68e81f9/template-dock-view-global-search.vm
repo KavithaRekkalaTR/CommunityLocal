@@ -1,0 +1,103 @@
+## Global Search Template
+<div class="global-search-wrapper">
+	<div class="global-search-form">
+
+		<form>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item query">
+						<span class="field-item-input input">
+							<input type="search" size="40" class="global-search-input-query" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Query'))" id="$core_v2_widget.UniqueId('GlobalSearch-Query')" />
+						</span>
+						<span class="field-item-input submit">
+							<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('RunSearch'))" class="ui-tip global-search-submit button">$core_v2_language.GetResource('RunSearch')</a>
+						</span>
+					</li>
+					<li class="field-item global-search-component-scopes">
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-caseSensitive')" class="global-search-case-sensitive-input" />
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-caseSensitive')">$core_v2_language.GetResource('CaseSensitive')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-regEx')" class="global-search-regex-input" />
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-regEx')">$core_v2_language.GetResource('UseRegEx')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-OnlyStaged')" class="global-search-regex-only-staged" />
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-OnlyStaged')">$core_v2_language.GetResource('OnlyStaged')</label>
+						</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+							## Source/State
+							<select class="state-select">
+								<option value="current">$core_v2_language.GetResource('InCurrentTheme')</option>
+								<option value="all">$core_v2_language.GetResource('All')</option>
+								<option value="Custom">$core_v2_language.GetResource('UserInstalled')</option>
+								<option value="FactoryDefault">$core_v2_language.GetResource('Default')</option>
+								<option value="CustomizedDefault">$core_v2_language.GetResource('EditedDefault')</option>
+							</select>
+						</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+							## Theme Type
+							#set ($themeTypes = $context.ListThemeTypes("%{ ExcludeUnusedTypes = 'true' }"))
+							#if ($themeTypes && $themeTypes.Count > 0)
+								<select class="type-select">
+									<option value="all">$core_v2_language.GetResource('Any')</option>
+									#foreach ($themeType in $themeTypes)
+										<option value="$themeType.Id">$core_v2_encoding.HtmlEncode($themeType.Name)</option>
+									#end
+								</select>
+							#end
+						</span>
+					</li>
+					<li class="field-item global-search-component-scopes">
+						<label class="field-item-name">$core_v2_language.GetResource('Including')</label>
+
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-overview')"  value="overview" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-overview')">$core_v2_language.GetResource('Overview')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-headscript')"  value="headscript" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-headscript')">$core_v2_language.GetResource('HeadScript')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-bodyscript')"  value="bodyscript" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-bodyscript')">$core_v2_language.GetResource('BodyScript')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-configuration')"  value="configuration" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-configuration')">$core_v2_language.GetResource('Configuration')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-resources')"  value="resources" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-resources')">$core_v2_language.GetResource('Resources')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-palettes')"  value="palettes" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-palettes')">$core_v2_language.GetResource('Palettes')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-style')"  value="style" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-style')">$core_v2_language.GetResource('StyleFiles')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-script')"  value="script" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-script')">$core_v2_language.GetResource('ScriptFiles')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-file')"  value="file" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-file')">$core_v2_language.GetResource('Files')</label>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+		</form>
+	</div>
+	<div class="global-search-output">
+		<ul class="global-search-results"></ul>
+	</div>
+</div>

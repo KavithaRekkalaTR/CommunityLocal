@@ -1,0 +1,50 @@
+@color-contrast: -evo-themeconfig-double('contrast', 0);
+@color-background: -evo-themeconfig-color('backgroundColor', '#fff');
+@color-foreground: -evo-themeconfig-color('foregroundColor', '#000');
+@color-accent: -evo-themeconfig-color('accentColor', '#2196f3');
+@spacing: 10px;
+@font-size: 14px;
+
+.code-editor {
+    .code-editor-heading {
+        border-top: 1px solid -evo-decrease-contrast(@color-background, 10%, @color-foreground, @color-contrast);
+        border-left: 1px solid -evo-decrease-contrast(@color-background, 10%, @color-foreground, @color-contrast);
+        border-right: 1px solid -evo-decrease-contrast(@color-background, 10%, @color-foreground, @color-contrast);
+        background-color: -evo-decrease-contrast(@color-background, 2%, @color-foreground, @color-contrast);
+        border-radius: 3px 3px 0 0;
+        font-size: @font-size * .9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        overflow: hidden;
+        .icon {
+	        width: 32px;
+	        height: 32px;
+	        display: block;
+	        overflow: hidden;
+	        text-indent: -3000em;
+	        background-repeat: no-repeat;
+	        background-size: 80%;
+	        background-position: center;
+        }
+        .fs {
+            background-image: url(-evo-widgetfile-url('fullscreen.svg'));
+        }        
+        .dl {
+            background-image: url(-evo-widgetfile-url('download.svg'));
+        }
+        .filename {
+            padding: @spacing;
+	        display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;	        
+        }
+        a {
+            color: -evo-decrease-contrast(@color-foreground, 10%, @color-background, @color-contrast);
+            &:hover {
+                color: @color-accent;
+            }
+        }
+    }
+}

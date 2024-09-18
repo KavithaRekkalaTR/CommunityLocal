@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:TagManagement_Name}" version="9.0.0.0" description="${resource:TagManagement_Description}" instanceIdentifier="71ba79936f9a4fb1bd525542c5e62494" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="ed2e923a7ce04156a9c0e03832f82fbe">
+    <contentScript><![CDATA[#set($canAdd = $core_v2_tags.CanAddTagsInApplication($context.ApplicationId, $context.ApplicationTypeId))
+<p>
+  #set($application = '?')
+  #set($application = $core_v2_application.Get($context.ApplicationId, $context.ApplicationTypeId).HtmlName('Web'))
+	$core_v2_language.FormatString($core_v2_language.GetResource('tag_list_instructions'), $application)
+</p>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+<div id="$core_v2_widget.UniqueId('list')">
+  $core_v2_widget.ExecuteFile('paged-tags.vm')
+</div>
+<div id="$core_v2_widget.UniqueId('search')" style="display:none">
+  $core_v2_widget.ExecuteFile('paged-tags.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.tagManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.tagManagement.register({
+			listWrapper: jQuery('#$core_v2_widget.UniqueId('list')'),
+			searchWrapper: jQuery('#$core_v2_widget.UniqueId('search')'),
+			applicationId: '$context.ApplicationId',
+			applicationTypeId: '$context.ApplicationTypeId',
+			pagedTagsUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-tags.vm'))',
+			renameTagUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('rename-tag.vm'))',
+			listContentUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('list-content.vm'))',
+      text: {
+        addTag: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('add_tag'))',
+        renameTag: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('rename_tag'))',
+        deleteTag: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete_tag'))',
+        deleteConfirmationMessage: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete_tag_confirmation'))',
+  			removeTagFromContentConfirmationMessage: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('remove_tag_from_content_confirmation'))',
+        save: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('save'))',
+        tagName: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('tag_name'))',
+        tagNameDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('tag_name_description'))',
+        newTagName: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('new_tag_name'))',
+        newTagNameDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('new_tag_name_description'))',
+        onlyASingleTagAllowed: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('only_a_single_tag_allowed'))',
+        addSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('add_successful'))',
+        addMultipleSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('add_multiple_successful'))',
+        renameSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('rename_successful'))',
+        deleteSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete_successful'))',
+        contentRemovedSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('content_removed_successful'))'
+      },
+			canAdd: #if ($canAdd) true #else false #end,
+      canRename: #if ($canRename) true #else false #end,
+      canDelete: #if ($canDelete) true #else false #end
+		});
+	});
+	</script>
+#end
+		]]></contentScript>
+    <languageResources><language key="en-us">
+  <resource name="TagManagement_Name">Tags</resource>
+  <resource name="TagManagement_Description">Manage and moderate tags within an application.</resource>
+  <resource name="add_tag">Add Tag</resource>
+  <resource name="save">Save</resource>
+  <resource name="rename_tag">Rename</resource>
+  <resource name="delete_tag">Delete</resource>
+  <resource name="remove_tag_from_content">Remove tag</resource>
+  <resource name="no_tags">No tags have been defined or used in '{0}' yet.</resource>
+  <resource name="no_tagged_content">No content has been tagged '{0}' in '{1}' yet.</resource>
+  <resource name="delete_tag_confirmation">Are you sure you want to remove the tag '{0}'?</resource>
+  <resource name="remove_tag_from_content_confirmation">Are you sure you want to remove the tag '{0}' from '{1}'?</resource>
+  <resource name="associated_content_zero">Not used</resource>
+  <resource name="associated_content_one">1 content item</resource>
+  <resource name="associated_content_many">{0} content items</resource>
+  <resource name="only_a_single_tag_allowed">Only a single tag is allowed</resource>
+  <resource name="view">View</resource>
+  <resource name="more">More</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="tag_name">Tag</resource>
+  <resource name="tag_name_description">Separate multiple tags with commas or semicolons.</resource>
+  <resource name="new_tag_name">New Tag Name</resource>
+  <resource name="new_tag_name_description">The new tag name to use in place of the existing tag.</resource>
+  <resource name="add_successful">The tag was added.</resource>
+  <resource name="add_multiple_successful">The tags were added.</resource>
+  <resource name="rename_successful">The tag is renamed.</resource>
+  <resource name="delete_successful">The tag has been deleted.</resource>
+  <resource name="content_removed_successful">The content has been untagged.</resource>
+  <resource name="content_list_instructions">The following content has been tagged '{0}' in '{1}'.</resource>
+  <resource name="tag_list_instructions">The following tags have been defined or used in '{0}'.</resource>
+  <resource name="find">Find a tag...</resource>
+</language></languageResources>
+<restScopes>
+  <scope id="tags.aggregatetags.modify" />
+  <scope id="tags.contenttags.modify" />
+</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:IdeaStatusContextualPanel_Name}" version="11.0.0.0" description="${resource:IdeaStatusContextualPanel_Description}" instanceIdentifier="3e6de0528a2644e686764ca72a294328" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="administration-status" lastModified="2021-07-15 20:46:10Z" provider="bfef574a0a3647398e80fc9f2e2f51a7">
+    <contentScript language="Velocity"><![CDATA[		<div class="administration-status">
+			<div class="$core_v2_widget.UniqueId('tab')" id="$core_v2_widget.UniqueId('configuration')" style="display:none;">
+				<form><fieldset>
+					<ul class="field-list">
+						<li class="field-item">
+							<label class="field-item-name" for="$core_v2_widget.UniqueId('indexPerRun')">$core_v2_language.GetResource('IndexPerRun')</label>
+							<span class="field-item-description">$core_v2_language.GetResource('IndexPerRunDescription')</span>
+							<span class="field-item-input">
+								<input type="text" id="$core_v2_widget.UniqueId('indexPerRun')" name="$core_v2_widget.UniqueId('indexPerRun')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('IndexPerRun', 1000).ToString())" />
+							</span>
+						</li>
+					</ul>
+				</fieldset></form>
+			</div>
+
+			<div class="$core_v2_widget.UniqueId('tab')" id="$core_v2_widget.UniqueId('status')">
+			    $core_v2_widget.ExecuteFile('status-listitem.vm')
+			</div>
+		</div>
+
+		#set($keyList = "")
+		#foreach($status in $statuses)
+			#each
+				#set($keyList = "${keyList} '${status.Key}'")
+			#between
+				#set($keyList = "${keyList} , ")
+		#end
+
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+    <script type="text/javascript">
+    	jQuery.telligent.evolution.widgets.administrationIdea.status.register({
+			configApi: $context.JsonApi,
+			widgetId: '$core_v2_widget.WrapperElementId',
+			inputs: {
+				indexPerRun: '#$core_v2_widget.UniqueId('indexPerRun')'
+			},
+    	urls: {
+				edit: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('edit.vm'))',
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+				delete: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+				statuseslistitem: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('status-listitem.vm'))',
+				saveOptions: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-options.vm'))',
+				sortOrder: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('sort.vm'))',
+			},
+    	text:  {
+	    	actionSaveButton: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))',
+				actionDeleteButton: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))',
+	    	deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteConfirmation'))',
+	    	statusOptionsTab: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('StatusOptions'))',
+				statusDeleted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('StatusDeleted'))',
+				saveError: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SaveError'))',
+				deleteError: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteError'))',
+				editError: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditError'))'
+    	},
+			statusList : [$keyList],
+			statusTab : '#$core_v2_widget.UniqueId('status')',
+      isEnabled : #if($context.IsEnabled) true #else false #end,
+			tabs: [
+				{ name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Status'))', element: jQuery('#$core_v2_widget.UniqueId('status')'), button : {text:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateStatus'))'} },
+				{ name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Options'))', element: jQuery('#$core_v2_widget.UniqueId('configuration')') }
+			]
+    	});
+    </script>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+    $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:IdeaStatusContextualPanel_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:IdeaStatusContextualPanel_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AllowedFileExtensions">Allowed File Extensions</resource>
+  <resource name="AllowedFileExtensions_Description">A comma delimited list of valid file extensions for ideation file storage. This list can only further limit the global list of allowed files which is currently: {0}</resource>
+  <resource name="ChallengeFileSizeQuota">Disk space quota per ideation</resource>
+  <resource name="ChallengeFileSizeQuota_Description">The maximum amount of disk space (in Kilobytes) that will be allowed per idea for file storage. Enter 0 for unlimited quota.</resource>
+  <resource name="Closed">Closed</resource>
+  <resource name="Closed_Detail">Closed statuses are considered final and prevent any votes from being added or removed from assigned ideas.</resource>
+  <resource name="CreateStatus">Add New Status</resource>
+  <resource name="Default">Default</resource>
+  <resource name="Default_Current">This status is the current default.</resource>
+  <resource name="Default_Detail">When a new idea is created, the default status is assigned to the idea.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Delete_Detail">Please select another status to reassign existing ideas.</resource>
+  <resource name="DeleteConfirmation">Are you sure you want to delete this Status?</resource>
+  <resource name="DeleteError">An error occurred while deleting the status.</resource>
+  <resource name="DisabledPluginMessage">The Ideation application needs to be enabled before statuses can be customized.</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="EditError">An error occurred while trying to edit the status.</resource>
+  <resource name="EnableFileStorage">Enable the Ideas file storage</resource>
+  <resource name="Find">Find status...</resource>
+  <resource name="IdeaStatusContextualPanel_Description">Manage Idea Statuses</resource>
+  <resource name="IdeaStatusContextualPanel_Name">Idea Status</resource>
+  <resource name="IndexPerRun">Number of ideations to index per run</resource>
+  <resource name="IndexPerRunDescription">The number of ideations that should be indexed with each run of the search index job.</resource>
+  <resource name="ItemPermissions">{0} Statuses</resource>
+  <resource name="Key">Key</resource>
+  <resource name="Key_Detail">The unique identifier for this status.</resource>
+  <resource name="MaxFileSize">Maximum File Size</resource>
+  <resource name="MaxFileSize_Description">The maximum size (in Kilobytes) that a file is allowed to be for idea storage. Members with Override Validation permission at the group or application level are exempt from this limit. Enter 0 for unlimited size. This setting can only further restrict the site-wide maximum file size setting, which is currently {0}.</resource>
+  <resource name="MaxFileSize_Limited">{0} MB ({1} KB)</resource>
+  <resource name="MaxFileSize_Unlimited">0 (unlimited)</resource>
+  <resource name="Name">Name</resource>
+  <resource name="Name_Detail">Text to be displayed for this status. Default statuses can be translated under the translation tab.</resource>
+  <resource name="NoStatusFound">No matching status found.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="OptionsSaved">Your configuration has been updated.</resource>
+  <resource name="ReleasesVotes">Releases Votes</resource>
+  <resource name="ReleasesVotes_Detail">When set to release votes, member votes on ideas with this status will not count towards their vote allowance. This is appropriate for closed statuses and any other status that shouldn't prevent vote reuse.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SaveError">An error occurred while saving the status.</resource>
+  <resource name="Score">Score Value</resource>
+  <resource name="Score_Detail">This value is used when determining the Idea Status Metric and affects scores that use this metric.  The allowed range is 0 (lowest value) to 10 (highest value).</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="SelectNone">Select None</resource>
+  <resource name="Status">Statuses</resource>
+  <resource name="StatusCreated">Status has been created.</resource>
+  <resource name="StatusDeleted">Status has been deleted.</resource>
+  <resource name="Statuses">Site Statuses</resource>
+  <resource name="StatusOptions">Status Options</resource>
+  <resource name="StatusUpdated">Status has been updated.</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="ideas.ideastatuses.readonly" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

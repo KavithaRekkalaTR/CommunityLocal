@@ -1,0 +1,7 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($subscribe = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscribe')))
+	$core_v2_wikiPage.SetSubscribed($core_v2_utility.ParseInt($core_v2_page.GetFormValue('wikiPageId')), $subscribe)
+	{"subscribe":#if($subscribe) true#else false#end}
+#end

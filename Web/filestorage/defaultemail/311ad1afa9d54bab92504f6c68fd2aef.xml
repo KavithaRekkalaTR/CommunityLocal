@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Group Membership Added" version="13.0.0.0" description="Notifies users when they were added to a group by someone else" id="311ad1afa9d54bab92504f6c68fd2aef" lastModified="2023-05-05 20:49:40Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('group_name')
+    $context_v1_email.Context.Group.Name
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Body_Welcome'))
+#token('group_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Group.Url)">$context_v1_email.Context.Group.Name</a>
+#end]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+    <div style="max-width: 250px;">
+    $core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Group.AvatarUrl, 0, 0, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True' }")
+    </div>
+</p>
+<p>
+#format($core_v2_language.GetResource('Body_Members'))
+#token('member_count')
+    $core_v2_language.FormatNumber($context_v1_email.Context.Group.TotalMembers)
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Members">There are currently {member_count} members.</resource>
+  <resource name="Body_Welcome">Welcome to {group_name_link}.</resource>
+  <resource name="Subject">{site_name}: Welcome to {group_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

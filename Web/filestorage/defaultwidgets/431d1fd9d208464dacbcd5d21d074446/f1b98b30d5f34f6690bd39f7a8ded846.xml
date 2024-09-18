@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Plugin Group" version="10.0.0.0" description="" instanceIdentifier="f1b98b30d5f34f6690bd39f7a8ded846" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="431d1fd9d208464dacbcd5d21d074446">
+	<contentScript><![CDATA[#set ($searchId = $core_v2_widget.UniqueId('search'))
+#set ($resultsId = $core_v2_widget.UniqueId('results'))
+#set ($templateId = $core_v2_widget.UniqueId('template'))
+<div id="$core_v2_widget.UniqueId('tab')">
+	#set ($dependentPanels = $core_v2_administrationPanels.GetDependentPluginPanels($context.PluginType))
+	#if ($dependentPanels.count > 5)
+		<div class="filter-selector plugins">
+			<form><fieldset>
+				<input type="text" placeholder="$core_v2_language.GetResource('Find')" />
+			</fieldset></form>
+		</div>
+	#end
+
+	#foreach ($dependentPanel in $dependentPanels)
+	#beforeall
+		<ul class="navigation-list administration-links plugin-types">
+	#each
+		<li class="navigation-list-item plugin-type ${core_v2_language.Lowercase($dependentPanel.State.ToString())}" data-text="$core_v2_encoding.HtmlAttributeEncode($dependentPanel.Document)">
+			<a href="#"
+				data-messagename="dependent-plugin"
+				data-state="${core_v2_language.Lowercase($dependentPanel.State.ToString())}"
+				data-name="$core_v2_encoding.HtmlAttributeEncode($dependentPanel.Name)"
+				data-plugintypename="$core_v2_encoding.HtmlAttributeEncode($dependentPanel.TypeName)"
+				data-url="$core_v2_encoding.HtmlAttributeEncode($dependentPanel.Url)"
+				class="ui-tip"
+				#if ($dependentPanel.State == 'Enabled')
+					data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Enabled'))"
+				#elseif ($dependentPanel.State == 'Disabled')
+					data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Disabled'))"
+				#elseif ($dependentPanel.State == 'Misconfigured')
+					data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Misconfigured'))"
+				#end>
+				<div>
+					<span class="name">$dependentPanel.Name</span>
+					<span class="description">$dependentPanel.Description</span>
+				</div>
+			</a>
+		</li>
+	#afterall
+		</ul>
+	#nodata
+	#end
+</div>
+
+<script type="text/javascript">
+	(function(){
+		var api = $context.JsonApi;
+		var wrapper = jQuery('#$core_v2_widget.UniqueId('tab')');
+		var searchTimeout = null;
+
+		api.registerContent({
+			name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChildPlugins'))',
+			orderNumber: 1000000,
+			selected: function() {
+				wrapper.css({
+					visibility: 'visible',
+					height: 'auto',
+					width: 'auto',
+					left: '0',
+					position: 'static',
+					overflow: 'visible',
+					top: '0'
+				});
+			},
+			unselected: function() {
+				wrapper.css({
+					visibility: 'hidden',
+					height: '100px',
+					width: '800px',
+					left: '-1000px',
+					position: 'absolute',
+					overflow: 'hidden',
+					top: '-1000px'
+				});
+			}
+		});
+
+		jQuery(wrapper)
+			.on('input', '.filter-selector.plugins input[type="text"]', function() {
+				var searchText = jQuery(this).val();
+				window.clearTimeout(searchTimeout);
+				searchTimeout = window.setTimeout(function() {
+					searchText = jQuery.trim(searchText || '').toLowerCase();
+					if (searchText.length == 0) {
+						jQuery('.navigation-list-item.plugin-type', wrapper).show();
+					} else {
+						var searchTerms = searchText.split(' ');
+						jQuery('.navigation-list-item.plugin-type', wrapper).each(function() {
+							var cft = jQuery(this);
+							var text = cft.data('text');
+							var match = true;
+							for (var i = 0; i < searchTerms.length; i++) {
+								if (text.indexOf(searchTerms[i]) == -1) {
+									match = false;
+									break;
+								}
+							}
+							if (match) {
+								cft.show();
+							} else {
+								cft.hide();
+							}
+						})
+					}
+				}, 125);
+			});
+	})();
+</script>]]></contentScript>
+	<languageResources><language key="en-us">
+  <resource name="Find">Find...</resource>
+  <resource name="ChildPlugins">Related</resource>
+  <resource name="Enabled">Enabled</resource>
+  <resource name="Disabled">Disabled</resource>
+  <resource name="Misconfigured">Misconfigured</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

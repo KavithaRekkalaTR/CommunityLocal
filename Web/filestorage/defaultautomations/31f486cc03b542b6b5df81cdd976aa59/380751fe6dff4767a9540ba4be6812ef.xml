@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" id="380751fe6dff4767a9540ba4be6812ef" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2021-09-21 21:52:19Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="forumthread.aftercreate" />
+      <event key="forumthread.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var threadType = core_v2_widget.GetStringValue('threadType', '');
+var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumThread.ContentTypeId);
+if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.Approved && !awardedPoints) {
+    if (threadType == '' || threadType == context_v2_automationTrigger.Arguments.ThreadType) {
+        context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumThread.ContentTypeId);
+    }
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (context_v2_automationTrigger.Arguments.Approved) {
+        // ensure points awarded
+        if ((threadType == '' || threadType == context_v2_automationTrigger.Arguments.ThreadType) && !awardedPoints) {
+            context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumThread.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (awardedPoints) {
+            context_v1_pointsAutomation.RevokePoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumThread.ContentTypeId);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="threadType" labelResourceName="ThreadType" descriptionResourceName="ThreadType_Description" dataType="String" defaultValue="">
+        <propertyValue value="" labelResourceName="ThreadType_Any" />
+        <propertyValue value="Discussion" labelResourceName="ThreadType_Discussion" />
+        <propertyValue value="QuestionAndAnswer" labelResourceName="ThreadType_Question" />
+    </property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Awards points to authors of forum threads.</resource>
+  <resource name="ThreadType">Types of threads</resource>
+  <resource name="ThreadType_Any">Any</resource>
+  <resource name="ThreadType_Description">Only threads of the selected type will be awarded points.</resource>
+  <resource name="ThreadType_Discussion">Discussions only</resource>
+  <resource name="ThreadType_Question">Questions only</resource>
+  <resource name="Title">When a forum thread is posted</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" id="dae1e6d3b2c24f87ba6b00ab9414408d" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2021-10-18 22:36:32Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="article.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(context_v2_automationTrigger.Arguments.UserId, context_v2_automationTrigger.Arguments.ContentId, articles_v1_articles.ContentTypeId);
+if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.IsPublished && !awardedPoints) {
+    context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.UserId, context_v2_automationTrigger.Arguments.ContentId, articles_v1_articles.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (context_v2_automationTrigger.Arguments.IsPublished) {
+        // ensure points awarded
+        if (!awardedPoints) {
+            context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.UserId, context_v2_automationTrigger.Arguments.ContentId, articles_v1_articles.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (awardedPoints) {
+            context_v1_pointsAutomation.RevokePoints(context_v2_automationTrigger.Arguments.UserId, context_v2_automationTrigger.Arguments.ContentId, articles_v1_articles.ContentTypeId);
+        }
+    }
+}]]></executionScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Awards points to authors of articles.</resource>
+  <resource name="Title">When an article is published</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

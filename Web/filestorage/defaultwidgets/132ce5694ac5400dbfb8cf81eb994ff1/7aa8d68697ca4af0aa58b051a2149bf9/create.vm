@@ -1,0 +1,44 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($Title = $core_v2_page.GetFormValue('Title'))
+	#if ($Title)
+		$options.Add('Title', $Title)
+	#end
+
+	#set ($Url = $core_v2_page.GetFormValue('Url'))
+	#if ($Url)
+		$options.Add('Url', $Url)
+	#end
+
+	#set ($DefaultAuthorUsername = $core_v2_page.GetFormValue('DefaultAuthorUsername'))
+	#if ($DefaultAuthorUsername)
+		$options.Add('DefaultAuthorUsername', $DefaultAuthorUsername)
+	#end
+
+	#set ($IntervalMinutes = $core_v2_page.GetFormValue('IntervalMinutes'))
+	#if ($IntervalMinutes)
+		$options.Add('IntervalMinutes', $core_v2_utility.ParseInt($IntervalMinutes))
+	#end
+
+	#set ($ExerptSize = $core_v2_page.GetFormValue('ExerptSize'))
+	#if ($ExerptSize)
+		$options.Add('ExerptSize', $core_v2_utility.ParseInt($ExerptSize))
+	#end
+
+	#set ($PostFullText = $core_v2_page.GetFormValue('PostFullText'))
+	#if ($PostFullText)
+		$options.Add('PostFullText', $PostFullText)
+	#end
+
+	#set($response = $context.CreateFeed($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

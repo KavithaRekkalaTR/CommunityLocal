@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="System Notification" version="13.0.0.0" description="Sends an email when a user receives a system notification but conversations are disabled." id="59d596be5ae44fa6b9370d286de74554" lastModified="2023-04-18 18:49:51Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('notification_subject')
+    $context_v1_email.Context.SystemNotification.Subject
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$context_v1_email.Context.SystemNotification.Subject
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[
+<p>
+$context_v1_email.Context.SystemNotification.Body
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Footer">You are receiving this message because a system notification on {site_name} was sent to you.</resource>
+  <resource name="Subject">Important Notification from {site_name}: {notification_subject}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:NewMemberExperience_Name}" version="12.0.0.0" description="${resource:NewMemberExperience_Description}" instanceIdentifier="ea295075adcb4ec39008eb6bdac660ee" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="new-member-experience" lastModified="2019-10-18 18:53:32Z" provider="48f821a38c9d4b76b20b49a06fd46e48">
+    <contentScript language="Velocity"><![CDATA[
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item default-friends">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('DefaultUserFriends')">$core_v2_language.GetResource('DefaultUserFriends_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DefaultUserFriends_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('DefaultUserFriends')" name="$core_v2_widget.UniqueId('DefaultUserFriends')" />
+			</span>
+		</li>
+
+		<li class="field-item default-moderation">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('DefaultModerationLevel')">$core_v2_language.GetResource('DefaultModerationLevel_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DefaultModerationLevel_Description')</span>
+			<span class="field-item-input">
+                <select id="$core_v2_widget.UniqueId('DefaultModerationLevel')" name="$core_v2_widget.UniqueId('DefaultModerationLevel')">
+                    <option value="1" #if($context.Settings.NewUserModerationLevel == 'Unmoderated')selected="selected" #end>$core_v2_language.GetResource('UserNotModerated')</option>
+                    <option value="0" #if($context.Settings.NewUserModerationLevel == 'Moderated')selected="selected" #end>$core_v2_language.GetResource('UserModerated')</option>
+                </select>
+			</span>
+            <span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('WelcomeMessageEnabled')" id="$core_v2_widget.UniqueId('WelcomeMessageEnabled')" value="true" #if($context.Settings.EnableWelcomeMessage)checked="checked"#end />
+    			<label class="field-item-name" for="$core_v2_widget.UniqueId('WelcomeMessageEnabled')">$core_v2_language.GetResource('WelcomeMessageEnabled_Name')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('WelcomeMessageEnabled_Description')</span>
+		</li>
+
+		<li class="field-item welcome-message-from">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('WelcomeMessageFrom')">$core_v2_language.GetResource('WelcomeMessageFrom_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('WelcomeMessageFrom_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('WelcomeMessageFrom')" name="$core_v2_widget.UniqueId('WelcomeMessageFrom')" />
+			</span>
+		</li>
+
+		<li class="field-item welcome-message-subject">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('WelcomeMessageSubject')">$core_v2_language.GetResource('WelcomeMessageSubject_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('WelcomeMessageSubject_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('WelcomeMessageSubject')" name="$core_v2_widget.UniqueId('WelcomeMessageSubject')" value="$context.settings.WelcomeMessageSubject" />
+			</span>
+		</li>
+
+		<li class="field-item welcome-message-body">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('WelcomeMessageBody')">$core_v2_language.GetResource('WelcomeMessageBody_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('WelcomeMessageBody_Description')</span>
+			<span class="field-item-input">
+                $core_v2_editor.Render('WelcomeMessageBody', "%{Value=$context.settings.WelcomeMessageBody, Width='100%' }")
+			</span>
+            <span class="field-item-validation" style="display: none;" id="$core_v2_widget.UniqueId('WelcomeMessageBodyValidation')"></span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#set($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+        <fieldset>
+            <ul class="field-list">
+                <li class="field-item"><a href="#" class="button save">$core_v2_language.GetResource('save')</a></li>
+            </ul>
+        </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.newMemberExperience')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    var userFriends = [];
+    #foreach($user in $context.DefaultNewUserFriends)
+        userFriends.push({id: '$user.UserId', name: '$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end'});
+    #end
+
+    var welcomeMessageFromUser = [];
+    welcomeMessageFromUser.push({id: '$context.WelcomeMessageFromUser.UserId', name: '$core_v2_encoding.JavascriptEncode($context.WelcomeMessageFromUser.DisplayName)#if($context.WelcomeMessageFromUser.DisplayName != $context.WelcomeMessageFromUser.Username) ($core_v2_encoding.JavascriptEncode($context.WelcomeMessageFromUser.Username))#end'});
+
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.newMemberExperience.register({
+           		wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+                headerTemplate: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+                saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+           		lookupUsersUrl:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))',
+                defaultUserFriendsId: '#$core_v2_widget.UniqueId('DefaultUserFriends')',
+                defaultModerationLevelId: '#$core_v2_widget.UniqueId('DefaultModerationLevel')',
+                welcomeMessageEnabledId: '#$core_v2_widget.UniqueId('WelcomeMessageEnabled')',
+                welcomeMessageFromId: '#$core_v2_widget.UniqueId('WelcomeMessageFrom')',
+                welcomeMessageSubjectId: '#$core_v2_widget.UniqueId('WelcomeMessageSubject')',
+                text: {
+                    save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+                    saveSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save_successful'))',
+                   alreadySelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadySelected'))'
+                },
+                values: {
+                    userFriends: userFriends,
+                    welcomeMessageFromUser: welcomeMessageFromUser
+                },
+                editors: {
+                    welcomeMessageBody: {
+                        getHtml: function() { return $core_v2_editor.GetContentScript('WelcomeMessageBody'); },
+                        attachChangeScript: function(f) { $core_v2_editor.GetAttachOnChangeScript('WelcomeMessageBody', 'f'); },
+                        validationId: '$core_v2_widget.UniqueId('WelcomeMessageBodyValidation')'
+                    }
+                }
+			});
+		});
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="NewMemberExperience_Description">Manage options related to the experience of new members.</resource>
+  <resource name="NewMemberExperience_Name">New Member Experience</resource>
+  <resource name="save">Save</resource>
+  <resource name="save_successful">Membership options have been saved.  Due to caching it may take up to 15 minutes for changes to be reflected through-out your site.</resource>
+  <resource name="DefaultUserFriends_Name">Default Friends</resource>
+  <resource name="DefaultUserFriends_Description">List of users who will automatically become friends with new users.</resource>
+  <resource name="DefaultModerationLevel_Name">Default Moderation Level</resource>
+  <resource name="DefaultModerationLevel_Description">New users are moderated by default requiring a moderator to approve posts.</resource>
+  <resource name="WelcomeMessageEnabled_Name">Deliver Welcome Message</resource>
+  <resource name="WelcomeMessageEnabled_Description">When checked, the welcome message is sent as a conversation message to new users.</resource>
+  <resource name="WelcomeMessageFrom_Name">Welcome Message From</resource>
+  <resource name="WelcomeMessageFrom_Description">The user that the welcome message will be sent from.</resource>
+  <resource name="WelcomeMessageSubject_Name">Welcome Message Subject</resource>
+  <resource name="WelcomeMessageSubject_Description">The subject of the welcome message.</resource>
+  <resource name="WelcomeMessageBody_Name">Welcome Message Body</resource>
+  <resource name="WelcomeMessageBody_Description">The content of the welcome message.  {0} is replaced with the user&#39;s display name; {1} links to the user&#39;s edit page; {2} links to the profile</resource>
+  <resource name="UserModerated">User is moderated</resource>
+  <resource name="UserNotModerated">User is not moderated</resource>
+  <resource name="UserLookUp_NoMatches">A matching user could not be found.</resource>
+  <resource name="AlreadySelected">Already selected</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

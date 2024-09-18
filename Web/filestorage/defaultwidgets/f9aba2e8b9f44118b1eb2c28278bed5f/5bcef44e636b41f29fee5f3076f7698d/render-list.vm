@@ -1,0 +1,24 @@
+##
+## Expects in scope: $configuredAutomations, $inProcess
+## Optional i scope: $automations
+##
+
+#foreach ($configuredAutomation in $configuredAutomations)
+	<li class="content-item configuredautomation" data-configuredautomationid="$configuredAutomation.Id"
+		data-configuredautomationname="$core_v2_encoding.HtmlAttributeEncode($configuredAutomation.Name)">
+		$core_v2_widget.ExecuteFile('render-item.vm')
+	</li>
+#nodata
+	#if ($inProcess)
+		#if ($automations && $automations.Count > 0)
+			<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+		#else
+			<div class="message norecords">
+				#format ($core_v2_language.GetResource('NoResultsOrAutomationTypes'))
+					#token ('studio')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())">$core_v2_language.GetResource('Studio')</a>
+				#end
+			</div>
+		#end
+	#end
+#end

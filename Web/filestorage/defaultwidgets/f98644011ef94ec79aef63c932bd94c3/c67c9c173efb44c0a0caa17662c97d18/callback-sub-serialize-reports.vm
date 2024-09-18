@@ -1,0 +1,26 @@
+##
+## Renders a list of reports as JSON
+##
+## Requires in scope:
+##   $reports
+##
+
+#foreach ($report in $reports)
+#each
+    #if($categoryName && $categoryName != $report.CategoryName) ]},  #elseif ($categoryName == $report.CategoryName) , #end
+    #if($categoryName != $report.CategoryName)
+        { "name": "$core_v2_encoding.JavascriptEncode($report.CategoryName)",
+          "type": "category",
+          "reports": [
+    #end
+	{
+		"id": #if ($report.Id) "$report.Id" #else "" #end,
+		"name":  #if ($report.Name) "$core_v2_encoding.JavascriptEncode($report.Name)" #else "" #end,
+		"description":  #if ($report.Description) "$core_v2_encoding.JavascriptEncode($report.Description)" #else "" #end,        
+        "requiresSitePermission": "$report.RequiresSiteReportingPermission.ToString().ToLowerInvariant()",
+        "type": "report"
+	}
+    #set ($categoryName = $report.CategoryName)
+#afterall
+]}
+#end

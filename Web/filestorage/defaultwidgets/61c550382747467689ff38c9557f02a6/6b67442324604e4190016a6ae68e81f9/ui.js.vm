@@ -1,0 +1,44 @@
+$core_v2_page.SetContentType('application/javascript')
+
+(function(){
+
+	$shell.RenderShellScriptModules()
+
+	$core_v2_widget.RenderFile('model-data.js')
+	$core_v2_widget.RenderFile('model-model.js')
+	$core_v2_widget.RenderFile('model-exporter.js')
+
+	$core_v2_widget.RenderFile('shell-edit-view-factory.js')
+	$core_v2_widget.RenderFile('shell-utility.js')
+	$core_v2_widget.RenderFile('shell-controller.js')
+	$core_v2_widget.RenderFile('shell-global-search.js')
+
+	$core_v2_widget.RenderFile('view-theme-overview.js')
+	$core_v2_widget.RenderFile('view-theme-layouts.js')
+	$core_v2_widget.RenderFile('view-theme-fragments.js')
+	$core_v2_widget.RenderFile('view-import-selector.js')
+	$core_v2_widget.RenderFile('view-select-file-type.js')
+	$core_v2_widget.RenderFile('view-revert-staged-components.js')
+	$core_v2_widget.RenderFile('view-revert-options.js')
+	$core_v2_widget.RenderFile('view-dock-search.js')
+	$core_v2_widget.RenderFile('view-select-theme.js')
+	$core_v2_widget.RenderFile('view-preview-theme.js')
+
+#if ($context.RunTests)
+	$core_v2_widget.RenderFile('test.js')
+	$core_v2_widget.RenderFile('tests.js')
+	$core_v2_widget.RenderFile('main-test.js')
+#else
+	$core_v2_widget.RenderFile('main.js')
+#end
+
+	require(['main'], function(main, j, global, undef) {
+
+		j.telligent = j.telligent || {};
+		j.telligent.evolution = j.telligent.evolution || {};
+		j.telligent.evolution.widgets = j.telligent.evolution.widgets || {};
+		j.telligent.evolution.widgets.manageThemes = main;
+
+	}, jQuery, window);
+
+})();

@@ -1,0 +1,6 @@
+#set($roleId = $context.roleId)
+
+#if($roleId > 0)
+	#set($role = $core_v2_role.Get($roleId))
+	$context.HandleDownloadCsvRequest($role.RoleId)
+#end

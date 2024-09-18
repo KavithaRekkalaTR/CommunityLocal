@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Group Request" version="13.0.0.0" description="Raises notifications when users request membership to a group you manage." id="60fd8cbf886f43a2962bf361c8c0be6c" lastModified="2023-05-05 19:42:54Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('group_name')
+    $context_v1_email.Context.GroupMembership.Group.Name
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('group_name')
+    $context_v1_email.Context.GroupMembership.Group.Name
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+    #format($core_v2_language.GetResource('Body'))
+    #token('user_name_link')
+        #set($profileUrl = false)
+        #set($profileUrl = $context_v1_email.Context.GroupMembership.User.Url)
+        #if ($profileUrl)
+        	<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$context_v1_email.Context.GroupMembership.User.DisplayName</a>
+        #else
+            $context_v1_email.Context.GroupMembership.User.DisplayName
+        #end
+    #token('group_name_link')
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.GroupMembership.Group.Url)">$context_v1_email.Context.GroupMembership.Group.Name</a>
+    #end
+</p>
+#if ($context_v1_email.Context.GroupMembership.Message && $context_v1_email.Context.GroupMembership.Message.Length > 0)
+	<p><em>
+	$context_v1_email.Context.GroupMembership.Message
+	</em></p>
+#end
+#set($pendingMemberUrl = false)
+#set($pendingMemberUrl = $core_v2_groupUrls.PendingMemberList($context_v1_email.Context.GroupMembership.Group.Id, false))
+#if ($pendingMemberUrl)
+    <p>
+    #format($core_v2_language.GetResource('Body_Review'))
+    #token('pending_members_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($pendingMemberUrl)">$core_v2_language.GetResource('PendingMembers')</a>
+	#end
+	</p>
+#end
+]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Footer'))
+#token('group_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.GroupMembership.Group.Url)">$context_v1_email.Context.GroupMembership.Group.Name</a>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">{user_name_link} would like to join {group_name_link}.</resource>
+  <resource name="Body_Review">{pending_members_link}.</resource>
+  <resource name="Footer">You received this update because you manage membership for {group_name_link}.</resource>
+  <resource name="PendingMembers">You can accept or reject this request online</resource>
+  <resource name="Subject">{site_name}: Access Request to {group_name}</resource>
+  <resource name="Header">Access Request to {group_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

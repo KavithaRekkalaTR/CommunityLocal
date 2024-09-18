@@ -1,0 +1,30 @@
+##
+## Expects in scope: $uploadContext, $fileName
+##
+<div class="panelheader-list">
+	<fieldset class="fieldset-list">
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button internal-link save" data-messagename="configuredemail-import">$core_v2_language.GetResource('Import')</a>
+				</span>
+			</li>
+		</ul>
+		<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="1">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="configuredemail-import-cancel">$core_v2_language.GetResource('cancel')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">$core_v2_language.GetResource('ImportEmailStudio')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+</div>

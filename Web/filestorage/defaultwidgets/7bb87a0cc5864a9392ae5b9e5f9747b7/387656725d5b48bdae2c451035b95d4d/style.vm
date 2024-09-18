@@ -1,0 +1,40 @@
+<style>
+#${core_v2_widget.WrapperElementId}.content-fragment.featured-content-carousel .slider-container {
+	#if ($proportionalScaling)
+		#set ($ratio = 100 * $height)
+		#set ($ratio =  $ratio / $proportionalWidth)
+		padding-top: ${ratio}%;
+	#else
+		height: ${effectiveHeight};
+	#end
+}
+
+#${core_v2_widget.WrapperElementId}.content-fragment.featured-content-carousel.full-width {
+	height: ${effectiveHeight};
+}
+
+#${core_v2_widget.WrapperElementId}.content-fragment.featured-content-carousel .slider-container .slider .content-list.content > .content-item > .content {
+	#if ($verticalAlignment == 'top')
+		justify-content: flex-start;
+	#elseif ($verticalAlignment == 'center')
+		justify-content: center;
+	#elseif ($verticalAlignment == 'bottom')
+		justify-content: flex-end;
+	#end
+	#if ($horizontalAlignment == 'left')
+		align-items: flex-start;
+		text-align: left;
+	#elseif ($horizontalAlignment == 'center')
+		align-items: center;
+		text-align: center;
+	#elseif ($horizontalAlignment == 'right')
+		align-items: flex-end;
+		text-align: right;
+	#end
+
+	#if ($fullWidth && !$foregroundFullWidth)
+		padding-left: 0;
+		padding-right: 0;
+	#end
+}
+</style>

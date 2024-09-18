@@ -1,0 +1,62 @@
+#set ($languages = $shellApi.ListLanguages())
+
+##
+## Default resources view template
+## Can be overridden in specific studio, but usually not needed
+##
+## Expects in scope:
+##
+## Should expose elements with class names:
+##    template-editor-header
+##    template-editor-state
+##
+<div class="editor-header">
+	<form class="template-editor-header"></form>
+	<div class="editor-state template-editor-state"></div>
+</div>
+<div class="editor-content resources">
+	<div class="resource-diff"></div>
+	<div class="resource-editor">
+
+		<form>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item">
+						<label class="field-item-name">$core_v2_language.GetResource('Language')</label>
+						<span class="field-item-input">
+							<select>
+								#foreach ($language in $languages)
+									<option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)">$core_v2_encoding.HtmlEncode($language.Name)</option>
+								#end
+							</select>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+		</form>
+
+		#foreach ($language in $languages)
+			<div class="language" data-language="$core_v2_encoding.HtmlAttributeEncode($language.Key)" style="display: block;">
+				<div class="attribute-list-header">
+					<label class="input">$core_v2_language.GetResource('Name')</label>
+					<label class="value">$core_v2_language.GetResource('Value')</label>
+				</div>
+				<ul class="attribute-list">
+					<% foreach(groupedResources['$core_v2_encoding.JavascriptEncode($language.Key)'], function(resource){ %>
+						<li class="attribute-item resource" data-language="$core_v2_encoding.HtmlAttributeEncode($language.Key)">
+							<span class="attribute-name">
+								<input data-focusname="n-<%: resource.name %>" type="text" value="<%: resource.name %>">
+							</span>
+							<span class="attribute-value">
+								<input data-focusname="v-<%: resource.name %>" type="text" value="<%: resource.value %>">
+							</span><a href="#" class="delete">$core_v2_language.GetResource('Delete')</a>
+						</li>
+					<% }); %>
+				</ul>
+				<div class="attribute-list-footer"></div>
+			</div>
+		#end
+		<a href="#" class="button add">$core_v2_language.GetResource('AddResource')</a>
+	</div>
+
+</div>

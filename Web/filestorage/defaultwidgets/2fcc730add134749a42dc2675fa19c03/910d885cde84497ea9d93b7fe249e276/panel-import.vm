@@ -1,0 +1,118 @@
+##
+## Import selection form.
+## Expects in scope: $importResult, $uploadContext, $fileName
+##
+
+<form>
+	<fieldset>
+		<ul class="field-list">
+		#if ($importResult.NewFragments.Count == 0 && $importResult.UpdatedFragments.Count == 0)
+			<p class="message error">$core_v2_language.GetResource('ImportEmpty')</p>
+		#elseif ($context.DeveloperModeEnabled && ($importResult.NewFragments.Count > 0 || $importResult.UpdatedFragments.Count > 0))
+			<p class="message error">
+				#format($core_v2_language.GetResource('ImportDevMode'))
+					#token('studio')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">$core_v2_language.GetResource('Studio')</a>
+				#end
+			</p>
+		#else
+
+			#if ($importResult.NewFragments.Count > 0)
+				<li class="field-item importable-fragments new-fragments">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('NewFragmentResources')
+						#else
+							$core_v2_language.GetResource('NewFragments')
+						#end
+					</label>
+					<span class="field-item-description">$core_v2_language.GetResource('TheFollowingFragmentsAreNew')</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($fragment in $importResult.NewFragments)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${fragment.InstanceIdentifier}:$!{fragment.ThemeId}" class="importable-fragment" data-id="$fragment.InstanceIdentifier" data-theme="$!fragment.ThemeId" data-model="fragment" checked />
+							<label  for="cb${fragment.InstanceIdentifier}:$!{fragment.ThemeId}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($fragment.ProcessedName)
+							</label>
+						</span>
+						#if ($fragment.ProcessedDescription)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($fragment.ProcessedDescription)</span>
+						#end
+						#if ($fragment.ThemeTitle)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($fragment.ThemeTitle)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.UpdatedFragments.Count > 0)
+				<li class="field-item importable-fragments updated-fragments">
+					<label class="field-item-name heading">
+						#if ($importResult.ResourceOnly)
+							$core_v2_language.GetResource('UpdatedFragmentResources')
+						#else
+							$core_v2_language.GetResource('UpdatedFragments')
+						#end
+					</label>
+					<span class="field-item-description">
+						#format ($core_v2_language.GetResource('UpdatedFragmentDesc'))
+							#token ('studio-begin-link')
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())&importUploadContext=${core_v2_encoding.HtmlAttributeEncode($uploadContext)}&importFileName=${core_v2_encoding.HtmlAttributeEncode($fileName)}">
+							#token ('studio-end-link')
+								</a>
+						#end
+					</span>
+					<span>
+						<a href="#" class="pill select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>
+						<a href="#" class="pill de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a>
+					</span>
+					#foreach ($fragment in $importResult.UpdatedFragments)
+						<span class="field-item-input managed-item">
+							<input type="checkbox" id="cb${fragment.InstanceIdentifier}:$!{fragment.ThemeId}" class="importable-fragment" data-id="$fragment.InstanceIdentifier" data-theme="$!fragment.ThemeId" data-model="fragment" />
+							<label  for="cb${fragment.InstanceIdentifier}:$!{fragment.ThemeId}" class="field-item-name">
+								$core_v2_encoding.HtmlEncode($fragment.ProcessedName)
+							</label>
+						</span>
+						#if ($fragment.ProcessedDescription)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($fragment.ProcessedDescription)</span>
+						#end
+						#if ($fragment.ThemeTitle)
+							<span class="field-item-description">$core_v2_encoding.HtmlEncode($fragment.ThemeTitle)</span>
+						#end
+					#end
+				</li>
+			#end
+
+			#if ($importResult.MatchingFragments.Count > 0)
+				<li class="field-item importable-fragments updated-fragments">
+					<span class="field-item-description">$core_v2_language.GetResource('AlreadyInstalled')</span>
+				</li>
+			#end
+		#end
+		</ul>
+	</fieldset>
+</form>
+
+#set ($importTemplateId = $core_v2_widget.UniqueId('importTemplate'))
+#registerClientTemplate($importTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-import.vm')
+#end
+#registerEndOfPageHtml('fragmentsPanel.import')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-import.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.widgets.fragmentAdministration.import.register({
+			importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+			importTemplateId: '$core_v2_encoding.JavascriptEncode($importTemplateId)',
+			uploadContext: '$core_v2_encoding.JavascriptEncode($uploadContext)',
+			fileName: '$core_v2_encoding.JavascriptEncode($fileName)',
+			importCompleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportComplete'))'
+		});
+	});
+	</script>
+#end

@@ -1,0 +1,40 @@
+#set($grouptype = $core_v2_page.GetQueryStringValue('w_grouptype'))
+#set($grouptypeResource = "type_$grouptype.ToLower()")
+
+#set($groupRoles = $context.GetGroupRoles($grouptype))
+
+#foreach($role in $groupRoles)
+#beforeall
+	<ul class="content-list" style="margin-bottom: 1em;">
+#each
+	<li class="content-item role" data-roleid="$role.Id" data-title="$core_v2_encoding.HtmlAttributeEncode($role.Name)">
+		<div class="avatar">
+			$!core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 50, 50, "%{border='0px', ResizeMethod = 'ZoomAndCrop' }")
+		</div>
+		<div class="content-container">
+			<h4 class="name">$role.Name</h4>
+			<div class="attributes">
+				<div class="content">$!role.Description</div>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.groupDefaultPermissionsRolesList.register({
+			groupType: '$core_v2_encoding.JavascriptEncode($grouptype)',
+			groupTypeResource: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource($grouptypeResource))',
+		    urls: {
+				permissionslist:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('permissions-list.vm'))',
+		    },
+            text: {
+				permissionsheadertext: '$core_v2_language.GetResource('PermissionsHeaderText')',
+            }
+    	});
+	});
+	</script>
+#end

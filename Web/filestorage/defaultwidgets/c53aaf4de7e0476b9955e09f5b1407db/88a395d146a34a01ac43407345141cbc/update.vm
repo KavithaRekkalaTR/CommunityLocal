@@ -1,0 +1,22 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($enableAboutPage = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableAboutPage')))
+	#set ($aboutPageTitle = $core_v2_page.GetFormValue('aboutPageTitle'))
+	#set ($aboutPageBody = $core_v2_page.GetFormValue('aboutPageBody'))
+
+	$options.Add('enableAboutPage', $enableAboutPage)
+	$options.Add('aboutPageTitle', $aboutPageTitle)
+	$options.Add('aboutPageBody', $aboutPageBody)
+
+	#set($response = $context.Update($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

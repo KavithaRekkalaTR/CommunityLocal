@@ -1,0 +1,29 @@
+##
+## Tree Node
+##
+<li data-key="<%: node.key %>" class="node <%: (node.cssClass || '') %> <% if(node.expanded && node.expanded === true) { %>expanded<% } %>">
+	<div class="node-content<% if(node.children && node.children.length > 0) { %> with-children<% } %>">
+		## Multi-select
+		<input type="checkbox" class="node-select" />
+
+		## Expansion Handles
+		<% if(node.children && node.children.length > 0) { %>
+			<span class="expander">
+				<a href="#" class="handle">X</a>
+			</span>
+		<% } %>
+
+		## Node Label
+		<div class="node-label" data-key="<%: node.key %>">
+			<%= template(treeNodeTemplate, { node: node }) %>
+		</div>
+	</div>
+
+	## Children
+	<% if(node.children && node.children.length > 0) { %>
+		<ul class="node-children<% if(node.sortable) { %> sortable<% } %>">
+			<%= template('studioShell-browseTree', { nodes: node.children, treeNodeTemplate: treeNodeTemplate }) %>
+		</ul>
+	<% } %>
+
+</li>

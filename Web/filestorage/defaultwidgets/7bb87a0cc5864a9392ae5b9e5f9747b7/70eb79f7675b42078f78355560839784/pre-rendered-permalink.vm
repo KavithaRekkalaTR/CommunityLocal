@@ -1,0 +1,78 @@
+##
+## Server-rendered permalinked forum reply + contextual replies
+##
+## Expects in scope: $replyId, $sortBy, $sortOrder, $thread
+##
+
+## Load forum reply
+#set ($forumReply = $core_v2_forumReply.Get($replyId))
+#set ($permalinkedForumReply = $forumReply)
+
+## Load forum reply parents
+#set ($parents = [])
+#set ($child = $forumReply)
+$core_v2_widget.ExecuteFile('common-load-parents.vm')
+
+## Load Children
+#set ($flattenAt = $flattenedDepth - $parents.Count - 1)
+#if ($flattenAt < 0)
+	#set ($flattenAt = 0)
+#end
+
+#set ($listThreadedOptions = "%{}")
+$listThreadedOptions.add('ParentReplyId', $replyId)
+$listThreadedOptions.add('FlattenedDepth', $flattenAt)
+$listThreadedOptions.add('RootPageSize', $pageSize)
+$listThreadedOptions.add('ChildPageSize', $pageSize)
+#if ($sortBy)
+	$listThreadedOptions.add('ThreadedSortBy', $sortBy)
+#end
+#if ($sortOrder)
+	$listThreadedOptions.add('ThreadedSortOrder', $sortOrder)
+#end
+#if ($flattenedSortBy)
+	$listThreadedOptions.add('FlattenedSortBy', $flattenedSortBy)
+#end
+#if ($flattenedSortOrder)
+	$listThreadedOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+#end
+
+#set ($children = false)
+#set ($children = $core_v2_forumReply.ListThreaded($thread.Id, $listThreadedOptions))
+
+## Render forum reply parents
+
+<strong>$core_v2_language.GetResource('parents')</strong>
+#foreach ($forumReply in $parents)
+#beforeall
+	<ul>
+#each
+	$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+#afterall
+	</ul>
+#nodata
+	<div>$core_v2_language.GetResource('no_data')</div>
+#end
+
+
+## Render Requested Reply
+
+<strong>$core_v2_language.GetResource('reply')</strong>
+#set ($forumReply = $permalinkedForumReply)
+<ul>
+$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+</ul>
+
+## Render Children
+
+<strong>$core_v2_language.GetResource('children')</strong>
+#foreach ($forumReply in $children)
+#beforeall
+	<ul>
+#each
+	$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+#afterall
+	</ul>
+#nodata
+	<div>$core_v2_language.GetResource('no_data')</div>
+#end

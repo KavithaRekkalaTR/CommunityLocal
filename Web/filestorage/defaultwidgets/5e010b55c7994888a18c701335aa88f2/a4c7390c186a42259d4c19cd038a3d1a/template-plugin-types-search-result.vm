@@ -1,0 +1,14 @@
+﻿<ul class="navigation-list administration-links plugin-types">
+	<% foreach(results, function(result) { %>
+		<% if(result.Type == 'Plugin') { %>
+			<li class="navigation-list-item plugin-type <%: result.State %>" data-typename="<%: result.TypeName %>">
+				<a href="<%: result.Url %>">
+					<div>
+						<span class="name"><%= result.Name %></span>
+						<span class="description"><%: result.Description %></span>
+					</div>
+				</a>
+			</li>
+		<% } %>
+	<% }); %>
+</ul>

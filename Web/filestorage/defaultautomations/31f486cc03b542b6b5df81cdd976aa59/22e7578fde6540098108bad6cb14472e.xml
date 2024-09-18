@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="Subscribe users to comments when they comment on an article" version="11.0.0.0" description="When a user comments on an article, this automation will subscribe the user to comment notifications for that article." id="22e7578fde6540098108bad6cb14472e" executeAsServiceUser="false" isSingleton="true" trigger="Event" lastModified="2020-08-27 17:52:56Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="comment.aftercreate" />
+    </events>
+    <executionScript language="Velocity"><![CDATA[#set ($content = $context_v2_automationTrigger.Arguments.Content)
+#set ($user = $context_v2_automationTrigger.Arguments.User)
+#set ($isApproved = $context_v2_automationTrigger.Arguments.IsApproved)
+
+#if($content && $content.ContentTypeId == $articles_v1_articles.ContentTypeId && $isApproved && $user && $user.Username.ToLowerInvariant() != $core_v2_user.AnonymousUserName.ToLowerInvariant())
+    #set($subscription = $core_v2_contentSubscription.Get($content.ContentId, "%{ IncludeApplicationSubscriptions = 'true', TypeId = $articles_v1_subscriptionTypes.ArticleComments }"))
+
+    #if(!$subscription || !$subscription.IsSubscribed)
+        $core_v2_contentSubscription.Create($content.ContentId, $content.ContentTypeId, "%{ TypeId = $articles_v1_subscriptionTypes.ArticleComments }"))
+    #end
+#end]]></executionScript>
+  </automation>
+</automations>

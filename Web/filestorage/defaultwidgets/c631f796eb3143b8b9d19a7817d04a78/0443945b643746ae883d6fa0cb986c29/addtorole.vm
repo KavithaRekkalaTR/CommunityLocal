@@ -1,0 +1,71 @@
+#if ($context.UserId < 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+    $core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('addToRoleHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button addtorole">$core_v2_language.GetResource('AddToRole')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('AddToRoleInstructions')</p>
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+    #set($userTitle = $user.DisplayName)
+    #if ($user.Username != $user.DisplayName)
+        #set($userTitle = "$userTitle ($user.Username)")
+    #end
+#end
+
+<form><fieldset>
+    <ul class="field-list">
+		<li class="field-item">
+			<label for="$core_v2_widget.UniqueId('RoleToAdd')" class="field-item-name">$core_v2_language.GetResource("Field_RoleToAdd")</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_RoleToAdd_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('RoleToAdd')" value="" id="$core_v2_widget.UniqueId('RoleToAdd')" />
+			</span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationAddToRole')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('addtorole.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministrationAddToRole.register({
+		    userId: $context.UserId,
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        roleToAdd: jQuery('#$core_v2_widget.UniqueId('RoleToAdd')')
+		    },
+		    urls: {
+		      lookupRolesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-role.vm'))'  
+		    },
+		    text: {
+		        addRoleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('AddRoleSuccessful'), $userTitle))',
+		        addRoleSomeSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('AddRoleSomeSuccessful'), $userTitle))',
+		        roleLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectRoles'))',
+		        noRolesMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingRoles'))',
+		        alreadySelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadyInRole'))'
+		    }
+    	});
+	});
+	</script>
+#end

@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:LegacyUIOptions}" version="12.0.0.0" description="${resource:LegacyUIOptions_Description}" instanceIdentifier="4c72278a0a0d49348177a9a6d7af91e6" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-10-22 19:50:01Z" provider="3a4cb11be2d4478eae2ef899d0b0d9b5">
+    <contentScript language="Velocity"><![CDATA[#set($headerTemplate = $core_v2_widget.UniqueId('header'))
+
+<p>$core_v2_language.GetResource('Instructions')</p>
+
+<form><fieldset>
+<ul class="field-list">
+
+	<li class="field-item">
+		<span class="field-item-input">
+			<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalFormElement')" #if($context.EnableGlobalFormElement) checked="checked" #end />
+			<label for="$core_v2_widget.UniqueId('GlobalFormElement')" class="field-item-name">$core_v2_language.GetResource('GlobalFormElement')</label>
+		</span>
+		<span class="field-item-description">
+			$core_v2_language.GetResource('GlobalFormElement_Description')
+		</span>
+	</li>
+
+	<li class="field-item">
+		<span class="field-item-input">
+			<input type="checkbox" id="$core_v2_widget.UniqueId('LegacyJQuery')" #if($context.EnableLegacyJQuery) checked="checked" #end #if($context.HasLegacyWidgets) disabled="disabled" #end />
+			<label for="$core_v2_widget.UniqueId('LegacyJQuery')" class="field-item-name">$core_v2_language.GetResource('LegacyJQuery')</label>
+		</span>
+		<span class="field-item-description">
+			$core_v2_language.GetResource('LegacyJQuery_Description')
+		</span>
+	</li>
+	
+	<li class="field-item">
+		<span class="field-item-input">
+			<input type="checkbox" id="$core_v2_widget.UniqueId('AllRestScopesInUserInterface')" #if($context.EnableAllRestScopesInUserInterface) checked="checked" #end />
+			<label for="$core_v2_widget.UniqueId('AllRestScopesInUserInterface')" class="field-item-name">$core_v2_language.GetResource('AllRestScopesInUserInterface')</label>
+		</span>
+		<span class="field-item-description">
+			$core_v2_language.GetResource('AllRestScopesInUserInterface_Description')
+		</span>
+	</li>
+
+</ul>
+</fieldset></form>
+
+<script type="text/html" id="$headerTemplate">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.legacyUiOptions')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.legacyUiOptions.register({
+			headerTemplateId: '$headerTemplate',
+			text: {
+				saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save_Successful'))'
+			},
+			fieldIds: {
+				globalFormElement: '#$core_v2_widget.UniqueId('GlobalFormElement')',
+				legacyJQuery: '#$core_v2_widget.UniqueId('LegacyJQuery')',
+				allRestScopesInUserInterface: '#$core_v2_widget.UniqueId('AllRestScopesInUserInterface')'
+			},
+			urls: {
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AllRestScopesInUserInterface">Enable all REST scopes for the user interface</resource>
+  <resource name="AllRestScopesInUserInterface_Description">Widgets and plugins in older versions of Telligent Community did not specify their REST API scope requirements. If any user interface functionality prior to version 12.1 is in use, all REST scopes can be enabled to allow the older implementations to still function until they can be updated.</resource>
+  <resource name="GlobalFormElement">Enable global &amp;lt;form&amp;gt; element</resource>
+  <resource name="GlobalFormElement_Description">Older versions of Telligent Community rendered a global &amp;lt;form&amp;gt; element into which all UI was rendered. This element is no longer required by first party widgets that now define their own &amp;lt;form&amp;gt; elements when required.</resource>
+  <resource name="Instructions">The following features have been moved to legacy status and will be removed in the future but can be managed to enable legacy behavior for communities in transition.</resource>
+  <resource name="LegacyJQuery">Enable legacy jQuery support</resource>
+  <resource name="LegacyJQuery_Description">Older versions of Telligent Community depended upon jQuery 1.x and 2.x APIs that have been deprecated or removed in jQuery 3.x. Enabling legacy support enables the jQuery Migrate plugin which temporarily restores APIs and logs deprecation warnings to the browser console.</resource>
+  <resource name="LegacyUIOptions">Legacy Options</resource>
+  <resource name="LegacyUIOptions_Description">Manage legacy interface support options.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Save_Successful">Legacy options have been saved.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

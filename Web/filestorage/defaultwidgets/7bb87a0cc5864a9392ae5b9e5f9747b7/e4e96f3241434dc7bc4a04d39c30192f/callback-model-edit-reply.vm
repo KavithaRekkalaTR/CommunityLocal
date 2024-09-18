@@ -1,0 +1,37 @@
+##
+## Edits and serializes a Reply
+##
+## Paramters
+##
+##   _w_commentId
+##   _w_body
+##
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	$core_v2_widget.ExecuteFile('common-config.vm')
+
+	##
+	## Parse Parameters
+	##
+	#set ($commentId = false)
+	#set ($commentIdQuery = false)
+	#set ($commentIdQuery = $core_v2_page.GetFormValue('_w_commentId'))
+	#if ($commentIdQuery)
+		#set ($commentId = $core_v2_utility.ParseGuid($commentIdQuery))
+	#end
+
+	#set ($body = false)
+	#set ($bodyQuery = false)
+	#set ($bodyQuery = $core_v2_page.GetFormValue('_w_body'))
+	#if ($bodyQuery)
+		#set ($body = $bodyQuery)
+	#end
+
+	#set ($comment = $core_v2_comments.Update($commentId, $body, "%{}"))
+
+	#set ($excludeContainer = false)
+	$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+
+#end

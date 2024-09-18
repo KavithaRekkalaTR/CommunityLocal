@@ -1,0 +1,108 @@
+<p class="instructions">$core_v2_language.GetResource('OverwriteFormInstructions')</p>
+
+<form><fieldset>
+<ul class="field-list">
+
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('UpdateTemplate')" class="field-item-name">$core_v2_language.GetResource('Field_UpdateTemplate')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_UpdateTemplate_Description')</span>
+        <span class="field-item-input">
+            <select id="$core_v2_widget.UniqueId('UpdateTemplate')">
+                <option value="false">$core_v2_language.GetResource('UpdateExisting')</option>
+                <option value="true">$core_v2_language.GetResource('UpdateNewAndExisting')</option>
+            </select>
+        </span>
+    </li>
+
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('GroupType')" class="field-item-name">$core_v2_language.GetResource('Field_GroupTypes')</label>
+        <span class="field-item-input">
+            <select id="$core_v2_widget.UniqueId('GroupType')">
+                <option value="">$core_v2_language.GetResource('SelectGroupType')</option>
+                <option value="Joinless">$core_v2_language.GetResource('type_joinless')</option>
+                <option value="PublicOpen">$core_v2_language.GetResource('type_publicopen')</option>
+                <option value="PublicClosed">$core_v2_language.GetResource('type_publicclosed')</option>
+                <option value="PrivateListed">$core_v2_language.GetResource('type_privatelisted')</option>
+                <option value="PrivateUnlisted">$core_v2_language.GetResource('type_privateunlisted')</option>
+            </select>
+        </span>
+    </li>
+
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('Roles')" class="field-item-name">$core_v2_language.GetResource('Field_Roles')</label>
+        <span class="field-item-input">
+            <select id="$core_v2_widget.UniqueId('Roles')" disabled>
+                <option value="">$core_v2_language.GetResource('SelectRole')</option>
+            </select>
+        </span>
+    </li>
+
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('Permissions')" class="field-item-name">$core_v2_language.GetResource('Field_Permissions')</label>
+        <span class="field-item-input">
+            <select id="$core_v2_widget.UniqueId('Permissions')" disabled>
+                <option value="">$core_v2_language.GetResource('SelectPermission')</option>
+            </select>
+        </span>
+    </li>
+
+    <li class="field-item">
+        <label for="$core_v2_widget.UniqueId('AllowDeny')" class="field-item-name">$core_v2_language.GetResource('Field_AllowDeny')</label>
+        <span class="field-item-input">
+            <select id="$core_v2_widget.UniqueId('AllowDeny')" disabled>
+                <option value="">$core_v2_language.GetResource('SelectAllowDeny')</option>
+                <option value="true">$core_v2_language.GetResource('Allow')</option>
+                <option value="false">$core_v2_language.GetResource('Deny')</option>
+            </select>
+        </span>
+    </li>
+
+</ul>
+</fieldset></form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('overwriteHeaderTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" class="button overwrite-permission disabled">$core_v2_language.GetResource("Overwrite")</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+</script>
+
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.groupDefaultPermissionsOverwritePermission.register({
+            overwriteHeaderTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    ids: {
+		        groupTypes:'#$core_v2_widget.UniqueId('GroupType')',
+		        roles:'#$core_v2_widget.UniqueId('Roles')',
+		        permissions:'#$core_v2_widget.UniqueId('Permissions')',
+		        allowDeny:'#$core_v2_widget.UniqueId('AllowDeny')',
+                updateTemplate:'#$core_v2_widget.UniqueId('UpdateTemplate')',
+		    },
+		    urls: {
+		        save:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('overwrite.vm'))',
+                callbackRoles:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-roles.vm'))',
+                callbackPermissions:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-permissions.vm'))',
+		    },
+            text: {
+                overwriteConfirmation: '$core_v2_language.GetResource('OverwriteConfirmation')',
+                overwriteConfirmationUpdateTemplate: '$core_v2_language.GetResource('OverwriteConfirmationUpdateTemplate')',
+                permissionOverwritten: '$core_v2_language.GetResource('PermissionOverwritten')',
+                permissionOverwrittenTemplateUpdated: '$core_v2_language.GetResource('PermissionOverwritten_TemplateUpdated')',
+                permissionAllowed: '$core_v2_language.GetResource('PermissionAllowed')',
+                permissionDenied: '$core_v2_language.GetResource('PermissionDenied')',
+                selectRole: '$core_v2_language.GetResource('SelectRole')',
+                selectPermission: '$core_v2_language.GetResource('SelectPermission')',
+                selectAllowDeny: '$core_v2_language.GetResource('SelectAllowDeny')',
+            }
+    	});
+	});
+	</script>
+#end

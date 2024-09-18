@@ -1,0 +1,35 @@
+##
+## List Themes Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#set ($options = "%{}")
+
+#set ($typeIdQuery = $core_v2_page.GetQueryStringValue("_w_typeId"))
+#if ($typeIdQuery)
+	$options.Add('TypeId', $typeIdQuery)
+#end
+
+#set ($stateQuery = $core_v2_page.GetQueryStringValue("_w_state"))
+#if ($stateQuery)
+	$options.Add('State', $stateQuery)
+#end
+
+#set ($stagedQuery = $core_v2_page.GetQueryStringValue("_w_staged"))
+#if ($stagedQuery)
+	$options.Add('Staged', $core_v2_utility.ParseBool($stagedQuery))
+#end
+
+#set ($includeFileDigestsQuery = $core_v2_page.GetQueryStringValue("_w_includeFileDigests"))
+#if ($includeFileDigestsQuery)
+	#set ($includeFileDigests = $core_v2_utility.ParseBool($includeFileDigestsQuery))
+#end
+
+#set ($themes = $context.ListThemes($options))
+#if ($themes && $themes.HasErrors())
+	$core_v2_page.SendJsonError($themes.Errors)
+#end
+
+{
+	"themes": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summaries.vm')
+}

@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="d6c15fdd3efd467494f3e44d2fe590ec" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-reporting" lastModified="2021-11-09 19:27:11Z" provider="b957eaf47f7e420ea6f7745fca9ca82d">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.ReportingStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('affectednodes')
+	    #foreach($node in $context.Status.AffectedNodes)
+	    #each
+		    #if ($context.Target == 'Web')
+				<strong>${node}</strong>
+			#else
+				${node}
+			#end
+		#between
+		    ,
+		#end
+	#token('startdate')
+	    #set($d = false)
+	    #set($d = $context.Status.StartDate)
+	    #if ($d)
+			#if ($context.Target == 'Web')
+				<strong>$core_v2_language.FormatDateAndTime($d)</strong>
+			#else
+				$core_v2_language.FormatDateAndTime($d)
+			#end
+	    #else
+			#if ($context.Target == 'Web')
+				<strong>$core_v2_language.GetResource('Date_Unknown')</strong>
+			#else
+				$core_v2_language.GetResource('Date_Unknown')
+			#end
+	    #end
+	#token('enddate')
+	    #set($d = false)
+	    #set($d = $context.Status.EndDate)
+	    #if ($d)
+			#if ($context.Target == 'Web')
+				<strong>$core_v2_language.FormatDateAndTime($d)</strong>
+			#else
+				$core_v2_language.FormatDateAndTime($d)
+			#end
+	    #else
+			#if ($context.Target == 'Web')
+				<strong>$core_v2_language.GetResource('Date_Unknown')</strong>
+			#else
+				$core_v2_language.GetResource('Date_Unknown')
+			#end
+	    #end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Connected">Reporting is healthy. The ETL last ran at {enddate}.</resource>
+  <resource name="Date_Unknown">Unknown</resource>
+  <resource name="Disabled">Reporting is currently disabled. </resource>
+  <resource name="EtlNotRecent">The reporting data is not recent. The ETL last completed at {enddate}. Ensure that the ETL is scheduled within Scheduled Tasks.</resource>
+  <resource name="EtlNotRun">The ETL has not yet started. Ensure that the ETL is scheduled within Scheduled Tasks.</resource>
+  <resource name="EtlRunning">The ETL is currently running. The process started at {startdate}.</resource>
+  <resource name="InvalidConnection">The connection to the reporting database could not be established on the following servers: {affectednodes}. Review the value of &lt;code&gt;Reporting&lt;/code&gt; in &lt;code&gt;connectionStrings.config&lt;/code&gt; and the servers' ability to connect to the reporting database.</resource>
+  <resource name="LongRunningEtl">The ETL has been running for an extended period of time without finishing. The ETL last started at {startdate}. If the community was recently upgraded or if reporting data was recently reset, this may be normal. Otherwise, this may indicate a performance problem within the reporting database that should be reviewed.</resource>
+  <resource name="MismatchedConfiguration">Servers serving this community are not consistently configured.  Please review every server's configuration to ensure that the value of &lt;code&gt;Reporting&lt;/code&gt; in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same.</resource>
+  <resource name="Unknown">The status of reporting is not yet known.</resource>
+  <resource name="Widget-Description">Reporting System Indicator</resource>
+  <resource name="Widget-Title">Reporting</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

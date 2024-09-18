@@ -1,0 +1,50 @@
+#set($id = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('id')))
+
+<form><fieldset>
+	<ul class="field-list">
+        <li class="field-item replace-with-category">
+		    <label for="$core_v2_widget.UniqueId('replace-category')" class="field-item-name">$core_v2_language.GetResource('category-replace-with')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('category-replace-with-description')</span>
+		    <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('replace-category')" />
+            </span>
+        </li>
+	</ul>
+</fieldset></form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('deleteCategoryHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input"><a href="#" class="button delete">$core_v2_language.GetResource('delete')</a></span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.deleteCategoryPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui-deletecategory.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.deleteCategoryPanel.register({
+			articleCollectionId: '$context.ArticleCollection.Id',
+			articleCategoryId: '$id',
+			fields: {
+			    replaceWithCategory: jQuery('#$core_v2_widget.UniqueId('replace-category')')
+			},
+			templates: {
+                header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)' 
+			},
+			urls: {
+			    lookupCategories: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-lookupcategories.jsm'))'
+			},
+			text: {
+			    noMatchingCategories: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('info-nomatchingcategories'))'
+			}
+		});
+	});
+	</script>
+#end

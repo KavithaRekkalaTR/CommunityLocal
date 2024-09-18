@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:Name}" version="12.1.0.0" description="${resource:Description}" instanceIdentifier="b46cd771375a4e83bbb35fcac1a131b5" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="article-helpfulness-notifications" lastModified="2021-09-17 18:56:52Z" provider="d9c88caeb54c4240925603d4aa8c81cf">
+		<contentScript language="Velocity"><![CDATA[
+	<div class="message">
+		$core_v2_language.GetResource('Instructions')
+	</div>
+	<div class="message warning">
+		$core_v2_language.GetResource('Instructions_Note')
+	</div>
+
+<form><fieldset>
+    <ul class="field-list">
+		<li class="field-item users">
+			<label for="$core_v2_widget.UniqueId('userLookup')" class="field-item-name">$core_v2_language.GetResource('Field_User')</label>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('userLookup')" />
+			</span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#set ($roles = $context.ListRoles())
+#set ($users = $context.ListUsers())
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headertemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+    var selectedRoles = [];
+    var selectedUsers = [];
+
+	#if ($roles) 
+		#foreach($role in $roles)
+			selectedRoles.push({id: '$role.Id', name: '$role.Name'});
+		#end
+	#end
+
+	#if ($users) 
+		#foreach($user in $users)
+			selectedUsers.push({id: '$user.Id', name: '$user.DisplayName #if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end'});
+		#end
+	#end
+
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.articleHelpfulnessNotifications.register({
+		collectionId: '$context.ArticleCollection.Id.ToString()',
+		selectedRoles: selectedRoles,
+		selectedUsers: selectedUsers,
+		headerTemplateId: '$headerTemplateId',
+		fields: {
+	        userLookup: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('userLookup'))'),
+		},
+		urls: {
+            findUsersOrRolesUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users-or-roles.jsm'))',
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.jsm'))',	
+		},
+		text: {
+   			userLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FindMember'))',
+   			noUsersMatch: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FindUser_NoMatches'))",
+            alreadySelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadySelected'))',
+			saveSuccessful: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SaveSuccessful'))",
+		}
+	});
+});
+</script>]]></contentScript>
+		<headerScript language="Velocity" />
+		<languageResources><![CDATA[<language key="en-us">
+    <resource name="AlreadySelected">Already selected</resource>
+	<resource name="Description">Set users who should receive feedback notifications.</resource>
+	<resource name="Name">Feedback Notifications</resource>
+	<resource name="Field_User">Members or Roles to Notify</resource>
+	<resource name="FindUser_NoMatches">A matching member or role could not be found.</resource>
+	<resource name="FindMember">Find a member or role...</resource>
+	<resource name="Instructions">When feedback is received on an article, all authors of a published version of that article will receive a notifcation.  Additional members or a role's members may receive these notifications by listing them below.</resource>
+	<resource name="Instructions_Note">Permissions still apply to these members.  A member must have Create Articles or Edit Articles permission for an article to receive a feedback notification for that article.</resource>
+	<resource name="Save">Save</resource>
+	<resource name="SaveSuccessful">Changes have been saved.</resource>
+</language>]]></languageResources>
+		<additionalCssScript language="Velocity" />
+	</scriptedContentFragment>
+</scriptedContentFragments>

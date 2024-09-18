@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PreviewTheme_Name}" version="11.0.0.0" description="${resource:PreviewTheme_Description}" instanceIdentifier="a81369a5aa6040348a2507df22cd9c42" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-preview-theme" lastModified="2021-03-08 16:41:25Z" provider="665bbe8295b442e7aeda0c980d2726b4">
+    <contentScript language="Velocity"><![CDATA[
+## if publishing is already in-progress, then show the indicator
+#set ($scheduledCommitProgressKey = "publish-ui:${core_v2_user.Accessing.Id}")
+#set ($status = $core_v2_widget.GetScheduledFileStatus($scheduledCommitProgressKey))
+#set ($scheduledCommitInProgress = false)
+<div class="progress-indicator">
+	#if ($status && $status.PercentComplete < 1)
+		#set ($scheduledCommitInProgress = true)
+		$core_v2_ui.ScheduledFile($scheduledCommitProgressKey, "%{ IncludeProgress = 'True', IncludeAllMessages = 'False', IncludeLatestMessage = 'True' }")
+	#end
+</div>
+$core_v2_widget.ExecuteFile('list.vm')
+#registerEndOfPageHtml('telligent.evolution.widgets.previewTheme')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.previewTheme.register({
+			scheduledCommitInProgress: #if($scheduledCommitInProgress) true#else false#end,
+			scheduledCommitProgressKey: '$core_v2_encoding.JavascriptEncode($scheduledCommitProgressKey)',
+			hasStagedItems: #if($hasStagedItems) true#else false#end,
+			commitUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('commit.jsm'))',
+			listUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list.vm'))',
+			updateReviewStateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update-review-status.vm'))',
+			text: {
+				approve: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('approve'))',
+				deny: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deny'))',
+				notReviewed: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('not-reviewed'))',
+				commit: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('commit'))',
+				commitSuccessfull: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('commit-successful'))',
+				preview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview'))',
+				stopPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('stop-preview'))',
+				previewInstructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview-instructions'))',
+				unreviewedCommitConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('unreviewed-commit-confirmation'))'
+			}
+		});
+	});
+	</script>
+#end
+				]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="approve">Approve</resource>
+  <resource name="approve-all">Approve all</resource>
+  <resource name="approved">Approved</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="change">{0} change</resource>
+  <resource name="change-plural">{0} changes</resource>
+  <resource name="commit">Publish Reviewed Changes</resource>
+  <resource name="commit-successful">The reviewed changes have been published successfully.</resource>
+  <resource name="denied">Denied</resource>
+  <resource name="deny">Deny</resource>
+  <resource name="deny-all">Deny all</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="instructions">Enable/disable previewing to privately view undenied changes (only you will see the preview). Approve or deny changes then publish the reviewed changes to the community.</resource>
+  <resource name="mixed">Mixed review states</resource>
+  <resource name="more">More</resource>
+  <resource name="no-staged-items">No theme changes are available for previewing.</resource>
+  <resource name="not-reviewed">Not reviewed</resource>
+  <resource name="open-window">Open a new window for previewing</resource>
+  <resource name="preview">Enable Previewing</resource>
+  <resource name="preview-instructions">Previewing is now enabled. All browsers/devices you are signed into will now show undenied changes.</resource>
+  <resource name="PreviewTheme_Description">Enable/disabling previewing and review theme changes.</resource>
+  <resource name="PreviewTheme_Name">Preview Changes</resource>
+  <resource name="set-not-reviewed">Flag as unreviewed</resource>
+  <resource name="set-not-reviewed-all">Flag all as unreviewed</resource>
+  <resource name="stop-preview">Disable Previewing</resource>
+  <resource name="unreviewed-commit-confirmation">There are unreviewed changes. Publishing changes may cause rendering different from what you see when previewing. Are you sure you want to publish?</resource>
+  <resource name="view">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

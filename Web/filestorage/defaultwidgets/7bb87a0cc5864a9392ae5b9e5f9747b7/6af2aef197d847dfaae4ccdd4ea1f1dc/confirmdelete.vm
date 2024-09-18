@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>$core_v2_language.GetResource('ConfirmDelete_Title')</title>
+		$core_v2_page.RenderThemeHeaders("%{ IsModal = 'True'}")
+	</head>
+	<body>
+	    <form>
+	        <div class="message warning">
+	            $core_v2_language.GetResource('ConfirmDelete_Instructions')
+	        </div>
+	        <fieldset style="margin-top: 20px;">
+	            <ul class="field-list">
+	                <li class="field-item">
+            			<label class="field-item-name" for="confirmdelete">$core_v2_language.GetResource("ConfirmDelete_Label")</label>
+            			<span class="field-item-input"><input type="text" size="30" maxlength="254" id="confirmdelete" name="confirmdelete" /></span>
+            			<span class="field-item-validation confirmdeletevalidation" style="display: none;"></span>
+            		</li>
+            		<li class="field-item">
+                        <span class="field-item-input">
+                            <a href="#" class="internal-link delete-account button">
+                                <span></span>$core_v2_language.GetResource('DeleteAccount')
+                            </a>
+                            <a href="#" class="internal-link cancel">
+                                <span></span>$core_v2_language.GetResource('Cancel')
+                            </a>
+                            <span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+                        </span>
+            		</li>
+	            </ul>
+	        </fieldset>
+
+<script type="text/javascript">
+jQuery(function() {
+    jQuery('.cancel').on('click', function() {
+       jQuery.glowModal.close();
+       return false;
+    });
+
+    var deleteButton = jQuery('.delete-account');
+
+    deleteButton.evolutionValidation({
+        onValidated: function(isValid, buttonClicked, c) {
+            if (isValid)
+                deleteButton.removeClass('disabled');
+            else {
+                deleteButton.addClass('disabled');
+            }
+        },
+        onSuccessfulClick: function(e) {
+            $('.processing', deleteButton.parent()).css("visibility", "visible");
+            deleteButton.addClass('disabled');
+            jQuery.telligent.evolution.post({
+                url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('deleteaccount.vm'))'
+            })
+                .then(function() {
+                    window.alert('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteAccount_Successful'))');
+                    window.parent.location.href = '$core_v2_encoding.JavascriptEncode($core_v2_urls.LogOut())';
+                })
+                .always(function() {
+                   deleteButton.removeClass('disabled');
+                   $('.processing', deleteButton.parent()).css("visibility", "hidden");
+                });
+        }
+    });
+
+    var f = deleteButton.evolutionValidation('addCustomValidation', 'confirmation', function() {
+            return jQuery('#confirmdelete').val() == '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ConfirmDelete_ConfirmationText'))';
+        },
+        '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ConfirmDelete_ConfirmationTextRequired'))', jQuery('.confirmdeletevalidation'), { }
+    );
+    jQuery('#confirmdelete').on('input', function() { f(); });
+});
+</script>
+	    </form>
+	 </body>
+</html>

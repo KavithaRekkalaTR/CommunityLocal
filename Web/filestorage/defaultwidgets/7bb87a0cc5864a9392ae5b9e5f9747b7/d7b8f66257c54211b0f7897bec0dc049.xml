@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="d7b8f66257c54211b0f7897bec0dc049" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="article-category" lastModified="2020-12-22 21:31:45Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($category = false)
+#set ($category = $articles_v1_categories.Current)
+#if (!$category)
+	$core_v2_widget.Hide()
+#end
+
+#set($visible = $core_v2_widget.GetStringValue('visible', 'IfArticleNotPresent'))
+#if ($visible == 'IfArticleNotPresent')
+	#set($article = false)
+	#set($article =  $articles_v1_articles.Current)
+	#if ($article && !$article.HasErrors())
+		$core_v2_widget.Hide()
+	#end
+#end
+
+#set ($roundIcons = $core_v2_widget.GetBoolValue('roundIcons', true))
+
+$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($imageHtml = false)
+#if ($category.ImageUrl)
+	#set($imageHtml = $core_v2_ui.GetResizedImageHtml($category.ImageUrl, 32, 32, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt = '' }"))
+#end
+
+<div class="content full text #if ($imageHtml) with-icon #end #if ($roundIcons) round #end">
+    <h1 class="name">
+		#if ($imageHtml)
+			<span class="icon">
+				$imageHtml
+			</span>
+		#end
+		$category.Name
+	</h1>
+	<div class="content">
+	   #if ($category.Description)
+	        <p>$category.Description</p>
+	   #end
+    </div>
+</div>]]></contentScript>
+    <headerScript language="Velocity" />
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="visible" labelResourceName="Visible" defaultValue="IfArticleNotPresent" dataType="string">
+			<propertyValue value="IfArticleNotPresent" labelResourceName="Visible_IfArticleNotPresent" />
+			<propertyValue value="True" labelResourceName="Visible_Always" />
+	</property>
+	<property id="roundIcons" labelResourceName="roundIcons" dataType="bool" defaultValue="true" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Displays details about the current contextual category.</resource>
+  <resource name="Name">Articles - Category</resource>
+  <resource name="Options">Options</resource>
+  <resource name="roundIcons">Rounded icons</resource>
+  <resource name="Visible">Visible</resource>
+  <resource name="Visible_Always">Always</resource>
+  <resource name="Visible_IfArticleNotPresent">When an article is not available</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+    <requiredContext>
+      <context id="7aa379d6ca0c4016a0bfe1302122db9c" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

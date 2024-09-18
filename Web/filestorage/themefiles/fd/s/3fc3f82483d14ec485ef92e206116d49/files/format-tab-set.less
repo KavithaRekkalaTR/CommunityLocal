@@ -1,0 +1,48 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.tab-set {
+	font-family: @font-family;
+	margin: 0 0 (@spacing * 3) 0;
+	table {
+		width: 100%;
+		table-layout: fixed;
+		td {
+			white-space: nowrap;
+			vertical-align: bottom;
+		}
+		a {
+			.transition(all .15s);
+			display: block;
+			padding: (@spacing / 2) 0 (@spacing / 3) 0;
+			border-bottom: 2px solid -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+			text-align: center;
+			color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast) !important;
+			font-size: @font-size;
+			width: 100%;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			&:active {
+				background-color: -evo-decrease-contrast(@color-background, 0%, @color-foreground, @color-contrast);
+			}
+			&.selected {
+				color: -evo-decrease-contrast(@color-foreground, 22%, @color-background, @color-contrast) !important;
+				border-bottom: 2px solid -evo-decrease-contrast(@color-foreground, 22%, @color-background, @color-contrast);
+			}
+			&:hover, &:focus {
+				color: @color-link !important;
+				border-bottom: 2px solid @color-accent;
+			}
+			div {
+				width: 100%;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+	}
+}

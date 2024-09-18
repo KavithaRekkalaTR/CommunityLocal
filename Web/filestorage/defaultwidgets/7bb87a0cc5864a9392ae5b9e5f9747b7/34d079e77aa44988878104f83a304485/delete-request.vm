@@ -1,0 +1,12 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	#set($contactRequestId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ContactRequestId')))
+	#set($groupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupId')))
+	#set($result = $core_v2_groupContactRequest.Delete($groupId, $contactRequestId))
+
+	#if ($result.HasErrors())
+		$core_v2_page.SendJsonError($result.Errors)
+	#else
+		{"success": "true"}
+	#end
+#end

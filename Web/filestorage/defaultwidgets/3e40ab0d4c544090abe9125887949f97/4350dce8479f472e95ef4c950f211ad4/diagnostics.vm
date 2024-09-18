@@ -1,0 +1,64 @@
+##
+## Renders all summaries
+## Expects in scope: $includeRemote
+##
+
+#set ($summary = false)
+#set ($summary = $context.ReportLocal($context.PluginType))
+
+<p>
+	#format($core_v2_language.GetResource('LocalSummary'))
+		#token('machine_name')
+			<strong>$summary.MachineName</strong>
+		#token('state')
+			<strong>
+				#if ($summary.Connected)
+					$core_v2_language.GetResource('Connected')
+				#else
+					$core_v2_language.GetResource('NotConnected')
+				#end
+			</strong>
+	#end
+</p>
+
+<div class="summaries local">
+
+	#set ($summary = false)
+	#set ($summary = $context.ReportLocal($context.PluginType))
+	#set ($localSummary = $summary)
+
+	$core_v2_widget.ExecuteFile('summary.vm')
+
+	## if a message bus server name was reported, render it too
+	#if ($summary.ServerName && $summary.ServerName.length > 0)
+		<span class="connector #if ($summary.Connected) online #else offline #end"></span>
+		<div class="bus-server-summary summary #if ($summary.Connected) online #else offline #end">
+			<span class="type">$core_v2_language.GetResource('MessageBusServer')</span>
+			<div class="name">
+				<span class="machine-name ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ServerName'))">$summary.ServerName</span>
+			</div>
+		</div>
+	#end
+</div>
+
+#if ($includeRemote)
+	#set ($remoteSummaries = $context.ReportAll($context.PluginType))
+	#foreach ($remoteSummary in $remoteSummaries)
+	#beforeall
+		<p>$core_v2_language.GetResource('AllServersSummary')</p>
+		#if (!$localSummary || !$localSummary.Connected)
+			<div class="message error">$core_v2_language.GetResource('AllServersSummaryDescLocalOffline')</div>
+		#end
+		<div class="summaries">
+	#each
+			#set ($summary = false)
+			#set ($summary = $remoteSummary)
+			$core_v2_widget.ExecuteFile('summary.vm')
+	#afterall
+		</div>
+	#nodata
+		<div class="ui-loading"></div>
+	#end
+#else
+	<div class="ui-loading"></div>
+#end

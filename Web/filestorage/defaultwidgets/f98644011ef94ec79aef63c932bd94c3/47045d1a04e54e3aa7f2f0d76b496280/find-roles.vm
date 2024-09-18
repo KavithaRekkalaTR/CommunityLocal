@@ -1,0 +1,14 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_SearchText'))
+
+#set($loweredSearchText = "$core_v2_language.Lowercase($searchText)")
+#set($matchingRoles = $core_v2_role.Find($loweredSearchText))
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+	#if($matchingRoles)
+		#foreach($role in $matchingRoles)
+			{"roleId":"$role.Id","title":"$core_v2_encoding.JavascriptEncode($role.Name)"},
+		#end
+	#end
+null]}

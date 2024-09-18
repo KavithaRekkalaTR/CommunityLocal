@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Blog Confirm Subscription" version="13.0.0.0" description="Sends a confirmation email when an anonymous user subscribes to a blog." id="8b7b003d7d4e41d3b29136f1e54863c9" lastModified="2023-05-10 20:53:08Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('blog_name')
+    $context_v1_email.Context.Blog.Name
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Header')
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body_Confirm'))
+#token('confirm_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.BlogSubscription.SubscribeUrl)">$core_v2_language.GetResource('Confirm')</a>
+#token('blog_name_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Blog.Url)">$context_v1_email.Context.Blog.Name</a>
+#end
+</p>
+<p>
+#format($core_v2_language.GetResource('Body_Disregard'))
+#token('blog_name_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Blog.Url)">$context_v1_email.Context.Blog.Name</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Confirm">Please {confirm_link} to {blog_name_link}.</resource>
+  <resource name="Body_Disregard">If you did not request this subscription or for whatever reason decide you do not wish to receive email notifications about {blog_name_link}, please just disregard this email.</resource>
+  <resource name="Confirm">confirm your subscription</resource>
+  <resource name="Subject">{blog_name}: Subscription Confirmation</resource>
+  <resource name="Header">Subscription Confirmation</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

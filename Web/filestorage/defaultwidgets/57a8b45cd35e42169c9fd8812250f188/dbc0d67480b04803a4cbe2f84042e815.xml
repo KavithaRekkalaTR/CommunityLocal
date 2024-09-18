@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Ideas_BrowseChallenges_Name}" version="13.0.0.0" description="${resource:Ideas_BrowseChallenges_Description}" instanceIdentifier="dbc0d67480b04803a4cbe2f84042e815" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="browse-challenges" lastModified="2022-09-02 20:26:57Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[
+
+$core_v2_widget.ExecuteFile('inSidebar.vm')    
+$core_v2_ui.PagedContent('list.vm')
+
+  		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#if($core_v2_widget.GetBoolValue('includeGroupName',false))
+	$core_v2_language.FormatString($core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:BrowseChallenges_Title_BrowseChallengesIn}')), $core_v2_group.Current.Name)
+#else
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:BrowseChallenges_Title_BrowseChallenges}'))
+#end
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:BrowseChallenges_Title_BrowseChallenges}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="showTitleColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowTitle_Challenge" defaultValue="true" dataType="Bool" />
+	<property id="showGroupColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowGroup_Challenge" defaultValue="false" dataType="Bool" />
+	<property id="showPostsColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowPosts" defaultValue="true" dataType="Bool" />
+	<property id="showLastPostColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowLatest" defaultValue="true" dataType="Bool" />
+	<property id="groupAndSubGroups" labelResourceName="UIFragment_Core_BrowseApplication_GroupAndSubGroups" defaultValue="false" dataType="Bool" />
+	<property id="itemsBeforeScroll" labelResourceName="UIFragment_Core_BrowseApplication_ItemsToShow" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="defaultSortOrder" labelResourceName="UIFragment_Core_BrowseApplication_DefaultSortOrder" defaultValue="ApplicationName" dataType="String">
+		<propertyValue value="Name" labelResourceName="UIFragment_Core_BrowseApplication_ApplicationName" />
+		<propertyValue value="TotalPosts" labelResourceName="UIFragment_Core_BrowseApplication_Posts" />
+		<propertyValue value="LastPost" labelResourceName="UIFragment_Core_BrowseApplication_LastPost" />
+		<propertyValue value="ApplicationIdsOrder" labelResourceName="UIFragment_Core_BrowseApplication_Custom" />
+	</property>
+	<property id="challengeSelection" labelResourceName="UIFragment_Core_BrowseApplication_ChallengeInclusion" dataType="Custom" template="telligentIdeas_v1_challengeOrder" key="challenge" includeSubGroupsPropertyId="groupAndSubGroups" visibilityPropertyId="defaultSortOrder" visibilityPropertyValue="ApplicationIdsOrder" />
+	<property id="includeGroupName" labelResourceName="UIFragment_Core_BrowseApplication_IncludeGroupName" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="BrowseChallenges_Title_BrowseChallenges">Browse Ideations</resource>
+  <resource name="BrowseChallenges_Title_BrowseChallengesIn">Browse Ideations in {0}</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Ideas_BrowseChallenges_Description">Displays a browse control to view all ideations on the site.</resource>
+  <resource name="Ideas_BrowseChallenges_Name">Ideas - Browse Ideations</resource>
+  <resource name="LastUpdated">Latest: {0}</resource>
+  <resource name="NA">N/A</resource>
+  <resource name="Options">Options</resource>
+  <resource name="post_plural">active ideas</resource>
+  <resource name="post_singular">active idea</resource>
+  <resource name="Sort_Ascending">Ascending</resource>
+  <resource name="Sort_Descending">Descending</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ApplicationName">By name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ChallengeColumn">Ideation</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ChallengeInclusion">Include Ideations</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Custom">Custom order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_DefaultSortOrder">Sort Order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Error">An error occurred while searching.</resource>
+  <resource name="UIFragment_Core_BrowseApplication_GroupAndSubGroups">Show data from Group and all Subgroups</resource>
+  <resource name="UIFragment_Core_BrowseApplication_GroupColumn">Group</resource>
+  <resource name="UIFragment_Core_BrowseApplication_IncludeGroupName">Include current group's name in Title (Title must be a formatted string with a {0} placeholder)</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ItemsToShow">Number of results to display</resource>
+  <resource name="UIFragment_Core_BrowseApplication_LastPost">By date</resource>
+  <resource name="UIFragment_Core_BrowseApplication_LastPostColumn">Last Idea</resource>
+  <resource name="UIFragment_Core_BrowseApplication_NoResults">No results could be found.</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Posts">By idea count</resource>
+  <resource name="UIFragment_Core_BrowseApplication_PostsColumn">Ideas</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowGroup_Challenge">Show Ideation Group Name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowLatest">Show Latest Idea Date</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowPosts">Show Idea Count</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowTitle_Challenge">Show Ideation Name</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

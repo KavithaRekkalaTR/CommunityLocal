@@ -1,0 +1,16 @@
+﻿<% if(State != 'NotPersisted') { %>
+	<h3>$core_v2_language.GetResource('Components')</h3>
+	<ul class="navigation-list managed-items">
+		<li class="navigation-list-item"><a class="managed-item-link content" href="$context.PanelUrl&_fid=<%: InstanceIdentifier %>&_ftid=<%: ThemeId %>&_ft=content">$core_v2_language.GetResource('Content')</a></li>
+		<% if(typeof(HasPluginConfiguration) !== 'undefined' && !HasPluginConfiguration) { %>
+			<li class="navigation-list-item"><a class="managed-item-link configuration" href="$context.PanelUrl&_fid=<%: InstanceIdentifier %>&_ftid=<%: ThemeId %>&_ft=configuration">$core_v2_language.GetResource('Configuration')</a></li>
+		<% } %>
+		<% if(HasHeader) { %>
+			<li class="navigation-list-item"><a class="managed-item-link header" href="$context.PanelUrl&_fid=<%: InstanceIdentifier %>&_ftid=<%: ThemeId %>&_ft=header">$core_v2_language.GetResource('Header')</a></li>
+		<% } %>
+		<% if(HasWrapperCss) { %>
+			<li class="navigation-list-item"><a class="managed-item-link css" href="$context.PanelUrl&_fid=<%: InstanceIdentifier %>&_ftid=<%: ThemeId %>&_ft=css">$core_v2_language.GetResource('CSSScript')</a></li>
+		<% } %>
+		<li class="navigation-list-item"><a class="managed-item-link resources" href="$context.PanelUrl&_fid=<%: InstanceIdentifier %>&_ftid=<%: ThemeId %>&_ft=language">$core_v2_language.GetResource('Resources')</a></li>
+	</ul>
+<% } %>

@@ -1,0 +1,36 @@
+##
+## Renders markup description of a property for use in autocomplete
+##
+## Requires in scope:
+##   $apiExtension
+##   $apiProperty
+##
+
+## ACE prevents use of an actual anchor here. Shimming with an onclick that simulates a true data-messagename link
+<div class="suggestion_details">
+	#if ($apiProperty.Description)
+		<div class="description">$apiProperty.Description</div>
+	#end
+	#if ($apiProperty.Type)
+		<div class="label">
+			#set ($existingType = $type)
+			#set ($type = false)
+			#foreach ($overloadedType in $apiProperty.Types)
+				#set ($type = $overloadedType.Type)
+				#set ($forCompletionSuggestion = true)
+				$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+			#between
+				,
+			#end
+
+			#set ($type = $existingType)
+			#set ($forCompletionSuggestion = false)
+		</div>
+	#end
+	<span class="mfw suggestion view_docs" onclick="jQuery.telligent.evolution.messaging.publish('studio.view.documentation.show', { target: this, elm: this });"
+		data-type="extension"
+		data-name="$core_v2_encoding.HtmlAttributeEncode($apiExtension.Name)"
+		data-displayname="$core_v2_encoding.HtmlAttributeEncode($apiExtension.Name)"
+		data-target="$core_v2_encoding.HtmlAttributeEncode($apiProperty.Name)">View Documentation</span>
+	<span class="view_doc_shortcut">$core_v2_language.GetResource('ViewDocShortcut')</span
+</div>

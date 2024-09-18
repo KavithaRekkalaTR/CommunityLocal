@@ -1,0 +1,66 @@
+#set($messageSubject = $core_v2_language.GetResource('SiteConfigured_Subject'))
+#set($message = $core_v2_language.FormatString($core_v2_language.GetResource('SiteConfigured_Body'), $core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Home()), $core_v2_encoding.HtmlAttributeEncode($core_v2_urls.FullPath('~/administration/'))))
+
+<form><fieldset class="setup-form">
+	<h2>$core_v2_language.GetResource('SetupSite')</h2>
+	<div class="message warning license-check" #if (!$hasLimitedLicense) style="display:none;"#end>$core_v2_language.FormatString($core_v2_language.GetResource('LimitedLicense_Site'), $core_v2_urls.FullPath('~/'), $core_v2_page.Url)</div>
+	<p>$core_v2_language.GetResource('SetupSite_Description')</p>
+	<ul class="field-list">
+		<li class="field-item static">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('communitytype')">$core_v2_language.GetResource('CommunityType')</label>
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('communitytype')" class="ui-select">
+					<option value="support">$core_v2_language.GetResource('CommunityType_Support')</option>
+					<option value="enterprise">$core_v2_language.GetResource('CommunityType_Enterprise')</option>
+					<option value="other">$core_v2_language.GetResource('CommunityType_Other')</option>
+				</select>
+			</span>
+		</li>
+		$core_v2_widget.ExecuteFile('setup-support-site.vm')
+		$core_v2_widget.ExecuteFile('setup-enterprise-site.vm')
+		$core_v2_widget.ExecuteFile('setup-other-site.vm')
+	</ul>
+</fieldset></form>
+
+<fieldset class="complete-form" style="display: none;">
+	<div class="content">
+		<h2 class="name">$messageSubject</h2>
+		<div class="content">
+			<p>$message</p>
+		</div>
+	</div>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Home())" class="internal-link button">$core_v2_language.GetResource('ViewSite')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<![CDATA[
+		jQuery(function()
+		{
+			var wrapper = jQuery('#$core_v2_widget.WrapperElementId');
+			var type = jQuery('#$core_v2_widget.UniqueId('communitytype')');
+			var updateSelection = function() {
+				var selection = type.val();
+				wrapper.find('fieldset.setup-form > ul > li.field-item').each(function() {
+					var item = jQuery(this);
+					if (item.hasClass('static') || item.hasClass(selection)) {
+						item.show();
+					} else {
+						item.hide();
+					}
+				});
+			}
+
+			type.on('change', function() { updateSelection(); });
+			updateSelection();
+		});
+	//]]]]><![CDATA[>
+	</script>
+#end

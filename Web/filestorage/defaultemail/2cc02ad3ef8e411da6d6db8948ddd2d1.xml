@@ -1,0 +1,287 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Email Digest" version="13.0.0.0" description="Email Digest Job and Email Template" id="2cc02ad3ef8e411da6d6db8948ddd2d1" lastModified="2023-10-09 17:59:38Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('group_name')
+    $context_v1_email.Context.Group.Name
+#token('digest_frequency')
+    $context_v1_email.Context.EmailDigest.FrequencyName
+#token('date')
+    $core_v2_language.RemoveHtml($core_v2_language.FormatDate($core_v2_utility.CurrentDate))
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Body_Title'))
+#token('digest_frequency')
+    $context_v1_email.Context.EmailDigest.FrequencyName
+#token('date')
+    $core_v2_language.FormatDate($core_v2_utility.CurrentDate)
+#token('group_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Group.Url)">$context_v1_email.Context.Group.Name</a>
+#end]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#foreach($contentByApplication in $context_v1_email.Context.EmailDigest.ContentByApplication)
+	<h3 style="margin-bottom: 4px;"><a href="$core_v2_encoding.HtmlAttributeEncode($contentByApplication.Application.Url)">$contentByApplication.Application.HtmlName('Web')</a></h3>
+	#foreach($content in $contentByApplication.NewContents)
+	#beforeall
+	    <div>$core_v2_language.GetResource('Body_New')</div>
+	    <ul style="margin-top: 0px;">
+	#each
+		<li><a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a></li>
+	#afterall
+	    </ul>
+	#end
+	#foreach($content in $contentByApplication.UpdatedContents)
+	#beforeall
+	    <div>$core_v2_language.GetResource('Body_Updates')</div>
+	    <ul style="margin-top: 0px;">
+	#each
+		<li><a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a></li>
+	#afterall
+	    </ul>
+	#end
+#end
+
+#foreach($threadsByForum in $context_v1_email.Context.EmailDigest.ThreadsByForum)
+    <h3 style="margin-bottom: 4px;"><a href="$core_v2_encoding.HtmlAttributeEncode($threadsByForum.Application.Url)">$threadsByForum.Application.HtmlName('Web')</a></h3>
+	#foreach($content in $threadsByForum.NewForumThreads)
+	#beforeall
+	    <div>$core_v2_language.GetResource('Body_New')</div>
+	    <ul style="margin-top: 0px;">
+	#each
+		<li><a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a></li>
+	#afterall
+	    </ul>
+	#end
+	#foreach($content in $contentByApplication.UpdatedForumThreads)
+	#beforeall
+	    <div>$core_v2_language.GetResource('Body_Updates')</div>
+	    <ul style="margin-top: 0px;">
+	#each
+		<li><a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a></li>
+	#afterall
+	    </ul>
+	#end
+#end
+
+
+#if ($context_v1_email.Context.EmailDigest.IncludePostText)
+	#foreach($contentByApplication in $context_v1_email.Context.EmailDigest.ContentByApplication)
+		#foreach($content in $contentByApplication.NewThreads)
+		    <hr style="height: 1px; border-width: 0; background-color: #ccc;" />
+			<h3 style="margin-bottom: 4px;"><a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a></h3>
+			<div>
+			#format($core_v2_language.GetResource('Body_Content_ByLine'))
+			#token('author_name_link')
+			    #set($author = $core_v2_user.Get("%{ Id=$content.Content.CreatedByUserId }"))
+			    #if ($author && !$author.HasErrors())
+			        #if ($author.Url)
+			            <a href="$core_v2_encoding.HtmlAttributeEncode($author.Url)">$author.DisplayName</a>
+			        #else
+			            $author.DisplayName
+			        #end
+			    #else
+			        $content.Content.CreatedByUserId
+			    #end
+			#token('created_date')
+			    $core_v2_language.FormatDate($content.Content.CreatedDate)
+			#token('application_name_link')
+				<a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Application.Url)">$content.Content.Application.HtmlName('Web')</a>
+			#end
+			</div>
+			$content.Content.HtmlDescription('Email')
+
+			#foreach($comment in $content.Comments)
+			#beforeall
+			    <div style="margin-left: 20px;">
+			#each
+			    <h4>
+			    #format($core_v2_language.GetResource('Body_Comment_ByLine'))
+			    #token('author_name_link')
+			        #if ($comment.User.Url)
+				        <a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.Url)">$comment.User.DisplayName</a>
+				    #else
+				        $comment.User.DisplayName
+				    #end
+				#token('created_date')
+				    $core_v2_language.FormatDate($comment.CreatedDate)
+				#end
+				</h4>
+				$comment.Body('Email')
+			#afterall
+			    </div>
+			#end
+		#end
+
+		#foreach($content in $contentByApplication.UpdatedContents)
+		    <hr style="height: 1px; border-width: 0; background-color: #ccc;" />
+		    <h3 style="margin-bottom: 4px;">
+		        #format($core_v2_language.GetResource('Body_Content_NewComments'))
+		        #token('content_name_link')
+		            <a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a>
+		        #end
+		    </h3>
+			<div>
+			#format($core_v2_language.GetResource('Body_Content_ByLine'))
+			#token('author_name_link')
+			    #set($author = $core_v2_user.Get("%{ Id=$content.Content.CreatedByUserId }"))
+			    #if ($author && !$author.HasErrors())
+			        #if ($author.Url)
+			            <a href="$core_v2_encoding.HtmlAttributeEncode($author.Url)">$author.DisplayName</a>
+			        #else
+			            $author.DisplayName
+			        #end
+			    #else
+			        $content.Content.CreatedByUserId
+			    #end
+			#token('created_date')
+			    $core_v2_language.FormatDate($content.Content.CreatedDate)
+			#token('application_name_link')
+				<a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Application.Url)">$content.Content.Application.HtmlName('Web')</a>
+			#end
+			</div>
+			$content.Content.HtmlDescription('Email')
+
+			#foreach($comment in $content.Comments)
+			#beforeall
+			    <div style="margin-left: 20px;">
+			#each
+			    <h4>
+			    #format($core_v2_language.GetResource('Body_Comment_ByLine'))
+			    #token('author_name_link')
+			        #if ($comment.User.Url)
+				        <a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.Url)">$comment.User.DisplayName</a>
+				    #else
+				        $comment.User.DisplayName
+				    #end
+				#token('created_date')
+				    $core_v2_language.FormatDate($comment.CreatedDate)
+				#end
+				</h4>
+				$comment.Body('Email')
+			#afterall
+			    </div>
+			#end
+		#end
+	#end
+
+	#foreach($contentByApplication in $context_v1_email.Context.EmailDigest.ThreadsByForum)
+	    #foreach($content in $contentByApplication.NewForumThreads)
+	        <hr style="height: 1px; border-width: 0; background-color: #ccc;" />
+			<h3 style="margin-bottom: 4px;"><a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a></h3>
+			<div>
+			#format($core_v2_language.GetResource('Body_Content_ByLine'))
+			#token('author_name_link')
+			    #set($author = $core_v2_user.Get("%{ Id=$content.Content.CreatedByUserId }"))
+			    #if ($author && !$author.HasErrors())
+			        #if ($author.Url)
+			            <a href="$core_v2_encoding.HtmlAttributeEncode($author.Url)">$author.DisplayName</a>
+			        #else
+			            $author.DisplayName
+			        #end
+			    #else
+			        $content.Content.CreatedByUserId
+			    #end
+			#token('created_date')
+			    $core_v2_language.FormatDate($content.Content.CreatedDate)
+			#token('application_name_link')
+				<a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Application.Url)">$content.Content.Application.HtmlName('Web')</a>
+			#end
+			</div>
+			$content.Content.HtmlDescription('Email')
+
+			#foreach($comment in $content.Replies)
+			#beforeall
+			    <div style="margin-left: 20px;">
+			#each
+			    <h4>
+			    #format($core_v2_language.GetResource('Body_Reply_ByLine'))
+			    #token('author_name_link')
+			        #if ($comment.Author.Url)
+				        <a href="$core_v2_encoding.HtmlAttributeEncode($comment.Author.Url)">$comment.Author.DisplayName</a>
+				    #else
+				        $comment.Author.DisplayName
+				    #end
+				#token('created_date')
+				    $core_v2_language.FormatDate($comment.CreatedDate)
+				#end
+				</h4>
+				$comment.Body('Email')
+			#afterall
+			    </div>
+			#end
+		#end
+
+		#foreach($content in $contentByApplication.UpdatedForumThreads)
+		    <hr style="height: 1px; border-width: 0; background-color: #ccc;" />
+		    <h3 style="margin-bottom: 4px;">
+		        #format($core_v2_language.GetResource('Body_Content_NewReplies'))
+		        #token('content_name_link')
+		            <a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Url)">$content.Content.HtmlName('Web')</a>
+		        #end
+		    </h3>
+			<div>
+			#format($core_v2_language.GetResource('Body_Content_ByLine'))
+			#token('author_name_link')
+			    #set($author = $core_v2_user.Get("%{ Id=$content.Content.CreatedByUserId }"))
+			    #if ($author && !$author.HasErrors())
+			        #if ($author.Url)
+			            <a href="$core_v2_encoding.HtmlAttributeEncode($author.Url)">$author.DisplayName</a>
+			        #else
+			            $author.DisplayName
+			        #end
+			    #else
+			        $content.Content.CreatedByUserId
+			    #end
+			#token('created_date')
+			    $core_v2_language.FormatDate($content.Content.CreatedDate)
+			#token('application_name_link')
+				<a href="$core_v2_encoding.HtmlAttributeEncode($content.Content.Application.Url)">$content.Content.Application.HtmlName('Web')</a>
+			#end
+			</div>
+			$content.Content.HtmlDescription('Email')
+
+			#foreach($comment in $content.Replies)
+			#beforeall
+			    <div style="margin-left: 20px;">
+			#each
+			    <h4>
+			    #format($core_v2_language.GetResource('Body_Reply_ByLine'))
+			    #token('author_name_link')
+			        #if ($comment.Author.Url)
+				        <a href="$core_v2_encoding.HtmlAttributeEncode($comment.Author.Url)">$comment.Author.DisplayName</a>
+				    #else
+				        $comment.Author.DisplayName
+				    #end
+				#token('created_date')
+				    $core_v2_language.FormatDate($comment.CreatedDate)
+				#end
+				</h4>
+				$comment.Body('Email')
+			#afterall
+			    </div>
+			#end
+		#end
+	#end
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('digest_frequency')
+    $context_v1_email.Context.EmailDigest.FrequencyName
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Settings(false))">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Comment_ByLine">{author_name_link} on {created_date}:</resource>
+  <resource name="Body_Content_ByLine">by {author_name_link} on {created_date} in {application_name_link}</resource>
+  <resource name="Body_Content_NewComments">New comments on {content_name_link}</resource>
+  <resource name="Body_Content_NewReplies">New replies on {content_name_link}</resource>
+  <resource name="Body_New">NEW</resource>
+  <resource name="Body_Reply_ByLine">{author_name_link} on {created_date}:</resource>
+  <resource name="Body_Title">{digest_frequency} Digest for {group_name_link} on {date}</resource>
+  <resource name="Body_Updates">UPDATES</resource>
+  <resource name="Footer">You received this email because you are subscribed to a {digest_frequency} Digest for this group. To manage your email subscriptions, {settings_link}.</resource>
+  <resource name="Settings">go here</resource>
+  <resource name="Subject">{group_name}: {digest_frequency} Digest for {date}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,13 @@
+##
+## Expects in scope: $events, $inProcess
+##
+
+#foreach ($event in $events)
+	<li class="content-item event" data-eventId="$event.EntryID">
+		$core_v2_widget.ExecuteFile('render-item.vm')
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end

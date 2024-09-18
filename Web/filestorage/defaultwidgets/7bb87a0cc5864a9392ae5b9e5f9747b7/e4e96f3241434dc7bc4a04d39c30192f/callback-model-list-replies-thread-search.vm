@@ -1,0 +1,13 @@
+##
+## Recursively searches $comments tree to see if $commentId is included. If so, sets $inInitialPage to true
+## Expects in scope: $commentsToSearch, $inInitialPage, $commentId
+##
+
+#foreach ($comment in $commentsToSearch)
+	#if ($comment.CommentId == $commentId)
+		#set ($inInitialPage = true)
+	#elseif (!$inInitialPage && $comment.Children)
+		#set ($commentsToSearch = $comment.Children)
+		$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-search.vm')
+	#end
+#end

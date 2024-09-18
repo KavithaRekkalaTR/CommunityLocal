@@ -1,0 +1,15 @@
+#set($previewUrl = $core_v2_widget.GetExecutedFileUrl('preview-content.vm'))
+#set($type = $core_v2_page.GetQueryStringValue('w_type'))
+#if ($type == 'content')
+    #set($previewUrl = $core_v2_page.AdjustQueryString($previewUrl, "w_contentid=${core_v2_page.GetQueryStringValue('w_contentid')}&w_contenttypeid=${core_v2_page.GetQueryStringValue('w_contenttypeid')}"))
+#elseif ($type == 'reviewablecontent')
+    #set($previewUrl = $core_v2_page.AdjustQueryString($previewUrl, "w_reviewablecontentid=${core_v2_page.GetQueryStringValue('w_reviewablecontentid')}"))
+#end
+
+<iframe src="$core_v2_encoding.HtmlAttributeEncode($previewUrl)" id="$core_v2_widget.UniqueId('preview')" style="width: calc(100% + 20px); height: calc(100% + 20px); margin: -10px; border-width: 0;" scrolling="auto"></iframe>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	// do stuff?
+});
+</script>

@@ -1,0 +1,58 @@
+#foreach ($event in $events)
+#beforeall
+	<div class="avatar-list">
+	<ul class="content-list">
+#each
+	#set ($viewUrl = $calendar_v1_urls.Event($event.Id))
+	#set ($eventDate = $core_v2_language.FormatDateAndTime($event.EventStartDate, "%{AdjustTimeZone = 'false'}"))
+
+	<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($viewUrl)">
+		<div class="author">
+			<a $core_v2_ui.ContentPeek($event.ContentId, $calendar_v1_events.ContentTypeId, 'internal-link view-full-post navigable')
+				href="$core_v2_encoding.HtmlAttributeEncode($viewUrl)">
+				<div class="content">$core_v2_language.Truncate($event.EventTitle, 200, "...")</div>
+			</a>
+			<div class="meta">
+				<a $core_v2_ui.ContentPeek($event.ContentId, $calendar_v1_events.ContentTypeId, 'internal-link view-post navigable')
+					href="$core_v2_encoding.HtmlAttributeEncode($viewUrl)">
+					$eventDate
+				</a>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+	</div>
+#nodata
+	#if ($viewType == 'calendar')
+		#if ($core_v2_ui.GetCurrentPageIndex() == 0)
+			<div class="message norecords">
+				#set ($addUrl = false)
+				#set ($addUrl = $calendar_v1_urls.AddEvent($calendar_v1_calendars.Current.Id))
+				#if ($addUrl && $addUrl != '')
+					#if ($startDate && $isSpecificDay)
+						#set($newDate = $core_v2_utility.ParseDate("$startDate.Year", "$startDate.Month", "$startDate.Day", '12', '0'))
+						#set($addUrl = $core_v2_page.AdjustQueryString($addUrl, "startDate=$core_v2_encoding.UrlEncode($calendar_v1_UI.ToCultureSafeString($newDate))"))
+					#end
+					#if ($isSpecificDay)
+						$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Date_Link"), $core_v2_language.FormatDate($startDate), $addUrl)
+					#elseif ($startDate)
+						$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Upcoming_Link"), $core_v2_language.FormatDate($startDate), $addUrl)
+					#else
+						$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Link"), $addUrl)
+					#end
+				#else
+					#if ($isSpecificDay)
+						$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Date"), $core_v2_language.FormatDate($startDate))
+					#elseif ($startDate)
+						$core_v2_language.FormatString($core_v2_language.GetResource("NoData_Upcoming"), $core_v2_language.FormatDate($startDate))
+					#else
+						$core_v2_language.GetResource("NoData")
+					#end
+				#end
+			</div>
+		#end
+	#else
+		$core_v2_widget.Hide()
+	#end
+#end

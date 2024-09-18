@@ -1,0 +1,103 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ImportTheme_Name}" cssClass="contextual-import-theme" description="${resource:ImportTheme_Description}" instanceIdentifier="4e1cc1947d0f49ddaa692e96d3d2186c" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<contentScript>
+				<![CDATA[
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-name"><a href="#" id="$core_v2_widget.UniqueId('upload')" class="inline-button">$core_v2_language.GetResource('select-file')</a></span>
+			<span class="field-item-description">$core_v2_language.GetResource('select-file-description')</span>
+		</li>
+	</ul>
+</fieldset>
+
+<p id="$core_v2_widget.UniqueId('uploading')" style="display: none;"></p>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.importTheme')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.importTheme.register({
+			uploadContextId: '$core_v2_encoding.JavaScriptEncode($uploadContextId)',
+			uploadUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			uploadButton: jQuery('#$core_v2_widget.UniqueId('upload')'),
+			importOptionsUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('import-options.vm'))',
+			importUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('import.vm'))',
+			isDefault: #if($context.ForceDefault) true#else false#end,
+			currentPageName: '$core_v2_encoding.JavaScriptEncode($context.CurrentPage.Name)',
+			uploading: jQuery('#$core_v2_widget.UniqueId('uploading')'),
+			previewThemeUrl: '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)',
+			text: {
+				uploading: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('uploading'))',
+				importComponents: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('import-components'))',
+				importOptions: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('import-options'))',
+				importAndPublish: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('import-and-publish'))',
+				importAndPreview: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('import-and-preview'))',
+				importAsDefault: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('import-as-default'))',
+				importConfirmation: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-confirmation'), $context.ThemeTypeName.ToLower()))',
+				importAsDefaultConfirmation: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-as-default-confirmation'), $context.ThemeTypeName.ToLower()))',
+				importSuccess: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-success'), $context.ThemeTypeName.ToLower()))',
+				importPreviewSuccess: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-success'), $context.ThemeTypeName.ToLower()))',
+				importSuccessReload: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-success-reload'), $context.ThemeTypeName.ToLower()))',
+				importAsDefaultPreviewSuccess: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-as-default-preview-success'), $context.ThemeTypeName.ToLower()))',
+				importAsDefaultSuccess: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-as-default-success'), $context.ThemeTypeName.ToLower()))',
+				importAsDefaultSuccessReload: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-as-default-success-reload'), $context.ThemeTypeName.ToLower()))',
+				importContextual: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-contextual'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+				importContextualDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-contextual-description'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+				importAsDefault: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-as-default'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+				importAsDefaultDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('import-as-default-description'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName))',
+				selectAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-all'))',
+				selectNone: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-none'))'
+			}
+		})
+	});
+	</script>
+#end
+				]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+		<resource name="ImportTheme_Name">Import Theme</resource>
+		<resource name="ImportTheme_Description">Import a theme from a backup.</resource>
+
+		<resource name="select-file">Select file</resource>
+		<resource name="select-file-description">Select the theme export file you'd like to import. When the file is uploaded, you'll have an opportunity to select which portions of the export you'd like to import.</resource>
+		<resource name="uploading">Uploading ({0}%)</resource>
+		<resource name="import-options">Import Options</resource>
+		<resource name="import-components">Import Components</resource>
+		<resource name="import-and-publish">Publish</resource>
+		<resource name="import-and-preview">Preview</resource>
+		<resource name="import-confirmation">Are you sure you want to import and publish the selected theme components? It is strongly recommended that you preview theme changes.</resource>
+		<resource name="import-as-default-confirmation">Are you sure you want to import and publish the selected theme components to the default applying to every {0}? It is strongly recommended that you preview theme changes.</resource>
+		<resource name="import-preview-success">The selected theme components have been imported for previewing successfully.</resource>
+		<resource name="import-success">The selected theme components have been imported successfully.</resource>
+		<resource name="import-as-default-preview-success">The selected theme components have been imported for previewing successfully.</resource>
+		<resource name="import-as-default-success">The selected theme components have been imported successfully to the default for every {0}.</resource>
+		<resource name="import-success-reload">The selected theme components have been imported successfully. Some changes may affect the currently displayed page. Would you like to refresh the page now to see those changes?</resource>
+		<resource name="import-as-default-success-reload">The selected theme components have been imported successfully to the default for every {0}. Some changes may affect the currently displayed page. Would you like to refresh the page now to see those changes?</resource>
+		<resource name="import-options-instructions">The applicable theme components found in the export file that are different from what is currently published are listed below. Select the components you'd like to import.</resource>
+		<resource name="header">Theme Header</resource>
+		<resource name="header-description">The header content of all pages within the theme.</resource>
+		<resource name="footer">Theme Footer</resource>
+		<resource name="footer-description">The footer content of all pages within the theme.</resource>
+		<resource name="themeconfiguration">Theme Options</resource>
+		<resource name="themeconfiguration-description">The theme-wide options.</resource>
+		<resource name="pages">Theme Pages</resource>
+		<resource name="scoped-properties">Shared Widget Options</resource>
+		<resource name="no-import-options">No applicable theme components were found in the uploaded export file or the applicable theme components are the same as what is currently published. Check to ensure that it is a valid export file and contains components applicable to {0} themes.</resource>
+		<resource name="import-contextual">Import for this {0} only</resource>
+		<resource name="import-as-default">Import to the default for every {0}</resource>
+		<resource name="import-contextual-description">The selected theme components will only be applied to '{1}'. Every other {0} will be unaffected.</resource>
+		<resource name="import-as-default-description">The selected theme components will be applied to every uncustomized {0}. Note that '{1}' will not see these components if they have already been customized.</resource>
+		<resource name="theme-options">Theme</resource>
+		<resource name="select-all">Select all</resource>
+		<resource name="select-none">Select none</resource>
+
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

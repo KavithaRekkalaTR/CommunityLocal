@@ -1,0 +1,482 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ManageFragments_Name}" version="12.0.0.0" description="${resource:ManageFragments_Description}" instanceIdentifier="bf8b78932cbb4566a0a35ab228724f9d" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="management-studio manage-widgets" lastModified="2021-09-28 18:18:25Z" provider="5969630d938e41fe889124078c6bec75">
+    <contentScript language="Velocity"><![CDATA[#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+$core_v2_widget.ExecuteFile('templates.vm')
+$core_v2_widget.ExecuteFile('style.vm')
+
+#if ($context.RunTests)
+	#set ($developerMode = $context.DeveloperModeEnabled)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-description">
+					<p>
+						<strong>
+						#if ($developerMode)
+							Developer Mode
+						#else
+							Non-Developer Mode
+						#end
+						</strong>
+						Integration test results will be written to the console.
+					</p>
+					<p>
+						The <a href="$core_v2_encoding.HtmlAttributeEncode($context.TestSupportPluginUrl)"><strong>Content Fragment Test Support</strong></a> plugin should be enabled prior.
+					</p>
+				</span>
+			</li>
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button" data-messagename="studio.tests.run"
+						#if ($developerMode) data-developermode="true" #else data-developermode="false" #end>
+						Run Tests
+					</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+<div class="welcome">$core_v2_language.GetResource('Welcome')</div>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('ui.js.vm'))"></script>
+<script>
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.manageFragments.register({
+		developerModeEnabled: #if ($context.DeveloperModeEnabled) true #else false #end,
+		templates: {
+			panelWrapperTemplate: '$core_v2_encoding.JavascriptEncode($panelWrapperTemplate)',
+
+			## Browser
+			browseHeaderTemplate: '$core_v2_encoding.JavascriptEncode($browseHeaderTemplate)',
+			browseViewItemTemplate: '$core_v2_encoding.JavascriptEncode($browseViewItemTemplate)',
+			selectProviderTemplate: '$core_v2_encoding.JavascriptEncode($selectProviderTemplate)',
+			selectThemeTemplate: '$core_v2_encoding.JavascriptEncode($selectThemeTemplate)',
+			importSelectorTemplate: '$core_v2_encoding.JavascriptEncode($importSelectorTemplate)',
+
+			## Tab List
+			tabViewItemTemplate: '$core_v2_encoding.JavascriptEncode($tabViewItemTemplate)',
+
+			## Editor Views
+			fragmentOverviewAttachmentsViewTemplate: '$core_v2_encoding.JavascriptEncode($fragmentOverviewAttachmentsViewTemplate)',
+			fragmentOverviewComponentsViewTemplate: '$core_v2_encoding.JavascriptEncode($fragmentOverviewComponentsViewTemplate)',
+			fragmentOverviewVersionsViewTemplate: '$core_v2_encoding.JavascriptEncode($fragmentOverviewVersionsViewTemplate)',
+			fragmentOverviewViewTemplate: '$core_v2_encoding.JavascriptEncode($fragmentOverviewViewTemplate)',
+			fragmentOverviewViewDetailsTemplate: '$core_v2_encoding.JavascriptEncode($fragmentOverviewViewDetailsTemplate)',
+			fragmentEditableAttachmentViewTemplate: '$core_v2_encoding.JavascriptEncode($fragmentEditableAttachmentViewTemplate)',
+			fragmentEditableAttachmentHeaderTemplate: '$core_v2_encoding.JavascriptEncode($fragmentEditableAttachmentHeaderTemplate)',
+
+			fragmentNonEditableFileViewHeaderTemplate: '$core_v2_encoding.JavascriptEncode($fragmentNonEditableFileViewHeaderTemplate)',
+			fragmentNonEditableFileViewExampleTemplate: '$core_v2_encoding.JavascriptEncode($fragmentNonEditableFileViewExampleTemplate)',
+			fragmentEditorHeaderTemplate: '$core_v2_encoding.JavascriptEncode($fragmentEditorHeaderTemplate)',
+
+			## Editor View Shared Components
+			fragmentActionsTemplate: '$core_v2_encoding.JavascriptEncode($fragmentActionsTemplate)',
+			fragmentEditorStateTemplate: '$core_v2_encoding.JavascriptEncode($fragmentEditorStateTemplate)',
+			fragmentEditorComponentsTemplate: '$core_v2_encoding.JavascriptEncode($fragmentEditorComponentsTemplate)',
+
+			## Docks
+			globalSearchTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchTemplate)',
+			globalSearchResultTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchResultTemplate)',
+			globalSearchResultOverviewTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchResultOverviewTemplate)',
+			globalSearchResultLoadingTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchResultLoadingTemplate)'
+		},
+		providerCategories: [
+			#set ($providerCategories = $context.ListProviderCategories("%{}"))
+			#foreach ($providerCategory in $providerCategories)
+				$core_v2_utility.ToJson($providerCategory)
+			#between
+				,
+			#end
+		],
+		urls: {
+			panelUrl: '$core_v2_encoding.JavascriptEncode($context.PanelUrl)',
+			listFragmentsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-fragments.jsm'))',
+			getFragmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-fragment.jsm'))',
+			createFragmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-create-fragment.jsm'))',
+			saveFragmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save-fragment.jsm'))',
+			deleteFragmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete-fragment.jsm'))',
+			publishFragmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-publish-fragment.jsm'))',
+			revertFragmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revert-fragment.jsm'))',
+			getFragmentAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-fragment-attachment.jsm'))',
+			saveFragmentAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save-fragment-attachment.jsm'))',
+			deleteFragmentAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete-fragment-attachment.jsm'))',
+			restoreFragmentAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-restore-fragment-attachment.jsm'))',
+			getFragmentExampleInstanceUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-fragment-example-instance.jsm'))',
+			createFragmentAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-create-fragment-attachment.jsm'))',
+			cloneFragmentAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-clone-fragment.jsm'))',
+			createFragmentVariantUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-create-fragment-variant.jsm'))',
+			importFragmentsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import-fragments.jsm'))',
+			listContextsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-contexts.jsm'))',
+      listRestScopesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-rest-scopes.jsm'))',
+
+			uploadFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+
+			exportResourcesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-resources.jsm'))',
+			exportFragmentsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-fragments.jsm'))',
+			storeTemporaryExportListUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-store-requests.jsm'))',
+
+			searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-search.jsm'))',
+
+			revertFragmentsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-mult-revert-fragment.jsm'))',
+			publishFragmentsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-mult-publish-fragment.jsm'))',
+			deleteFragmentsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-mult-delete-fragment.jsm'))'
+		},
+		resources: {
+			confirmPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmPublish'))',
+			confirmRevert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmRevert'))',
+			confirmPublishAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmPublishAll'))',
+			confirmRevertAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmRevertAll'))',
+			confirmDeleteFragments: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmDeleteFragments'))',
+			noSearchResults: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoWidgetsMatchFilter'))',
+			cssScript: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CSSScript'))',
+			configuration: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Configuration'))',
+			content: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Content'))',
+			overview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Overview'))',
+      header: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Header'))',
+			confirmResourceDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmResourceDelete'))',
+			selectedTabName: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('selectedTabName'))',
+			noContextsFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noContextsFound'))',
+      noRestScopesFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noRestScopesFound'))',
+			resourceImport: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('resourceImport'))',
+			widgetImport: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('widgetImport'))',
+			developerModeNewWidgetDetails: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('developerModeNewWidgetDetails'))',
+			invalidGuid: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('invalidGuid'))',
+			selectTheme: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('selectTheme'))',
+			settings: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('settings'))',
+			activeTabs: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('activeTabs'))',
+			confirmUnsavedExit: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmUnsavedExit'))',
+			scriptSandbox: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ScriptSandbox'))',
+			apiDocumentation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('APIDocumentation'))',
+			noSampleAvailable: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noSampleAvailable'))',
+			shortcutSwitch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SwitchDesc'))',
+			shortcutSwitchLeft: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SwitchLeftDesc'))',
+			shortcutSwitchRight: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SwitchRightDesc'))',
+			shortcutRepositionLeft: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RepositionLeftDesc'))',
+			shortcutRepositionRight: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RepositionRightDesc'))',
+			shortcutCloseTab: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CloseTabDesc'))',
+			shortcutNewWidget: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NewWidgetDesc'))',
+			shortcutCloseOtherTabs: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CloseOtherTabsDesc'))',
+			shortcutRevealInTree: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevealInTreeDesc'))',
+			shortcutSearch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SearchDesc'))',
+			shortcutPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishShortcutDesc'))',
+			shortcutPublishAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishAllShortcutDesc'))',
+			shortcutRevert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertShortcutDesc'))',
+			shortcutRevertAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertAllShortcutDesc'))',
+			shortcutPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PreviewShortcutDesc'))',
+			shortcutRunConsole: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RunConsoleDesc'))',
+			shortcutForceSave: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForceSaveDesc'))',
+			nameorDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NameorDescription'))',
+			exportSelectedWidgets: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportSelectedWidgets'))',
+			exportSelectedResources: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportSelectedResources'))',
+			deleteSelectedWidgets: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteSelectedWidgets'))',
+			noComparison: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoComparison'))',
+			contentDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ContentDesc'))',
+			configurationDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ConfigurationDesc'))',
+			cssDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CssDesc'))',
+			headerDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('HeaderDesc'))',
+			deleted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleted'))',
+			confirmStageDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmStageDelete'))',
+      diffEmpty: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('diffEmpty'))'
+		},
+		editableExtensions: [
+			#foreach ($extension in $context.EditableExtensions)
+				#each
+					"$core_v2_encoding.JavascriptEncode($extension)"
+				#between
+					,
+			#end
+		]
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Actions">Actions</resource>
+  <resource name="activeTabs">Active Tabs</resource>
+  <resource name="AddFile">Create Attachment</resource>
+  <resource name="AddResource">Add Resource</resource>
+  <resource name="ThemePageWidgets">Theme Page Widgets</resource>
+  <resource name="All">All Theme Page Widgets</resource>
+  <resource name="AllSaved">Saved.</resource>
+  <resource name="AllWidgets">All Widgets</resource>
+  <resource name="Any">Any</resource>
+  <resource name="APIDocumentation">API Documentation</resource>
+  <resource name="ArrayOf">Array of</resource>
+  <resource name="Attachment">Attachment</resource>
+  <resource name="AttachmentExampleUrl">Example Widget Script to retrieve the URL of the attachment:</resource>
+  <resource name="AttachmentFilePath">Attachments Source Path</resource>
+  <resource name="AttachmentImageExample">Example Widget Script to retrieve a scaled and cropped image tag displaying the attachment:</resource>
+  <resource name="Attachments">Attachments</resource>
+  <resource name="AvailableContexts">Available Contexts</resource>
+  <resource name="AvailableContextsDesc">Contexts in which the widget is available. If one or more contexts is specified, the widget will only be listed in the widget browser when all defined context requirements are satisfied.</resource>
+  <resource name="RestScopes">Accessible REST Scopes</resource>
+  <resource name="RestScopesDesc">These scopes are made accessible to REST requests issued by the widget's JavaScript.</resource>
+  <resource name="Caching">Caching</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CaseSensitive">Case Sensitive</resource>
+  <resource name="ChangedResource">Changed Resource</resource>
+  <resource name="ChangesQueued">Changed</resource>
+  <resource name="ChangesSavedAutomatically">Changes are automatically saved to Staging with no need to manually save.</resource>
+  <resource name="ChangesStaged">Changes Staged</resource>
+  <resource name="Clear">Clear</resource>
+  <resource name="Close">Close</resource>
+  <resource name="CloseOtherTabs">Close Other Tabs</resource>
+  <resource name="CloseOtherTabsDesc">Close other tabs</resource>
+  <resource name="CloseTab">Close Tab</resource>
+  <resource name="CloseTabDesc">Close the current tab</resource>
+  <resource name="CompareChanges">Compare Changes</resource>
+  <resource name="CompareCurrentWithFactory">Compare current version with the factory default</resource>
+  <resource name="CompareStagedWithPublished">Compare staged changes with published version</resource>
+  <resource name="completeFullMemberSignature">Complete full method signatures on autocomplete</resource>
+  <resource name="Components">Components</resource>
+  <resource name="Configuration">Configuration</resource>
+  <resource name="ConfigurationDesc">Dynamic configuration XML identifying the configuration options exposed by this widget.</resource>
+  <resource name="confirmDeleteFragments">Are you sure you want to delete or revert the selected widgets to factory default?</resource>
+  <resource name="confirmPublish">Publishing will make staged changes to this widget public. Are you sure?</resource>
+  <resource name="confirmPublishAll">Publishing all will make all changes to all staged widgets public. Are you sure?</resource>
+  <resource name="confirmResourceDelete">Are you sure you want to delete this resource?</resource>
+  <resource name="confirmRevert">Reverting will erase staged changes to this widget. Are you sure?</resource>
+  <resource name="confirmRevertAll">Reverting all will erase all changes to all staged widgets. Are you sure?</resource>
+  <resource name="confirmStageDelete">This will erase other staged changes to this widget. Are you sure?</resource>
+  <resource name="confirmUnsavedExit">You have changes that have not yet saved. They will save momentarily, or you can use CTRL + S.</resource>
+  <resource name="Content">Content</resource>
+  <resource name="ContentDesc">Script which renders as the content of this widget.</resource>
+  <resource name="Continue">Continue</resource>
+  <resource name="Copy">Copy</resource>
+  <resource name="CssClassName">CSS Class Name</resource>
+  <resource name="CssClassNameDesc">This CSS class applies to widget's container element. Choosing a unique class name enabled theme designers to target instances of this widget uniquely via CSS.</resource>
+  <resource name="CssDesc">Script which renders additional CSS class names to be applied to the widget.  This is useful for group-editable widgets.</resource>
+  <resource name="CSSScript">CSS Script</resource>
+  <resource name="current">Current</resource>
+  <resource name="CurrentWidget">Current Widget</resource>
+  <resource name="Custom">Custom</resource>
+  <resource name="CustomizedDefault">Customized Default</resource>
+  <resource name="Dark">Dark</resource>
+  <resource name="Default">Default</resource>
+  <resource name="DefaultForAllThemes">Default for All Themes</resource>
+  <resource name="DefaultProviderId">Default Provider ID</resource>
+  <resource name="DefaultProviderName">Default Provider Name</resource>
+  <resource name="DefaultWidgets">Default Widgets</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteAttachment">Delete Attachment</resource>
+  <resource name="deleted">Deleted</resource>
+  <resource name="deleted_desc">Staged to be deleted when published</resource>
+  <resource name="DeleteFile">Delete File</resource>
+  <resource name="DeleteSelectedWidgets">Delete or Revert to Default</resource>
+  <resource name="Description">Description</resource>
+  <resource name="DescriptionDesc">Can contain resources in the format ${resource:NAME}</resource>
+  <resource name="DeselectAll">Deselect all</resource>
+  <resource name="developerModeNewWidgetDetails">Developer Mode Widget Details</resource>
+  <resource name="downloadFile">Download Attachment</resource>
+  <resource name="dynamic_configuration_title">Dynamic Configuration</resource>
+  <resource name="EditedDefault">Edited Default</resource>
+  <resource name="EditedDefaultWidgets">Edited Default Widgets</resource>
+  <resource name="EditorColorTheme">Editor color theme</resource>
+  <resource name="EvaluateTip">Evaluate entire script or current selection (CTRL+ENTER)</resource>
+  <resource name="Example">Example</resource>
+  <resource name="ExistingWidgets">Existing Widgets</resource>
+  <resource name="ExportAllResources">Export All Resources</resource>
+  <resource name="ExportAllWidgets">Export All Widgets</resource>
+  <resource name="ExportResources">Export Resources</resource>
+  <resource name="ExportSelectedResources">Export Resources</resource>
+  <resource name="ExportSelectedWidgets">Export Widgets</resource>
+  <resource name="ExportWidget">Export Widget</resource>
+  <resource name="Extension">API</resource>
+  <resource name="ExtensionIndex">Widget APIs</resource>
+  <resource name="FactoryDefaultProvider">Factory Default Provider</resource>
+  <resource name="FactoryDefaultProviderDesc">In developer mode, new widgets are created as Factory Defaults, and require association with a Factory Default Provider.</resource>
+  <resource name="FactoryDefaultProviderNoneDesc">In developer mode, new widgets are created as Factory Defaults, and require association with a Factory Default Provider compiled in Debug mode. No Factory Default Provider plugins compiled in Debug mode are currently enabled.</resource>
+  <resource name="FileActions">Attachment Actions</resource>
+  <resource name="FilePath">Source Path</resource>
+  <resource name="For">For</resource>
+  <resource name="ForAnyTheme">For Any Theme</resource>
+  <resource name="ForceSaveDesc">Force an immediate save of unsaved changes</resource>
+  <resource name="Header">Header</resource>
+  <resource name="HeaderDesc">When selected, the widget's header will be configured as visible when initially placed on a page.</resource>
+  <resource name="HeaderScript">Header Script</resource>
+  <resource name="HideComparison">Hide Comparison</resource>
+  <resource name="HideDetails">Hide Details</resource>
+  <resource name="Import">Import</resource>
+  <resource name="ImportInstruction">The import includes the following new or changed widgets, which will be uploaded into staging for further review or modification prior to publishing.</resource>
+  <resource name="In">In</resource>
+  <resource name="InAllWidgets">In All Theme Page Widgets</resource>
+  <resource name="InAllWidgetsGlobal">In All Widgets</resource>
+  <resource name="Including">Including</resource>
+  <resource name="InCurrentWidget">In Current Widget</resource>
+  <resource name="InDefaultWidgets">In Default Widgets</resource>
+  <resource name="InEditedDefaultWidgets">In Edited Default Widgets</resource>
+  <resource name="InUserInstalledWidgets">In User Installed Widgets</resource>
+  <resource name="invalidGuid">Invalid GUID</resource>
+  <resource name="InvalidWidgets">Invalid Widgets</resource>
+  <resource name="InvalidWidgetsLabel">Unknown or invalid widgets:</resource>
+  <resource name="IsCacheable">Is Cacheable</resource>
+  <resource name="IsCacheableDesc">When selected, this widget's output will be cached to improve overall site performance.</resource>
+  <resource name="javascript">JavaScript</resource>
+  <resource name="KeyComma">,</resource>
+  <resource name="KeyDown">Down</resource>
+  <resource name="KeyLeft">Left</resource>
+  <resource name="KeyPeriod">.</resource>
+  <resource name="KeyRight">Right</resource>
+  <resource name="KeySlash">/</resource>
+  <resource name="KeyTab">Tab</resource>
+  <resource name="KeyUp">Up</resource>
+  <resource name="Language">Language</resource>
+  <resource name="Light">Light</resource>
+  <resource name="ManageFragments_Description">Develop and customize widgets.</resource>
+  <resource name="ManageFragments_Name">Widget Studio</resource>
+  <resource name="Match">Match</resource>
+  <resource name="Matches">Matches</resource>
+  <resource name="Method">Method</resource>
+  <resource name="Methods">Methods</resource>
+  <resource name="ModifierAlt">Alt</resource>
+  <resource name="ModifierCommand">Command</resource>
+  <resource name="ModifierControl">Control</resource>
+  <resource name="ModifierMeta">Meta</resource>
+  <resource name="ModifierOption">Option</resource>
+  <resource name="ModifierShift">Shift</resource>
+  <resource name="ModifierWindows">Windows</resource>
+  <resource name="More">More</resource>
+  <resource name="Name">Name</resource>
+  <resource name="NameDesc">Can contain resources in the format ${resource:NAME}</resource>
+  <resource name="NameorDescription">Name or Description</resource>
+  <resource name="NewFile">Add Attachment</resource>
+  <resource name="NewResource">New Resource</resource>
+  <resource name="NewValue">New Value</resource>
+  <resource name="NewWidget">New Widget</resource>
+  <resource name="NewWidgetDesc">New Widget</resource>
+  <resource name="NewWidgetResources">New Widget Resources</resource>
+  <resource name="NewWidgets">New Widgets</resource>
+  <resource name="NoComparison">This is a new widget attachment and has no comparable version.</resource>
+  <resource name="noContextsFound">No matching contexts found</resource>
+  <resource name="noRestScopesFound">No matching scopes found</resource>
+  <resource name="NoImportMessage">Import contains no new or updated widgets or resources.</resource>
+  <resource name="NoMatches">No Matches</resource>
+  <resource name="noSampleAvailable">There are no pages configured to render this widget</resource>
+  <resource name="NoThemesMessage">There are no available themes or this widget already has theme versions for each known theme.</resource>
+  <resource name="Nothing">Nothing</resource>
+  <resource name="NotThemed">Not Themed</resource>
+  <resource name="NoWidgetsMatchFilter">No widgets match the filter.</resource>
+  <resource name="of">of</resource>
+  <resource name="OldValue">Old Value</resource>
+  <resource name="OnlyStaged">Only Staged</resource>
+  <resource name="Optional">Optional</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Overload">Overload</resource>
+  <resource name="Overview">Overview</resource>
+  <resource name="Parameters">Parameters</resource>
+  <resource name="Pin">Pin</resource>
+  <resource name="PinClosed">Pin dock when opened</resource>
+  <resource name="PinDocked">Hide on Exit</resource>
+  <resource name="PinOverlaid">Keep Open</resource>
+  <resource name="Preview">Preview</resource>
+  <resource name="PreviewShortcutDesc">Preview the widget</resource>
+  <resource name="PrivateExtension">Private API</resource>
+  <resource name="Properties">Properties</resource>
+  <resource name="Property">Property</resource>
+  <resource name="Publish">Publish</resource>
+  <resource name="PublishAll">Publish All</resource>
+  <resource name="PublishAllShortcutDesc">Publish all staged widgets' changes</resource>
+  <resource name="published">Published</resource>
+  <resource name="PublishShortcutDesc">Publish the current staged widget's changes</resource>
+  <resource name="PublishStagedChanges">Publish Staged Changes</resource>
+  <resource name="Query">Search for...</resource>
+  <resource name="Raw">Raw</resource>
+  <resource name="RemovedResource">Removed Resource</resource>
+  <resource name="Rendered">Rendered</resource>
+  <resource name="RepositionLeftDesc">Reposition current tab to the left</resource>
+  <resource name="RepositionRightDesc">Reposition current tab to the right</resource>
+  <resource name="Required">Required</resource>
+  <resource name="ReRun">Re-Run</resource>
+  <resource name="resourceImport">Import Resources</resource>
+  <resource name="ResourceName">Resource Name</resource>
+  <resource name="Resources">Resources</resource>
+  <resource name="RestoreAttachment">Restore Attachment</resource>
+  <resource name="restored">restored</resource>
+  <resource name="restoreNote">This attachment is deleted. It can be</resource>
+  <resource name="Returns">Returns</resource>
+  <resource name="RevealInTree">Reveal in Tree</resource>
+  <resource name="RevealInTreeDesc">Reveal current tab in the tree</resource>
+  <resource name="Revert">Revert</resource>
+  <resource name="RevertAll">Revert All</resource>
+  <resource name="RevertAllShortcutDesc">Revert all staged widgets' changes</resource>
+  <resource name="reverted">Reverted</resource>
+  <resource name="reverted_desc">Staged to be reverted to the default version when published</resource>
+  <resource name="RevertShortcutDesc">Revert the current staged widget's changes</resource>
+  <resource name="RevertStagedChanges">Revert Staged Changes</resource>
+  <resource name="RevertToDefault">Revert to Factory Default</resource>
+  <resource name="Run">Run</resource>
+  <resource name="RunConsoleDesc">Evaulate the script console or its highlighted text selection</resource>
+  <resource name="RunSearch">Search</resource>
+  <resource name="SaveAsCopy">Save as Copy</resource>
+  <resource name="SavedButNotPublished">This version of the widget is saved but not published.</resource>
+  <resource name="SaveForTheme">Save for Theme</resource>
+  <resource name="SavingChanges">Saving...</resource>
+  <resource name="script-language">Script Language</resource>
+  <resource name="ScriptSandbox">Script Sandbox</resource>
+  <resource name="SearchDesc">Search</resource>
+  <resource name="Searching">Searching for: </resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="SelectAllVisible">Select All Visible</resource>
+  <resource name="selectedTabName">Header Script</resource>
+  <resource name="selectTheme">Select Theme</resource>
+  <resource name="SelectWidgets">Select Widgets</resource>
+  <resource name="settings">Widget Studio Settings</resource>
+  <resource name="Settings">Settings</resource>
+  <resource name="Shortcuts">Shortcuts</resource>
+  <resource name="ShowDetails">Show Details</resource>
+  <resource name="ShowHeaderbyDefault">Show Header by Default</resource>
+  <resource name="ShowLineNumbers">Show line numbers</resource>
+  <resource name="Staged">Staged</resource>
+  <resource name="StagedChanges">Staged Changes</resource>
+  <resource name="SwitchDesc">Switch between open tabs</resource>
+  <resource name="SwitchLeftDesc">Switch one tab to the left</resource>
+  <resource name="SwitchRightDesc">Switch one tab to the right</resource>
+  <resource name="SyncTree">Synchronize tree to current tab</resource>
+  <resource name="TheFollowingWidgetsAreNew">The following widgets are new.</resource>
+  <resource name="Theme">Theme</resource>
+  <resource name="ThemeDesc">The following themes do not yet have a theme-specific version of this widget.</resource>
+  <resource name="ThemeID">Theme ID</resource>
+  <resource name="ThemeName">Theme Name</resource>
+  <resource name="ThemeSelectDesc">Please select a theme for which to create a version of this widget.</resource>
+  <resource name="themeversionand">theme version and</resource>
+  <resource name="ToggleNav">Toggle Main Navigation</resource>
+  <resource name="Translated">Translated</resource>
+  <resource name="Type">Type</resource>
+  <resource name="Uncategorized">Uncategorized</resource>
+  <resource name="UndocumentedParamMessage">This method accepts optional parameters which have not been documented.</resource>
+  <resource name="UneditableMessage">This widget is non-editable. It can only be previewed, published, or reverted.</resource>
+  <resource name="UnmodifiedCountLabel">Unmodified widgets which will be ignored:</resource>
+  <resource name="UpdatedWidgetDesc">The following widgets are updates of existing widgets.</resource>
+  <resource name="UpdatedWidgetResources">Updated Widget Resources</resource>
+  <resource name="UpdatedWidgets">Updated Widgets</resource>
+  <resource name="UploadAttachment">Upload Attachment</resource>
+  <resource name="UseRegEx">Using Regular Expression</resource>
+  <resource name="UserInstalled">User Installed</resource>
+  <resource name="UserInstalledWidgets">User Installed Widgets</resource>
+  <resource name="Value">Value</resource>
+  <resource name="VaryByUser">Vary Cache by User</resource>
+  <resource name="VaryByUserDesc">When selected, the widget's output cache will be user-specific. If the widget will render differently for different users, this should be selected.</resource>
+  <resource name="velocity">Velocity</resource>
+  <resource name="velocity_scripting_title">Velocity Scripting</resource>
+  <resource name="View">View</resource>
+  <resource name="ViewDocShortcut">Shortcut: [right]</resource>
+  <resource name="ViewRaw">View Raw</resource>
+  <resource name="ViewRendered">View Rendered</resource>
+  <resource name="Welcome">Open an existing widget or create a new widget.</resource>
+  <resource name="WidgetActions">Widget Actions</resource>
+  <resource name="WidgetApis">Widget APIs</resource>
+  <resource name="WidgetID">Widget ID</resource>
+  <resource name="WidgetIDDesc">In developer mode, new widgets can be provided an explicit ID (GUID). If not provided, a new ID will be assigned.</resource>
+  <resource name="widgetImport">Import Widgets</resource>
+  <resource name="widgetswith">widgets with</resource>
+  <resource name="WidgetVersions">Widget Versions</resource>
+  <resource name="wordWrap">Wrap long lines</resource>
+  <resource name="diffEmpty">Empty</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

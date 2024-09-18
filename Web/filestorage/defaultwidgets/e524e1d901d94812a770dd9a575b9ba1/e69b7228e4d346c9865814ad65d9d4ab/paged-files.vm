@@ -1,0 +1,106 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set($options = "%{PageSize = $pageSize, PageIndex = $pageIndex}")
+#if ($core_v2_page.GetQueryStringValue('w_filter') == "notpublished")
+	$options.Add('UnpublishedOnly', 'true')
+#end
+
+#set($queryText = '')
+#set($queryText = $core_v2_page.GetQueryStringValue('w_queryText'))
+#if ($queryText != '')
+    $options.Add('Query', $queryText)
+#end
+
+#set($gallery = $context.Gallery)
+
+#set($files = $context.ListFiles($options))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($files.PageIndex + 1) * $files.PageSize)
+#if ($files.TotalItems > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#set($canEdit = false)
+#set($canDelete = false)
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" id="$core_v2_encoding.HtmlAttributeEncode($filesListId)">
+
+#foreach($file in $files)
+#each
+  #set($canEdit = $core_v3_permission.CheckPermission($core_v2_mediaPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $file.ContentId, ContentTypeId = $core_v2_media.ContentTypeId }").IsAllowed)
+  #set($canDelete = $core_v3_permission.CheckPermission($core_v2_mediaPermissions.DeletePost, $core_v2_user.Accessing.Id, "%{ ContentId = $file.ContentId, ContentTypeId = $core_v2_media.ContentTypeId }").IsAllowed)
+  #set($redirect = false)
+  #if($core_v2_media.Current && $core_v2_media.Current.Id == $file.PostID)
+  	#set($redirect = true)
+  #end
+
+  <li class="content-item file">
+	<h4 class="name">$file.Subject</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item status">
+				#if(!$file.IsApproved)
+					<span class="value highlight">$core_v2_language.GetResource('NotPublished')</span>
+				#else
+					<span class="value">$core_v2_language.GetResource('Published')</span>
+				#end
+			</li>
+			<li class="attribute-item downloads">
+				#if($file.Downloads == 1)
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('DownloadFormat'), $core_v2_language.FormatNumber($file.Downloads))</span>
+				#else
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('DownloadsFormat'), $core_v2_language.FormatNumber($file.Downloads))</span>
+				#end
+			</li>
+		</ul>
+	</div>
+	<div class="content expandable">
+		$!core_v2_ui.GetPreviewHtml($file.Attachment.Url, "%{width=300,height=80}")
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				<li class="navigation-list-item view-file">
+					<a href="$core_v2_page.AbsoluteUrl($core_v2_mediaUrls.Media($file.PostID))">$core_v2_language.GetResource('View')</a>
+				</li>
+				#if($file.Downloads > 0)
+					<li class="navigation-list-item downloads">
+						<a href="#" data-messagename="mediafile.downloads" data-fileid="$file.PostID.ToString()" data-filename="$core_v2_encoding.HtmlAttributeEncode($file.Subject.ToString())">$core_v2_language.GetResource('Downloads')</a>
+					</li>
+				#end
+				#if ($canEdit)
+					<li class="navigation-list-item edit">
+						<a href="$core_v2_page.AbsoluteUrl($core_v2_mediaUrls.EditMedia($file.PostID))">$core_v2_language.GetResource('Edit')</a>
+					</li>
+				#end
+				#set($convert = false)
+        		#set($convert = $core_v2_ui.ConvertContent($file.ContentId, $core_v2_media.ContentTypeId))
+        		#if ($convert)
+        		    <li class="navigation-list-item">
+        		        $convert
+        		    </li>
+        		#end
+				#if ($file.IsApproved)
+					<li class="navigation-list-item publish">
+						<a href="#" data-messagename="mediafile.publish" data-publish="False" data-fileid="$file.PostID.ToString()">$core_v2_language.GetResource('Unpublish')</a>
+					</li>
+				#elseif (!$file.IsApproved)
+					<li class="navigation-list-item publish">
+						<a href="#" data-messagename="mediafile.publish" data-publish="True" data-fileid="$file.PostID.ToString()">$core_v2_language.GetResource('Publish')</a>
+					</li>
+				#end
+				#if ($canDelete)
+					<li class="navigation-list-item edit">
+						<a href="#" data-messagename="mediafile.delete" data-fileid="$file.PostID.ToString()" data-mediagalleryid="$gallery.SectionID.ToString()" data-redirect="$redirect">$core_v2_language.GetResource('Delete')</a>
+					</li>
+				#end
+			</ul>
+		</div>
+	</div>
+  </li>
+
+#end
+
+</ul>

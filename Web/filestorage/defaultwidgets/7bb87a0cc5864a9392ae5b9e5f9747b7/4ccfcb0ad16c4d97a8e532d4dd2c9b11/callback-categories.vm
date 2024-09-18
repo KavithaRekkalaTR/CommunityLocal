@@ -1,0 +1,24 @@
+#set ($articleCollectionId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_articleCollectionId')))
+#set ($parentCategoryId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_parentCategoryId')))
+#set ($hierarchyApi = $core_v2_widget.ExecuteFile('hierarchy-api.jsm'))
+
+#set ($nodes = $hierarchyApi.listChildren($articleCollectionId, $parentCategoryId))
+
+#foreach($node in $nodes)
+#beforeall
+	<div class="hierarchy-children">
+		<ul class="hierarchy-list">
+#each
+	<li data-categoryid="$node.Id">
+		<div class="hierarchy-item #if($node.HasChildren) with-children #else without-children #end">
+			#if ($node.HasChildren)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($node.Url)"><span class="expand-collapse collapsed">+</span>$node.Name</a>
+			#else
+				<a href="$core_v2_encoding.HtmlAttributeEncode($node.Url)">$node.Name</a>
+			#end
+		</div>
+	</li>
+#afterall
+		</ul>
+	</div>
+#end

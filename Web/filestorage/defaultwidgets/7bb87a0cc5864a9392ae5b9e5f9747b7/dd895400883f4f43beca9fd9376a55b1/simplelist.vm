@@ -1,0 +1,34 @@
+﻿##
+## Render Posts
+##
+
+$core_v2_widget.ExecuteFile('query.vm')
+
+#if ($posts)
+	#foreach($post in $posts)
+	#beforeall
+		<div class="avatar-list">
+		<ul class="content-list">
+	#each
+		$core_v2_widget.ExecuteFile('simplelistitem.vm')
+	#afterall
+		</ul>
+		</div>
+	#nodata
+		$core_v2_widget.Hide()
+	#end
+#elseif ($featuredContents)
+	#foreach($featuredContent in $featuredContents)
+	#beforeall
+		<div class="avatar-list">
+		<ul class="content-list">
+	#each
+		#set ($post = $core_v2_blogPost.Get($featuredContent.Content.ContentId))
+		$core_v2_widget.ExecuteFile('simplelistitem.vm')
+	#afterall
+		</ul>
+		</div>
+	#nodata
+		$core_v2_widget.Hide()
+	#end
+#end

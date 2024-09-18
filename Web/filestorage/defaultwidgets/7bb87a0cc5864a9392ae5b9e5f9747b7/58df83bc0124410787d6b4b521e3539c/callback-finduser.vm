@@ -1,0 +1,17 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_query'))
+#set($users = $core_v2_user.Lookup($searchText, "%{PageSize=20}"))
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+	#if($users)
+        #foreach($user in $users)
+            {
+                "userName":"$core_v2_encoding.JavascriptEncode($user.Username)",
+                "title":"$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+                "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 16, 16, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop', alt='$user.DisplayName'}")) $core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+                "valid":#if($core_v2_conversation.CanStartConversationWith($user.Username)) true #else false #end
+            },
+        #end
+	#end
+null]}

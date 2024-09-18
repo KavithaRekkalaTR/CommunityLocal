@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="f22ed27fadf24ce2a06a8d2ce4ef1aea" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2023-03-28 15:42:47Z" provider="62c1ecce719d47509c7a3ebb3ab098dc">
+    <contentScript language="Velocity"><![CDATA[#set($value = false)
+#set($value = $context.Value)
+
+#if ($context.Editable)
+    #set($luValue = '')
+    #set($htmlValue = '')
+    #if ($value && $core_v2_utility.ParseInt($value) > 0)
+        #set($user = $core_v2_user.Get("%{ Id = $value }"))
+        #if ($user && !$user.HasErrors())
+            #set($luValue = $user.Id)
+            #set($htmlValue = $user.DisplayName)
+            #if ($user.DisplayName != $user.Username)
+                #set($htmlValue = "${htmlValue} (${user.Username})")
+            #end
+        #end
+    #end
+
+    <input type="text" columns="40" id="$context.UniqueId" value="$luValue" />
+
+    <script type="text/javascript">
+        jQuery(function() {
+            var api = $context.JsonApi,
+                input = jQuery('#$context.UniqueId'),
+                lastQuery = '',
+                searchTimeout = null,
+                getValue = function() {
+                    var v = [], c = input.glowLookUpTextBox('count');
+                    if (c > 0) {
+                        return input.glowLookUpTextBox('getByIndex', 0).Value;
+                    } else {
+                        return null;
+                    }
+                },
+                setValue = function(v) {
+                    var c = input.glowLookUpTextBox('count');
+                    for (var i = 0; i < c; i++) {
+                        input.glowLookUpTextBox('removeByIndex', 0);
+                    }
+                    
+                    var id = parseInt(v, 10);
+                    if (!isNaN(id)) {
+                        input.glowLookUpTextBox('add', input.glowLookUpTextBox('createLookUp', id, '?', '?', true));
+                        jQuery.telligent.evolution.get({
+                			url: '$core_v2_widget.GetExecutedFileUrl('search-authors.jsm')',
+                			data: {
+                			    _w_applicationId: '$context.ApplicationId',
+                				_w_query: id
+                			},
+                			success: function(response) {
+                			    input.glowLookUpTextBox('removeByValue', id);
+                				if (response && response.authors && response.authors.length == 1) {
+                				    input.glowLookUpTextBox('add', input.glowLookUpTextBox('createLookUp', id, response.authors[0].name, response.authors[0].name, true));
+                				}
+                			}
+                		});
+                    }
+                };
+
+            input.glowLookUpTextBox({
+                maxValues: 1,
+                minimumLookUpLength: 0,
+                onGetLookUps: function(tb, searchText) {
+                    jQuery.telligent.evolution.get({
+        				url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('search-authors.jsm'))',
+        				data: {
+        					_w_applicationId: '$context.ApplicationId',
+        					_w_query: searchText
+        				}
+			        }).then(function(response){
+                        if (response && response.authors && response.authors.length >= 1) {
+                            input.glowLookUpTextBox('updateSuggestions',
+                                jQuery.map(response.authors, function(author, i) {
+                                    return input.glowLookUpTextBox('createLookUp', author.id, author.name, author.name, true);
+                                }));
+                        } else {
+                            input.glowLookUpTextBox('updateSuggestions', [
+                                input.glowLookUpTextBox('createLookUp', '', '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchesFound'))', '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchesFound'))', false)
+                            ]);
+                        }
+                    });
+                },
+                selectedLookUpsHtml: #if ($htmlValue.Length > 0) [ '$core_v2_encoding.JavascriptEncode($htmlValue)' ] #else [] #end
+            });
+
+            api.register({
+                val: function(val) { return (typeof val == 'undefined') ? getValue() : setValue(val); },
+                hasValue: function() { return getValue() != null; }
+            });
+
+            input.on('glowLookUpTextBoxChange', function() {
+		       api.changed(getValue());
+            });
+        });
+    </script>
+#else
+    #if ($value && $core_v2_utility.ParseInt($value) > 0)
+        #set($user = $core_v2_user.Get("%{ Id = $value }"))
+        #if ($user && !$user.HasErrors())
+            $user.DisplayName
+        #end
+    #end
+#end
+#if ($context.Editable)
+    <script type="text/javascript">
+        jQuery(function() {
+            var df = jQuery('#${context.FormId}'),
+                checkPostSummary = function(v) {
+                    if (v) {
+                        df.dynamicForm('show', ['GeneratePostSummary', 'ExcerptSize', 'Excerpt'], 'UsePostSummary');
+                    } else {
+                        df.dynamicForm('hide', ['GeneratePostSummary', 'ExcerptSize', 'Excerpt'], 'UsePostSummary');
+                    }    
+                }, checkGeneratePostSummary = function(v) {
+                   if (v) {
+                       df.dynamicForm('hide', ['Excerpt'], 'GeneratePostSummary');
+                       df.dynamicForm('show', ['ExcerptSize'], 'GeneratePostSummary');
+                   } else {
+                       df.dynamicForm('show', ['Excerpt'], 'GeneratePostSummary');
+                       df.dynamicForm('hide', ['ExcerptSize'], 'GeneratePostSummary');
+                   }     
+                }
+            
+            
+            df.dynamicForm('onChange', 'UsePostSummary', function(o) {
+                checkPostSummary(o.val);
+            });
+            df.dynamicForm('onChange', 'GeneratePostSummary', function(o) {
+               checkGeneratePostSummary(o.val);
+            });
+            
+            window.setTimeout(function() {
+                checkPostSummary(df.dynamicForm('val', 'UsePostSummary'));
+                checkGeneratePostSummary(df.dynamicForm('val', 'GeneratePostSummary'));
+            },10);
+        });
+    </script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enables blog author selection.</resource>
+  <resource name="NoMatchesFound">No matches found.</resource>
+  <resource name="Title">Blog Author Lookup</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

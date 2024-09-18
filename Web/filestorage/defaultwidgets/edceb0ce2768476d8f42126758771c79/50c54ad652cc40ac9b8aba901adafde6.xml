@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ForumReportsPanel_Name}" version="13.0.0.0" description="${resource:ForumReportsPanel_Description}" instanceIdentifier="50c54ad652cc40ac9b8aba901adafde6" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-reports" lastModified="2023-09-12 06:16:08Z" provider="edceb0ce2768476d8f42126758771c79">
+    <contentScript language="Velocity"><![CDATA[
+<fieldset>
+    <ul class="field-list">
+
+        #set($format = "<li class='field-item'><span class='field-item-name'><a class='inline-button' href='$core_v2_encoding.HtmlAttributeEncode('{0}')' target='_blank'>{1}</a></span><span class='field-item-description'>{2}</span></li>")
+        #set ($detailOptions = "%{applicationId   = '$context.ApplicationId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}")
+        #set ($options = "%{applicationIds  = '$context.ApplicationId.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}")
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.ForumDetail($detailOptions))
+        #if ($reportUrl)
+            $core_v2_language.FormatString($format, $reportUrl, $core_v2_language.GetResource('ForumDetailReport'), $core_v2_language.GetResource('ForumDetailReport_Description'))
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.Interactions($options))
+        #if ($reportUrl)
+            $core_v2_language.FormatString($format, $reportUrl, $core_v2_language.GetResource('InteractionsReport'), $core_v2_language.GetResource('InteractionsReport_Description'))
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.ActiveContent($options))
+        #if ($reportUrl)
+            $core_v2_language.FormatString($format, $reportUrl, $core_v2_language.GetResource('ActiveContentReport'), $core_v2_language.GetResource('ActiveContentReport_Description'))
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.Content($options))
+        #if ($reportUrl)
+            $core_v2_language.FormatString($format, $reportUrl, $core_v2_language.GetResource('NewContentReport'), $core_v2_language.GetResource('NewContentReport_Description'))
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.ViewedContent($options))
+        #if ($reportUrl)
+            $core_v2_language.FormatString($format, $reportUrl, $core_v2_language.GetResource('ViewedContentReport'), $core_v2_language.GetResource('ViewedContentReport_Description'))
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.Participation($options))
+        #if ($reportUrl)
+            $core_v2_language.FormatString($format, $reportUrl, $core_v2_language.GetResource('ParticipationReport'), $core_v2_language.GetResource('ParticipationReport_Description'))
+        #end
+
+        #set ($reportUrl = false)
+        #set ($reportUrl = $core_v1_reportingUrls.ActiveMembers($options))
+        #if ($reportUrl)
+            $core_v2_language.FormatString($format, $reportUrl, $core_v2_language.GetResource('ActiveMembersReport'), $core_v2_language.GetResource('ActiveMembersReport_Description'))
+        #end
+   </ul>
+</fieldset>
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ActiveContentReport">Active Content</resource>
+  <resource name="ActiveContentReport_Description">Report displaying content that was active.</resource>
+  <resource name="ActiveMembersReport">Active Members</resource>
+  <resource name="ActiveMembersReport_Description">Report detailing members who were active.</resource>
+  <resource name="ForumDetailReport">Forum Detail</resource>
+  <resource name="ForumDetailReport_Description">Report providing overview of this forum.</resource>
+  <resource name="ForumReportsPanel_Description">View forum reports.</resource>
+  <resource name="ForumReportsPanel_Name">Reporting</resource>
+  <resource name="InteractionsReport">Interactions</resource>
+  <resource name="InteractionsReport_Description">Report detailing the interactions that occurred.</resource>
+  <resource name="NewContentReport">New Content</resource>
+  <resource name="NewContentReport_Description">Report displaying content that is new.</resource>
+  <resource name="ParticipationReport">Participation</resource>
+  <resource name="ParticipationReport_Description">Report detailing the level of participation of members.</resource>
+  <resource name="ViewedContentReport"> Viewed Content</resource>
+  <resource name="ViewedContentReport_Description"> Report displaying content that was viewed.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,37 @@
+﻿#*
+Renders notifications
+
+Expects In Scope:
+	$notifications
+*#
+#foreach ($notification in $notifications)
+
+	<li class="content-item" data-notificationid="$notification.Id">
+		<a href="#" data-messagename="widget.systemnotification.view" data-notificationid="$notification.Id" data-name="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($notification.Subject, 99915, "..."))">
+			<h4 class="name">$notification.Subject</h4>
+
+			<div class="attributes">
+				<ul class="attribute-list">
+					#if($notification.PluginType && $notification.PluginName)
+						<li class="attribute-item">
+							#set ($pluginUrl = $context.GetPluginUrl($notification.PluginType))
+							#if ($pluginUrl)
+								<span class="attribute-value"><a href="$context.GetPluginUrl($notification.PluginType)">$notification.PluginName</a></span>
+							#else
+								<span class="attribute-value">$notification.PluginName</span>
+							#end
+						</li>
+					#end
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatDateAndTime($notification.LastOccurredDate)</span>
+					</li>
+					#if( $notification.TotalOccurrences > 1)
+						<li class="attribute-item">
+							<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('Occurrences'), $notification.TotalOccurrences.ToString())</span>
+						</li>
+					#end
+				</ul>
+			</div>
+		</a>
+	</li>
+#end

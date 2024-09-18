@@ -1,0 +1,47 @@
+$core_v2_widget.ExecuteFile('setquery.vm')
+
+#set ($threads = $core_v2_forumThread.List($filter, $options))
+
+#foreach ($thread in $threads)
+#beforeall
+	<div class="avatar-list">
+	<ul class="content-list">
+#each
+	#set($author = $thread.Author)
+
+	<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)">
+		<div class="author">
+			<div class="avatar">
+				$core_v2_ui.GetResizedImageHtml($author.AvatarUrl, 35, 35, "%{border='0px', alt=$author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+			</div>
+			<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)" $core_v2_ui.ContentPeek($thread.ContentId, $core_v2_forumThread.ContentTypeId, "internal-link view-full-post navigable ui-tip") data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('View'))">
+				<div class="content">$core_v2_language.Truncate($thread.Subject, 200, "...")</div>
+			</a>
+			<div class="meta">
+				#if ($thread.ThreadType == "QuestionAndAnswer")
+					<span class="$thread.ThreadStatus">
+						#if ($thread.ThreadStatus == 'Answered')
+							$core_v2_language.GetResource('Status_VerifiedAnswer')
+						#elseif ($thread.ThreadStatus == 'NotAnswered')
+							$core_v2_language.GetResource('Status_NotAnswered')
+						#elseif ($thread.ThreadStatus == 'AnsweredNotVerified')
+							$core_v2_language.GetResource('Status_SuggestedAnswer')
+						#end
+					</span>
+				#end
+				<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)" $core_v2_ui.ContentPeek($thread.ContentId, $core_v2_forumThread.ContentTypeId, "internal-link view-post navigable")>
+					#if ($sortBy.ToLowerInvariant() == 'date')
+						$core_v2_ui.AgoDate($thread.CreatedDate)
+					#else
+						$core_v2_ui.AgoDate($thread.LatestPostDate)
+					#end
+				</a>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+	</div>
+#nodata
+	$core_v2_widget.Hide()
+#end

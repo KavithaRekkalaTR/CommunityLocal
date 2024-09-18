@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" id="5d6f7783f93b4e13b6dad49e1ef24929" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2022-05-11 18:36:48Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="like.aftercreate" />
+      <event key="like.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var contentTypeIds = core_v2_widget.GetCustomValue('contentTypeIds', 'all');
+var valid = false;
+
+if (contentTypeIds == 'all') {
+    contentTypeIds = null;
+    valid = true;
+} else {
+    var contentTypeIdList = core_v2_page.ParseQueryString(contentTypeIds).Values('ContentTypeId');
+    if (contentTypeIdList !== null && contentTypeIdList.Count > 0) {
+        var i;
+        for (i = 0; i < contentTypeIdList.Count; i++) {
+            var contentTypeId = core_v2_utility.ParseGuid(contentTypeIdList[i]);
+            if (contentTypeId && contentTypeId == context_v2_automationTrigger.Arguments.ContentTypeId) {
+                valid = true;
+                break;
+            }
+        }
+    }
+}
+
+if (!valid) {
+    // not a valid content type
+    return;
+}
+
+var content = core_v2_content.Get(context_v2_automationTrigger.Arguments.ContentId, context_v2_automationTrigger.Arguments.ContentTypeId);
+if (!content || content.HasErrors()) {
+    return;
+}
+
+if (core_v2_widget.GetBoolValue('ignoreIfOriginalAuthor', true) && context_v2_automationTrigger.Arguments.UserId == content.CreatedByUserId) {
+    // bookmarker is the content author
+    return;
+}
+
+var userId = context_v2_automationTrigger.Arguments.UserId;
+if (core_v2_widget.GetStringValue('awardTo', 'parent') == 'parent') {
+    userId = content.CreatedByUserId;
+    if(userId === null) {
+        return;
+    }
+}
+
+if (context_v2_automationTrigger.Event == 'AfterCreate') {
+    context_v1_pointsAutomation.AwardPoints(userId, context_v2_automationTrigger.Arguments.ContentId, context_v2_automationTrigger.Arguments.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterDelete') {
+    // ensure points not awarded
+    var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(userId, context_v2_automationTrigger.Arguments.ContentId, context_v2_automationTrigger.Arguments.ContentTypeId);
+    if (awardedPoints) {
+        context_v1_pointsAutomation.AwardPoints(userId, context_v2_automationTrigger.Arguments.ContentId, context_v2_automationTrigger.Arguments.ContentTypeId, {
+            Description: core_v2_language.FormatString(core_v2_language.GetResource('Revoked'), context_v1_pointsAutomation.Description),
+            Points: context_v1_pointsAutomation.Points * -1
+        });
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="contentTypeIds" labelResourceName="ContentToReview" descriptionResourceName="ContentToReview_Description" dataType="Custom" template="core_v2_contentTypeList" strictContentTypes="true" isLikeable="true" />
+    <property id="awardTo" labelResourceName="AwardTo" descriptionResourceName="AwardTo_Description" dataType="string" defaultValue="parent">
+        <propertyValue labelResourceName="AwardTo_Parent" value="parent" />
+        <propertyValue labelResourceName="AwardTo_Child" value="child" />
+    </property>
+    <property id="ignoreIfOriginalAuthor" labelResourceName="IgnoreIfOriginalAuthor" descriptionResourceName="IgnoreIfOriginalAuthor_Description" dataType="bool" defaultValue="true" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AwardTo">Award points to</resource>
+  <resource name="AwardTo_Child">Like creator</resource>
+  <resource name="AwardTo_Description">Select which member should receive points.</resource>
+  <resource name="AwardTo_Parent">Content author</resource>
+  <resource name="ContentToReview">Types of content</resource>
+  <resource name="ContentToReview_Description">Optionally select the types of content on which likes can be made to receive points.</resource>
+  <resource name="Description">Awards points when content is liked.</resource>
+  <resource name="IgnoreIfOriginalAuthor">Ignore likes created by the content author</resource>
+  <resource name="IgnoreIfOriginalAuthor_Description">If enabled, likes made by the author of the content being liked will not cause points to be awarded.</resource>
+  <resource name="Revoked">Revoked: {0}</resource>
+  <resource name="Title">When content is liked</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

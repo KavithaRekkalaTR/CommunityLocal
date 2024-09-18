@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="813f6cefd81c4e7490a2a0f4415cb9bf" executeAsServiceUser="true" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2019-06-18 20:49:14Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="ideastatus.aftercreate" />
+      <event key="ideastatus.afterdelete" />
+      <event key="ideastatus.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var idea = telligentIdeas_v1_ideas.Get(context_v2_automationTrigger.Arguments.IdeaId);
+if (!idea || idea.HasErrors()) {
+    return;
+}
+
+var statuses = {};
+var statusList = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('statuses', '')).Values('Key');
+for (var i = 0; i < statusList.Count; i++) {
+    statuses[statusList[i]] = true;
+}
+
+var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(idea.Author.Id, idea.ContentId, telligentIdeas_v1_ideas.ContentTypeId);
+if (statuses[idea.CurrentStatus.StatusKey]) {
+    // ensure points awarded
+    if (!awardedPoints) {
+        context_v1_pointsAutomation.AwardPoints(idea.Author.Id, idea.ContentId, telligentIdeas_v1_ideas.ContentTypeId)
+    }
+} else {
+    // ensure points not awarded
+    if (awardedPoints) {
+        context_v1_pointsAutomation.RevokePoints(idea.Author.Id, idea.ContentId, telligentIdeas_v1_ideas.ContentTypeId)
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="statuses" labelResourceName="Statuses" descriptionResourceName="Statuses_Description" dataType="custom" defaultValue="" template="propertytemplate-statuses.vm" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Awards points to idea authors when the idea is completed with specific statuses.</resource>
+  <resource name="NoClosedStatuses">The ideation application has no statuses identified as 'closed.' </resource>
+  <resource name="Statuses">Status(es)</resource>
+  <resource name="Statuses_Description">When an idea's current status is one of the selected statuses below, the author of the idea will be awarded points.</resource>
+  <resource name="Title">When an idea is completed</resource>
+</language>]]></languageResources>
+    <files>
+      <file name="propertytemplate-statuses.vm" />
+    </files>
+  </automation>
+</automations>

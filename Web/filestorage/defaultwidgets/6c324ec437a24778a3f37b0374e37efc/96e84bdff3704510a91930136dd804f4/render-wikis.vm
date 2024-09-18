@@ -1,0 +1,19 @@
+#*
+Renders wikis
+
+Expects In Scope:
+	$wikis
+*#
+#foreach ($wiki in $wikis)
+#each
+	<li class="field-item" data-wikiid="$wiki.Id">
+		<span class="field-item-input">
+			<input type="checkbox" id="$core_v2_widget.UniqueId($wiki.Id.ToString())" value="$wiki.Id"/> 
+			<label for="$core_v2_widget.UniqueId($wiki.Id.ToString())">$wiki.Name $core_v2_language.GetResource('WikiInGroup') $wiki.Group.Name</label>
+		</span>
+	</li>
+#nodata
+	#if ($wikis.PageIndex == 0)
+		<div class="message">$core_v2_language.GetResource('NoWikis')</div>
+	#end
+#end

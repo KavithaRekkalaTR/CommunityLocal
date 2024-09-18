@@ -1,0 +1,51 @@
+#set($group = $context.Group)
+
+<p>
+    $core_v2_language.GetResource('AddMembers_Instructions')
+</p>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item username">
+			<label for="$core_v2_widget.UniqueId('AddMemberUserName')" class="field-item-name">$core_v2_language.GetResource('AddUserRole')</label>
+			<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('AddMemberUserName')" name="$core_v2_widget.UniqueId('AddMemberUserName')" /></span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item membership-type">
+			<label for="$core_v2_widget.UniqueId('AddMemberMembershipType')" class="field-item-name">$core_v2_language.GetResource('MembershipType')</label>
+			<span class="field-item-input"><select id="$core_v2_widget.UniqueId('AddMemberMembershipType')" name="$core_v2_widget.UniqueId('AddMemberMembershipType')">
+				<option value="Owner">$core_v2_language.GetResource('membershiptype-owner')</option>
+				#if ($group.GroupType != 'Joinless')
+					<option value="Manager">$core_v2_language.GetResource('membershiptype-manager')</option>
+					<option value="Member" selected="selected">$core_v2_language.GetResource('membershiptype-member')</option>
+				#end
+			</select></span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#if($core_v2_configuration.EnableLdap)
+	<div class="message info">$core_v2_language.GetResource('AddDirectoryGroup_Warning')</div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.groupMemberManagermentAdd')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("add-ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.groupMemberManagermentAdd.register({
+				groupId: '$!core_v2_group.Current.Id',
+				addMemberUserName : jQuery('#$core_v2_widget.UniqueId('AddMemberUserName')'),
+				addMemberMembershipType : jQuery('#$core_v2_widget.UniqueId('AddMemberMembershipType')'),
+				addMemberUserNameMissingText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MissingUserNames'))',
+				findUsersOrRolesUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users-or-roles.vm'))',
+				noUserOrRoleMatchesText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatches_AllUsers'))',
+				addMemberUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('add-user-or-role.vm'))',
+				alreadyAMemberText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadyAMember'))',
+				addMemberSaveText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddMembers'))',
+				usersAddedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MembersAdded'))'
+			});
+		});
+	</script>
+#end

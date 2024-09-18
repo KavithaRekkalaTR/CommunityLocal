@@ -1,0 +1,14 @@
+﻿#if ($core_v2_page.IsPost)
+
+	#set($body = $core_v2_page.GetFormValue('body'))
+	#set($param = "tempkey=")
+
+	$core_v2_page.SetContentType('application/json')
+
+	#set($key = $core_v2_utility.StoreTemporaryData($body))
+
+	{
+		"tempKey" : "${core_v2_encoding.UrlEncode($param)}${key}"
+	}
+
+#end

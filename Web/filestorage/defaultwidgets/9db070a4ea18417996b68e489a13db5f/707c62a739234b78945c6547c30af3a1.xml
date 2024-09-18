@@ -1,0 +1,288 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:BlogOptionsApplicationPanel_Name}" version="13.0.0.0" description="${resource:BlogOptionsApplicationPanel_Description}" instanceIdentifier="707c62a739234b78945c6547c30af3a1" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="blog-options" lastModified="2023-02-02 19:03:08Z" provider="9db070a4ea18417996b68e489a13db5f">
+    <contentScript language="Velocity"><![CDATA[#set ($blog = false)
+#set ($blog = $context.Blog)
+#set ($group = false)
+#set ($group = $context.Group)
+#if (!$blog)
+	$core_v2_widget.Hide()
+#end
+
+#set ($saveButtonTemplateId = $core_v2_widget.UniqueId('saveButtonTemplate'))
+#set ($nameId = $core_v2_widget.UniqueId('nameId'))
+#set ($addressId = $core_v2_widget.UniqueId('addressId'))
+#set ($enableId = $core_v2_widget.UniqueId('enableId'))
+#set ($enableAggBugsId = $core_v2_widget.UniqueId('enableAggBugsId'))
+#set ($includeInSiteMapId = $core_v2_widget.UniqueId('includeInSiteMapId'))
+#set ($includeInAggregateId = $core_v2_widget.UniqueId('includeInAggregateId'))
+#set ($mailingListEnabled = $core_v2_widget.UniqueId('mailingListEnabled'))
+#set ($groupId = $core_v2_widget.UniqueId('groupId'))
+#set ($authorsId = $core_v2_widget.UniqueId('authorsId'))
+#set ($enableContactId = $core_v2_widget.UniqueId('enableContactId'))
+#set ($contactEmailAddressId = $core_v2_widget.UniqueId('contactEmailAddressId'))
+
+#set($redirect = false)
+#if($core_v2_blog.Current && $core_v2_blog.Current.Id == $context.Blog.SectionId)
+	#set($redirect = true)
+#end
+
+#set ($canDelete = $core_v3_permission.CheckPermission($core_v2_groupPermissions.DeleteBlog, $core_v2_user.Accessing.Id, "%{ ApplicationId = $context.Blog.Group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+<form><fieldset>
+	<ul class="field-list">
+
+		<li class="field-item">
+			<label class="field-item-name">$core_v2_language.GetResource('NameLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('NameLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" value="$blog.Name" id="$core_v2_encoding.HtmlAttributeEncode($nameId)" name="$core_v2_encoding.HtmlAttributeEncode($nameId)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item web-address">
+			<label class="field-item-name">$core_v2_language.GetResource('AddressLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AddressLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" maxlength="256" value="$blog.ApplicationKey" id="$core_v2_encoding.HtmlAttributeEncode($addressId)" name="$core_v2_encoding.HtmlAttributeEncode($addressId)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item group">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($groupId)" class="field-item-name">$core_v2_language.GetResource('GroupLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('GroupLabel_Desc')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($groupId)" name="$core_v2_encoding.HtmlAttributeEncode($groupId)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item description">
+			<label class="field-item-name">$core_v2_language.GetResource('DescriptionLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DescriptionLabel_Desc')</span>
+			<span class="field-item-input">
+				#set($description = $context.ApiBlog.HtmlDescription('raw'))
+				$core_v2_editor.Render('Description',"%{Width='100%', Height='25%', Value='$description', ContentTypeId=$core_v2_blogs.ContentTypeId }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item authors">
+			<label for="$core_v2_encoding.HtmlAttributeEncode($authorsId)" class="field-item-name">$core_v2_language.GetResource('AuthorsLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AuthorsLabel_Desc')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($authorsId)" name="$core_v2_encoding.HtmlAttributeEncode($authorsId)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.IsActive) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableId)" name="$core_v2_encoding.HtmlAttributeEncode($enableId)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableId)">$core_v2_language.GetResource('EnableLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.EnableAggBugs) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableAggBugsId)" name="$core_v2_encoding.HtmlAttributeEncode($enableAggBugsId)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableAggBugsId)">$core_v2_language.GetResource('EnableAggBugsLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableAggBugsLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.IsIncludedInSitemap) checked #end id="$core_v2_encoding.HtmlAttributeEncode($includeInSiteMapId)" name="$core_v2_encoding.HtmlAttributeEncode($includeInSiteMapId)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($includeInSiteMapId)">$core_v2_language.GetResource('IncludeInSiteMapLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('IncludeInSiteMapLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.IsCommunityAggregated) checked #end id="$core_v2_encoding.HtmlAttributeEncode($includeInAggregateId)" name="$core_v2_encoding.HtmlAttributeEncode($includeInAggregateId)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($includeInAggregateId)">$core_v2_language.GetResource('IncludeInAggregateLabel')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('IncludeInAggregateLabel_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item enable-contact">
+			<span class="field-item-input">
+				<input type="checkbox" #if ($blog.EnableContact) checked #end id="$core_v2_encoding.HtmlAttributeEncode($enableContactId)" name="$core_v2_encoding.HtmlAttributeEncode($enableContactId)" />
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enableContactId)">$core_v2_language.GetResource('EnableContactForm')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableContactForm_Desc')</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item contact-address" #if(!$blog.EnableContact)style="display: none;"#end>
+			<label class="field-item-name">$core_v2_language.GetResource('ContactAddress')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ContactAddress_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" maxlength="256" value="$core_v2_encoding.HtmlAttributeEncode($blog.Email)" id="$core_v2_encoding.HtmlAttributeEncode($contactEmailAddressId)" name="$core_v2_encoding.HtmlAttributeEncode($contactEmailAddressId)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		#if ($context.MailGatewayEnabled)
+			<li class="field-item">
+				<span class="field-item-input">
+					<input type="checkbox" #if ($context.MailingListEnabled) checked #end id="$core_v2_encoding.HtmlAttributeEncode($mailingListEnabled)" name="$core_v2_encoding.HtmlAttributeEncode($mailingListEnabled)" />
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($mailingListEnabled)">$core_v2_language.GetResource('MailingListEnabled')</label>
+				</span>
+				#set ($address = $context.MailingListAddress)
+				#if ($address)
+					<span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('MailingListEnabledWithAddress_Desc'), $address)</span>
+				#else
+					<span class="field-item-description">$core_v2_language.GetResource('MailingListEnabled_Desc')</span>
+				#end
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		#end
+
+		#if ($blog)
+			<li class="field-item identifiers">
+				<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</li>
+			<li class="field-item identifiers entityid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('EntityId')</label>
+				<span class="field-item-input">$blog.SectionID</span>
+			</li>
+			<li class="field-item identifiers contentid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+				<span class="field-item-input">$!blog.ApplicationId</span>
+			</li>
+			<li class="field-item identifiers contenttypeid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+				<span class="field-item-input">$!blog.ApplicationTypeId</span>
+			</li>
+		#end
+
+		#if ($canDelete)
+			<li class="field-item">
+				<li class="field-item">
+					<span class="field-item-input">
+						<a href="#" class="button delete" data-messagename="contextual-delete">$core_v2_language.GetResource('Delete')</a>
+					</span>
+				</li>
+			</li>
+		#end
+	</ul>
+</fieldset></form>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveButtonTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+var authors = [];
+#foreach($author in $blog.Owners)
+	authors.push({id: '$author.UserId', name: '$core_v2_encoding.JavascriptEncode($author.DisplayName)#if($author.DisplayName != $author.Username) ($core_v2_encoding.JavascriptEncode($author.Username))#end'});
+#end
+
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogOptionsApplicationPanel.register({
+		saveTemplateId: '$core_v2_encoding.JavascriptEncode($saveButtonTemplateId)',
+		updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('update.vm'))',
+		lookupUsersUrl:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))',
+		groupRedirect: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Blog.Group.Id)))',
+		groupId: #if ($group) '$group.Id' #else null #end,
+		blogId: $context.Blog.SectionId,
+		applicationKey: '$context.Blog.ApplicationKey',
+		groupName: #if ($group) '$group.Name' #else null #end,
+		hasPermissionOverrides: #if ($context.HasCustomPermissions()) true #else false #end,
+		mailGatewayEnabled: #if ($context.MailGatewayEnabled) true #else false #end,
+		mailingListEnabled: #if ($context.MailingListEnabled) true #else false #end,
+		redirect: #if ($redirect) true #else false #end,
+		authors: authors,
+		getDescription: function() { return $core_v2_editor.GetContentScript('Description'); },
+		inputs: {
+			name: '#$core_v2_encoding.JavascriptEncode($nameId)',
+			address: '#$core_v2_encoding.JavascriptEncode($addressId)',
+			enable: '#$core_v2_encoding.JavascriptEncode($enableId)',
+			enableAggBugs: '#$core_v2_encoding.JavascriptEncode($enableAggBugsId)',
+			includeInSiteMap: '#$core_v2_encoding.JavascriptEncode($includeInSiteMapId)',
+			includeInAggregate: '#$core_v2_encoding.JavascriptEncode($includeInAggregateId)',
+			group: '#$core_v2_encoding.JavascriptEncode($groupId)',
+			authors: '#$core_v2_encoding.JavascriptEncode($authorsId)',
+			mailingListEnabled: '#$core_v2_encoding.JavascriptEncode($mailingListEnabled)',
+			enableContact: '#$core_v2_encoding.JavascriptEncode($enableContactId)',
+			contactEmailAddress: '#$core_v2_encoding.JavascriptEncode($contactEmailAddressId)'
+		},
+		text: {
+			requiredText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Required'))',
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UpdateSuccess'))',
+			noGroupsMatch: '$core_v2_language.GetResource('GroupLookUp_NoMatches')',
+			moveWarning: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ValidateMove'))',
+			deleteConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteConfirm'))',
+			noUsersMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserLookUp_NoMatches'))',
+			invalidAddress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Invalid_Address'))',
+			addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))",
+            alreadySelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadySelected'))',
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddressLabel">Web Address </resource>
+  <resource name="AddressLabel_Desc">Enter the name of the blog as you wish it to appear for the web address for this blog</resource>
+  <resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource>
+  <resource name="AlreadySelected">Already an owner</resource>
+  <resource name="ApplicationId">Application Identifier</resource>
+  <resource name="ApplicationTypeId">Application Type Identifier</resource>
+  <resource name="AuthorsLabel">Authors</resource>
+  <resource name="AuthorsLabel_Desc">Enter a list of users that can manage this blog. For multi-user blogging group permissions can be used.</resource>
+  <resource name="BlogOptionsApplicationPanel_Description">Manage blog options.</resource>
+  <resource name="BlogOptionsApplicationPanel_Name">Blog Options</resource>
+  <resource name="ContactAddress">Contact Email Address</resource>
+  <resource name="ContactAddress_Desc">The email address where the weblog contact form data will be sent</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteConfirm">Are you sure you want to delete this blog?</resource>
+  <resource name="DescriptionLabel">Blog Description</resource>
+  <resource name="DescriptionLabel_Desc">Enter a description displayed under the title.</resource>
+  <resource name="EnableAggBugsLabel">Enable AggBugs </resource>
+  <resource name="EnableAggBugsLabel_Desc">When enabled, an invisible tracking image is inserted into the end of each syndicated post.</resource>
+  <resource name="EnableContactForm">Enable Contact Form</resource>
+  <resource name="EnableContactForm_Desc">Allows readers to send you email</resource>
+  <resource name="EnableLabel">Enable Blog </resource>
+  <resource name="EnableLabel_Desc">When disabled the blog is not accessible.</resource>
+  <resource name="EntityId">Identifier</resource>
+  <resource name="GroupLabel">Blog Group</resource>
+  <resource name="GroupLabel_Desc">Select a group that this blog is associated with</resource>
+  <resource name="GroupLookUp_NoMatches">A matching ${group_lowercase} could not be found.</resource>
+  <resource name="IncludeInAggregateLabel">Include in community aggregate </resource>
+  <resource name="IncludeInAggregateLabel_Desc">When disabled the blog is not included in the community aggregate blogs page and rss feed.</resource>
+  <resource name="IncludeInSiteMapLabel">Include posts in Sitemap </resource>
+  <resource name="IncludeInSiteMapLabel_Desc">When enabled posts are included in Sitemap</resource>
+  <resource name="Invalid_Address">The URL that you requested is not available. Please enter a different URL to create/edit this blog.</resource>
+  <resource name="MailingListEnabled">Enable blog-by-email</resource>
+  <resource name="MailingListEnabled_Desc">When enabled, this blog can be posted to by email</resource>
+  <resource name="MailingListEnabledWithAddress_Desc">When enabled, this blog can be posted to by emailing &lt;a href="mailto:{0}"&gt;{0}&lt;/a&gt;.</resource>
+  <resource name="NameLabel">Blog Title</resource>
+  <resource name="NameLabel_Desc">Enter a title to be displayed on the blog.</resource>
+  <resource name="Required">This field is required.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="UpdateSuccess">Success</resource>
+  <resource name="UserLookUp_NoMatches">A matching user could not be found.</resource>
+  <resource name="ValidateMove">You have selected to move the blog to another ${group_lowercase}. There are permission overrides on this blog that will be removed if you choose to continue.</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="blogs.blogs.modify" />
+      <scope id="groups.groups.readonly" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

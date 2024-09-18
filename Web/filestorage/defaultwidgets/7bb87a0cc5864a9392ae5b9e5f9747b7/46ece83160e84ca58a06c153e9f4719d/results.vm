@@ -1,0 +1,46 @@
+#set ($query = false)
+#set ($query = $core_v2_utility.Trim($core_v2_page.GetQueryStringValue('q')))
+#set ($searchResultCount = 0)
+#if($query && $query!='')
+	$core_v2_widget.ExecuteFile('query.jsm')
+#end
+
+#if ($searchResultCount > 0)
+	<ul class="content-list content margin-bottom">
+		#foreach ($searchResult in $searchResults)
+			#set ($resultHtml = false)
+			#set ($resultHtml = $searchResult.ViewHtml())
+			#if ($resultHtml)
+				<li class="content-item" #if ($searchResult.Url) data-href="$core_v2_encoding.HtmlAttributeEncode($searchResult.Url)" #end>$resultHtml</li>
+			#end
+		#end
+	</ul>
+#else
+	<div class="message norecords">
+		#set ($defaultForum = false)
+		#if ($defaultAskForumId > 0)
+			#set ($defaultForum = $core_v2_forum.Get($defaultAskForumId))
+		#end
+		#if(!$query || $query == '')
+			$core_v2_language.GetResource('Core_SearchResults_NoQuery')
+		#elseif ($defaultForum && $defaultForum.Enabled && $core_v2_forumConfiguration.IsEnabled)
+			$core_v2_language.FormatString($core_v2_language.GetResource('Core_SearchResults_NoResults_AskForm'), "jQuery.glowModal('$core_v2_encoding.JavascriptEncode($core_v2_page.AdjustQueryString($core_v2_widget.GetExecutedFileUrl('askform.vm'), $core_v2_page.MakeQueryString($askQuery).ToString()))', { width: 400, height: 500}); return false;")
+		#else
+			$core_v2_language.GetResource('Core_SearchResults_NoResults')
+		#end
+	</div>
+#end
+
+#if ($searchResults)
+	$core_v2_ui.Pager($searchResults.PageIndex, $searchResults.PageSize, $searchResults.TotalCount, "%{ PagedContentFile = 'results.vm', LoadOnAnyHashChange = 'true', LoadingIndicator = 'true', QueryStringProperty = 'serp' }")
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(j) {
+			j.telligent.evolution.messaging.publish('telligent.evolution.widgets.searchResultList.optionsUpdated', {
+				optionsHtml: '$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('options.vm'))'
+			});
+		});
+	</script>
+#end

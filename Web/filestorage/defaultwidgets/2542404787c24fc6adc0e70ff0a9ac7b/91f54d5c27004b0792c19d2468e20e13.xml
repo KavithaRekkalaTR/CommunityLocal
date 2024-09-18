@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeCollectionPeek}" version="13.0.0.0" description="${resource:KnowledgeCollectionPeek_Description}" instanceIdentifier="91f54d5c27004b0792c19d2468e20e13" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="knowledge-collection" lastModified="2022-09-02 20:26:57Z" provider="2542404787c24fc6adc0e70ff0a9ac7b">
+    <contentScript language="Velocity"><![CDATA[#set ($content = $context.Content)
+#if (!$content)
+	$core_v2_widget.Hide()
+#end
+
+#set ($knowledgeCollection = $km_v1_knowledgeCollections.Get($content.Application.ApplicationId))
+#if (!$knowledgeCollection)
+	$core_v2_widget.Hide()
+#end
+
+#set ($avatarSize = 32)
+
+#set ($target = $context.Target)
+#set ($title = $content.HtmlName($target))
+#set ($body = $content.HtmlDescription($target))
+
+#if($content.Application && $content.Application.Container)
+	#set ($containerName = $content.Application.Container.HtmlName($target))
+	#set ($containerUrl = $content.Application.Container.Url)
+	#set ($containerAvatarUrl = $content.Application.Container.AvatarUrl)
+#end
+
+<div class="content-peek">
+	<div class="content-peek-heading">
+		<div class="content-peek-avatar">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+				$core_v2_ui.GetResizedImageHtml($containerAvatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$containerName' }")
+			</a>
+		</div>
+		<div class="content-peek-name">
+			<div class="content-peek-title">
+				<a title="$core_v2_encoding.HtmlAttributeEncode($containerName)" href="$core_v2_encoding.HtmlAttributeEncode($containerUrl)">
+					$core_v2_language.Truncate($containerName, 100, '...')
+				</a>
+				<a title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 100, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 100, '...')
+				</a>
+			</div>
+			<div class="content-peek-subtitle">
+				${knowledgeCollection.HtmlDescription('web')}
+			</div>
+		</div>
+	</div>
+
+	#set ($documents = $km_v1_documents.List($content.Application.ApplicationId, "%{ PageIndex=0, PageSize=1 }"))
+	<div class="content-peek-details">
+		<div class="content-peek-detail">
+			<div class="content-peek-detail-component">
+				$core_v2_language.FormatNumber($documents.TotalCount)
+				#if ($documents.TotalCount == 1)
+					$core_v2_language.GetResource('post_singular')
+				#else
+					$core_v2_language.GetResource('post_plural')
+				#end
+			</div>
+		</div>
+	</div>
+
+	## Actions
+	#set ($includeBookmark = $core_v2_bookmark.SupportsBookmarks($content.ContentTypeId) && $core_v2_bookmark.CanBookmark($content.ContentId, $content.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($content.ContentId, $content.ContentTypeId))
+	#set ($includeSubscriptions = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v2_applicationSubscription.SupportsSubscriptions($content.Application.ApplicationTypeId) && $core_v2_applicationSubscription.CanSubscribe($content.Application.ApplicationId, $content.Application.ApplicationTypeId))
+	#set ($includeModeration = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v2_abuseReport.CanBeMarkedAsAbusive($content.ContentTypeId))
+
+	#set ($maxLinks = 0)
+	#set ($totalLinks = 0)
+
+	#if ($includeBookmark)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeSubscriptions)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeModeration)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($totalLinks > 0)
+		<div class="content-peek-actions">
+			<ul class="ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+				#if ($includeBookmark)
+					<li class="navigation-list-item">$core_v2_ui.Bookmark($content.ContentId, $content.ContentTypeId, "%{ addBookmarkText = $core_v2_language.GetResource('bookmark'), deleteBookmarkText = $core_v2_language.GetResource('unbookmark') }")</li>
+				#end
+
+				#if ($includeSubscriptions)
+					#set ($subscription = $core_v2_applicationSubscription.Get($content.Application.ApplicationId, "%{}"))
+					#set ($isSubscribed = $subscription.IsSubscribed)
+					<li class="navigation-list-item">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.subscribe"
+							data-value="$isSubscribed"
+							data-labelon="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Subscribe'))"
+							data-labeloff="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Unsubscribe'))"
+							data-labelontip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SubscribeTip'))"
+							data-labelofftip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('UnsubscribeTip'))"
+							data-labelprocess="…"
+							title="#if ($isSubscribed) $core_v2_language.GetResource('UnsubscribeTip') #else $core_v2_language.GetResource('SubscribeTip') #end"
+							href="#">
+							#if ($isSubscribed) $core_v2_language.GetResource('Unsubscribe') #else $core_v2_language.GetResource('Subscribe') #end
+						</a>
+					</li>
+				#end
+
+				#if ($includeModeration)
+					<li class="navigation-list-item">$core_v2_ui.Moderate($content.ContentId, $content.ContentTypeId, "%{ }")</li>
+				#end
+				<li><a href="#" data-more><span class="more">$core_v2_language.GetResource('More')</span></a></li>
+				<li><a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a></li>
+			</ul>
+
+			#if ($includeSubscriptions)
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.appSubscribe")
+					<script>
+					jQuery(function(j){
+						j.telligent.evolution.messaging.unsubscribe('widget.${core_v2_widget.WrapperElementId}.subscribe');
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.subscribe', function(data){
+							var link = j(data.target);
+							var targetSubscriptionState = (link.data('value') === true || link.data('value') === 'True') ? false : true;
+							link.html(link.data('labelprocess'));
+							j.telligent.evolution.put({
+								url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/application/subscription.json',
+								data: {
+									ApplicationId: '$content.Application.ApplicationId',
+									ApplicationTypeId: '$content.Application.ApplicationTypeId',
+									IsSubscribed: targetSubscriptionState
+								}
+							}).then(function(){
+								link.data('value', targetSubscriptionState);
+								if (targetSubscriptionState === true) {
+									link.html(link.data('labeloff'))
+										.prop('title', link.data('labelofftip'));
+								} else {
+									link.html(link.data('labelon'))
+										.prop('title', link.data('labelontip'));
+								}
+							})
+						});
+					});
+					</script>
+				#end
+			#end
+		</div>
+	#end
+</div>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="bookmark">Bookmark</resource>
+  <resource name="by">By {user} {date}</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="KnowledgeCollectionPeek">Knowledge Collection Peek</resource>
+  <resource name="KnowledgeCollectionPeek_Description">Displays content for peeked knowledge collections.</resource>
+  <resource name="LastUpdated">Latest: {0}</resource>
+  <resource name="More">…</resource>
+  <resource name="post_plural"> documents</resource>
+  <resource name="post_singular"> document</resource>
+  <resource name="Subscribe">Subscribe</resource>
+  <resource name="SubscribeTip">Subscribe to notifications</resource>
+  <resource name="unbookmark">Unbookmark</resource>
+  <resource name="Unsubscribe">Unsubscribe</resource>
+  <resource name="UnsubscribeTip">Unsubscribe from notifications</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="subscriptions.applications.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,11 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($language = $core_v2_page.GetFormValue('language'))
+
+	$context.SendPreviewEmail($language)
+
+	{
+		"success":true
+	}
+#end

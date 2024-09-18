@@ -1,0 +1,163 @@
+#set($includeRoles = false)
+#set($includeRoles = $core_v2_page.GetQueryStringValue('w_IncludeRoles'))
+#set($includeEmail = false)
+#set($includeEmail = $core_v2_page.GetQueryStringValue('w_IncludeEmail'))
+
+#set($searchText = $core_v2_page.GetQueryStringValue('w_SearchText'))
+
+#set($matchingRoles = false)
+#set($matchingLdapRoles = false)
+#if ($includeRoles == 'True')
+	#set($matchingRoles = $core_v2_role.Find($searchText))
+	#if($core_v2_configuration.EnableLdap)
+		#set($matchingLdapRoles = $core_v2_ldapGroups.List($searchText))
+	#end
+#end
+
+#set($matchingUsers = $core_v2_user.Lookup($searchText, "%{PageSize=20}"))
+#set($matchingLdapUsers = false)
+#if ($core_v2_configuration.EnableLdap)
+	#set($matchingLdapUsers = $core_v2_ldapUsers.List("%{UsernameQuery=$searchText,PageSize=20}"))
+#end
+
+#set($totalRoles = 0)
+#set($totalLocalRoles = 20)
+#if ($includeRoles != 'True' || !$matchingRoles)
+	#set($totalLocalRoles = 0)
+#else
+	#set($totalLocalRoles = $matchingRoles.Count)
+	#if($totalLocalRoles > 20)
+		#set($totalLocalRoles = 20)
+	#end
+	#set($totalRoles = $totalRoles + $totalLocalRoles)
+#end
+
+#set($totalLdapRoles = 20)
+#if ($includeRoles != 'True' || !$matchingLdapRoles)
+	#set($totalLdapRoles = 0)
+#else
+	#set($totalLdapRoles = $matchingLdapRoles.Count)
+	#if($totalLdapRoles > 20)
+		#set($totalLdapRoles = 20)
+	#end
+	#set($totalRoles = $totalRoles + $totalLdapRoles)
+#end
+
+#set($totalUsers = 0)
+#set($totalLocalUsers = 20)
+
+#if (!$matchingUsers)
+	#set($totalLocalUsers = 0)
+#else
+	#set($totalUsers = $totalUsers + $matchingUsers.Count)
+	#set($totalLocalUsers = $matchingUsers.Count)
+#end
+
+#set($totalLdapUsers = 20)
+#if (!$matchingLdapUsers)
+	#set($totalLdapUsers = 0)
+#else
+	#set($totalLdapUsers = $matchingLdapUsers.Count)
+	#set($totalUsers = $totalUsers + $matchingLdapUsers.Count)
+#end
+
+#if($includeRoles == 'True' && $totalRoles + $totalUsers > 20)
+	#if ($totalRoles > 10)
+		#if ($totalUsers > 10)
+			#set($totalUsers = 10)
+		#end
+	#else
+		#set($totalUsers = 20 - $totalRoles)
+	#end
+
+	#if($totalRoles > 10)
+		#set($totalRoles = 20 - $totalUsers)
+	#end
+#end
+
+#if ($totalLocalRoles + $totalLdapRoles > $totalRoles)
+	#if($totalLdapRoles > 5 && $totalLocalRoles > 5)
+		#set($totalLdapRoles = $totalRoles / 2)
+		#set($totalLocalRoles = $totalRoles / 2)
+	#elseif ($matchingLdapRoles.Count > 5)
+		#set($totalLdapRoles = $totalRoles - $totalLocalRoles)
+	#end
+#end
+
+#if ($totalLocalUsers + $totalLdapUsers > $totalUsers)
+	#if($totalLdapUsers > 5 && $totalLocalUsers > 5)
+		#set($totalLdapUsers = $totalUsers / 2)
+		#set($totalLocalUsers = $totalUsers / 2)
+	#elseif ($matchingLdapUsers.Count > 5)
+		#set($totalLdapUsers = $totalUsers - $totalLocalUsers)
+	#end
+#end
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+	#if ($includeEmail && $searchText && $core_v2_utility.IsMatch($searchText, $core_v2_configuration.EmailRegex))
+		{
+		    "email":"$core_v2_encoding.JavascriptEncode($searchText)",
+		    "title":"$core_v2_encoding.JavascriptEncode($searchText)",
+		    "preview":"$core_v2_encoding.JavascriptEncode($searchText)",
+		    "alreadySelected": false
+		},
+	#end
+	#set($index = 0)
+	#if($matchingUsers)
+		#foreach($user in $matchingUsers)
+			#if ($index < $totalUsers)
+                #if ($user && (!$exactUser || $exactUser.Id != $user.Id))
+                    {
+                        "userId":"$user.Id",
+                        "title":"$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+                        "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 16, 16, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop', alt='$user.DisplayName'}")) $core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+                        "alreadySelected": #if($core_v2_groupUserMember.Get($core_v2_group.Current.Id, "%{UserId = $user.Id}")) true #else false #end
+                    },
+                #end
+			#end
+			#set($index = $index + 1)
+		#end
+	#end
+	#set($index = 0)
+	#foreach($matchedUser in $matchingLdapUsers)
+		#if ($index < $totalLdapUsers)
+			{
+    			"ldapUserId":"$core_v2_encoding.JavascriptEncode($matchedUser.UserName)",
+                "title":"$core_v2_encoding.JavascriptEncode($matchedUser.FriendlyName) ($core_v2_encoding.JavascriptEncode($matchedUser.UserName)) (D)",
+                "preview":"$core_v2_encoding.JavascriptEncode($matchedUser.FriendlyName) ($core_v2_encoding.JavascriptEncode($matchedUser.UserName)) (D)",
+                "alreadySelected": false
+            },
+		#end
+		#set($index = $index + 1)
+	#end
+	#set($index = 0)
+	#if ($matchingRoles)
+		#foreach($role in $matchingRoles)
+			#if ($index < $totalLocalRoles)
+				{
+		        "roleId":"$role.Id",
+		        "title":"$core_v2_encoding.JavascriptEncode($role.Name) ($core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserOrRoleLookUp_RoleType')))",
+		        "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 16, 16, "%{border='0px', ResizeMethod = 'ZoomAndCrop', alt='$role.Name' }")) $core_v2_encoding.JavascriptEncode($role.Name) ($core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserOrRoleLookUp_RoleType')))",
+		        "alreadySelected": #if($core_v2_groupRoleMember.Get($core_v2_group.Current.Id, "%{RoleId = $role.Id}")) true #else false #end
+                },
+			#end
+			#set($index = $index + 1)
+		#end
+	#end
+	#set($index = 0)
+	#if ($matchingLdapRoles)
+		#foreach($role in $matchingLdapRoles)
+			#if ($index < $totalLdapRoles)
+				{"ldapRoleId":"$core_v2_encoding.JavascriptEncode($role.Name)",
+					"ldapRoleDn":"$core_v2_encoding.JavascriptEncode($role.DistinguishedName)",
+					"title":"$core_v2_encoding.JavascriptEncode($role.Name) (D)",
+					"preview":"$core_v2_encoding.JavascriptEncode($role.Name) (D)",
+					"alreadySelected": false
+                 },
+			#end
+			#set($index = $index + 1)
+		#end
+	#end
+null]}

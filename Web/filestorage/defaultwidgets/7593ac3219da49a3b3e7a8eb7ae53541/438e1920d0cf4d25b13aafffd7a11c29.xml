@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:FeatureManagement_Name}" version="11.0.0.0" description="${resource:FeatureManagement_Description}" instanceIdentifier="438e1920d0cf4d25b13aafffd7a11c29" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-features with-header-filter" lastModified="2021-05-28 18:38:09Z" provider="7593ac3219da49a3b3e7a8eb7ae53541">
+    <contentScript language="Velocity"><![CDATA[#set($featuresListId = $core_v2_widget.UniqueId('featuresListId'))
+#set($applicationType = $core_v2_applicationType.Get($context.ApplicationTypeId))
+
+<fieldset>
+    ## Create container to be populated by scrollableResults.load
+	<ul class="content-list content expandable simple features" data-hasmore="$hasMore"></ul>
+</fieldset>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.featureManagement.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		containerId: '$context.ContainerId',
+		containerTypeId: '$context.ContainerTypeId',
+		applicationTypeName: '$applicationType.Name.ToLower()',
+		pagedFeaturesUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-features.vm'))',
+		editFeatureName: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('Edit_Feature'))',
+		editFeatureUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('edit-feature.vm'))',
+		localContentFilter: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('filter_localcontent'))',
+		displayedContentFilter: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('filter_displayedcontent'))',
+		 deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete_Confirmation'))',
+		featuredeleted : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Feature_Deleted'))',
+		text:  {
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))',
+			delete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))',
+			applicationPanelInstructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ApplicationPanel_Instructions'))',
+			containerPanelInstructions: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ContainerPanel_Instructions'))"
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add_Feature">Feature this {0}</resource>
+  <resource name="ApplicationPanel_Instructions">Content within this {0} that is featured is listed below.</resource>
+  <resource name="Attachment_File">Poster Image</resource>
+  <resource name="Attachment_File_Detail">Optionally select an image to use for this featured post.</resource>
+  <resource name="ChangeFile">Change File</resource>
+  <resource name="ContainerPanel_Instructions">'Features from here' lists content within this {0} that is featured.  'Features displayed here' lists content from anywhere on the site that will be displayed as featured in this {0}.</resource>
+  <resource name="ContentTypeNotFeaturable">This content type does not support featuring</resource>
+  <resource name="Delete">Unfeature</resource>
+  <resource name="Delete_Confirmation">Are you sure you want to remove this feature?</resource>
+  <resource name="Edit">Edit Feature</resource>
+  <resource name="Edit_Feature">Edit {0} feature</resource>
+  <resource name="EndDate">End Featuring</resource>
+  <resource name="EndDate_Detail">The date the content will no longer be featured</resource>
+  <resource name="Feature_Both">the site group and current group</resource>
+  <resource name="Feature_Deleted">Feature removed.</resource>
+  <resource name="Feature_Group">the current group</resource>
+  <resource name="Feature_Saved">Feature saved.</resource>
+  <resource name="Feature_Site">the site group</resource>
+  <resource name="Feature_Target">Feature In</resource>
+  <resource name="Feature_Target_Detail">The groups where this item will be displayed as featured</resource>
+  <resource name="FeatureManagement_Description">Manage featured content within this application.</resource>
+  <resource name="FeatureManagement_Name">Featured Content</resource>
+  <resource name="FeatureNotFound">Feature not found.</resource>
+  <resource name="FeaturePermissionDenied">You do not have permission to feature this content</resource>
+  <resource name="FeatureSaveError">An error occurred while saving this feature.</resource>
+  <resource name="filter_displayedcontent">Features displayed here</resource>
+  <resource name="filter_localcontent">Features from here</resource>
+  <resource name="no_displayedfeatures">No content is set to be displayed as featured in '{0}'.</resource>
+  <resource name="no_features">No content has been featured in '{0}' yet.</resource>
+  <resource name="RemoveFile">Remove File</resource>
+  <resource name="Save">Save</resource>
+  <resource name="StartDate">Start Featuring</resource>
+  <resource name="StartDate_Detail">The date when the content should begin being featured</resource>
+  <resource name="to">to</resource>
+  <resource name="UploadFile">Upload File</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="View">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="features.featureditems.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

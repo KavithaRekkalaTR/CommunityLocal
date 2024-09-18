@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ExternalMessageActivityStory_Name}" cssClass="" description="${resource:ExternalMessageActivityStory_Description}"
+		instanceIdentifier="4ea2cc3e81a444bfb4581c173240e002" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+
+	#if(!$context.ExternalMessage)
+		$core_v2_widget.Hide()
+	#else
+		#set($actor = $context.Story.PrimaryUser)
+		#if ($actor.Url)
+		 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+		#else
+			#set($profile0Html = $actor.DisplayName)
+		#end
+
+		#if($isPreview)
+			$profile0Html $context.ExternalMessage.Body
+		#else
+			<div class="activity-summary">$profile0Html#if(!$context.ExternalMessage.Group):#else $core_v2_language.GetResource('activity_view_in')
+				<a href="$core_v2_encoding.HtmlAttributeEncode($context.ExternalMessage.Group.Url)">$context.ExternalMessage.Group.Name</a>#end
+			</div>
+
+			<div class="activity-content">
+				$context.ExternalMessage.RenderedBody
+			</div>
+		#end
+	#end
+#end
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="ExternalMessageActivityStory_Name">External Message Activity Story</resource>
+	<resource name="ExternalMessageActivityStory_Description">Story for external messages.</resource>
+	<resource name="UserProfile_Html"><![CDATA[<span class="user-name"><a href="{1}" class="internal-link view-user-profile activity-summary-user">{0}</a></span>]]></resource>
+	<resource name="activity_view_in"> in </resource>
+</language>
+</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

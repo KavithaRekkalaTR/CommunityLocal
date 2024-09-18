@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ArticleActivityStory_Name}" version="10.0.0.0" description="${resource:ArticleActivityStory_Description}" instanceIdentifier="e8d9c6c893cd47edb8b2a4cd025ac967" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="6ceb4a59bdd948df9dd67676a7a7f1dd">
+    <contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+	#set($article = $articles_v1_articles.Get("%{ Id = $context.Story.ContentId }"))
+	#if(!$article)
+		$core_v2_widget.Hide()
+	#else
+		#set($user = $context.Story.PrimaryUser)
+		#if ($user.Url)
+		 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $user.DisplayName, $user.Url))
+		#else
+			#set($profile0Html = $user.DisplayName)
+		#end
+
+		#if($isPreview)
+			#if ($article.RevisionCount > 0)
+					#format($core_v2_language.GetResource('UpdatedArticle_Preview'))
+								#token('user')
+									$profile0Html
+							#token('article')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">$article.Title</a>
+							#token('articlecollection')
+									#if ($content.Application.Container.ParentContainer)
+												<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+													href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+												<span class="group-application-separator">&gt;</span>
+										#end
+										<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+								#end
+						#else
+								#format($core_v2_language.GetResource('NewArticle_Preview'))
+								#token('user')
+									$profile0Html
+							#token('article')
+									<a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">$article.Title</a>
+							#token('articlecollection')
+									#if ($content.Application.Container.ParentContainer)
+												<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+													href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+												<span class="group-application-separator">&gt;</span>
+										#end
+										<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+								#end
+			#end
+		#else
+				<div class="activity-summary article">
+				#format($core_v2_language.GetResource('in'))
+								#token('user')
+								$profile0Html
+						#token('articlecollection')
+								#if ($content.Application.Container.ParentContainer)
+										<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+										<span class="group-application-separator">&gt;</span>
+								#end
+								<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+									href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+						#end
+				</div>
+			<span class="activity-title">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)" class="internal-link view-post"><span>$article.Title</span></a>
+			</span>
+			<div class="activity-description user-defined-markup">
+					#set($rawBody = $article.Body('Web'))
+					#set($body = $core_v2_language.Truncate($rawBody, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+					$body
+					#if ($body.Length < $rawBody.Length)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">$core_v2_language.GetResource('read-more')</a>
+					#end
+			</div>
+		#end
+	#end
+#end
+]]></contentScript>
+    <languageResources><language key="en-us">
+        <resource name="in">{user} added an article in {articlecollection}:</resource>
+        <resource name="NewArticle_Preview">{user} added {article} to {articlecollection}.</resource>
+        <resource name="read-more">Read more.</resource>
+        <resource name="UpdatedArticle_Preview">{user} edited {article} in {articlecollection}.</resource>
+        <resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource>
+        <resource name="ArticleActivityStory_Description">Story for articles.</resource>
+        <resource name="ArticleActivityStory_Name">Article Activity Story</resource>
+        </language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

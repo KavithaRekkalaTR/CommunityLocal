@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:IdeaStatusHistory}" version="11.0.0.0" description="${resource:IdeaStatusHistory_Description}" instanceIdentifier="2985eb157a09464bbf2033075ff0cd50" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="idea-status-list" lastModified="2019-05-30 15:51:05Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+$core_v2_ui.PagedContent('list.vm')]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="IdeaLinks_DeleteIdeaStatus">Delete</resource>
+  <resource name="IdeaLinks_EditIdeaStatus">Edit</resource>
+  <resource name="IdeaStatusHistory">Ideas - Idea Status History</resource>
+  <resource name="IdeaStatusHistory_Description">Shows the history of status changes on the current idea.</resource>
+  <resource name="instructions">Below is the history of changes to this idea's status. &lt;a href="{0}"&gt;Return to the idea&lt;/a&gt;.</resource>
+  <resource name="more">More</resource>
+  <resource name="NoNote">No note was provided with this status update.</resource>
+  <resource name="title">{0}: Status History</resource>
+  <resource name="VerifyIdeaStatusDeletion">Are you sure you want to delete this status?</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="17db2a1129bd4739a986e65b09f7f36a" />
+    </requiredContext>
+    <restScopes>
+      <scope id="ideas.ideastatuses.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MediaGalleries_MediaGalleryLinks_Name}" version="11.0.0.0" description="${resource:MediaGalleries_MediaGalleryLinks_Description}" instanceIdentifier="1d1c8dd2813e43689cf58562dc698b08" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="media-gallery-links" lastModified="2020-01-14 16:06:56Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=mediaGalleryCreate&amp;Link=mediaGalleryEdit&amp;Link=mediaGalleryManage&amp;Link=mediaGalleryPostEdit&amp;Link=mediaGalleryPostDelete&amp;Link=mediaGalleryFiles&amp;Link=mediaGallerySlideshow&amp;Link=mediaGalleryPostDownload&amp;Link=mediaGalleryFavorites')))
+#set($hasLinks = false)
+#set($currentMedia = $core_v2_media.Current)
+#set($currentGallery = $core_v2_gallery.Current)
+
+#set ($collapse = $core_v2_widget.GetBoolValue('collapsed', false))
+#set ($mediaLinks = $links.Values('Link'))
+#set ($linksToShow = $mediaLinks.Count * 2)
+#if ($collapse)
+	#set ($linksToShow = 0)
+#end
+
+#foreach($link in $mediaLinks)
+	#beforeall
+		<div class="ui-links navigation-list links" data-minlinks="2" data-direction="vertical" data-minlinks="$linksToShow" data-maxlinks="$linksToShow">
+			<ul class="navigation-list">
+	#each
+		#set($url = false)
+		#if ($link == 'mediaGalleryPostDownload')
+			#if ($currentMedia)
+				#set($url = $core_v2_mediaUrls.DownloadMedia($currentMedia.Id))
+				#if ($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-post"><span></span>$core_v2_language.GetResource('Download')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryCreate')
+			#set($url = $core_v2_mediaUrls.AddGallery($core_v2_group.Current.Id))
+			#if($url)
+				<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link add-application"><span></span>$core_v2_language.GetResource('CF_CreateMediaGallery')</a></li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'mediaGalleryManage')
+			#if ($currentGallery)
+				#set($url = $core_v2_mediaUrls.ManageGallery($currentGallery.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link manage-application"><span></span>$core_v2_language.GetResource('CF_ManageMediaGallery')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryEdit')
+			#if ($currentGallery)
+				#set($url = $core_v2_mediaUrls.EditGallery($currentGallery.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-application"><span></span>$core_v2_language.GetResource('CF_EditMediaGallery')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryAddPost')
+			#if ($currentGallery)
+				#set($url = $core_v2_mediaUrls.AddMedia($currentGallery.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link add-post"><span></span>$core_v2_language.GetResource('CF_MediaGalleryAddPost')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryRss')
+			#if($currentGallery)
+				#set($url = $core_v2_mediaUrls.Rss($currentGallery.Id))
+			#else
+				#set($url = $core_v2_mediaUrls.GroupAggregateRss($core_v2_group.Current.Id))
+			#end
+			#if($url)
+				<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link rss"><span></span>$core_v2_language.GetResource('Rss')</a></li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'mediaGallerySlideshow')
+			#if($currentGallery)
+				#set($url = $core_v2_mediaUrls.Slideshow($currentGallery.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-slideshow"><span></span>$core_v2_language.GetResource('MediaGallery_ViewSlideshow')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryFiles')
+			#if($currentGallery)
+				#set($url = $core_v2_mediaUrls.Gallery($currentGallery.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-application"><span></span>$core_v2_language.GetResource('MediaGallery_ViewFiles')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryViewNextPost')
+			#if ($currentMedia)
+				#set($url = $core_v2_mediaUrls.NextMedia($currentMedia.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-next-post"><span></span>$core_v2_language.GetResource('Button_NextTopic')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryViewPreviousPost')
+			#if ($currentMedia)
+				#set($url = $core_v2_mediaUrls.PreviousMedia($currentMedia.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-previous-post"><span></span>$core_v2_language.GetResource('Button_PreviousTopic')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryPostEdit')
+			#if ($currentMedia)
+				#set($url = $core_v2_mediaUrls.EditMedia($currentMedia.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-post"><span></span>$core_v2_language.GetResource('Edit')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'mediaGalleryPostDelete')
+			#if ($currentMedia && $core_v3_permission.CheckPermission($core_v2_mediaPermissions.DeletePost, $core_v2_user.Accessing.Id, "%{ ContentId = $currentMedia.ContentId, ContentTypeId = $core_v2_media.ContentTypeId }").IsAllowed)
+				<li class="navigation-list-item"><a href="#" data-messagename="widget.${core_v2_widget.WrapperElementId}.mediaDelete" data-mediaid="$currentMedia.Id" data-galleryid="$currentMedia.MediaGalleryId" data-successurl="$core_v2_encoding.HtmlAttributeEncode($core_v2_mediaUrls.Gallery($currentMedia.MediaGalleryId))" id="$core_v2_widget.UniqueId('deletepost')" class="internal-link delete-post"><span></span>$core_v2_language.GetResource('Delete')</a></li>
+				<script type="text/javascript">
+				//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+				jQuery(function(j){
+					j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.mediaDelete', function(data) {
+						if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MediaGalleries_MediaGalleryLinks_DeletePostConfirmation'))'))
+						{
+							jQuery.telligent.evolution.del({
+								url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/media/{MediaGalleryId}/files/{FileId}.json',
+								data: {
+									MediaGalleryId: j(data.target).data('galleryid'),
+									FileId: j(data.target).data('mediaid')
+								},
+								success: function(response) {
+									window.location = j(data.target).data('successurl');
+								},
+								defaultErrorMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MediaGalleries_MediaGalleryLinks_DeletePostError'))'
+							});
+						}
+					});
+				});
+				//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+				</script>
+
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'mediaGalleryFavorites')
+			#if ($currentGallery && $core_v2_bookmark.SupportsBookmarks($core_v2_gallery.ContentTypeId) && $core_v2_bookmark.CanBookmark($currentGallery.ContentId, $core_v2_gallery.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($currentGallery.ContentId, $core_v2_gallery.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($currentGallery.ContentId, $core_v2_gallery.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'mediaGalleryFavoritePost')
+			#if ($currentMedia && $core_v2_bookmark.SupportsBookmarks($core_v2_media.ContentTypeId) && $core_v2_bookmark.CanBookmark($currentMedia.ContentId, $core_v2_media.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($currentMedia.ContentId, $core_v2_media.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($currentMedia.ContentId, $core_v2_media.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'mediaGalleryPostSubscription')
+			#if ($currentMedia && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+				<li class="navigation-list-item">
+					<a data-messagename="widget.${core_v2_widget.WrapperElementId}.mediaSubscribe" data-mediaid="$currentMedia.Id" data-subscribed="true" href="#" #if(!$core_v2_media.IsSubscribed($currentMedia.Id,"%{IncludeApplicationSubscriptions='false'}")) style="display:none;" #end>$core_v2_language.GetResource('CF_MediaGalleryPostSubscriptionOn')</a>
+				</li>
+    			<li class="navigation-list-item">
+    				<a data-messagename="widget.${core_v2_widget.WrapperElementId}.mediaSubscribe" data-mediaid="$currentMedia.Id" data-subscribed="false" href="#" #if($core_v2_media.IsSubscribed($currentMedia.Id,"%{IncludeApplicationSubscriptions='false'}")) style="display:none;" #end>$core_v2_language.GetResource('CF_MediaGalleryPostSubscriptionOff')</a>
+    			</li>
+				#registerEndOfPageHtml()
+					<script type="text/javascript">
+					//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+					jQuery(function(j){
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.mediaSubscribe', function(data) {
+							var link = j(data.target);
+							j.telligent.evolution.post({
+								url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+								data: {
+									type: 'media',
+									subscribe: !link.data('subscribed'),
+									mediaId: link.data('mediaid')
+								},
+								dataType: 'json',
+								success: function(response) {
+									if (response.subscribe) {
+										link.closest('ul').find('a[data-messagename="widget.${core_v2_widget.WrapperElementId}.mediaSubscribe"][data-subscribed="false"]').hide();
+                                    	link.closest('ul').find('a[data-messagename="widget.${core_v2_widget.WrapperElementId}.mediaSubscribe"][data-subscribed="true"]').show();
+                                    } else {
+                                    	link.closest('ul').find('a[data-messagename="widget.${core_v2_widget.WrapperElementId}.mediaSubscribe"][data-subscribed="false"]').show();
+                                    	link.closest('ul').find('a[data-messagename="widget.${core_v2_widget.WrapperElementId}.mediaSubscribe"][data-subscribed="true"]').hide();
+									}
+
+									if (response.warnings && response.warnings.length > 0) {
+										j.telligent.evolution.notifications.show(response.warnings[0], { type: 'warning' });
+									}
+								}
+							});
+						});
+					});
+					//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+					</script>
+				#end
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'mediaGalleryPostShare')
+			#if ($currentMedia)
+				#set($url = $core_v2_mediaUrls.ShareMedia($currentMedia.Id, "%{Modal='False'}"))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlEncode($url)" class="internal-link email-post"><span></span>$core_v2_language.GetResource('CF_MediaGalleryPostShare')</a></li>
+				#else
+					<li class="navigation-list-item"><a href="mailto:?subject=$currentMedia.Title&body=$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AbsoluteUrl($currentMedia.Url))" class="internal-link email-post"><span></span>$core_v2_language.GetResource('CF_MediaGalleryPostShare')</a></li>
+				#end
+				#set($hasLinks = true)
+			#end
+		  #elseif($link == 'feature')
+            #if ($core_v3_feature.CanFeature($currentMedia.ContentId, $currentMedia.ContentTypeId))
+      			  <li class="navigation-list-item">$core_v2_ui.Feature($currentMedia.ContentId, $currentMedia.ContentTypeId)</li>
+              #set($hasLinks = true)
+            #end
+        #elseif ($link == 'convert' && $currentMedia)
+            #set($convert = false)
+    		#set($convert = $core_v2_ui.ConvertContent($currentMedia.ContentId, $currentMedia.ContentTypeId))
+    		#if ($convert)
+    		    <li class="navigation-list-item">
+    		        $convert
+    		    </li>
+    		    #set($hasLinks = true)
+    		#end
+		  #end
+#afterall
+			 <li class="navigation-list-item">
+		            <a href="#" data-more>$core_v2_language.GetResource('more')</a>
+		        </li>
+		        <li class="navigation-list-item">
+		            <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+		        </li>
+			</ul>
+		</div>
+#end
+
+#if($hasLinks == false)
+	$core_v2_widget.Hide()
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:MediaGalleries_MediaGalleryLinks_Title_Options}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:MediaGalleries_MediaGalleryLinks_Title_Options}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="collapsed" labelResourceName="collapsed" defaultValue="false" dataType="Bool" />
+	<property id="links" labelResourceName="MediaGalleries_MediaGalleryLinks_Links" defaultValue="Link=mediaGalleryCreate&amp;Link=mediaGalleryEdit&amp;Link=mediaGalleryManage&amp;Link=mediaGalleryPostEdit&amp;Link=mediaGalleryPostDelete&amp;Link=mediaGalleryFiles&amp;Link=mediaGallerySlideshow&amp;Link=mediaGalleryPostDownload&amp;Link=mediaGalleryFavorites" dataType="Custom" template="core_v2_sortableList" height="275" key="Link">
+		<propertyValue value="mediaGalleryPostDownload" labelResourceName="CF_MediaGalleryDownload" orderNumber="1000000" />
+		<propertyValue value="mediaGalleryCreate" labelResourceName="CF_CreateMediaGallery" orderNumber="1000001" />
+		<propertyValue value="mediaGalleryManage" labelResourceName="CF_ManageMediaGallery" orderNumber="1000002" />
+		<propertyValue value="mediaGalleryEdit" labelResourceName="CF_EditMediaGallery" orderNumber="1000003" />
+		<propertyValue value="mediaGalleryAddPost" labelResourceName="CF_MediaGalleryAddPost" orderNumber="1000004" />
+		<propertyValue value="mediaGalleryRss" labelResourceName="Rss" orderNumber="1000005" />
+		<propertyValue value="mediaGallerySlideshow" labelResourceName="MediaGallery_ViewSlideshow" orderNumber="1000006" />
+		<propertyValue value="mediaGalleryFiles" labelResourceName="MediaGallery_ViewFiles" orderNumber="1000007" />
+		<propertyValue value="mediaGalleryViewNextPost" labelResourceName="Button_NextTopic" orderNumber="1000008" />
+		<propertyValue value="mediaGalleryViewPreviousPost" labelResourceName="Button_PreviousTopic" orderNumber="1000009" />
+		<propertyValue value="mediaGalleryPostEdit" labelResourceName="CF_MediaGalleryEdit" orderNumber="1000010" />
+		<propertyValue value="mediaGalleryPostDelete" labelResourceName="CF_MediaGalleryDelete" orderNumber="1000011" />
+		<propertyValue value="mediaGalleryFavorites" labelResourceName="CF_MediaGalleryFavorites" orderNumber="1000012" />
+		<propertyValue value="mediaGalleryFavoritePost" labelResourceName="CF_MediaGalleryFavoritePost" orderNumber="1000013" />
+		<propertyValue value="mediaGalleryPostSubscription" labelResourceName="CF_MediaGalleryPostSubscription" orderNumber="1000014" />
+		<propertyValue value="mediaGalleryPostShare" labelResourceName="CF_MediaGalleryPostShareLink" orderNumber="1000015" />
+		<propertyValue value="feature" labelResourceName="CF_feature" orderNumber="1000016" />
+		<propertyValue value="convert" labelResourceName="Convert" orderNumber="1000017" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Button_NextTopic">Next</resource>
+  <resource name="Button_PreviousTopic">Previous</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_CreateMediaGallery">Create new gallery</resource>
+  <resource name="CF_EditMediaGallery">Administer gallery</resource>
+  <resource name="CF_feature">Feature</resource>
+  <resource name="CF_ManageMediaGallery">Manage gallery</resource>
+  <resource name="CF_MediaGalleryAddPost">Upload</resource>
+  <resource name="CF_MediaGalleryDelete">Delete</resource>
+  <resource name="CF_MediaGalleryDownload">Download</resource>
+  <resource name="CF_MediaGalleryEdit">Edit</resource>
+  <resource name="CF_MediaGalleryFavoritePost">Bookmark file</resource>
+  <resource name="CF_MediaGalleryFavorites">Bookmark gallery</resource>
+  <resource name="CF_MediaGalleryPostShare">Share</resource>
+  <resource name="CF_MediaGalleryPostShareLink">Share</resource>
+  <resource name="CF_MediaGalleryPostSubscription">Subscription</resource>
+  <resource name="CF_MediaGalleryPostSubscriptionOff">Turn Comment notifications on</resource>
+  <resource name="CF_MediaGalleryPostSubscriptionOn">Turn Comment notifications off</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="collapsed">Collapsed</resource>
+  <resource name="Convert">Move file</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Download">Download</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="MediaGalleries_MediaGalleryLinks_DeletePostConfirmation">Are you sure you want to delete this file?</resource>
+  <resource name="MediaGalleries_MediaGalleryLinks_DeletePostError">An error occurred while attempting to delete this file.</resource>
+  <resource name="MediaGalleries_MediaGalleryLinks_Description">Displays links related to an individual media gallery.</resource>
+  <resource name="MediaGalleries_MediaGalleryLinks_Links">Select, rearrange, and enable the links to be displayed</resource>
+  <resource name="MediaGalleries_MediaGalleryLinks_Name">Media Gallery - Links</resource>
+  <resource name="MediaGalleries_MediaGalleryLinks_Title_Options">Options</resource>
+  <resource name="MediaGallery_ViewFiles">View all</resource>
+  <resource name="MediaGallery_ViewSlideshow">View slideshow</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Rss">RSS</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="galleries.media.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:CF_GenericContent}" version="11.0.0.0" description="${resource:CF_GenericContentDesc}" instanceIdentifier="50c816b46c7647d5a7cea85b3f47d4d6" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="html-content" lastModified="2020-01-17 15:42:00Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+$core_v2_widget.ExecuteFile('visibility-check.vm')
+
+#set($html = false)
+#set($html = $core_v2_ui.Render($core_v2_widget.GetHtmlValue('html','')))
+#set($backgroundColor = false)
+#set($backgroundColor = $core_v2_widget.GetColorValue('backgroundColor', ''))
+#set($backgroundImage = false)
+#set($backgroundImage = $core_v2_widget.GetUrlValue('backgroundImage', ''))
+#set($height = false)
+#set($height = $core_v2_widget.GetUnitValue('height', ''))
+#set($width = $core_v2_widget.GetStringValue('width', 'page'))
+#if (!$html || $html == '')
+	$core_v2_widget.Hide()
+#end
+#if ($width == 'windowpage')
+	<div id="$core_v2_widget.UniqueId('content')" class="outer-wrapper" style="#if($backgroundColor && $backgroundColor != '')background-color: $backgroundColor;#end#if($backgroundImage && $backgroundImage != '')background-image:url('$core_v2_encoding.HtmlAttributeEncode($backgroundImage)');#end#if($height && $height != '')height:$height;#end">
+		<div class="inner-wrapper user-defined-markup">
+			$html
+		</div>
+	</div>
+#else
+	<div id="$core_v2_widget.UniqueId('content')" class="#if ($width == 'window') outer-wrapper inner-wrapper #end user-defined-markup" style="#if($backgroundColor && $backgroundColor != '')background-color: $backgroundColor;#end#if($backgroundImage && $backgroundImage != '')background-image:url('$core_v2_encoding.HtmlAttributeEncode($backgroundImage)');#end#if($height && $height != '')height:$height;#end">
+		$html
+	</div>
+#end
+#if ($width == 'window' || $width == 'windowpage')
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function() {
+				var elm = jQuery('#$core_v2_widget.UniqueId('content')');
+				elm.parent().height(elm.outerHeight(true));
+				jQuery(window).trigger('resize');
+				elm.on('resized', function() {
+					elm.parent().height(elm.outerHeight(true));
+					jQuery(window).trigger('resize');
+				});
+			});
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('title', '${resource:CF_GenericContent}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="group1" labelResourceName="Options">
+	<property id="title" labelResourceName="CF_Title" defaultValue="${resource:CF_GenericContent}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="html" labelResourceName="CF_Content" dataType="Html" contentTypeId="DF237622-6CC3-4FC2-8555-EF4FB2656444" enableRichEditing="true" />
+</propertyGroup>
+<propertyGroup id="group2" labelResourceName="Style">
+	<property id="backgroundColor" labelResourceName="CF_BackgroundColor" dataType="Color" />
+	<property id="backgroundImage" labelResourceName="CF_BackgroundImage" dataType="Url" validExtensions="gif,jpg,jpeg,png">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" />
+	</property>
+	<property id="height" labelResourceName="Height" dataType="Unit" />
+	<property id="width" labelResourceName="Width" defaultValue="page" dataType="String">
+		<propertyValue value="page" labelResourceName="Width_PageWidth" />
+		<propertyValue value="windowpage" labelResourceName="Width_WindowContentPageWidth" />
+		<propertyValue value="window" labelResourceName="Width_WindowWidth" />
+	</property>
+	<property id="cssClass" labelResourceName="CF_CssClass" descriptionResourceName="CF_CssClass_Description" dataType="String" />
+</propertyGroup>
+<propertyGroup id="group3" labelResourceName="Visibility">
+	<property id="visibleTo" labelResourceName="VisibleTo" defaultValue="" dataType="String">
+		<propertyValue value="" labelResourceName="Everyone" propertiesToHide="includeRoles,excludeRoles" />
+		<propertyValue value="anonymous" labelResourceName="AnonymousUsers" propertiesToHide="includeRoles,excludeRoles" />
+		<propertyValue value="authenticated" labelResourceName="AuthenticatedMembers" propertiesToHide="includeRoles,excludeRoles" />
+		<propertyValue value="includeRoles" labelResourceName="IncludeRoles" propertiesToShow="includeRoles" propertiesToHide="excludeRoles" />
+		<propertyValue value="excludeRoles" labelResourceName="ExcludeRoles" propertiesToShow="excludeRoles" propertiesToHide="includeRoles" />
+	</property>
+	<property id="includeRoles" resourceName="IncludeRoles" dataType="Custom" template="core_v2_roleLookup" maxSelections="10" defaultValue="" />
+	<property id="excludeRoles" resourceName="ExcludeRoles" dataType="Custom" template="core_v2_roleLookup" maxSelections="10" defaultValue="" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AnonymousUsers">Anonymous users</resource>
+  <resource name="AuthenticatedMembers">Authenticated members</resource>
+  <resource name="CF_BackgroundColor">Background Color</resource>
+  <resource name="CF_BackgroundImage">Background Image</resource>
+  <resource name="CF_Content">Content</resource>
+  <resource name="CF_CssClass">CSS Class</resource>
+  <resource name="CF_CssClass_Description">This class name is applied to the wrapper for the content, enabling targeting from custom CSS rules.</resource>
+  <resource name="CF_GenericContent">Generic Content</resource>
+  <resource name="CF_GenericContentDesc">Enter any message, images, video, etc...</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="ExcludeRoles">Hidden from roles</resource>
+  <resource name="Everyone">Everyone</resource>
+  <resource name="Height">Height</resource>
+  <resource name="IncludeRoles">Visible to roles</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Style">Style</resource>
+  <resource name="Visibility">Visibility</resource>
+  <resource name="VisibleTo">Visible to</resource>
+  <resource name="WidgetHidden">This widget is currently configured to be hidden from you.</resource>
+  <resource name="Width">Width</resource>
+  <resource name="Width_PageWidth">Page width</resource>
+  <resource name="Width_WindowContentPageWidth">Background at window width, content at page width</resource>
+  <resource name="Width_WindowWidth">Window width</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[$core_v2_widget.GetStringValue('cssClass', '')]]></additionalCssScript>
+  </scriptedContentFragment>
+</scriptedContentFragments>

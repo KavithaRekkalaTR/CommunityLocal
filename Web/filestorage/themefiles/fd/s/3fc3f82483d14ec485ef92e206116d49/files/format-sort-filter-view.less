@@ -1,0 +1,102 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+// sorting.by
+.sort {
+	float: right;
+	margin-bottom: @spacing * 2;
+	.by, .order {
+		margin-left: @spacing;
+		.uiselect {
+			.uiselect-slim;
+		}
+	}
+}
+@{small-sidebars} {
+	.sort {
+		display: none;
+	}
+}
+
+// filter
+.filter {
+	clear: both;
+	width: 100%;
+	display: flex;
+	.uiselect {
+		.uiselect-slim;
+	}
+	.filter-option {
+		text-align: center;
+		flex: 1 1 0;
+		width: 100%;
+		a {
+			.transition(all .1s);
+			display: block;
+			padding: (@spacing / 2) 0 (@spacing / 3) 0;
+			border-bottom: 2px solid -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+			text-align: center;
+			border-right: 0px;
+			color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+			font-size: @font-size;
+			&:active {
+				background-color: -evo-decrease-contrast(@color-background, 0%, @color-foreground, @color-contrast);
+			}
+			&:hover {
+				color: @color-link;
+				border-bottom: 2px solid @color-link;
+			}
+		}
+		&.selected {
+			a {
+				color: -evo-decrease-contrast(@color-foreground, 22%, @color-background, @color-contrast);
+				border-bottom: 2px solid -evo-decrease-contrast(@color-foreground, 22%, @color-background, @color-contrast);
+			}
+		}
+	}
+}
+
+
+// filter-selector
+.filter-selector {
+	float: right;
+	margin: 0 @spacing @spacing @spacing;
+}
+.left-sidebar, .right-sidebar {
+	.filter-selector {
+		float: none;
+		clear: both;
+		width: 100%;
+		margin: 0;
+		div {
+			float: none !important;
+			clear: both !important;
+			width: 100% !important;
+			margin: 0 0 0 0 !important;
+			overflow: hidden;
+			.uiselect {
+				float: left;
+				width: 100% !important;
+			}
+		}
+	}
+}
+
+
+// filter-selector
+.view {
+	margin-bottom: @spacing * 2;
+	.uiselect {
+		.uiselect-slim;
+	}
+}
+@{small-sidebars} {
+	.view {
+		display: none;
+	}
+}

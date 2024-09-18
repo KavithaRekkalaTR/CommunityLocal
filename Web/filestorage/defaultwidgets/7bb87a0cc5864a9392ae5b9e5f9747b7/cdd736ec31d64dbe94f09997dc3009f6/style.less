@@ -1,0 +1,69 @@
+@icon-size: 16px;
+
+@color-contrast: -evo-themeconfig-double('contrast', 0);
+@color-foreground: -evo-themeconfig-color('foregroundColor', #11171A);
+@color-background: -evo-themeconfig-color('backgroundColor', #ffffff);
+@color-link: -evo-themeconfig-color('linkFontColor', '#2196F3');
+
+.prepend_icon(@iconurl) {
+	display: flex;
+	&:before {
+		width: @icon-size;
+		height: @icon-size;
+		display: inline-block;
+		content: ' ';
+		margin-right: (@icon-size / 4);
+		position: relative;
+		mask-image: url(@iconurl);
+		-webkit-mask-image: url(@iconurl);
+	}
+}
+.icon_color(@color, @hover-color, @active-color) {
+	&:before {
+		background-color: @color;
+	}
+	&:hover {
+	    &:before {
+		    background-color: @hover-color;
+	    }
+	}
+	&:active {
+	    &:before {
+		    background-color: @active-color;
+	    }
+	}
+}
+
+a.manage-subscriptions {
+    .icon_color(@color-link, -evo-decrease-contrast(@color-link, 25%, @color-background, @color-contrast), -evo-increase-contrast(@color-link, 20%, @color-background, @color-contrast));
+    &.on {
+        .prepend_icon(-evo-widgetfile-url('bell.svg'));
+    }
+    &.off {
+        .prepend_icon(-evo-widgetfile-url('bell-off.svg'));
+    }
+}
+
+.layout-region.right-sidebar, .layout-region.left-sidebar {
+     a.manage-subscriptions {
+         justify-content: center;
+        .icon_color(@color-foreground, @color-background, @color-background);
+    }   
+}
+
+fieldset .field-list.article-notifications {
+	.field-item {
+		margin: 15px 0 15px 0;
+	}
+	.field-item.sub-article-comments-item {
+		border-top: 1px solid #ccc;
+		padding-top: 10px;
+	}
+	.field-item.mute-article-item {
+		margin-left: 25px;
+	}
+}
+
+.article-subscriptions-modal {
+	fieldset .field-list .field-item .field-item-input label { top: 0; display: inline; }
+}

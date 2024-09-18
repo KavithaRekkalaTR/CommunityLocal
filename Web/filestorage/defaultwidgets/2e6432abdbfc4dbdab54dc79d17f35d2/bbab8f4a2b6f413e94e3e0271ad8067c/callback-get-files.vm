@@ -1,0 +1,35 @@
+#set ($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentid')))
+#set ($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contenttypeid')))
+
+#set($contentTypeName = '')
+#set($contentType = false)
+#set($contentType = $core_v2_contentType.Get($contentTypeId))
+#if ($appeal.Content.ContentTypeId != $core_v2_utility.ParseGuid('') && $contentType && $contentType.Name)
+	#set($contentTypeName = $contentType.Name.ToLowerInvariant())
+#else
+	#set($contentTypeName = $core_v2_language.GetResource('missing-content-type-name').ToLowerInvariant())
+#end
+
+#set($files = $context.GetFileContent($contentId, $contentTypeId))
+#set ($thumbnailSize = 160)
+
+#foreach($file in $files)
+#beforeall
+    <p>$core_v2_language.FormatString($core_v2_language.GetResource('FileContent_Instructions'), $contentTypeName)</p>
+	<fieldset>
+		<ul class="file-list">
+#each
+			<li class="file-item">
+                <a href="$file.Url" title="$core_v2_encoding.HtmlAttributeEncode($file.Type)" target="_blank">
+                    <div class="avatar">
+                        $!core_v2_ui.GetPreviewHtml($file.Url, "%{Width=$thumbnailSize, Height=$thumbnailSize, OutputIsPersisted='False'}")
+                    </div>
+                    <div>$core_v2_language.Truncate($file.Type, 18, '...')</div>
+                </a>
+			</li>
+#afterall
+		</ul>
+	</fieldset>
+#nodata
+    <p>$core_v2_language.FormatString($core_v2_language.GetResource('NoFileContent'), $contentTypeName)</p>
+#end

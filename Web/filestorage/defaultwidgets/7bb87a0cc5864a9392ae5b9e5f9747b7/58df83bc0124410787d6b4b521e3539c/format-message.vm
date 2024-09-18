@@ -1,0 +1,15 @@
+{
+    "Id": "$message.Id.ToString()",
+    "ConversationId": "$message.ConversationId.ToString()",
+    "CreatedDate": "$core_v2_utility.GetTimestamp($message.CreatedDate)",
+    "Time": "$core_v2_encoding.JavascriptEncode($core_v2_language.FormatTime($message.CreatedDate))",
+    "HeaderDate": "$message.CreatedDate.Year.ToString("00")-$message.CreatedDate.Month.ToString("00")-$message.CreatedDate.Day.ToString("00")",
+    "HeaderTitle": "$core_v2_encoding.JavascriptEncode($core_v2_language.FormatDate($message.CreatedDate))",
+    "Author": {
+        "Id": $message.Author.Id,
+        "DisplayName": "$core_v2_encoding.JavascriptEncode($message.Author.DisplayName)",
+        "AvatarHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($message.Author.AvatarUrl, 44, 44, "%{OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt='$message.Author.AvatarUrl'}"))",
+        "ProfileUrl": "$!core_v2_encoding.JavascriptEncode($!message.Author.ProfileUrl)"
+    },
+    "Body": "$core_v2_encoding.JavascriptEncode($message.RenderedBody)"
+}

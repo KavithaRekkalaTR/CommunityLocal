@@ -1,0 +1,14 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($pageName = $core_v2_page.GetFormValue('PageName'))
+
+	#set($response = $context.Delete($pageName))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

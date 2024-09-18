@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="3187bc5d5d25474e97b242c6660985b6" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2019-12-23 21:03:05Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="media.aftercreate" />
+      <event key="media.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_media.ContentTypeId);
+if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.IsApproved && !awardedPoints) {
+    context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_media.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (context_v2_automationTrigger.Arguments.IsApproved) {
+        // ensure points awarded
+        if (!awardedPoints) {
+            context_v1_pointsAutomation.AwardPoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_media.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (awardedPoints) {
+            context_v1_pointsAutomation.RevokePoints(context_v2_automationTrigger.Arguments.Author.Id, context_v2_automationTrigger.Arguments.ContentId, core_v2_media.ContentTypeId);
+        }
+    }
+}]]></executionScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Awards points to members who upload files to media galleries.</resource>
+  <resource name="Title">When a media file is uploaded</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

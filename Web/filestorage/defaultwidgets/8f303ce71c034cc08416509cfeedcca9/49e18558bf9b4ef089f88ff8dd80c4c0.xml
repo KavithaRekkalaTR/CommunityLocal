@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Range_Name}" version="11.0.0.0" description="${resource:Range_Description}" instanceIdentifier="49e18558bf9b4ef089f88ff8dd80c4c0" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-05-15 19:28:34Z" provider="8f303ce71c034cc08416509cfeedcca9">
+    <contentScript language="Velocity"><![CDATA[#set($value = false)
+#set($value = $core_v2_page.ParseQueryString($context.Value))
+#set($minValue = '')
+#set($minValue = $value.Value('Minimum'))
+#set($maxValue = '')
+#set($maxValue = $value.Value('Maximum'))
+
+#if ($context.Editable)
+    #set($minValueAllowed = 'null')
+    #if ($context.Minimum != '')
+        #set($minValueAllowed = $core_v2_utility.ParseInt($context.Minimum))
+    #end
+    #set($maxValueAllowed = 'null')
+    #if ($context.Maximum != '')
+        #set($maxValueAllowed = $core_v2_utility.ParseInt($context.Maximum))
+    #end
+
+    <span class="range-property">
+        <input type="text" columns="50" id="${context.UniqueId}_Minimum" value="$!minValue" style="width: 75px;" />
+        $core_v2_language.GetResource('Range_To')
+        <input type="text" columns="50" id="${context.UniqueId}_Maximum" value="$!maxValue" style="width: 75px;" />
+    </span>
+
+    <script type="text/javascript">
+        jQuery(function() {
+            var api = $context.JsonApi;
+            var inputMin = jQuery('#${context.UniqueId}_Minimum');
+            var inputMax = jQuery('#${context.UniqueId}_Maximum');
+            var minAllowed = $minValueAllowed;
+            var maxAllowed = $maxValueAllowed;
+
+            var gv = function(inputChanged) {
+                var minV, maxV;
+                minV = parseInt(inputMin.val(), 10);
+                maxV = parseInt(inputMax.val(), 10);
+
+                var v = [];
+                if (!isNaN(minV)) {
+                    if (minAllowed != null && minV < minAllowed) {
+                        minV = minAllowed;
+                        inputMin.val(minV);
+                    }
+                    if (maxAllowed != null && minV > maxAllowed) {
+                        minV = maxAllowed;
+                        inputMin.val(minV);
+                    }
+                } else {
+                    inputMin.val('');
+                }
+                if(!isNaN(maxV)) {
+                    if (minAllowed != null && maxV < minAllowed) {
+                        maxV = minAllowed;
+                        inputMax.val(maxV);
+                    }
+                    if (maxAllowed != null && maxV > maxAllowed) {
+                        maxV = maxAllowed;
+                        inputMax.val(maxV);
+                    }
+                } else {
+                    inputMax.val('');
+                }
+                
+                if (!isNaN(minV) && !isNaN(maxV) && minV > maxV) {
+                    if (inputChanged == 'min') {
+                        maxV = minV;
+                        inputMax.val(maxV);
+                    } else {
+                        minV = maxV;
+                        inputMin.val(minV);
+                    }
+                }
+                
+                if (!isNaN(minV)) {
+                    v.push('Minimum=' + encodeURIComponent(minV));
+                }
+                if (!isNaN(maxV)) {
+                    v.push('Maximum=' + encodeURIComponent(maxV));                
+                }
+                
+                return v.length > 0 ? v.join('&') : null;
+            }, sv = function(val) {
+                var q = jQuery.telligent.evolution.url.parseQuery(val || '');
+                
+                var minV = parseInt(q.Minimum || '', 10);
+                var maxV = parseInt(q.Maximum || '', 10);
+                
+                if (!isNaN(minV)) {
+                    inputMin.val(minV);
+                } else {
+                    inputMin.val('');
+                }
+                
+                if (!isNaN(maxV)) {
+                    inputMin.val(maxV);
+                } else {
+                    inputMin.val('');
+                }
+                
+                return gv();
+            };
+            
+            api.register({
+                val: function(val) { return (typeof val == 'undefined') ? gv() : sv(val); },
+                hasValue: function() { return gv() != null; }
+            });
+            inputMin.on('change', function() {
+                api.changed(gv('min'));
+            });
+            inputMax.on('change', function() {
+                api.changed(gv('max'));
+            });
+        });
+    </script>
+#else
+    #if ($minValue != '' || $maxValue != '')
+        #if ($minValue != '')
+            #set($minValue = $core_v2_language.FormatNumber($core_v2_utility.ParseInt($minValue)))
+        #end
+        #if ($maxValue != '')
+            #set($maxValue = $core_v2_language.FormatNumber($core_v2_utility.ParseInt($maxValue)))
+        #end
+
+        #if ($minValue != '' && $maxValue != '')
+            $core_v2_language.FormatString($core_v2_language.GetResource('ReadOnly_Range'), $minValue, $maxValue)
+        #elseif ($minValue != '')
+            $core_v2_language.FormatString($core_v2_language.GetResource('ReadOnly_MinValueOnly'), $minValue)
+        #elseif ($maxValue != '')
+            $core_v2_language.FormatString($core_v2_language.GetResource('ReadOnly_MaxValueOnly'), $maxValue)
+        #end
+    #end
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Range_Description">Represents a range of integer values.</resource>
+  <resource name="Range_Name">Range</resource>
+  <resource name="Range_To">to</resource>
+  <resource name="ReadOnly_MaxValueOnly">No more than {0}</resource>
+  <resource name="ReadOnly_MinValueOnly">At least {0}</resource>
+  <resource name="ReadOnly_Range">{0} to {1}</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

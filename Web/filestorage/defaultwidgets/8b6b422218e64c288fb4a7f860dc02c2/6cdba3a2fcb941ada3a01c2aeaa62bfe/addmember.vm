@@ -1,0 +1,51 @@
+#set($roleId = $context.roleId)
+#set($role = $core_v2_role.Get($roleId))
+
+<form><fieldset>
+	<ul class="field-list" style="width: 80%">
+		<li class="field-item new-threads-user">
+			<label for="$core_v2_widget.UniqueId('userToAdd')" class="field-item-name">$core_v2_language.GetResource('UserToAdd_Title')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('UserToAdd_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('userToAdd')" />
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#set ($addMemberHeaderTemplateId = $core_v2_widget.UniqueId('addMemberHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($addMemberHeaderTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input role-options">
+					<a href="#" class="button addtorole">$core_v2_language.GetResource('AddMembers')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.administrationRolesAddMember.register({
+		addMemberHeaderTemplateId: '$core_v2_encoding.JavascriptEncode($addMemberHeaderTemplateId)',
+		roleId: $context.RoleId,
+		roleName: '$core_v2_encoding.JavascriptEncode($role.Name)',
+		inputs: {
+			userToAddId: "#$core_v2_widget.UniqueId('userToAdd')"
+		},
+		text: {
+			find: '$core_v2_language.GetResource('Find')',
+			addRoleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('AddRoleSuccessful'), $role.Name))',
+			addRoleSomeSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('AddRoleSomeSuccessful'), $role.Name))',
+			userLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('find'))',
+			noUsersMatchText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserLookUp_NoMatches'))",
+			alreadySelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MemberAlreadyInRole'))'
+		},
+		urls: {
+			findUsersUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))'
+		}
+	});
+});
+</script>

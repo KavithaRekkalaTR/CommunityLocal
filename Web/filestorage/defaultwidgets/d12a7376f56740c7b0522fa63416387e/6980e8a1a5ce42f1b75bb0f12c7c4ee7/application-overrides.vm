@@ -1,0 +1,32 @@
+<p>
+    $core_v2_language.GetResource('applicationoverrides_instructions')
+</p>
+
+#if (!$context.GetScoreConfiguration().AreDecayOverridesEnabled)
+    <div class="message error">$core_v2_language.GetResource('applicationoverrides_notapplicable')</div>
+#end
+
+<div id="$core_v2_widget.UniqueId('application-list')">
+    $core_v2_widget.ExecuteFile('list-applicationoverrides.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.scorePluginApplicationOverrides')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('application-overrides.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.scorePluginApplicationOverrides.register({
+		    applicationList: jQuery('#$core_v2_widget.UniqueId('application-list') ul'),
+		    urls: {
+		        listApplications: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-applicationoverrides.vm'))',
+		        revert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revertapplicationdecay.vm'))'
+		    },
+		    text: {
+		        revertApplicationOverrideSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('applicationrevert-succesful'))',
+		        revertApplicationOverrideConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('applicationrevert-confirmation'))'
+		    }
+    	});
+	});
+	</script>
+#end

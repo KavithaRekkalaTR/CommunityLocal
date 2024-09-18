@@ -1,0 +1,18 @@
+{
+#foreach($template in $context.ListTemplates())
+    #each
+        "$core_v2_encoding.JavascriptEncode($template.Id)":{
+            #foreach($translation in $template.Translations)
+                #each
+                    "$core_v2_encoding.JavascriptEncode($translation.Language)":{
+                        "value":"$core_v2_encoding.JavascriptEncode($translation.Value)"
+                    }
+        	    #between
+        	        ,
+            #end
+        }
+    #between
+        ,
+#end
+}
+    

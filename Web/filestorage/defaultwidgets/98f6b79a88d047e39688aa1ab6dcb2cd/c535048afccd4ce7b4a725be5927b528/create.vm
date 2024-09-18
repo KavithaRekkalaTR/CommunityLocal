@@ -1,0 +1,22 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($token = $core_v2_page.GetFormValue('token'))
+	#set ($link = $core_v2_page.GetFormValue('link'))
+	#set ($text = $core_v2_page.GetFormValue('text'))
+
+	$options.Add('token', $token)
+	$options.Add('link', $link)
+	$options.Add('text', $text)
+
+	#set($response = $context.CreateSnippet($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

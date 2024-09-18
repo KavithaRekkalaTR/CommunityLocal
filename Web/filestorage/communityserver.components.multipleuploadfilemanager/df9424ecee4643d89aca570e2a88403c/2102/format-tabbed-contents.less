@@ -1,0 +1,61 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.tabbed-contents {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+
+	.tabs {
+		border-right: solid 1px -evo-decrease-contrast(@color-background, 11%, @color-foreground, @color-contrast);
+		list-style: none;
+		padding: 0 0 (@spacing * 2) 0;
+		text-overflow: ellipsis;
+		width: 25%;
+		min-width: 125px;
+		max-width: 200px;
+
+		.tab {
+			padding: 0;
+			margin: 0;
+
+			> a {
+				display: block;
+				padding: @spacing (@spacing * 2) @spacing 0;
+				text-decoration: none;
+				color: -evo-decrease-contrast(@color-background, 27%, @color-foreground, @color-contrast);
+				transition: color .1s, padding .1s;
+				font-weight: 600;
+
+				&:hover {
+					color: @color-foreground;
+					padding: @spacing (@spacing * 1.5) @spacing (@spacing / 2);
+				}
+
+				.append_icon(@right-open, @font-size, @spacing / 2);
+			}
+
+			&.selected {
+				margin: -1px -1px -1px 0;
+				border-top: solid 1px -evo-decrease-contrast(@color-background, 11%, @color-foreground, @color-contrast);
+				border-bottom: solid 1px -evo-decrease-contrast(@color-background, 11%, @color-foreground, @color-contrast);
+				background-color: @color-background;
+
+				> a {
+					color: -evo-decrease-contrast(@color-foreground, 34%, @color-background, @color-contrast);
+				}
+			}
+		}
+	}
+	.contents {
+		padding: @spacing @spacing @spacing (@spacing * 2);
+		width: 75%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}

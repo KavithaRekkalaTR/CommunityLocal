@@ -1,0 +1,82 @@
+#set($roleIdString = $core_v2_page.GetQueryStringValue('w_roleid'))
+#set($roleId = $core_v2_utility.ParseInt($roleIdString))
+#set($role = $core_v2_role.Get($roleId))
+
+#set($perms = $context.GetPermissions($roleId, $context.ApplicationId))
+#set($appType = '')
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item permission-filter">
+			<span class="field-item-input"><input type="text" name="search" placeholder="$core_v2_language.GetResource('Find')"></input></span>
+		</li>
+	</ul>
+</fieldset>
+
+#set ($index = 0)
+#foreach($perm in $perms)
+#beforeall
+	<fieldset>
+#each
+	#set ($index = $index + 1)
+	#set ($inputId = "${core_v2_widget.UniqueId('permissionInputId')}${index}")
+
+	#if($appType != $perm.Permission.ApplicationTypeId && $appType != '')
+		</ul>
+	</div>
+	#end
+
+	#if($appType != $perm.Permission.ApplicationTypeId)
+		<div class="permission-group">
+			<div class="permission-group-header">
+				$core_v2_language.FormatString($core_v2_language.GetResource('ItemPermissions'), $core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name)
+			</div>
+			<div class="post-attributes">
+				<ul class="field-list">
+					<li class="field-item" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower())">
+						<span class="field-item-input">
+							<a href="#" class="inline-button checkall">$core_v2_language.GetResource('SelectAll')</a>
+							<a href="#" class="inline-button checknone">$core_v2_language.GetResource('SelectNone')</a>
+						</span>
+					</li>
+				</ul>
+			</div>
+			<ul class="field-list">
+	#end
+
+	<li class="field-item permission" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name).ToLower() $core_v2_encoding.HtmlAttributeEncode($perm.Permission.Description).ToLower()">
+		<span class="field-item-input">
+			<input type="checkbox" name="permissions" id="$inputId" value="$perm.Permission.Id" #if($perm.IsAllowed)checked="checked"#end />
+			<label for="$inputId">$perm.Permission.Name</label>
+		</span>
+		<span class="field-item-description">$perm.Permission.Description</span>
+	</li>
+
+	#set($appType = $perm.Permission.ApplicationTypeId)
+#afterall
+		</ul>
+	</fieldset>
+#end
+</form>
+
+<div class="message norecords" #if($perms.Count > 0) style="display: none;"#end>$core_v2_language.GetResource("NoPermissionsFound")</div>
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.contextualPermissionsEdit.register({
+		hasOverrides: '$context.HasOverrides($role.Id, $context.applicationId)',
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		roleId: $roleId,
+		urls: {
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			revertWarning: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-warning.vm'))'
+		},
+		text: {
+			permissionsUpdated: '$core_v2_language.GetResource('PermissionsUpdated')',
+			revert: '$core_v2_language.GetResource('RevertTitle')',
+			revertConfirm: '$core_v2_language.GetResource('RevertConfirm')',
+		}
+	});
+});
+</script>

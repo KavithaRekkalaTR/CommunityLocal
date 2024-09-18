@@ -1,0 +1,71 @@
+﻿#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($query = "%{ ApplicationIds = $context.ApplicationId, ApplicationTypeIds = $context.ApplicationTypeId, PageSize = 25, PageIndex = $pageIndex, MinimumContentCount = 0 }")
+#set($filter = false)
+#set($filter = $core_v2_page.GetQueryStringValue('w_filter'))
+#if ($filter)
+    $query.Add('TagNameFilter', $filter)
+#end
+#set($tags = $core_v2_tags.List($query))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($tags.PageIndex + 1) * $tags.PageSize)
+#if ($tags.TotalCount > $currentPagedQuantity)
+		#set ($hasMore = 'true')
+#end
+
+#set($canDelete = $core_v2_tags.CanAddTagsInApplication($context.ApplicationId, $context.ApplicationTypeId))
+#set($canRename = $core_v2_tags.CanAddTagsInApplication($context.ApplicationId, $context.ApplicationTypeId))
+
+#foreach($tag in $tags)
+#beforeall
+	<ul class="content-list content simple" data-hasmore="$hasMore">
+#each
+	<li class="content-item">
+		<div class="content tag" data-tagname="$core_v2_encoding.HtmlAttributeEncode($tag.Name)">
+		<h4 class="name">
+			$tag.Name
+		</h4>
+		<div class="actions">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item">
+						<a href="#" data-messagename="contextual-view-tag" data-tagname="$core_v2_encoding.HtmlAttributeEncode($tag.Name)">
+							#if ($tag.ContentCount == 0)
+								$core_v2_language.GetResource('associated_content_zero')
+							#elseif ($tag.ContentCount == 1)
+								$core_v2_language.GetResource('associated_content_one')
+							#else
+								$core_v2_language.FormatString($core_v2_language.GetResource('associated_content_many'), $core_v2_language.FormatNumber($tag.ContentCount))
+							#end
+						</a>
+					</li>
+					#if ($canRename)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="contextual-rename-tag" data-tagname="$core_v2_encoding.HtmlAttributeEncode($tag.Name)">$core_v2_language.GetResource('rename_tag')</a>
+						</li>
+					#end
+					#if ($canDelete)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="contextual-delete-tag" data-tagname="$core_v2_encoding.HtmlAttributeEncode($tag.Name)">$core_v2_language.GetResource('delete_tag')</a>
+						</li>
+					#end
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#nodata
+	#set($applicationName = '?')
+	#set($application = $core_v2_application.Get($context.ApplicationId, $context.ApplicationTypeId))
+	#if ($application && !$application.HasErrors())
+		#set($applicationName = $application.HtmlName('Web'))
+	#end
+	<div class="message norecords">$core_v2_language.FormatString($core_v2_language.GetResource('no_tags'), $applicationName)</div>
+#afterall
+	</ul>
+#end

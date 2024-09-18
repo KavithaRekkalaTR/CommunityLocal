@@ -1,0 +1,140 @@
+##
+## List Replies
+##
+## Query String:
+##
+##   _w_contentId
+##   _w_contentTypeId
+##   _w_parentId
+##   _w_commentId
+##   _w_flattenedDepth
+##   _w_sortBy
+##   _w_sortOrder
+##   _w_flattenedSortBy
+##   _w_flattenedSortOrder
+##   _w_startReplyId
+##   _w_endReplyId
+##   _w_includeSiblings
+##   _w_initial
+##
+
+$core_v2_widget.ExecuteFile('common-config.vm')
+
+##
+## Defaults
+##
+#set ($commentId = false)
+#set ($parentId = false)
+#set ($includeSiblings = false)
+#set ($initial = false)
+
+##
+## Parse Parameters
+##
+#set ($contentIdQuery = false)
+#set ($contentIdQuery = $core_v2_page.GetQueryStringValue('_w_contentId'))
+#if ($contentIdQuery && $contentIdQuery.length > 0)
+	#set ($contentId = $core_v2_utility.ParseGuid($contentIdQuery))
+#end
+
+#set ($contentTypeIdQuery = false)
+#set ($contentTypeIdQuery = $core_v2_page.GetQueryStringValue('_w_contentTypeId'))
+#if ($contentTypeIdQuery && $contentTypeIdQuery.length > 0)
+	#set ($contentTypeId = $core_v2_utility.ParseGuid($contentTypeIdQuery))
+#end
+
+#set ($commentIdQuery = false)
+#set ($commentIdQuery = $core_v2_page.GetQueryStringValue('_w_commentId'))
+#if ($commentIdQuery && $commentIdQuery.length > 0)
+	#set ($commentId = $core_v2_utility.ParseGuid($commentIdQuery))
+#end
+
+#set ($commentSortByQuery = false)
+#set ($commentSortByQuery = $core_v2_page.GetQueryStringValue('_w_sortBy'))
+#if ($commentSortByQuery)
+	#set ($sortBy = $commentSortByQuery)
+#end
+
+#set ($commentSortOrderQuery = false)
+#set ($commentSortOrderQuery = $core_v2_page.GetQueryStringValue('_w_sortOrder'))
+#if ($commentSortOrderQuery)
+	#set ($sortOrder = $commentSortOrderQuery)
+#end
+
+#set ($flattenedCommentSortByQuery = false)
+#set ($flattenedCommentSortByQuery = $core_v2_page.GetQueryStringValue('_w_flattenedSortBy'))
+#if ($flattenedCommentSortByQuery)
+	#set ($flattenedSortBy = $flattenedCommentSortByQuery)
+#end
+
+#set ($flattenedCommentSortOrderQuery = false)
+#set ($flattenedCommentSortOrderQuery = $core_v2_page.GetQueryStringValue('_w_flattenedSortOrder'))
+#if ($flattenedCommentSortOrderQuery)
+	#set ($flattenedSortOrder = $flattenedCommentSortOrderQuery)
+#end
+
+#set ($parentIdQuery = false)
+#set ($parentIdQuery = $core_v2_page.GetQueryStringValue('_w_parentId'))
+#if ($parentIdQuery && $parentIdQuery.length > 0)
+	#set ($parentId = $core_v2_utility.ParseGuid($parentIdQuery))
+#end
+
+#set ($flattenedDepthQuery = false)
+#set ($flattenedDepthQuery = $core_v2_page.GetQueryStringValue('_w_flattenedDepth'))
+#if ($flattenedDepthQuery)
+	#set ($flattenedDepth = $core_v2_utility.ParseInt($flattenedDepthQuery))
+#end
+
+#set ($startReplyIdQuery = false)
+#set ($startReplyIdQuery = $core_v2_page.GetQueryStringValue('_w_startReplyId'))
+#if ($startReplyIdQuery && $startReplyIdQuery.length > 0)
+	#set ($startReplyId = $core_v2_utility.ParseGuid($startReplyIdQuery))
+#end
+
+#set ($endReplyIdQuery = false)
+#set ($endReplyIdQuery = $core_v2_page.GetQueryStringValue('_w_endReplyId'))
+#if ($endReplyIdQuery && $endReplyIdQuery.length > 0)
+	#set ($endReplyId = $core_v2_utility.ParseGuid($endReplyIdQuery))
+#end
+
+#set ($includeSiblingsQuery = false)
+#set ($includeSiblingsQuery = $core_v2_page.GetQueryStringValue('_w_includeSiblings'))
+#if ($includeSiblingsQuery && $includeSiblingsQuery.length > 0)
+	#set ($includeSiblings = $core_v2_utility.ParseBool($includeSiblingsQuery))
+#end
+
+#set ($initialQuery = false)
+#set ($initialQuery = $core_v2_page.GetQueryStringValue('_w_initial'))
+#if ($initialQuery && $initialQuery.length > 0)
+	#set ($initial = $core_v2_utility.ParseBool($initialQuery))
+#end
+
+##
+## Get Content
+##
+#set ($content = $core_v2_content.Get($contentId, $contentTypeId))
+
+
+## Detect if can use a single page of replies instead
+#set ($inInitialPage = false)
+#set ($comments = false)
+#if ($initial && $commentId)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-query.vm')
+	#if ($comments)
+		#set ($commentsToSearch = $comments)
+		$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-search.vm')
+	#end
+#end
+
+##
+## Render either a permalink's set of relevant comments (permalinked comment, all of its parents, its children)
+##
+#if ($commentId && !$inInitialPage)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-permalink.vm')
+##
+## Or a simple page of threaded replies
+##
+#else
+	#set ($initialPage = $inInitialPage)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-thread.vm')
+#end

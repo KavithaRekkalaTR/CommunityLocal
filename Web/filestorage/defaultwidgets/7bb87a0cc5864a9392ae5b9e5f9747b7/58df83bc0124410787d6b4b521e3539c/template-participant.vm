@@ -1,0 +1,27 @@
+<li class="participant<% if (HasLeft) { %> disabled ui-tip<% } %>" data-userid="<%= Id %>"<% if (HasLeft) { %>  data-tip="Left the conversation."<% } %>>
+    <span class="presence">
+        <%= PresenceHtml %>
+    </span>
+    <span class="username">
+        <% if (ProfileUrl) { %>
+            <a href="<%= ProfileUrl %>" class="internal-link view-profile"><%= DisplayName %></a>
+        <% } else { %>
+		    <%= DisplayName %>
+		<% } %>
+    </span>
+    <% if (HasLeft) { %>
+        <div class="ui-links navigation-list" data-minlinks="0" data-direction="horizontal" data-maxlinks="0">
+			<ul class="navigation-list">
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="conversations.restoreparticipant" data-userid="<%= Id %>">$core_v2_language.GetResource('restore-participant')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-more class="more">...</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+    <% } %>
+</li>

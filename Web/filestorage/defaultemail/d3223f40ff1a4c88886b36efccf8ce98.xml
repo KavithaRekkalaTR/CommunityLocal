@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Idea Notifications" version="13.0.0.0" description="Raises notifications to an idea to subscribed users of an Ideas Application." id="d3223f40ff1a4c88886b36efccf8ce98" lastModified="2023-08-30 16:31:50Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('author_name')
+    $context_v1_email.Context.Idea.Author.DisplayName
+#token('idea_name')
+    $core_v2_language.Truncate($context_v1_email.Context.Idea.Name, 100, '...')
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#set($profileUrl = false)
+#set($profileUrl = $context_v1_email.Context.Idea.Author.Url)
+<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Idea.Url)">$context_v1_email.Context.Idea.Name</a>
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#set($profileUrl = false)
+#set($profileUrl = $context_v1_email.Context.Idea.Author.Url)
+<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+#if ($profileUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">
+	<div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	    $core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Idea.Author.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', title='', width='32', height='32' }")
+	</div>
+	</a>
+#else
+    <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	    $core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Idea.Author.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', title='', width='32', height='32' }")
+	</div>
+#end
+</td>
+<td style="padding-left: 10px;">
+#if ($profileUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$context_v1_email.Context.Idea.Author.DisplayName</a>
+#end
+</td>
+</tr>
+</tbody>
+</table>
+<p>
+$context_v1_email.Context.Idea.Description('Email')
+</p>
+<p>
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Idea.Url)">$core_v2_language.GetResource('ViewOnline')</a>
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('ideation_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Idea.Challenge.Url)">$context_v1_email.Context.Idea.Challenge.Name</a>
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Settings(false))">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Footer">You received this email because you subscribed to {ideation_name_link}. You can disable these notifications {settings_link}.</resource>
+  <resource name="ViewOnline">View online</resource>
+  <resource name="Settings">here</resource>
+  <resource name="Subject">{author_name} posted the idea {idea_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

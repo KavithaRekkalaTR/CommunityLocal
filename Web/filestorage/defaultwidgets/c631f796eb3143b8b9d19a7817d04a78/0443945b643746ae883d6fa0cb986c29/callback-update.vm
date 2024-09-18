@@ -1,0 +1,20 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+    $core_v2_widget.Hide()
+#end
+
+#set($points = '')
+#if ($user.Points == 1)
+    #set($points = $core_v2_language.FormatString($core_v2_language.GetResource('PointCount'), $core_v2_language.FormatNumber($user.Points)))
+#else
+    #set($points = $core_v2_language.FormatString($core_v2_language.GetResource('PointsCount'), $core_v2_language.FormatNumber($user.Points)))
+#end
+
+{
+    "avatarHtml": #if ($user.AvatarUrl) "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 32, 32, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop', alt='$user.DisplayName'}"))" #else null #end,
+    "pointsHtml": "$core_v2_encoding.JavascriptEncode($points)",
+    "rolesHtml": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('user-roles.vm'))"
+}

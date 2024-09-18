@@ -1,0 +1,69 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($metaDescription = $core_v2_page.GetFormValue('metaDescription'))
+	#set ($metaKeywords = $core_v2_page.GetFormValue('metaKeywords'))
+	#set ($enableRss = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableRss')))
+	#set ($enableAtom = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableAtom')))
+	#set ($enableTagsRss = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableTagsRss')))
+	#set ($enableCommentsRss = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableCommentsRss')))
+	#set ($enableITunes = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('enableITunes')))
+	#set ($iTunesCategory = $core_v2_page.GetFormValue('iTunesCategory'))
+	#set ($iTunesExplicit = $core_v2_page.GetFormValue('iTunesExplicit'))
+	#set ($iTunesKeywords = $core_v2_page.GetFormValue('iTunesKeywords'))
+	#set ($iTunesOwnerName = $core_v2_page.GetFormValue('iTunesOwnerName'))
+	#set ($iTunesOwnerEmail = $core_v2_page.GetFormValue('iTunesOwnerEmail'))
+	#set ($iTunesSubTitle = $core_v2_page.GetFormValue('iTunesSubTitle'))
+	#set ($externalFeedUrl = $core_v2_page.GetFormValue('externalFeedUrl'))
+	#set ($pingUrls = $core_v2_page.GetFormValue('pingUrls'))
+	#set ($syndicateExternalLinks = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('syndicateExternalLinks')))
+
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 1/0
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+	#set($fileRemoved = $core_v2_page.GetFormValue('FileRemoved')) ## 1/0
+
+	$options.Add('metaDescription', $metaDescription)
+	$options.Add('metaKeywords', $metaKeywords)
+
+	$options.Add('enableRss', $enableRss)
+	$options.Add('enableAtom', $enableAtom)
+	$options.Add('enableTagsRss', $enableTagsRss)
+	$options.Add('enableCommentsRss', $enableCommentsRss)
+
+	$options.Add('enableITunes', $enableITunes)
+	$options.Add('iTunesCategory', $iTunesCategory)
+	$options.Add('iTunesExplicit', $iTunesExplicit)
+	$options.Add('iTunesKeywords', $iTunesKeywords)
+	$options.Add('iTunesOwnerName', $iTunesOwnerName)
+	$options.Add('iTunesOwnerEmail', $iTunesOwnerEmail)
+	$options.Add('iTunesSubTitle', $iTunesSubTitle)
+	$options.Add('externalFeedUrl', $externalFeedUrl)
+
+	$options.Add('pingUrls', $pingUrls)
+	$options.Add('syndicateExternalLinks', $syndicateExternalLinks)
+
+	#if ($fileChanged == '1')
+		#set($file = false)
+		#set($file = $core_v2_uploadedFile.Get($fileContextId, $fileName))
+		#if ($file)
+			$options.Add('itunesImageFileUploadContext', $fileContextId)
+			$options.Add('itunesImageFileName',$file.Name)
+		#end
+	#elseif ($fileRemoved == '1')
+		$options.Add('itunesImageRemoveImage', 'true')
+	#end
+
+	#set($response = $context.Update($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

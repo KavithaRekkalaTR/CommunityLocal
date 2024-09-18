@@ -1,0 +1,26 @@
+﻿#if ($core_v2_page.IsPost)
+	#set($subscribe = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscribe')))
+	#set($applicationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('galleryId')))
+
+	$core_v2_page.SetContentType('application/json')
+	#set($response = false)
+
+	#if ($subscribe)
+		#set($response = $core_v2_applicationSubscription.Create($applicationId, $core_v2_gallery.ApplicationTypeId, "%{}"))
+	#else
+		#set($response = $core_v2_applicationSubscription.Delete($applicationId, $core_v2_gallery.ApplicationTypeId, "%{}"))
+	#end
+
+	#if ($response && $response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+	{"subscribe":#if($subscribe) true#else false#end,"warnings":[
+		#foreach ($warning in $response.Warnings)
+			#each
+				"$core_v2_encoding.JavascriptEncode($warning.Message)"
+			#between
+				,
+		#end
+	]}
+	
+#end

@@ -1,0 +1,118 @@
+$core_v2_page.SetContentType('application/json')
+
+#set ($applicationId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue("applicationId")))
+#set ($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue("contentTypeId")))
+#set ($query = $core_v2_page.GetQueryStringValue("query"))
+
+#set ($searchQuery = "%{}")
+$searchQuery.Add("Query", $query)
+$searchQuery.Add("PageSize", 5)
+$searchQuery.Add("PageIndex", 0)
+$searchQuery.Add("ApplicationId", $applicationId)
+$searchQuery.Add("Filters", "contenttypeid::(${contentTypeId})")
+#set ($searchResults = $core_v2_searchResult.List($searchQuery))
+
+#set ($searchQuery = "%{}")
+#set($relatedResults = false)
+#set($contentTypeIds = false)
+#set($contentTypeIds = $core_v2_widget.GetCustomValue('relatedContentTypeIds', 'ContentTypeId=6b577b8c-0470-4e20-9d29-b6772bf67243&ContentTypeId=ab51a545-f7a4-4570-8125-283b303f9082&ContentTypeId=d6391dab-5520-42d8-95a6-6e62d1c6394e'))
+#if ($contentTypeIds && $contentTypeIds.Length > 0)
+	#if ($contentTypeIds == 'all')
+	    #set ($filters = "contenttypeid::(")
+	    #set($first = true)
+	    #foreach($contentType in $core_v2_contentType.List())
+            #if ($core_v2_searchResult.IsSearchable($contentType.Id))
+            	#set($applicationType = false)
+            	#set($applicationType = $core_v2_applicationType.Get($contentType.Id))
+            	#set($containerType = false)
+            	#set($containerType = $core_v2_containerType.Get($contentType.Id))
+            	#if ((!$applicationType || $applicationType.HasErrors()) && (!$containerType || $containerType.HasErrors()))
+            	   #if ($first)
+                        #set($filters = "${filters}${contentType.Id}")
+                        #set($first = false)
+                    #else
+                        #set($filters = "${filters} OR ${contentType.Id}")
+                    #end
+            	#end
+            #end
+        #end
+        #set($filters = "$filters)")
+	#else
+	    #set ($filters = "contenttypeid::(")
+	    #set($first = true)
+    	#foreach($v in $core_v2_page.ParseQueryString($contentTypeIds).Values('ContentTypeId'))
+        #each
+            #if ($first)
+                #set($filters = "${filters}${core_v2_utility.ParseGuid($v)}")
+                #set($first = false)
+            #else
+                #set($filters = "${filters} OR ${core_v2_utility.ParseGuid($v)}")
+            #end
+        #nodata
+            #set($filters="${filters}00000000-0000-0000-0000-000000000000")
+        #end
+        #set($filters = "$filters)")
+    #end
+    #set($query = "${query} -applicationid:($applicationId)")
+    
+    #set($groupIds = false)
+    #set($groupIds = $core_v2_widget.GetCustomValue('relatedContentGroups', ''))
+    #if ($groupIds && $groupIds.Length > 0)
+        #set ($filters = "${filters}||group::(")
+        #set ($first = true)
+        #foreach($groupId in $core_v2_page.ParseQueryString($groupIds).Values('Group'))
+            #if ($groupId == -1)
+                #set($groupId = $core_v2_group.Current.Id)
+            #end
+            #if ($first)
+                #set($filters = "${filters}${groupId}")
+                #set($first = false)
+            #else
+                #set($filters = "${filters} OR ${groupId}")
+            #end
+        #end
+        #set($filters = "${filters})")
+    #end
+
+    #set ($searchQuery = "%{}")
+    $searchQuery.Add("Query", $query)
+    $searchQuery.Add("PageSize", 5)
+    $searchQuery.Add("PageIndex", 0)
+    $searchQuery.Add("Filters", $filters)
+    #set ($relatedResults = $core_v2_searchResult.List($searchQuery))
+#end
+
+{
+    "filters": "$core_v2_encoding.JavascriptEncode($filters)",
+	"results": [
+	#foreach ($result in $searchResults)
+		{
+			"url": "$!core_v2_encoding.JavascriptEncode($!result.Url)",
+			"viewHtml": "$!core_v2_encoding.JavascriptEncode($!result.ViewHtml())"
+		}
+	#between
+		,
+	#end
+	#if ($relatedResults && !$relatedResults.HasErrors() && $relatedResults.Count > 0)
+	    #if (!$searchResults || $searchResults.Count == 0)
+	        {
+	            "url": null,
+	            "viewHtml": "$core_v2_encoding.JavascriptEncode("<div class='content abbreviated rendered'><div class=content>$core_v2_language.GetResource('noDirectMatches')</div></div>")"
+	        }
+	    #end
+        ,
+        {
+            "url": null,
+            "viewHtml": "$core_v2_encoding.JavascriptEncode("<span class=heading>$core_v2_language.GetResource('relatedHeading')</span>")"
+        },
+    	#foreach($result in $relatedResults)
+    	    {
+    			"url": "$!core_v2_encoding.JavascriptEncode($!result.Url)",
+    			"viewHtml": "$!core_v2_encoding.JavascriptEncode($!result.ViewHtml())"
+    		}
+    	#between
+    	    ,
+    	#end
+    #end
+	]
+}

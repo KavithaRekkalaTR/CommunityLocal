@@ -1,0 +1,164 @@
+// Automation Studio specific Management Studio
+
+.studio-shell.browse.manage-automations {
+	.automation-name {
+
+	}
+	.automation-type-name {
+		.border-radius (2px, 2px, 2px, 2px);
+		background-color: rgba(0, 0, 0, 0.1);
+		text-transform: uppercase;
+		padding: 2px 4px 2px 4px;
+		color: #444;
+		font-size: @ap-font-size * .7;
+		font-weight: bold;
+	}
+
+	.search-header {
+		margin-top: 10px;
+	}
+
+	.field-item {
+		margin-bottom: @ap-spacing;
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+}
+
+.administration-panel.manage-automations {
+	.child-items {
+		display: flex;
+		flex-wrap: wrap;
+		.child-item {
+			flex: 1 1 auto;
+			width: 20%;
+
+			margin: 0 @ap-spacing @ap-spacing 0;
+			padding: @ap-spacing;
+
+			border: 1px solid #DDD;
+			border-radius: 3px;
+
+			display: flex;
+			flex-direction: column;
+			.name {
+				font-weight: bold;
+			}
+			a.name {
+				font-weight: bold;
+				color: @ap-content-color-foreground;
+				&:hover {
+					color: @ap-content-color-accent;
+				}
+			}
+			.description {
+				color: #888;
+				display: block;
+				font-size: @ap-font-size * .9;
+			}
+			&[data-comparison="new"] {
+				background-color: lighten(#d1f5e0,0%);
+			}
+			&[data-comparison="changed"] {
+				background-color: lighten(#f1c40f,40%);
+			}
+			ul.actions {
+				margin-top: auto;
+				display: flex;
+				font-size: @ap-font-size * .9;
+				li {
+					margin-right: @ap-spacing;
+				}
+			}
+		}
+	}
+	.staged-indicator {
+		width: 14px;
+		height: 14px;
+		background-color: @color-staged;
+		.icon(14px, 8px);
+		position: relative;
+		top: 2px;
+		display: inline-block;
+		.round;
+		&::after {
+			top: 3px;
+			left: 3px;
+		}
+	}
+	.navigation-list.automation-events {
+		.automation-event {
+			font-size: @ap-font-size * .95;
+			background-color: fade(@ap-content-color-foreground, 5%);
+			border: 1px solid fade(@ap-content-color-foreground, 10%);
+			margin: 0 0 5px 0;
+			padding: 5px 10px 5px 10px;
+			border-radius: 3px;
+			.automation-event-name {
+				font-weight: @ap-font-weight-heavy;
+				color: fade(@ap-content-color-foreground, 80%);
+			}
+			a {
+				margin-left: 10px;
+			}
+			&:last-child {
+				margin-bottom: 20px;
+			}
+		}
+	}
+
+	.field-item.trigger {
+		> .field-item-input {
+			position: relative;
+			label {
+				position: absolute !important;
+				left: 24px;
+			}
+		}
+		.trigger-form {
+			padding-left: 25px;
+			fieldset {
+				padding: 0 !important;
+				margin: 0 !important;
+				.field-list {
+					padding: 0 !important;
+					margin: 0 !important;
+					.field-item {
+						padding: 0 !important;
+					}
+				}
+			}
+		}
+	}
+
+	.content.full .attributes {
+		margin-top: 20px !important;
+	}
+}
+
+.modal .modal-content {
+	.select-automation-file-type {
+		.field-item.submit {
+			margin-top: 10px;
+		}
+		.field-item-description {
+			color: #555;
+			font-style: italic;
+		}
+	}
+	fieldset .field-list .field-item {
+		display: block;
+		clear: both;
+		.field-item-input {
+			position: relative;
+			input[name="automation-host"] {
+				position: absolute !important;
+				top: 3px;
+			}
+			label {
+				left: 1.5em;
+			}
+		}
+	}
+}

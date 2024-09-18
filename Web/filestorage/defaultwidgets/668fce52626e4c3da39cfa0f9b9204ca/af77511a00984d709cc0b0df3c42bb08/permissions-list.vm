@@ -1,0 +1,140 @@
+#set($roleId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('_roleid')))
+#set($groupType = $core_v2_page.GetQueryStringValue('_grouptype'))
+#set($appType = '')
+
+#set($role = $core_v2_role.Get($roleId))
+#set($readOnlyMode = $role.IsAdministratorRole)
+
+#set($perms = $context.GetPermissions($groupType, $roleId))
+#set($currentperms = $context.GetGroupTypeTemplatePermissions($groupType, $roleId))
+#set($defaultperms = $context.GetGroupTypeDefaultTemplatePermissions($groupType, $roleId))
+
+<p class="instructions">$core_v2_language.GetResource('PermissionsListInstructions')</p>
+
+<form><fieldset>
+	<div class="filter-selector">
+        <span class="field-item-input"><input type="text" name="search" placeholder="$core_v2_language.GetResource('Find')" style="width:300px"></input></span>
+        <select name="enabled-filter">
+            <option value="">$core_v2_language.GetResource('ShowEnabledandDisabled')</option>
+            <option value="enabled">$core_v2_language.GetResource('ShowEnabled')</option>
+            <option value="disabled">$core_v2_language.GetResource('ShowDisabled')</option>
+        </select>
+    </div>
+</fieldset>
+
+#if ($readOnlyMode)
+    <div class="message information">$core_v2_language.GetResource('ReadOnlyMode')</div>
+#end
+
+#if (!$readOnlyMode)
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="inline-button revert-to-default">$core_v2_language.GetResource("RevertToDefault")</a>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+#end
+
+#set ($index = 0)
+#foreach($perm in $perms)
+#beforeall
+	<fieldset>
+#each
+	#set ($index = $index + 1)
+	#set ($inputId = "${core_v2_widget.UniqueId('permissionInputId')}${index}")
+
+	#if($appType != $perm.Permission.ApplicationTypeId && $appType != '')
+		</ul>
+	</div>
+	#end
+
+	#if($appType != $perm.Permission.ApplicationTypeId)
+		<div class="permission-group">
+			<h3 class="permission-group-header">
+				$core_v2_language.FormatString($core_v2_language.GetResource('ItemPermissions'), $core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name)
+			</h3>
+            #if (!$readOnlyMode)
+			<div class="post-attributes">
+				<ul class="field-list">
+					<li class="field-item" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower())">
+						<span class="field-item-input">
+							<a href="#" class="inline-button checkall">$core_v2_language.GetResource('SelectAll')</a>
+							<a href="#" class="inline-button checknone">$core_v2_language.GetResource('SelectNone')</a>
+						</span>
+					</li>
+				</ul>
+			</div>
+            #end
+			<ul class="field-list">
+	#end
+
+	<li class="field-item permission" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name).ToLower() $core_v2_encoding.HtmlAttributeEncode($perm.Permission.Description).ToLower()">
+		<span class="field-item-input">
+			<input type="checkbox" name="permissions" id="$inputId" value="$perm.Permission.Id" #if($perm.IsAllowedByCurrentDefault)checked="checked"#end data-value="$perm.IsAllowedByCurrentDefault.ToString().ToLowerInvariant()" data-defaultvalue="$perm.IsAllowedByFactoryDefault.ToString().ToLowerInvariant()" #if ($readOnlyMode) disabled="disabled" #end />
+			<label for="$inputId">$perm.Permission.Name
+                #if($perm.IsAllowedByCurrentDefault && !$perm.IsAllowedByFactoryDefault)
+                    <span class="pill">$core_v2_language.GetResource('DefaultDenied')</span>
+                #elseif(!$perm.IsAllowedByCurrentDefault && $perm.IsAllowedByFactoryDefault)
+                    <span class="pill">$core_v2_language.GetResource('DefaultAllowed')</span>
+                #end
+            </label>
+		</span>
+		<span class="field-item-description">$perm.Permission.Description</span>
+	</li>
+
+	#set($appType = $perm.Permission.ApplicationTypeId)
+#afterall
+		</ul>
+	</fieldset>
+#end
+</form>
+<div class="message norecords" #if($perms.Count > 0) style="display: none;"#end>$core_v2_language.GetResource("NoPermissionsFound")</div>
+
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('permissionsHeaderTemplate'))
+#registerClientTemplate($headerTemplateId)
+<% if (readonly != 'True') { %>
+	<ul class="field-list">
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" class="button save-permissions">$core_v2_language.GetResource("Save")</a>
+			</span>
+			<ul class="navigation-list ui-links" data-direction="horizontal">
+				<li class="navigation-list-item submit">
+					<span class="field-item-input">
+						<a href="#" class="save-overwrite-permissions">$core_v2_language.GetResource("SaveAndOverwrite")</a>
+					</span>
+				</li>
+			</ul>
+		</li>
+	</ul>
+<% } %>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.globalPermissionsPermissionsList.register({
+            permissionHeaderTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			roleId: $roleId,
+            roleName: '$core_v2_encoding.JavascriptEncode($!role.Name)',
+			groupType: '$core_v2_encoding.JavascriptEncode($groupType)',
+            readonly: '$core_v2_encoding.JavascriptEncode($readOnlyMode.ToString())',
+		    urls: {
+		        save:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('permissions-save.vm'))',
+                revert:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('permissions-revert.vm'))',
+		    },
+            text: {
+                permissionsUpdated: '$core_v2_language.GetResource('PermissionsUpdated')',
+                permissionsOverwritten: '$core_v2_language.GetResource('PermissionsOverwritten')',
+                unsavedCustomization: '$core_v2_language.GetResource('UnsavedCustomization')',
+                saveConfirmation: '$core_v2_language.GetResource('TemplateSaveConfirmation')',
+                overwriteConfirmation: '$core_v2_language.GetResource('TemplateSaveOverwriteConfirmation')',
+            }
+    	});
+	});
+	</script>
+#end

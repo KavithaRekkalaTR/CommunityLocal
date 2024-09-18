@@ -1,0 +1,136 @@
+#set($query = "%{}")
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+$query.Add('PageIndex', $pageIndex)
+$query.Add('PageSize', 20)
+
+#set($filter = false)
+#set($filter = $core_v2_page.GetQueryStringValue('w_filter'))
+#if ($filter == 'unpublished')
+	$query.Add('UnpublishedOnly', 'True')
+#elseif ($filter == 'hidden')
+    $query.Add('HiddenOnly', 'True')
+#end
+
+#set($searchText = false)
+#set($searchText = $core_v2_page.GetQueryStringValue('w_query'))
+#if ($searchText)
+    $query.Add('Query', $searchText)
+#end
+
+#set($wiki = $context.Wiki)
+#set($wikiDeletePagePermission = $core_v2_utility.ParseGuid('04848A0B-E75B-4cd6-89C0-10E053F46458')) 
+
+#set($pages = $context.ListPages($query))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($pages.PageIndex + 1) * $pages.PageSize)
+#if ($pages.TotalItems > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#set($canEdit = false)
+#set($canDelete = false)
+#if ($pages.Count > 0)
+	#set($canEdit = $core_v3_permission.CheckPermission($core_v2_wikiPermissions.ModifyPage, $core_v2_user.Accessing.Id, "%{ ApplicationId = $wiki.ApplicationId, ApplicationTypeId = $core_v2_wiki.ApplicationTypeId }").IsAllowed)
+	#set($canDelete = $core_v3_permission.CheckPermission($core_v2_wikiPermissions.DeletePage, $core_v2_user.Accessing.Id, "%{ ApplicationId = $wiki.ApplicationId, ApplicationTypeId = $core_v2_wiki.ApplicationTypeId }").IsAllowed)
+	#set($canLock = $core_v3_permission.CheckPermission($core_v2_wikiPermissions.LockPage, $core_v2_user.Accessing.Id, "%{ ApplicationId = $wiki.ApplicationId, ApplicationTypeId = $core_v2_wiki.ApplicationTypeId }").IsAllowed)
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" id="$core_v2_encoding.HtmlAttributeEncode($pagesListId)">
+
+#foreach($page in $pages)
+#each
+  #set($redirect = false)
+  #if($core_v2_wikiPage.Current && $core_v2_wikiPage.Current.Id == $page.Id)
+  	#set($redirect = true)
+  #end
+
+  <li class="content-item wikipage">
+	<h4 class="name">$page.Title</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				#if($page.IsDefaultPage)
+					<li class="attribute-item default">
+						<span class="value">$core_v2_language.GetResource('Default')</span>
+					</li>
+				#end
+				#if($page.IsHiddenInTOC)
+    				<li class="attribute-item toc-status">
+    					<span class="value highlight">$core_v2_language.GetResource('Hidden')</span>
+    				</li>
+			    #end
+				<li class="attribute-item status">
+					#if(!$page.IsPublished)
+						<span class="value highlight">$core_v2_language.GetResource('NotPublished')</span>
+					#else
+						<span class="value">$core_v2_language.GetResource('Published')</span>
+					#end
+				</li>
+				<li class="attribute-item lock-status">
+					#if($page.IsLocked)
+						<span class="value highlight">$core_v2_language.GetResource('Locked')</span>
+					#else
+						<span class="value"></span>
+					#end
+				</li>
+			</ul>
+		</div>
+		<div class="content expandable">
+			$core_v2_language.Truncate($page.Body(), 100, '...')
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item view-page">
+						<a href="$core_v2_page.AbsoluteUrl($core_v2_wikiUrls.Page($page.Id))">$core_v2_language.GetResource('View')</a>
+					</li>
+					#set($editUrl = false)
+					#set($editUrl = $core_v2_wikiUrls.EditPage($page.Id))
+					#if ($editUrl)
+						<li class="navigation-list-item edit">
+							<a href="$core_v2_page.AbsoluteUrl($core_v2_wikiUrls.EditPage($page.Id))">$core_v2_language.GetResource('Edit')</a>
+						</li>
+					#end
+					#set($convert = false)
+            		#set($convert = $core_v2_ui.ConvertContent($page.ContentId, $page.ContentTypeId))
+            		#if ($convert)
+            		    <li class="navigation-list-item">
+            		        $convert
+            		    </li>
+            		#end
+					#if (!$page.IsDefaultPage)
+						#if ($canEdit && $page.IsPublished)
+							<li class="navigation-list-item publish">
+								<a href="#" data-messagename="wikipage.publish" data-publish="False" data-wikipageid="$page.Id.ToString()">$core_v2_language.GetResource('Unpublish')</a>
+							</li>
+						#elseif (!$page.IsPublished)
+							<li class="navigation-list-item publish">
+								<a href="#" data-messagename="wikipage.publish" data-publish="True" data-wikipageid="$page.Id.ToString()">$core_v2_language.GetResource('Publish')</a>
+							</li>
+						#end
+						#if ($canDelete || $core_v2_userPermission.HasPermission($wikiDeletePagePermission, $page.ContentId, $core_v2_wikiPage.ContentTypeId)))
+							<li class="navigation-list-item delete">
+								<a href="#" data-messagename="wikipage.delete" data-wikipageid="$page.Id.ToString()" data-redirect="$redirect">$core_v2_language.GetResource('Delete')</a>
+							</li>		
+						#end
+					#end
+					#if ($canLock)
+						#if ($page.IsLocked)
+							<li class="navigation-list-item lock">
+								<a href="#" data-messagename="wikipage.lock" data-lock="False" data-wikipageid="$page.Id.ToString()">$core_v2_language.GetResource('Unlock')</a>
+							</li>
+						#else
+							<li class="navigation-list-item lock">
+								<a href="#" data-messagename="wikipage.lock" data-lock="True" data-wikipageid="$page.Id.ToString()">$core_v2_language.GetResource('Lock')</a>
+							</li>
+						#end
+					#end
+				</ul>
+			</div>
+		</div>
+  </li>
+
+#end
+
+</ul>

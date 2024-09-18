@@ -1,0 +1,121 @@
+#set ($subscribersListId = $core_v2_widget.UniqueId('subscribersListId'))
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set($options = "%{PageSize = $pageSize, PageIndex = $pageIndex, SortBy = 'Username' }")
+
+#set ($usernameSearch = $core_v2_page.GetQueryStringValue('w_username'))
+#if ($usernameSearch != '')
+    $options.Add("UsernameSearch", $usernameSearch)
+#end
+
+#set ($typeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_typeId')))
+#if ($typeId)
+    $options.Add("TypeId", $typeId)
+#else
+    $options.Add("TypeId", "00000000-0000-0000-0000-000000000000")
+#end
+
+#set($article = false)
+#set ($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_articleId')))
+#if ($articleId != "00000000-0000-0000-0000-000000000000")
+    #set ($article = $articles_v1_articles.Get("%{ Id = $articleId }"))
+#elseif($currentArticle)
+    #set ($article = $currentArticle)
+#end
+
+#if ($article)
+    $options.Add("IncludeApplicationSubscriptions", "true")
+    #set ($mode = 'article')
+    #set ($subscribers = $core_v2_contentSubscription.List($article.ContentId, $article.ContentTypeId, $options))
+#else
+    #set ($mode = 'collection')
+    #set ($subscribers = $core_v2_applicationSubscription.List($context.ApplicationId, $context.ApplicationTypeId, $options))
+#end
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($subscribers.PageIndex + 1) * $subscribers.PageSize)
+#if ($subscribers.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<div class="subscribers">
+    <div class="subscriber-total">
+        #if($subscribers.TotalCount == 1)
+            $core_v2_language.FormatString($core_v2_language.GetResource("SubscriberTotal_Singular"), $subscribers.TotalCount.ToString("N0"))
+        #else
+            $core_v2_language.FormatString($core_v2_language.GetResource("SubscriberTotal_Plural"), $subscribers.TotalCount.ToString("N0"))
+        #end
+    </div>
+</div>
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" id="$core_v2_encoding.HtmlAttributeEncode($subscribersListId)">
+
+#if ($mode == "collection")
+    #foreach($subscriber in $subscribers)
+    #each
+
+    <li class="content-item subscriber">
+        <h4 class="name">$subscriber.User.UserName</h4>
+            <div class="post-attributes">
+                <ul class="attribute-list">
+
+                </ul>
+            </div>
+            <div class="actions expandable">
+                <div class="navigation-list ui-links" data-direction="horizontal">
+                    <ul>
+                    #if ($subscriber.User.ProfileUrl)
+                        <li class="navigation-list-item view-file">
+                            <a href="$core_v2_page.AbsoluteUrl($subscriber.User.ProfileUrl)">$core_v2_language.GetResource('ViewUser')</a>
+                        </li>
+                    #end
+                    </ul>
+                </div>
+            </div>
+    </li>
+
+    #end
+#elseif ($mode == "article")
+    #foreach($subscriber in $subscribers)
+    #each
+
+    <li class="content-item subscriber">
+        <h4 class="name">$subscriber.User.UserName</h4>
+            <div class="post-attributes">
+                <ul class="attribute-list">
+                    #if($subscriber.IsMuted)
+                    <li class="attribute-item muted">
+                            <span class="value highlight">$core_v2_language.GetResource('Muted')</span>
+                    </li>
+                    #end
+                    #if($subscriber.IsSubscribedToApplication && !$subscriber.IsSubscribed)
+                    <li class="attribute-item subscription">
+                            <span class="value">$core_v2_language.GetResource('ApplicationSubscriber')</span>
+                    </li>
+                    #elseif($subscriber.IsSubscribed)
+                    <li class="attribute-item subscription">
+                            <span class="value">$core_v2_language.GetResource('ContentSubscriber')</span>
+                    </li>
+                    #end
+                </ul>
+            </div>
+            <div class="actions expandable">
+                <div class="navigation-list ui-links" data-direction="horizontal">
+                    <ul>
+                    #if ($subscriber.User.ProfileUrl)
+                        <li class="navigation-list-item view-file">
+                            <a href="$core_v2_page.AbsoluteUrl($subscriber.User.ProfileUrl)">$core_v2_language.GetResource('ViewUser')</a>
+                        </li>
+                    #end
+                    </ul>
+                </div>
+            </div>
+    </li>
+
+    #end
+#end
+
+</ul>

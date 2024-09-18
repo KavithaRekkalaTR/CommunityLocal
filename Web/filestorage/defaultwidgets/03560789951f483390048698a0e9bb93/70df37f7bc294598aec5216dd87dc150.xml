@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Name}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="70df37f7bc294598aec5216dd87dc150" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-02-24 16:39:12Z" provider="03560789951f483390048698a0e9bb93">
+    <contentScript language="Velocity"><![CDATA[
+#set($status = $context.Status.InterfaceStatus)
+#set($message = 'Unknown')
+#if($status)
+  #set($message = $status.ToString())
+#end
+$core_v2_language.GetResource($message)
+]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ConfigurationExceptions">One or more scripted extensions encountered an issue with their implementation details. Review the specific exceptions to determine how to resolve these issues.</resource>
+  <resource name="FrequentExecutionExceptions">Multiple errors have occurred related to executing scripted extensions. The specific exceptions should be reviewed to determine the severity and resolution of these errors.</resource>
+  <resource name="Healthy">The interface is healthy.</resource>
+  <resource name="LegacyOptionsEnabled">Legacy user interface options are currently enabled. While these options are still supported, the community will function better with them disabled and they may not be supported in the future. It is recommended to update user interface customizations to allow the disablement of legacy options.</resource>
+  <resource name="SiteUrlMisconfiguration">Servers serving this community are not consistently configured.  Please review every server's configuration to ensure that the value of &lt;code&gt;SiteUrl&lt;/code&gt; in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same. Often this issue will appear because multiple community installations are configured to connect to the same message bus.</resource>
+  <resource name="Unknown">The status of the interface is not yet known.</resource>
+  <resource name="Widget-Description">Interface System Indicator</resource>
+  <resource name="Widget-Name">Interface</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

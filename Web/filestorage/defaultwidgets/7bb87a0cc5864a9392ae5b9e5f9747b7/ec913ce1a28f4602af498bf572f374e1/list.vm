@@ -1,0 +1,49 @@
+
+$core_v2_widget.ExecuteFile("setquery.vm")
+#set($taggedContent = $core_v2_taggedContent.List($query))
+
+#foreach ($taggedContent in $taggedContent)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+	<li class="content-item" #if ($taggedContent.Content.Url) data-href="$core_v2_encoding.HtmlAttributeEncode($taggedContent.Content.Url)" #end>
+		#set ($resultHtml = false)
+		#set ($resultHtml = $taggedContent.Content.ViewHtml())
+		#if ($resultHtml)
+			$resultHtml
+		#end
+	</li>
+#afterall
+	</ul>
+#nodata
+ 	$core_v2_language.GetResource('TaggedContent_NotFound')
+#end
+
+#if ($dataSource == 'context' && $core_v2_container.Current)
+	#set($scopeSiteUrl = false)
+	#set($scopeContainerUrl = false)
+	#set($currentTags = $core_v2_utility.Join(',',$core_v2_tags.Current))
+	#set($scopeContainerUrl = $core_v2_urls.Tags("%{ContainerId=$core_v2_container.Current.ContainerId,ContainerTypeId=$core_v2_container.Current.ContainerTypeId,Tags=$currentTags}"))
+	#set($scopeSiteUrl = $core_v2_urls.Tags("%{Tags=$currentTags}"))
+
+	#if ($scopeSiteUrl || $scopeContainerUrl || $scopeApplicationUrl)
+		<div class="navigation-list navigation ui-links" data-direction="horizontal" data-minlinks="1">
+			<ul class="navigation-list">
+				#if($core_v2_application.Current && $scopeContainerUrl && $scopeContainerUrl != $scopeSiteUrl)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($scopeContainerUrl)">$core_v2_language.FormatString($core_v2_language.GetResource('Scope_Filter_Container'), $core_v2_container.Current.HtmlName('Web'))</a></li>
+				#elseif ($core_v2_container.Current)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($scopeSiteUrl)">$core_v2_language.GetResource('Scope_Filter_Site')</a></li>
+				#end
+				<li class="navigation-list-item">
+					<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+#end
+
+$core_v2_ui.Pager($taggedContent.PageIndex, $taggedContent.PageSize, $taggedContent.TotalCount, "%{PagedContentFile='list.vm'}")
+

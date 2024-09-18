@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Categories}" version="10.0.0.0" description="${resource:Categories_Description}" instanceIdentifier="feabdc25c1954db5a0b807b189fe27c8" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="73cc0cbfdf244db18440eb674265f4f9">
+    <contentScript><![CDATA[<p>
+    $core_v2_language.GetResource('category_list_instructions')
+</p>
+
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset>
+
+<div id="$core_v2_widget.UniqueId('list')">
+  $core_v2_widget.ExecuteFile('list-categories.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.ideaCategoryManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.ideaCategoryManagement.register({
+            listWrapper: jQuery('#$core_v2_widget.UniqueId('list')'),
+            ideationId: '$context.Challenge.Id.ToString()',
+            deleteUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete-category.vm'))',
+          text: {
+            addCategory: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('add_category'))',
+            deleteCategory: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete_category'))',
+            deleteConfirmationMessage: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete_category_confirmation'))',
+            save: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('save'))',
+            categoryName: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('category_name'))',
+            categoryNameDescription: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('category_name_description'))',
+            addSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('add_successful'))',
+            editSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('edit_successful'))',
+            deleteSuccessful: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('delete_successful'))'
+          }
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <languageResources><language key="en-us"><resource name="add_category">Add Category</resource><resource name="add_successful">The category '{0}' was added successfully.</resource><resource name="cancel">Cancel</resource><resource name="Categories">Categories</resource><resource name="Categories_Description">Manage idea categories.</resource><resource name="category_list_instructions">The following categories can be used to organize ideas.</resource><resource name="category_name">Name</resource><resource name="category_name_description">The name of the category.</resource><resource name="category-to-delete">Category to Delete</resource><resource name="delete">Delete</resource><resource name="delete_category">Delete</resource><resource name="delete_category_confirmation">Are you sure you want to delete the category '{0}'?</resource><resource name="delete_successful">The category '{0}' has been deleted.</resource><resource name="edit">Edit</resource><resource name="edit_successful">The category '{0}' was saved successfully.</resource><resource name="find">Find a category...</resource><resource name="more">More</resource><resource name="no_categories">No categories have been defined.</resource><resource name="no-replacement-category-available">A replacement category is required because this ideation requires that all ideas be categorized, however, there are no available categories to replace this category with. A new category must be created or the requirement that ideas are categorized must be disabled before deleting this category.</resource><resource name="replacement-category">Replacement Category</resource><resource name="replacement-category-description-notrequired">Select the category to use on ideas that are currently associated to the category being deleted. To uncategorize ideas associated to the category being deleted, chose 'No Category.'</resource><resource name="replacement-category-description-required">Select the category to use on ideas that are currently associated to the category being deleted.</resource><resource name="replace-with-no-category">(No Category)</resource><resource name="save">Save</resource></language></languageResources>
+    <restScopes>
+      <scope id="ideas.categories.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

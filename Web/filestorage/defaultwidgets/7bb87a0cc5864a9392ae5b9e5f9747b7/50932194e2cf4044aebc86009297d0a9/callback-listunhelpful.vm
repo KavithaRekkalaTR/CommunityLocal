@@ -1,0 +1,34 @@
+#set ($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_articleId')))
+#set ($article = $articles_v1_articles.Get("%{ Id = $articleId }"))
+#set ($pageSize = 3)
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('_w_pageIndex')))
+
+#set ($existingUnhelpfulRatings = $articles_v1_helpfulness.List("%{ ArticleId = $article.Id, AuthorId = $core_v2_user.Accessing.Id, IsHelpful = 'false', State = 'Unresolved', PageIndex = $pageIndex, PageSize = $pageSize }"))
+#foreach ($rating in $existingUnhelpfulRatings)
+	<li class="content-item">
+		<div class="attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<span class="attribute-value response-type">
+						#if ($rating && $rating.HelpfulnessResponseType && $rating.HelpfulnessResponseType.Name)
+							$rating.HelpfulnessResponseType.Name
+						#else
+							$core_v2_language.GetResource('UnknownReason')
+						#end
+					</span>
+				</li>
+				<li class="attribute-item">
+					<span class="attribute-value">$core_v2_ui.AgoDate($rating.CreateDate)</span>
+				</li>
+				<li class="attribute-item">
+					<a href="#" data-messagename="widget.${core_v2_widget.WrapperElementId}.deleterating" data-ratingid="$rating.Id">$core_v2_language.GetResource('Delete')</a>
+				</li>
+			</ul>
+		</div>
+		#if ($rating.Message)
+			<div class="content">
+				$rating.Message
+			</div>
+		#end
+	</li>
+#end

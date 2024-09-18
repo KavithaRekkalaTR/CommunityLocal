@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_BlogPostList_Name}" version="12.0.0.0" description="${resource:Blogs_BlogPostList_Description}" instanceIdentifier="dd895400883f4f43beca9fd9376a55b1" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="blog-post-list" lastModified="2022-10-14 18:46:40Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($showSidebarList = false)
+#set ($region = $core_v2_widget.RegionName.ToLower())
+#set ($layout = $core_v2_page.Layout.ToLower())
+
+#if ($region == 'split-sidebar-left' || $region == 'split-sidebar-right' || $region == 'left-sidebar')
+	#set ($showSidebarList = true)
+#elseif ($region == 'right-sidebar' && !$layout.Contains('split-content') && !$layout.Contains('split-sidebar'))
+	#set ($showSidebarList = true)
+#end
+
+#if ($showSidebarList)
+	$core_v2_widget.ExecuteFile('simplelist.vm')
+#else
+	#if ($core_v2_blog.Current)
+		#if (!$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+			#set ($sub = $core_v2_page.GetQueryStringValue('sub'))
+			#if ($sub)
+				#set ($msg = false)
+				#if ($sub.ToLower() == "true")
+					#set ($msg = $core_v2_language.GetResource("Weblog_Subscription_SuccessMessage"))
+				#elseif ($sub.ToLower() == "false")
+					#set ($msg = $core_v2_language.GetResource("Weblog_Unsubscription_SuccessMessage"))
+				#end
+				#if ($msg)
+					#registerEndOfPageHtml()
+						<script type="text/javascript">
+							jQuery(function(j){
+								j.telligent.evolution.notifications.show('$msg', {type: 'success', duration: 10000});
+							});
+						</script>
+					#end
+				#end
+			#end
+		#end
+	#end
+	$core_v2_ui.PagedContent('list.vm')
+#end
+
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($blogPostNameResource = $core_v2_language.GetResource('Blogs_BlogPostList_Name'))
+#set($header = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Blogs_BlogPostList_Name}')))
+#set($currentBlog = $core_v2_blog.Current)
+#set($DQ = '"')
+#if($currentBlog && $header == $blogPostNameResource)
+	#set($header = "<a class=${DQ}internal-link view-application weblog${DQ} href=${DQ}${core_v2_encoding.HtmlAttributeEncode($currentBlog.Url)}${DQ}><span></span>${core_v2_encoding.HtmlEncode($currentBlog.Name)}</a>")
+#end
+#set($userFilterType = $core_v2_widget.GetStringValue("userQueryType", "all"))
+#if($userFilterType == "accessingUser")
+	#set($user = $core_v2_user.Accessing)
+#elseif($userFilterType == "currentUser")
+	#set($user = $core_v2_user.Current)
+#end
+#if($user && $core_v2_user.IsRegistered($user.Id))
+	#set($header = "${header} <a class=${DQ}internal-link rss${DQ} href=${DQ}${core_v2_encoding.HtmlAttributeEncode($core_v2_blogUrls.UserRss($user.Id))}${DQ}><span></span>${core_v2_encoding.HtmlEncode($core_v2_language.GetResource('Rss'))}</a>")
+#end
+$header
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blogs_BlogPostList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="viewDetail" labelResourceName="CF_BlogPostList_ViewDetail" defaultValue="list" dataType="String">
+		<propertyValue value="list" labelResourceName="CF_BlogPostList_ListView" />
+		<propertyValue value="detail" labelResourceName="CF_BlogPostList_DetailView" />
+	</property>
+	<property id="viewLayout" labelResourceName="viewLayout" defaultValue="list" dataType="String">
+		<propertyValue value="list" labelResourceName="listlayout" />
+		<propertyValue value="grid" labelResourceName="gridlayout" />
+	</property>
+	<property id="postFilter" labelResourceName="postFilter" defaultValue="all" dataType="String">
+		<propertyValue value="all" labelResourceName="all" orderNumber="1000000" propertiesToShow="postSortBy,tagsToFilter,userQueryType" />
+		<propertyValue value="featured" labelResourceName="featured" orderNumber="1000001" propertiesToHide="postSortBy,tagsToFilter,userQueryType" />
+	</property>
+	<property id="selectedBlogOrGroup" labelResourceName="CF_Blog_SelectGroupAndBlog" dataType="Custom" template="core_v2_blogLookup" width="95%" maxBlogSelections="20" />
+	<property id="postSortBy" labelResourceName="CF_BlogPostList_PostSortBy" defaultValue="MostRecent" dataType="String">
+		<propertyValue value="MostRecent" labelResourceName="CF_BlogPostList_PostSortBy_MostRecent" />
+		<propertyValue value="MostViewed" labelResourceName="CF_BlogPostList_PostSortBy_MostViewed" />
+		<propertyValue value="MostComments" labelResourceName="CF_BlogPostList_PostSortBy_MostComments" />
+	</property>
+	<property id="tagsToFilter" labelResourceName="CF_BlogPostList_TagsToFilter" dataType="String" />
+	<property id="userQueryType" labelResourceName="CF_BlogPostList_UserQueryType" defaultValue="all" dataType="String">
+		<propertyValue value="all" labelResourceName="CF_BlogPostList_UserQueryType_All" />
+		<propertyValue value="accessingUser" labelResourceName="CF_BlogPostList_UserQueryType_Accessing" />
+		<propertyValue value="currentUser" labelResourceName="CF_BlogPostList_UserQueryType_Current" />
+	</property>
+	<property id="excerptSize" labelResourceName="CF_BlogPostList_ExcerptSize" descriptionResourceName="CF_BlogPostList_ExcerptSize_Description" defaultValue="420" dataType="Int">
+		<propertyRule name="minmax" min="1" max="10000" />
+	</property>
+	<property id="pageSize" labelResourceName="CF_BlogPostList_PageSize" defaultValue="25" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="displayPostImage" labelResourceName="CF_BlogPostList_DisplayPostImage" defaultValue="true" dataType="Bool" />
+	<property id="enablePaging" labelResourceName="enablePaging" defaultValue="true" dataType="Bool" />
+	<property id="enableFiltering" labelResourceName="enableFiltering" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="all">All Posts</resource>
+  <resource name="Blogs_BlogPostList_Description">Displays a list of blog posts.</resource>
+  <resource name="Blogs_BlogPostList_Name">Blog - Post List</resource>
+  <resource name="Blogs_BlogPostList_Title_Activity">Activity</resource>
+  <resource name="by">by</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Blog_SelectGroupAndBlog">Select group/blog to pull content from</resource>
+  <resource name="CF_BlogPostList_DetailView">Detail View</resource>
+  <resource name="CF_BlogPostList_DisplayPostImage">Show Post Thumbnail</resource>
+  <resource name="CF_BlogPostList_ExcerptSize">Excerpt Size</resource>
+  <resource name="CF_BlogPostList_ExcerptSize_Description">Enter the maximum number of characters to display for post excerpts.</resource>
+  <resource name="CF_BlogPostList_ListView">List View</resource>
+  <resource name="CF_BlogPostList_PageSize">Number of posts to display</resource>
+  <resource name="CF_BlogPostList_PostSortBy">Sort Posts By</resource>
+  <resource name="CF_BlogPostList_PostSortBy_MostComments">Most Comments</resource>
+  <resource name="CF_BlogPostList_PostSortBy_MostRecent">Most Recent</resource>
+  <resource name="CF_BlogPostList_PostSortBy_MostViewed">Most Viewed</resource>
+  <resource name="CF_BlogPostList_TagsToFilter">Tag to filter posts by</resource>
+  <resource name="CF_BlogPostList_UserQueryType">User Query Type</resource>
+  <resource name="CF_BlogPostList_UserQueryType_Accessing">The logged in user</resource>
+  <resource name="CF_BlogPostList_UserQueryType_All">All</resource>
+  <resource name="CF_BlogPostList_UserQueryType_Current">The current user</resource>
+  <resource name="CF_BlogPostList_ViewDetail">View Detail</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Comments">Comments</resource>
+  <resource name="EmailAddress">Email Address</resource>
+  <resource name="enableFiltering">Enable Filtering</resource>
+  <resource name="enablePaging">Enable Paging</resource>
+  <resource name="featured">Featured Posts</resource>
+  <resource name="gridlayout">Grid</resource>
+  <resource name="listlayout">List</resource>
+  <resource name="more">More</resource>
+  <resource name="MostComments">By comment count</resource>
+  <resource name="MostRecent">By date</resource>
+  <resource name="MostViews">By view count</resource>
+  <resource name="Options">Options</resource>
+  <resource name="postFilter">Filter Posts</resource>
+  <resource name="Rss">RSS</resource>
+  <resource name="Sort_Ascending">Ascending</resource>
+  <resource name="Sort_Descending">Descending</resource>
+  <resource name="Subscribe_ByEmail">Subscribe by email</resource>
+  <resource name="tags">Tags</resource>
+  <resource name="UI_NewsAndAnnouncements">News and Announcements</resource>
+  <resource name="UserBlogPosts_Header_Leader"></resource>
+  <resource name="UserBlogPosts_Header_Trailer">'s Posts</resource>
+  <resource name="View">View</resource>
+  <resource name="viewLayout">Layout</resource>
+  <resource name="Weblog_Link_AboutAuthor">About</resource>
+  <resource name="Weblog_Link_Contact">Contact author</resource>
+  <resource name="Weblog_NoPosts_Created">There are no blog posts to show.  This could be because there are no posts in this blog or due to a filter.</resource>
+  <resource name="Weblog_NoPosts_Created_Link">There are no blog posts to show.  &lt;a href="{0}"&gt;Add a post&lt;/a&gt; now.</resource>
+  <resource name="Weblog_Subscribed">Turn Blog notifications off</resource>
+  <resource name="Weblog_Subscription_AlreadyConfirmed">You will receive email notifications when this blog is updated.</resource>
+  <resource name="Weblog_Subscription_AlreadySubscribed">You're already subscribed, please check your email for a confirmation email.</resource>
+  <resource name="Weblog_Subscription_Subscribe">Subscribe</resource>
+  <resource name="Weblog_Subscription_SuccessMessage">You have successfully subscribed to receive email updates for this blog.</resource>
+  <resource name="Weblog_Subscription_YourSubscribed">Thanks for subscribing, you will receive a confirmation email shortly.</resource>
+  <resource name="Weblog_Unsubscribed">Turn Blog notifications on</resource>
+  <resource name="Weblog_Unsubscription_SuccessMessage">You have successfully unsubscribed from updates for this blog.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,22 @@
+#set($searchText = '')
+#set($searchText = $core_v2_page.GetQueryStringValue('w_searchtext'))
+
+#set($isDeleted = false)
+
+#set($options = "%{}")
+
+#if ($core_v2_utility.ParseBool($core_v2_page.GetQueryStringValue('w_isdeleted')))
+    #set($isDeleted = true)
+    $options.Add('IsDeleted', 'True')
+    #set($noItemsMessage = $core_v2_language.GetResource('no-deleted-results'))
+#end
+
+#if ($searchText.Length > 0)
+    $options.Add('SearchText', $searchText)
+    #set($noItemsMessage = $core_v2_language.GetResource('no-search-results'))
+#end
+
+
+#set($applications = $core_v2_application.List($context.ContainerTypeId, $context.ContainerId, $options))
+
+$core_v2_widget.ExecuteFile('list.vm')

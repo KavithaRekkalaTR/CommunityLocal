@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="ea8dd71ef1f342b28823f97e86c96898" executeAsServiceUser="true" isSingleton="false" hostId="20621367a4734f92abef8dc33fa32a5b" trigger="Event" lastModified="2019-12-23 21:03:05Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="forumreply.aftercreate" />
+      <event key="forumreply.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var thread = core_v2_forumThread.Get(context_v2_automationTrigger.Arguments.ThreadId);
+if (!thread || thread.HasErrors()) {
+    return;
+}
+
+if (core_v2_widget.GetBoolValue('ignoreIfOriginalAuthor', true) && context_v2_automationTrigger.Arguments.Author.Id == thread.Author.Id)
+{
+    // thread author is the same as reply author
+    return;
+}
+
+var userId = context_v2_automationTrigger.Arguments.Author.Id;
+var awardTo = core_v2_widget.GetStringValue('awardTo', 'parent');
+if (awardTo == 'parent') {
+    userId = thread.Author.Id;
+}
+else if (awardTo == 'verifier') {
+    userId = context_v2_automationTrigger.Arguments.AnswerVerifiedByUserId;
+}
+
+var awardedPoints = context_v1_pointsAutomation.ArePointsAwarded(userId, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumReply.ContentTypeId);
+if (context_v2_automationTrigger.Event == 'AfterCreate' && context_v2_automationTrigger.Arguments.Approved && context_v2_automationTrigger.Arguments.IsAnswer && !awardedPoints) {
+    context_v1_pointsAutomation.AwardPoints(userId, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumReply.ContentTypeId);
+} else if (context_v2_automationTrigger.Event == 'AfterUpdate') {
+    if (context_v2_automationTrigger.Arguments.Approved && context_v2_automationTrigger.Arguments.IsAnswer) {
+        // ensure points awarded
+        if (!awardedPoints) {
+            context_v1_pointsAutomation.AwardPoints(userId, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumReply.ContentTypeId);
+        }
+    } else {
+        // ensure points not awarded
+        if (awardedPoints) {
+            context_v1_pointsAutomation.RevokePoints(userId, context_v2_automationTrigger.Arguments.ContentId, core_v2_forumReply.ContentTypeId);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="awardTo" labelResourceName="AwardTo" descriptionResourceName="AwardTo_Description" dataType="string" defaultValue="parent">
+        <propertyValue labelResourceName="AwardTo_Parent" value="parent" />
+        <propertyValue labelResourceName="AwardTo_Child" value="child" />
+        <propertyValue labelResourceName="AwardTo_Verifier" value="verifier" />
+    </property>
+    <property id="ignoreIfOriginalAuthor" labelResourceName="IgnoreIfOriginalAuthor" descriptionResourceName="IgnoreIfOriginalAuthor_Description" dataType="bool" defaultValue="true" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AwardTo">Award points to</resource>
+  <resource name="AwardTo_Child">Reply author</resource>
+  <resource name="AwardTo_Description">Select which member should receive points.</resource>
+  <resource name="AwardTo_Parent">Thread author</resource>
+  <resource name="AwardTo_Verifier">Verifying member</resource>
+  <resource name="Description">Awards points when a forum reply is verified as an answer.</resource>
+  <resource name="IgnoreIfOriginalAuthor">Ignore replies made by the thread author</resource>
+  <resource name="IgnoreIfOriginalAuthor_Description">If enabled, replies by the thread author will not cause points to be awarded.</resource>
+  <resource name="Title">When a forum reply is verified as an answer</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

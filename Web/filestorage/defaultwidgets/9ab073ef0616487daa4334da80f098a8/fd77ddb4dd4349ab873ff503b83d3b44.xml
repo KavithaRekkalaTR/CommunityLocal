@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:CommentsContextualPanel_Name}" version="11.0.0.0" description="${resource:CommentsContextualPanel_Description}" instanceIdentifier="fd77ddb4dd4349ab873ff503b83d3b44" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-comments" lastModified="2021-01-05 20:55:45Z" provider="9ab073ef0616487daa4334da80f098a8">
+    <contentScript language="Velocity"><![CDATA[
+#set ($content = false)
+#set ($content = $core_v2_content.Current)
+
+#set ($application = false)
+#set ($application = $core_v2_application.Current)
+#if (!$application)
+	$core_v2_widget.Hide();
+#end
+
+#set ($applicationName = $application.HtmlName('Web'))
+#set ($applicationId = $application.ApplicationId)
+#set ($contentTypeId = false)
+#set ($contentName = false)
+#set ($ContentId = false)
+#if ($content)
+	#set ($contentTypeId = $content.ContentTypeId)
+	#set ($contentName = $content.HtmlName('Web'))
+	#set ($contentId = $content.ContentId)
+#end
+#set ($pageIndex = 0)
+
+#if ($contentId && ($contentId == $contentTypeId || $contentId == $applicationId))
+	#set ($contentTypeId = false)
+	#set ($contentId = false)
+	#set ($contentName = false)
+#end
+
+#set ($contentTypeName = false)
+#if ($contentTypeId)
+	#set ($contentType = false)
+	#set ($contentType = $core_v2_contentType.Get($contentTypeId))
+	#if ($contentType)
+		#set ($contentTypeName = $contentType.Name)
+	#end
+#end
+
+#set ($applicationTypeName = false)
+#if ($application && $application.ApplicationTypeId)
+	#set ($applicationType = false)
+	#set ($applicationType = $core_v2_applicationType.Get($application.ApplicationTypeId))
+	#if ($applicationType)
+		#set ($applicationTypeName = $applicationType.Name)
+	#end
+#end
+
+#set ($showSearch = $context.HasSearchableCommentableContentTypes($application.ApplicationTypeId))
+
+#if($showSearch)
+	## Build up a list of content types to filter by when searching that are
+	## not also app or container types, and are commentable
+	#set($searchFilters = '')
+	#foreach($contentType in $core_v2_contentType.List())
+		#set($applicationType = false)
+		#set($applicationType = $core_v2_applicationType.Get($contentType.Id))
+		#set($containerType = false)
+		#set($containerType = $core_v2_containerType.Get($contentType.Id))
+		#set ($supportsComments = false)
+		#set ($supportsComments = $core_v2_comments.SupportsComments($contentType.Id))
+		#if ($supportsComments && (!$applicationType || $applicationType.HasErrors()) && (!$containerType || $containerType.HasErrors()))
+			#if ($searchFilters.Length == 0)
+				#set($searchFilters = "contenttypeid::(${contentType.Id}")
+			#else
+				#set($searchFilters = "${searchFilters} OR ${contentType.Id}")
+			#end
+		#end
+	#end
+	#set ($searchFilters = "${searchFilters})")
+#end
+
+#set ($commentListId = $core_v2_widget.UniqueId('commentList'))
+#set ($searchInputId = $core_v2_widget.UniqueId('searchInput'))
+
+<p class="panel-instructions">
+	#if (!$applicationTypeName)
+		#set ($applicationTypeName = $core_v2_language.GetResource('GenericApplicationTypeName'))
+	#end
+	$core_v2_language.FormatString($core_v2_language.GetResource('Instructions'), $core_v2_language.Lowercase($applicationTypeName))
+</p>
+
+#if($showSearch)
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item body">
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)" />
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+#end
+
+<div class="content-list-name"></div>
+<div class="content-list-description"></div>
+<ul class="content-list content simple margin-bottom expandable" id="$core_v2_encoding.HtmlAttributeEncode($commentListId)">
+#set ($inProcess = true)
+$core_v2_widget.ExecuteFile('list.vm')
+</ul>
+
+#set ($placeHolderText = $core_v2_language.GetResource('PlaceHolder'))
+#if ($contentTypeName)
+	#set ($placeHolderText = $core_v2_language.FormatString($core_v2_language.GetResource('PlaceHolderGeneric'), $contentTypeName))
+#end
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.commentsPanel.register({
+		listCallback: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-callback.vm'))',
+		editCallback: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('edit.vm'))',
+		commentsListId: '#$core_v2_encoding.JavascriptEncode($commentListId)',
+		searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+		deleteVerificationText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("Comment_DeleteVerify"))',
+		editCommentText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditComment'))',
+		contentId: #if ($contentId) '$contentId' #else null #end,
+		contentTypeId: #if ($contentTypeId) '$contentTypeId' #else null #end,
+		contentName: #if ($contentName) '$core_v2_encoding.JavascriptEncode($contentName)' #else null #end,
+		applicationName: '$core_v2_encoding.JavascriptEncode($applicationName)',
+		applicationId: #if ($applicationId) '$applicationId' #else null #end,
+		searchFilters: '$core_v2_encoding.JavascriptEncode($searchFilters)',
+		searchErrorMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SearchErrorMessage'))',
+		noCommentsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+		approvedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Approved'))',
+		notApprovedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NotApproved'))',
+		placeHolderText: '$core_v2_encoding.JavascriptEncode($placeHolderText)'
+	});
+});
+</script>
+
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:CommentsContextualPanel_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:CommentsContextualPanel_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Approved">Published</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="Comment_DeleteVerify">Are you sure you want to delete this comment?</resource>
+  <resource name="CommentBody">Comment Body</resource>
+  <resource name="CommentNotFound">No comment found.</resource>
+  <resource name="CommentsContextualPanel_Description">Comments Administration.</resource>
+  <resource name="CommentsContextualPanel_Name">Comments Administration</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="EditComment">Edit Comment</resource>
+  <resource name="GenericApplicationTypeName">Application</resource>
+  <resource name="InReplyTo">In reply to {0}</resource>
+  <resource name="Instructions">Comments made on content within this {0} are listed below.</resource>
+  <resource name="IsApproved">Published</resource>
+  <resource name="more">More</resource>
+  <resource name="NoResults">There are no comments on this content.</resource>
+  <resource name="NotApproved">Not Published</resource>
+  <resource name="On">{0} on {1}</resource>
+  <resource name="PlaceHolder">Filter by content</resource>
+  <resource name="PlaceHolderGeneric">Filter by {0}</resource>
+  <resource name="RequiredField">This field is required.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SearchErrorMessage">No Results</resource>
+  <resource name="Updated">Updated {0}</resource>
+  <resource name="view">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="comments.comments.modify" />
+			<scope id="search.results.readonly" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

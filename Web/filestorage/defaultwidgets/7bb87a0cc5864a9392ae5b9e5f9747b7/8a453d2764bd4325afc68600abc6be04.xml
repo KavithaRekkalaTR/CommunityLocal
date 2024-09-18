@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget_Title}" version="11.0.0.0" description="${resource:Widget_Description}" instanceIdentifier="8a453d2764bd4325afc68600abc6be04" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="track-term-search" lastModified="2020-01-14 16:08:05Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set($enableAjax = $core_v2_widget.GetBoolValue('EnableAjax', true))
+#if ($enableAjax)
+	<div id="$core_v2_ui.PagedContentWrapperElementId()" style="display:none;"></div>
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		    jQuery(function() {
+                jQuery.telligent.evolution.get({
+                    url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list.vm'))',
+                    success: function(response) {
+                        jQuery('#$core_v2_ui.PagedContentWrapperElementId()').fadeOut('fast', function() {
+                            jQuery(this).html(response).fadeIn('fast');
+                        });
+                    }
+                });
+		    });
+		</script>
+	#end
+#else
+    $core_v2_ui.PagedContent('list.vm')
+#end
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('Title', '${resource:Widget_Title}'))
+]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="group1" labelResourceName="Property_Options">
+	<property id="Title" labelResourceName="Property_Title" defaultValue="${resource:Widget_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="SearchTerm" labelResourceName="Property_SearchTerm" descriptionResourceName="Property_SearchTerm_Desc" defaultValue="Sample" dataType="String" />
+	<property id="IncludeContentTypeIds" labelResourceName="Property_IncludeContentTypes" descriptionResourceName="Property_IncludeContentTypes_Desc" defaultValue="all" dataType="Custom" template="core_v2_contentTypeList" isSearchable="true" />
+	<property id="Groups" labelResourceName="Property_Groups" descriptionResourceName="Property_Groups_Desc" dataType="Custom" template="core_v2_groupLookup" enableCurrent="True" />
+	<property id="IncludeSubGroups" labelResourceName="Property_IncludeSubGroups" defaultValue="true" dataType="Bool" />
+	<property id="SortBy" labelResourceName="Property_SortBy" defaultValue="date desc" dataType="String">
+		<propertyValue value="date desc" labelResourceName="Property_SortBy_DateDesc" />
+		<propertyValue value="date asc" labelResourceName="Property_SortBy_DateAsc" />
+		<propertyValue value="titlesort desc" labelResourceName="Property_SortBy_TitleDesc" />
+		<propertyValue value="titlesort asc" labelResourceName="Property_SortBy_TitleAsc" />
+	</property>
+	<property id="NumResults" labelResourceName="Property_NumResults" defaultValue="5" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="EnableAjax" labelResourceName="Property_EnableAjax" defaultValue="true" dataType="Bool" />
+	<property id="EnablePaging" labelResourceName="Property_EnablePaging" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Html_NoSearchItems">&lt;div class="message norecords"&gt;No search items found for the provided terms&lt;/div&gt;</resource>
+  <resource name="Property_EnableAjax">Load results asynchronously</resource>
+  <resource name="Property_EnablePaging">Enable paging results</resource>
+  <resource name="Property_Groups">Group</resource>
+  <resource name="Property_Groups_Desc">Select a specific group to load results from. If left blank, results from all groups will be shown.</resource>
+  <resource name="Property_IncludeContentTypes">Content types to include</resource>
+  <resource name="Property_IncludeContentTypes_Desc">Choose the types of content to include in the results.</resource>
+  <resource name="Property_IncludeSubGroups">Include results from sub-groups</resource>
+  <resource name="Property_NumResults">Number of results to display</resource>
+  <resource name="Property_Options">Options</resource>
+  <resource name="Property_SearchTerm">Search term</resource>
+  <resource name="Property_SearchTerm_Desc">Enter one or more terms. Content matching these terms will be listed.</resource>
+  <resource name="Property_SortBy">Sort by</resource>
+  <resource name="Property_SortBy_DateAsc">Date (ascending)</resource>
+  <resource name="Property_SortBy_DateDesc">Date (descending)</resource>
+  <resource name="Property_SortBy_TitleAsc">Title (ascending)</resource>
+  <resource name="Property_SortBy_TitleDesc">Title (descending)</resource>
+  <resource name="Property_Title">Widget title</resource>
+  <resource name="Widget_Description">This widget allows you to track the search results for a specific term.</resource>
+  <resource name="Widget_Title">Search Terms</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

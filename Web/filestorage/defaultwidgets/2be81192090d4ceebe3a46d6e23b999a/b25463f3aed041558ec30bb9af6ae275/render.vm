@@ -1,0 +1,68 @@
+﻿#foreach($group in $subGroups)
+#beforeall
+	<ul class="content-list content expandable simple" data-hasmore="$hasMore">
+#each
+	<li class="content-item group" data-groupid="$group.Id" data-name="$group.Name">
+		<div class="content group">
+		<h4 class="name">
+			$group.Name
+		</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					#if ($group.GroupType == 'Joinless')
+						$core_v2_language.GetResource('type_joinless')
+					#elseif ($group.GroupType == 'PublicOpen')
+						$core_v2_language.GetResource('type_publicopen')
+					#elseif ($group.GroupType == 'PublicClosed')
+						$core_v2_language.GetResource('type_publicclosed')
+					#elseif ($group.GroupType == 'PrivateListed')
+						$core_v2_language.GetResource('type_privatelisted')
+					#elseif ($group.GroupType == 'PrivateUnlisted')
+						$core_v2_language.GetResource('type_privateunlisted')
+					#else
+						&nbsp;
+					#end
+				</li>
+			</ul>
+		</div>
+		<div class="content expandable">
+			$!group.Description
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					#if ($group.Url)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($group.Url)">$core_v2_language.GetResource('view')</a>
+						</li>
+					#end
+					#set ($editUrl = false)
+					#set ($editUrl = $context.GetEditUrl($group.ContainerId))
+					#if ($editUrl)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($editUrl)">$core_v2_language.GetResource('edit')</a>
+						</li>
+					#end
+					#if ($core_v3_permission.CheckPermission($core_v2_groupPermissions.DeleteGroup, $core_v2_user.Accessing.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="subgroups.delete" data-groupid="$group.Id">$core_v2_language.GetResource('delete')</a>
+						</li>
+					#end
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#nodata
+	<div class="message information" data-hasmore="false">
+		$noItemsMessage
+	</div>
+#end

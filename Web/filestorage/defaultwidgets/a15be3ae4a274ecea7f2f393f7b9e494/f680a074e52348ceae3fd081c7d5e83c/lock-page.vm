@@ -1,0 +1,15 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($pageId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('PageId')))
+	#set($lock = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Lock')))
+
+	#set($response = $core_v2_wikiPage.Update($pageId, "%{IsLocked = $lock}"))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_CreateBlog_Name}" version="11.0.0.0" description="${resource:Blogs_CreateBlog_Description}" instanceIdentifier="e1f9626ef5474039b7088fdb1a3d15bb" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="create-blog" lastModified="2020-01-14 16:09:04Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+## require non-anonymous user
+#if (!$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	$core_v2_authentication.RedirectToLogin()
+#end
+
+## capture a group which is either current or root
+#set ($group = $core_v2_group.Current)
+#if (!$group)
+	#set ($group = $core_v2_group.Root)
+#end
+#set ($defaultGroup = $core_v2_group.Default)
+
+## require proper permissions
+#set ($canCreateBlogInCurrentGroup = $core_v3_permission.CheckPermission($core_v2_groupPermissions.CreateBlog, $core_v2_user.Accessing.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+#set ($canCreateBlogInDefaultGroup = $core_v3_permission.CheckPermission($core_v2_groupPermissions.CreateBlog, $core_v2_user.Accessing.Id, "%{ ApplicationId = $defaultGroup.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+#if (!$canCreateBlogInCurrentGroup && (!$defaultGroup || !$canCreateBlogInDefaultGroup))
+	$core_v2_widget.Hide()
+#end
+
+<form><fieldset>
+	<h1>$core_v2_language.GetResource('CF_CreateBlog')</h1>
+	<ul class="field-list">
+		<li class="field-item required blog-name">
+			<label for="$core_v2_widget.UniqueId('name')" class="field-item-name">$core_v2_language.GetResource('Weblog_Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Weblog_Name_Desc')</span>
+			<span class="field-item-input"><input name="$core_v2_widget.UniqueId('name')" type="text" size="40" id="$core_v2_widget.UniqueId('name')" /></span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('group')">$core_v2_language.GetResource('Weblog_Groups')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Weblog_Groups_Desc')</span>
+			<span class="field-item-input"><input id="$core_v2_widget.UniqueId('group')" name="$core_v2_widget.UniqueId('group')" type="text" style="width:100%;" /></span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<a id="$core_v2_widget.UniqueId('create')" class="internal-link create-blog disabled submit-button button" href="#"><span></span>$core_v2_language.GetResource('Create')</a>
+			<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.createBlog')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	jQuery(function(j){
+		j.telligent.evolution.widgets.createBlog.register({
+			nameInput: "#$core_v2_widget.UniqueId('name')",
+			groupInput: "#$core_v2_widget.UniqueId('group')",
+			createLink: "#$core_v2_widget.UniqueId('create')",
+			lookupGroupsUrl: "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/groups.json')",
+			createBlogUrl: "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/blogs.json')",
+			noGroupsMatchText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupLookUp_NoMatches'))",
+			groupRequiredMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreateBlog_NoGroupSelected'))",
+			defaultGroupId: $group.Id,
+			defaultGroupName: '$core_v2_encoding.JavascriptEncode($group.Name)'
+		});
+	});
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+	</script>
+#end
+
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Blogs_CreateBlog_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blogs_CreateBlog_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Blogs_CreateBlog_Description">Displays a form used to create a new blog.</resource>
+  <resource name="Blogs_CreateBlog_Name">Blog - Create Blog</resource>
+  <resource name="CF_CreateBlog">Create Blog</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Create">Create</resource>
+  <resource name="CreateBlog_NoGroupSelected">You must select a group for this blog.</resource>
+  <resource name="GroupLookUp_NoMatches">A matching group could not be found.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Weblog_Groups">Blog Group</resource>
+  <resource name="Weblog_Groups_Desc">Select a group for this blog.</resource>
+  <resource name="Weblog_Name">Blog Name</resource>
+  <resource name="Weblog_Name_Desc">Enter a name for the blog.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="groups.groups.readonly" />
+			<scope id="blogs.blogs.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

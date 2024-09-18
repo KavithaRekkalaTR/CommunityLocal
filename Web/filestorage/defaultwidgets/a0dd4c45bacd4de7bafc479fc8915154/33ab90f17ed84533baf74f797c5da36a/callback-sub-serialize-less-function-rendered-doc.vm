@@ -1,0 +1,43 @@
+##
+## Renders an autocomplete caption description of LESS function
+##
+## Requires in scope:
+##   $lessFunction
+##
+
+<div class="suggestion_details">
+	#if ($lessFunction.Description)
+		<div class="description">$lessFunction.Description</div>
+	#end
+
+	#foreach ($parameter in $lessFunction.Parameters)
+	#beforeall
+		<span class="label">$core_v2_language.GetResource('Parameters')</span>
+		<ul class="parameters">
+	#each
+			<li>
+				<span class="name">${parameter.Name}</span>
+				<span class="opt">
+					#if ($parameter.IsRequired)
+						$core_v2_language.GetResource('RequiredLower')
+					#else
+						$core_v2_language.GetResource('OptionalLower')
+					#end
+				</span>
+				#if ($parameter.Type)
+					<span class="type">
+						$parameter.Type
+					</span>
+				#end
+			</li>
+	#afterall
+		</ul>
+	#end
+
+	<span class="mfw suggestion view_docs" onclick="jQuery.telligent.evolution.messaging.publish('studio.view.documentation.show', { target: this, elm: this });"
+		data-type="extension"
+		data-name="$core_v2_encoding.HtmlAttributeEncode($lessFunction.Name)"
+		data-mode="less">$core_v2_language.GetResource('ViewDocumentation')</span>
+	<span class="view_doc_shortcut">$core_v2_language.GetResource('ViewDocShortcut')</span>
+</div>
+

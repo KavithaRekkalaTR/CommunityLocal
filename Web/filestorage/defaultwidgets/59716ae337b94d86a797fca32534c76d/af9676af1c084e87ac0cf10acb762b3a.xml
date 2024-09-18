@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="af9676af1c084e87ac0cf10acb762b3a" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-09-10 13:41:04Z" provider="59716ae337b94d86a797fca32534c76d">
+    <contentScript language="Velocity"><![CDATA[<link type="text/css" rel="stylesheet" href="$core_v2_widget.GetExecutedFileUrl('style.less')"></link>
+
+#set($thread = false)
+#set($thread = $core_v2_forumThread.Get($context.ForumReply.ThreadId))
+
+#set($replies = false)
+#if ($context.ForumReply.ParentId > 0)
+    #set($hierarchalReplies = $core_v2_forumReply.ListThreadedForReply($context.ForumReply.ThreadId, "%{ Direction = 'FromReply', FlattenedDepth = 1, PageSize = 10, ReplyId = $context.ForumReply.ParentId }"))
+    #set ($replies = [])
+	#set ($threadedReplies = $hierarchalReplies)
+	$core_v2_widget.ExecuteFile('recurse.vm')
+#end
+
+<div class="content-fragment-page forums-thread">
+    <div class="layout">
+        <div class="layout-header"></div>
+            <div class="layout-content content">
+    
+                <div class="layout-region content">
+                    <div class="layout-region-inner content">
+                        <div class="content-fragment threaded-thread no-wrapper with-spacing">
+                            <div class="content-fragment-content">
+
+                                #if ($thread)
+                                    #set ($hasAttachment = false)
+                                	#set ($hasAttachment = $thread.File && $thread.File.FileUrl)
+                                	#set ($mediaType = false)
+                                	#set ($mediaRendered = false)
+                                	#if ($hasAttachment)
+                                		#set ($mediaType = $core_v2_ui.GetMediaType($thread.File.FileUrl, "%{ ViewType = 'View' }"))
+                                	#end
+                                
+                                    <div class="thread-start">
+    		                            <div class="content full">
+    		                                <h1 class="name">$thread.Subject</h1>
+                                    		<div class="author header thread-starter">
+    			                                <div class="avatar">
+    									            <a href="#">
+    									                $core_v2_ui.GetResizedImageHtml($thread.Author.AvatarUrl, 32, 32, "%{ ResizeMethod = 'ZoomAndCrop', alt = $thread.Author.DisplayName }")
+    					                            </a>
+    							                </div>
+    			                                <span class="user-name">
+    								                <a href="#" class="internal-link view-user-profile">
+                                					    $thread.Author.DisplayName
+    					                            </a>
+                    							</span>
+                                    			<span class="post-date">
+                                    				<a href="#">
+                                    				    $core_v2_language.FormatAgoDate($thread.Date)
+                                    				</a>
+                                    			</span>
+    		                                </div>
+    		                                
+    		                                ## audio/video
+                                    		#if ($hasAttachment && ($mediaType == 'Video' || $mediaType == 'Audio'))
+                                    			<div class="attachment">
+                                    				$core_v2_ui.GetViewHtml($thread.File.FileUrl, "%{ AdjustToContainer = 'true' }")
+                                    				<a href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)">$thread.File.FileName</a>
+                                    			</div>
+                                    			#set ($mediaRendered = true)
+                                    		#end
+    
+                                    		<div class="content">
+    			                                $thread.Body('Web')
+    			                                
+    			                                #if($thread.EmailFiles && $thread.EmailFiles.Count() > 0)
+                                    				#foreach($emailFile in $thread.EmailFiles)
+                                    				#beforeall
+                                    					<div class="content-list thumbnail ui-masonry margin-top" data-columnclass="thumbnail-column">
+                                    				#each
+                                    					<div class="content-item content thumbnail" data-hasmore="false" data-url="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)">
+                                    						<div class="avatar">
+                                    							$core_v2_ui.GetPreviewHtml($emailFile.DirectDownloadUrl, "%{ Width = 140 }")
+                                    							</div>
+                                    							<h3 class="name">
+                                    								<a href="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)" target="_blank">$core_v2_encoding.HtmlEncode($emailFile.FileName)</a>
+                                    							</h3>
+                                    					</div>
+                                    				#afterall
+                                    					</div>
+                                    				#end
+                                    			#end
+                                    			#if($thread.EditNotes && $thread.EditNotes != "" && $core_v2_forumConfiguration.DisplayEditNotes)
+                                    				<br /><br />
+                                    				$thread.EditNotes
+                                    				<br />
+                                    			#end
+    								        </div>
+                                    
+                                    		## non-viewable
+                                    		#if (!$mediaRendered && $hasAttachment)
+                                    			<div class="attachment margin-bottom">
+                                    				<ul class="navigation-list">
+                                    					<li class="navigation-list-item">
+                                    						<a class="file-name" href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)" target="_blank">$thread.File.FileName</a>
+                                    					</li>
+                                    				</ul>
+                                    			</div>
+                                    			#set ($mediaRendered = true)
+                                    		#end
+    
+                                    		<div class="actions footer">
+                                            </div>
+                                        </div>
+    		                        </div>
+    		                    #end
+
+                                <div class="threaded-wrapper-outer">
+                                	<div class="threaded-wrapper" style="display: block;">
+                                	    <div class="reply-header"></div>
+                                	    
+                                	    <ul class="content-list threaded" data-sortby="CreatedDate" data-sortorder="Ascending" data-filter="">
+                                	        #if ($replies)
+                                	            #set($permalink = false)
+                                	            #set($first = true)
+                                	            #foreach ($reply in $replies)
+                                	                #if ($first)
+                                	                    #set($first = false)
+                                	                    #if ($reply.ParentId)
+                                	                        <li class="load-more previous">
+                                                            	<a class="previous" href="#">View More</a>
+                                                            	<span class="ui-loading" data-width="24" data-height="24"></span>
+                                                            </li>
+                                	                    #end
+                                	                #end
+                                	                
+                                	                $core_v2_widget.ExecuteFile('render-reply.vm')
+                    	                       #end
+                    	                   #end
+                    	                   
+                    	                   #set($permalink = true)
+                    	                   #set($reply = $context.ForumReply)
+                    	                   $core_v2_widget.ExecuteFile('render-reply.vm')
+            	                       </ul>
+                                    </div>
+                                </div>
+                    
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="layout-footer"></div>
+</div>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enables previewing forum replies in abuse workflows.</resource>
+  <resource name="InReplyTo">in reply to {user}</resource>
+  <resource name="Name">Forum Reply Preview</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

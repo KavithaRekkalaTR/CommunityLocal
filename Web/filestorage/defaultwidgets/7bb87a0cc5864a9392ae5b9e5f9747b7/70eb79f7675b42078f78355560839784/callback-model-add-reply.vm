@@ -1,0 +1,67 @@
+##
+## Adds a Reply
+##
+## Parameters
+##
+##   _w_forumId
+##   _w_threadId
+##   _w_parentId
+##   _w_body
+##   _w_suggestAnswer
+##   _w_subscribeToThread
+##
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	$core_v2_widget.ExecuteFile('common-config.vm')
+
+	##
+	## Parse Parameters
+	##
+	#set ($options = "%{}")
+
+	#set ($forumIdQuery = false)
+	#set ($forumIdQuery = $core_v2_page.GetFormValue('_w_forumId'))
+	#if ($forumIdQuery && $forumIdQuery.length > 0)
+		$options.Add("ForumId", $core_v2_utility.ParseInt($forumIdQuery))
+	#end
+
+	#set ($threadId = false)
+	#set ($threadIdQuery = false)
+	#set ($threadIdQuery = $core_v2_page.GetFormValue('_w_threadId'))
+	#if ($threadIdQuery && $threadIdQuery.length > 0)
+		#set ($threadId = $core_v2_utility.ParseInt($threadIdQuery))
+	#end
+
+	#set ($body = false)
+	#set ($bodyQuery = false)
+	#set ($bodyQuery = $core_v2_page.GetFormValue('_w_body'))
+	#if ($bodyQuery)
+		#set ($body = $bodyQuery)
+	#end
+
+	#set ($parentIdQuery = false)
+	#set ($parentIdQuery = $core_v2_page.GetFormValue('_w_parentId'))
+	#if ($parentIdQuery && $parentIdQuery.length > 0)
+		$options.Add("ForumReplyId", $core_v2_utility.ParseInt($parentIdQuery))
+	#end
+
+	#set ($suggestAnswerQuery = false)
+	#set ($suggestAnswerQuery = $core_v2_page.GetFormValue('_w_suggestAnswer'))
+	#if ($suggestAnswerQuery)
+		$options.Add('IsSuggestedAnswer', $core_v2_utility.ParseBool($suggestAnswerQuery))
+	#end
+	
+	#set ($subscribeToThreadQuery = false)
+	#set ($subscribeToThreadQuery = $core_v2_page.GetFormValue('_w_subscribeToThread'))
+	#if ($subscribeToThreadQuery)
+		$options.Add('SubscribeToThread', $core_v2_utility.ParseBool($subscribeToThreadQuery))
+	#end
+
+	#set ($forumReply = $core_v2_forumReply.Create($threadId, $body, $options))
+
+	#set ($excludeContainer = false)
+	$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+
+#end

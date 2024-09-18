@@ -1,0 +1,455 @@
+#set ($designMode = $core_v2_widget.GetStringValue('designMode', 'inherit'))
+#set ($coverPhotoAlignment = $core_v2_widget.GetStringValue('coverPhotoAlignment', 'center center'))
+#set ($coverPhotoLayout = $core_v2_widget.GetStringValue('coverPhotoLayout', 'cover'))
+
+## If configured to render post images and there is one, override design mode and cover photo URL
+#set ($coverPhotoUrl = false)
+#set ($renderingPoster = false)
+#if ($renderPoster && $post && $post.PostImageUrl && $post.PostImageUrl.length > 0)
+	#set ($renderingPoster = true)
+	#set ($designMode = 'photo')
+	#set ($coverPhotoUrl = $post.PostImageUrl)
+#end
+
+## Inherited
+#if ($designMode == 'inherit')
+	#set ($inheritHeight = $core_v2_widget.GetStringValue('inheritHeight', 'custom'))
+	#if ($inheritHeight == 'inherit')
+		## When inheriting, gather the dynamic view width ratio from event raised by group banner,
+		## which is raised regardless of whether the group banner's height ratio is based on image
+		## measurement or specific dimensions.
+		<script>
+		(function(j){
+			j(window).on('dynamic-cover-measured', function(e, data){
+				if(data && data.height) {
+					var height = 'calc(' + data.height + ' - 44px)';
+					j('.banner.application').css('min-height', height);
+					j(window).trigger('dynamic-cover-loaded');
+				}
+			})
+		})(jQuery);
+		</script>
+	#elseif ($inheritHeight == 'custom')
+		#set ($customHeight = $core_v2_widget.GetIntValue('customHeight', 176))
+		<style>
+		.no-cover .banner.application,
+		.banner.application {
+			min-height: ${customHeight}px;
+		}
+		</style>
+		<script>
+		(function(j){
+			j(function(){
+				j(window).trigger('dynamic-cover-loaded');
+			});
+		})(jQuery);
+		</script>
+	#end
+#else ## Non-inherited
+	## Defaults
+	#set ($background = false)
+	#set ($backgroundColor = '#fff')
+	#set ($foregroundColor = '#263238')
+	#set ($shadow = true)
+	#set ($border = true)
+
+	## Background color used for no photos, or for photos in modes where background would still show through
+	#if ($designMode == 'color' || $coverPhotoLayout == 'contain')
+		## Parse Selected Color Palette
+		#if ($designMode == 'color')
+			#set ($paletteId = $core_v2_widget.GetCustomValue('paletteId', ''))
+		#elseif ($designMode == 'photo')
+			#set ($paletteId = $core_v2_widget.GetCustomValue('coverPhotoBackgroundPaletteId', ''))
+		#end
+
+		#set ($backgroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color', '#2196F3', 10))
+		#set ($backgroundColorTo = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color-to', '', 10))
+		#set ($foregroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'foreground-color', '#ffffff', 10))
+
+		#set ($border = false)
+		#set ($borderValue = $core_v2_theme.GetPaletteIntValue('contextBanner', $paletteId, 'include-border', 0, 10))
+		#if ($borderValue == 1)
+			#set ($border = true)
+		#end
+
+		#set ($shadow = false)
+		#set ($shadowValue = $core_v2_theme.GetPaletteIntValue('contextBanner', $paletteId, 'include-shadow', 0, 10))
+		#if ($shadowValue == 1)
+			#set ($shadow = true)
+		#end
+
+		#if ($backgroundColorTo && $backgroundColorTo.length > 0)
+			#set ($background = "linear-gradient(to right, ${backgroundColor}, ${backgroundColorTo})")
+		#else
+			#set ($background = $backgroundColor)
+		#end
+
+		<script>
+		(function(j){
+			j('body').addClass('no-cover');
+		})(jQuery);
+		</script>
+	#end
+
+	#if ($designMode == 'color')
+		#set ($customHeight = $core_v2_widget.GetIntValue('customHeight', 176))
+		<style>
+		.no-cover .banner.application,
+		.banner.application {
+			min-height: ${customHeight}px;
+		}
+		</style>
+	#end
+
+	<style>
+		## Reset inherited styles
+		.with-cover-photo .cover-photo,
+		.header-fragments .layout .header-top-content .layout-region.content .layout-region-inner .content-fragment.group-banner .cover-photo {
+			background-image: none;
+		}
+		.single-column.header-fragments,
+		.header-fragments .layout .header-top-content .layout-region.content,
+		.header-fragments .layout .header-top-content.with-adaptable-elements .layout-region.content,
+		.banner.context,
+		.banner.context:not(.home),
+		.banner.context.home {
+			background-color: transparent;
+		}
+		.single-column.header-fragments,
+		.header-fragments .layout .header-top-content .layout-region.content,
+		.header-fragments .layout .header-top-content.with-adaptable-elements .layout-region.content {
+			border-bottom: 0px;
+		}
+		.header-fragments .layout .header-top-content,
+		.header-fragments .layout .header-top-content.scrolled {
+			box-shadow: none;
+		}
+
+
+		#set ($includeAvatar = $core_v2_widget.GetBoolValue('includeAvatar', true))
+		#if (!$includeAvatar)
+			.banner.context > .avatar {
+				display: none;
+			}
+		#end
+
+		#if (!$coverPhotoUrl)
+			#set ($coverPhotoUrl = $core_v2_widget.GetUrlValue('coverPhotoUrl', ''))
+		#end
+
+		#if ($coverPhotoUrl && $coverPhotoUrl.Length > 0 && $designMode == 'photo')
+			## Photo defaults
+			#set ($backgroundColor = '#263238')
+			#set ($foregroundColor = '#fff')
+			#set ($shadow = false)
+			#set ($border = false)
+
+
+			#set ($definedDynamicHeight = false)
+			#set ($coverPhotoWidth = 1500)
+			#set ($coverPhotoHeight = 0)
+
+			## Fixed Heights
+			#set ($coverPhotoFixedHeight = false)
+			#if ($coverPhotoLayout == 'cover' || $coverPhotoLayout == 'contain')
+				#set ($coverPhotoFixedHeight = $core_v2_widget.GetIntValue('coverPhotoFixedHeight', 176))
+			#end
+
+			#if ($coverPhotoLayout == 'dynamic')
+				#set ($coverPhotoLayoutDynamicHeightMode = $core_v2_widget.GetStringValue('coverPhotoLayoutDynamicHeightMode', 'defined'))
+				## Defined Dynamic Dimensions
+				#if ($coverPhotoLayoutDynamicHeightMode == 'defined')
+					#set ($coverPhotoWidth = $core_v2_widget.GetDoubleValue('coverPhotoLayoutDynamicDefinedWidth', 1500))
+					#set ($coverPhotoHeight = $core_v2_widget.GetDoubleValue('coverPhotoLayoutDynamicDefinedHeight', 375))
+					#set ($definedDynamicHeight = 100 * $coverPhotoHeight / $coverPhotoWidth)
+					#set ($definedDynamicHeight = $core_v2_utility.Round($definedDynamicHeight))
+					#set ($coverPhotoWidth = $core_v2_utility.Round($coverPhotoWidth))
+					#set ($coverPhotoHeight = $core_v2_utility.Round($coverPhotoHeight))
+				## Measured Dynamic Dimensions
+				#elseif ($coverPhotoLayoutDynamicHeightMode == 'measured')
+					#set ($measurableDynamicCoverPhotoHtml = $core_v2_ui.GetResizedImageHtml($coverPhotoUrl, $coverPhotoWidth, $coverPhotoHeight, "%{ ResizeMethod = 'ZoomAndCrop', alt = '' }"))
+				#end
+			#elseif ($coverPhotoLayout == 'cover')
+				#if ($renderingPoster)
+					#set ($blurCoverPhoto = false)
+				#else
+					#set ($blurCoverPhoto = $core_v2_widget.GetBoolValue('blurCoverPhoto', true))
+				#end
+			#elseif ($coverPhotoLayout == 'contain')
+				#set ($coverPhotoWidth = 0)
+				#set ($coverPhotoHeight = $coverPhotoFixedHeight)
+			#end
+
+			#if ($blurCoverPhoto)
+				#set ($coverPhotoWidth = 200)
+				#set ($coverPhotoHeight = 50)
+			#end
+
+			#set ($resizedCoverPhotoUrl = $core_v2_ui.GetResizedImageUrl($coverPhotoUrl, $coverPhotoWidth, $coverPhotoHeight, "%{ ResizeMethod='ZoomAndCrop' }"))
+
+			.with-cover-photo .cover-photo,
+			.header-fragments .layout .header-top-content .layout-region.content .layout-region-inner .content-fragment.group-banner .cover-photo {
+
+				#if ($coverPhotoLayout == 'contain')
+					background-size: contain;
+				#elseif ($coverPhotoLayout == 'cover' || $coverPhotoLayout == 'dynamic')
+					background-size: cover;
+				#end
+
+				#if ($background)
+					background: url($resizedCoverPhotoUrl), $background;
+				#else
+					background-image: url($resizedCoverPhotoUrl);
+				#end
+
+				background-repeat: no-repeat;
+				background-position: $coverPhotoAlignment;
+
+				#if ($blurCoverPhoto)
+					filter: blur(15px);
+				#end
+			}
+
+			#if ($coverPhotoLayout == 'contain')
+				.single-column .with-cover-photo .cover-photo,
+				.single-column .header-fragments .layout .header-top-content .layout-region.content .layout-region-inner .content-fragment.group-banner .cover-photo {
+					background-size: cover;
+				}
+			#end
+
+			#if ($coverPhotoLayout == 'dynamic')
+				#if ($definedDynamicHeight)
+					.banner.application,
+					.with-cover-photo .banner.application {
+						height: calc(${definedDynamicHeight}vw - 44px);
+					}
+				#end
+				.scrolled .banner.application,
+				.scrolled .with-cover-photo .banner.application {
+					display: none;
+				}
+			#elseif ($coverPhotoLayout == 'contain' || $coverPhotoLayout == 'cover')
+				#if ($coverPhotoFixedHeight)
+					.with-cover-photo .banner.application {
+						min-height: calc(${coverPhotoFixedHeight}px - 44px);
+					}
+					.scrolled .with-cover-photo .banner.application {
+						display: none;
+					}
+				#end
+			#end
+
+		#else
+
+			.single-column.header-fragments,
+			.header-fragments .layout .header-top-content .layout-region.content,
+			.header-fragments .layout .header-top-content.with-adaptable-elements .layout-region.content {
+				background: $background;
+			}
+
+		#end
+
+		## when both defined, shows shadow when scrolled, border when not
+		#if ($shadow && $border)
+			.single-column.header-fragments {}
+
+			.header-fragments .layout .header-top-content:not(.scrolled) .layout-region.content,
+			.header-fragments .layout .header-top-content.with-adaptable-elements:not(.scrolled) .layout-region.content {
+				 border-bottom: 1px solid #CFD8DC;
+			}
+
+			.header-fragments .layout .header-top-content:not(scrolled) {
+				box-shadow: none;
+			}
+			.header-fragments .layout .header-top-content.scrolled {
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+			}
+		## when only shadow, always shows shadow
+		#elseif ($shadow)
+			.single-column.header-fragments,
+			.header-fragments .layout .header-top-content .layout-region.content,
+			.header-fragments .layout .header-top-content.with-adaptable-elements .layout-region.content {
+				border-bottom: 0px;
+			}
+			.header-fragments .layout .header-top-content {
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+			}
+		## when only border, always shows border
+		#elseif ($border)
+			.single-column.header-fragments,
+			.header-fragments .layout .header-top-content .layout-region.content,
+			.header-fragments .layout .header-top-content.with-adaptable-elements .layout-region.content {
+				border-bottom: 1px solid #CFD8DC;
+			}
+			.header-fragments .layout .header-top-content,
+			.header-fragments .layout .header-top-content.scrolled {
+				box-shadow: none;
+			}
+		#else
+			.single-column.header-fragments,
+			.header-fragments .layout .header-top-content .layout-region.content,
+			.header-fragments .layout .header-top-content.with-adaptable-elements .layout-region.content {
+				border-bottom: 0px;
+			}
+			.header-fragments .layout .header-top-content,
+			.header-fragments .layout .header-top-content.scrolled {
+				box-shadow: none;
+			}
+		#end
+
+		## parent navigation
+		.banner.context.slim .hierarchy > .parent-navigation a.more:before,
+		.banner.context > .hierarchy > .parent-navigation ul li a,
+		.banner.context > .hierarchy > .parent-navigation ul li a:hover,
+		.banner.context > .hierarchy > .parent-navigation ul li a:before,
+		.scrolled .banner.context > .hierarchy > .parent-navigation a.more:before,
+		.scrolled .banner.context > .hierarchy > .parent-navigation ul li a:before,
+		.banner.context > .hierarchy > .parent-navigation ul li a.more.links-expanded,
+		.banner.context > .hierarchy > .parent-navigation ul li a.more.links-expanded:before,
+		.banner.context > .hierarchy > .parent-navigation ul li a.more:before {
+			color: $foregroundColor;
+		}
+
+		## hierarchy components
+		.banner.context > .hierarchy > .current-hierarchy > .hierarchy-component,
+		.banner.context > .hierarchy > .current-hierarchy > .hierarchy-component a,
+		.banner.context > .hierarchy > .current-hierarchy > .hierarchy-component:before,
+		.banner.context > .hierarchy > .current-hierarchy > .hierarchy-component a:hover {
+			color: $foregroundColor;
+		}
+
+		## applications
+		.banner.context > .hierarchy > .current-hierarchy > .applications ul a,
+		.banner.context > .hierarchy > .current-hierarchy > .applications ul a:hover,
+		.banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more,
+		.banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more:before,
+		.banner.context.home > .hierarchy > .current-hierarchy > .applications ul a.more:before,
+		.scrolled .banner.context .hierarchy .current-hierarchy > .applications ul a.more,
+		.scrolled .banner.context .hierarchy .current-hierarchy > .applications ul a.more:before,
+		.banner.context.slim:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more,
+		.banner.context.slim:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more:before,
+		.scrolled .banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more,
+		.scrolled .banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more:before {
+			border-color: $foregroundColor;
+			color: $foregroundColor;
+		}
+		.banner.context.home > .hierarchy > .current-hierarchy > .applications ul a.links-expanded,
+		.banner.context.home > .hierarchy > .current-hierarchy > .applications ul a.links-expanded:before,
+		.banner.context.home > .hierarchy > .current-hierarchy > .applications ul a.more.links-expanded:before,
+		.scrolled .banner.context .hierarchy .current-hierarchy > .applications ul a.more.links-expanded,
+		.scrolled .banner.context .hierarchy .current-hierarchy > .applications ul a.more.links-expanded:before,
+		.banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more.links-expanded,
+		.banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more.links-expanded:before,
+		.banner.context.slim:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more.links-expanded,
+		.banner.context.slim:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more.links-expanded:before,
+		.scrolled .banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more.links-expanded,
+		.scrolled .banner.context:not(.home) > .hierarchy > .current-hierarchy > .applications ul a.more.links-expanded:before {
+			background-color: $foregroundColor;
+			color: $backgroundColor;
+			border-color: $foregroundColor;
+		}
+
+		## new
+		.banner.context > .new ul a,
+		.banner.context .navigation-list.new ul a.links-expanded,
+		.banner.context .navigation-list.new ul a.links-expanded:hover,
+		.banner.context .navigation-list.new ul a.links-expanded:active,
+		.banner.context .navigation-list.new ul a:hover {
+			background-color: $foregroundColor;
+			color: $backgroundColor;
+		}
+		.single-column .banner.context > .new a,
+		.single-column .banner.context:not(.home) > .new a,
+		.single-column .banner.context.home > .new a {
+			color: $foregroundColor;
+			border-color: $foregroundColor;
+		}
+
+		## inheriting application banner
+		.banner.application,
+		.banner.application .navigation-list a,
+		.banner.application .name .title a {
+			color: $foregroundColor;
+		}
+		.banner.application::after {
+			background-color: $foregroundColor;
+		}
+
+
+		## custom navigation widget
+		.header-fragments .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a,
+		.header-fragments .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a:hover {
+			color: $foregroundColor;
+		}
+		.header-fragments .content-fragment.navigation-custom:after,
+		.header-fragments .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.selected:after {
+			background-color: $foregroundColor;
+		}
+		.header-fragments:hover .header-top-content .layout-region.content .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a {
+			color: $foregroundColor;
+		}
+		.header-fragments .header-top-content .layout-region.content .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.links-expanded,
+		.header-fragments .header-top-content .layout-region.content .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.subnav-open,
+		.header-fragments:hover .header-top-content .layout-region.content .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.links-expanded,
+		.header-fragments:hover .header-top-content .layout-region.content .content-fragment.navigation-custom .navigation-list[data-direction='horizontal'] a.subnav-open {
+			background-color: $foregroundColor;
+			color: $backgroundColor;
+		}
+
+	</style>
+
+	## Cover Photos
+	#if ($coverPhotoUrl && $coverPhotoUrl.Length > 0 && $designMode == 'photo')
+		<div class="cover-photo"></div>
+	#end
+
+	## Fixed height, inform inheriting banners
+	#if ($coverPhotoLayout == 'contain' || $coverPhotoLayout == 'cover')
+		<script>
+		(function(j){
+			j('body').addClass('dynamic-cover');
+			j(function(j){
+				j(window).trigger('dynamic-cover-loaded');
+			});
+		})(jQuery);
+		</script>
+	## Dynamic, measured, cover photos
+	#elseif ($coverPhotoLayout == 'dynamic')
+		#if ($coverPhotoLayoutDynamicHeightMode == 'defined')
+			<script>
+			(function(j){
+				j('body').addClass('dynamic-cover');
+				j(function(j){
+					j(window).trigger('dynamic-cover-loaded');
+				});
+			})(jQuery);
+			</script>
+		#elseif ($coverPhotoLayoutDynamicHeightMode == 'measured' && $measurableDynamicCoverPhotoHtml)
+			#set ($measureId = $core_v2_widget.UniqueId('measure'))
+			<div id="$core_v2_encoding.HtmlAttributeEncode($measureId)" data-imagehtml="$core_v2_encoding.HtmlAttributeEncode($measurableDynamicCoverPhotoHtml)" style="display:none"></div>
+			<script>
+			(function(j){
+				j('body').addClass('dynamic-cover');
+				var measure = j('#${measureId}');
+				if (measure && measure.length > 0) {
+					measure.css({ visibility: 'hidden', display: 'block', position: 'absolute' }).html(measure.data('imagehtml'));
+					var measureImg = measure.find('img');
+					measureImg.on('load', function() {
+						var measuredHeightProportion = Math.round(100 * measureImg.height() / measureImg.width());
+						measure.remove();
+						var height = 'calc(' + measuredHeightProportion + 'vw - 44px)';
+						j('#${core_v2_widget.WrapperElementId}.with-cover-photo .banner.application').css({
+							'height': height
+						});
+						j(function(j){
+							j(window).trigger('dynamic-cover-loaded');
+						});
+					});
+				}
+			})(jQuery);
+			</script>
+		#end
+	#end
+
+
+#end

@@ -1,0 +1,23 @@
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<% if(HostName) { %>
+					<span class="hierarchy automation ui-tip" data-tip="<%: HostName %>"><%: HostName %></span>
+					<span class="divider"> / </span>
+				<% } %>
+				<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_aid=<%: Id %>&_at=overview" class="hierarchy automation-name ui-tip" data-tip="<%: ProcessedName %> $core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Overview'))"><%: ProcessedName %></a>
+				<span class="divider"> / </span>
+				<div class="editor-components template-editor-components"></div>
+				<div class="editor-script-language ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('script-language'))" style="display:none">
+					<select class="script-language">
+						<option value="Velocity">$core_v2_language.GetResource('velocity')</option>
+						<option value="JavaScript">$core_v2_language.GetResource('javascript')</option>
+					</select>
+					<span class="measure" style="display:none"></span>
+				</div>
+				<div class="editor-actions-wrapper template-editor-actions"></div>
+			</span>
+		</li>
+	</ul>
+</fieldset>

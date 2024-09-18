@@ -1,0 +1,80 @@
+#set ($filter = $core_v2_page.GetQueryStringValue('w_filter'))
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set ($currentNotificationCategoryId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_currentNotificationCategoryId')))
+#set ($pageSize = 10)
+
+#set ($options = "%{ PageIndex = $pageIndex, PageSize = $pageSize, IsRead = 'False', SortBy = 'NotificationCategory' }")
+#set ($conversationMessageNotificationFilterName = "_Filters_${core_v2_conversationMessage.NotificationTypeId}")
+$options.Add($conversationMessageNotificationFilterName, 'Exclude')
+#set ($notifications = $core_v2_notification.List($options))
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($notifications.PageIndex + 1) * $notifications.PageSize)
+#if ($notifications.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = true)
+#end
+
+#set ($replacementOptions = $core_v2_utility.MakeList('IgnoreCase', 'Singleline'))
+#foreach ($notification in $notifications)
+	#set ($lastActor = false)
+	#set ($actors = $notification.Actors)
+	#set ($lastIndex = $actors.Count - 1)
+	#set ($lastActor = $actors.ToArray().get($lastIndex).User)
+	#set ($notificationType = $core_v2_notificationType.Get($notification.NotificationTypeId))
+
+	#if ($notificationType.NotificationTypeId == $core_v2_ratedItem.NotificationTypeId)
+		#set ($lastActor = false)
+	#end
+
+	## render notification
+	#set ($notificationMessage = false)
+	#set ($notificationMessage = $notification.Message('Html'))
+	#if ($notificationMessage)
+		#if ($currentNotificationCategoryId != $notification.NotificationCategory.Id)
+			<li class="content-item-header" data-notificationcategoryid="$notification.NotificationCategory.Id.ToString()">
+				<div class="name">
+					$notification.NotificationCategory.Name
+				</div>
+				<div class="mark-all">
+					<a href="#">$core_v2_language.GetResource('Notifications_MarkAll')</a>
+				</div>
+			</li>
+			#set($currentNotificationCategoryId = $notification.NotificationCategory.Id)
+		#end
+
+		<li class="content-item #if(!$notification.IsRead) unread #end #if (!$lastActor) no-author #end" data-contenturl="$notification.TargetUrl"
+			data-notificationcategoryid="$notification.NotificationCategory.Id.ToString()"
+			data-notificationid="$notification.NotificationId"
+			data-notificationtypeid="$notification.NotificationTypeId"
+			data-notificationtypename="$core_v2_encoding.HtmlAttributeEncode($notificationType.Description)"
+			#if($hasMore) data-hasmore="true" #end>
+
+			#if ($lastActor)
+				<div class="post-author">
+					<span class="avatar">
+						$core_v2_ui.GetResizedImageHtml($lastActor.AvatarUrl, 40, 40, "%{border='0', alt=$lastActor.DisplayName, ResizeMethod='ZoomAndCrop',border='0'}")
+					</span>
+					<span class="user-name">
+						$lastActor.DisplayName
+					</span>
+				</div>
+			#end
+			<div class="content">
+				$core_v2_utility.Replace($notificationMessage, '<(\/)?a(?=\s|>)[^>]*>', '<$1b>', "%{ RegexOptions = $replacementOptions }")
+			</div>
+			<div class="post-date">
+				$core_v2_ui.AgoDate($notification.LastUpdatedDate, "%{CssClass = 'value'}")
+			</div>
+			<div class="preference">
+				<a href="#" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('TurnOffNotifications'))" class="ui-tip">X</a>
+			</div>
+			#if(!$notification.IsRead)
+				<div class="mark">
+					<a href="#" title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Notifications_Mark'))" class="ui-tip">O</a>
+				</div>
+			#end
+		</li>
+	#end
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('Notifications_None')</div>
+#end

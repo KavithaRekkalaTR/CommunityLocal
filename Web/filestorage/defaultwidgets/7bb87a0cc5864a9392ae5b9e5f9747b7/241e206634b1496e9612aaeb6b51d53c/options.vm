@@ -1,0 +1,40 @@
+﻿#set ($optionsContainerId = $core_v2_widget.UniqueId('optionsContainer'))
+#set ($searchInputId = 'telligent_evolution_widgets_peopleSearch_search')
+#set ($getFilterValuesScript = $core_v2_dynamicForm.GetValuesScript($filterFormId))
+
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($optionsContainerId)"></div>
+
+#registerEndOfPageHtml()
+	<script>
+		jQuery(function(j){
+			var container = j('#$optionsContainerId');
+			var searchButton = j('#$searchInputId');
+			var wrapper = j('#$core_v2_widget.WrapperElementId');
+
+			j.telligent.evolution.messaging.subscribe('telligent.evolution.widgets.peopleSearch.optionsUpdated', function(data){
+				container.find('select').each(function(){
+					$(this).glowDropDownList('close');
+				});
+				if(data.filterForm) {
+					container.html(data.filterForm);
+				}
+			});
+
+			function filter() {
+				var filterValues = $getFilterValuesScript;
+				j.telligent.evolution.messaging.publish('telligent.evolution.widgets.peopleSearch.profileFilter', filterValues);
+			}
+
+			wrapper.on('change', 'input,select,textarea', function(e){
+				e.preventDefault();
+				filter();
+			});
+
+			wrapper.on('click', '.${core_v2_encoding.JavascriptEncode($searchInputId)}', function(e){
+				e.preventDefault();
+				filter();
+			})
+		});
+	</script>
+#end

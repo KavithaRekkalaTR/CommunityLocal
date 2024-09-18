@@ -1,0 +1,43 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($searches = $context.GetNoResultSearches($options))
+
+#foreach($search in $searches)
+#beforeall
+<div class="responsive-wrapper">
+	<table class="scrollable-table small-table">
+	<thead>
+		<tr>
+            <th>$core_v2_language.GetResource('Query')</th>
+            $reporting_ui.SortableTableHeader("right sup-header", "SearchCount", "descending", $core_v2_language.GetResource('SearchCount'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sup-header", "UserCount", "descending", $core_v2_language.GetResource('UserCount'), $sortBy, $sortOrder)
+            $reporting_ui.SortableTableHeader("sup-header", "searchdate", "descending", $core_v2_language.GetResource('LatestSearchDate'), $sortBy, $sortOrder)
+		</tr>
+	</thead>
+	<tbody>
+#each
+		<tr data-id="$core_v2_encoding.HtmlAttributeEncode($!search.Query)">
+			<td data-title="$core_v2_language.GetResource('Query')">$core_v2_encoding.HtmlAttributeEncode($search.Query)</td>
+            <td data-title="$core_v2_language.GetResource('SearchCount')" class="number">$!search.SearchCount.ToString("N0")</td>
+            <td data-title="$core_v2_language.GetResource('UserCount')" class="number">$!search.UserCount.ToString("N0")</td>
+            <td data-title="$core_v2_language.GetResource('LatestSearchDate')">#if($search.LatestSearchDate)$reporting_ui.FormatAgoDate($search.LatestSearchDate)#end</td>
+		</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$searches.PageSize" data-totalitems="$searches.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

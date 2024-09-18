@@ -1,0 +1,22 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($stage = false)
+	#set($stage = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('stage')))
+
+	#set($revert = "%{}")
+	#foreach ($id in $core_v2_page.GetFormValues('properties[]'))
+		$revert.Add($id, 'true')
+	#end
+
+	#if ($revert.Count > 0)
+		#set($response = $context.RevertConfigurationProperties($revert, $stage))
+		#if ($response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+	#end
+
+	{
+		"success":true
+	}
+#end

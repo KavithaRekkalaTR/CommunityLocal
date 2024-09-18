@@ -1,0 +1,13 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($reviewableContentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ReviewableContentId')))
+#set($formData = $core_v2_page.ParseQueryString($core_v2_page.GetFormValue('FormData')))
+
+#set($response = $context.UpdateReviewableContent($reviewableContentId, $formData))
+#if ($response.HasErrors())
+    $core_v2_page.SendJsonError($response.Errors)
+#else
+    {
+        "success": true
+    }
+#end

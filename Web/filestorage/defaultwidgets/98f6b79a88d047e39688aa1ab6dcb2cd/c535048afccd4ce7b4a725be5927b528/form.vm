@@ -1,0 +1,28 @@
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item token">
+			<label class="field-item-name">$core_v2_language.GetResource('TokenLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('TokenLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" maxlength="50" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('token'))" #if ($snippet) value="$core_v2_encoding.HtmlAttributeEncode($snippet.Token)" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item link">
+			<label class="field-item-name">$core_v2_language.GetResource('LinkLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('LinkLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('link'))" #if ($snippet) value="$core_v2_encoding.HtmlAttributeEncode($snippet.Link)" #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item text">
+			<label class="field-item-name">$core_v2_language.GetResource('TextLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('TextLabel_Desc')</span>
+			<span class="field-item-input">
+				<textarea type="text" rows="3" maxlength="500" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('text'))" #if ($snippet) #end>$!snippet.Text</textarea>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+	</ul>
+</fieldset></form>

@@ -1,0 +1,71 @@
+#set ($id = $core_v2_widget.UniqueId($core_v2_utility.NewGuid().ToString()))
+<div class="font-file-viewer view" id="$core_v2_encoding.HtmlAttributeEncode($id)">
+	<div class="viewer">
+		<div class="ffv">
+			<div class="ffv-section identity">
+				<div class="ffv-title">$core_v2_language.GetResource('font')</div>
+				<div class="ffv-name ffv-styled">$context.Name</div>
+				<div class="ffv-glyph ffv-styled">${context.Glyph}${context.Glyph.ToLowerInvariant()}</div>
+			</div>
+			<div class="ffv-section sample">
+				<div class="ffv-sample-tabs">
+					<ul>
+						<li><a href="#" class="selected" data-type="characters">$core_v2_language.GetResource('characters')</a></li>
+						<li><a href="#" data-type="sample">$core_v2_language.GetResource('Sample')</a></li>
+						<li><a href="#" data-type="interactive">$core_v2_language.GetResource('Interactive')</a></li>
+					</ul>
+				</div>
+				<div class="ffv-sample characters ffv-styled">
+					<p>$core_v2_language.GetResource('CharacterList')</p>
+				</div>
+				<div class="ffv-sample sample ffv-styled">
+					$core_v2_language.GetResource('SampleContent')
+				</div>
+				<div class="ffv-sample interactive">
+					<form>
+						<input type="text" class="ffv-input" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Placeholder'))"></input>
+						<div class="ffv-modifiers">
+							<input type="range" class="ffv-size" min="8" max="150" value="16"></input>
+							<select class="ffv-font-weight">
+								<option value="normal">$core_v2_language.GetResource('Normal')</option>
+								<option value="bold">$core_v2_language.GetResource('Bold')</option>
+								<option value="bolder">$core_v2_language.GetResource('Bolder')</option>
+								<option value="lighter">$core_v2_language.GetResource('Lighter')</option>
+								<option value="100">100</option>
+								<option value="200">200</option>
+								<option value="300">300</option>
+								<option value="400">400</option>
+								<option value="500">500</option>
+								<option value="600">600</option>
+								<option value="700">700</option>
+								<option value="800">800</option>
+								<option value="900">900</option>
+							</select>
+							<select class="ffv-font-style">
+								<option value="normal">$core_v2_language.GetResource('Normal')</option>
+								<option value="italic">$core_v2_language.GetResource('Italic')</option>
+							</select>
+						</div>
+					</form>
+					<div class="ffv-output ffv-styled"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="default">
+		<span class="message">$core_v2_language.GetResource('Unsupported')</span>
+	</div>
+</div>
+#registerEndOfPageHtml('telligent.evolution.fileViewers.font')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+		jQuery(function(j){
+			j.telligent.evolution.fileViewers.font.register({
+				type: '$core_v2_encoding.JavascriptEncode($context.Format)',
+				wrapper: '#${core_v2_encoding.JavascriptEncode($id)}'
+			});
+		});
+	</script>
+#end

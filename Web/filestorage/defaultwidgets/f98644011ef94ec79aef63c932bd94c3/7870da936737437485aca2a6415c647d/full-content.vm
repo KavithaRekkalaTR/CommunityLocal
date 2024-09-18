@@ -1,0 +1,87 @@
+#set ($query = $core_v2_page.ParseQueryString($context.TabKey))
+
+#if($query.Value("tab"))
+	#set($reportContainerId = $core_v2_widget.UniqueId($query.Value("tab")))
+
+	<div id="$reportContainerId">
+		#set ($parent = $reporting.GetReport($context.ParentId))
+		#set ($report = $reporting.GetReport($context.Id))
+
+		<div class="view-header">
+			<span class="view-title">
+				#if($parent)
+					<a href="#" data-messagename="reporting.drill.up" class="hierarchy name">$parent.Name</a> <span class="divider">/</span>
+				#end
+				<span class="hierarchy name">$report.Name</span>
+				<span class="actions-container">
+					<ul class="ui-links export-actions" data-maxlinks="0">
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="reporting.export.chart.csv">$core_v2_language.GetResource('ExportChartasCSV')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="reporting.export.chart.png">$core_v2_language.GetResource('ExportChartasPNG')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="reporting.export.list.csv" data-filters="store">$core_v2_language.GetResource('ExportListasCSV')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a class="export-actions-more" href="#" data-more>$core_v2_language.GetResource('Export')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+						</li>
+					</ul>
+				</span>
+			</span>
+			<div class="description">$core_v2_encoding.HtmlAttributeEncode($report.Description)</div>
+			<div class="filter-container">
+				<ul class="global-filters">
+					<li>$reporting.RenderFilter($reporting_filters.DateRangeFilter, "%{tabKey=$context.TabKey}")</li>
+					<li>$reporting.RenderFilter($reporting_filters.DatePeriodFilter, "%{tabKey=$context.TabKey}")</li>
+					<li>$reporting.RenderFilter($reporting_filters.ResetFilter, "%{tabKey=$context.TabKey}")</li>
+				</ul>
+			</div>
+		</div>
+        <div class="errors" style="display: none;"></div>
+		<div class="view-body report-body full">
+			<div class="report-summary-container">
+				<div class="title">$core_v2_language.GetResource('Report_Title')</div>
+				<div class="report-summary"></div>
+			</div>
+
+			<div class="graph-content"><span class="ui-loading"></span></div>
+			<div class="table-filter" style="display:none;"></div>
+			<div class="paged-content"></div>
+			<div class="pager-control"></div>
+		</div>
+	</div>
+
+	#registerEndOfPageHtml()
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('full-ui.js'))"></script>
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.reporting.widgets.activeGroupsReport.register({
+				target: '$context.Target',
+				tabKey: '$context.TabKey',
+				fields: {
+					reportContainerId: '#$reportContainerId',
+				},
+				resources: {
+					title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Report_Title'))',
+					filter: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Filter'))',
+					clearFilter: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ClearFilter'))',
+				},
+				urls: {
+					reportData: '$core_v2_widget.GetExecutedFileUrl('full-reportdata.vm')',
+					pagedData: '$core_v2_widget.GetExecutedFileUrl('full-paged-groups.vm')',
+					export: '$core_v2_widget.GetExecutedFileUrl('full-export.vm')',
+					csvComments: '$core_v2_widget.GetExecutedFileUrl('full-csv-comments.vm')',
+					summary: '$core_v2_widget.GetExecutedFileUrl('full-report-summary.vm')',
+				}
+			});
+		});
+	</script>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end

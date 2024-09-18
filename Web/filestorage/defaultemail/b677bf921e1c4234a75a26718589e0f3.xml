@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Changed Username Email" version="13.0.0.0" description="Sends an email to a member whose username has changed." id="b677bf921e1c4234a75a26718589e0f3" lastModified="2023-04-13 20:51:03Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body_Greeting'))
+#token('old_username')
+    $context_v1_email.Context.UsernameChange.OldUsername
+#end
+</p>
+<p>
+#format($core_v2_language.GetResource('Body_Introduction'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('new_username')
+    $context_v1_email.Context.UsernameChange.NewUsername
+#end
+</p>
+<p>
+$core_v2_language.GetResource('Body_Disclaimer')
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Disclaimer">If you didn't make this change, please contact the site administrator as soon as possible.</resource>
+  <resource name="Body_Greeting">{old_username},</resource>
+  <resource name="Body_Introduction">This is just a note to let you know your username for {site_name} was changed to {new_username}. If you made this change yourself, no action is necessary.</resource>
+  <resource name="Subject">Your username was changed on {site_name}</resource>
+  <resource name="Header">Your username was changed on {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

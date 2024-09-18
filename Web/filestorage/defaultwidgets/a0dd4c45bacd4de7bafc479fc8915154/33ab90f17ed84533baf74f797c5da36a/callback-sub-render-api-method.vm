@@ -1,0 +1,252 @@
+##
+## Method Renderer
+##
+## Requires in scope:
+##   $method
+##
+
+<div class="documentation-member">
+
+	<a name="$core_v2_encoding.HtmlAttributeEncode($method.Name)"></a>
+	<h3 class="member_heading">$method.Name</h3>
+	<div class="documentation-member-body">
+
+		#set ($overloadIndex = 1)
+		#foreach ($overload in $method.Overloads)
+			#if ($method.Overloads.Count > 1)
+				<h4 class="member_sub_heading">$core_v2_language.GetResource('Overload') $overloadIndex</h4>
+			#end
+			#set ($overloadIndex = $overloadIndex + 1)
+
+			#if ($overload.Description)
+				<p>$overload.Description</p>
+			#end
+
+			<div class="documentation-section example">
+				<span class="label">$core_v2_language.GetResource('Example')</span>
+				<div class="value">
+					<pre>$shellApi.BuildSyntaxSample($overload, true, 'velocity')</pre>
+				</div>
+			</div>
+
+			<div class="documentation-section example">
+				<span class="label">$core_v2_language.GetResource('JsExample')</span>
+				<div class="value">
+					<pre>$shellApi.BuildSyntaxSample($overload, true, 'javascript')</pre>
+				</div>
+			</div>
+
+			#if ($overload.Parameters && $overload.Parameters.Count > 0)
+				<div class="documentation-section parameters">
+					<span class="label">$core_v2_language.GetResource('Parameters')</span>
+
+					## Show undocumented options message if not documented
+					#set ($acceptsOptionalParameters = false)
+					#set ($optionalParametersDocumented = false)
+					#foreach ($parameter in $overload.Parameters)
+						#if ($parameter.IsParameterSet)
+							#set ($acceptsOptionalParameters = true)
+							#foreach ($optParam in $parameter.ParameterSetParameters)
+								#set ($optionalParametersDocumented = true)
+							#end
+						#end
+					#end
+					#if ($acceptsOptionalParameters && !$optionalParametersDocumented)
+						<p>$core_v2_language.GetResource('UndocumentedParamMessage')</p>
+					#end
+
+					<div class="value">
+						#foreach ($parameter in $overload.Parameters)
+						#beforeall
+							<table cellspacing="0">
+								<thead>
+									<tr>
+										<th>$core_v2_language.GetResource('Name')</th>
+										<th>$core_v2_language.GetResource('Type')</th>
+										<th>$core_v2_language.GetResource('Description')</th>
+										<th>$core_v2_language.GetResource('Required')</th>
+										<th>$core_v2_language.GetResource('Default')</th>
+										<th>$core_v2_language.GetResource('Options')</th>
+									</tr>
+								</thead>
+								<tbody>
+						#each
+							#if ($parameter.IsParameterSet)
+								<tr>
+									<td>$parameter.Name</td>
+									<td>$core_v2_language.GetResource('Options')</td>
+									<td>$core_v2_language.GetResource('OptionsDescription')</td>
+									<td>
+										#if ($parameter.IsRequired)
+											$core_v2_language.GetResource('Required')
+										#else
+											$core_v2_language.GetResource('Optional')
+										#end
+									</td>
+									<td>$!parameter.Default</td>
+									<td>
+										#if ($parameter.Options)
+											#foreach ($opt in $parameter.Options)
+												$opt
+											#between
+												,
+											#end
+										#end
+									</td>
+								</tr>
+								#foreach ($optionalParameter in $parameter.ParameterSetParameters)
+									#set ($subParameterTypeIndex = 0)
+    								#foreach ($subParameterTypeOverload in $optionalParameter.Types)
+    									#if ($subParameterTypeIndex == 0)
+    										<tr>
+    											<td class="sub" rowspan="$optionalParameter.Types.Count">$optionalParameter.Name</td>
+    											<td rowspan="1">
+    												#set ($existingType = $type)
+    												#set ($type = false)
+    												#set ($type = $subParameterTypeOverload.Type)
+    												$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+    												#set ($type = $existingType)
+    											</td>
+    											<td rowspan="1">
+    												#if ($subParameterTypeOverload.Description)
+    													$subParameterTypeOverload.Description
+    												#else
+    													$!optionalParameter.Description
+    												#end
+    											</td>
+    
+    											<td rowspan="$optionalParameter.Types.Count">
+    												#if ($optionalParameter.IsRequired)
+    													$core_v2_language.GetResource('Required')
+    												#else
+    													$core_v2_language.GetResource('Optional')
+    												#end
+    											</td>
+    											<td rowspan="$optionalParameter.Types.Count">$!optionalParameter.Default</td>
+    											<td rowspan="$optionalParameter.Types.Count">
+    												#if ($optionalParameter.Options)
+    													#foreach ($opt in $optionalParameter.Options)
+    														$opt
+    													#between
+    														,
+    													#end
+    												#end
+    											</td>
+    										</tr>
+    									#else
+    										<tr>
+    											<td>
+    												#set ($existingType = $type)
+    												#set ($type = false)
+    												#set ($type = $subParameterTypeOverload.Type)
+    												$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+    												#set ($type = $existingType)
+    											</td>
+    											<td>
+    												#if ($subParameterTypeOverload.Description)
+    													$subParameterTypeOverload.Description
+    												#else
+    													$!optionalParameter.Description
+    												#end
+    											</td>
+    										</tr>
+    									#end
+    									#set ($subParameterTypeIndex = $subParameterTypeIndex + 1)
+    								#end
+								#end
+							#else
+								#set ($parameterTypeIndex = 0)
+								#foreach ($parameterTypeOverload in $parameter.Types)
+									#if ($parameterTypeIndex == 0)
+										<tr>
+											<td rowspan="$parameter.Types.Count">$parameter.Name</td>
+											<td rowspan="1">
+												#set ($existingType = $type)
+												#set ($type = false)
+												#set ($type = $parameterTypeOverload.Type)
+												$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+												#set ($type = $existingType)
+											</td>
+											<td rowspan="1">
+												#if ($parameterTypeOverload.Description)
+													$parameterTypeOverload.Description
+												#else
+													$!parameter.Description
+												#end
+											</td>
+
+											<td rowspan="$parameter.Types.Count">
+												#if ($parameter.IsRequired)
+													$core_v2_language.GetResource('Required')
+												#else
+													$core_v2_language.GetResource('Optional')
+												#end
+											</td>
+											<td rowspan="$parameter.Types.Count">$!parameter.Default</td>
+											<td rowspan="$parameter.Types.Count">
+												#if ($parameter.Options)
+													#foreach ($opt in $parameter.Options)
+														$opt
+													#between
+														,
+													#end
+												#end
+											</td>
+										</tr>
+									#else
+										<tr>
+											<td>
+												#set ($existingType = $type)
+												#set ($type = false)
+												#set ($type = $parameterTypeOverload.Type)
+												$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+												#set ($type = $existingType)
+											</td>
+											<td>
+												#if ($parameterTypeOverload.Description)
+													$parameterTypeOverload.Description
+												#else
+													$!parameter.Description
+												#end
+											</td>
+										</tr>
+									#end
+									#set ($parameterTypeIndex = $parameterTypeIndex + 1)
+								#end
+							#end
+						#afterall
+								</tbody>
+							</table>
+						#end
+					</div>
+
+				</div>
+			#end
+		#end
+
+		<div class="documentation-section returns">
+			<span class="label">$core_v2_language.GetResource('Returns')</span>
+			<span class="value">
+				#if (!$method.ReturnType)
+					$core_v2_language.GetResource('Nothing')
+				#else
+					#set ($type = false)
+					<ul>
+					#foreach ($typeOverload in $method.ReturnTypes)
+						<li>
+							#set ($type = $typeOverload.Type)
+							$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+							#if ($typeOverload.Description)
+								<span class="description">
+									$typeOverload.Description
+								</span>
+							#end
+						</li>
+					#end
+					</ul>
+				#end
+			</span>
+		</div>
+
+	</div>
+</div>

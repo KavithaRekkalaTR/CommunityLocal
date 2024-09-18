@@ -1,0 +1,57 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+#set ($parsedStartDate = $core_v2_utility.ParseDate($startDate))
+#set ($parsedEndDate = $core_v2_utility.ParseDate($endDate))
+
+<div class="report-summary">
+    #if($selectedContent.length > 0)
+        #set ($content = $core_v2_content.Get($core_v2_utility.ParseGuid($selectedContent), $core_v2_utility.ParseGuid($selectedContentTypeId)))
+        <div class="title">$core_v2_language.GetResource("ActivityForContent")
+            #if ($content && !$content.HasErrors())
+                #if ($content.Url)
+                    <a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)"> $content.HtmlName('')</a>
+                #else
+                    $content.HtmlName('')
+                #end
+            #else
+                #set ($analyticsContent = $context.GetContent($core_v2_utility.ParseGuid($selectedContent)))
+                #if ($analyticsContent) $analyticsContent.Name #else $core_v2_language.GetResource("Unknown") #end
+            #end
+
+            $core_v2_language.FormatString($core_v2_language.GetResource('DateRange'), $parsedStartDate.ToString("MMMM d, yyyy"), $parsedEndDate.ToString("MMMM d, yyyy"))
+        </div>
+    #elseif($selectedUsers.length > 0)
+        #set ($user = $core_v2_user.Get("%{Id = $core_v2_utility.ParseInt($selectedUsers)}"))
+        <div class="title">$core_v2_language.GetResource("ActivityForMember")
+            #if ($user)
+                #if ($user.Url) <a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)"> #end
+                $user.DisplayName #if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end
+                #if ($user.Url) </a> #end
+            #else
+                #set ($analyticsUser = $context.GetUser($core_v2_utility.ParseInt($selectedUsers)))
+                #if ($analyticsUser) $analyticsUser.ExpandedName #else $core_v2_language.GetResource("Unknown") #end
+            #end
+
+            $core_v2_language.FormatString($core_v2_language.GetResource('DateRange'), $parsedStartDate.ToString("MMMM d, yyyy"), $parsedEndDate.ToString("MMMM d, yyyy"))
+        </div>
+    #elseif($selectedGroups.length > 0)
+        #set ($group = $core_v2_group.Get("%{ContainerId = $core_v2_utility.ParseGuid($selectedGroups)}"))
+        <div class="title">$core_v2_language.GetResource("ActivityForGroup")
+            #if ($group)
+                #if ($group.Url)
+                    <a href="$core_v2_encoding.HtmlAttributeEncode($group.Url)"> $group.HtmlName('web') </a>
+                #else
+                    $group.HtmlName('web')
+                #end
+            #else
+                #set ($analyticsGroup = $context.GetGroup($core_v2_utility.ParseGuid($selectedGroups)))
+                #if ($analyticsGroup) $analyticsGroup.Name #else $core_v2_language.GetResource("Unknown") #end
+            #end
+
+            $core_v2_language.FormatString($core_v2_language.GetResource('DateRange'), $parsedStartDate.ToString("MMMM d, yyyy"), $parsedEndDate.ToString("MMMM d, yyyy"))
+        </div>
+    #else
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    #end
+</div>

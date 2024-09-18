@@ -1,0 +1,108 @@
+﻿<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:name}" cssClass="online-members" description="${resource:description}" instanceIdentifier="3a1d6bcc30a748d896a528aab9d6b82a" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true">
+	<contentScript>
+	  <![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+#set ($containerId = $core_v2_widget.UniqueId('onlineUsersContainer'))
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($containerId)">
+	$core_v2_widget.ExecuteFile('users.vm')
+</div>
+
+#registerEndOfPageHtml()
+	<script>
+		jQuery(function(j){
+			var containerId = "#${core_v2_encoding.JavascriptEncode($containerId)}";
+			var listUrl = "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('users.vm'))";
+			var modalTitle = "$core_v2_encoding.JavascriptEncode($core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:name}')))";
+			var defaults = {
+				pageIndex: 0,
+				pageSize: 20,
+				includeContainer: true,
+				forModal: false
+			};
+
+			function loadUsers(options) {
+				var data = j.extend({}, defaults, options || {});
+				return j.telligent.evolution.get({
+					url: listUrl,
+					data: {
+						w_pageIndex: data.pageIndex,
+						w_pageSize: data.pageSize,
+						w_includeContainer: data.includeContainer,
+						w_forModal: data.forModal
+					}
+				});
+			}
+
+			j.telligent.evolution.messaging.subscribe('users.presenceChanged', function(data) {
+				loadUsers({ pageSize: 10 }).then(function(r){
+					j(containerId).html(r);
+				});
+			});
+
+			j.telligent.evolution.messaging.subscribe('widget.online-members.view-more', function(data) {
+				var modalPageIndex = 0;
+				var modalPageSize = 20;
+				var modalContent;
+				loadUsers({
+					pageSize: modalPageSize,
+					pageIndex: modalPageIndex,
+					includeContainer: true,
+					forModal: true
+				}).then(function(r){
+					modalContent = j(r);
+
+					j.glowModal({
+						title: modalTitle,
+						html: modalContent,
+						width: 450,
+						height: '100%'
+					});
+
+					modalContent.on('click', 'a.view-more', function(e) {
+						modalPageIndex++;
+
+						loadUsers({
+							pageSize: modalPageSize,
+							pageIndex: modalPageIndex,
+							includeContainer: false,
+							forModal: true
+						}).then(function(r){
+							modalContent.find('ul').append(r);
+						});
+
+						return false;
+					});
+				});
+			});
+		});
+	</script>
+#end
+		]]>
+	</contentScript>
+	<headerScript>
+	<![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:name}'))
+	]]>
+	</headerScript>
+	<configuration>
+	<![CDATA[
+<propertyGroup id="options" resourceName="Options">
+	<property id="fragmentHeader" resourceName="CF_Title" dataType="string" defaultValue="${resource:name}" />
+</propertyGroup>
+	]]>
+	</configuration>
+		<languageResources>
+<language key="en-us">
+	<resource name="name">Who's Online</resource>
+	<resource name="description">List of online members</resource>
+	<resource name="Options">Options</resource>
+	<resource name="CF_Title">Widget Title</resource>
+	<resource name="CountSingular">{count} member online</resource>
+	<resource name="CountPlural">{count} members online</resource>
+	<resource name="ViewAll">View all</resource>
+	<resource name="ViewMore">View More</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

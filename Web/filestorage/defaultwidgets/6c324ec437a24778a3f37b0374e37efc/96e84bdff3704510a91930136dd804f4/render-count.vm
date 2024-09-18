@@ -1,0 +1,11 @@
+##
+## Expects in scope: $wikis, $inProcess
+##
+
+#if ($wikis.TotalCount == 1)
+    $core_v2_language.FormatString($core_v2_language.GetResource('WikisSingular'), $wikis.TotalCount.ToString())
+#elseif($wikis.TotalCount == 0)
+    <div style="display:hidden"></div>
+#else
+    $core_v2_language.FormatString($core_v2_language.GetResource('WikisPlural'), $wikis.TotalCount.ToString())
+#end

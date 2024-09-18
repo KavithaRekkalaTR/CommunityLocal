@@ -1,0 +1,545 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ManageAutomations_Title}" version="12.0.0.0" description="${resource:ManageAutomations_Description}" instanceIdentifier="dd1b5771a2fd44d1826ac089ea59aaa0" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="management-studio manage-automations" lastModified="2021-11-19 20:38:35Z" provider="f9704f7d55d5487185a21af34cc2ae89">
+    <contentScript language="Velocity"><![CDATA[$core_v2_widget.ExecuteFile('templates.vm')
+$core_v2_widget.ExecuteFile('style.vm')
+
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+#if ($context.RunTests)
+	#set ($developerMode = $context.IsDeveloperModeEnabled("%{}"))
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-description">
+					<p>
+						<strong>
+						#if ($developerMode)
+							Developer Mode
+						#else
+							Non-Developer Mode
+						#end
+						</strong>
+						Integration test results will be written to the console.
+					</p>
+					<p>
+						The <a href="$core_v2_encoding.HtmlAttributeEncode($context.TestSupportPluginUrl)"><strong>Automation Test Support</strong></a> plugin should be enabled prior.
+					</p>
+				</span>
+			</li>
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="button" data-messagename="studio.tests.run"
+						#if ($developerMode) data-developermode="true" #else data-developermode="false" #end>
+						Run Tests
+					</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+<div class="welcome">$core_v2_language.GetResource('Welcome')</div>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('ui.js.vm'))"></script>
+<script>
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.manageAutomations.register({
+		templates: {
+			panelWrapperTemplate: '$core_v2_encoding.JavascriptEncode($panelWrapperTemplate)',
+
+			## Browser
+			browseHeaderTemplate: '$core_v2_encoding.JavascriptEncode($browseHeaderTemplate)',
+			browseViewItemTemplate: '$core_v2_encoding.JavascriptEncode($browseViewItemTemplate)',
+			importSelectorTemplate: '$core_v2_encoding.JavascriptEncode($importSelectorTemplate)',
+
+			## Tab List
+			tabViewItemTemplate: '$core_v2_encoding.JavascriptEncode($tabViewItemTemplate)',
+
+			## Editor Views
+			automationExecutionScriptHeaderTemplate: '$core_v2_encoding.JavascriptEncode($automationScriptHeaderTemplate)',
+			automationConfigurationHeaderTemplate: '$core_v2_encoding.JavascriptEncode($automationScriptHeaderTemplate)',
+			automationNonEditableFileViewHeaderTemplate: '$core_v2_encoding.JavascriptEncode($automationNonEditableFileViewHeaderTemplate)',
+			automationNonEditableFileViewExampleTemplate: '$core_v2_encoding.JavascriptEncode($automationNonEditableFileViewExampleTemplate)',
+			automationEditableFileHeaderTemplate: '$core_v2_encoding.JavascriptEncode($automationEditableFileHeaderTemplate)',
+			automationResourcesHeaderTemplate: '$core_v2_encoding.JavascriptEncode($automationScriptHeaderTemplate)',
+			automationOverviewViewTemplate: '$core_v2_encoding.JavascriptEncode($automationOverviewViewTemplate)',
+			automationOverviewComponentsViewTemplate: '$core_v2_encoding.JavascriptEncode($automationOverviewComponentsViewTemplate)',
+			automationOverviewFilesViewTemplate: '$core_v2_encoding.JavascriptEncode($automationOverviewFilesViewTemplate)',
+			automationOverviewDetailsViewTemplate: '$core_v2_encoding.JavascriptEncode($automationOverviewDetailsViewTemplate)',
+			automationOverviewEventsViewTemplate: '$core_v2_encoding.JavascriptEncode($automationOverviewEventsViewTemplate)',
+			automationOverviewTriggerSummaryTemplate: '$core_v2_encoding.JavascriptEncode($automationOverviewTriggerSummaryTemplate)',
+
+			## Editor View Shared Components
+			automationActionsTemplate: '$core_v2_encoding.JavascriptEncode($automationActionsTemplate)',
+			automationEditorStateTemplate: '$core_v2_encoding.JavascriptEncode($automationEditorStateTemplate)',
+			automationEditorComponentsTemplate: '$core_v2_encoding.JavascriptEncode($automationEditorComponentsTemplate)',
+
+			## Docks
+			globalSearchTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchTemplate)',
+			globalSearchResultTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchResultTemplate)',
+			globalSearchResultOverviewTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchResultOverviewTemplate)',
+			globalSearchResultLoadingTemplate: '$core_v2_encoding.JavascriptEncode($globalSearchResultLoadingTemplate)',
+
+			## Prompts
+			newAutomationViewTemplate: '$core_v2_encoding.JavascriptEncode($newAutomationViewTemplate)'
+		},
+		hosts: [
+			#set ($hosts = $context.ListHosts("%{}"))
+			#foreach ($host in $hosts)
+				$core_v2_utility.ToJson($host)
+			#between
+				,
+			#end
+		],
+		urls: {
+			listConfiguredAutomationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-configured-automations.jsm'))',
+			listAutomationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-automations.jsm'))',
+			getAutomationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-automation.jsm'))',
+			saveAutomationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save-automation.jsm'))',
+			deleteAutomationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete-automation.jsm'))',
+			deleteAutomationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-delete-automation.jsm'))',
+			cloneAutomationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-clone-automation.jsm'))',
+			createAutomationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-create-automation.jsm'))',
+			publishAutomationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-publish-automation.jsm'))',
+			publishAutomationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-publish-automation.jsm'))',
+			revertAutomationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revert-automation.jsm'))',
+			revertAutomationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-revert-automation.jsm'))',
+			getAutomationFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-automation-file.jsm'))',
+			createAutomationFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-create-automation-file.jsm'))',
+			saveAutomationFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save-automation-file.jsm'))',
+			deleteAutomationFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete-automation-file.jsm'))',
+			restoreAutomationFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-restore-automation-file.jsm'))',
+			searchUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-search.jsm'))',
+			importAutomationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import-automations.jsm'))',
+			uploadFileUrl: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+			panelUrl: '$core_v2_encoding.JavascriptEncode($context.PanelUrl)',
+			exportAutomationsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-automations.jsm'))',
+			storeTemporaryExportListUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-store-requests.jsm'))',
+			listEventsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-events.jsm'))'
+		},
+		resources: {
+			nameorDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NameorDescription'))',
+			exportSelectedAutomations: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportSelectedAutomations'))',
+			exportSelectedResources: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportSelectedResources'))',
+			deleteSelectedAutomations: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteSelectedAutomations'))',
+			exportAllAutomations: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportAllAutomations'))',
+			exportAllResources: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportAllResources'))',
+			confirmPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmPublish'))',
+			confirmRevert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmRevert'))',
+			confirmPublishAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmPublishAll'))',
+			confirmRevertAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmRevertAll'))',
+			confirmDeleteAutomations: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmDeleteAutomations'))',
+			shortcutSearch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SearchDesc'))',
+			shortcutPublish: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishShortcutDesc'))',
+			shortcutPublishAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishAllShortcutDesc'))',
+			shortcutRevert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertShortcutDesc'))',
+			shortcutRevertAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertAllShortcutDesc'))',
+			shortcutNewAutomation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NewAutomationDesc'))',
+			shortcutForceSave: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForceSaveDesc'))',
+			scriptSandbox: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ScriptSandbox'))',
+			apiDocumentation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('APIDocumentation'))',
+			overview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Overview'))',
+			executionScript: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExecutionScript'))',
+			implementation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Implementation'))',
+			implementationDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImplementationDesc'))',
+			configuration: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Configuration'))',
+			resources: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Resources'))',
+			palettes: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Palettes'))',
+			images: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Images'))',
+			fonts: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Fonts'))',
+			styleSheets: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('StyleSheets'))',
+			styleSheetIncludes: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('StyleSheetIncludes'))',
+			scripts: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Scripts'))',
+			other: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Other'))',
+			files: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Files'))',
+			confirmUnsavedExit: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmUnsavedExit'))',
+			settings: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('settings'))',
+			overviewDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('OverviewDesc'))',
+			configurationDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ConfigurationDesc'))',
+			palettesDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PalettesDesc'))',
+			styleDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('StyleDesc'))',
+			scriptDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ScriptFileDesc'))',
+			fileDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FileDesc'))',
+			resourcesDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ResourcesDesc'))',
+			resourceImport: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('resourceImport'))',
+			automationImport: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('automationImport'))',
+			layouts: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Layouts'))',
+			layoutsDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('LayoutsDesc'))',
+			fragments: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Fragments'))',
+			fragmentsDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FragmentsDesc'))',
+			revertStagedChanges: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertStagedChanges'))',
+			noComparison: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoComparison'))',
+			revertLayoutAndOptions:  '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertLayoutAndOptions'))',
+			revertConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-confirmation'))',
+			revertSuccessNoPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-successful-nopreview'))',
+			revertSuccessPreview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-successful-preview'))',
+			deleted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleted'))',
+			selectAutomationTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('selectAutomationTitle'))',
+			previewChangesTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview'))',
+			previewChangesShortcutDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('previewChangesShortcutDesc'))',
+			previewSearch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('previewSearch'))',
+			previewNoMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('previewNoMatch'))',
+			confirmStageDelete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirmStageDelete'))',
+			customHost: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CustomHost'))',
+			customHostDesc: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CustomHostDesc'))',
+			newAutomationTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NewAutomationTitle'))',
+			configuredImport: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('configuredImport'))',
+			noMatchingAutomations: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingAutomations'))',
+      diffEmpty: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('diffEmpty'))'
+		},
+		editableExtensions: [
+			#foreach ($extension in $context.EditableExtensions)
+				#each
+					"$core_v2_encoding.JavascriptEncode($extension)"
+				#between
+					,
+			#end
+		],
+		developerModeEnabled: #if ($context.IsDeveloperModeEnabled("%{}")) true #else false #end
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Actions">Actions</resource>
+  <resource name="AddFile">Create File</resource>
+  <resource name="AddResource">Add Resource</resource>
+  <resource name="All">All automations</resource>
+  <resource name="AlreadyInstalled">The import also contains other components already installed in your community.</resource>
+  <resource name="Any">Any</resource>
+  <resource name="AnyDirection">Any direction</resource>
+  <resource name="APIDocumentation">API Documentation</resource>
+  <resource name="APIEventOccurs">API Event Occurs</resource>
+  <resource name="ApiEvents">API Events</resource>
+  <resource name="ApiEventsDesc">Select one or more events that will trigger this automation to execute. Trigger event details will be provided via the {trigger} API.</resource>
+  <resource name="ApplyToAuthorizationRequests">Apply to authorization requests (OAuth workflows)</resource>
+  <resource name="ApplyToModals">Apply to modals</resource>
+  <resource name="ApplyToNonModals">Apply to non-modals</resource>
+  <resource name="arguments">arguments</resource>
+  <resource name="AttachmentExampleUrl">Example script to retrieve the URL of the attachment:</resource>
+  <resource name="AttachmentFilePath">Attachments Source Path</resource>
+  <resource name="AttachmentImageExample">Example script to retrieve a scaled and cropped image tag displaying the attachment:</resource>
+  <resource name="Authentication">Authentication</resource>
+  <resource name="AuthenticationDesc">The means by which this automation's HTTP endpoint is secured.</resource>
+  <resource name="Automation">Automation</resource>
+  <resource name="AutomationActions">Automation Actions</resource>
+  <resource name="AutomationFooters">Automation Footer Layouts</resource>
+  <resource name="AutomationFragments">Automation Widgets</resource>
+  <resource name="AutomationHeaders">Automation Header Layouts</resource>
+  <resource name="automationImport">Import Automations</resource>
+  <resource name="AutomationPages">Automation Page Layouts</resource>
+  <resource name="automations">automations</resource>
+  <resource name="automationswith">Automations With</resource>
+  <resource name="automationtype">Automation Type</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CaseSensitive">Case Sensitive</resource>
+  <resource name="ChangedResource">Changed Resource</resource>
+  <resource name="ChangesStaged">Changes Staged</resource>
+  <resource name="CompareChanges">Compare Changes</resource>
+  <resource name="CompareCurrentWithFactory">Compare current version with the factory default</resource>
+  <resource name="CompareStagedWithPublished">Compare staged changes with published version</resource>
+  <resource name="Components">Components</resource>
+  <resource name="Configuration">Configuration</resource>
+  <resource name="ConfigurationDesc">Dynamic configuration XML identifying the configuration options exposed by this automation.</resource>
+  <resource name="Configured">Configured</resource>
+  <resource name="ConfiguredAutomation">Configured Automation</resource>
+  <resource name="configuredImport">Configured automations can only be published or reverted from within Automation Studio.</resource>
+  <resource name="confirmDeleteAutomations">Are you sure you want to delete or revert the selected automations to factory default?</resource>
+  <resource name="confirmPublish">Publishing will make staged changes to this automation public. Are you sure?</resource>
+  <resource name="confirmPublishAll">Publishing all will make all changes to all staged automations public. Are you sure?</resource>
+  <resource name="confirmRevert">Reverting will erase staged changes to this automation. Are you sure?</resource>
+  <resource name="confirmRevertAll">Reverting all will erase all changes to all staged automations. Are you sure?</resource>
+  <resource name="confirmStageDelete">This will erase other staged changes to this automation. Are you sure?</resource>
+  <resource name="confirmUnsavedExit">You have changes that have not yet saved. They will save momentarily, or you can use CTRL + S.</resource>
+  <resource name="Content">Content</resource>
+  <resource name="continue">Continue</resource>
+  <resource name="ConvertSupplemental">Convert to Supplemental File</resource>
+  <resource name="ConvertToScript">Convert to Script</resource>
+  <resource name="ConvertToStyle">Convert to Style Sheet</resource>
+  <resource name="current">Current</resource>
+  <resource name="Custom">Custom</resource>
+  <resource name="CustomHost">General Purpose Automations</resource>
+  <resource name="CustomHostDesc">Automations with full access to the stadard platform API.</resource>
+  <resource name="CustomizedDefault">Customized Default</resource>
+  <resource name="DaysToExecute">Days on which to execute</resource>
+  <resource name="DaysToExecuteDesc">The days on which this automation should be scheduled.</resource>
+  <resource name="Default">Default</resource>
+  <resource name="DefaultAutomations">Default</resource>
+  <resource name="DefaultProviderId">Default Provider ID</resource>
+  <resource name="DefaultProviderName">Default Provider</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="deleted">Deleted</resource>
+  <resource name="deleted_desc">Staged to be deleted when published</resource>
+  <resource name="DeleteFile">Delete File</resource>
+  <resource name="DeleteSelectedAutomations">Delete or Revert to Default</resource>
+  <resource name="Description">Description</resource>
+  <resource name="DescriptionDesc">Identifies the purpose/function of this automation. Can contain resources in the format ${resource:NAME}</resource>
+  <resource name="DeselectAll">Deselect All</resource>
+  <resource name="downloadFile">Download File</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="EditedDefault">Edited default</resource>
+  <resource name="Every">Every</resource>
+  <resource name="EveryFewHours">Every few hours</resource>
+  <resource name="EveryFewMinutes">Every few minutes</resource>
+  <resource name="EveryFewSeconds">Every few seconds</resource>
+  <resource name="EveryHour">Every hour</resource>
+  <resource name="EveryMinute">Every minute</resource>
+  <resource name="EverySecond">Every second</resource>
+  <resource name="ExecuteAsService">Execute as the service account</resource>
+  <resource name="ExecuteAsServiceDescription">If unchecked, the accessing user will be left unchanged and will be subject to the execution context that triggers the automation. The accessing user can be detected using the {accessing_user} API or adjusted using the {execute_file} API.</resource>
+  <resource name="ExecutionScript">Execution Script</resource>
+  <resource name="ExistingAutomations">Existing Automations</resource>
+  <resource name="ExistingConfiguredAutomations">Existing Configured Automations</resource>
+  <resource name="ExportAllAutomations">Export All Automations</resource>
+  <resource name="ExportAllResources">Export All Resources</resource>
+  <resource name="ExportAutomation">Export Automation</resource>
+  <resource name="ExportResources">Export Resources</resource>
+  <resource name="ExportSelectedAutomations">Export Automations</resource>
+  <resource name="ExportSelectedResources">Export Resources</resource>
+  <resource name="FactoryDefaultProvider">Factory Default Provider</resource>
+  <resource name="FactoryDefaultProviderDesc">In developer mode, new automations are created as factory defaults, and require association with a factory default provider.</resource>
+  <resource name="FactoryDefaultProviderNoneDesc">In developer mode, new automations are created as factory defaults, and require association with a factory default provider compiled in debug mode. No factory default provider plugins compiled in debug mode are currently enabled.</resource>
+  <resource name="FileActions">File Actions</resource>
+  <resource name="FileDesc">Non-automatically rendered supplemental file</resource>
+  <resource name="FileExampleUrl">Example Script to retrieve the URL of the file:</resource>
+  <resource name="FileFilePath">Files Source Path</resource>
+  <resource name="FileImageExample">Example Script to retrieve a scaled and cropped image tag displaying the file:</resource>
+  <resource name="FileLessExample">To reference in LESS:</resource>
+  <resource name="FilePath">Source Path</resource>
+  <resource name="Files">Files</resource>
+  <resource name="Fonts">Fonts</resource>
+  <resource name="ForceSaveDesc">Force an immediate save of unsaved changes</resource>
+  <resource name="Fragments">Widgets</resource>
+  <resource name="FragmentsDesc">Widgets defined by this automation</resource>
+  <resource name="FragmentsHeader">Themable Widgets</resource>
+  <resource name="Friday">Friday</resource>
+  <resource name="HideComparison">Hide Comparison</resource>
+  <resource name="HideDetails">Hide Details</resource>
+  <resource name="HostId">Automation Host ID</resource>
+  <resource name="HostName">Automation Host</resource>
+  <resource name="HostNameDesc">Select an automation type.</resource>
+  <resource name="hours">hours</resource>
+  <resource name="HoursBetweenExecutions">Hours between executions</resource>
+  <resource name="HoursBetweenExecutionsDesc">This automation will be rescheduled when it completes this number of hours in the future.</resource>
+  <resource name="HttpExecutionOnly">HTTP Request</resource>
+  <resource name="HttpRequestArgs">HTTP request and response are available as {args} on the {trigger} API.</resource>
+  <resource name="Id">Automation ID</resource>
+  <resource name="Images">Images</resource>
+  <resource name="Implementation">Implementation</resource>
+  <resource name="ImplementationDesc">Main automation script</resource>
+  <resource name="Import">Import</resource>
+  <resource name="ImportInstruction">The import includes the following new or changed automations, which will be uploaded into staging for further review or modification prior to publishing.</resource>
+  <resource name="InAnyState">In any state</resource>
+  <resource name="Including">Including</resource>
+  <resource name="InCurrentAutomation">In Current Automation</resource>
+  <resource name="InternetExplorerMaxVersion">Apply to Internet Explorer version (and earlier)</resource>
+  <resource name="InvalidAutomations">Invalid Automations</resource>
+  <resource name="InvalidAutomationsLabel">Unknown or invalid automations:</resource>
+  <resource name="InvalidConfiguredAutomations">Invalid Configured Automations</resource>
+  <resource name="InvalidConfiguredAutomationsLabel">Unknown or invalid configured automations:</resource>
+  <resource name="javascript">JavaScript</resource>
+  <resource name="JavaScriptExample">Server-Side JavaScript:</resource>
+  <resource name="JobArgs">Job {args} are available on the {trigger} API.</resource>
+  <resource name="Language">Language</resource>
+  <resource name="LanguageDirection">Apply within language direction</resource>
+  <resource name="LastOfAutomationTypeError">Cannot delete the last automation of its type.</resource>
+  <resource name="Layouts">Layouts</resource>
+  <resource name="LayoutsDesc">Layouts defined by this automation</resource>
+  <resource name="LayoutsHeadersFooters">Header and Footer Layouts</resource>
+  <resource name="LayoutsPages">Page Layouts</resource>
+  <resource name="LTR">Left to right only</resource>
+  <resource name="ManageAutomations_Description">Develop and customize automation types.</resource>
+  <resource name="ManageAutomations_Title">Automation Studio</resource>
+  <resource name="ManualExecutionOnly">Manual Execution</resource>
+  <resource name="ManualPlugin">To trigger this automation from a plugin (the NameValueCollection provides key/value pairs as optional arguments):</resource>
+  <resource name="ManualPost">To trigger this automation from an HTTP request (any body parameters are provided as optional arguments):</resource>
+  <resource name="RestScope">REST scope required:</resource>
+  <resource name="NotPublishedRestScopeName">Automations › Modify {0}</resource>
+  <resource name="ManualRequestArgs">Manual request parameters and response are available as {args} on the {trigger} API.</resource>
+  <resource name="ManualWidget">To trigger this automation from a widget, theme, or other automation:</resource>
+  <resource name="Match">Match</resource>
+  <resource name="Matches">Matches</resource>
+  <resource name="MediaMaxHeightPixels">Media Height</resource>
+  <resource name="MediaMaxHeightPixelsDesc">The maximum height, in pixels, of media rendered within this automation.</resource>
+  <resource name="MediaMaxWidthPixels">Media Width</resource>
+  <resource name="MediaMaxWidthPixelsDesc">The maximum width, in pixels, of media rendered within this automation.</resource>
+  <resource name="MediaQuery">With media query</resource>
+  <resource name="minutes">minutes</resource>
+  <resource name="MinutesBetweenExecutions">Minutes between executions</resource>
+  <resource name="MinutesBetweenExecutionsDesc">This automation will be rescheduled when it completes this number of minutes in the future.</resource>
+  <resource name="Monday">Monday</resource>
+  <resource name="Name">Name</resource>
+  <resource name="NameDesc">This name will be used to refer to this automation in lists and reports. Can contain resources in the format ${resource:NAME}</resource>
+  <resource name="NameorDescription">Go to…</resource>
+  <resource name="NewAutomationDesc">New Automation</resource>
+  <resource name="newAutomationIdInvalid">Invalid or already in use by an existing automation</resource>
+  <resource name="NewAutomationResources">New Automation Resources</resource>
+  <resource name="NewAutomations">New Automations</resource>
+  <resource name="NewAutomationTitle">New Automation</resource>
+  <resource name="NewConfiguredAutomations">New Configured Automation</resource>
+  <resource name="NewFile">Add File</resource>
+  <resource name="NewIdDesc">New automations can be provided an explicit ID in GUID format. If not provided, a new ID will be automatically assigned.</resource>
+  <resource name="NewResource">New Resource</resource>
+  <resource name="NewValue">New Value</resource>
+  <resource name="NoAuthentication">No Authentication</resource>
+  <resource name="NoAuthWarning">HTTP-enabled automations with no authentication are publicly accessible and should implement their own authentication and validation.</resource>
+  <resource name="NoComparison">This is a new automation file and has no comparable version.</resource>
+  <resource name="NoEvents">no events</resource>
+  <resource name="NoImportMessage">Import contains no new or updated automations or resources.</resource>
+  <resource name="NoMatchingAutomations">No Matching Automations</resource>
+  <resource name="none">None</resource>
+  <resource name="NoneDefined">None defined by this automation</resource>
+  <resource name="NoPreview">No Preview Image</resource>
+  <resource name="OldValue">Old Value</resource>
+  <resource name="OnceDaily">Once daily, at a specific time, on specific days</resource>
+  <resource name="OnEvent">On event</resource>
+  <resource name="OnEvents">On events</resource>
+  <resource name="OnlyStaged">Only Staged</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Other">Other</resource>
+  <resource name="Overview">Overview</resource>
+  <resource name="OverviewDesc">Automation Settings</resource>
+  <resource name="Palettes">Palettes</resource>
+  <resource name="PalettesDesc">XML identifying the palette types exposed by this automation.</resource>
+  <resource name="preview">Preview</resource>
+  <resource name="previewChanges">Preview Staged Changes</resource>
+  <resource name="previewChangesShortcutDesc">Preview the staged automation changes</resource>
+  <resource name="preview-desc-app">Staged changes to the '&lt;%: Name %&gt;' &lt;%: TypeName.toLowerCase() %&gt; automation are available for review. Select the &lt;%: TypeName.toLowerCase() %&gt; in which to preview these changes and click 'Start Preview' to review the changes.</resource>
+  <resource name="preview-desc-site">Staged changes to the '&lt;%: Name %&gt;' &lt;%: TypeName.toLowerCase() %&gt; automation are available for review. Click 'Start Preview' to review these changes.</resource>
+  <resource name="PreviewImage">Preview Image</resource>
+  <resource name="previewIn">Preview in</resource>
+  <resource name="previewInDesc">Select the &lt;%= TypeName.toLowerCase() %&gt; in which to preview. If the &lt;%: TypeName.toLowerCase() %&gt; has a different automation, it will be staged to use '&lt;%: Name %&gt;'.</resource>
+  <resource name="previewNoMatch">No Matches</resource>
+  <resource name="preview-note">Within preview mode, you (and you alone) will view the &lt;%: TypeName.toLowerCase() %&gt; with the staged changes. These changes are not yet published for all users to see. Review the items listed in the preview list and then choose which items should be published.</resource>
+  <resource name="PreviewReversion">Preview Reversion</resource>
+  <resource name="previewSearch">Search...</resource>
+  <resource name="Providers">Providers</resource>
+  <resource name="Publish">Publish</resource>
+  <resource name="PublishAllShortcutDesc">Publish all staged automations' changes</resource>
+  <resource name="published">Published</resource>
+  <resource name="PublishShortcutDesc">Publish the current staged automation's changes</resource>
+  <resource name="PublishStagedChanges">Publish Staged Changes</resource>
+  <resource name="Query">Search for...</resource>
+  <resource name="Remove">Remove Preview</resource>
+  <resource name="RemovedResource">Removed Resource</resource>
+  <resource name="RemoveEvent">Remove</resource>
+  <resource name="resourceImport">Import Resources</resource>
+  <resource name="ResourceName">Resource Name</resource>
+  <resource name="Resources">Resources</resource>
+  <resource name="ResourcesDesc">Language Resources</resource>
+  <resource name="Rest">REST Authentication</resource>
+  <resource name="restored">restored</resource>
+  <resource name="RestoreFile">Restore File</resource>
+  <resource name="restoreNote">This file is deleted. It can be</resource>
+  <resource name="Revert">Revert</resource>
+  <resource name="RevertAllShortcutDesc">Revert all staged automations' changes</resource>
+  <resource name="RevertAndPublish">Revert and Publish</resource>
+  <resource name="RevertComponentsDesc">Select any related staged components of the automation you would like to revert in addition to the automation.</resource>
+  <resource name="revert-confirmation">Are you sure you want to revert this automation immediately? This action will result in the loss of customizations. Previewing is strongly recommended.</resource>
+  <resource name="reverted">Reverted</resource>
+  <resource name="reverted_desc">Staged to be reverted to the default version when published</resource>
+  <resource name="revert-footers">Revert footers</resource>
+  <resource name="revert-footers-description-1">Revert all customizations of footers within this automation to</resource>
+  <resource name="revert-footers-description-2">.</resource>
+  <resource name="revert-headers">Revert headers</resource>
+  <resource name="revert-headers-description-1">Revert all customizations of headers within this automation to</resource>
+  <resource name="revert-headers-description-2">.</resource>
+  <resource name="revert-instructions">Select the options from this automation that you would like to revert. When previewing the reversion, you will be able to use the site and preview the changes before publishing the changes for all users.</resource>
+  <resource name="RevertLayoutAndOptions">Revert Layouts and Options</resource>
+  <resource name="revert-pages">Revert pages</resource>
+  <resource name="revert-pages-description-1">Revert all customizations of</resource>
+  <resource name="revert-pages-description-2">pages within this automation to</resource>
+  <resource name="revert-pages-description-3">.</resource>
+  <resource name="revert-platform-and-custom-pages">platform-defined and custom</resource>
+  <resource name="revert-platform-pages">platform-defined</resource>
+  <resource name="revert-scoped-properties">Revert shared widget options</resource>
+  <resource name="revert-scoped-properties-description">Revert all shared widget options to the default values defined by this automation.</resource>
+  <resource name="RevertShortcutDesc">Revert the current staged automation's changes</resource>
+  <resource name="RevertStagedChanges">Revert Staged Changes</resource>
+  <resource name="revert-successful-nopreview">The automation has been reverted successfully.</resource>
+  <resource name="revert-successful-preview">The automation reversion has been staged successfully.</resource>
+  <resource name="revert-to-configured-default">configured defaults</resource>
+  <resource name="revert-to-default">automation defaults</resource>
+  <resource name="RevertToDefault">Revert to Default</resource>
+  <resource name="RTL">Right to left only</resource>
+  <resource name="RunSearch">Search</resource>
+  <resource name="Saturday">Saturday</resource>
+  <resource name="SaveAsCopy">Save as Copy</resource>
+  <resource name="SavedButNotPublished">This version of the automation is saved but not published.</resource>
+  <resource name="Scheduled">Scheduled</resource>
+  <resource name="ScheduledDaily">Scheduled once daily at</resource>
+  <resource name="ScheduleThisAutomation">Schedule this automation</resource>
+  <resource name="Script">Script</resource>
+  <resource name="ScriptDesc">Automatically-rendered JavaScript</resource>
+  <resource name="ScriptFileDesc">Automatically-rendered JavaScript</resource>
+  <resource name="ScriptFiles">Scripts</resource>
+  <resource name="script-language">Script Language</resource>
+  <resource name="Scripts">Scripts</resource>
+  <resource name="ScriptSandbox">Script Sandbox</resource>
+  <resource name="SearchDesc">Search</resource>
+  <resource name="Searching">Searching for: </resource>
+  <resource name="seconds">seconds</resource>
+  <resource name="SecondsBetweenExecutions">Seconds between executions</resource>
+  <resource name="SecondsBetweenExecutionsDesc">This automation will be rescheduled when it completes this number of seconds in the future.</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="selectAutomation">Select Related Automation</resource>
+  <resource name="selectAutomationDesc">Select an automation, if any, with which to share inheritable configuration. The new automation will be of a different automation type but share the same automation ID. These automations do not already have corresponding &lt;%= automationTypeName %&gt; automations.</resource>
+  <resource name="selectAutomationNewDesc">New automations can be provided an explicit ID in GUID format. If not provided, a new ID will be automatically assigned.</resource>
+  <resource name="selectAutomationNoneDesc">If not selecting an existing automation, an explicit new ID in GUID format can be provided. Otherwise, a random ID will be automatically assigned.</resource>
+  <resource name="selectAutomationTitle">Save as Copy</resource>
+  <resource name="settings">Settings</resource>
+  <resource name="ShowDetails">Show Details</resource>
+  <resource name="Singleton">Prevent multiple automations</resource>
+  <resource name="SingletonDesc">If checked, this automation type will only support being enabled by a single automation.</resource>
+  <resource name="SingletonWarning">This automation type is already in use by multiple automations.</resource>
+  <resource name="Staged">Staged</resource>
+  <resource name="startPreview">Start Preview</resource>
+  <resource name="StyleDesc">Automatically-rendered style</resource>
+  <resource name="StyleFiles">Style Sheets</resource>
+  <resource name="StyleSheet">Style Sheet</resource>
+  <resource name="StyleSheetDesc">Automatically-rendered CSS or LESS style sheet</resource>
+  <resource name="StyleSheetIncludes">Style Sheet Includes</resource>
+  <resource name="StyleSheets">Style Sheets</resource>
+  <resource name="Sunday">Sunday</resource>
+  <resource name="SupplementalFile">Supplemental File</resource>
+  <resource name="SupplementalFileDesc">Other files including non-automatically rendered style sheets and scripts</resource>
+  <resource name="TheFollowingAutomationsAreNew">The following automations are new</resource>
+  <resource name="TheFollowingConfiguredAutomationsAreNew">The following configured automations are new</resource>
+  <resource name="Thursday">Thursday</resource>
+  <resource name="TimeToExecute">Time to execute</resource>
+  <resource name="TimeToExecuteDesc">The time at which this automation should start on days it is scheduled.</resource>
+  <resource name="Translated">Translated</resource>
+  <resource name="Trigger">Triggers</resource>
+  <resource name="TriggerDesc">When the automation is enabled and configured, it will be executed in response to triggers.</resource>
+  <resource name="Tuesday">Tuesday</resource>
+  <resource name="TypeId">Automation Type ID</resource>
+  <resource name="TypeName">Automation Type</resource>
+  <resource name="UnmodifiedConfiguredCountLabel">Unmodified configured automations which will be ignored:</resource>
+  <resource name="UnmodifiedCountLabel">Unmodified automations which will be ignored:</resource>
+  <resource name="UpdatedAutomationDesc">The following automations are updates of existing automations.</resource>
+  <resource name="UpdatedAutomationResources">Updated Automation Resources</resource>
+  <resource name="UpdatedAutomations">Updated Automations</resource>
+  <resource name="UpdatedConfiguredAutomationDesc">The following configured automations are updates of existing configurations.</resource>
+  <resource name="UpdatedConfiguredAutomations">Updated Configured Automations</resource>
+  <resource name="Upload">Upload Preview</resource>
+  <resource name="UploadFile">Upload File</resource>
+  <resource name="UseRegEx">Using Regular Expression</resource>
+  <resource name="UserInstalled">User installed</resource>
+  <resource name="Value">Value</resource>
+  <resource name="velocity">Velocity</resource>
+  <resource name="VelocityExample">Velocity:</resource>
+  <resource name="View">View</resource>
+  <resource name="view-desc-app">The '&lt;%: Name %&gt;' &lt;%: TypeName.toLowerCase() %&gt; automation has no staged changes available for review, but it can still be previewed. Select the &lt;%: TypeName.toLowerCase() %&gt; in which to preview and click 'Start Preview'.</resource>
+  <resource name="view-desc-site">The '&lt;%: Name %&gt;' &lt;%: TypeName.toLowerCase() %&gt; automation has no staged changes available for review, but it can still be previewed. If the site has a different automation, it will be staged to use '&lt;%: Name %&gt;'. Click 'Start Preview' to preview.</resource>
+  <resource name="ViewDocumentation">View Documentation</resource>
+  <resource name="Viewing">Viewing</resource>
+  <resource name="ViewSample">View Sample Usage</resource>
+  <resource name="Wednesday">Wednesday</resource>
+  <resource name="Welcome">Select an automation.</resource>
+  <resource name="diffEmpty">Empty</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

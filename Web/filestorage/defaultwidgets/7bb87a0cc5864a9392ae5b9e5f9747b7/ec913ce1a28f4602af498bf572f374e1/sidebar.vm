@@ -1,0 +1,41 @@
+$core_v2_widget.ExecuteFile("setquery.vm")
+#set($taggedContent = $core_v2_taggedContent.List($query))
+
+#foreach ($item in $taggedContent)
+#beforeall
+	<div class="avatar-list">
+	<ul class="content-list">
+#each
+	#if ($item.Content && $item.Content.Errors.Count == 0)
+		#set($author = $core_v2_user.Get("%{Id = $item.Content.CreatedByUserId}"))
+
+		<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)">
+			<a $core_v2_ui.ContentPeek($item.Content.ContentId, $item.Content.ContentTypeId, 'internal-link view-full-post navigable')
+				href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)">
+				<div class="content">$core_v2_language.Truncate($item.Content.HtmlName('Web'), 200, "...")</div>
+			</a>
+			<div class="author">
+				<div class="avatar">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)" class="internal-link">
+						#if ($item.Content.AvatarUrl && $item.Content.AvatarUrl != '')
+							$core_v2_ui.GetResizedImageHtml($item.Content.AvatarUrl, 35, 35, "%{border='0px', ResizeMethod='ZoomAndCrop', alt=$item.Content.HtmlName('Web')}")
+						#elseif($author && $author.AvatarUrl && $author.AvatarUrl != '')
+							$core_v2_ui.GetResizedImageHtml($author.AvatarUrl, 35, 35, "%{border='0px', alt=$author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+						#end
+					</a>
+				</div>
+				<div class="meta">
+					<a $core_v2_ui.ContentPeek($item.Content.ContentId, $item.Content.ContentTypeId, 'internal-link view-post navigable')
+						href="$core_v2_encoding.HtmlAttributeEncode($item.Content.Url)">
+						$core_v2_ui.AgoDate($item.Content.CreatedDate)
+					</a>
+				</div>
+			</div>
+		</li>
+	#end
+#afterall
+		</ul>
+	</div>
+#nodata
+	 $core_v2_widget.Hide()
+#end

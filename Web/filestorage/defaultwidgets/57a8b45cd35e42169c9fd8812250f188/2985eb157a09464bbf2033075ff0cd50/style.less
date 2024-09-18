@@ -1,0 +1,85 @@
+.scale_prepended_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @margin: 2px) {
+	&:before {
+		width: @size;
+		height: @size;
+		font-size: @size;
+		line-height: @size;
+		margin-right: @margin;
+	}
+}
+.content-fragment.idea-status-list {
+	.content-list {
+		margin-top: 10px * 3;
+	}
+	.content-list.content > .content-item {
+		padding: 10px 0;
+		border-width: 0;
+	}
+	.content.full .name {
+		position: relative;
+		font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px);
+		font-weight: normal;
+		margin: 0 0 20px 0;
+		border: 1px solid -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		border-radius: 3px;
+		color: -evo-themeconfig-color('foregroundColor', #11171A);
+		background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		padding: 10px 0px 10px 10px;
+		.scale_prepended_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.2);
+		a {
+			color: -evo-themeconfig-color('foregroundColor', #11171A);
+			&.links-expanded {
+				background-color: -evo-themeconfig-color('foregroundColor', #11171A);
+				color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			}
+		}
+		&.status-comingsoon {
+			border-color: -evo-themeconfig-color('statePending', #FFB300);
+			background-color: -evo-themeconfig-color('statePending', #FFB300);
+			color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+			a {
+				color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+				&.links-expanded {
+					background-color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+					color: -evo-themeconfig-color('statePending', #FFB300);
+				}
+			}
+		}
+		&.status-complete {
+			border-color: -evo-themeconfig-color('statePositive', #9CCC65);
+			background-color: -evo-themeconfig-color('statePositive', #9CCC65);
+			color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+			a {
+				color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+				&.links-expanded {
+					background-color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+					color: -evo-themeconfig-color('statePositive', #9CCC65);
+				}
+			}
+		}
+		&.status-notplanned {
+			border-color: -evo-themeconfig-color('stateNegative', #E53935);
+			background-color: -evo-themeconfig-color('stateNegative', #E53935);
+			color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+			a {
+				color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+				&.links-expanded {
+					background-color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+					color: -evo-themeconfig-color('stateNegative', #E53935);
+				}
+			}
+		}
+		&.status-underreview {
+			border-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			color: -evo-themeconfig-color('foregroundColor', #11171A);
+			a {
+				color: -evo-themeconfig-color('foregroundColor', #11171A);
+				&.links-expanded {
+					background-color: -evo-themeconfig-color('foregroundColor', #11171A);
+					color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 8%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+				}
+			}
+		}
+	}
+}

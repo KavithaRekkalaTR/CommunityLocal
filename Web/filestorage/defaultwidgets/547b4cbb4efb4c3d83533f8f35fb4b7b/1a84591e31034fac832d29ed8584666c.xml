@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="1a84591e31034fac832d29ed8584666c" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="" lastModified="2021-03-29 14:56:52Z" provider="547b4cbb4efb4c3d83533f8f35fb4b7b">
+    <contentScript language="Velocity"><![CDATA[#set ($codeEditorId = "${core_v2_widget.UniqueId('code-editor')}")
+#set ($codeFullScreenId = "${core_v2_widget.UniqueId('code-editor-fs')}")
+
+<style>$core_v2_widget.ExecuteFile('style.less')</style>
+
+<div class="code-editor">
+    <div class="code-editor-heading">
+        <a href="#" 
+            class="ui-tip fs icon" 
+            title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Fullscreen'))"
+            id="$core_v2_encoding.HtmlAttributeEncode($codeFullScreenId)">$core_v2_language.GetResource('Fullscreen')</a>
+        <a href="$context.DownloadUrl" 
+            class="ui-tip filename" 
+            title="$core_v2_language.GetResource('Download') $context.FileName">$context.FileName</a>
+        <a href="$context.DownloadUrl" 
+            class="ui-tip dl icon"
+            title="$core_v2_language.GetResource('Download') $context.FileName">$core_v2_language.GetResource('Download')</a>
+    </div>
+    <pre class="ui-code" 
+        id="$core_v2_encoding.HtmlAttributeEncode($codeEditorId)"
+        data-mode="$context.TextMode" 
+        data-theme="$context.Theme"
+        style="height:${context.Height}px;min-width:${context.Width}px;margin:0px;"
+        data-enablefullscreen="false"
+        data-wordwrap="$core_v2_language.Lowercase($context.WordWrap.ToString())"
+        data-gutter="$core_v2_language.Lowercase($context.ShowGutter.ToString())">$context.FileContent</pre>
+</div>
+
+<script>
+jQuery(function(j){
+    var fullScreenToggle = j('#${core_v2_encoding.JavascriptEncode($codeFullScreenId)}');
+    var codeEditor = j('#${core_v2_encoding.JavascriptEncode($codeEditorId)}');
+    fullScreenToggle.on('click', function(){
+        if (codeEditor.evolutionCodeEditor('fullscreen')) {
+            codeEditor.evolutionCodeEditor('fullscreen', false);
+        } else {
+            codeEditor.evolutionCodeEditor('fullscreen', true);
+        }
+        return false;
+    });
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Renders previewable text files</resource>
+  <resource name="Download">Download</resource>
+  <resource name="Fullscreen">Fullscreen</resource>
+  <resource name="Name">Code File Viewer</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,219 @@
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+#set($fileFilter = 'null')
+#if ($context.AllowedFileExtensions && $context.AllowedFileExtensions.Length > 0)
+    #set($fileFilter = "[{ title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Files'))', extensions: '$core_v2_utility.Join(',', $context.AllowedFileExtensions)' }]")
+#end
+
+<span class="url-property #if($context.EnablePreview) with-preview #end #if($canUpload) with-upload #end">
+    <select id="$context.UniqueId">
+        #set($itemsHtml = '')
+        #foreach($v in $value)
+            #set($fileName = $v)
+            #if ($context.IsLocalUrl($v))
+                #set($fileName = $context.GetLocalUrlFileName($v))
+            #end
+            #if ($itemsHtml.Length > 0)
+                #set($itemsHtml = "$itemsHtml,")
+            #end
+            #set($itemsHtml = "$itemsHtml'<div>$core_v2_encoding.JavascriptEncode($core_v2_encoding.HtmlEncode($fileName))</div>'")
+            <option value="$core_v2_encoding.HtmlAttributeEncode($v)">$core_v2_encoding.HtmlEncode($fileName)</option>
+        #end
+    </select>
+	<span class="upload-options">
+	    #if ($context.AllowRemote)
+	        <a href="#" class="add" id="${context.UniqueId}_add">$core_v2_language.GetResource('Add')</a>
+	    #end
+	    #if ($canUpload)
+		    <a href="#" class="upload" id="${context.UniqueId}_upload" #if($context.AllowRemote) style="margin-left: 1em;" #end>$core_v2_language.GetResource('Upload')</a>
+	    #end
+		<a href="#" class="remove" id="${context.UniqueId}_remove" style="margin-left: 1em;">$core_v2_language.GetResource('Remove')</a>
+		<a href="#" class="moveup" id="${context.UniqueId}_up" style="margin-left: 1em;">$core_v2_language.GetResource('MoveUp')</a>
+		<a href="#" class="movedown" id="${context.UniqueId}_down" style="margin-left: 1em;">$core_v2_language.GetResource('MoveDown')</a>
+	</span>
+</span>
+
+<script type="text/javascript">
+    jQuery(function() {
+        var api = $context.JsonApi;
+        var i = jQuery('#$context.UniqueId');
+        var upload = jQuery('#${context.UniqueId}_upload');
+        var remove = jQuery('#${context.UniqueId}_remove');
+        var moveUp = jQuery('#${context.UniqueId}_up');
+        var moveDown = jQuery('#${context.UniqueId}_down');
+        var add = jQuery('#${context.UniqueId}_add');
+        var p = new RegExp('$core_v2_encoding.JavascriptEncode($context.ValidUrlPattern)');
+        var allowRemote = #if ($context.AllowRemote) true #else false #end;
+        var uploading = false;
+        var golv = function() {
+          var count = i.glowOrderedList('count');
+          var val = [];
+          for (var j = 0; j < count; j++){
+            val.push(i.glowOrderedList('getByIndex', j).value);
+          }
+          return val;
+        };
+        var testUrl = function(url) {
+          if (url.toLowerCase() == '$defaultProtocol://'.toLowerCase()) {
+                url = null;
+            } else if(!(p.test(url))) {
+                url = '$defaultProtocol://' + url;
+                if(!(p.test(url)) || url.toLowerCase() == '$defaultProtocol://'.toLowerCase()) {
+                    url = null;
+                }
+            }
+            return url;
+        };
+        var gv = function(v, setValue) {
+            var pv = [];
+            jQuery.each(v, function(i, url) {
+                url = testUrl(url);
+                if (url) {
+                    pv.push(url);
+                }
+            });
+            pv.toString = function() {
+                var out = [];
+                jQuery.each(this, function(j,url) {
+                    if (out.length > 0) { out.push('&'); }
+                    out.push('Uri=');
+                    out.push(encodeURIComponent(url));
+                });
+                return out.join('');
+            };
+            if (setValue) {
+                i.glowOrderedList('clear');
+                jQuery.each(pv, function(j, url) {
+                   var item = i.glowOrderedList('createItem', {
+	                    value: url,
+	                    text: url,
+	                    html: '<div>' + url + '</div>'
+	                });
+	                i.glowOrderedList('add', item);
+                });
+                i.glowOrderedList('refresh');
+            }
+            return pv;
+        };
+
+        i.glowOrderedList({
+            width: '100%',
+            height: 220,
+            itemsHtml: [$itemsHtml]
+        })
+            .on('glowOrderedListItemMoved', function() {
+                api.changed(gv(golv()));
+            });
+
+        upload.glowUpload({
+			fileFilter: $fileFilter,
+			uploadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			renderMode: 'link',
+			type: 'image'
+		})
+		.on('glowUploadBegun', function (e) {
+			uploading = true;
+			upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))'.replace('{0}', 0));
+		})
+		.on('glowUploadComplete', function (e, file) {
+			if (file && file.name.length > 0) {
+				jQuery.telligent.evolution.post({
+			        url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getfileurl.vm'))',
+			        data: {
+			            filename: file.name,
+			            contextid: '$uploadContextId'
+			        },
+			        success: function(response) {
+			            if (response && response.url) {
+			                var item = i.glowOrderedList('createItem', {
+			                    value: response.url,
+			                    text: file.name,
+			                    html: '<div>' + file.name + '</div>'
+			                });
+			                i.glowOrderedList('add', item);
+			                i.glowOrderedList('refresh');
+			                i.glowOrderedList('select', i.glowOrderedList('count') - 1);
+
+        					api.changed(gv(golv()));
+        					uploading = false;
+        					upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Upload'))');
+			            }
+			        }
+			    });
+			}
+		})
+		.on('glowUploadFileProgress', function (e, details) {
+			uploading = true;
+			upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))'.replace('{0}', details.percent));
+		})
+		.on('glowUploadError', function(e) {
+			 jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Error'))', { type: 'error', duration: 5000 });
+			 uploading = false;
+			 upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Upload'))');
+		});
+
+		remove.on('click', function() {
+			var selectedIndex = i.glowOrderedList('selectedIndex');
+			if (i.glowOrderedList('selectedIndex') < 0) {
+		        jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoItemSelected'))', { type: 'error', duration: 3000 });
+		        return false;
+		    }
+
+		    var item = i.glowOrderedList('getByIndex', selectedIndex);
+		    if (item) {
+		        i.glowOrderedList('remove', item);
+		        i.glowOrderedList('refresh');
+		    }
+			upload.html('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Upload'))');
+			return false;
+		});
+
+		moveUp.on('click', function() {
+		    if (i.glowOrderedList('selectedIndex') < 0) {
+		        jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoItemSelected'))', { type: 'error', duration: 3000 });
+		        return false;
+		    }
+
+		    i.glowOrderedList('moveUp');
+		    return false;
+		});
+
+		moveDown.on('click', function() {
+		    if (i.glowOrderedList('selectedIndex') < 0) {
+		        jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoItemSelected'))', { type: 'error', duration: 3000 });
+		        return false;
+		    }
+
+		    i.glowOrderedList('moveDown');
+		    return false;
+		});
+
+		add.on('click', function() {
+		    var url = window.prompt('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Link_Instructions'))');
+		    if (url && url.length > 0) {
+		        url = testUrl(url);
+		        if (url) {
+    	            var item = i.glowOrderedList('createItem', {
+                        value: url,
+                        text: url,
+                        html: '<div>' + url + '</div>'
+                    });
+                    i.glowOrderedList('add', item);
+                    i.glowOrderedList('refresh');
+                    i.glowOrderedList('select', i.glowOrderedList('count') - 1);
+
+    				api.changed(gv(golv()));
+		        }
+		    }
+		    return false;
+		});
+
+        api.register({
+            val: function(val) { return (typeof val == 'undefined') ? gv(golv()) : i.val(gv(val, true)); },
+            hasValue: function() { return gv(golv()) != null; }
+        });
+        i.on('change', function() {
+            api.changed(gv(golv()));
+        });
+    });
+</script>

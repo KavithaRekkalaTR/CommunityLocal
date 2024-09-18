@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PointFactors_Name}" version="11.0.0.0" description="${resource:PointFactors_Description}" instanceIdentifier="89b8f5e0a12b4813b6eb71ad5b2ee7d3" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="administration-points" lastModified="2021-07-28 15:47:35Z" provider="5bc5ffbc9f154575a984db44043d66aa">
+    <contentScript language="Velocity"><![CDATA[#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input user-options">
+	                <a href="#" data-messagename="pointFactors.add" class="button add-points">$core_v2_language.GetResource('Action_Add')</a>
+                    <div style="float: left; width: 50%">
+						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="3" data-direction="horizontal">
+							<ul>
+                                <li class="navigation-list-item">
+                                    <a href="#" data-messagename="administeruser.addremovepoints" data-userid="$context.UserId">$core_v2_language.GetResource('Options_AddRemovePoints')</a>
+                                </li>
+							</ul>
+						</div>
+					</div>
+				</span>
+	        </li>
+
+        </ul>
+    </fieldset>
+</script>
+
+<ul class="content-list content expandable simple"></ul>
+<div id="$core_v2_widget.UniqueId('noresults')" class="message information" style="display:none;">
+    $core_v2_language.GetResource('NoMatchingPointFactors')
+</div>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.administrationPointFactors.register({
+	    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+	    fields: {
+            noResults: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('noresults'))')
+	    },
+		urls: {
+		    list: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.vm'))',
+			addedit: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('addedit.vm'))',
+			delete: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+            addremovepoints: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('addremovepoints.vm'))',
+		},
+		text:  {
+			deletePointFactor: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_DeletePointFactor'))',
+			addPointFactor: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_AddPointFactor'))',
+			editPointFactor: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_EditPointFactor'))',
+			deleteSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success_PointFactorDeleted'))',
+			deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Confirm_DeletePointFactor'))',
+            addremovepoints: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Title_AddRemovePoints'))',
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Action_Add">Add</resource>
+  <resource name="Action_Delete">Delete</resource>
+  <resource name="Action_Edit">Edit</resource>
+  <resource name="Action_Save">Save</resource>
+  <resource name="Action_View">View</resource>
+  <resource name="AddRemovePoints">Save</resource>
+  <resource name="AddRemovePointsInstructions">Use this form to adjust points for a member.</resource>
+  <resource name="AddRemovePointsSuccessful">The point adjustment has been applied successfully.</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="Confirm_DeletePointFactor">Are you sure you want to delete '{0}'?</resource>
+  <resource name="Field_Automation">Award/Revoke Automation</resource>
+  <resource name="Field_Automation_Description">The automation rule for awarding and revoking this point automation.</resource>
+  <resource name="Field_Description">Description</resource>
+  <resource name="Field_Description_Description">An explanation of this automation.</resource>
+  <resource name="Field_Enabled">Enabled</resource>
+  <resource name="Field_Enabled_Description">Only enabled point automations will be processed.</resource>
+  <resource name="Field_Points">Points</resource>
+  <resource name="Field_Points_Description">The number of points to award.</resource>
+  <resource name="Field_PointsReason">Reason for point adjustment</resource>
+  <resource name="Field_PointsReason_Desc">The reason for the point adjustment.</resource>
+  <resource name="Field_PointsToAdd">Points to add/remove</resource>
+  <resource name="Field_PointsToAdd_Desc">The number of points to add or remove. Positive values are additions and negative values are removals.</resource>
+  <resource name="Field_Title">Title</resource>
+  <resource name="Field_Title_Description">The title of this point automation.</resource>
+  <resource name="Field_UpdatePoints">Update Existing Point Awards</resource>
+  <resource name="Field_UpdatePoints_Description">Apply the point value change retroactively to existing point awards; otherwise the change will only be applied to new point awards.</resource>
+  <resource name="Field_User">Member to adjust</resource>
+  <resource name="Field_User_Desc">The Member whose points should be adjusted.</resource>
+  <resource name="FieldRequired">This field is required.</resource>
+  <resource name="find">Find a member...</resource>
+  <resource name="more">More...</resource>
+  <resource name="No">No</resource>
+  <resource name="NoMatchingPointFactors">No point automations have been created yet.</resource>
+  <resource name="Options_AddRemovePoints">Add/remove points</resource>
+  <resource name="PointFactorNotFound">The selected point automation could not be found.</resource>
+  <resource name="PointFactors_Description">Manage Points</resource>
+  <resource name="PointFactors_Name">Points</resource>
+  <resource name="PointsFormat">{0} points</resource>
+  <resource name="Status_Disabled">Disabled</resource>
+  <resource name="Status_Enabled">Enabled</resource>
+  <resource name="Success_PointFactorCreated">The point automation has been added.</resource>
+  <resource name="Success_PointFactorDeleted">The '{0}' point automation has been deleted.</resource>
+  <resource name="Success_PointFactorEdited">The point automation has been saved successfully.</resource>
+  <resource name="Title_AddPointFactor">Add</resource>
+  <resource name="Title_AddRemovePoints">Add/Remove Points</resource>
+  <resource name="Title_DeletePointFactor">Delete '{0}'</resource>
+  <resource name="Title_EditPointFactor">Edit '{0}'</resource>
+  <resource name="UserLookUp_NoMatches">A matching member could not be found.</resource>
+  <resource name="Validation_PointsRequired">A positive or negative numeric points value is required.</resource>
+  <resource name="Value_Automation_NotSelected">(Not Automated)</resource>
+  <resource name="Yes">Yes</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+        <scope id="users.users.readonly" />
+        <scope id="points.transactions.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,23 @@
+﻿#set ($themes = $context.ListThemes())
+
+<% if(State != 'NotPersisted') { %>
+	<h3>$core_v2_language.GetResource('WidgetVersions')</h3>
+	<ul class="navigation-list managed-items">
+		<% if(ThemeIds['00000000-0000-0000-0000-000000000000']) { %>
+			<li class="navigation-list-item">
+				<a class="managed-item-link <% if(!ThemeId) { %> current <% } %>" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_fid=<%: InstanceIdentifier %>&_ftid=&_ft=overview">
+					$core_v2_language.GetResource('DefaultForAllThemes')
+				</a>
+			</li>
+		<% } %>
+		#foreach ($theme in $themes)
+			<% if(ThemeIds['$core_v2_encoding.JavascriptEncode($theme.Id.ToString())']) { %>
+				<li class="navigation-list-item">
+					<a class="managed-item-link <% if(ThemeId == '$core_v2_encoding.JavascriptEncode($theme.Id.ToString())') { %> current <% } %>" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_fid=<%: InstanceIdentifier %>&_ftid=${theme.Id.ToString()}&_ft=overview">
+						$core_v2_encoding.HtmlEncode($theme.Title)
+					</a>
+				</li>
+			<% } %>
+		#end
+	</ul>
+<% } %>

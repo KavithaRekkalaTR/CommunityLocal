@@ -1,0 +1,29 @@
+#set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+<li class="content-item sample-metric" style="position:relative;">
+    <div class="sample-value">
+        <div class="value">
+            $api.round($sampleMetric.Value)
+        </div>
+        <div class="calculated">$core_v2_language.FormatString($core_v2_language.GetResource('samplemetrics-caculated'), $core_v2_language.FormatDateAndTime($sampleMetric.CalculatedDate))</div>
+    </div>
+	<div class="content-container">
+	    #set($content = false)
+        #set($content = $core_v2_content.Get($sampleMetric.ContentId, $sampleMetric.ContentTypeId))
+    	<h4 class="name">
+    	    #if ($content && !$content.HasErrors())
+    	        #set($contentName = false)
+    	        #set($contentName = $content.HtmlName('Web'))
+    	        #if (!$contentName || $contentName.Trim().Length == 0)
+    	            #set($contentName = $sampleMetric.ContentId.ToString())
+    	        #end
+    	        #if ($content.Url)
+                    <a href="$core_v2_encoding.HtmlAttributeEncode($content.url)" target="_blank">$contentName</a>
+                #else
+                    $contentName
+                #end
+            #else
+                $sampleMetric.ContentId
+            #end
+    	</h4>
+    </div>
+</li>

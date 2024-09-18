@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_FriendshipList_Name}" version="12.0.0.0" description="${resource:Core_FriendshipList_Description}" instanceIdentifier="133a73e034ea4500939f774b78d3d683" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="friendship-list" lastModified="2022-03-09 16:44:39Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($queryType = $core_v2_widget.GetStringValue('queryType', 'currentUser'))
+#set ($enablePaging = $core_v2_widget.GetBoolValue('enablePaging', true))
+
+#set ($targetUser = false)
+#if ($queryType == "accessingUser")
+	#set ($targetUser = $core_v2_user.Accessing)
+#elseif ($queryType == "currentUser")
+	#set ($targetUser = $core_v2_user.Current)
+#end
+
+## if there is no accessing or current user, hide widget
+#if (!$targetUser)
+	$core_v2_widget.Hide();
+#end
+
+#set ($isUserAccessing = false)
+#if ($targetUser.Id == $core_v2_user.Accessing.Id)
+	#set ($isUserAccessing = true)
+#end
+
+#set ($viewType = "Friends")
+#set ($viewType = $core_v2_page.GetQueryStringValue('Show'))
+
+$core_v2_widget.ExecuteFile('inSidebar.vm')
+
+#if ($isUserAccessing && !$inSidebar && $enablePaging)
+	<div id="$core_v2_widget.UniqueId('edit-form')" style="display: none;">
+		<fieldset>
+			<div id="$core_v2_widget.UniqueId('edit-mode-message')"></div>
+			<ul class="field-list">
+				<li class="field-item submit-button">
+					<span class="field-item-input">
+						<a href="javascript:void(0);" class="internal-link disabled button unfriend-all" data-confirmation="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('unfriend_all_confirmation'))" data-success="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('unfriend_all_success'))">$core_v2_language.GetResource('unfriend_all')</a>
+						<a href="javascript:void(0);" class="internal-link disabled button follow-all" data-confirmation="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('follow_all_confirmation'))" data-success="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('follow_all_success'))">$core_v2_language.GetResource('follow_all')</a>
+						<a href="javascript:void(0);" class="internal-link disabled button unfollow-all" data-confirmation="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('unfollow_all_confirmation'))" data-success="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('unfollow_all_success'))">$core_v2_language.GetResource('unfollow_all')</a>
+						<a href="javascript:void(0);" class="internal-link button done">$core_v2_language.GetResource('done')</a>
+						<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</div>
+
+	<div class="navigation-list navigation">
+		<ul>
+			<li class="navigation-list-item"><a href="#" class="internal-link edit-mode-toggle" id="$core_v2_widget.UniqueId('edit-mode')">$core_v2_language.GetResource('edit')</a></li>
+		</ul>
+	</div>
+
+	<div class="view">
+		<div>
+			<form>
+			<select class="ui-select" data-update="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AdjustQueryString($core_v2_page.Url, "Show=OPTIONVALUE"))">
+				<option value="Friends"#if($viewType == 'Friends') selected #end">$core_v2_language.GetResource('Friends')</option>
+				<option value="Review"#if($viewType == 'Review') selected #end>$core_v2_language.GetResource('Friends_RequestsReview')</option>
+				<option value="Pending"#if($viewType == 'Pending') selected #end>$core_v2_language.GetResource('Friends_YourRequests')</option>
+				<option value="Following"#if($viewType == 'Following') selected #end>$core_v2_language.GetResource('Core_FriendshipList_Filter_Following')</option>
+				<option value="Followers"#if($viewType == 'Followers') selected #end>$core_v2_language.GetResource('Followers')</option>
+				<option value="Recommendations"#if($viewType == 'Recommendations') selected #end>$core_v2_language.GetResource('Recommendations')</option>
+			</select>
+			</form>
+		</div>
+	</div>
+#end
+
+$core_v2_widget.ExecuteFile('list.vm')
+
+#if ($inSidebar || !$enablePaging)
+	#if ($queryType == 'accesingUser')
+		#set($remaining = $total - $pageSize)
+		#set($url = false)
+		#set($url = $core_v2_urls.Friends($core_v2_user.Acessing.Id))
+		#if ($url)
+			#if ($remaining == 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#elseif ($remaining > 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#end
+		#end
+	#elseif($queryType == 'currentUser')
+		#set($remaining = $total - $pageSize)
+		#set($url = false)
+		#set($url = $core_v2_urls.Friends($core_v2_user.Current.Id))
+		#if ($url)
+			#if ($remaining == 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#elseif ($remaining > 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#end
+		#end
+	#end
+	#registerEndOfPageHtml ()
+		<script type="text/javascript">
+		jQuery(function() {
+			jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))').on('click', '.content-item', function(e){
+				window.location = jQuery(this).data('url');
+			});
+		});
+		</script>
+	#end
+#else
+	#registerEndOfPageHtml('telligent.evolution.widgets.friendshipList')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	#end
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+		jQuery(function()
+		{
+			jQuery.telligent.evolution.widgets.friendshipList.register({
+				wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+				loadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list.vm'))',
+				pageIndexKey: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)',
+				thumbnailsContainer: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))'),
+				hasMore: '$hasMore',
+				editMode: jQuery('#$core_v2_widget.UniqueId('edit-mode')'),
+				editForm: jQuery('#$core_v2_widget.UniqueId('edit-form')'),
+				editModeMessage: jQuery('#$core_v2_widget.UniqueId('edit-mode-message')'),
+				selectedUserMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('selected_user'))',
+				selectedUsersMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('selected_users'))',
+				editMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('edit'))',
+				cancelMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('cancel'))',
+				searchUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('search.vm'))',
+				searchFilterText: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('friends_filter'), $targetUser.DisplayName))',
+				searchFilterDefault: #if($core_v2_urls.Current == 'Friends') true #else false #end
+			});
+		});
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_FriendshipList_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_FriendshipList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="queryType" labelResourceName="Core_FriendshipList_QueryType" defaultValue="currentUser" dataType="String">
+		<propertyValue value="currentUser" labelResourceName="Core_FriendshipList_QueryType_CurrentUser" />
+		<propertyValue value="accessingUser" labelResourceName="Core_FriendshipList_QueryType_AccessingUser" />
+	</property>
+	<property id="pageSize" labelResourceName="Pagesize" defaultValue="21" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="enablePaging" labelResourceName="EnablePaging" defaultValue="True" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="And_Multiple_More">And {0} more...</resource>
+  <resource name="And_One_More">And 1 more...</resource>
+  <resource name="ApproveDeny">Accept/Reject</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Connect">Connect</resource>
+  <resource name="Core_FriendshipList_Description">Displays a list of pending and approved ${friendships_lowercase}.</resource>
+  <resource name="Core_FriendshipList_Filter_Following">Following</resource>
+  <resource name="Core_FriendshipList_Name">${friendship_propercase} List</resource>
+  <resource name="Core_FriendshipList_QueryType">Show ${friends_propercase} For:</resource>
+  <resource name="Core_FriendshipList_QueryType_AccessingUser">Accessing User</resource>
+  <resource name="Core_FriendshipList_QueryType_CurrentUser">Current Contextual User</resource>
+  <resource name="Core_FriendshipList_Title_Friends">${friends_propercase}</resource>
+  <resource name="done">Done</resource>
+  <resource name="edit">Edit</resource>
+  <resource name="EditProfile_Friends_None">No users have been added to {0}'s ${friends_lowercase} list.</resource>
+  <resource name="EnablePaging">Enable paging</resource>
+  <resource name="follow_all">Follow all</resource>
+  <resource name="follow_all_confirmation">Are you sure you want to follow all of the selected people?</resource>
+  <resource name="follow_all_success">You are now following the selected people.</resource>
+  <resource name="Followers">Followers</resource>
+  <resource name="Followers_None">You do not have any followers yet.</resource>
+  <resource name="Following_None">You are not following anyone yet.</resource>
+  <resource name="FriendRequest_Accepted_Confirmation">You are now ${friends_lowercase} with {0}.</resource>
+  <resource name="FriendRequest_Accepted_Notification">You have accepted a ${friendship_lowercase} request from {0}.</resource>
+  <resource name="FriendRequest_NoneToReview">You do not have any ${friendship_lowercase} requests to review.</resource>
+  <resource name="FriendRequest_Rejected_Notification">You have denied a ${friendship_lowercase} request from {0}.</resource>
+  <resource name="Friends">${friends_propercase}</resource>
+  <resource name="friends_filter">{0}'s Friends</resource>
+  <resource name="Friends_None">No users have been added to your ${friends_lowercase} list.</resource>
+  <resource name="Friends_RequestsReview">Requests to Review</resource>
+  <resource name="Friends_YourRequests">Your Requests</resource>
+  <resource name="ignore_user_recommendation">Ignore recommendation</resource>
+  <resource name="more">More</resource>
+  <resource name="no_search_matches_found">No matching friends were found.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Pagesize">Number of friends to display</resource>
+  <resource name="Recommendations">Find Friends</resource>
+  <resource name="Recommendations_None">You do not have any suggestions to review.</resource>
+  <resource name="selected_user">{0} person selected</resource>
+  <resource name="selected_users">{0} people selected</resource>
+  <resource name="unfollow_all">Unfollow all</resource>
+  <resource name="unfollow_all_confirmation">Are you sure you want to stop following all of the selected people?</resource>
+  <resource name="unfollow_all_success">You are no longer following any of the selected people.</resource>
+  <resource name="unfriend_all">Unfriend all</resource>
+  <resource name="unfriend_all_confirmation">Are you sure you want to remove all of the selected friendships?</resource>
+  <resource name="unfriend_all_success">The selected friendships have been removed.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="users.following.modify" />
+      <scope id="users.friends.modify" />
+      <scope id="users.recommendations.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

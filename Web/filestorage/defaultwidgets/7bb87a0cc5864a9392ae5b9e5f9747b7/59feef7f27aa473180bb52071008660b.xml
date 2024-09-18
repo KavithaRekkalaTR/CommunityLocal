@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_BrowseForums_Name}" version="12.0.0.0" description="${resource:Forums_BrowseForums_Description}" instanceIdentifier="59feef7f27aa473180bb52071008660b" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="browse-forums" lastModified="2022-10-14 18:46:40Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+
+$core_v2_widget.ExecuteFile('inSidebar.vm')
+$core_v2_ui.PagedContent('list.vm')
+
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#if($core_v2_widget.GetBoolValue('includeGroupName',false))
+	$core_v2_language.FormatString($core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_BrowseForums_Name}')), $core_v2_group.Current.Name)
+#else
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_BrowseForums_Name}'))
+#end
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_BrowseForums_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="showTitleColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowTitle_Forum" defaultValue="true" dataType="Bool" />
+	<property id="showGroupColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowGroup_Forum" defaultValue="false" dataType="Bool" />
+	<property id="showPostsColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowPosts" defaultValue="true" dataType="Bool" />
+	<property id="showLastPostColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowLatest" defaultValue="true" dataType="Bool" />
+	<property id="group" labelResourceName="UIFragment_Core_BrowseApplication_Group" defaultValue="Group=-1" dataType="Custom" template="core_v2_groupLookup" enableCurrent="true" />
+	<property id="groupAndSubGroups" labelResourceName="UIFragment_Core_BrowseApplication_GroupAndSubGroups" defaultValue="false" dataType="Bool" />
+	<property id="itemsBeforeScroll" labelResourceName="UIFragment_Core_BrowseApplication_ItemsToShow" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="defaultSortOrder" labelResourceName="UIFragment_Core_BrowseApplication_DefaultSortOrder" defaultValue="ApplicationName" dataType="String">
+		<propertyValue value="ApplicationName" labelResourceName="UIFragment_Core_BrowseApplication_ApplicationName" />
+		<propertyValue value="Threads" labelResourceName="UIFragment_Core_BrowseApplication_Threads" />
+		<propertyValue value="LastPost" labelResourceName="UIFragment_Core_BrowseApplication_LastPost" />
+		<propertyValue value="ApplicationIdsOrder" labelResourceName="UIFragment_Core_BrowseApplication_Custom" />
+	</property>
+	<property id="forumSelection" labelResourceName="UIFragment_Core_BrowseApplication_ForumInclusion" dataType="Custom" template="core_v2_forumOrder" key="forum" includeSubGroupsPropertyId="groupAndSubGroups" visibilityPropertyId="defaultSortOrder" visibilityPropertyValue="ApplicationIdsOrder" groupPropertyId="group" />
+	<property id="includeGroupName" labelResourceName="UIFragment_Core_BrowseApplication_IncludeGroupName" defaultValue="false" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="discussion_plural">discussions</resource>
+  <resource name="discussion_singular">discussion</resource>
+  <resource name="Forums_BrowseForums_Description">Displays a browse control to view all forums on the site.</resource>
+  <resource name="Forums_BrowseForums_Name">Forums - Browse Forums</resource>
+  <resource name="Forums_BrowseForums_Title_BrowseForums">Browse Forums</resource>
+  <resource name="LastUpdated">Latest: {0}</resource>
+  <resource name="Options">Options</resource>
+  <resource name="question_plural"> questions</resource>
+  <resource name="question_singular"> question</resource>
+  <resource name="questionordiscussion_plural"> questions and discussions</resource>
+  <resource name="questionordiscussion_singular"> question or discussion</resource>
+  <resource name="Sort_Ascending">Ascending</resource>
+  <resource name="Sort_Descending">Descending</resource>
+  <resource name="UI_SupportForums">Support Forums</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ApplicationName">Application Name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Custom">Custom order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_DefaultSortOrder">Sort Order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ForumColumn">By name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ForumInclusion">Include Forums</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Group">Filter to Group</resource>
+  <resource name="UIFragment_Core_BrowseApplication_GroupAndSubGroups">Show Forums from Group and all Subgroups</resource>
+  <resource name="UIFragment_Core_BrowseApplication_IncludeGroupName">Include current group's name in Title (Title must be a formatted string with a {0} placeholder)</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ItemsToShow">Number of results to display</resource>
+  <resource name="UIFragment_Core_BrowseApplication_LastPost">Last Post</resource>
+  <resource name="UIFragment_Core_BrowseApplication_LastPostColumn">By last updated date</resource>
+  <resource name="UIFragment_Core_BrowseApplication_NoResults">No results could be found.</resource>
+  <resource name="UIFragment_Core_BrowseApplication_PostsColumn">By thread count</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowGroup_Forum">Show Forum Group Name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowLatest">Show Latest Post Date</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowPosts">Show Thread Count</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowTitle_Forum">Show Forum Name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Threads">Threads</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

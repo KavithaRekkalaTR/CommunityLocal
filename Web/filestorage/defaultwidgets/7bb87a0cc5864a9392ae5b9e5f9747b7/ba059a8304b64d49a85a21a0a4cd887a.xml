@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_ForgottenPassword_Name}" version="11.0.0.0" description="${resource:Core_ForgottenPassword_Description}" instanceIdentifier="ba059a8304b64d49a85a21a0a4cd887a" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="forgotten-password" lastModified="2020-01-14 16:08:48Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+<div id="$core_v2_widget.UniqueId('Message')" style="display: none;"></div>
+
+<form><fieldset>
+	<h1>$core_v2_language.GetResource('ForgottenPassword_SendButton')</h1>
+    <ul class="field-list">
+    	<li class="field-item">
+    		<span class="field-item-description">
+    			$core_v2_language.GetResource('ForgottenPassword_Instructions')
+    		</span>
+    	</li>
+        <li class="field-item email-address">
+            <label class="field-item-name" for="$core_v2_widget.UniqueId('EmailAddress')">$core_v2_language.GetResource('ForgottenPassword_EmailAddress')</label>
+            <span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('EmailAddress')" size="30" maxlength="128" /></span>
+            <span class="field-item-validation" style="display: none;"></span>
+        </li>
+        <li class="field-item">
+            <span class="field-item-input">
+            	<a href="#" class="button" id="$core_v2_widget.UniqueId('Recover')">$core_v2_language.GetResource('ForgottenPassword_SendButton')</a>
+            </span>
+        </li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.forgottenPassword')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.forgottenPassword.register({
+			wrapperId: '$core_v2_widget.WrapperElementId',
+			message: jQuery('#$core_v2_widget.UniqueId('Message')'),
+			emailAddressSelector: '#$core_v2_widget.UniqueId('EmailAddress')',
+			recoveryMethod: '$core_v2_configuration.PasswordRecoveryMethod',
+			recover: jQuery('#$core_v2_widget.UniqueId('Recover')'),
+			recoverUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('recover.vm'))',
+			errorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForgottenPassword_Error'))',
+			resetTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForgottenPassword_PasswordResetTitle'))',
+			resetMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForgottenPassword_PasswordResetMessage'))',
+			linkTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForgottenPassword_PasswordLinkSentTitle'))',
+			linkMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForgottenPassword_PasswordLinkSentMessage'))'
+		});
+	});
+	</script>
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_ForgottenPassword_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_ForgottenPassword_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_ForgottenPassword_Description">Displays the forgot password form for a user.</resource>
+  <resource name="Core_ForgottenPassword_Name">Forgot Password</resource>
+  <resource name="ForgottenPassword_EmailAddress">Email Address: </resource>
+  <resource name="ForgottenPassword_Error">An error occurred while attempting to recover your password.  Please try again.</resource>
+  <resource name="ForgottenPassword_Instructions">Please enter the email address you used when you created your account, and we will send you an email with further instructions.</resource>
+  <resource name="ForgottenPassword_PasswordLinkSentMessage">You have requested a reset password link be sent to the email address {0}.  If this email is associated to a valid account, it should arrive shortly.</resource>
+  <resource name="ForgottenPassword_PasswordLinkSentTitle">User Password Link Sent</resource>
+  <resource name="ForgottenPassword_PasswordResetMessage">You have requested that a new password be generated and sent to the email address {0}.  If this email is associated to a valid account, it should arrive shortly.</resource>
+  <resource name="ForgottenPassword_PasswordResetTitle">User Password Reset</resource>
+  <resource name="ForgottenPassword_SendButton">Recover Password</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

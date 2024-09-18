@@ -1,0 +1,64 @@
+#set($options = "%{}")
+
+#set ($id = $core_v2_page.GetQueryStringValue('fr_id'))
+#if($id)
+    $options.Add('selectedApplications', $id)
+#end
+
+#set ($blog = $context.GetBlogSummaryDetailReport($options))
+#if($blog && !$blog.HasErrors())
+    #set ($apiBlog = $core_v2_blog.Get($blog.ApplicationId))
+
+    <div class="data">
+        <ul class="report-details">
+            <li class="report-name">
+                #if ($apiBlog.Url) <a href="$apiBlog.Url">$blog.Name</a> #else $blog.Name #end
+            </li>
+            <li class="report-info">
+                    $core_v2_language.GetResource('in')
+                    #if ($apiBlog.Container.Url) <a href="$apiBlog.Container.Url">$blog.Container.Name</a> #else $blog.Container.Name #end
+            </li>
+        </ul>
+
+        <table class="blog-data large-data">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>$core_v2_language.GetResource('Last1Day')</th>
+                    <th>$core_v2_language.GetResource('Last3Day')</th>
+                    <th>$core_v2_language.GetResource('Last7Day')</th>
+                    <th>$core_v2_language.GetResource('Last30Day')</th>
+                    <th>$core_v2_language.GetResource('Last90Day')</th>
+                    <th>$core_v2_language.GetResource('Last180Day')</th>
+                </tr>
+            </thead>
+            </tbody>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewPosts'), $core_v2_language.GetResource('NewPosts_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $blog.NewPostCountLast1Day, $blog.NewPostCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $blog.NewPostCountLast3Days, $blog.NewPostCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $blog.NewPostCountLast7Days, $blog.NewPostCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $blog.NewPostCountLast30Days, $blog.NewPostCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $blog.NewPostCountLast90Days, $blog.NewPostCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $blog.NewPostCountLast180Days, $blog.NewPostCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewComments'), $core_v2_language.GetResource('NewComments_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $blog.NewCommentCountLast1Day, $blog.NewCommentCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $blog.NewCommentCountLast3Days, $blog.NewCommentCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $blog.NewCommentCountLast7Days, $blog.NewCommentCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $blog.NewCommentCountLast30Days, $blog.NewCommentCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $blog.NewCommentCountLast90Days, $blog.NewCommentCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $blog.NewCommentCountLast180Days, $blog.NewCommentCount180DayTrend)
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

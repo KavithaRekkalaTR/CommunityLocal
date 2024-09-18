@@ -1,0 +1,35 @@
+##
+## Flattened rendering of thread or individual permalink for crawlable, server-side-rendered, paging of all content
+##
+## Supported query string parameters: CommentId, CommentSortBy, and CommentSortOrder
+## Expects in scope: $content
+##
+
+#set ($commentId = false)
+#set ($commentIdQuery = false)
+#set ($commentIdQuery = $core_v2_page.GetQueryStringValue('CommentId'))
+#if ($commentIdQuery)
+	#set ($commentId = $core_v2_utility.ParseGuid($commentIdQuery))
+#end
+
+#set ($commentSortByQuery = false)
+#set ($commentSortByQuery = $core_v2_page.GetQueryStringValue('CommentSortBy'))
+#if ($commentSortByQuery)
+	#set ($sortBy = $commentSortByQuery)
+#end
+
+#set ($commentSortOrderQuery = false)
+#set ($commentSortOrderQuery = $core_v2_page.GetQueryStringValue('CommentSortOrder'))
+#if ($commentSortOrderQuery)
+	#set ($sortOrder = $commentSortOrderQuery)
+#end
+
+## Render either a permalink's set of relevant comments
+#if (!$core_v2_page.SupportsJavaScript)
+	#if ($commentId)
+		$core_v2_widget.ExecuteFile('pre-rendered-permalink.vm')
+	## Or a full page
+	#else
+		$core_v2_widget.ExecuteFile('pre-rendered-thread.vm')
+	#end
+#end

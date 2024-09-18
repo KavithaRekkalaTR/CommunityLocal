@@ -1,0 +1,19 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($revert = "%{}")
+	#foreach ($id in $core_v2_page.GetFormValues('scopedproperties[]'))
+		$revert.Add($id, 'true')
+	#end
+
+	#if ($revert.Count > 0)
+		#set($reponse = $context.PublishScopedPropertyReversion($revert))
+		#if ($response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+	#end
+	
+	{
+	    "success": true
+	}
+#end

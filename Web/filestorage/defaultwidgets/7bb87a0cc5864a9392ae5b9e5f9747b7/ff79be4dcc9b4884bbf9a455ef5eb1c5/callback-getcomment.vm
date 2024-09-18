@@ -1,0 +1,37 @@
+#set ($typeId = false)
+#set ($typeId = $core_v2_page.GetQueryStringValue('w_typeId'))
+#if ($typeId == '')
+    #set($typeId = false)
+#end
+
+#set($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentTypeId')))
+#if (!$typeId && $contentTypeId == $core_v2_forumThread.ContentTypeId)
+    #set ($replyId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_commentId')))
+    #set ($reply = $core_v2_forumReply.Get($replyId))
+    #if ($reply && !$reply.HasErrors())
+        #set ($accessingUser = $core_v2_user.Accessing)
+        #set ($accessingUserIsRegistered = false)
+        #if ($core_v2_user.IsRegistered($accessingUser.Id))
+        	#set ($accessingUserIsRegistered = true)
+        #end
+    
+        #set ($hasReplyPermission = false)
+        #set ($thread = false)
+        #set ($thread = $core_v2_forumThread.Get($reply.ThreadId))
+        #if ($thread && !$thread.HasErrors())
+        	#set ($hasReplyPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+        #end
+
+        $core_v2_widget.ExecuteFile('reply.vm')
+    #end
+#else
+    #set ($commentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_commentId')))
+    #set ($comment = $core_v2_comments.Get($commentId))
+    
+    #set ($accessingUserCanComment = false)
+    #set ($accessingUserCanComment = $core_v2_comments.CanCreateComment($comment.ContentId, $comment.ContentTypeId))
+    
+    #if ($comment && !$comment.HasErrors())
+        $core_v2_widget.ExecuteFile('comment.vm')
+    #end
+#end

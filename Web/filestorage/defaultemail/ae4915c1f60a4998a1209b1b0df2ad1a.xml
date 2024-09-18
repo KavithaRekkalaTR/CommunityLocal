@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Calendar Comment Notifications" version="13.0.0.0" description="Raises notifications to subscribed users on a piece of content when a comment is added to a Calendar." id="ae4915c1f60a4998a1209b1b0df2ad1a" lastModified="2023-08-30 16:29:33Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('content_name')
+    $context_v1_email.Context.Content.HtmlName('Web')
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Body'))
+#token('content_name_link')
+    #if ($context_v1_email.Context.Content.Url)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Content.Url)">$context_v1_email.Context.Content.HtmlName('Web')</a>
+    #else
+        $context_v1_email.Context.Content.HtmlName('Web')
+    #end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[
+<table border="0">
+<tbody>
+<tr>
+<td>
+#set($authorUrl = false)
+#set($authorUrl = $context_v1_email.Context.Comment.User.Url)
+#if ($authorUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($authorUrl)">
+	<div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Comment.User.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+	</div>
+	</a>
+#else
+    <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 16px; -moz-border-radius: 16px;">
+	$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Comment.User.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+	</div>
+#end
+</td>
+<td style="padding-left: 10px;">
+#if ($authorUrl)
+	<a href="$core_v2_encoding.HtmlAttributeEncode($authorUrl)">$context_v1_email.Context.Comment.User.DisplayName</a>
+#else
+    $context_v1_email.Context.Comment.User.DisplayName
+#end
+</td>
+</tr>
+</tbody>
+</table>
+$context_v1_email.Context.Comment.Body('Email')]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[#set($abuseUrl = false)
+#set($abuseUrl = $core_v2_urls.ReportAbuse($context_v1_email.Context.Comment.Url, $context_v1_email.Context.Comment.ContentId, $core_v2_comments.ContentTypeId))
+#if ($abuseUrl)
+    <p>
+    #format($core_v2_language.GetResource('Footer'))
+    #token('reportabuse_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($abuseUrl)">$core_v2_language.GetResource('ReportAbuse')</a>
+    #end
+    </p>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">New comment on {content_name_link}</resource>
+  <resource name="Footer">{reportabuse_link}.</resource>
+  <resource name="ReportAbuse">Flag as spam/abuse</resource>
+  <resource name="Subject">{site_name}: Comment on {content_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Abusive Author Appeal Accepted" version="13.0.0.0" description="Notifies a user that their abuse appeal has been accepted." id="a6cf18bced294afcaa668ad130d02db4" lastModified="2023-05-11 20:32:09Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	#format($core_v2_language.GetResource('Subject_User'))
+	#token('site_name')
+		$core_v2_infoResult.Get().SiteName
+	#end
+#else
+	#format($core_v2_language.GetResource('Subject'))
+	#token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#token('site_name')
+		$core_v2_infoResult.Get().SiteName
+	#end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	$core_v2_language.GetResource('Header_User')
+#else
+	#format($core_v2_language.GetResource('Header'))
+	#token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#token('site_name')
+		$core_v2_infoResult.Get().SiteName
+	#end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	<p>
+	$core_v2_language.GetResource('Body_User')
+	</p>
+#else
+	<p>
+	#format($core_v2_language.GetResource('Body'))
+	#token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#token('view_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Content.Url)">$core_v2_language.GetResource('View')</a>
+	#end
+	</p>
+#end
+#if ($context_v1_email.Context.AbuseAppeal.BoardResponse && $context_v1_email.Context.AbuseAppeal.BoardResponse.Length > 0)
+    <p><em>$context_v1_email.Context.AbuseAppeal.BoardResponse</em></p>
+#end
+
+	]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">We've reviewed your appeal and have restored the {contenttype_name} to the site. We appreciate your help in keeping the community experience safe and enjoyable for everyone, creating posts that are appropriate and consistent with our culture. The content is available {view_link}.</resource>
+  <resource name="Body_User">We've reviewed your appeal and have resolved the issue with your user account. We appreciate your help in keeping the community experience safe and enjoyable for everyone.</resource>
+  <resource name="Subject">{site_name}: Your appeal to display your {contenttype_name}</resource>
+  <resource name="Subject_User">{site_name}: Your appeal to resolve issues with your user account </resource>
+  <resource name="Header">Your appeal to display your {contenttype_name}</resource>
+  <resource name="Header_User">Your appeal to resolve issues with your user account</resource>
+  <resource name="View">here</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

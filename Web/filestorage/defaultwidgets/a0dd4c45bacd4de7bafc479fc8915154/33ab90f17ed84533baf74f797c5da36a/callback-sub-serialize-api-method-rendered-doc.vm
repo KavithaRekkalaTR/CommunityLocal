@@ -1,0 +1,148 @@
+##
+## Renders markup description of a method for use in autocomplete
+##
+## Requires in scope:
+##   $apiExtension
+##   $apiMethod
+##
+#set ($overloadWithMostParameters = false)
+#if ($apiMethod.Overloads)
+	#foreach ($apiOverload in $apiMethod.Overloads)
+		#if (!$overloadWithMostParameters)
+			#set ($overloadWithMostParameters = $apiOverload)
+		#end
+		#if($apiOverload.TotalParameterCount >= $overloadWithMostParameters.TotalParameterCount)
+			#set ($overloadWithMostParameters = $apiOverload)
+		#end
+	#end
+#end
+
+<div class="suggestion_details">
+	#if ($overloadWithMostParameters.Description)
+		<div class="description">$overloadWithMostParameters.Description</div>
+	#end
+
+	#set ($maxParametersToRender = 7)
+	#set ($parameterIndex = 0)
+	#foreach ($parameter in $overloadWithMostParameters.Parameters)
+	#beforeall
+		<span class="label">Parameters</span>
+		<ul class="parameters">
+	#each
+			#if ($parameterIndex < $maxParametersToRender)
+				#if ($parameter.IsParameterSet)
+					<li>
+						<span class="name">${parameter.Name}</span>
+						<span class="opt">
+							#if ($parameter.IsRequired)
+								$core_v2_language.GetResource('RequiredLower')
+							#else
+								$core_v2_language.GetResource('OptionalLower')
+							#end
+						</span>
+						<span class="type">$core_v2_language.GetResource('Options')</span>
+					</li>
+					#foreach ($optionalParameter in $parameter.ParameterSetParameters)
+						#if ($parameterIndex < $maxParametersToRender)
+							<li>
+								<span class="name sub">${optionalParameter.Name}</span>
+								<span class="opt">
+									#if ($optionalParameter.IsRequired)
+										$core_v2_language.GetResource('RequiredLower')
+									#else
+										$core_v2_language.GetResource('OptionalLower')
+									#end
+								</span>
+								<span class="type">
+									#set ($existingType = $type)
+									#foreach ($typeOverload in $optionalParameter.Types)
+										#set ($type = false)
+										#set ($type = $typeOverload.Type)
+										#set ($forCompletionSuggestion = true)
+										$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+									#between
+										,
+									#end
+									#set ($type = $existingType)
+									#set ($forCompletionSuggestion = false)
+								</span>
+							</li>
+							#set ($parameterIndex = $parameterIndex + 1)
+						#end
+					#end
+				#else
+					<li>
+						<span class="name">${parameter.Name}</span>
+						<span class="opt">
+							#if ($parameter.IsRequired)
+								$core_v2_language.GetResource('RequiredLower')
+							#else
+								$core_v2_language.GetResource('OptionalLower')
+							#end
+						</span>
+						<span class="type">
+							#set ($existingType = $type)
+							#foreach ($typeOverload in $parameter.Types)
+								#set ($type = false)
+								#set ($type = $typeOverload.Type)
+								#set ($forCompletionSuggestion = true)
+								$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+							#between
+								,
+							#end
+							#set ($type = $existingType)
+							#set ($forCompletionSuggestion = false)
+						</span>
+					</li>
+				#end
+			#end
+			#set ($parameterIndex = $parameterIndex + 1)
+	#afterall
+		</ul>
+	#end
+
+	#if ($overloadWithMostParameters.TotalParameterCount > $maxParametersToRender)
+		#set ($remainder = $overloadWithMostParameters.TotalParameterCount - $maxParametersToRender)
+		#format($core_v2_language.GetResource('MoreParameters'))
+			#token('remainder')
+				$remainder
+		#end
+	#end
+
+	#if ($apiMethod.Overloads.Count > 1)
+		#set ($otherCount = $apiMethod.Overloads.Count)
+		#set ($otherCount = $otherCount - 1)
+		<div class="label">
+			#format($core_v2_language.GetResource('OtherOverloads'))
+				#token('other')
+					$otherCount
+			#end
+		</div>
+	#end
+
+	<div class="label">
+		<span>Returns</span>
+		#if (!$apiMethod.ReturnType)
+			$core_v2_language.GetResource('Nothing')
+		#else
+			#set ($existingType = $type)
+			#foreach ($typeOverload in $apiMethod.ReturnTypes)
+				#set ($type = false)
+				#set ($type = $typeOverload.Type)
+				#set ($forCompletionSuggestion = true)
+				$core_v2_widget.ExecuteFile('callback-sub-render-api-type-link.vm')
+			#between
+				,
+			#end
+			#set ($type = $existingType)
+			#set ($forCompletionSuggestion = false)
+		#end
+	</div>
+
+	<span class="mfw suggestion view_docs" onclick="jQuery.telligent.evolution.messaging.publish('studio.view.documentation.show', { target: this, elm: this });"
+		data-type="extension"
+		data-name="$core_v2_encoding.HtmlAttributeEncode($apiExtension.Name)"
+		data-displayname="$core_v2_encoding.HtmlAttributeEncode($apiExtension.Name)"
+		data-target="$core_v2_encoding.HtmlAttributeEncode($apiMethod.Name)">View Documentation</span>
+	<span class="view_doc_shortcut">$core_v2_language.GetResource('ViewDocShortcut')</span>
+</div>

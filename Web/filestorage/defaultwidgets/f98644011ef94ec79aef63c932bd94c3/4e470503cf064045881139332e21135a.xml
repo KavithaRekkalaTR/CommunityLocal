@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GroupsSummaryDashboard_Name}"
+                           version="10.0.0.0"
+                           description="${resource:GroupsSummaryDashboard_Description}"
+                           instanceIdentifier="4e470503cf064045881139332e21135a"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+#set ($query = $core_v2_page.ParseQueryString($context.TabKey))
+#set ($dashboard = $reporting.GetReport($context.Id))
+#set ($parent = $reporting.GetReport($context.ParentId))
+
+#set($reportContainerId = $core_v2_widget.UniqueId($query.Value("tab")))
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id))
+	<div id="$reportContainerId" class="applications-summary-report  groups-summary-report">
+
+    <div class="view-header dashboard">
+        #if($parent)
+            <a href="#" data-messagename="reporting.drill.up" class="hierarchy name">$parent.Name</a> <span class="divider">/</span>
+        #end
+        <span class="view-title">
+            <span class="hierarchy name">$dashboard.Name</span>
+        </span>
+				<span class="actions-container">
+					<ul class="ui-links export-actions" data-maxlinks="0">
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="reporting.export.list.csv">$core_v2_language.GetResource('ExportListasCSV')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a class="export-actions-more" href="#" data-more>$core_v2_language.GetResource('Export')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+						</li>
+					</ul>
+				</span>
+        <div class="description">$dashboard.Description</div>
+    </div>
+    <div class="view-body dashboard">
+        <div class="table-filter" style="display:none;"></div>
+        <div class="paged-content"></div>
+        <div class="pager-control"></div>
+    </div>
+  </div>
+
+  #registerEndOfPageHtml('telligent.reporting.widgets.groupsSummaryDashboard')
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+  #end
+
+  #registerEndOfPageHtml()
+  <script type="text/javascript">
+    jQuery.telligent.reporting.widgets.groupsSummaryDashboard.register({
+        tabKey: '$context.TabKey',
+        isSiteReporter: '$reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id)',
+        fields: {
+            reportContainerId: '#$reportContainerId',
+        },
+        resources: {
+            title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupsSummaryDashboard_Name'))',
+        },
+        urls: {
+            pagedData: '$core_v2_widget.GetExecutedFileUrl('full-paged-content.vm')',
+            export: '$core_v2_widget.GetExecutedFileUrl('full-export.vm')'
+        }
+    });
+  </script>
+  #end
+#else
+    <div id="$containerId" #if ($context.Target.Contains('tile'))class="tile new-content" #end>
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+#end
+
+]]></contentScript>
+		<languageResources>
+      <language key="en-us">
+        <resource name="GroupsSummaryDashboard_Name">${groups_propercase} Summary</resource>
+        <resource name="GroupsSummaryDashboard_Description">Summary of each ${group_lowercase}'s membership, activity and new content over past 30 days.</resource>
+        <resource name="Dashboard_Description">Summary of each ${group_lowercase}'s membership, activity and new content over past 30 days.</resource>
+        <resource name="PermissionDenied">You do not have permission to view this dashboard.</resource>
+        <resource name="NoData">No groups match the current filters.</resource>
+        <resource name="Name">Name</resource>
+        <resource name="ParentGroup">Parent Group</resource>
+        <resource name="LatestContentActivityDate">Last Activity</resource>
+        <resource name="TotalMembers">Total Members</resource>
+        <resource name="NewMembers">New Members</resource>
+        <resource name="ActiveMembers">Active Members</resource>
+        <resource name="NewContentCount">New Content</resource>
+        <resource name="ViewCount">Views</resource>
+        <resource name="ActivityCount">Activities</resource>
+        <resource name="DateCreated">Date Created</resource>
+        <resource name="CreatedBy">Created By</resource>
+
+        <resource name="1Day">Yesterday</resource>
+        <resource name="7Day">Last 7</resource>
+        <resource name="30Day">Last 30</resource>
+        <resource name="Cancel">Cancel</resource>
+        <resource name="Export">Export</resource>
+        <resource name="ExportListasCSV">Export List as CSV</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

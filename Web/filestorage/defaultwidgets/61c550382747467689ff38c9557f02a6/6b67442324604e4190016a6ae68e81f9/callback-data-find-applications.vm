@@ -1,0 +1,32 @@
+$core_v2_page.SetContentType('application/json')
+
+#set ($options = "%{}")
+
+#set ($queryQuery = $core_v2_page.GetQueryStringValue("_w_query"))
+#if ($queryQuery)
+	$options.Add('Query', $queryQuery)
+#end
+
+#set ($typeIdQuery = $core_v2_page.GetQueryStringValue("_w_typeId"))
+#if ($typeIdQuery)
+	$options.Add('TypeId', $typeIdQuery)
+#end
+
+#set ($applications = $context.FindApplications($options))
+#if ($applications && $applications.HasErrors())
+	$core_v2_page.SendJsonError($applications.Errors)
+#end
+
+{
+	"matches": [
+		#foreach($application in $applications)
+			#each
+				{
+					"label": "$core_v2_encoding.JavascriptEncode($application.HtmlName('Web'))#if ($application.Container && $application.Container.ContainerId != $application.ApplicationId) (in $application.Container.HtmlName('Web'))#end",
+					"id": "$application.ApplicationId.ToString()"
+				}
+			#between
+			,
+		#end
+	]
+}

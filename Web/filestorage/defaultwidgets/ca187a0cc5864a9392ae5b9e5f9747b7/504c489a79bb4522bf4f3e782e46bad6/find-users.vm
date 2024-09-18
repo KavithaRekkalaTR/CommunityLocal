@@ -1,0 +1,39 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_SearchText'))
+#set($calendarEventId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("CalendarEventId")))
+#set($event = $calendar_v1_events.Show($calendarEventId))
+
+#set($allowAnonymousRegistrations = $event.AllowAnonymousRegistrations && $calendar_v1_calendars.HasAnonymousPermission($event.CalendarId, $calendar_v1_permissions.ViewCalendar))
+
+#set($email = false)
+#if ($core_v2_utility.IsMatch($searchText, '^.+@.+\..+$') && ($allowAnonymousRegistrations || $core_v2_user.Get("%{Email = $searchText}")))
+	#set($email = $searchText)
+#end
+
+#set($isRegistered = "%{}")
+#set($registrations = $calendar_v1_registrations.List($calendarEventId, "%{}"))
+#foreach($registration in $registrations)
+    #if($registration.UserId > 0)
+        $isRegistered.Add($registration.UserId, true)
+    #end
+#end
+
+#set($users = $core_v2_user.Lookup($searchText, "%{PageSize=20}"))
+
+$core_v2_page.SetContentType('application/json')
+
+{"matches":[
+    #if ($email)
+		{"userId":"$email","title":"$core_v2_encoding.JavascriptEncode($email)","preview":"$core_v2_encoding.JavascriptEncode($email)"},
+	#end
+
+	#if($users)
+		#foreach($user in $users)
+            {
+                "userId":"$user.Id",
+                "title":"$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+                "preview":"$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 16, 16, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop', alt='$user.DisplayName'}")) $core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end",
+                "alreadySelected":#if ($isRegistered.Contains($user.Id)) true #else false #end
+            },
+		#end
+	#end
+null]}

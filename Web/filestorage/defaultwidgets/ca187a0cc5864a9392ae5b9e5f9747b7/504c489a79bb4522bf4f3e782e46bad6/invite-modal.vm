@@ -1,0 +1,77 @@
+#set($event = $calendar_v1_events.Current)
+#set($showMessage = 'false')
+#if ($core_v2_page.GetCookieValue('Calendar-InviteSuccess') == 'true')
+	$core_v2_page.SetCookieValue('Calendar-InviteSuccess', '')
+#end
+
+<!DOCTYPE html>
+<html lang="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Code)" #if($core_v2_language.IsRightToLeft) class="direction-rtl" style="direction: rtl;" #else class="direction-ltr" style="direction: ltr;" #end>
+	<head>
+		<title>$core_v2_language.GetResource("Invite")</title>
+		
+		#set($isModal = true)
+		$core_v2_page.RenderThemeHeaders("%{ IsModal = $isModal}")
+	</head>
+	<body>
+
+		<div id="$core_v2_widget.UniqueId('Message')" class="message success" style="display: none;">$core_v2_language.GetResource('Hubs_InvitationSentMessage')</div>
+
+		<div id="$core_v2_widget.UniqueId('InviteMemberByNameTab')">
+			<div class="field-list-header"></div>
+			<form><fieldset class="field-list">
+				<ul class="field-list">
+					<li class="field-item required user-name">
+						<label class="field-item-header" for="$core_v2_widget.UniqueId('InviteMemberByNameUserName')">$core_v2_language.GetResource('Groups_GroupMembershipList_UserNames')</label>
+						<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('InviteMemberByNameUserName')" name="$core_v2_widget.UniqueId('InviteMemberByNameUserName')" /></span>
+						<span class="field-item-validation" style="display: none;"></span>
+					</li>
+					<li class="field-item membership-type">
+						<label for="$core_v2_widget.UniqueId('Status')" class="field-item-header">$core_v2_language.GetResource('Status')</label>
+						<span class="field-item-input"><select id="$core_v2_widget.UniqueId('Status')" name="$core_v2_widget.UniqueId('Status')" class="ui-select">
+							<option value="1">$core_v2_language.GetResource('Confirmed')</option>
+							<option value="3" selected="selected">$core_v2_language.GetResource('Invite')</option>
+						</select></span>
+					</li>
+					<li class="field-item invite-member">
+						<span class="field-item-input"><a href="#" id="$core_v2_widget.UniqueId('InviteMemberByNameInvite')" class="internal-link invite-member button disabled"><span></span>$core_v2_language.GetResource('Groups_GroupMembershipList_SendInvitation')</a></span>
+					</li>
+				</ul>
+			</fieldset></form>
+			<div class="field-list-footer"></div>
+		</div>
+			
+
+		#registerEndOfPageHtml('telligent.evolution.widgets.eventRegistrationInvitation')
+			<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("invite-ui.js"))"></script>
+		#end
+
+
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+				jQuery(function(j){
+					j.telligent.evolution.widgets.eventRegistrationInvitation.register({
+						ajaxErrorText                               : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Groups_ManageMembers_AjaxError'))',
+						allowAnonymous                              : #if ($event.AllowAnonymousRegistrations) true #else false #end,
+						baseUrl                                     : '$core_v2_encoding.JavascriptEncode($core_v2_page.Url)',
+						byEmail_Status                              : j('#$core_v2_widget.UniqueId('ByEmail_Status')'),
+						cleanUrl                                    : '$core_v2_encoding.JavascriptEncode($core_v2_page.AdjustQueryString($core_v2_page.Url, 'UserId=&RoleId='))',
+						eventId                                     : $event.Id,
+						findUsersUrl                                : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))',
+						inviteMemberByNameInvite                    : j('#$core_v2_widget.UniqueId('InviteMemberByNameInvite')'),
+						inviteMemberByNameTabId                     : '$core_v2_widget.UniqueId('InviteMemberByNameTab')',
+						inviteMemberByNameTabText                   : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Groups_GroupMembershipList_InviteByName'))',
+						inviteMemberByNameUserName                  : j('#$core_v2_widget.UniqueId('InviteMemberByNameUserName')'),
+						inviteMemberByNameUserNameMissingText       : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Groups_ManageMembers_MissingInviteUserNames'))',
+						inviteUserUrl                               : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('invite-user.vm'))',
+						message                                     : j('#$core_v2_widget.UniqueId('Message')'),
+						noUserOrRoleMatchesText                     : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserLookUpTextBox_NoMatches_AllUsers'))',
+						showMessage                                 : $showMessage,
+						status                                      : j('#$core_v2_widget.UniqueId('Status')'),
+						wrapperId                                   : '$core_v2_widget.WrapperElementId',
+						alreadySelected                             : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadySelected'))'
+					});
+				});
+			</script>
+		#end
+	</body>
+</html>

@@ -1,0 +1,17 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($serverName = false)
+	#set ($serverName = $core_v2_page.GetFormValue('serverName'))
+
+	#if ($serverName)
+		#set($response = $context.UnregisterServer($serverName))
+		#if ($response.Errors.Count > 0)
+			$core_v2_page.SendJsonError($response.Errors)
+		#else
+		    {
+		        "success": true
+		    }
+		#end
+	#end
+#end

@@ -1,0 +1,24 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($id = $core_v2_page.GetFormValue('Id'))
+	#set($word = $core_v2_page.GetFormValue('Word'))
+	#set($isRegex = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('IsRegex')))
+	#set($replacement = $core_v2_page.GetFormValue('Replacement'))
+	
+	#set($result = false)
+	
+	#if($id == "")
+	    #set($result = $context.Create($word, $replacement, $isRegex))
+	    #set($id = $result.Id)
+	#else
+	    #set($id = $core_v2_utility.ParseInt($id))
+	    #set($result = $context.Update($id, $word, $replacement, $isRegex))
+	#end    
+    
+	#if ($result.Errors.Count > 0)
+		$core_v2_page.SendJsonError($result.Errors)
+	#else
+		{"success":true, "id":$id}
+	#end
+#end

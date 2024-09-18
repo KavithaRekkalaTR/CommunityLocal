@@ -1,0 +1,165 @@
+##
+## Queries and renders a page of comments for an activity story
+## Requires in scope:
+##   $storyId or $story instance
+##   $commentPageIndex (Reversed 0-based. 0 represents last page)
+##
+
+#if (!$story)
+	#set ($story = $core_v2_activityStory.Get($storyId))
+	#set ($forumThread = false)
+    #if (!$story.TypeId && $story.ContentTypeId == $core_v2_forumThread.ContentTypeId)
+        #set($commentsSupported = true)
+        #set ($forumThread = $core_v2_forumThread.Get($story.ContentId))
+    #end
+#end
+
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($accessingUserIsRegistered = false)
+#if ($core_v2_user.IsRegistered($accessingUser.Id))
+	#set ($accessingUserIsRegistered = true)
+#end
+
+#set($comments = false)
+#set($replies = false)
+
+#if ($forumThread)
+    #set ($hasReplyPermission = false)
+	#set ($hasReplyPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $core_v2_user.Accessing.Id, "%{ ContentId = $forumThread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+
+    #set ($reversedComments = false)
+    #set ($replyOptions = "%{ RootPageSize = $commentPageSize, FlattenedDepth = 0, FlattenedSortBy = 'CreatedDate' }")
+    #if ($commentStartDate)
+        $replyOptions.Add('CreatedEndDate', $commentStartDate)
+        $replyOptions.Add('FlattenedSortOrder', 'Descending')
+    #else
+        $replyOptions.Add('FlattenedSortOrder', 'Descending')
+    #end
+    
+    #set ($reversedReplies = $core_v2_forumReply.ListThreaded($forumThread.Id, $replyOptions))
+    #if ($reversedReplies)
+    	## reverse the last page into proper order, but PagedList doesn't support this natively, so first copy into an array
+    	#set ($replies = [])
+    	#set($latestCreatedDate = false)
+    	#foreach ($reply in $reversedReplies)
+    		#set ($resp = $replies.Add($reply))
+    		#if (!$latestCreatedDate || $latestCreatedDate > $reply.CreatedDate)
+    		    #set($latestCreatedDate = $reply.CreatedDate)
+    		#end
+    	#end
+        #set ($resp = $replies.Reverse())
+    
+    	## render comments
+    	#set ($hasMorePages = false)
+    	#if ($reversedReplies.Count >= $commentPageSize)
+    		#set ($hasMorePages = true)
+    	#end
+    	#if ($hasMorePages)
+    		<li class="content-item action collapse" style="display:block">
+    			<a href="#" class="expand" data-timestamp="$core_v2_utility.GetTimestamp($latestCreatedDate)" data-storyid="$story.StoryId" data-loadingtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_more_comments_loading'))">$core_v2_language.GetResource('view_more_comments')</a>
+    		</li>
+    	#end
+    
+    	#foreach ($reply in $replies)
+    		$core_v2_widget.ExecuteFile('reply.vm')
+    	#end
+    
+    	## only show comment form as part of the first (initial) page of comments
+    	#if (!$commentStartDate && $isInline)
+    	    <li class="content-item action new-comments highlight" style="display:none;"></li>
+    	    #if ($hasReplyPermission)
+        		<li class="content-item comment comment-form" style="display:none;">
+        			<div class="field-list-header"></div>
+        			<form><fieldset class="field-list">
+        				<ul class="field-list">
+        					<li class="field-item">
+        						<span class="field-item-input">
+        							<span class="avatar">
+        								$core_v2_ui.GetResizedImageHtml($accessingUser.AvatarUrl, 32, 32, "%{alt=$accessingUser.DisplayName,style='border-width:0;', ResizeMethod = 'ZoomAndCrop'}")
+        							</span>
+        							<span class="editor"><span class="ui-loading"></span></span>
+        						</span>
+        					</li>
+        				</ul>
+        			</fieldset></form>
+        			<div class="field-list-footer"></div>
+        		</li>
+        		<li class="placeholder" style="display: none;"></li>
+        	#end
+    	#end
+    #end
+#else
+    #set ($commentsSupported = false)
+    #set ($commentsSupported = $core_v2_comments.SupportsComments($story.ContentTypeId))
+    
+    #set ($accessingUserCanComment = false)
+    #if ($commentsSupported)
+    	#set ($accessingUserCanComment = $core_v2_comments.CanCreateComment($story.ContentId, $story.ContentTypeId))
+    #end
+    
+    #set ($reversedComments = false)
+    #set ($commentOptions = "%{ ContentId = $story.ContentId, ContentTypeId = $story.ContentTypeId, RootPageSize = $commentPageSize, FlattenedDepth = 0, FlattenedSortBy = 'CreatedDate' }")
+    #if ($story.TypeId)
+    	$commentOptions.Add('CommentTypeId', $story.TypeId)
+    #end
+    
+    #if ($commentStartDate)
+        $commentOptions.Add('CreatedEndDate', $commentStartDate)
+        $commentOptions.Add('FlattenedSortOrder', 'Descending')
+    #else
+        $commentOptions.Add('FlattenedSortOrder', 'Descending')
+    #end
+    
+    #set ($reversedComments = $core_v2_comments.ListThreaded($commentOptions))
+    #if ($reversedComments)
+    	## reverse the last page into proper order, but PagedList doesn't support this natively, so first copy into an array
+    	#set ($comments = [])
+    	#set($latestCreatedDate = false)
+    	#foreach ($comment in $reversedComments)
+    		#set ($resp = $comments.Add($comment))
+    		#if (!$latestCreatedDate || $latestCreatedDate > $comment.CreatedDate)
+    		    #set($latestCreatedDate = $comment.CreatedDate)
+    		#end
+    	#end
+        #set ($resp = $comments.Reverse())
+    
+    	## render comments
+    	#set ($hasMorePages = false)
+    	#if ($reversedComments.Count >= $commentPageSize)
+    		#set ($hasMorePages = true)
+    	#end
+    	#if ($hasMorePages)
+    		<li class="content-item action collapse" style="display:block">
+    			<a href="#" class="expand" data-timestamp="$core_v2_utility.GetTimestamp($latestCreatedDate)" data-storyid="$story.StoryId" data-loadingtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_more_comments_loading'))">$core_v2_language.GetResource('view_more_comments')</a>
+    		</li>
+    	#end
+    
+    	#foreach ($comment in $comments)
+    		$core_v2_widget.ExecuteFile('comment.vm')
+    	#end
+    
+    	## only show comment form as part of the first (initial) page of comments
+    	#if (!$commentStartDate && $isInline)
+    	    <li class="content-item action new-comments highlight" style="display:none;"></li>
+    	    #if ($accessingUserCanComment)
+        		<li class="content-item comment comment-form" style="display:none;">
+        			<div class="field-list-header"></div>
+        			<form><fieldset class="field-list">
+        				<ul class="field-list">
+        					<li class="field-item">
+        						<span class="field-item-input">
+        							<span class="avatar">
+        								$core_v2_ui.GetResizedImageHtml($accessingUser.AvatarUrl, 32, 32, "%{alt=$accessingUser.DisplayName,style='border-width:0;', ResizeMethod = 'ZoomAndCrop'}")
+        							</span>
+        							<span class="editor"><span class="ui-loading"></span></span>
+        						</span>
+        					</li>
+        				</ul>
+        			</fieldset></form>
+        			<div class="field-list-footer"></div>
+        		</li>
+        		<li class="placeholder" style="display: none;"></li>
+        	#end
+    	#end
+    #end
+#end

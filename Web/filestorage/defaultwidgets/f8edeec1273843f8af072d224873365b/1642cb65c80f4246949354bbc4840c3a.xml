@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:UserJoinedActivityStory_Name}" cssClass="" description="${resource:UserJoinedActivityStory_Description}"
+		instanceIdentifier="1642cb65c80f4246949354bbc4840c3a" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.Actors || $context.Story.Actors.Count == 0)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+
+	#set($actor0 = $context.Story.PrimaryUser)
+	#if ($actor0.Url)
+	 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor0.DisplayName, $actor0.Url))
+	#else
+		#set($profile0Html = $actor0.DisplayName)
+	#end
+
+	#if($context.Story.Actors.Count == 1)
+		$core_v2_language.FormatString($core_v2_language.GetResource('UserJoin_Single_Preview'), $profile0Html, $core_v2_urls.Home(), $core_v2_configuration.SiteName)
+	#elseif($context.Story.Actors.Count == 2)
+		$core_v2_language.FormatString($core_v2_language.GetResource('UserJoin_Double_Preview'), $profile0Html, $core_v2_urls.Home(), $core_v2_configuration.SiteName)
+	#elseif($context.Story.Actors.Count > 2)
+		#set($count = $context.Story.Actors.Count - 1)
+		$core_v2_language.FormatString($core_v2_language.GetResource('UserJoin_Multiple_Preview'), $profile0Html, $core_v2_urls.Home(), $$core_v2_configuration.SiteName, $count.ToString())
+	#end
+
+	#if(!$isPreview && $context.Story.Actors.Count > 1)
+		#foreach($actor in $context.Story.Actors)
+		#beforeall
+			<div class="content-list-header user"></div>
+			<ul class="content-list user">
+		#each
+			#if ($actor.User.Id != $context.Story.PrimaryUser.Id)
+				<li class="content-list-item user">
+					<span class="avatar">
+						#if ($actor.User.ProfileUrl)
+							<a class="internal-link view-user-profile activity-summary-user" href="$core_v2_encoding.HtmlAttributeEncode($actor.User.ProfileUrl)">$!core_v2_ui.GetResizedImageHtml($actor.User.AvatarUrl, 32, 32, "%{border='0px', alt='$actor.User.DisplayName'}")</a>
+						#else
+							$!core_v2_ui.GetResizedImageHtml($actor.User.AvatarUrl, 32, 32, "%{border='0px', alt='$actor.User.DisplayName'}")
+						#end
+					</span>
+				</li>
+			#end
+		#afterall
+			</ul>
+			<div class="content-list-footer user"></div>
+		#end
+	#end
+#end
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="UserJoinedActivityStory_Name">User Joined Activity Story</resource>
+	<resource name="UserJoinedActivityStory_Description">Story for users joining site.</resource>
+	<resource name="UserProfile_Html"><![CDATA[<span class="username"><a href="{1}" class="internal-link view-user-profile">{0}</a></span>]]></resource>
+	<resource name="UserJoin_Single_Preview"><![CDATA[{0} joined <a href="{1}">{2}</a>.]]></resource>
+	<resource name="UserJoin_Double_Preview"><![CDATA[{0} and 1 other joined <a href="{1}">{2}</a>.]]></resource>
+	<resource name="UserJoin_Multiple_Preview"><![CDATA[{0} and {3} others joined <a href="{1}">{2}</a>.]]></resource>
+</language>
+</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

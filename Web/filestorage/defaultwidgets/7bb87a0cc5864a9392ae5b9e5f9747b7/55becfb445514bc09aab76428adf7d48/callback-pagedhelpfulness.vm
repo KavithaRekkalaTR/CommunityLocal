@@ -1,0 +1,60 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('pageIndex')))
+
+#set($articleId = false)
+#set($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('articleId')))
+
+#set($version = false)
+#set($version = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('version')))
+
+#set($cbIdPrefix = $core_v2_widget.UniqueId("helpfulness_"))
+#set($helpfulnesses = $articles_v1_helpfulness.List("%{ ArticleId = $articleId, PageIndex = $pageIndex, PageSize = 20, SortBy = 'CreateDate', SortOrder = 'Descending', IsHelpful = 'False', State = 'Unresolved', IncludeIgnored = 'False' }"))
+#foreach ($helpfulness in $helpfulnesses)
+#nodata
+	#if($pageIndex == 0)
+		<li>
+			<div class="message norecords">$core_v2_language.GetResource('NoUnresolvedHelpfulness')</div>
+		</li>
+	#end
+#each
+	#set($checked = false)
+	#if ($helpfulness.ResolvedByVersionIds.Contains($version))
+		#set($checked = true)
+	#end
+	<li class="content-item helpfulness" data-id="$helfulness.Id.ToString()">
+		<div class="content abbreviated">
+			<div class="avatar"><input type="checkbox" id="$cbIdPrefix$helpfulness.Id.ToString()" #if($checked) checked="checked" data-waschecked="true" #else data-waschecked="false" #end data-id="$helpfulness.Id.ToString()" class="ui-tip" title="$core_v2_language.GetResource('ResolvedTip')" /></div>
+			<div class="summary">
+				<h4 class="name"><label for="$cbIdPrefix$helpfulness.Id.ToString()">$helpfulness.HelpfulnessResponseType.Name</label></h4>
+				<div class="content">
+					$!helpfulness.Message
+				</div>
+				<div class="actions">
+					<div class="navigation-list ui-links" data-direction="horizontal">
+						<ul>
+							<li class="navigation-list-item">
+								#if (!$helpfulness.Author)
+									#set ($authorHtml = $core_v2_language.GetResource('anonymous'))
+								#else
+									#set($profileUrl = false)
+									#set($profileUrl = $helpfulness.Author.ProfileUrl)
+									#if ($profileUrl)
+										#store ($authorHtml)
+											<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)" $core_v2_ui.ContentPeek($helpfulness.Author.ContentId, $core_v2_user.ContentTypeId)>$helpfulness.Author.DisplayName</a>
+										#end
+									#else
+										#set($authorHtml = $helpfulness.Author.DisplayName)
+									#end
+								#end
+								<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('Helpfulness_ByLine'), $core_v2_language.FormatAgoDate($helpfulness.CreateDate), $authorHtml)</span>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" class="action-ignore" data-id="$helpfulness.Id">$core_v2_language.GetResource('Action_Ignore')</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</li>
+#end

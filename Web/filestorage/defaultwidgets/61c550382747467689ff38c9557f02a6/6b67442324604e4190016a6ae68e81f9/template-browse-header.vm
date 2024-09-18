@@ -1,0 +1,22 @@
+<span class="label">$core_v2_language.GetResource('Viewing')</span>
+
+## State Filter
+<select class="state-select">
+	<option value="all">$core_v2_language.GetResource('All')</option>
+	<option value="Custom">$core_v2_language.GetResource('UserInstalled')</option>
+	<option value="FactoryDefault">$core_v2_language.GetResource('Default')</option>
+	<option value="CustomizedDefault">$core_v2_language.GetResource('EditedDefault')</option>
+</select>
+<span class="label">$core_v2_language.GetResource('themeswith')</span>
+
+## Theme Type
+#set ($themeTypes = $context.ListThemeTypes("%{ ExcludeUnusedTypes = 'true' }"))
+#if ($themeTypes && $themeTypes.Count > 0)
+	<select class="type-select">
+		<option value="all">$core_v2_language.GetResource('Any')</option>
+		#foreach ($themeType in $themeTypes)
+			<option value="$themeType.Id">$core_v2_encoding.HtmlEncode($themeType.Name)</option>
+		#end
+	</select>
+	<span class="label">$core_v2_language.GetResource('themetype')</span>
+#end

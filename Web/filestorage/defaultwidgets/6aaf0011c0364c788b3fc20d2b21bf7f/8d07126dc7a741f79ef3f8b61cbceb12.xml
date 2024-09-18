@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:GroupPeek}" cssClass="group" description="${resource:GroupPeek_Description}" provider="6aaf0011c0364c788b3fc20d2b21bf7f" instanceIdentifier="8d07126dc7a741f79ef3f8b61cbceb12" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[<style>$core_v2_widget.ExecuteFile('style.less')</style>
+
+#set ($content = $context.Content)
+#if (!$content)
+	$core_v2_widget.Hide()
+#end
+
+#set ($group = $core_v2_group.Get($content.ContentId))
+#if (!$group)
+	$core_v2_widget.Hide()
+#end
+
+#set ($avatarSize = 68)
+
+#set ($target = $context.Target)
+#set ($title = $content.HtmlName($target))
+#set ($body = $content.HtmlDescription($target))
+#set ($avatarUrl = $content.AvatarUrl)
+
+#set ($containerIds = "$group.ContainerId")
+#set ($activityStories = false)
+#set ($activityStories = $core_v2_activityStory.List("%{ ContainerIds = $containerIds, PageIndex = 0, PageSize = 1, SortBy = 'Date', SortOrder = 'Descending' }"))
+
+<div class="content-peek with-large-avatar">
+	<div class="content-peek-heading">
+		<div class="content-peek-avatar">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+				$core_v2_ui.GetResizedImageHtml($avatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$title' }")
+			</a>
+		</div>
+		<div class="content-peek-name">
+			<div class="content-peek-title">
+				<a title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 100, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 100, '...')
+				</a>
+			</div>
+			<div class="content-peek-subtitle">
+				${group.Description}
+			</div>
+		</div>
+	</div>
+
+	<div class="content-peek-details">
+		#if($group.GroupType != 'Joinless')
+			<div class="content-peek-detail">
+				<div class="content-peek-detail-component">
+					#set ($membersResource = 'Members_Plural')
+					#if ($group.TotalMembers() == 1)
+						#set ($membersResource = 'Members_Singular')
+					#end
+
+					#format($core_v2_language.GetResource($membersResource))
+						#token('count')
+							$group.TotalMembers()
+					#end
+				</div>
+			</div>
+		#end
+		<div class="content-peek-detail">
+			<div class="content-peek-detail-component">
+				#foreach($story in $activityStories)
+					$story.PreviewHtml()
+					<span class="date">$core_v2_ui.AgoDate($story.LastUpdate)</span>
+				#end
+			</div>
+		</div>
+	</div>
+
+	## Actions
+	#set ($includeBookmark = $core_v2_bookmark.SupportsBookmarks($content.ContentTypeId) && $core_v2_bookmark.CanBookmark($content.ContentId, $content.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($content.ContentId, $content.ContentTypeId))
+	#set ($includeModeration = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v2_abuseReport.CanBeMarkedAsAbusive($content.ContentTypeId))
+
+	#set ($includeJoinGroup = false)
+	#set ($joinGroupLinkType = '')
+	#if ($group && $group.GroupType != 'Joinless')
+		#set ($user = $core_v2_user.Accessing)
+		#set ($member = $core_v2_groupUserMember.Get($group.Id, "%{ UserId = $user.Id }"))
+		#set ($canJoinGroup = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroup, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+		#set ($canJoinGroupByRequest = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroupByRequest, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+		#if (!$member.IsRoleMember)
+			#if ($member.MembershipType == "Owner" || $member.MembershipType == "Manager" || $member.MembershipType == "Member" || $member.MembershipType == "PendingMember")
+				#set ($canLeaveGroup = $member.MembershipType != "Owner" || $core_v2_groupUserMember.List($group.Id, "%{MembershipType = 'Owner', PageSize = 1}").TotalCount > 1)
+				#if ($canLeaveGroup)
+					#set ($includeJoinGroup = true)
+					#set ($joinGroupLinkType = 'leave-group')
+				#end
+			#elseif ($canJoinGroupByRequest || $canJoinGroup)
+				#if ($group.GroupType == "PublicOpen")
+					#set ($includeJoinGroup = true)
+					#set ($joinGroupLinkType = 'join-group')
+				#elseif ($group.GroupType == "PublicClosed")
+					#set ($includeJoinGroup = true)
+					#set ($joinGroupLinkType = 'request-join-group')
+				#end
+			#end
+		#end
+	#end
+
+	#set ($maxLinks = 0)
+	#set ($totalLinks = 0)
+
+	#if ($includeJoinGroup)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeBookmark)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeModeration)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($totalLinks > 0)
+		<div class="content-peek-actions">
+			<ul class="ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+				#if ($includeJoinGroup)
+					#if ($joinGroupLinkType == 'leave-group')
+						<li class="navigation-list-item leave-group">
+							<a href="#" class="internal-link leave-group" data-messagename="widget.${core_v2_widget.WrapperElementId}.leave">
+								#if ($member.MembershipType == "PendingMember")
+									$core_v2_language.GetResource("leaveRequest")
+								#else
+									$core_v2_language.GetResource("LeaveGroup")
+								#end
+							</a>
+						</li>
+					#elseif ($joinGroupLinkType == 'join-group')
+						<li class="navigation-list-item join-group">
+							<a href="#" class="internal-link join-group" data-messagename="widget.${core_v2_widget.WrapperElementId}.join">
+								$core_v2_language.GetResource('JoinGroup')
+							</a>
+						</li>
+					#elseif ($joinGroupLinkType == 'request-join-group')
+						<li class="navigation-list-item">
+							<a href="#" class="internal-link join-group" data-messagename="widget.${core_v2_widget.WrapperElementId}.requestjoin">
+								$core_v2_language.GetResource('ApplyToJoin')
+							</a>
+						</li>
+					#end
+				#end
+				#if ($includeBookmark)
+					<li class="navigation-list-item">$core_v2_ui.Bookmark($content.ContentId, $content.ContentTypeId, "%{ addBookmarkText = $core_v2_language.GetResource('bookmark'), deleteBookmarkText = $core_v2_language.GetResource('unbookmark') }")</li>
+				#end
+				#if ($includeModeration)
+					<li class="navigation-list-item">$core_v2_ui.Moderate($content.ContentId, $content.ContentTypeId, "%{ }")</li>
+				#end
+				<li><a href="#" data-more><span class="more">$core_v2_language.GetResource('More')</span></a></li>
+				<li><a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a></li>
+			</ul>
+
+			#if ($includeJoinGroup)
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.joinGroup")
+					<script>
+					jQuery(function(j){
+						var options = {
+							groupId: $group.Id,
+							currentGroup: $core_v2_group.Current.Id,
+							userId: $user.Id,
+							canJoinGroup: #if($canJoinGroup) true,#else false,#end
+							canJoinGroupByRequest: #if($canJoinGroupByRequest) true,#else false,#end
+							joinMessageLinkName: 'widget.${core_v2_widget.WrapperElementId}.join',
+							requestJoinMessageLinkName: 'widget.${core_v2_widget.WrapperElementId}.requestjoin',
+							cancelMessageLinkName: 'widget.${core_v2_widget.WrapperElementId}.leave',
+							requestJoinUrl: #if(!$canJoinGroup) "$core_v2_groupUrls.RequestMembership($group.Id)" #else null #end,
+
+							cancelConfirmMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("LeaveConfirm"))',
+							joinedText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Joined'))',
+							leftText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Left'))'
+						};
+
+						function join(membershipType) {
+							return j.telligent.evolution.post({
+								url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/groups/{GroupId}/members/users.json',
+								data: {
+									GroupId: options.groupId,
+									UserId: options.userId,
+									GroupMembershipType: membershipType
+								}
+							});
+						}
+
+						function leave() {
+							return j.telligent.evolution.del({
+								url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/groups/{GroupId}/members/users/{UserId}.json',
+								data: {
+									GroupId: options.groupId,
+									UserId: options.userId
+								}
+							});
+						}
+
+						function reloadIfCurrentGroup() {
+							if (options.currentGroup === options.groupId) {
+								window.location.reload();
+							} else {
+								j.telligent.evolution.contentPeek.hide();
+							}
+						}
+
+						// activate group joining buttons
+						j.telligent.evolution.messaging.unsubscribe(options.joinMessageLinkName);
+						j.telligent.evolution.messaging.subscribe(options.joinMessageLinkName, function() {
+							join('Member').then(function(){
+								j.telligent.evolution.notifications.show(options.joinedText);
+								reloadIfCurrentGroup();
+							});
+						});
+
+						// request join
+						j.telligent.evolution.messaging.unsubscribe(options.requestJoinMessageLinkName);
+						j.telligent.evolution.messaging.subscribe(options.requestJoinMessageLinkName, function() {
+							if (options.canJoinGroup) {
+								join('PendingMember').then(function(){
+									j.telligent.evolution.notifications.show(options.joinedText);
+									reloadIfCurrentGroup();
+								});
+							} else {
+								Telligent_Modal.Open(options.requestJoinUrl, 550, 300, function() {
+									reloadIfCurrentGroup();
+								});
+							}
+						});
+
+						// activate membership cancellation links
+						j.telligent.evolution.messaging.unsubscribe(options.cancelMessageLinkName);
+						j.telligent.evolution.messaging.subscribe(options.cancelMessageLinkName, function() {
+							if(confirm(options.cancelConfirmMessage)) {
+								leave().then(function(){
+									j.telligent.evolution.notifications.show(options.leftText);
+									reloadIfCurrentGroup();
+								});
+							}
+						});
+					});
+					</script>
+				#end
+			#end
+		</div>
+	#end
+</div>
+
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="GroupPeek">Group Peek</resource>
+	<resource name="GroupPeek_Description">Displays content for peeked groups.</resource>
+	<resource name="by">By {user} {date}</resource>
+	<resource name="More">&#8230;</resource>
+	<resource name="Cancel">Cancel</resource>
+	<resource name="Members_Singular">{count} member</resource>
+	<resource name="Members_Plural">{count} members</resource>
+	<resource name="bookmark">Bookmark</resource>
+	<resource name="unbookmark">Unbookmark</resource>
+	<resource name="leaveRequest">Cancel join request</resource>
+	<resource name="LeaveGroup">Leave</resource>
+	<resource name="JoinGroup">Join</resource>
+	<resource name="ApplyToJoin">Request membership</resource>
+	<resource name="LeaveConfirm">Are you sure you want to leave this group?</resource>
+	<resource name="Joined">You have joined this group.</resource>
+	<resource name="Left">You have left this group.</resource>
+</language>
+</languageResources>
+<restScopes>
+  <scope id="groups.users.modify" />
+</restScopes>
+	</scriptedContentFragment>
+</scriptedContentFragments>

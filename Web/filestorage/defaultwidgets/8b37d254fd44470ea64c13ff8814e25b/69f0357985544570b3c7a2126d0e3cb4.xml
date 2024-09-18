@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:UserPeek}" cssClass="user" description="${resource:UserPeek_Description}" provider="8b37d254fd44470ea64c13ff8814e25b" instanceIdentifier="69f0357985544570b3c7a2126d0e3cb4" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[<style>$core_v2_widget.ExecuteFile('style.less')</style>
+
+#set ($content = $context.Content)
+#if (!$content)
+	$core_v2_widget.Hide()
+#end
+
+#set ($user = $core_v2_user.Get("%{ ContentId = $content.ContentId }"))
+#if (!$user)
+	$core_v2_widget.Hide()
+#end
+
+#set ($hasCoverPhoto = false)
+#if ($user.CoverPhotoUrl && $user.CoverPhotoUrl.length > 0)
+	#set ($hasCoverPhoto = true)
+#end
+
+#set ($avatarSize = 66)
+#set ($avatarUrl = $content.AvatarUrl)
+
+<div class="content-peek with-large-avatar #if ($hasCoverPhoto) with-cover-photo #end">
+	#if ($hasCoverPhoto)
+		#set ($resizedCoverPhotoUrl = $core_v2_ui.GetResizedImageUrl($user.CoverPhotoUrl, 375, 94, "%{ ResizeMethod='ZoomAndCrop' }"))
+		<div class="cover-photo" style="background-image:url($core_v2_encoding.HtmlAttributeEncode($resizedCoverPhotoUrl))"></div>
+	#end
+	<div class="content-peek-heading">
+		<div class="content-peek-avatar">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+				$core_v2_ui.GetResizedImageHtml($avatarUrl, $avatarSize, $avatarSize, "%{OutputIsPersisted = 'false', ResizeMethod = 'ZoomAndCrop', alt='$user.DisplayName' }")
+			</a>
+		</div>
+		<div class="content-peek-name">
+			<div class="content-peek-title">
+				$core_v2_ui.UserPresence($user.Id)
+				#if ($user.ProfileUrl)
+					<a title="$core_v2_encoding.HtmlAttributeEncode($user.DisplayName)" href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)">
+						$user.DisplayName
+					</a>
+				#else
+					$user.DisplayName
+				#end
+			</div>
+			<div class="content-peek-subtitle">
+				## Points, Reputation
+				#set ($reputationMessage = false)
+				#set ($reputationPercentage = $user.QualityPercentile)
+
+				#if ($reputationPercentage >= 0 && $reputationPercentage < 5)
+					#set ($reputationPercentage = 0)
+				#elseif ($reputationPercentage >= 5 && $reputationPercentage < 10)
+					#set ($reputationPercentage = 5)
+				#elseif ($reputationPercentage >= 10 && $reputationPercentage < 15)
+					#set ($reputationPercentage = 10)
+				#elseif ($reputationPercentage >= 15 && $reputationPercentage < 20)
+					#set ($reputationPercentage = 15)
+				#elseif ($reputationPercentage >= 20 && $reputationPercentage < 25)
+					#set ($reputationPercentage = 20)
+				#elseif ($reputationPercentage >= 25 && $reputationPercentage < 30)
+					#set ($reputationPercentage = 25)
+				#elseif ($reputationPercentage >= 30 && $reputationPercentage < 35)
+					#set ($reputationPercentage = 30)
+				#elseif ($reputationPercentage >= 35 && $reputationPercentage < 40)
+					#set ($reputationPercentage = 35)
+				#elseif ($reputationPercentage >= 40 && $reputationPercentage < 45)
+					#set ($reputationPercentage = 40)
+				#elseif ($reputationPercentage >= 45 && $reputationPercentage < 50)
+					#set ($reputationPercentage = 45)
+				#elseif ($reputationPercentage >= 50 && $reputationPercentage < 55)
+					#set ($reputationPercentage = 50)
+				#elseif ($reputationPercentage >= 55 && $reputationPercentage < 60)
+					#set ($reputationPercentage = 55)
+				#elseif ($reputationPercentage >= 60 && $reputationPercentage < 65)
+					#set ($reputationPercentage = 60)
+				#elseif ($reputationPercentage >= 65 && $reputationPercentage < 70)
+					#set ($reputationPercentage = 65)
+				#elseif ($reputationPercentage >= 70 && $reputationPercentage < 75)
+					#set ($reputationPercentage = 70)
+				#elseif ($reputationPercentage >= 75 && $reputationPercentage < 80)
+					#set ($reputationPercentage = 75)
+				#elseif ($reputationPercentage >= 80 && $reputationPercentage < 85)
+					#set ($reputationPercentage = 80)
+				#elseif ($reputationPercentage >= 85 && $reputationPercentage < 90)
+					#set ($reputationPercentage = 85)
+				#elseif ($reputationPercentage >= 90 && $reputationPercentage < 95)
+					#set ($reputationPercentage = 90)
+				#elseif ($reputationPercentage >= 95 && $reputationPercentage < 99)
+					#set ($reputationPercentage = 95)
+				#elseif ($reputationPercentage > 99)
+					#set ($reputationPercentage = 99)
+				#end
+				#if ($reputationPercentage)
+					#if ($reputationPercentage >= 50 || $user.Id == $core_v2_user.Accessing.Id)
+						#set ($topPercent = (100 - $reputationPercentage))
+						#if ($user.Id == $core_v2_user.Accessing.Id)
+							#set ($reputationTemplate = $core_v2_language.GetResource('ReputationSelf'))
+						#else
+							#set ($reputationTemplate = $core_v2_language.GetResource('ReputationOther'))
+						#end
+						#set ($reputationMessage = $core_v2_language.FormatString($reputationTemplate, $topPercent.ToString()))
+					#end
+				#end
+
+				#if ($user.Points == 1)
+					$core_v2_language.GetResource('point')
+				#else
+					$core_v2_language.FormatString($core_v2_language.GetResource('points'), $core_v2_language.FormatNumber($user.Points))
+				#end
+				#if ($reputationMessage)
+					<span class="reputation ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($reputationMessage)">
+						$core_v2_language.FormatString($core_v2_language.GetResource('ReputationLabel'), $topPercent.ToString())
+					</span>
+				#end
+			</div>
+		</div>
+	</div>
+
+	<div class="content-peek-excerpt"></div>
+
+	<div class="content-peek-details">
+		<div class="content-peek-detail">
+			## Profile Fields
+
+			#set ($selectedFields = $context.ProfileFields)
+			#if ($selectedFields)
+				#if ($selectedFields && $selectedFields.Count > 2)
+					#set ($selectedFields = $core_v2_utility.Slice($selectedFields, 0, 2))
+				#end
+
+				#set($data = $core_v2_page.ParseQueryString(''))
+				#foreach($profileField in $user.ProfileFields)
+					$data.Add($profileField.Label, $core_v2_encoding.HtmlDecode($profileField.Value))
+				#end
+				#set ($dq = '"')
+
+				#set ($dynamicFormHeader = '<propertyGroup id="profileData" resourceName="" resourceFile="" text="" descriptionResourceName="" descriptionResourceFile="" descriptionText="" orderNumber="1" visible="true">')
+				#set ($dynamicFormFooter = '</propertyGroup>')
+				#set ($dynamicFormXmlOptions = "%{ ReadOnly = 'true' }")
+
+				<div class="post-attributes profile-fields">
+					<div class="attribute-list-header"></div>
+
+					#set ($selectedFieldIndex = 0)
+					#foreach ($selectedField in $selectedFields)
+						#set ($formXml = "${dynamicFormHeader}${core_v2_userProfileField.dynamicFormXml(${selectedFields.ToArray().get($selectedFieldIndex)}, $dynamicFormXmlOptions)}${dynamicFormFooter}")
+						#set ($form = false)
+						#set ($form = $core_v2_dynamicForm.RenderForm($core_v2_widget.UniqueId('form'), $formXml, $data, "%{GroupHeaderHtmlFormat='<ul class=${dq}attribute-list${dq}>',GroupFooterHtmlFormat='</ul>',PropertyHeaderHtmlFormat='<li class=${dq}attribute-item${dq}>',PropertyFooterHtmlFormat='</li>',HidePropertiesWithoutValues='true'}"))
+						#if ($form)
+							<div class="profile-field #if($selectedFieldIndex == 0)primary-profile-field #end">$form</div>
+						#end
+						#set ($selectedFieldIndex = $selectedFieldIndex + 1)
+					#end
+
+					<div class="attribute-list-footer"></div>
+				</div>
+			#end
+		</div>
+	</div>
+
+	<div class="content-peek-details">
+		<div class="content-peek-detail">
+			## signature
+			<div class="signature">
+				#if ($!user.Signature)
+					$!user.Signature
+				#end
+			</div>
+		</div>
+	</div>
+
+	<div class="content-peek-details">
+		<div class="content-peek-detail">
+			## Roles, achievements
+
+			#set ($roles = $core_v2_role.List( "%{PageSize=6,PageIndex=0,IncludeWithAvatarOnly='True',Include='user',UserId=$user.Id}"))
+			#set ($achievementCount = 6 - $roles.Count)
+			#if ($achievementCount > 0)
+				#set($achievements = $core_v2_userAchievement.List( "%{PageSize=$achievementCount,PageIndex=0,SortBy='DateCreated',SortOrder='Descending',Enabled='True',UserId=$user.Id}"))
+			#end
+
+			#if (($roles && $roles.Count > 0) || ($achievements && $achievements.Count >0))
+				<div class="post-attributes badges">
+					<div class="attribute-list-header"></div>
+					<ul class="attribute-list">
+			#end
+
+				## show role badge icons
+				#foreach ($role in $roles)
+				#each
+					<li class="attribute-item badge $class ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($role.Name)">
+						<span class="attribute-value">
+							$core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 34, 34, "%{ border='0', alt = $role.Name, ResizeMethod = 'ZoomAndCrop' }")
+						</span>
+					</li>
+				#end
+
+
+				## show achievement icons
+				#foreach ($achievement in $achievements)
+				#each
+					<li class="attribute-item badge ui-tip" title="$achievement.Achievement.Title">
+						<span class="attribute-value">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.UserAchievements($user.Id))" class="internal-link view-user-achievements">
+								$core_v2_ui.GetResizedImageHtml($achievement.Achievement.BadgeIconUrl, 34, 34, "%{ border='0', alt = $achievement.Achievement.Title, ResizeMethod = 'ZoomAndCrop' }")
+							</a>
+						</span>
+					</li>
+				#end
+
+			#if (($roles && $roles.Count > 0) || ($achievements && $achievements.Count >0))
+				</ul>
+					<div class="attribute-list-footer"></div>
+				</div>
+			#end
+		</div>
+	</div>
+
+	<div class="content-peek-details">
+		<div class="content-peek-detail">
+			## Recent activity
+			#set ($activityStories = false)
+			#set ($activityStories = $core_v2_activityStory.List("%{ UserId = $user.Id, PageIndex = 0, PageSize = 1, SortBy = 'Date', SortOrder = 'Descending' }"))
+			#foreach($story in $activityStories)
+				$story.PreviewHtml()
+				<span class="date">$core_v2_ui.AgoDate($story.LastUpdate)</span>
+			#end
+		</div>
+	</div>
+
+	## User actions
+
+	#set($links = $core_v2_user.ListActionLinks($user.Id))
+	#foreach($link in $links)
+	#beforeall
+		<div class="content-peek-actions">
+			<ul class="ui-links" data-direction="horizontal">
+	#each
+			<li>$!link.Html</li>
+	#afterall
+			#set($administerUrl = false)
+			#set($administerUrl = $core_v2_urls.EditUser($user.Id))
+			#if ($administerUrl)
+				<li><a href="$administerUrl">Administer</a></li>
+			#end
+
+			<li><a href="#" data-more><span class="more">$core_v2_language.GetResource('More')</span></a></li>
+			<li><a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a></li>
+			</ul>
+		</div>
+	#end
+</div>
+
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="UserPeek">User Peek</resource>
+	<resource name="UserPeek_Description">Displays content for peeked users.</resource>
+	<resource name="by">By {user} {date}</resource>
+	<resource name="More">&#8230;</resource>
+	<resource name="Cancel">Cancel</resource>
+	<resource name="Members_Singular">{count} member</resource>
+	<resource name="Members_Plural">{count} members</resource>
+	<resource name="bookmark">Follow</resource>
+	<resource name="unbookmark">Unfollow</resource>
+	<resource name="point">&lt;b&gt;1&lt;/b&gt; Point</resource>
+	<resource name="points">&lt;b&gt;{0}&lt;/b&gt; Points</resource>
+	<resource name="ReputationLabel">Top &lt;strong&gt;{0}%&lt;/strong&gt;</resource>
+	<resource name="ReputationOther">has a reputation in the &lt;strong&gt;top {0}%&lt;/strong&gt; of the community.</resource>
+	<resource name="ReputationSelf">Your current reputation puts you in the &lt;strong&gt;top {0}%&lt;/strong&gt; of members. Members in the top 50% are highlighted within the community.</resource>
+</language>
+</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

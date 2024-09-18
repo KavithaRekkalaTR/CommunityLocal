@@ -1,0 +1,43 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#set($ApplicationKey = $core_v2_page.GetFormValue('ApplicationKey'))
+	#set($Description = $core_v2_page.GetFormValue('Description'))
+	#set($GroupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupId')))
+	#set($Enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enabled')))
+	#set($Moderated = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Moderated')))
+	#set($RequiresCategory = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('RequiresCategory')))
+	#set($MaximumVotesPerUser = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('MaximumVotesPerUser')))
+	#set($MaximumVotesPerIdea = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('MaximumVotesPerIdea')))
+	#set($AllowMultipleVotes = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('AllowMultipleVotes')))
+
+	#if ($Name && $Name != '')
+		$options.Add('Name', $Name)
+	#end
+	#if ($ApplicationKey && $ApplicationKey != '')
+		$options.Add('ApplicationKey', $ApplicationKey)
+	#end
+	#if ($GroupId > 0)
+		$options.Add('GroupId', $GroupId)
+	#end
+
+	$options.Add('Description', $Description)
+	$options.Add('IsEnabled', $Enabled)
+	$options.Add('IsModerated', $Moderated)
+	$options.Add('RequiresCategory', $RequiresCategory)
+	$options.Add('MaximumVotesPerUser', $MaximumVotesPerUser)
+	$options.Add('MaximumVotesPerIdea', $MaximumVotesPerIdea)
+	$options.Add('AllowMultipleVotes', $AllowMultipleVotes)
+
+	#set($response = $telligentIdeas_v1_challenges.Update($context.Challenge.Id, $options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "redirectUrl":"$response.Url"}
+
+#end

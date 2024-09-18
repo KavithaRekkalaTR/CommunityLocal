@@ -1,0 +1,53 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:BlogContactRequestsApplicationPanel_Name}" cssClass="blog-contactrequests" description="${resource:BlogContactRequestsApplicationPanel_Description}" instanceIdentifier="e332274cb9a4407ba971c73377816b27" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+
+#set ($blog = $core_v2_blog.Current)
+#if (!$blog)
+	$core_v2_widget.Hide();
+#end
+
+#set ($pageIndex = 0)
+#set ($blogId = $blog.Id)
+#set ($requestListId = $core_v2_widget.UniqueId('requestList'))
+
+<div class="content-list-name"></div>
+<div class="content-list-description"></div>
+<ul class="content-list content simple margin-bottom expandable" id="$core_v2_encoding.HtmlAttributeEncode($requestListId)">
+#set ($inProcess = true)
+$core_v2_widget.ExecuteFile('list.vm')
+</ul>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogContactRequestsApplicationPanel.register({
+		listCallback: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-callback.vm'))',
+		requestListId: '#$core_v2_encoding.JavascriptEncode($requestListId)',
+		deleteVerificationText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("Comment_DeleteVerify"))',
+		blogId: $blog.Id,
+		noCommentsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))'
+	});
+});
+</script>
+
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="BlogContactRequestsApplicationPanel_Name">Contact Requests</resource>
+	<resource name="BlogContactRequestsApplicationPanel_Description">View and delete blog contact requests.</resource>
+	<resource name="delete">Delete</resource>
+	<resource name="more">More</resource>
+	<resource name="cancel">Cancel</resource>
+	<resource name="Comment_DeleteVerify">Are you sure you want to delete this contact request?</resource>
+	<resource name="NoResults">There are no contact requests.</resource>
+</language>
+		</languageResources>
+		<restScopes>
+			<scope id="blogs.contactrequests.modify" />
+		</restScopes>
+	</scriptedContentFragment>
+</scriptedContentFragments>
+

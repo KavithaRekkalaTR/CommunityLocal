@@ -1,0 +1,43 @@
+#set ($downloadsListId = $core_v2_widget.UniqueId('downloadsListId'))
+#set($fileIdString = $core_v2_page.GetQueryStringValue('w_fileid'))
+#set($fileId = $core_v2_utility.ParseInt($fileIdString))
+#set($startDate = $core_v2_language.FormatDate($context.DefaultStartDate, "%{AdjustTimeZone = 'false', Format = 'yyyy-MM-dd'}"))
+#set($endDate = $core_v2_language.FormatDate($context.DefaultEndDate, "%{AdjustTimeZone = 'false', Format = 'yyyy-MM-dd'}"))
+
+#set($baseUrl = $core_v2_page.AbsoluteUrl("~/utility/filedownloads"))
+#set($querystring = $core_v2_language.FormatString("fileid={0}&startdate={1}&enddate={2}", $fileId.ToString(), $startDate, $endDate))
+#set($defaultUrl = $core_v2_page.AdjustQueryString($baseUrl, $querystring))
+
+#set($userDownloads = $context.GetUserDownloads($fileId, $context.DefaultStartDate, $context.DefaultEndDate, 0, 1))
+
+$core_v2_widget.ExecuteFile('paged-downloads.vm')
+			
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.galleryFileDownloads.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		fileId: '$fileId',
+		startDate: '$startDate',
+		endDate: '$endDate',
+		userDownloads: $userDownloads.TotalItems,
+		inputs: {
+			startDateId: '#$core_v2_widget.UniqueId('StartDate')',
+			endDateId: '#$core_v2_widget.UniqueId('EndDate')',
+			downloadsListId: '#$core_v2_encoding.JavascriptEncode($downloadsListId)'
+		},
+		urls: {
+			defaultUrl: '$defaultUrl',
+			pagedDownloads: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-downloads.vm'))',
+			downloadCsvFile: '$core_v2_encoding.JavaScriptEncode($baseUrl)'
+		},
+		resources: {
+			recordFormat: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('RecordFormat'))',
+			recordsFormat: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('RecordsFormat'))',
+			startDate: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('StartDate'))',
+			endDate: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('EndDate'))',
+			downloadCSV: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('DownloadCSV'))'			
+		}
+	});
+});
+</script>	

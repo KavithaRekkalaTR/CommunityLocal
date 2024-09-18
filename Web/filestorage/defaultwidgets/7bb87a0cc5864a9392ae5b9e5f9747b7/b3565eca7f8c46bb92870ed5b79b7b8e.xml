@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:name}" version="11.0.0.0" description="${resource:description}" instanceIdentifier="b3565eca7f8c46bb92870ed5b79b7b8e" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="article-details" lastModified="2020-12-22 19:38:25Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($article = false)
+
+#set ($selectedArticleType = $core_v2_widget.GetStringValue('selectedArticleType', 'article'))
+#set ($titleVisible = $core_v2_widget.GetBoolValue('titleVisible', true))
+#set ($iconVisible = $core_v2_widget.GetBoolValue('iconVisible', false))
+
+
+## Specific or current article
+#if ($selectedArticleType == 'article')
+	#set ($emptyArticleId = $core_v2_utility.ParseGuid('00000000-0000-0000-0000-000000000000'))
+	#set ($selectedArticleQuery = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue("selectedArticle", "")))
+	#set ($selectedArticleId = $core_v2_utility.ParseGuid($selectedArticleQuery.Value('Article')))
+
+	## Current article
+	#if ($selectedArticleId == $emptyArticleId)
+		#set($article = $articles_v1_articles.Current)
+	## Specific article
+	#else
+		#set($article = $articles_v1_articles.Get("%{ Id = $selectedArticleId }"))
+	#end
+
+## Current collection's default article
+#elseif ($selectedArticleType == 'collection')
+	#set($collection = $articles_v1_articleCollections.Current)
+	#if (!$collection)
+		$core_v2_widget.Hide()
+	#end
+	#set ($article = $collection.DefaultArticle)
+
+## Current cagegory's default article
+#elseif ($selectedArticleType == 'category')
+	#set($category = $articles_v1_categories.Current)
+	#if (!$category)
+		$core_v2_widget.Hide()
+	#end
+
+	#set ($article = $category.DefaultArticle)
+#end
+
+#if (!$article)
+	$core_v2_widget.Hide()
+#end
+
+<div class="content-details minimal">
+	<ul class="attribute-list">
+		#if ($article.CreateDate)
+			<li class="attribute-item">
+				<span class="attribute-name"></span>
+				<span class="attribute-value">
+					#format($core_v2_language.GetResource('created'))
+						#token('date')
+							$core_v2_ui.AgoDate($article.CreateDate)
+					#end
+				</span>
+			</li>
+		#end
+		#if ($article.LastUpdateDate && $article.LastUpdateDate > $article.CreateDate.AddDays(1))
+			<li class="attribute-item">
+				<span class="attribute-name"></span>
+				<span class="attribute-value">
+					#format($core_v2_language.GetResource('updated'))
+						#token('date')
+							$core_v2_ui.AgoDate($article.LastUpdateDate)
+					#end
+				</span>
+			</li>
+		#end
+	</ul>
+</div>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:name}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="title" defaultValue="${resource:name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="selectedArticleType" labelResourceName="ArticleType" defaultValue="article" dataType="String">
+		<propertyValue value="article" labelResourceName="SpecificArticle" propertiesToShow="selectedArticle" propertiesToHide="" />
+		<propertyValue value="collection" labelResourceName="CollectionDefault" propertiesToShow="" propertiesToHide="selectedArticle" />
+		<propertyValue value="category" labelResourceName="CategoryDefault" propertiesToShow="" propertiesToHide="selectedArticle" />
+	</property>
+	<property id="selectedArticle" labelResourceName="Select" defaultValue="Article=00000000-0000-0000-0000-000000000000" dataType="Custom" template="articles_v1_articleLookup" enableCurrent="true" maxSelections="1" format="query" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ArticleType">Show</resource>
+  <resource name="CategoryDefault">Current article category default</resource>
+  <resource name="CollectionDefault">Current article collection default</resource>
+  <resource name="created">Created {date}</resource>
+  <resource name="description">Displays article details</resource>
+  <resource name="name">Articles - Article Details</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Select">Article</resource>
+  <resource name="SpecificArticle">Specific article</resource>
+  <resource name="title">Title</resource>
+  <resource name="updated">Updated {date}</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="459387784fe24dd7a7b67e122f9f3945" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:TweetActivityStory_Name}" cssClass="" description="${resource:TweetActivityStory_Description}"
+		instanceIdentifier="de10a28e3fad4ec7b32ec78128c0b276" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+#set ($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+#if(!$content || !$context.Tweet)
+	$core_v2_widget.Hide()
+#else
+	#set ($isPreview = $context.IsPreview)
+	#set ($tweet = $context.Tweet)
+
+	#if ($isPreview)
+		$tweet.TwitterUserScreenName: $tweet.Text
+	#else
+		#if($context.RenderEmbeddedTweet)
+			$context.ProxyEmbeddedTweet($tweet.EmbedHtml)
+		#else
+			#if ($tweet.TwitterRetweetUserScreenName && $tweet.TwitterRetweetUserScreenName != '' && $tweet.TwitterRetweetUserName && $tweet.TwitterRetweetUserName != '')
+				$core_v2_language.FormatString('{0} <a href="https://twitter.com/{1}">{2}</a>', $core_v2_language.GetResource('retweetedBy'), $core_v2_encoding.HtmlAttributeEncode($tweet.TwitterRetweetUserScreenName), $tweet.TwitterRetweetUserName)
+			#else
+				#set ($viaText = $core_v2_language.GetResource('via'))
+			#end
+
+			#set ($avatarUrl = $core_v2_ui.GetResizedImageHtml($tweet.AvatarUrl, 50, 50, "%{ResizeMethod = 'ZoomAndCrop', alt=$tweet.TwitterRetweetUserName}").Replace("http://", "//").Replace("https://", "//"))
+
+			<span class="avatar twitter">
+				<a class="internal-link view-user-profile" href="https://twitter.com/$core_v2_encoding.HtmlAttributeEncode($tweet.TwitterUserScreenName)">$avatarUrl</a>
+			</span>
+			<div class="post-content activity">
+				<a href="https://twitter.com/$core_v2_encoding.HtmlAttributeEncode($tweet.TwitterUserScreenName)" class="ui-twitterfollow twitter-follow-button" data-show-count="false" data-show-screen-name="false" data-lang="$core_v2_user.Accessing.User.Language">$core_v2_language.GetResource('follow') @$tweet.TwitterUserScreenName</a>
+				<div class="activity-summary">
+					<span class="user-name">
+						<a class="internal-link view-user-profile" href="https://twitter.com/$core_v2_encoding.HtmlAttributeEncode($tweet.TwitterUserScreenName)"><span></span>$tweet.TwitterUserName</a>
+					</span>
+					<a class="via" href="https://twitter.com/$core_v2_encoding.HtmlAttributeEncode($tweet.TwitterUserScreenName)"><span></span>@$tweet.TwitterUserScreenName</a> <span class="via">$viaText</span>
+					<ul class="twitter-intents">
+						<li class="navigation-item"><a href="https://twitter.com/intent/favorite?tweet_id=$tweet.TweetId">$core_v2_language.GetResource('favorite')</a></li>
+						<li class="navigation-item"><a href="https://twitter.com/intent/retweet?tweet_id=$tweet.TweetId">$core_v2_language.GetResource('retweet')</a></li>
+						<li class="navigation-item"><a href="https://twitter.com/intent/tweet?in_reply_to=$tweet.TweetId">$core_v2_language.GetResource('reply')</a></li>
+					</ul>
+				</div>
+				<div class="activity-content">$context.LinkifyTweet($tweet.Text)</div>
+				<div class="date">
+					<a href="https://twitter.com/$core_v2_encoding.HtmlAttributeEncode($tweet.TwitterUserScreenName)/status/$tweet.TweetId">$core_v2_language.FormatDateAndTime($tweet.CreatedDate)</a>
+				</div>
+			</div>
+
+			#registerEndOfPageHtml('twitter-activity-story')
+				<script type="text/javascript">!function(d,s,id){{var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){{js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}}}(document,"script","twitter-wjs");</script>
+				<script>
+					jQuery.telligent.evolution.ui.components.twitterfollow = {
+						add: function(elm, options) {
+							clearInterval(widgetTimeout);
+							widgetTimeout = setTimeout(function(){
+								twttr.widgets.load();
+							}, 20);
+						}
+					};
+				</script>
+			#end
+		#end
+	#end
+#end
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="TweetActivityStory_Name">Twitter Status Activity Story</resource>
+	<resource name="TweetActivityStory_Description">Stories associated with syndicated Twitter statuses</resource>
+	<resource name="follow">Follow</resource>
+	<resource name="reply">Reply</resource>
+	<resource name="retweet">Retweet</resource>
+	<resource name="favorite">Favorite</resource>
+	<resource name="via">via Twitter</resource>
+	<resource name="retweetedBy">retweeted by</resource>
+</language>
+</languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

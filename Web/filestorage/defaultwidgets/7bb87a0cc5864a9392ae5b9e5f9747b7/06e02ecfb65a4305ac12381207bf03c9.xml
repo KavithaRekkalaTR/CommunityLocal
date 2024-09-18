@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_BlogPostPoster_Name}" version="11.0.0.0" description="${resource:Blogs_BlogPostPoster_Description}" instanceIdentifier="06e02ecfb65a4305ac12381207bf03c9" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="blog-post-poster" lastModified="2021-06-14 18:41:35Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($post = false)
+#set($post = $core_v2_blogPost.Current)
+#if(!$post || !$post.PostImageUrl || $post.PostImageUrl.length == 0)
+	$core_v2_widget.Hide()
+#end
+
+<div class="content full text">
+	#set ($posterImageOptions = "%{ }")
+    #if($post.PostImageAlternateText && $post.PostImageAlternateText.length > 0)
+        #set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($post.PostImageAlternateText))
+    #else
+        #set($postImageAltText = $core_v2_encoding.HtmlAttributeEncode($post.HtmlName('web')))
+    #end
+	$posterImageOptions.Add('alt', $postImageAltText)
+	#set ($crop = $core_v2_widget.GetStringValue('crop', 'zoomAndCrop'))
+	#if ($crop == 'zoomAndCrop')
+		$posterImageOptions.Add('ResizeMethod', 'ZoomAndCrop')
+	#end
+	<div class="poster">
+	    #set($maxWidth = false)
+	    #set($maxWidth = $core_v2_theme.GetUnitValue('maxWidth', '1060px', 3))
+	    #if ($maxWidth && $maxWidth.IndexOf('px') > 0)
+	        #set($length = $maxWidth.Length - 2)
+	        #set($maxWidth = $core_v2_utility.ParseInt($maxWidth.SubString(0, $length)))
+	        #if ($maxWidth <= 0)
+	            #set($maxWidth = 1060)
+	        #end
+        #else
+	        #set($maxWidth = 1060)
+	    #end
+		$core_v2_ui.GetResizedImageHtml($post.PostImageUrl, $maxWidth, 400, $posterImageOptions)
+	</div>
+</div>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($blog = false)
+#set($blog = $core_v2_blog.Current)
+#if ($blog)
+	<a class="internal-link view-application weblog" href="$core_v2_encoding.HtmlAttributeEncode($blog.Url)"><span></span>$blog.Name</a>
+#else
+	$core_v2_language.GetResource('Blogs_BlogPostPoster_Name')
+#end
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blogs_BlogPostPoster_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="crop" labelResourceName="crop" defaultValue="zoomAndCrop" dataType="String">
+		<propertyValue value="zoomAndCrop" labelResourceName="zoomAndCrop" />
+		<propertyValue value="resize" labelResourceName="resize" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Blogs_BlogPostPoster_Description">Displays a blog post's image.</resource>
+  <resource name="Blogs_BlogPostPoster_Name">Blog - Post Image</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="crop">Image Cropping</resource>
+  <resource name="Options">Options</resource>
+  <resource name="resize">Scale to fit without cropping</resource>
+  <resource name="zoomAndCrop">Fill available space and crop</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="24fa6951ab1244f5be3df20cc46b361b" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

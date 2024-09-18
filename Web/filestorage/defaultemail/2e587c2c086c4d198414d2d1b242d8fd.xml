@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Message to Role" version="13.0.0.0" description="Sends an email to users in a role when using the Mass Email feature." id="2e587c2c086c4d198414d2d1b242d8fd" lastModified="2023-04-20 18:12:09Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('subject')
+    $context_v1_email.Context.MessageToRole.Subject
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$context_v1_email.Context.MessageToRole.Subject
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[$context_v1_email.Context.MessageToRole.Body]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Footer'))
+#token('role')
+    $context_v1_email.Context.MessageToRole.Role.Name
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Subject">{site_name}: {subject}</resource>
+  <resource name="Footer">You were sent this email because an administrator sent it to all members of the {role} role on {site_name}.</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

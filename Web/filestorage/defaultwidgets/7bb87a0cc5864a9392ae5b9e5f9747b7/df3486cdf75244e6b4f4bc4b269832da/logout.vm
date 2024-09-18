@@ -1,0 +1,8 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	#set ($falseValue = false)
+	#set ($ignore = $core_v2_userPresence.Update($falseValue, "%{UserId=$core_v2_user.Accessing.Id}"))
+	#set ($returnUrl = '')
+    #set ($returnUrl = $core_v2_authentication.Logout())
+	{"redirectUrl":"$core_v2_encoding.JavascriptEncode($returnUrl)"}
+#end

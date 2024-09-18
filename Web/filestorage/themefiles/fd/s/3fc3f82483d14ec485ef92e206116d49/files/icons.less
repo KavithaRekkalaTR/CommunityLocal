@@ -1,0 +1,1249 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+// icon font
+@font-face {
+	font-family: 'Entypo';
+	src: url(-evo-themefile-url('entypo.eot'));
+	src: url(-evo-themefile-url('entypo.eot', '', '#iefix')) format('embedded-opentype'),
+		 url(-evo-themefile-url('entypo.woff')) format('woff'),
+		 url(-evo-themefile-url('entypo.ttf')) format('truetype'),
+		 url(-evo-themefile-url('entypo.svg', '', '#fontello')) format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+// icon names
+@address: "\e841";
+@adjust: "\e867";
+@air: "\e8ce";
+@alert: "\e83f";
+@archive: "\e851";
+@arrow-combo: "\e86e";
+@arrows-ccw: "\e891";
+@attach: "\e823";
+@attention: "\e83e";
+@back-in-time: "\e8aa";
+@back: "\e820";
+@bag: "\e85a";
+@basket: "\e859";
+@battery: "\e8a9";
+@bell: "\e83d";
+@block: "\e868";
+@book-open: "\e84e";
+@book: "\e84f";
+@bookmark: "\e828";
+@bookmarks: "\e829";
+@box: "\e852";
+@briefcase: "\e8bb";
+@brush: "\e8c0";
+@bucket: "\e8d5";
+@calendar: "\e85b";
+@camera: "\e80f";
+@cancel-circled: "\e814";
+@cancel-squared: "\e815";
+@cancel: "\e813";
+@ccw: "\e88f";
+@cd: "\e8ae";
+@chart-area: "\e8c7";
+@chart-bar: "\e8c6";
+@chart-line: "\e8c5";
+@chart-pie: "\e8c4";
+@chat: "\e83c";
+@check: "\e812";
+@clipboard: "\e8d1";
+@clock: "\e862";
+@cloud-thunder: "\e8b3";
+@cloud: "\e8b2";
+@code: "\e834";
+@cog: "\e855";
+@comment: "\e83b";
+@compass: "\e845";
+@credit-card: "\e8cf";
+@cup: "\e846";
+@cw: "\e890";
+@database: "\e8d3";
+@direction: "\e844";
+@doc-landscape: "\e84a";
+@doc-text-inv: "\e84c";
+@doc-text: "\e84b";
+@doc: "\e848";
+@docs: "\e849";
+@dot-2: "\e8be";
+@dot-3: "\e8bf";
+@dot: "\e8bd";
+@down-bold: "\e887";
+@down-circled: "\e86f";
+@down-dir: "\e883";
+@down-open-big: "\e87b";
+@down-open-mini: "\e877";
+@down-open: "\e873";
+@down-thin: "\e88b";
+@down: "\e87f";
+@download: "\e82d";
+@drive: "\e8d4";
+@droplet: "\e8cd";
+@erase: "\e8c3";
+@export: "\e835";
+@eye: "\e826";
+@fast-backward: "\e89e";
+@fast-forward: "\e89d";
+@feather: "\e837";
+@flag: "\e82a";
+@flash: "\e8b4";
+@flashlight: "\e804";
+@flight: "\e8b6";
+@floppy: "\e8d0";
+@flow-branch: "\e8d9";
+@flow-cascade: "\e8d8";
+@flow-line: "\e8db";
+@flow-tree: "\e8da";
+@folder: "\e850";
+@forward: "\e832";
+@globe: "\e8b1";
+@graduation-cap: "\e8c9";
+@heart-empty: "\e807";
+@heart: "\e806";
+@help-circled: "\e81d";
+@help: "\e81c";
+@home: "\e821";
+@hourglass: "\e863";
+@inbox: "\e8af";
+@infinity: "\e8c2";
+@info-circled: "\e81f";
+@info: "\e81e";
+@install: "\e8b0";
+@key: "\e8d7";
+@keyboard: "\e83a";
+@lamp: "\e864";
+@language: "\e8ca";
+@layout: "\e810";
+@leaf: "\e8b8";
+@left-bold: "\e888";
+@left-circled: "\e870";
+@left-dir: "\e884";
+@left-open-big: "\e87c";
+@left-open-mini: "\e878";
+@left-open: "\e874";
+@left-thin: "\e88c";
+@left: "\e880";
+@level-down: "\e892";
+@level-up: "\e893";
+@lifebuoy: "\e8b9";
+@light-down: "\e865";
+@light-up: "\e866";
+@link: "\e822";
+@list-add: "\e8a6";
+@list: "\e8a5";
+@location: "\e842";
+@lock-open: "\e825";
+@lock: "\e824";
+@login: "\e85c";
+@logout: "\e85d";
+@loop: "\e895";
+@magnet: "\e8c1";
+@mail: "\e805";
+@map: "\e843";
+@megaphone: "\e8d2";
+@menu: "\e811";
+@mic: "\e85e";
+@minus-circled: "\e81a";
+@minus-squared: "\e81b";
+@minus: "\e819";
+@mobile: "\e8ac";
+@monitor: "\e8ab";
+@moon: "\e8b5";
+@mouse: "\e8ba";
+@music: "\e802";
+@mute: "\e85f";
+@network: "\e8ad";
+@newspaper: "\e84d";
+@note-beamed: "\e801";
+@note: "\e800";
+@palette: "\e8a4";
+@paper-plane: "\e8b7";
+@pause: "\e899";
+@pencil: "\e836";
+@phone: "\e854";
+@picture: "\e80e";
+@play: "\e897";
+@plus-circled: "\e817";
+@plus-squared: "\e818";
+@plus: "\e816";
+@popup: "\e86b";
+@print: "\e838";
+@progress-0: "\e89f";
+@progress-1: "\e8a0";
+@progress-2: "\e8a1";
+@progress-3: "\e8a2";
+@publish: "\e86c";
+@quote: "\e833";
+@record: "\e89a";
+@reply-all: "\e831";
+@reply: "\e830";
+@resize-full: "\e869";
+@resize-small: "\e86a";
+@retweet: "\e839";
+@right-bold: "\e889";
+@right-circled: "\e871";
+@right-dir: "\e885";
+@right-open-big: "\e87d";
+@right-open-mini: "\e879";
+@right-open: "\e875";
+@right-thin: "\e88d";
+@right: "\e881";
+@rss: "\e853";
+@search: "\e803";
+@share: "\e857";
+@shareable: "\e858";
+@shuffle: "\e894";
+@signal: "\e8a7";
+@sound: "\e860";
+@star-empty: "\e809";
+@star: "\e808";
+@stop: "\e898";
+@suitcase: "\e8bc";
+@switch: "\e896";
+@tag: "\e827";
+@tape: "\e8c8";
+@target: "\e8a3";
+@thermometer: "\e8d6";
+@thumbs-down: "\e82c";
+@thumbs-up: "\e82b";
+@ticket: "\e8cb";
+@to-end: "\e89b";
+@to-start: "\e89c";
+@tools: "\e856";
+@trash: "\e847";
+@trophy: "\e8a8";
+@up-bold: "\e88a";
+@up-circled: "\e872";
+@up-dir: "\e886";
+@up-open-big: "\e87e";
+@up-open-mini: "\e87a";
+@up-open: "\e876";
+@up-thin: "\e88e";
+@up: "\e882";
+@upload-cloud: "\e82f";
+@upload: "\e82e";
+@user-add: "\e80c";
+@user: "\e80a";
+@users: "\e80b";
+@vcard: "\e840";
+@video: "\e80d";
+@volume: "\e861";
+@water: "\e8cc";
+@window: "\e86d";
+@flow-parallel: '\e8dc';
+@rocket: '\e8dd';
+@gauge: '\e8de';
+@traffic-cone: '\e8df';
+@help-circled-alt: '\e900';
+
+// decorate an element with an icon replacement...
+.replace_with_icon(@icon, @size: @font-size, @padding: 0px) {
+	display: inline-block;
+	width: @size + (@padding * 2);
+	height: @size + (@padding * 2);
+	text-indent: 200%;
+	white-space: nowrap;
+	overflow: hidden;
+	position: relative;
+	top: 1px;
+	&:before {
+		text-indent: 0;
+		position: absolute;
+		text-align: center;
+		width: @size + (@padding * 2);
+		height: @size + (@padding * 2);
+		top: @padding;
+		left: 0;
+		display: block;
+		content: @icon;
+		font-family: Entypo;
+		font-size: @size;
+		line-height: @size;
+	}
+}
+// decorate an element with an icon prefix...
+.prepend_icon(@icon, @size: @font-size, @margin: 2px) {
+	&:before {
+		width: @size;
+		height: @size;
+		display: inline-block;
+		content: @icon;
+		font-family: Entypo;
+		font-size: @size;
+		line-height: @size;
+		margin-right: @margin;
+		position: relative;
+		top: 1px;
+	}
+
+
+}
+.append_icon(@icon, @size: @font-size, @margin: 2px) {
+	&:after {
+		width: @size;
+		height: @size;
+		display: inline-block;
+		content: @icon;
+		font-family: Entypo;
+		font-size: @size;
+		line-height: @size;
+		margin-left: @margin;
+		position: relative;
+		top: 1px;
+	}
+}
+
+// explicit icons <span class="icon NAME"></span>
+.icon {
+	&.address:before { content: @address }
+	&.adjust:before { content: @adjust }
+	&.air:before { content: @air }
+	&.alert:before { content: @alert }
+	&.archive:before { content: @archive }
+	&.arrow-combo:before { content: @arrow-combo }
+	&.arrows-ccw:before { content: @arrows-ccw }
+	&.attach:before { content: @attach }
+	&.attention:before { content: @attention }
+	&.back-in-time:before { content: @back-in-time }
+	&.back:before { content: @back }
+	&.bag:before { content: @bag }
+	&.basket:before { content: @basket }
+	&.battery:before { content: @battery }
+	&.bell:before { content: @bell }
+	&.block:before { content: @block }
+	&.book-open:before { content: @book-open }
+	&.book:before { content: @book }
+	&.bookmark:before { content: @bookmark }
+	&.bookmarks:before { content: @bookmarks }
+	&.box:before { content: @box }
+	&.briefcase:before { content: @briefcase }
+	&.brush:before { content: @brush }
+	&.bucket:before { content: @bucket }
+	&.calendar:before { content: @calendar }
+	&.camera:before { content: @camera }
+	&.cancel-circled:before { content: @cancel-circled }
+	&.cancel-squared:before { content: @cancel-squared }
+	&.cancel:before { content: @cancel }
+	&.ccw:before { content: @ccw }
+	&.cd:before { content: @cd }
+	&.chart-area:before { content: @chart-area }
+	&.chart-bar:before { content: @chart-bar }
+	&.chart-line:before { content: @chart-line }
+	&.chart-pie:before { content: @chart-pie }
+	&.chat:before { content: @chat }
+	&.check:before { content: @check }
+	&.clipboard:before { content: @clipboard }
+	&.clock:before { content: @clock }
+	&.cloud-thunder:before { content: @cloud-thunder }
+	&.cloud:before { content: @cloud }
+	&.code:before { content: @code }
+	&.cog:before { content: @cog }
+	&.comment:before { content: @comment }
+	&.compass:before { content: @compass }
+	&.credit-card:before { content: @credit-card }
+	&.cup:before { content: @cup }
+	&.cw:before { content: @cw }
+	&.database:before { content: @database }
+	&.direction:before { content: @direction }
+	&.doc-landscape:before { content: @doc-landscape }
+	&.doc-text-inv:before { content: @doc-text-inv }
+	&.doc-text:before { content: @doc-text }
+	&.doc:before { content: @doc }
+	&.docs:before { content: @docs }
+	&.dot-2:before { content: @dot-2 }
+	&.dot-3:before { content: @dot-3 }
+	&.dot:before { content: @dot }
+	&.down-bold:before { content: @down-bold }
+	&.down-circled:before { content: @down-circled }
+	&.down-dir:before { content: @down-dir }
+	&.down-open-big:before { content: @down-open-big }
+	&.down-open-mini:before { content: @down-open-mini }
+	&.down-open:before { content: @down-open }
+	&.down-thin:before { content: @down-thin }
+	&.down:before { content: @down }
+	&.download:before { content: @download }
+	&.drive:before { content: @drive }
+	&.droplet:before { content: @droplet }
+	&.erase:before { content: @erase }
+	&.export:before { content: @export }
+	&.eye:before { content: @eye }
+	&.fast-backward:before { content: @fast-backward }
+	&.fast-forward:before { content: @fast-forward }
+	&.feather:before { content: @feather }
+	&.flag:before { content: @flag }
+	&.flash:before { content: @flash }
+	&.flashlight:before { content: @flashlight }
+	&.flight:before { content: @flight }
+	&.floppy:before { content: @floppy }
+	&.flow-branch:before { content: @flow-branch }
+	&.flow-cascade:before { content: @flow-cascade }
+	&.flow-line:before { content: @flow-line }
+	&.flow-tree:before { content: @flow-tree }
+	&.folder:before { content: @folder }
+	&.forward:before { content: @forward }
+	&.globe:before { content: @globe }
+	&.graduation-cap:before { content: @graduation-cap }
+	&.heart-empty:before { content: @heart-empty }
+	&.heart:before { content: @heart }
+	&.help-circled:before { content: @help-circled }
+	&.help:before { content: @help }
+	&.home:before { content: @home }
+	&.hourglass:before { content: @hourglass }
+	&.inbox:before { content: @inbox }
+	&.infinity:before { content: @infinity }
+	&.info-circled:before { content: @info-circled }
+	&.info:before { content: @info }
+	&.install:before { content: @install }
+	&.key:before { content: @key }
+	&.keyboard:before { content: @keyboard }
+	&.lamp:before { content: @lamp }
+	&.language:before { content: @language }
+	&.layout:before { content: @layout }
+	&.leaf:before { content: @leaf }
+	&.left-bold:before { content: @left-bold }
+	&.left-circled:before { content: @left-circled }
+	&.left-dir:before { content: @left-dir }
+	&.left-open-big:before { content: @left-open-big }
+	&.left-open-mini:before { content: @left-open-mini }
+	&.left-open:before { content: @left-open }
+	&.left-thin:before { content: @left-thin }
+	&.left:before { content: @left }
+	&.level-down:before { content: @level-down }
+	&.level-up:before { content: @level-up }
+	&.lifebuoy:before { content: @lifebuoy }
+	&.light-down:before { content: @light-down }
+	&.light-up:before { content: @light-up }
+	&.link:before { content: @link }
+	&.list-add:before { content: @list-add }
+	&.list:before { content: @list }
+	&.location:before { content: @location }
+	&.lock-open:before { content: @lock-open }
+	&.lock:before { content: @lock }
+	&.login:before { content: @login }
+	&.logout:before { content: @logout }
+	&.loop:before { content: @loop }
+	&.magnet:before { content: @magnet }
+	&.mail:before { content: @mail }
+	&.map:before { content: @map }
+	&.megaphone:before { content: @megaphone }
+	&.menu:before { content: @menu }
+	&.mic:before { content: @mic }
+	&.minus-circled:before { content: @minus-circled }
+	&.minus-squared:before { content: @minus-squared }
+	&.minus:before { content: @minus }
+	&.mobile:before { content: @mobile }
+	&.monitor:before { content: @monitor }
+	&.moon:before { content: @moon }
+	&.mouse:before { content: @mouse }
+	&.music:before { content: @music }
+	&.mute:before { content: @mute }
+	&.network:before { content: @network }
+	&.newspaper:before { content: @newspaper }
+	&.note-beamed:before { content: @note-beamed }
+	&.note:before { content: @note }
+	&.palette:before { content: @palette }
+	&.paper-plane:before { content: @paper-plane }
+	&.pause:before { content: @pause }
+	&.pencil:before { content: @pencil }
+	&.phone:before { content: @phone }
+	&.picture:before { content: @picture }
+	&.play:before { content: @play }
+	&.plus-circled:before { content: @plus-circled }
+	&.plus-squared:before { content: @plus-squared }
+	&.plus:before { content: @plus }
+	&.popup:before { content: @popup }
+	&.print:before { content: @print }
+	&.progress-0:before { content: @progress-0 }
+	&.progress-1:before { content: @progress-1 }
+	&.progress-2:before { content: @progress-2 }
+	&.progress-3:before { content: @progress-3 }
+	&.publish:before { content: @publish }
+	&.quote:before { content: @quote }
+	&.record:before { content: @record }
+	&.reply-all:before { content: @reply-all }
+	&.reply:before { content: @reply }
+	&.resize-full:before { content: @resize-full }
+	&.resize-small:before { content: @resize-small }
+	&.retweet:before { content: @retweet }
+	&.right-bold:before { content: @right-bold }
+	&.right-circled:before { content: @right-circled }
+	&.right-dir:before { content: @right-dir }
+	&.right-open-big:before { content: @right-open-big }
+	&.right-open-mini:before { content: @right-open-mini }
+	&.right-open:before { content: @right-open }
+	&.right-thin:before { content: @right-thin }
+	&.right:before { content: @right }
+	&.rss:before { content: @rss }
+	&.search:before { content: @search }
+	&.share:before { content: @share }
+	&.shareable:before { content: @shareable }
+	&.shuffle:before { content: @shuffle }
+	&.signal:before { content: @signal }
+	&.sound:before { content: @sound }
+	&.star-empty:before { content: @star-empty }
+	&.star:before { content: @star }
+	&.stop:before { content: @stop }
+	&.suitcase:before { content: @suitcase }
+	&.switch:before { content: @switch }
+	&.tag:before { content: @tag }
+	&.tape:before { content: @tape }
+	&.target:before { content: @target }
+	&.thermometer:before { content: @thermometer }
+	&.thumbs-down:before { content: @thumbs-down }
+	&.thumbs-up:before { content: @thumbs-up }
+	&.ticket:before { content: @ticket }
+	&.to-end:before { content: @to-end }
+	&.to-start:before { content: @to-start }
+	&.tools:before { content: @tools }
+	&.trash:before { content: @trash }
+	&.trophy:before { content: @trophy }
+	&.up-bold:before { content: @up-bold }
+	&.up-circled:before { content: @up-circled }
+	&.up-dir:before { content: @up-dir }
+	&.up-open-big:before { content: @up-open-big }
+	&.up-open-mini:before { content: @up-open-mini }
+	&.up-open:before { content: @up-open }
+	&.up-thin:before { content: @up-thin }
+	&.up:before { content: @up }
+	&.upload-cloud:before { content: @upload-cloud }
+	&.upload:before { content: @upload }
+	&.user-add:before { content: @user-add }
+	&.user:before { content: @user }
+	&.users:before { content: @users }
+	&.vcard:before { content: @vcard }
+	&.video:before { content: @video }
+	&.volume:before { content: @volume }
+	&.water:before { content: @water }
+	&.window:before { content: @window }
+	&.flow-parallel:before { content: @flow-parallel; }
+	&.rocket:before { content: @rocket; }
+	&.gauge:before { content: @gauge; }
+	&.traffic-cone:before { content: @traffic-cone; }
+	&.help-circled-alt:before { content: @help-circled-alt; }
+	&:before {
+		font-family: Entypo;
+		font-size: 30px;
+	}
+}
+
+.replace-with-icon {
+	&.address { .replace_with_icon(@address); }
+	&.adjust { .replace_with_icon(@adjust); }
+	&.air { .replace_with_icon(@air); }
+	&.alert { .replace_with_icon(@alert); }
+	&.archive { .replace_with_icon(@archive); }
+	&.arrow-combo { .replace_with_icon(@arrow-combo); }
+	&.arrows-ccw { .replace_with_icon(@arrows-ccw); }
+	&.attach { .replace_with_icon(@attach); }
+	&.attention { .replace_with_icon(@attention); }
+	&.back-in-time { .replace_with_icon(@back-in-time); }
+	&.back { .replace_with_icon(@back); }
+	&.bag { .replace_with_icon(@bag); }
+	&.basket { .replace_with_icon(@basket); }
+	&.battery { .replace_with_icon(@battery); }
+	&.bell { .replace_with_icon(@bell); }
+	&.block { .replace_with_icon(@block); }
+	&.book-open { .replace_with_icon(@book-open); }
+	&.book { .replace_with_icon(@book); }
+	&.bookmark { .replace_with_icon(@bookmark); }
+	&.bookmarks { .replace_with_icon(@bookmarks); }
+	&.box { .replace_with_icon(@box); }
+	&.briefcase { .replace_with_icon(@briefcase); }
+	&.brush { .replace_with_icon(@brush); }
+	&.bucket { .replace_with_icon(@bucket); }
+	&.calendar { .replace_with_icon(@calendar); }
+	&.camera { .replace_with_icon(@camera); }
+	&.cancel-circled { .replace_with_icon(@cancel-circled); }
+	&.cancel-squared { .replace_with_icon(@cancel-squared); }
+	&.cancel { .replace_with_icon(@cancel); }
+	&.ccw { .replace_with_icon(@ccw); }
+	&.cd { .replace_with_icon(@cd); }
+	&.chart-area { .replace_with_icon(@chart-area); }
+	&.chart-bar { .replace_with_icon(@chart-bar); }
+	&.chart-line { .replace_with_icon(@chart-line); }
+	&.chart-pie { .replace_with_icon(@chart-pie); }
+	&.chat { .replace_with_icon(@chat); }
+	&.check { .replace_with_icon(@check); }
+	&.clipboard { .replace_with_icon(@clipboard); }
+	&.clock { .replace_with_icon(@clock); }
+	&.cloud-thunder { .replace_with_icon(@cloud-thunder); }
+	&.cloud { .replace_with_icon(@cloud); }
+	&.code { .replace_with_icon(@code); }
+	&.cog { .replace_with_icon(@cog); }
+	&.comment { .replace_with_icon(@comment); }
+	&.compass { .replace_with_icon(@compass); }
+	&.credit-card { .replace_with_icon(@credit-card); }
+	&.cup { .replace_with_icon(@cup); }
+	&.cw { .replace_with_icon(@cw); }
+	&.database { .replace_with_icon(@database); }
+	&.direction { .replace_with_icon(@direction); }
+	&.doc-landscape { .replace_with_icon(@doc-landscape); }
+	&.doc-text-inv { .replace_with_icon(@doc-text-inv); }
+	&.doc-text { .replace_with_icon(@doc-text); }
+	&.doc { .replace_with_icon(@doc); }
+	&.docs { .replace_with_icon(@docs); }
+	&.dot-2 { .replace_with_icon(@dot-2); }
+	&.dot-3 { .replace_with_icon(@dot-3); }
+	&.dot { .replace_with_icon(@dot); }
+	&.down-bold { .replace_with_icon(@down-bold); }
+	&.down-circled { .replace_with_icon(@down-circled); }
+	&.down-dir { .replace_with_icon(@down-dir); }
+	&.down-open-big { .replace_with_icon(@down-open-big); }
+	&.down-open-mini { .replace_with_icon(@down-open-mini); }
+	&.down-open { .replace_with_icon(@down-open); }
+	&.down-thin { .replace_with_icon(@down-thin); }
+	&.down { .replace_with_icon(@down); }
+	&.download { .replace_with_icon(@download); }
+	&.drive { .replace_with_icon(@drive); }
+	&.droplet { .replace_with_icon(@droplet); }
+	&.erase { .replace_with_icon(@erase); }
+	&.export { .replace_with_icon(@export); }
+	&.eye { .replace_with_icon(@eye); }
+	&.fast-backward { .replace_with_icon(@fast-backward); }
+	&.fast-forward { .replace_with_icon(@fast-forward); }
+	&.feather { .replace_with_icon(@feather); }
+	&.flag { .replace_with_icon(@flag); }
+	&.flash { .replace_with_icon(@flash); }
+	&.flashlight { .replace_with_icon(@flashlight); }
+	&.flight { .replace_with_icon(@flight); }
+	&.floppy { .replace_with_icon(@floppy); }
+	&.flow-branch { .replace_with_icon(@flow-branch); }
+	&.flow-cascade { .replace_with_icon(@flow-cascade); }
+	&.flow-line { .replace_with_icon(@flow-line); }
+	&.flow-tree { .replace_with_icon(@flow-tree); }
+	&.folder { .replace_with_icon(@folder); }
+	&.forward { .replace_with_icon(@forward); }
+	&.globe { .replace_with_icon(@globe); }
+	&.graduation-cap { .replace_with_icon(@graduation-cap); }
+	&.heart-empty { .replace_with_icon(@heart-empty); }
+	&.heart { .replace_with_icon(@heart); }
+	&.help-circled { .replace_with_icon(@help-circled); }
+	&.help { .replace_with_icon(@help); }
+	&.home { .replace_with_icon(@home); }
+	&.hourglass { .replace_with_icon(@hourglass); }
+	&.inbox { .replace_with_icon(@inbox); }
+	&.infinity { .replace_with_icon(@infinity); }
+	&.info-circled { .replace_with_icon(@info-circled); }
+	&.info { .replace_with_icon(@info); }
+	&.install { .replace_with_icon(@install); }
+	&.key { .replace_with_icon(@key); }
+	&.keyboard { .replace_with_icon(@keyboard); }
+	&.lamp { .replace_with_icon(@lamp); }
+	&.language { .replace_with_icon(@language); }
+	&.layout { .replace_with_icon(@layout); }
+	&.leaf { .replace_with_icon(@leaf); }
+	&.left-bold { .replace_with_icon(@left-bold); }
+	&.left-circled { .replace_with_icon(@left-circled); }
+	&.left-dir { .replace_with_icon(@left-dir); }
+	&.left-open-big { .replace_with_icon(@left-open-big); }
+	&.left-open-mini { .replace_with_icon(@left-open-mini); }
+	&.left-open { .replace_with_icon(@left-open); }
+	&.left-thin { .replace_with_icon(@left-thin); }
+	&.left { .replace_with_icon(@left); }
+	&.level-down { .replace_with_icon(@level-down); }
+	&.level-up { .replace_with_icon(@level-up); }
+	&.lifebuoy { .replace_with_icon(@lifebuoy); }
+	&.light-down { .replace_with_icon(@light-down); }
+	&.light-up { .replace_with_icon(@light-up); }
+	&.link { .replace_with_icon(@link); }
+	&.list-add { .replace_with_icon(@list-add); }
+	&.list { .replace_with_icon(@list); }
+	&.location { .replace_with_icon(@location); }
+	&.lock-open { .replace_with_icon(@lock-open); }
+	&.lock { .replace_with_icon(@lock); }
+	&.login { .replace_with_icon(@login); }
+	&.logout { .replace_with_icon(@logout); }
+	&.loop { .replace_with_icon(@loop); }
+	&.magnet { .replace_with_icon(@magnet); }
+	&.mail { .replace_with_icon(@mail); }
+	&.map { .replace_with_icon(@map); }
+	&.megaphone { .replace_with_icon(@megaphone); }
+	&.menu { .replace_with_icon(@menu); }
+	&.mic { .replace_with_icon(@mic); }
+	&.minus-circled { .replace_with_icon(@minus-circled); }
+	&.minus-squared { .replace_with_icon(@minus-squared); }
+	&.minus { .replace_with_icon(@minus); }
+	&.mobile { .replace_with_icon(@mobile); }
+	&.monitor { .replace_with_icon(@monitor); }
+	&.moon { .replace_with_icon(@moon); }
+	&.mouse { .replace_with_icon(@mouse); }
+	&.music { .replace_with_icon(@music); }
+	&.mute { .replace_with_icon(@mute); }
+	&.network { .replace_with_icon(@network); }
+	&.newspaper { .replace_with_icon(@newspaper); }
+	&.note-beamed { .replace_with_icon(@note-beamed); }
+	&.note { .replace_with_icon(@note); }
+	&.palette { .replace_with_icon(@palette); }
+	&.paper-plane { .replace_with_icon(@paper-plane); }
+	&.pause { .replace_with_icon(@pause); }
+	&.pencil { .replace_with_icon(@pencil); }
+	&.phone { .replace_with_icon(@phone); }
+	&.picture { .replace_with_icon(@picture); }
+	&.play { .replace_with_icon(@play); }
+	&.plus-circled { .replace_with_icon(@plus-circled); }
+	&.plus-squared { .replace_with_icon(@plus-squared); }
+	&.plus { .replace_with_icon(@plus); }
+	&.popup { .replace_with_icon(@popup); }
+	&.print { .replace_with_icon(@print); }
+	&.progress-0 { .replace_with_icon(@progress-0); }
+	&.progress-1 { .replace_with_icon(@progress-1); }
+	&.progress-2 { .replace_with_icon(@progress-2); }
+	&.progress-3 { .replace_with_icon(@progress-3); }
+	&.publish { .replace_with_icon(@publish); }
+	&.quote { .replace_with_icon(@quote); }
+	&.record { .replace_with_icon(@record); }
+	&.reply-all { .replace_with_icon(@reply-all); }
+	&.reply { .replace_with_icon(@reply); }
+	&.resize-full { .replace_with_icon(@resize-full); }
+	&.resize-small { .replace_with_icon(@resize-small); }
+	&.retweet { .replace_with_icon(@retweet); }
+	&.right-bold { .replace_with_icon(@right-bold); }
+	&.right-circled { .replace_with_icon(@right-circled); }
+	&.right-dir { .replace_with_icon(@right-dir); }
+	&.right-open-big { .replace_with_icon(@right-open-big); }
+	&.right-open-mini { .replace_with_icon(@right-open-mini); }
+	&.right-open { .replace_with_icon(@right-open); }
+	&.right-thin { .replace_with_icon(@right-thin); }
+	&.right { .replace_with_icon(@right); }
+	&.rss { .replace_with_icon(@rss); }
+	&.search { .replace_with_icon(@search); }
+	&.share { .replace_with_icon(@share); }
+	&.shareable { .replace_with_icon(@shareable); }
+	&.shuffle { .replace_with_icon(@shuffle); }
+	&.signal { .replace_with_icon(@signal); }
+	&.sound { .replace_with_icon(@sound); }
+	&.star-empty { .replace_with_icon(@star-empty); }
+	&.star { .replace_with_icon(@star); }
+	&.stop { .replace_with_icon(@stop); }
+	&.suitcase { .replace_with_icon(@suitcase); }
+	&.switch { .replace_with_icon(@switch); }
+	&.tag { .replace_with_icon(@tag); }
+	&.tape { .replace_with_icon(@tape); }
+	&.target { .replace_with_icon(@target); }
+	&.thermometer { .replace_with_icon(@thermometer); }
+	&.thumbs-down { .replace_with_icon(@thumbs-down); }
+	&.thumbs-up { .replace_with_icon(@thumbs-up); }
+	&.ticket { .replace_with_icon(@ticket); }
+	&.to-end { .replace_with_icon(@to-end); }
+	&.to-start { .replace_with_icon(@to-start); }
+	&.tools { .replace_with_icon(@tools); }
+	&.trash { .replace_with_icon(@trash); }
+	&.trophy { .replace_with_icon(@trophy); }
+	&.up-bold { .replace_with_icon(@up-bold); }
+	&.up-circled { .replace_with_icon(@up-circled); }
+	&.up-dir { .replace_with_icon(@up-dir); }
+	&.up-open-big { .replace_with_icon(@up-open-big); }
+	&.up-open-mini { .replace_with_icon(@up-open-mini); }
+	&.up-open { .replace_with_icon(@up-open); }
+	&.up-thin { .replace_with_icon(@up-thin); }
+	&.up { .replace_with_icon(@up); }
+	&.upload-cloud { .replace_with_icon(@upload-cloud); }
+	&.upload { .replace_with_icon(@upload); }
+	&.user-add { .replace_with_icon(@user-add); }
+	&.user { .replace_with_icon(@user); }
+	&.users { .replace_with_icon(@users); }
+	&.vcard { .replace_with_icon(@vcard); }
+	&.video { .replace_with_icon(@video); }
+	&.volume { .replace_with_icon(@volume); }
+	&.water { .replace_with_icon(@water); }
+	&.window { .replace_with_icon(@window); }
+	&.flow-parallel { .replace_with_icon(@flow-parallel); }
+	&.rocket { .replace_with_icon(@rocket); }
+	&.gauge { .replace_with_icon(@gauge); }
+	&.traffic-cone { .replace_with_icon(@traffic-cone); }
+	&.help-circled-alt { .replace_with_icon(@help-circled-alt); }
+}
+
+.append-icon {
+	&.address { .append_icon(@address); }
+	&.adjust { .append_icon(@adjust); }
+	&.air { .append_icon(@air); }
+	&.alert { .append_icon(@alert); }
+	&.archive { .append_icon(@archive); }
+	&.arrow-combo { .append_icon(@arrow-combo); }
+	&.arrows-ccw { .append_icon(@arrows-ccw); }
+	&.attach { .append_icon(@attach); }
+	&.attention { .append_icon(@attention); }
+	&.back-in-time { .append_icon(@back-in-time); }
+	&.back { .append_icon(@back); }
+	&.bag { .append_icon(@bag); }
+	&.basket { .append_icon(@basket); }
+	&.battery { .append_icon(@battery); }
+	&.bell { .append_icon(@bell); }
+	&.block { .append_icon(@block); }
+	&.book-open { .append_icon(@book-open); }
+	&.book { .append_icon(@book); }
+	&.bookmark { .append_icon(@bookmark); }
+	&.bookmarks { .append_icon(@bookmarks); }
+	&.box { .append_icon(@box); }
+	&.briefcase { .append_icon(@briefcase); }
+	&.brush { .append_icon(@brush); }
+	&.bucket { .append_icon(@bucket); }
+	&.calendar { .append_icon(@calendar); }
+	&.camera { .append_icon(@camera); }
+	&.cancel-circled { .append_icon(@cancel-circled); }
+	&.cancel-squared { .append_icon(@cancel-squared); }
+	&.cancel { .append_icon(@cancel); }
+	&.ccw { .append_icon(@ccw); }
+	&.cd { .append_icon(@cd); }
+	&.chart-area { .append_icon(@chart-area); }
+	&.chart-bar { .append_icon(@chart-bar); }
+	&.chart-line { .append_icon(@chart-line); }
+	&.chart-pie { .append_icon(@chart-pie); }
+	&.chat { .append_icon(@chat); }
+	&.check { .append_icon(@check); }
+	&.clipboard { .append_icon(@clipboard); }
+	&.clock { .append_icon(@clock); }
+	&.cloud-thunder { .append_icon(@cloud-thunder); }
+	&.cloud { .append_icon(@cloud); }
+	&.code { .append_icon(@code); }
+	&.cog { .append_icon(@cog); }
+	&.comment { .append_icon(@comment); }
+	&.compass { .append_icon(@compass); }
+	&.credit-card { .append_icon(@credit-card); }
+	&.cup { .append_icon(@cup); }
+	&.cw { .append_icon(@cw); }
+	&.database { .append_icon(@database); }
+	&.direction { .append_icon(@direction); }
+	&.doc-landscape { .append_icon(@doc-landscape); }
+	&.doc-text-inv { .append_icon(@doc-text-inv); }
+	&.doc-text { .append_icon(@doc-text); }
+	&.doc { .append_icon(@doc); }
+	&.docs { .append_icon(@docs); }
+	&.dot-2 { .append_icon(@dot-2); }
+	&.dot-3 { .append_icon(@dot-3); }
+	&.dot { .append_icon(@dot); }
+	&.down-bold { .append_icon(@down-bold); }
+	&.down-circled { .append_icon(@down-circled); }
+	&.down-dir { .append_icon(@down-dir); }
+	&.down-open-big { .append_icon(@down-open-big); }
+	&.down-open-mini { .append_icon(@down-open-mini); }
+	&.down-open { .append_icon(@down-open); }
+	&.down-thin { .append_icon(@down-thin); }
+	&.down { .append_icon(@down); }
+	&.download { .append_icon(@download); }
+	&.drive { .append_icon(@drive); }
+	&.droplet { .append_icon(@droplet); }
+	&.erase { .append_icon(@erase); }
+	&.export { .append_icon(@export); }
+	&.eye { .append_icon(@eye); }
+	&.fast-backward { .append_icon(@fast-backward); }
+	&.fast-forward { .append_icon(@fast-forward); }
+	&.feather { .append_icon(@feather); }
+	&.flag { .append_icon(@flag); }
+	&.flash { .append_icon(@flash); }
+	&.flashlight { .append_icon(@flashlight); }
+	&.flight { .append_icon(@flight); }
+	&.floppy { .append_icon(@floppy); }
+	&.flow-branch { .append_icon(@flow-branch); }
+	&.flow-cascade { .append_icon(@flow-cascade); }
+	&.flow-line { .append_icon(@flow-line); }
+	&.flow-tree { .append_icon(@flow-tree); }
+	&.folder { .append_icon(@folder); }
+	&.forward { .append_icon(@forward); }
+	&.globe { .append_icon(@globe); }
+	&.graduation-cap { .append_icon(@graduation-cap); }
+	&.heart-empty { .append_icon(@heart-empty); }
+	&.heart { .append_icon(@heart); }
+	&.help-circled { .append_icon(@help-circled); }
+	&.help { .append_icon(@help); }
+	&.home { .append_icon(@home); }
+	&.hourglass { .append_icon(@hourglass); }
+	&.inbox { .append_icon(@inbox); }
+	&.infinity { .append_icon(@infinity); }
+	&.info-circled { .append_icon(@info-circled); }
+	&.info { .append_icon(@info); }
+	&.install { .append_icon(@install); }
+	&.key { .append_icon(@key); }
+	&.keyboard { .append_icon(@keyboard); }
+	&.lamp { .append_icon(@lamp); }
+	&.language { .append_icon(@language); }
+	&.layout { .append_icon(@layout); }
+	&.leaf { .append_icon(@leaf); }
+	&.left-bold { .append_icon(@left-bold); }
+	&.left-circled { .append_icon(@left-circled); }
+	&.left-dir { .append_icon(@left-dir); }
+	&.left-open-big { .append_icon(@left-open-big); }
+	&.left-open-mini { .append_icon(@left-open-mini); }
+	&.left-open { .append_icon(@left-open); }
+	&.left-thin { .append_icon(@left-thin); }
+	&.left { .append_icon(@left); }
+	&.level-down { .append_icon(@level-down); }
+	&.level-up { .append_icon(@level-up); }
+	&.lifebuoy { .append_icon(@lifebuoy); }
+	&.light-down { .append_icon(@light-down); }
+	&.light-up { .append_icon(@light-up); }
+	&.link { .append_icon(@link); }
+	&.list-add { .append_icon(@list-add); }
+	&.list { .append_icon(@list); }
+	&.location { .append_icon(@location); }
+	&.lock-open { .append_icon(@lock-open); }
+	&.lock { .append_icon(@lock); }
+	&.login { .append_icon(@login); }
+	&.logout { .append_icon(@logout); }
+	&.loop { .append_icon(@loop); }
+	&.magnet { .append_icon(@magnet); }
+	&.mail { .append_icon(@mail); }
+	&.map { .append_icon(@map); }
+	&.megaphone { .append_icon(@megaphone); }
+	&.menu { .append_icon(@menu); }
+	&.mic { .append_icon(@mic); }
+	&.minus-circled { .append_icon(@minus-circled); }
+	&.minus-squared { .append_icon(@minus-squared); }
+	&.minus { .append_icon(@minus); }
+	&.mobile { .append_icon(@mobile); }
+	&.monitor { .append_icon(@monitor); }
+	&.moon { .append_icon(@moon); }
+	&.mouse { .append_icon(@mouse); }
+	&.music { .append_icon(@music); }
+	&.mute { .append_icon(@mute); }
+	&.network { .append_icon(@network); }
+	&.newspaper { .append_icon(@newspaper); }
+	&.note-beamed { .append_icon(@note-beamed); }
+	&.note { .append_icon(@note); }
+	&.palette { .append_icon(@palette); }
+	&.paper-plane { .append_icon(@paper-plane); }
+	&.pause { .append_icon(@pause); }
+	&.pencil { .append_icon(@pencil); }
+	&.phone { .append_icon(@phone); }
+	&.picture { .append_icon(@picture); }
+	&.play { .append_icon(@play); }
+	&.plus-circled { .append_icon(@plus-circled); }
+	&.plus-squared { .append_icon(@plus-squared); }
+	&.plus { .append_icon(@plus); }
+	&.popup { .append_icon(@popup); }
+	&.print { .append_icon(@print); }
+	&.progress-0 { .append_icon(@progress-0); }
+	&.progress-1 { .append_icon(@progress-1); }
+	&.progress-2 { .append_icon(@progress-2); }
+	&.progress-3 { .append_icon(@progress-3); }
+	&.publish { .append_icon(@publish); }
+	&.quote { .append_icon(@quote); }
+	&.record { .append_icon(@record); }
+	&.reply-all { .append_icon(@reply-all); }
+	&.reply { .append_icon(@reply); }
+	&.resize-full { .append_icon(@resize-full); }
+	&.resize-small { .append_icon(@resize-small); }
+	&.retweet { .append_icon(@retweet); }
+	&.right-bold { .append_icon(@right-bold); }
+	&.right-circled { .append_icon(@right-circled); }
+	&.right-dir { .append_icon(@right-dir); }
+	&.right-open-big { .append_icon(@right-open-big); }
+	&.right-open-mini { .append_icon(@right-open-mini); }
+	&.right-open { .append_icon(@right-open); }
+	&.right-thin { .append_icon(@right-thin); }
+	&.right { .append_icon(@right); }
+	&.rss { .append_icon(@rss); }
+	&.search { .append_icon(@search); }
+	&.share { .append_icon(@share); }
+	&.shareable { .append_icon(@shareable); }
+	&.shuffle { .append_icon(@shuffle); }
+	&.signal { .append_icon(@signal); }
+	&.sound { .append_icon(@sound); }
+	&.star-empty { .append_icon(@star-empty); }
+	&.star { .append_icon(@star); }
+	&.stop { .append_icon(@stop); }
+	&.suitcase { .append_icon(@suitcase); }
+	&.switch { .append_icon(@switch); }
+	&.tag { .append_icon(@tag); }
+	&.tape { .append_icon(@tape); }
+	&.target { .append_icon(@target); }
+	&.thermometer { .append_icon(@thermometer); }
+	&.thumbs-down { .append_icon(@thumbs-down); }
+	&.thumbs-up { .append_icon(@thumbs-up); }
+	&.ticket { .append_icon(@ticket); }
+	&.to-end { .append_icon(@to-end); }
+	&.to-start { .append_icon(@to-start); }
+	&.tools { .append_icon(@tools); }
+	&.trash { .append_icon(@trash); }
+	&.trophy { .append_icon(@trophy); }
+	&.up-bold { .append_icon(@up-bold); }
+	&.up-circled { .append_icon(@up-circled); }
+	&.up-dir { .append_icon(@up-dir); }
+	&.up-open-big { .append_icon(@up-open-big); }
+	&.up-open-mini { .append_icon(@up-open-mini); }
+	&.up-open { .append_icon(@up-open); }
+	&.up-thin { .append_icon(@up-thin); }
+	&.up { .append_icon(@up); }
+	&.upload-cloud { .append_icon(@upload-cloud); }
+	&.upload { .append_icon(@upload); }
+	&.user-add { .append_icon(@user-add); }
+	&.user { .append_icon(@user); }
+	&.users { .append_icon(@users); }
+	&.vcard { .append_icon(@vcard); }
+	&.video { .append_icon(@video); }
+	&.volume { .append_icon(@volume); }
+	&.water { .append_icon(@water); }
+	&.window { .append_icon(@window); }
+	&.flow-parallel { .append_icon(@flow-parallel); }
+	&.rocket { .append_icon(@rocket); }
+	&.gauge { .append_icon(@gauge); }
+	&.traffic-cone { .append_icon(@traffic-cone); }
+	&.help-circled-alt { .append_icon(@help-circled-alt); }
+}
+
+.prepend-icon {
+	&.address { .prepend_icon(@address); }
+	&.adjust { .prepend_icon(@adjust); }
+	&.air { .prepend_icon(@air); }
+	&.alert { .prepend_icon(@alert); }
+	&.archive { .prepend_icon(@archive); }
+	&.arrow-combo { .prepend_icon(@arrow-combo); }
+	&.arrows-ccw { .prepend_icon(@arrows-ccw); }
+	&.attach { .prepend_icon(@attach); }
+	&.attention { .prepend_icon(@attention); }
+	&.back-in-time { .prepend_icon(@back-in-time); }
+	&.back { .prepend_icon(@back); }
+	&.bag { .prepend_icon(@bag); }
+	&.basket { .prepend_icon(@basket); }
+	&.battery { .prepend_icon(@battery); }
+	&.bell { .prepend_icon(@bell); }
+	&.block { .prepend_icon(@block); }
+	&.book-open { .prepend_icon(@book-open); }
+	&.book { .prepend_icon(@book); }
+	&.bookmark { .prepend_icon(@bookmark); }
+	&.bookmarks { .prepend_icon(@bookmarks); }
+	&.box { .prepend_icon(@box); }
+	&.briefcase { .prepend_icon(@briefcase); }
+	&.brush { .prepend_icon(@brush); }
+	&.bucket { .prepend_icon(@bucket); }
+	&.calendar { .prepend_icon(@calendar); }
+	&.camera { .prepend_icon(@camera); }
+	&.cancel-circled { .prepend_icon(@cancel-circled); }
+	&.cancel-squared { .prepend_icon(@cancel-squared); }
+	&.cancel { .prepend_icon(@cancel); }
+	&.ccw { .prepend_icon(@ccw); }
+	&.cd { .prepend_icon(@cd); }
+	&.chart-area { .prepend_icon(@chart-area); }
+	&.chart-bar { .prepend_icon(@chart-bar); }
+	&.chart-line { .prepend_icon(@chart-line); }
+	&.chart-pie { .prepend_icon(@chart-pie); }
+	&.chat { .prepend_icon(@chat); }
+	&.check { .prepend_icon(@check); }
+	&.clipboard { .prepend_icon(@clipboard); }
+	&.clock { .prepend_icon(@clock); }
+	&.cloud-thunder { .prepend_icon(@cloud-thunder); }
+	&.cloud { .prepend_icon(@cloud); }
+	&.code { .prepend_icon(@code); }
+	&.cog { .prepend_icon(@cog); }
+	&.comment { .prepend_icon(@comment); }
+	&.compass { .prepend_icon(@compass); }
+	&.credit-card { .prepend_icon(@credit-card); }
+	&.cup { .prepend_icon(@cup); }
+	&.cw { .prepend_icon(@cw); }
+	&.database { .prepend_icon(@database); }
+	&.direction { .prepend_icon(@direction); }
+	&.doc-landscape { .prepend_icon(@doc-landscape); }
+	&.doc-text-inv { .prepend_icon(@doc-text-inv); }
+	&.doc-text { .prepend_icon(@doc-text); }
+	&.doc { .prepend_icon(@doc); }
+	&.docs { .prepend_icon(@docs); }
+	&.dot-2 { .prepend_icon(@dot-2); }
+	&.dot-3 { .prepend_icon(@dot-3); }
+	&.dot { .prepend_icon(@dot); }
+	&.down-bold { .prepend_icon(@down-bold); }
+	&.down-circled { .prepend_icon(@down-circled); }
+	&.down-dir { .prepend_icon(@down-dir); }
+	&.down-open-big { .prepend_icon(@down-open-big); }
+	&.down-open-mini { .prepend_icon(@down-open-mini); }
+	&.down-open { .prepend_icon(@down-open); }
+	&.down-thin { .prepend_icon(@down-thin); }
+	&.down { .prepend_icon(@down); }
+	&.download { .prepend_icon(@download); }
+	&.drive { .prepend_icon(@drive); }
+	&.droplet { .prepend_icon(@droplet); }
+	&.erase { .prepend_icon(@erase); }
+	&.export { .prepend_icon(@export); }
+	&.eye { .prepend_icon(@eye); }
+	&.fast-backward { .prepend_icon(@fast-backward); }
+	&.fast-forward { .prepend_icon(@fast-forward); }
+	&.feather { .prepend_icon(@feather); }
+	&.flag { .prepend_icon(@flag); }
+	&.flash { .prepend_icon(@flash); }
+	&.flashlight { .prepend_icon(@flashlight); }
+	&.flight { .prepend_icon(@flight); }
+	&.floppy { .prepend_icon(@floppy); }
+	&.flow-branch { .prepend_icon(@flow-branch); }
+	&.flow-cascade { .prepend_icon(@flow-cascade); }
+	&.flow-line { .prepend_icon(@flow-line); }
+	&.flow-tree { .prepend_icon(@flow-tree); }
+	&.folder { .prepend_icon(@folder); }
+	&.forward { .prepend_icon(@forward); }
+	&.globe { .prepend_icon(@globe); }
+	&.graduation-cap { .prepend_icon(@graduation-cap); }
+	&.heart-empty { .prepend_icon(@heart-empty); }
+	&.heart { .prepend_icon(@heart); }
+	&.help-circled { .prepend_icon(@help-circled); }
+	&.help { .prepend_icon(@help); }
+	&.home { .prepend_icon(@home); }
+	&.hourglass { .prepend_icon(@hourglass); }
+	&.inbox { .prepend_icon(@inbox); }
+	&.infinity { .prepend_icon(@infinity); }
+	&.info-circled { .prepend_icon(@info-circled); }
+	&.info { .prepend_icon(@info); }
+	&.install { .prepend_icon(@install); }
+	&.key { .prepend_icon(@key); }
+	&.keyboard { .prepend_icon(@keyboard); }
+	&.lamp { .prepend_icon(@lamp); }
+	&.language { .prepend_icon(@language); }
+	&.layout { .prepend_icon(@layout); }
+	&.leaf { .prepend_icon(@leaf); }
+	&.left-bold { .prepend_icon(@left-bold); }
+	&.left-circled { .prepend_icon(@left-circled); }
+	&.left-dir { .prepend_icon(@left-dir); }
+	&.left-open-big { .prepend_icon(@left-open-big); }
+	&.left-open-mini { .prepend_icon(@left-open-mini); }
+	&.left-open { .prepend_icon(@left-open); }
+	&.left-thin { .prepend_icon(@left-thin); }
+	&.left { .prepend_icon(@left); }
+	&.level-down { .prepend_icon(@level-down); }
+	&.level-up { .prepend_icon(@level-up); }
+	&.lifebuoy { .prepend_icon(@lifebuoy); }
+	&.light-down { .prepend_icon(@light-down); }
+	&.light-up { .prepend_icon(@light-up); }
+	&.link { .prepend_icon(@link); }
+	&.list-add { .prepend_icon(@list-add); }
+	&.list { .prepend_icon(@list); }
+	&.location { .prepend_icon(@location); }
+	&.lock-open { .prepend_icon(@lock-open); }
+	&.lock { .prepend_icon(@lock); }
+	&.login { .prepend_icon(@login); }
+	&.logout { .prepend_icon(@logout); }
+	&.loop { .prepend_icon(@loop); }
+	&.magnet { .prepend_icon(@magnet); }
+	&.mail { .prepend_icon(@mail); }
+	&.map { .prepend_icon(@map); }
+	&.megaphone { .prepend_icon(@megaphone); }
+	&.menu { .prepend_icon(@menu); }
+	&.mic { .prepend_icon(@mic); }
+	&.minus-circled { .prepend_icon(@minus-circled); }
+	&.minus-squared { .prepend_icon(@minus-squared); }
+	&.minus { .prepend_icon(@minus); }
+	&.mobile { .prepend_icon(@mobile); }
+	&.monitor { .prepend_icon(@monitor); }
+	&.moon { .prepend_icon(@moon); }
+	&.mouse { .prepend_icon(@mouse); }
+	&.music { .prepend_icon(@music); }
+	&.mute { .prepend_icon(@mute); }
+	&.network { .prepend_icon(@network); }
+	&.newspaper { .prepend_icon(@newspaper); }
+	&.note-beamed { .prepend_icon(@note-beamed); }
+	&.note { .prepend_icon(@note); }
+	&.palette { .prepend_icon(@palette); }
+	&.paper-plane { .prepend_icon(@paper-plane); }
+	&.pause { .prepend_icon(@pause); }
+	&.pencil { .prepend_icon(@pencil); }
+	&.phone { .prepend_icon(@phone); }
+	&.picture { .prepend_icon(@picture); }
+	&.play { .prepend_icon(@play); }
+	&.plus-circled { .prepend_icon(@plus-circled); }
+	&.plus-squared { .prepend_icon(@plus-squared); }
+	&.plus { .prepend_icon(@plus); }
+	&.popup { .prepend_icon(@popup); }
+	&.print { .prepend_icon(@print); }
+	&.progress-0 { .prepend_icon(@progress-0); }
+	&.progress-1 { .prepend_icon(@progress-1); }
+	&.progress-2 { .prepend_icon(@progress-2); }
+	&.progress-3 { .prepend_icon(@progress-3); }
+	&.publish { .prepend_icon(@publish); }
+	&.quote { .prepend_icon(@quote); }
+	&.record { .prepend_icon(@record); }
+	&.reply-all { .prepend_icon(@reply-all); }
+	&.reply { .prepend_icon(@reply); }
+	&.resize-full { .prepend_icon(@resize-full); }
+	&.resize-small { .prepend_icon(@resize-small); }
+	&.retweet { .prepend_icon(@retweet); }
+	&.right-bold { .prepend_icon(@right-bold); }
+	&.right-circled { .prepend_icon(@right-circled); }
+	&.right-dir { .prepend_icon(@right-dir); }
+	&.right-open-big { .prepend_icon(@right-open-big); }
+	&.right-open-mini { .prepend_icon(@right-open-mini); }
+	&.right-open { .prepend_icon(@right-open); }
+	&.right-thin { .prepend_icon(@right-thin); }
+	&.right { .prepend_icon(@right); }
+	&.rss { .prepend_icon(@rss); }
+	&.search { .prepend_icon(@search); }
+	&.share { .prepend_icon(@share); }
+	&.shareable { .prepend_icon(@shareable); }
+	&.shuffle { .prepend_icon(@shuffle); }
+	&.signal { .prepend_icon(@signal); }
+	&.sound { .prepend_icon(@sound); }
+	&.star-empty { .prepend_icon(@star-empty); }
+	&.star { .prepend_icon(@star); }
+	&.stop { .prepend_icon(@stop); }
+	&.suitcase { .prepend_icon(@suitcase); }
+	&.switch { .prepend_icon(@switch); }
+	&.tag { .prepend_icon(@tag); }
+	&.tape { .prepend_icon(@tape); }
+	&.target { .prepend_icon(@target); }
+	&.thermometer { .prepend_icon(@thermometer); }
+	&.thumbs-down { .prepend_icon(@thumbs-down); }
+	&.thumbs-up { .prepend_icon(@thumbs-up); }
+	&.ticket { .prepend_icon(@ticket); }
+	&.to-end { .prepend_icon(@to-end); }
+	&.to-start { .prepend_icon(@to-start); }
+	&.tools { .prepend_icon(@tools); }
+	&.trash { .prepend_icon(@trash); }
+	&.trophy { .prepend_icon(@trophy); }
+	&.up-bold { .prepend_icon(@up-bold); }
+	&.up-circled { .prepend_icon(@up-circled); }
+	&.up-dir { .prepend_icon(@up-dir); }
+	&.up-open-big { .prepend_icon(@up-open-big); }
+	&.up-open-mini { .prepend_icon(@up-open-mini); }
+	&.up-open { .prepend_icon(@up-open); }
+	&.up-thin { .prepend_icon(@up-thin); }
+	&.up { .prepend_icon(@up); }
+	&.upload-cloud { .prepend_icon(@upload-cloud); }
+	&.upload { .prepend_icon(@upload); }
+	&.user-add { .prepend_icon(@user-add); }
+	&.user { .prepend_icon(@user); }
+	&.users { .prepend_icon(@users); }
+	&.vcard { .prepend_icon(@vcard); }
+	&.video { .prepend_icon(@video); }
+	&.volume { .prepend_icon(@volume); }
+	&.water { .prepend_icon(@water); }
+	&.window { .prepend_icon(@window); }
+	&.flow-parallel { .prepend_icon(@flow-parallel); }
+	&.rocket { .prepend_icon(@rocket); }
+	&.gauge { .prepend_icon(@gauge); }
+	&.traffic-cone { .prepend_icon(@traffic-cone); }
+	&.help-circled-alt { .prepend_icon(@help-circled-alt); }
+}
+
+.scale_replaced_icon(@size: @font-size, @padding: 0px) {
+	width: @size + (@padding * 2);
+	height: @size + (@padding * 2);
+	&:before {
+		width: @size + (@padding * 2);
+		height: @size + (@padding * 2);
+		top: @padding;
+		font-size: @size;
+		line-height: @size;
+	}
+}
+.scale_prepended_icon(@size: @font-size, @margin: 2px) {
+	&:before {
+		width: @size;
+		height: @size;
+		font-size: @size;
+		line-height: @size;
+		margin-right: @margin;
+	}
+}
+.scale_appended_icon(@size: @font-size, @margin: 2px) {
+	&:after {
+		width: @size;
+		height: @size;
+		font-size: @size;
+		line-height: @size;
+		margin-left: @margin;
+	}
+}

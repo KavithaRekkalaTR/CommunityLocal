@@ -1,0 +1,15 @@
+##
+## Expects in scope: $actions, $inProcess
+##
+
+#if ($actions.TotalCount == 1)
+    $core_v2_language.FormatString($core_v2_language.GetResource('Actions_Singular'), $actions.TotalCount.ToString())
+#elseif($actions.TotalCount == 0)
+    <div style="display:hidden"></div>
+#else
+    $core_v2_language.FormatString($core_v2_language.GetResource('Actions_Plural'), $actions.TotalCount.ToString("N0"))
+#end
+
+#if($actions.TotalCount > 0)
+    <a href="#" class="inline-button save" data-messagename="audit-export-all">$core_v2_language.GetResource('ExportAll')</a>
+#end

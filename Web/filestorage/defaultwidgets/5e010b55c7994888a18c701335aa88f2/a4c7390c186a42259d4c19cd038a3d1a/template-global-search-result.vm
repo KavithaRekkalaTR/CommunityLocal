@@ -1,0 +1,16 @@
+﻿<ul class="navigation-list panels">
+	<% foreach(results, function(result) { %>
+		<li class="navigation-list-item <%: result.Type %> <% if(result.AvatarHtml){ %> with-avatar <% } %>">
+			<a href="<%: result.Url %>">
+				<div>
+					<% if(result.AvatarHtml){ %>
+						<span class="avatar"><%= result.AvatarHtml %></span>
+					<% } %>
+					<span class="name"><%= result.Name %></span>
+					<span class="description"><%: result.Description %></span>
+					<span class="badge" data-panelid="<%= result.Identifier %>" data-count="<%= result.BadgeCount %>"><%= result.BadgeCount %></span>
+				</div>
+			</a>
+		</li>
+	<% }); %>
+</ul>

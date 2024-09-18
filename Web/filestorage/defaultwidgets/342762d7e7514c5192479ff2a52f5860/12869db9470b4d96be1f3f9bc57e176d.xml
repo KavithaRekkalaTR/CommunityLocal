@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SolrSearch_Name}" version="11.0.0.0" description="${resource:SolrSearch_Description}" instanceIdentifier="12869db9470b4d96be1f3f9bc57e176d" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2020-03-18 21:02:12Z" provider="342762d7e7514c5192479ff2a52f5860">
+    <contentScript language="Velocity"><![CDATA[<div id="$core_v2_widget.UniqueId('synonyms')">
+
+	<p style="margin-bottom: 2em;">
+		$core_v2_language.GetResource('Synonyms_Instructions')
+	</p>
+
+	<fieldset style="margin-top: 2em;">
+		<ul class="field-list">
+			<li class="field-item synonyms">
+				<label for="$core_v2_widget.UniqueId('Synonyms')" class="field-item-name">$core_v2_language.GetResource('Field_Synonyms')</label>
+				<span class="field-item-description">$core_v2_language.GetResource("Field_Synonyms_Description")</span>
+				<span class="field-item-input">
+					<textarea id="$core_v2_widget.UniqueId('Synonyms')" name="$core_v2_widget.UniqueId('Synonyms')">$!core_v2_encoding.HtmlAttributeEncode($context.GetSynonyms())</textarea>
+				</span>
+				<span class="field-item-input">
+					<a href="#" class="inline-button" id="$core_v2_widget.UniqueId('Import')">$core_v2_language.GetResource('Action_Import')</a>
+				</span>
+				<span class="field-item-validation"></span>
+			</li>
+		</ul>
+	</fieldset>
+
+</div>
+<div id="$core_v2_widget.UniqueId('contentTypes')">
+	<p>$core_v2_language.GetResource('ContentType_Instructions')</p>
+
+	#set ($searchableContentTypes = $context.ListSearchableContentTypes())
+
+	#foreach ($contentType in $searchableContentTypes)
+	#beforeall
+		<fieldset>
+		<ul class="field-list">
+			<span class="field-item-input">
+				<a href="#" class="multi-select all inline-button">$core_v2_language.GetResource('SelectAll')</a>
+				<a href="#" class="multi-select none inline-button">$core_v2_language.GetResource('DeselectAll')</a>
+			</span>
+			<li class="field-item">
+	#each
+			<span class="field-item-input">
+				#set ($fieldId = "${core_v2_widget.UniqueId('contentType')}:${contentType.ContentType.Id}")
+				<input type="checkbox"
+					value="$contentType.ContentType.Id"
+					id="$core_v2_encoding.HtmlAttributeEncode($fieldId)"
+					#if ($contentType.IsSearchable) checked #end
+					/> <label for="$core_v2_encoding.HtmlAttributeEncode($fieldId)">$contentType.ContentType.Name</label>
+			</span>
+	#afterall
+			</li>
+		</ul>
+		</fieldset>
+	#end
+</div>
+
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+#registerEndOfPageHtml('telligent.evolution.widgets.solrConfiguration')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	jQuery(document).ready(function(){
+		var api = $context.JsonApi;
+		jQuery.telligent.evolution.widgets.solrConfiguration.register({
+			api: api,
+			synonymsWrapper: jQuery('#$core_v2_widget.UniqueId('synonyms')'),
+			contentTypesWrapper: jQuery('#$core_v2_widget.UniqueId('contentTypes')'),
+			uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+			fields: {
+				synonyms: jQuery('#$core_v2_widget.UniqueId('Synonyms')'),
+				import: jQuery('#$core_v2_widget.UniqueId('Import')'),
+				contentTypes: jQuery('#$core_v2_widget.UniqueId('contentTypes') input'),
+				multiSelect: jQuery('#$core_v2_widget.UniqueId('contentTypes') .multi-select')
+			},
+			text: {
+				synonyms: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Tab_Synonyms'))',
+				import: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Import'))',
+				uploadProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Progress_Import'))',
+				importing: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Progress_Importing'))',
+				contentTypes: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Tab_ContentTypes'))'
+			},
+			urls: {
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))',
+				importFile: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.vm'))',
+				uploadFile : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Action_Import">Import</resource>
+  <resource name="ContentType_Instructions">Selected content types will be searchable.</resource>
+  <resource name="DeselectAll">Deselect All</resource>
+  <resource name="Field_Synonyms">Synonyms</resource>
+  <resource name="Field_Synonyms_Description">Separate synonyms with commas. One set of synonyms on each line.</resource>
+  <resource name="Progress_Import">Importing ({0}%)...</resource>
+  <resource name="Progress_Importing">Importing...</resource>
+  <resource name="SelectAll">Select All</resource>
+  <resource name="SolrSearch_Description">Enables configuration of the Solr search server.</resource>
+  <resource name="SolrSearch_Name">Solr Configuration</resource>
+  <resource name="Synonyms_Instructions">Synonyms can be used to improve search results by making query terms more flexible.</resource>
+  <resource name="Tab_ContentTypes">Include</resource>
+  <resource name="Tab_Synonyms">Synonyms</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,55 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($collectionId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('CollectionId')))
+	#set($name = false)
+	#set($name = $core_v2_page.GetFormValue('Name'))
+
+	#set($orderNumber = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('OrderNumber')))
+
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 1/0
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+
+	#set($options = "%{}")
+
+	#if ($name && $name != '')
+		$options.Add('Name', $name)
+	#end
+
+	#if ($orderNumber && $orderNumber > 0)
+		$options.Add('OrderNumber', $orderNumber)
+	#end
+
+	#if($core_v2_page.GetFormValue('Enabled'))
+		#set($enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enabled')))
+		$options.Add('Enabled', $enabled)
+	#end
+	
+	#if ($fileChanged == '1')
+		#set($file = false)
+		#set($file = $core_v2_uploadedFile.Get($fileContextId, $fileName))
+		#if ($file)
+			$options.Add('FileUploadContext', $fileContextId)
+			$options.Add('FileName',$file.Name)
+		#end
+	#end
+
+
+	#if ($collectionId == '00000000-0000-0000-0000-000000000000')
+		#set($response = $context.SaveCollection($options))
+	#else
+		#set($response = $context.UpdateCollection($collectionId, $options))
+	#end
+
+	#set($orderChanges = $core_v2_page.GetFormValue('OrderChanges'))
+	$context.UpdateEmoticonOrder($orderChanges)
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "collectionId": "$response.Id"}
+#end

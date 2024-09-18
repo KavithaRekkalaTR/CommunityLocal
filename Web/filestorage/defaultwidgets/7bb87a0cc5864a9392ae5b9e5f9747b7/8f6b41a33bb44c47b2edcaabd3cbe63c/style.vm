@@ -1,0 +1,85 @@
+$core_v2_page.SetContentType('text/css')
+
+#set ($designMode = $core_v2_widget.GetStringValue('designMode', 'color'))
+
+## Defaults
+#set ($backgroundColor = '#fff')
+#set ($foregroundColor = '#263238')
+#set ($shadow = true)
+#set ($border = true)
+
+#if ($designMode == 'color')
+	## Palette
+
+	#set ($paletteId = $core_v2_widget.GetCustomValue('paletteId', ''))
+	#set ($backgroundColorFrom = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color', '#2196F3', 10))
+	#set ($backgroundColorTo = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'background-color-to', '', 10))
+	#set ($foregroundColor = $core_v2_theme.GetPaletteColorValue('contextBanner', $paletteId, 'foreground-color', '#ffffff', 10))
+
+	#set ($backgroundColor = $backgroundColorFrom)
+	#if ($backgroundColorTo && $backgroundColorTo.length > 0)
+		#set ($background = "linear-gradient(to right, ${backgroundColorFrom}, ${backgroundColorTo})")
+	#else
+		#set ($background = $backgroundColorFrom)
+	#end
+
+	## Border
+
+	#set ($borderMode = $core_v2_widget.GetStringValue('border', 'bottom'))
+	#set ($borderColor = $core_v2_widget.GetStringValue('borderColor', '#ffffff33'))
+
+	.header-fragments #${core_v2_widget.WrapperElementId} {
+		position: static !important;
+	}
+	
+	.single-column.header-fragments #${core_v2_widget.WrapperElementId} {
+		position: relative !important;
+	}
+	
+	## horizontal nav link color
+	.header-fragments #${core_v2_widget.WrapperElementId} a {
+		color: $foregroundColor !important;
+	}
+	## minor horizontal nav link tweaks (border radius, hover color, padding)
+	.header-fragments #${core_v2_widget.WrapperElementId} .navigation-list[data-direction='horizontal'] a.subnav-open,
+	.header-fragments #${core_v2_widget.WrapperElementId} .navigation-list[data-direction='horizontal'] a:hover {
+		border-radius: 0;
+		background-color: $foregroundColor;
+		color: $backgroundColor !important;
+	}
+	.header-fragments #${core_v2_widget.WrapperElementId}:after {
+		background: none !important;
+	}
+	.header-fragments #${core_v2_widget.WrapperElementId} .navigation-list[data-direction='horizontal'] a.selected:after,
+	.header-fragments .header-top-content .layout-region.header #${core_v2_widget.WrapperElementId} .navigation-list[data-direction='horizontal'] a.selected:after {
+		background-color: $foregroundColor !important;
+	}
+	.header-fragments #${core_v2_widget.WrapperElementId} .navigation-list[data-direction='horizontal'] li:first-child a {
+		padding-left: 10px;
+	}
+	## full-browser-width background color
+	.header-fragments #${core_v2_widget.WrapperElementId} .content-fragment-content:after {
+		height: 44px;
+		width: 100%;
+		right: 0;
+		left: 0;
+		background: $background;
+
+		#if($borderMode == 'top' || $borderMode == 'both')
+			border-top: 1px solid $borderColor;
+		#end
+		#if($borderMode == 'bottom' || $borderMode == 'both')
+			border-bottom: 1px solid $borderColor;
+		#end
+	}
+	## conditional placement of full-width background based on which region the widget is in
+	.header-fragments .layout-region.header #${core_v2_widget.WrapperElementId} .content-fragment-content:after {
+		top: 44px;
+	}
+	.header-fragments .layout-region.content #${core_v2_widget.WrapperElementId}:first-child .content-fragment-content:after {
+		top: 0px;
+	}
+	.header-fragments .layout-region.content #${core_v2_widget.WrapperElementId}:last-child .content-fragment-content:after {
+		bottom: 0px;
+	}
+#end

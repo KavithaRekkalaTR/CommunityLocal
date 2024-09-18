@@ -1,0 +1,290 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('w_sortOrder'))
+#set ($sortBy = $core_v2_page.GetQueryStringValue('w_sortBy'))
+#set ($filter = $core_v2_page.GetQueryStringValue('w_filter'))
+#set ($publishGroupId = $core_v2_page.GetQueryStringValue('w_publishgroupid'))
+#set ($categoryId = $core_v2_page.GetQueryStringValue('w_categoryid'))
+#set ($inCategory = $core_v2_page.GetQueryStringValue('w_incategory'))
+#set ($isDefault = $core_v2_page.GetQueryStringValue('w_isDefault'))
+#set ($selectAll = false)
+#set ($selectAll = $core_v2_page.GetQueryStringValue('w_selectall'))
+#if ($selectAll == '1')
+	#set($selectAll = true)
+#else
+	#set($selectAll = false)
+#end
+
+#set($options = "%{PageSize = $pageSize, PageIndex = $pageIndex, InCategory = $inCategory}")
+
+#if ($sortBy && $sortBy != '')
+	$options.Add('SortBy', $sortBy)
+#else
+	$options.Add('SortBy', 'LastUpdateDate')
+#end
+
+#if ($sortOrder && $sortOrder != '')
+	$options.Add('SortOrder', $sortOrder)
+#else
+	$options.Add('SortOrder', 'Descending')
+#end
+
+#if ($isDefault == '1')
+	$options.Add('IsDefault', 'True')
+#elseif ($isDefault == '0')
+	$options.Add('IsDefault', 'False')
+#end
+
+#set($queryText = '')
+#set($queryText = $core_v2_page.GetQueryStringValue('w_queryText'))
+#if ($queryText != '')
+	$options.Add('TitleSearch', $queryText)
+#end
+
+#if ($publishGroupId && $publishGroupId != '')
+	$options.Add('PublishGroupId', $publishGroupId)
+#end
+
+#if ($categoryId && $categoryId != '')
+	$options.Add('CategoryIds', $categoryId)
+#end
+
+#set($isArticle = true)
+#if ($filter == 'deletedarticles')
+	$options.Add('IsDeleted', 'True')
+	#set($articles = $context.ListArticles($options))
+#elseif ($filter == 'drafted')
+	$options.Add('IsPublished', 'False')
+	#set($articles = $context.ListArticleVersions($options))
+	#set($isArticle = false)
+#elseif ($filter == 'deleteddrafts')
+	$options.Add('IsPublished', 'False')
+	$options.Add('IsDeleted', 'True')
+	#set($articles = $context.ListArticleVersions($options))
+	#set($isArticle = false)
+#elseif ($filter == 'unpublished')
+	$options.Add('WasPublished', 'True')
+	#set($articles = $context.ListArticles($options))
+#else
+	#set($filter = 'published')
+	$options.Add('IsPublished', 'True')
+	#set($articles = $context.ListArticles($options))
+#end
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($articles.PageIndex + 1) * $articles.PageSize)
+#if ($articles.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" id="$core_v2_widget.UniqueId('articles')" data-totalcount="$articles.TotalCount">
+
+#foreach($article in $articles)
+	#set($canDelete = false)
+	#set($canDelete = $core_v2_permission.Get($articles_v1_permissions.DeleteArticles, $core_v2_user.Accessing.Id, $article.Id, $articles_v1_articles.ContentTypeId).IsAllowed)
+	#set($canEdit = false)
+	#set($canEdit = $core_v2_permission.Get($articles_v1_permissions.EditArticles, $core_v2_user.Accessing.Id, $article.Id, $articles_v1_articles.ContentTypeId).IsAllowed)
+
+	#set($unpublished = false)
+	#if (!$isArticle && $article.IsPublished && $article.PublishEndDate && $core_v2_utility.CompareDates($article.PublishEndDate, 'EarlierThan', $core_v2_utility.CurrentDate))
+		#set($unpublished = true)
+	#elseif ($isArticle && $article.PublishEndDate && $core_v2_utility.CompareDates($article.PublishEndDate, 'EarlierThan', $core_v2_utility.CurrentDate))
+		#set($unpublished = true)
+	#end
+
+  <li class="content-item article" data-articleid="$article.Id.ToString()" data-version="$article.Version.ToString()">
+	<span class="checkbox"><input type="checkbox" value="$article.Id.ToString()" #if ($selectAll) checked="checked" #end /></span>
+	<h4 class="name">$article.Title</h4>
+	<div class="post-attributes">
+		<ul class="attribute-list">
+			<li class="attribute-item status">
+			   <span class="value">
+				   #if ($article.IsDeleted)
+						<span class="status deleted">$core_v2_language.GetResource('Status_Deleted')</span>
+				   #elseif ($unpublished)
+						<span class="status unpublished">$core_v2_language.GetResource('Status_Unpublished')</span>
+				   #elseif ($article.IsPublished)
+						<span class="status published">$core_v2_language.GetResource('Status_Published')</span>
+					#elseif ($article.ReadyToPublish)
+						#if ($article.IsPendingReview)
+							<span class="status pendingreview">$core_v2_language.GetResource('Status_PendingReview')</span>
+						#else
+							<span class="status readytopublish">$core_v2_language.GetResource('Status_ReadyToPublish')</span>
+						#end
+					#else
+						<span class="status draft">$core_v2_language.GetResource('Status_Draft')</span>
+					#end
+			   </span>
+			</li>
+			<li class="attribute-item identifier">
+				<span class="value">$article.Identifier</span>
+			</li>
+			<li class="attribute-item updated-date">
+			   <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Date_Updated'), $core_v2_language.FormatAgoDate($article.LastUpdateDate))</span>
+			</li>
+			#if ($article.IsDeleted)
+				<li class="attribute-item published-date">
+				   <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Date_Deleted'), $core_v2_language.FormatDateAndTime($article.DeleteDate))</span>
+				</li>
+			#elseif ($unpublished)
+				#if ($article.PublishEndDate)
+					<li class="attribute-item publish-end-date">
+					   <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Date_Unpublished'), $core_v2_language.FormatDateAndTime($article.PublishEndDate))</span>
+					</li>
+				#end
+			#elseif ($article.IsPublished)
+				<li class="attribute-item published-date">
+				   <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Date_Published'), $core_v2_language.FormatDateAndTime($article.PublishDate))</span>
+				</li>
+				#set($publishEndDate = false)
+				#set($publishEndDate = $article.PublishEndDate)
+				#if (!$publishEndDate && $article.PublishGroup && $article.PublishGroup.PublishEndDate)
+					#set($publishEndDate = $article.PublishGroup.PublishEndDate)
+				#end
+				#if ($publishEndDate)
+					<li class="attribute-item publish-end-date">
+					   <span class="value"><em>$core_v2_language.FormatString($core_v2_language.GetResource('Date_Unpublishing'), $core_v2_language.FormatDateAndTime($publishEndDate))</em></span>
+					</li>
+				#end
+			#elseif($article.ReadyToPublish)
+				#set($publishDate = false)
+				#set($publishDate = $article.PublishDate)
+				#if (!$publishDate && $article.PublishGroup && $article.PublishGroup.PublishDate)
+					#set($publishDate = $article.PublishGroup.PublishDate)
+				#end
+				#if ($publishDate)
+					<li class="attribute-item published-date">
+						<span class="value"><em>$core_v2_language.FormatString($core_v2_language.GetResource('Date_Publishing'), $core_v2_language.FormatDateAndTime($publishDate))</em></span>
+					</li>
+				#end
+			#end
+
+			#if ($article.PublishGroup)
+				<li class="attribute-item publish-end-date">
+				   <span class="value">$article.PublishGroup.Name</span>
+				</li>
+			#end
+
+			#if ($article.ArticleCollection.EnableHelpfulness && $article.TotalHelpful > 0)
+				<li class="attribute-item helpful">
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Helpful'), $core_v2_language.FormatNumber($article.TotalHelpful))</span>
+				</li>
+			#end
+
+			#if ($article.ArticleCollection.EnableHelpfulness && $article.TotalNotHelpful > 0)
+				<li class="attribute-item not-helpful">
+					<span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('NotHelpful'), $core_v2_language.FormatNumber($article.TotalNotHelpful))</span>
+				</li>
+			#end
+		</ul>
+	</div>
+	#set($body = $article.Body())
+	<div class="content expanded-hidden">
+		$core_v2_language.Truncate($body, 140, "...")
+	</div>
+	<div class="content expandable">
+		$core_v2_language.Truncate($body, 500, "...")
+		#set($categories = '')
+		#foreach($category in $article.Categories)
+			#if ($categories.Length > 0)
+				#set($categories = "$categories, ")
+			#end
+			#set($categories = "${categories}${category.Category.Name}")
+		#end
+		#if ($categories.Length > 0)
+			<div class="categories">
+				$categories
+			</div>
+		#end
+	</div>
+	<div class="actions expandable">
+		<div class="navigation-list ui-links" data-direction="horizontal">
+			<ul>
+				#set($articleUrl = false)
+				#set($articleUrl = $articles_v1_articleUrls.Article($article.Id))
+				#if ($articleUrl && $article.IsPublished && !$article.IsDeleted && (!$article.PublishEndDate || $core_v2_utility.CompareDates($article.PublishEndDate, 'LaterThan', $core_v2_utility.CurrentDate)))
+					<li class="navigation-list-item">
+						<a href="$core_v2_page.AbsoluteUrl($articleUrl)">$core_v2_language.GetResource('View')</a>
+					</li>
+				#end
+				#if (!$article.IsDeleted && $canEdit)
+					#set($editUrl = false)
+					#if ($filter == 'drafted' && $article.PublishGroup)
+						#set($editUrl = $articles_v1_articleUrls.EditArticle($article.Id, $article.PublishGroup.Id))
+					#else
+						#set($editUrl = $articles_v1_articleUrls.EditArticle($article.Id))
+					#end
+					#if ($editUrl)
+						<li class="navigation-list-item">
+							<a href="$core_v2_page.AbsoluteUrl($editUrl)">$core_v2_language.GetResource('Edit')</a>
+						</li>
+					#end
+				#end
+				#if (!$article.IsDeleted && $canEdit)
+					#if ($unpublished || !$article.IsPublished)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="articlemanagement.publish" data-articleid="$article.Id.ToString()" data-version="$article.Version.ToString()" data-title="$article.Title">$core_v2_language.GetResource('Publish')</a>
+						</li>
+					#elseif ($article.IsPublished)
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="articlemanagement.unpublish" data-articleid="$article.Id.ToString()" data-version="$article.Version.ToString()" data-title="$article.Title">$core_v2_language.GetResource('Unpublish')</a>
+						</li>
+					#end
+				#end
+				#if ($filter == 'published')
+					#set($convert = false)
+					#set($convert = $core_v2_ui.ConvertContent($article.Id, $articles_v1_articles.ContentTypeId))
+					#if ($convert)
+						<li class="navigation-list-item">
+							$convert
+						</li>
+					#end
+
+					#set($feature = false)
+					#set($feature = $core_v2_ui.Feature($article.Id, $articles_v1_articles.ContentTypeId))
+					#if ($feature && $feature.Length > 0)
+						<li class="navigation-list-item">
+							$feature
+						</li>
+					#end
+				#end
+				#if ($canDelete)
+					#if ($article.IsDeleted)
+						<li class="navigation-list-item undelete">
+							<a href="#" data-messagename="articlemanagement.undelete" data-articleid="$article.Id.ToString()" data-version="$article.Version.ToString()" data-title="$article.Title">$core_v2_language.GetResource('Undelete')</a>
+						</li>
+					#else
+						<li class="navigation-list-item delete">
+							<a href="#" data-messagename="articlemanagement.delete" data-articleid="$article.Id.ToString()" data-version="$article.Version.ToString()" data-title="$article.Title">$core_v2_language.GetResource('Delete')</a>
+						</li>
+					#end
+				#end
+
+				#if ($article.ArticleCollection.EnableHelpfulness && $article.TotalNotHelpful > 0)
+					<li class="navigation-list-item feedback">
+						<a href="#" data-messagename="articlemanagement.viewfeedback" data-articleid="$article.Id.ToString()">$core_v2_language.GetResource('Feedback')</a>
+					</li>
+				#end
+
+				#set ($subscriberUrl = $articles_v1_articleUrls.ViewSubscribers($article.ArticleCollection.Id, "%{ ArticleId = '$article.Id.ToString()' }"))
+				#if ($subscriberUrl)
+				<li class="navigation-list-item subscribers">
+					<a href="$subscriberUrl">$core_v2_language.GetResource('ViewSubscribers')</a>
+				</li>
+				#end
+
+				<li class="navigation-list-item">
+					<a href="#" class="more" data-more>$core_v2_language.GetResource('More')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+  </li>
+#end
+
+</ul>

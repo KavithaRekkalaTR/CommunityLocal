@@ -1,0 +1,83 @@
+##
+## API Extensions Select Renderer
+##
+## Requires in scope:
+##   $extensions
+## 	 $lessFunctions
+##   $propertyTemplates
+##   $propertyRules
+## 	 $automationEvents
+##
+#set ($currentCategory = false)
+#set ($extensionIndex = 0)
+<form>
+<select class="documentation-navigator">
+	#foreach ($extension in $extensions)
+		#set ($extensionCategory = "Uncategorized")
+		#if ($extension.Category)
+			#set ($extensionCategory = $extension.Category)
+		#end
+
+		#if ($currentCategory == false)
+			#set ($currentCategory = $extensionCategory)
+			<optgroup label="$core_v2_encoding.HtmlAttributeEncode($extensionCategory)">
+		#elseif ($currentCategory != $extensionCategory)
+			#set ($currentCategory = $extensionCategory)
+			</optgroup>
+			<optgroup label="$core_v2_encoding.HtmlAttributeEncode($extensionCategory)">
+		#end
+			<option value="velocity:${core_v2_encoding.HtmlAttributeEncode($extension.Name)}">${extension.Name}</option>
+		#if ($extensionIndex = $extensions.Count - 1)
+			</optgroup>
+		#end
+	#end
+
+	#foreach ($resource in $restResources)
+	#beforeall
+		<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('RestApis'))">
+	#each
+		<option value="rest:${core_v2_encoding.HtmlAttributeEncode($resource.Resource)}">$core_v2_encoding.HtmlEncode($resource.Resource)</option>
+	#afterall
+		</optgroup>
+	#end
+
+	#foreach ($lessFunction in $lessFunctions)
+	#beforeall
+		<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('LessFunctions'))">
+	#each
+		<option value="less:${core_v2_encoding.HtmlAttributeEncode($lessFunction.Name)}">${lessFunction.Name}</option>
+	#afterall
+		</optgroup>
+	#end
+
+	#foreach ($propertyTemplate in $propertyTemplates)
+	#beforeall
+		<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('PropertyTemplates'))">
+	#each
+		<option value="template:${core_v2_encoding.HtmlAttributeEncode($propertyTemplate.Name)}">${propertyTemplate.Name}</option>
+	#afterall
+		</optgroup>
+	#end
+
+	#foreach ($propertyRule in $propertyRules)
+	#beforeall
+		<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('PropertyRules'))">
+	#each
+		<option value="rule:${core_v2_encoding.HtmlAttributeEncode($propertyRule.Name)}">${propertyRule.Name}</option>
+	#afterall
+		</optgroup>
+	#end
+
+	#if ($includeAutomationEvents)
+		#foreach ($automationEvent in $automationEvents)
+		#beforeall
+			<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('AutomationEvents'))">
+		#each
+			<option value="velocity:${core_v2_encoding.HtmlAttributeEncode($automationEvent.Name)}">${automationEvent.Name}</option>
+		#afterall
+			</optgroup>
+		#end
+	#end
+
+</select>
+</form>

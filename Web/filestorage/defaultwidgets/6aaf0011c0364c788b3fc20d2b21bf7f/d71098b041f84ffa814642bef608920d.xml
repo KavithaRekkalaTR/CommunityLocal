@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupPanel_Name}" version="12.0.0.0" description="${resource:GroupPanel_Description}" instanceIdentifier="d71098b041f84ffa814642bef608920d" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="administration-groupconfiguration" lastModified="2022-10-17 14:57:10Z" provider="6aaf0011c0364c788b3fc20d2b21bf7f">
+    <contentScript language="Velocity"><![CDATA[#set ($config = $context.Settings)
+
+<div class="administration-groupconfiguration">
+<form>
+
+<div class="$core_v2_widget.UniqueId('tab')" id="$core_v2_widget.UniqueId('configuration')">
+
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<label class="field-item-name" for="$core_v2_widget.UniqueId('indexPerRun')">$core_v2_language.GetResource('indexPerRun_name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('indexPerRun_description')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('indexPerRun')" name="$core_v2_widget.UniqueId('indexPerRun')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('IndexPerRun', 1000).ToString())" />
+				</span>
+			</li>
+			<li class="field-item">
+				<label class="field-item-name" for="$core_v2_widget.UniqueId('editCommentAgeLimit')">$core_v2_language.GetResource('editCommentAgeLimit_name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('editCommentAgeLimit_description')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('editCommentAgeLimit')" name="$core_v2_widget.UniqueId('editCommentAgeLimit')" value="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetIntValue('EditCommentAgeLimit', 30).ToString())" />
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+
+</div>
+
+<div class="$core_v2_widget.UniqueId('tab')" id="$core_v2_widget.UniqueId('themes')">
+
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item enableThemes">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableThemes')" #if($config.EnableGroupThemes)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('EnableThemes')" class="field-item-name">$core_v2_language.GetResource('EnableThemes')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableThemes_Detail')</span>
+			</li>
+			<li class="field-item enable-theme-config">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableThemeConfig')" #if($config.EnableGroupThemeConfiguration)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('EnableThemeConfig')" class="field-item-name">$core_v2_language.GetResource('EnableThemeConfig')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableThemeConfig_Detail')</span>
+			</li>
+		</ul>
+	</fieldset>
+
+</div>
+
+<div class="$core_v2_widget.UniqueId('tab')" id="$core_v2_widget.UniqueId('avatars')">
+
+	#if ($config.DefaultGroupAvatarUrl != false)
+		#set($defaultAvatarUrl = $config.DefaultGroupAvatarUrl)
+	#else
+		#set($defaultAvatarUrl = "~/cfs-file/__key/system/images/defaulthub.gif")
+	#end
+
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item avatar-dimensions">
+				<label for="$core_v2_widget.UniqueId('AvatarWidth')" class="field-item-name">$core_v2_language.GetResource('AvatarDimensions')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('AvatarDimensions_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('AvatarWidth')" name="avatarwidth" value="$!config.GroupAvatarWidth" />
+					$core_v2_language.GetResource('x')
+					<input type="text" id="$core_v2_widget.UniqueId('AvatarHeight')" name="avatarheight" value="$!config.GroupAvatarHeight" />
+				</span>
+				<span class="field-item-validation avatar-height" style="display:none;"></span>
+				<span class="field-item-validation avatar-width" style="display:none;"></span>
+			</li>
+			<li class="field-item default-avatar">
+				<label for="$core_v2_widget.UniqueId('DefaultAvatar')" class="field-item-name">$core_v2_language.GetResource('DefaultAvatar')</label>
+				<div class="group-avatar">
+					$core_v2_ui.GetResizedImageHtml($defaultAvatarUrl, $config.GroupAvatarWidth, $config.GroupAvatarHeight, "%{border='0px', alt=$avatar.FileName, ResizeMethod = 'ZoomAndCrop' }")
+				</div>
+				<span class="field-item-input"><a href="#" class="inline-button change-avatar">$core_v2_language.GetResource('ChangeAvatar')</a></span>
+			</li>
+
+			<li class="field-item enable-uploadable-avatars">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableGroupUploadedAvatars')" #if($config.EnableGroupUploadedAvatars)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('EnableGroupUploadedAvatars')" class="field-item-name">$core_v2_language.GetResource('EnableGroupUploadedAvatars')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableGroupUploadedAvatars_Detail')</span>
+			</li>
+			<li class="field-item enable-selectable-avatars">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableGroupSelectableAvatars')" #if($config.EnableGroupSelectableAvatars)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('EnableGroupSelectableAvatars')" class="field-item-name">$core_v2_language.GetResource('EnableGroupSelectableAvatars')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableGroupSelectableAvatars_Detail')</span>
+			</li>
+
+			<li class="field-item">
+				<span class="field-item-input"><a href="#" class="inline-button selectable-avatars">$core_v2_language.GetResource('SetSelectableAvatars')</a></span>
+			</li>
+		</ul>
+	</fieldset>
+
+</div>
+</form>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.groupConfiguration')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		(function() {
+			jQuery.telligent.evolution.widgets.groupConfiguration.register({
+				configApi: $context.JsonApi,
+		        saveConfigurationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-configuration.vm'))',
+				selectableAvatarsUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('selectable-avatars.vm'))',
+				setAvatarUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('set-avatar.vm'))',
+		        indexPerRun: jQuery('#$core_v2_widget.UniqueId('indexPerRun')'),
+		        editCommentAgeLimit: jQuery('#$core_v2_widget.UniqueId('editCommentAgeLimit')'),
+				enableThemes: jQuery('#$core_v2_widget.UniqueId('EnableThemes')'),
+				enableThemeConfig: jQuery('#$core_v2_widget.UniqueId('EnableThemeConfig')'),
+				avatarWidth: jQuery('#$core_v2_widget.UniqueId('AvatarWidth')'),
+				avatarHeight: jQuery('#$core_v2_widget.UniqueId('AvatarHeight')'),
+				enableGroupUploadedAvatars: jQuery('#$core_v2_widget.UniqueId('EnableGroupUploadedAvatars')'),
+				enableGroupSelectableAvatars: jQuery('#$core_v2_widget.UniqueId('EnableGroupSelectableAvatars')'),
+				tabClass: '$core_v2_widget.UniqueId('tab')',
+				tabs: [
+					{ name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('themes'))', element: jQuery('#$core_v2_widget.UniqueId('themes')') },
+					{ name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('avatars'))', element: jQuery('#$core_v2_widget.UniqueId('avatars')') },
+					{ name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('options'))', element: jQuery('#$core_v2_widget.UniqueId('configuration')') }
+				],
+				text: {
+					changeDefaultGroupAvatar: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeDefaultGroupAvatar'))',
+					selectableAvatars: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectableAvatars'))'
+				}
+			});
+		})();
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddAvatar">Add Avatar</resource>
+  <resource name="AddRemoveSelectableAvatar">Add and remove selectable avatars.</resource>
+  <resource name="AvatarDimensions">${group_propercase} Avatar Dimensions</resource>
+  <resource name="AvatarDimensions_Detail">Maximum dimensions used when uploading ${group_lowercase} avatars.</resource>
+  <resource name="avatars">Avatars</resource>
+  <resource name="AvatarUploaded">Avatar uploaded successfully.</resource>
+  <resource name="ChangeAvatar">Change Avatar</resource>
+  <resource name="ChangeDefaultGroupAvatar">Change Default ${group_propercase} Avatar</resource>
+  <resource name="ChooseFile">Choose File</resource>
+  <resource name="DefaultAvatar">Default Avatar</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteSelectedAvatar">Delete Selected Avatar</resource>
+  <resource name="editCommentAgeLimit_description">Enables comments to be edited by the comment author until the comment has aged a specified number of minutes.  Specify 0 to restrict editing by the comment author and -1 to not restrict editing.  Does not affect members with the edit comments permission.</resource>
+  <resource name="editCommentAgeLimit_name">Edit Comment Age Limit (in minutes)</resource>
+  <resource name="EnableGroupSelectableAvatars">Enable Selectable Avatars</resource>
+  <resource name="EnableGroupSelectableAvatars_Detail">Allows ${group_lowercase} owners to select from a list of available ${group_lowercase} avatar images.</resource>
+  <resource name="EnableGroupUploadedAvatars">Enable Uploaded Avatars</resource>
+  <resource name="EnableGroupUploadedAvatars_Detail">Allows ${group_lowercase} owners to upload their own pictures as ${group_lowercase} avatars.</resource>
+  <resource name="EnableThemeConfig">Enable Theme Configuration</resource>
+  <resource name="EnableThemeConfig_Detail">If enabled, ${group_lowercase} owners will be able to customize the theme of their ${group_lowercase} (if the theme exposes configuration options).</resource>
+  <resource name="EnableThemes">Enable Themes</resource>
+  <resource name="EnableThemes_Detail">If enabled, ${group_lowercase} owners will be able to choose a custom theme for their ${group_lowercase} from the ones provided.</resource>
+  <resource name="GroupPanel_Description">Collections of members and applications.</resource>
+  <resource name="GroupPanel_Name">Groups</resource>
+  <resource name="indexPerRun_description">The number of groups that should be indexed with each run of the search index job.</resource>
+  <resource name="indexPerRun_name">Number of groups to index per run</resource>
+  <resource name="NoFileChosen">No file Chosen</resource>
+  <resource name="options">Options</resource>
+  <resource name="OptionsUpdated">Avatar options were successfully updated.</resource>
+  <resource name="RevertAvatar">Revert Avatar</resource>
+  <resource name="RevertToDefaultAvatar">Revert Avatar to Factory Default</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SelectableAvatars">Selectable Avatars</resource>
+  <resource name="SelectAnAvatar">Select an Avatar</resource>
+  <resource name="SetSelectableAvatars">Set Selectable Avatars</resource>
+  <resource name="themes">Themes</resource>
+  <resource name="Upload">Upload</resource>
+  <resource name="UploadAnAvatar">Upload an Avatar</resource>
+  <resource name="UploadAvatar">Upload Avatar</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="UseSelectedImage">Use Selected Image</resource>
+  <resource name="x"> x </resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="utilities.resizeimage.readonly" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

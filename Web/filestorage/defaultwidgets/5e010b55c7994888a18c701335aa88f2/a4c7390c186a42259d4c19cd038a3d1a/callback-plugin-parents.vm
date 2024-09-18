@@ -1,0 +1,10 @@
+﻿#set ($pluginTypeName = $core_v2_page.GetQueryStringValue("_w_pluginTypeName"))
+#set ($enabling = $core_v2_utility.ParseBool($core_v2_page.GetQueryStringValue("_w_enabling")))
+
+#set ($pluginPanel = false)
+#set ($pluginPanel = $core_v2_administrationPanels.GetPluginPanel($pluginTypeName))
+#if (!$pluginPanel)
+	$core_v2_widget.Hide()
+#end
+
+$core_v2_widget.ExecuteFile('render-plugin-parents.vm')

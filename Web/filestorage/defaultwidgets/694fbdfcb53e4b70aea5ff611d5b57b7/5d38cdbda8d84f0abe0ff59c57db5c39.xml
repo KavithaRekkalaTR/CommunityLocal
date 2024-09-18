@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeCollectionOptions}" version="10.0.0.0" description="${resource:KnowledgeCollectionOptions-Description}" instanceIdentifier="5d38cdbda8d84f0abe0ff59c57db5c39" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="694fbdfcb53e4b70aea5ff611d5b57b7">
+    <contentScript><![CDATA[#set($collection = $context.KnowledgeCollection)
+#set ($addressId = $core_v2_widget.UniqueId('addressId'))
+#set ($canDelete = $core_v3_permission.CheckPermission($km_v1_permissions.DeleteKnowledgeCollection, $core_v2_user.Accessing.Id, "%{ ApplicationId = $collection.Group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+#set($openTagBrowserFunction = false)
+#set($openTagBrowserFunction = $context.TagBrowseOpenFunction())
+
+<div id="$core_v2_widget.WrapperElementId">
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item name">
+			<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Name')" name="collectionName" maxlength="256" value="$core_v2_encoding.HtmlDecode($!collection.Name)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item description">
+			<label for="$core_v2_widget.UniqueId('Description')" class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+			<span class="field-item-input">
+				<textarea name="Description" maxlength="256" id="$core_v2_widget.UniqueId('Description')">$!collection.Description</textarea>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item web-address">
+			<label class="field-item-name">$core_v2_language.GetResource('AddressLabel')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AddressLabel_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" maxlength="256" value="$core_v2_encoding.HtmlAttributeEncode($!collection.UrlKey)" id="$core_v2_encoding.HtmlAttributeEncode($addressId)" name="$core_v2_encoding.HtmlAttributeEncode($addressId)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item group">
+			<label for="$core_v2_widget.UniqueId('Group')" class="field-item-name">$core_v2_language.GetResource('Group')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Group_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Group')" name="Group" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		
+		#foreach ($tag in $context.TopLevelTags)
+            <li class="field-item tag-filter" data-parenttagid="$tag.Id">
+    		    <label for="$core_v2_widget.UniqueId('TagFilter_')$tag.Id">$core_v2_language.FormatString($core_v2_language.GetResource('TagFilter'), $tag.Name)</label>
+    		    <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('TagFilter_Detail'), $tag.Name.ToLower())</span>
+    		    <span class="field-item-input">
+    		        <input type="text" id="$core_v2_widget.UniqueId('TagFilter_')$tag.Id" />
+    		        #if ($openTagBrowserFunction)
+    		            <a href="#" class="browse" data-parenttagid="$tag.Id" data-lookuptextboxid="$core_v2_widget.UniqueId('TagFilter_')$tag.Id">$core_v2_language.GetResource('Browse')</a>
+    		        #end
+                </span>
+    		</li>
+		#end
+
+		#set($selectedLanguages = "%{}")
+		#foreach ($language in $context.LanguageKeys)
+		    $selectedLanguages.Add($language.ToLowerInvariant(), 'true')
+		#end
+		<li class="field-item languages">
+		    <label>$core_v2_language.GetResource('Languages')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('Languages_Detail')</span>
+		    <span class="field-item-input">
+		        #foreach($language in $core_v2_infoResult.Get().SupportedLanguages)
+		            <div>
+		                <input type="checkbox" id="$core_v2_widget.UniqueId('language_')$language.Key" value="$language.Key" #if($selectedLanguages.Contains($language.Key.ToLowerInvariant())) checked="checked"#end />
+		                <label for="$core_v2_widget.UniqueId('language_')$language.Key">$language.Name</label>
+		            </div>
+		        #end
+		    </span>
+		</li>
+		
+		#set($selectedCategories = "%{}")
+		#foreach ($category in $context.CategoryIds)
+		    $selectedCategories.Add($category, 'true')
+		#end
+		<li class="field-item categories">
+		    <label>$core_v2_language.GetResource('Categories')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('Categories_Detail')</span>
+		    <span class="field-item-input">
+		        #foreach($category in $km_v1_categories.List())
+		            <div>
+		                <input type="checkbox" id="$core_v2_widget.UniqueId('category_')$category.Id" value="$category.Id" #if($selectedCategories.Contains($category.Id)) checked="checked"#end />
+		                <label for="$core_v2_widget.UniqueId('category_')$category.Id">$category.Name</label>
+		            </div>
+		        #end
+		    </span>
+		</li>
+		
+		<li class="field-item navigation-tag">
+		    <label for="$core_v2_widget.UniqueId('NavigationTag')">$core_v2_language.GetResource('NavigationTag')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('NavigationTag_Detail')</span>
+		    <span class="field-item-input">
+		        <input type="text" id="$core_v2_widget.UniqueId('NavigationTag')" />
+		        #if ($openTagBrowserFunction)
+		            <a href="#" class="browse" data-parenttagid="" data-maxvalues="1" data-lookuptextboxid="$core_v2_widget.UniqueId('NavigationTag')">$core_v2_language.GetResource('Browse')</a>
+		        #end
+            </span>
+		</li>
+
+		#if ($collection)
+			<li class="field-item identifiers">
+				<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</li>
+			<li class="field-item identifiers contentid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+				<span class="field-item-input">$!collection.ApplicationId</span>
+			</li>
+			<li class="field-item identifiers contenttypeid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+				<span class="field-item-input">$!km_v1_knowledgeCollections.ApplicationTypeId</span>
+			</li>
+		#end
+
+	</ul>
+</fieldset></form>
+
+#if($canDelete)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input"><a href="#" class="button delete">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))</a></span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+</div>
+
+#set($redirect = false)
+#if($km_v1_knowledgeCollections.Current && $km_v1_knowledgeCollections.Current.Id == $collection.Id)
+	#set($redirect = true)
+#end
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.knowledgeCollectionOptions.register({
+		    wrapperId: '$core_v2_widget.WrapperElementId',
+			applicationId: '$context.ApplicationId',
+			applicationTypeId: '$context.ApplicationTypeId',
+			applicationKey: '$collection.UrlKey',
+			groupId: '$collection.Group.Id',
+			groupName: '$collection.Group.Name',
+			canDelete: '$canDelete',
+			redirect: '$redirect',
+			tagFilters: {
+			  #set($isFirst = true)
+			  #foreach ($topTag in $context.TopLevelTags)
+			    #if ($isFirst)
+			        #set($isFirst = false)
+			    #else
+			        ,
+			    #end
+			    "$core_v2_encoding.JavascriptEncode($topTag.Id)": [
+			        #set($childIsFirst = true)
+			        #foreach($tagId in $context.TagFilter($topTag.Id))
+			            #set($tag = false)
+			            #set($tag = $context.GetTag($tagId))
+			            #if ($tag)
+    			            #if ($childIsFirst)
+            			        #set($childIsFirst = false)
+            			    #else
+            			        ,
+            			    #end
+            			    { "id": "$core_v2_encoding.JavascriptEncode($tag.Id)", "name": "$!core_v2_encoding.JavascriptEncode($tag.Name)" }
+            			 #end
+			        #end
+			    ]
+			  #end
+			},
+			#if (!$openTagBrowserFunction)
+			    openTagBrowser: null,
+			#else
+			    openTagBrowser: $openTagBrowserFunction,
+			#end
+			navigationTag: 
+			    #set($tag = false)
+			    #if ($context.NavigationTagId)
+			        #set($tag = $context.GetTag($context.NavigationTagId))
+			    #end
+			    #if ($tag)
+			        { "id": "$core_v2_encoding.JavascriptEncode($tag.Id)", "name": "$!core_v2_encoding.JavascriptEncode($tag.Name)" }
+			    #else
+			        null
+			    #end,
+			inputs: {
+				nameId: "#$core_v2_widget.UniqueId('Name')",
+				descriptionId: "#$core_v2_widget.UniqueId('Description')",
+				address: '#$core_v2_encoding.JavascriptEncode($addressId)',
+				groupId: "#$core_v2_widget.UniqueId('Group')",
+				navigationTagId: '#$core_v2_widget.UniqueId('NavigationTag')'
+			},
+			resources: {
+				noGroupsMatch: "$core_v2_language.GetResource('GroupLookUp_NoMatches')",
+				noTagsMatch: "$core_v2_language.GetResource('TagsLookUp_NoMatches')",
+				save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+				delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+				moveWarning: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ValidateMove'))",
+				updated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Updated'))",
+				deleteConfirmation: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteWarning'))",
+				requiredText: "$core_v2_language.GetResource('RequiredText')"
+			},
+			urls: {
+				lookupGroups:  "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/groups.json')",
+				save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+				groupRedirect:  "$core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($collection.Group.Id))",
+				lookupTags: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('lookup-tags.vm'))",
+				delete: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))'
+			},
+			text: {
+				addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))"
+			}
+		});
+	});
+	</script>]]></contentScript>
+    <languageResources><language key="en-us"><resource name="AddressLabel">Web Address</resource><resource name="AddressLabel_Desc">Enter the name of the knowledge collection as you wish it to appear in its web address.</resource><resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource><resource name="ApplicationId">Application Identifier</resource><resource name="ApplicationTypeId">Application Type Identifier</resource><resource name="Browse">Browse...</resource><resource name="Categories">Categories</resource><resource name="Categories_Detail">Filter documents by category. Only documents of the selected categories will be included in this knowledge collection.</resource><resource name="Delete">Delete</resource><resource name="DeleteWarning">Are you sure you want to delete this knowledge collection?</resource><resource name="Description">Description (Optional)</resource><resource name="Description_Detail">A brief description of the knowledge collection.</resource><resource name="Group">${group_propercase}</resource><resource name="Group_Detail">The ${group_lowercase} that contains this knowledge collection.</resource><resource name="GroupLookUp_NoMatches">A matching group could not be found.</resource><resource name="KnowledgeCollectionOptions">Knowledge Collection Options</resource><resource name="KnowledgeCollectionOptions-Description">Manage knowledge collection options.</resource><resource name="Languages">Languages</resource><resource name="Languages_Detail">Filter documents by language. Only content from documents in these languages will be included in this knowledge collection.</resource><resource name="Name">Name</resource><resource name="Name_Detail">Choose a concise, but descriptive, name. This name is used to identify your knowledge collection.</resource><resource name="NavigationTag">Navigation Root (Optional)</resource><resource name="NavigationTag_Detail">Optionally select the root node in the tag hierarchy to use as the starting point for navigation within this knowledge collection.</resource><resource name="RequiredText">This field is required</resource><resource name="Save">Save</resource><resource name="TagFilter">{0} (Optional)</resource><resource name="TagFilter_Detail">Optionally filter documents by {0}. Documents will only be included in this knowledge collection if they match at least one of the selected tags in this filter.</resource><resource name="TagsLookUp_NoMatches">No matches could be found.</resource><resource name="Updated">Knowledge collection options have been updated.</resource><resource name="ValidateMove">You have selected to move the knowledge collection to another ${group_lowercase}. If there are permission overrides on this knowledge collection, they will be removed if you choose to continue.</resource><resource name="ViewIdentifiers">View Identifiers</resource></language></languageResources>
+		<restScopes>
+			<scope id="groups.groups.readonly" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

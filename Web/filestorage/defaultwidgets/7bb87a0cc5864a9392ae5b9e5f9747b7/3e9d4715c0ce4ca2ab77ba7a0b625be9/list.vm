@@ -1,0 +1,72 @@
+#set($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set($showLastPost = $core_v2_widget.GetBoolValue('showLastPostColumn', true))
+#set($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 5))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+
+#set($collections = false)
+#set($groupId = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('group', '')).Value('Group')))
+#if ($groupId <= 0)
+	#if ($core_v2_group.Current)
+		#set($groupId = $core_v2_group.Current.Id)
+	#else
+		$core_v2_widget.Hide()
+	#end
+#end
+
+#set($collections = $km_v1_knowledgeCollections.List("%{PageIndex=$pageIndex,PageSize=$pageSize,GroupId=$groupId}"))
+
+#foreach($collection in $collections)
+#beforeall
+	<ul class="content-list content simple margin-bottom tabular">
+#each
+	<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($collection.Url)">
+		<div class="name cell">
+			<h2>
+				<a class="internal-link view-application" href="$core_v2_encoding.HtmlAttributeEncode($collection.Url)">$collection.Name</a>
+			</h2>
+			#if(!$inSidebar && $collection.Description)
+				<div class="content">$collection.HtmlDescription('web')</div>
+			#end
+		</div>
+
+		#if(!$inSidebar)
+			#set($documents = false)
+			#if($showPosts || $showLastPost)
+				#set($documents = $km_v1_documents.List($collection.Id, "%{PageIndex=0, PageSize=1 }"))
+			#end
+
+			#if($showPosts)
+				<div class="minimal cell nowrap metadata">
+					<span class="value">$core_v2_language.FormatNumber($documents.TotalCount)</span>
+					<span class="description">
+						#if ($documents.TotalCount == 1)
+							$core_v2_language.GetResource('post_singular')
+						#else
+							$core_v2_language.GetResource('post_plural')
+						#end
+					</span>
+				</div>
+			#end
+
+			#if ($showLastPost)
+				<div class="minimal cell nowrap metadata latest">
+					#if($documents.TotalCount > 0)
+						#set ($lastPost = $documents.get_Item(0))
+						<span class="value">
+							<a
+								$core_v2_ui.ContentPeek($lastPost.ContentId, $km_v1_documents.ContentTypeId, "internal-link")
+								href="$core_v2_encoding.HtmlAttributeEncode($lastPost.Url)">$lastPost.Title</a>
+						</span>
+						<span class="description">$core_v2_language.FormatAgoDate($lastPost.LastUpdatedDate)</span>
+					#end
+				</div>
+			#end
+		#end
+	</li>
+
+	#set($hasResults = true)
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_NoResults')</div>
+#afterall
+	</ul>
+#end

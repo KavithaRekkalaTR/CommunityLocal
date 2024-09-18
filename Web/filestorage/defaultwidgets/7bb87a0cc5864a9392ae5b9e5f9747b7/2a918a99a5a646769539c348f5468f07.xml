@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UserMentionListWidget_Title}" version="11.0.0.0" description="${resource:UserMentionListWidget_Description}" instanceIdentifier="2a918a99a5a646769539c348f5468f07" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="user-mention-list" lastModified="2020-01-14 16:07:09Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set($user = false)
+#if ($filterType == 'Current')
+    #set($user = $core_v2_user.Current)
+#else
+    #set($user = $core_v2_user.Accessing)
+#end
+#if (!$user)
+    $core_v2_widget.Hide()
+#end
+
+$core_v2_ui.PagedContent('mentions.vm')
+$core_v2_ui.Pager($mentions.PageIndex, $mentions.PageSize, $mentions.TotalCount, "%{PagedContentFile='mentions.vm'}")
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Title}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="fragmentHeader" labelResourceName="Configuration_Title" defaultValue="${resource:Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageSize" labelResourceName="Configuration_PageSize" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="filterType" labelResourceName="Configuration_Filter" dataType="String">
+		<propertyValue value="Accessing" labelResourceName="Configuration_Filter_AccessingUser" />
+		<propertyValue value="Current" labelResourceName="Configuration_Filter_CurrentUser" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_Filter">Show mentions of</resource>
+  <resource name="Configuration_Filter_AccessingUser">Accessing user</resource>
+  <resource name="Configuration_Filter_CurrentUser">Contextual user</resource>
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Configuration_PageSize">Page Size</resource>
+  <resource name="Configuration_Title">Widget Title</resource>
+  <resource name="No_Mentions_Message">{0} has not yet been mentioned.</resource>
+  <resource name="No_Mentions_Message_Self">When you are mentioned in posts, they will show here.</resource>
+  <resource name="Title">User Mentions</resource>
+  <resource name="UserMentionListWidget_Description">Shows content that mentioned a user.</resource>
+  <resource name="UserMentionListWidget_Title">User Mention List</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

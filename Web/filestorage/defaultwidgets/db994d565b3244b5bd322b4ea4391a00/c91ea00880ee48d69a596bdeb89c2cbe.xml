@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="c91ea00880ee48d69a596bdeb89c2cbe" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-authentication" lastModified="2021-11-11 20:00:36Z" provider="db994d565b3244b5bd322b4ea4391a00">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.FileStorageStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('inaccessiblefilestores')
+	    #foreach($n in $context.Status.NodeInaccessibleFileStores)
+	    #each
+		    <strong>$n.Name</strong> cannot connect to
+		    #foreach($fs in $n.FileStoreKeys)
+		    #each
+		        <strong>$fs</strong>
+		    #between
+		        ,
+		    #end
+		#between
+		    ;
+		#end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CfsMisconfiguration">Servers serving this community are not consistently configured. Please review every server's configuration to ensure that the &lt;code&gt;CentralizedFileStorage&lt;/code&gt; configuration in &lt;code&gt;communityserver.config&lt;/code&gt; is the same.</resource>
+  <resource name="FileDeliveryMisconfiguration">Servers serving this community are not consistently configured. Please review every server's configuration to ensure that the &lt;code&gt;FileDelivery&lt;/code&gt; value in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same.</resource>
+  <resource name="FileStorageMisconfiguration">Servers serving this community are not consistently configured. Please review every server's configuration to ensure that the &lt;code&gt;FileStorage&lt;/code&gt; value in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same.</resource>
+  <resource name="Healthy">The file storage system is healthy.</resource>
+  <resource name="InaccessibleFileStores">One or more servers serving this community are unable to connect to certain configurations used by file stores: {inaccessiblefilestores}. This is likely due to a misconfiguration. Please review every server's configuration to ensure that the &lt;code&gt;CentralizedFileStorage&lt;/code&gt; configuration in &lt;code&gt;communityserver.config&lt;/code&gt; and the value of &lt;code&gt;FileDelivery&lt;/code&gt; in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same and valid.</resource>
+  <resource name="Unknown">The status of file storage is not yet known.</resource>
+  <resource name="Widget-Description">File Storage System Indicator</resource>
+  <resource name="Widget-Title">File Storage</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

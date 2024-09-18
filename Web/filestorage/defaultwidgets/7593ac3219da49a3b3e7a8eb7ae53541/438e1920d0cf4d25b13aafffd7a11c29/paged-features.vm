@@ -1,0 +1,83 @@
+﻿#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 50)
+
+#set($options = "%{ PageSize = $pageSize, PageIndex = $pageIndex, IncludeFutureDatedItems = 'true', SortBy = 'EndDate' }")
+
+#if ($core_v2_page.GetQueryStringValue('w_filter') == "displayed")
+	$options.Add('TargetContainerId', $context.ApplicationId)
+#else
+	#if($context.ApplicationId == $context.ContainerId)
+		$options.Add('ContainerId', $context.ContainerId)
+	#else
+		$options.Add('ApplicationId', $context.ApplicationId)
+	#end
+#end
+
+#set($features = $core_v3_feature.List($options))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($features.PageIndex + 1) * $features.PageSize)
+#if ($features.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#foreach($feature in $features)
+#beforeall
+<ul class="content-list content expandable simple features" data-hasmore="$hasMore">
+#each
+	<li class="content-item feature" data-contentid="$feature.Content.ContentId">
+		<h4 class="name">$feature.Title</h4>
+
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item feature-dates">
+					<span class="startdate">$core_v2_language.FormatDateAndTime($feature.StartDate)</span> to <span class="enddate">$core_v2_language.FormatDateAndTime($feature.EndDate)</span>
+				</li>
+			</ul>
+		</div>
+
+		#if ($feature.Image)
+			<div class="content expandable">
+				$!core_v2_ui.GetPreviewHtml($feature.Image, "%{width=300,height=80}")
+			</div>		
+		#elseif ($feature.Description)
+			<div class="content expandable">
+				$core_v2_language.Truncate($!feature.Description, 100, '...')
+			</div>
+		#end
+	
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item view-file">
+						<a href="$core_v2_page.AbsoluteUrl($feature.Url)">$core_v2_language.GetResource('View')</a>
+					</li>				
+					<li class="navigation-list-item edit">
+						<a href="#" data-messagename="contextual-edit-feature" data-featurename="$core_v2_encoding.HtmlAttributeEncode($feature.Title)" data-contentid="$feature.Content.ContentId" data-contenttypeid="$feature.Content.ContentTypeId">$core_v2_language.GetResource('Edit')</a>
+					</li>
+					<li class="navigation-list-item delete">
+						<a href="#" data-messagename="contextual-delete-feature" data-contentid="$feature.Content.ContentId" data-contenttypeid="$feature.Content.ContentTypeId">$core_v2_language.GetResource('Delete')</a>
+					</li>
+				</ul>
+			</div>
+		</div>		
+	</li>
+#afterall
+</ul>
+#nodata
+	<ul class="content-list content expandable simple features" data-hasmore="$hasMore">
+	</ul>
+	#set($applicationName = '?')
+	#set($application = $core_v2_application.Get($context.ApplicationId, $context.ApplicationTypeId))
+	#if ($application && !$application.HasErrors())
+		#set($applicationName = $application.HtmlName('Web'))
+	#end
+
+	#if ($core_v2_page.GetQueryStringValue('w_filter') == "displayed")
+		<div class="message norecords" data-hasmore="false">$core_v2_language.FormatString($core_v2_language.GetResource('no_displayedfeatures'), $applicationName)</div>
+	#else
+		<div class="message norecords" data-hasmore="false">$core_v2_language.FormatString($core_v2_language.GetResource('no_features'), $applicationName)</div>
+	#end
+#end
+
+

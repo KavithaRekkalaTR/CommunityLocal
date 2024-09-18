@@ -1,0 +1,8 @@
+#set($pointFactorId = false)
+#set($pointFactorId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('pointFactorId')))
+#set($selectedAutomationId = false)
+#set($selectedAutomationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('automationId')))
+#set($automationConfigurationData = false)
+#set($automationConfigurationData = $core_v2_page.ParseQueryString($core_v2_page.GetFormValue('automationConfiguration')))
+
+$core_v2_widget.ExecuteFile('render-automationconfiguration.vm')

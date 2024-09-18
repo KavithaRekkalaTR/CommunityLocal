@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Achievement" version="13.0.0.0" description="Raises notifications to users when an achievement is awarded." id="59691c32910a4d73824ea02da7e24602" lastModified="2023-04-18 13:42:30Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('achievement_title')
+    $context_v1_email.Context.UserAchievement.Achievement.Title
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('achievement_title')
+    $context_v1_email.Context.UserAchievement.Achievement.Title
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.UserAchievement.Achievement.Url)">$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.UserAchievement.Achievement.BadgeIconUrl, 75, 75, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='75', height='75' }")</a>
+</p>
+<p>
+#format($core_v2_language.GetResource('Body'))
+#token('achievement_link')
+    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.UserAchievement.Achievement.Url)">$context_v1_email.Context.UserAchievement.Achievement.Title</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">You earned the {achievement_link} achievement</resource>
+  <resource name="Subject">Earned {achievement_title} Achievement</resource>
+  <resource name="Header">Earned {achievement_title} Achievement</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

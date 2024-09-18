@@ -1,0 +1,109 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+// navigation list
+.navigation-list {
+	&.links {
+		display: none;
+		.inline {
+			a {
+				background-color: @color-background;
+				color: @color-link;
+				text-align: left;
+				padding: 0;
+				margin: 0;
+			}
+		}
+	}
+	&[data-direction='horizontal'] {
+		li {
+			> span,
+			> a {
+				margin-right: @spacing / 2;
+				margin-bottom: 0px;
+				padding-left: @spacing;
+				padding-right: @spacing;
+			}
+			&:first-child {
+				> span,
+				> a {
+					padding-left: 0;
+				}
+			}
+		}
+		margin-bottom: 0px;
+	}
+	&[data-direction='vertical'] {
+		a {
+			.button-style(@shadow: false,
+				@display: block,
+				@padding-vertical: 4px,
+				@padding-horizontal: 4px,
+				@margin-right: 0);
+			background-color: -evo-decrease-contrast(@color-background, 4%, @color-foreground, @color-contrast);
+			color: @color-foreground;
+			&:active, &:hover {
+				color: @color-background;
+			}
+			font-size: .9em;
+			margin-bottom: 6px;
+			&:hover, &:active, &.links-expanded {
+				background-color: @color-accent;
+				color: @color-background;
+				&[data-position="downright"], &[data-position="downleft"] {
+					border-bottom-left-radius: 0;
+					border-bottom-right-radius: 0;
+				}
+				&[data-position="upright"], &[data-position="upleft"] {
+					border-top-left-radius: 0;
+					border-top-right-radius: 0;
+				}
+			}
+		}
+	}
+	&.actions {
+		display: none;
+		float: right;
+		margin: 0 @spacing 0 @spacing;
+		a {
+			padding: (@spacing / 2) 0 (@spacing / 2) (@spacing * 2);
+			&[data-more] {
+				.replace_with_icon(@dot-3, 31px);
+			}
+		}
+	}
+	&.navigation {
+		float: right;
+		margin: 0 0 @spacing @spacing;
+		font-size: @font-size * .8;
+		a[data-more] {
+			color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+			.transition(background-color .15s);
+			.replace_with_icon(@cog, @font-size * 1.1, 8px);
+			&:hover, &:active {
+				color: @color-link
+			}
+			&.links-expanded {
+				border-radius: 3px;
+				background-color: @color-accent;
+				color: @color-background;
+				&[data-position="downright"], &[data-position="downleft"] {
+					border-bottom-left-radius: 0;
+					border-bottom-right-radius: 0;
+				}
+				&[data-position="upright"], &[data-position="upleft"] {
+					border-top-left-radius: 0;
+					border-top-right-radius: 0;
+				}
+			}
+			&:before {
+				top: 0;
+			}
+		}
+	}
+}

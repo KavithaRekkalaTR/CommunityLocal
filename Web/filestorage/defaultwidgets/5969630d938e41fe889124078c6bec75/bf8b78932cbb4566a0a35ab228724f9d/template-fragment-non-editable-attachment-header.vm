@@ -1,0 +1,45 @@
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<% if(ThemeTitle && ThemeTitle.length > 0) { %>
+					<span class="hierarchy theme ui-tip" data-tip="<%: ThemeTitle %>"><%: ThemeTitle %></span>
+					<span class="divider"> / </span>
+				<% } %>
+				<% if(FragmentProcessedName) { %>
+					<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_fid=<%: InstanceIdentifier %>&_ftid=<%: (ThemeId || '') %>&_ft=overview" class="hierarchy managed-item-name ui-tip" data-tip="<%: FragmentProcessedName %> Overview"><%: FragmentProcessedName %></a>
+					<span class="divider"> / </span>
+				<% } %>
+				<div class="editor-components template-editor-components"></div>
+				<div class="editor-actions-wrapper template-editor-actions"></div>
+
+				<ul class="ui-links file-actions" data-maxlinks="0">
+					<% if(typeof(deleted) == 'undefined' || !deleted) { %>
+						<li class="navigation-list-item">
+							<a href="#" class="delete-current-attachment" data-messagename="mfw.view.attachment.delete" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('DeleteAttachment')</a>
+						</li>
+					<% } else { %>
+						<li class="navigation-list-item">
+							<a href="#" class="restore-current-attachment restore-attachment" data-messagename="mfw.view.attachment.restore" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('RestoreAttachment')</a>
+						</li>
+					<% } %>
+					<li class="navigation-list-item">
+						<a href="<%: Url %>" class="download-current-file" download>$core_v2_language.GetResource('downloadFile')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a class="node-actions-more" href="#" data-more>$core_v2_language.GetResource('FileActions')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+					</li>
+				</ul>
+			</span>
+		</li>
+		<li class="field-item restore-note">
+			<div class="message error">
+				$core_v2_language.GetResource('restoreNote') <a href="#" data-messagename="mfw.view.attachment.restore" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('restored')</a>.
+			</div>
+		</li>
+
+	</ul>
+</fieldset>

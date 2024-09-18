@@ -1,0 +1,49 @@
+#set($filterType = false)
+#set($filterType = $core_v2_widget.GetStringValue('filterType', ''))
+#if(!$filterType)
+    #set($user = false)
+	#set($user = $core_v2_user.Current)
+	#if($user)
+		#set($filterType = 'Current')
+		$core_v2_widget.SetStringValue('filterType', $filterType)
+	#else
+		#set($filterType = 'Accessing')
+		$core_v2_widget.SetStringValue('filterType', $filterType)
+	#end
+#end
+
+#set($user = false)
+#if ($filterType == 'Current')
+    #set($user = $core_v2_user.Current)
+#else
+    #set($user = $core_v2_user.Accessing)
+#end
+
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($userId = $user.ContentId)
+
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 15))
+
+#set($mentions = $core_v2_mention.List("%{MentionedContentIds=$userId,MentionedContentTypeId=$core_v2_user.ContentTypeId,PageSize=$pageSize,PageIndex=$pageIndex,SortBy='Date',SortOrder='Descending'}"))
+#foreach($mention in $mentions)
+#beforeall
+	<ul class="content-list content">
+#each
+	<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($mention.MentioningContent.Url)">
+		#set ($resultHtml = false)
+		#set ($resultHtml = $mention.MentioningContent.ViewHtml())
+		#if ($resultHtml)
+			$resultHtml
+		#end
+	</li>
+#afterall
+	</ul>
+#nodata
+	<div class="message information">
+	#if ($core_v2_user.Current && $core_v2_user.Accessing && $core_v2_user.Current.Id == $core_v2_user.Accessing.Id)
+		$core_v2_language.GetResource("No_Mentions_Message_Self")
+	#else
+		$core_v2_language.FormatString($core_v2_language.GetResource("No_Mentions_Message"), $user.DisplayName)
+	#end
+	</div>
+#end

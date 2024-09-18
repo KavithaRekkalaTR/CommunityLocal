@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Groups_MembersList_Name}" version="11.0.0.0" description="${resource:Groups_MembersList_Description}" instanceIdentifier="91a40a91b04843ebb2bf2686c82b8996" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="group-members-list" lastModified="2020-01-14 16:08:13Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+$core_v2_widget.ExecuteFile('isinsidebar.vm')
+#set($view = $core_v2_widget.GetStringValue('viewType', 'simple'))
+
+#if ($isInSidebar || $view != 'full')
+	#if($view == 'simple')
+		#set($listUrl = 'avatar-list.vm')
+		$core_v2_ui.PagedContent('avatar-list.vm')
+	#else
+		#set($listUrl = 'simple-list.vm')
+		$core_v2_ui.PagedContent('simple-list.vm')
+	#end
+
+	#if($core_v2_widget.GetBoolValue('enablePaging', true))
+		$core_v2_ui.Pager($members.PageIndex, $members.PageSize, $members.TotalCount, "%{ShowIndividualPages = 'false', ShowPrevious = 'true', ShowNext = 'true', PagedContentFile = $listUrl, ShowFirst = 'false', ShowLast = 'false' }")
+	#end
+#else
+	<div class="filter">
+		<form>
+		<span class="membershiptype">
+		<select class="ui-select" id="$core_v2_widget.UniqueId('membershiptype')">
+			#if ($group.GroupType == 'Joinless')
+				<option value="">$core_v2_language.GetResource('Filter_Owners')</option>
+			#else
+				<option value="">$core_v2_language.GetResource('Filter_AllMemberTypes')</option>
+				<option value="Owner">$core_v2_language.GetResource('Filter_Owners')</option>
+				<option value="Manager">$core_v2_language.GetResource('Filter_Managers')</option>
+				<option value="Member">$core_v2_language.GetResource('Filter_Members')</option>
+			#end
+		</select>
+		</span>
+		</form>
+	</div>
+	$core_v2_widget.ExecuteFile('full-list.vm')
+	<div class="ui-loading"></div>
+	#registerEndOfPageHtml('telligent.evolution.widgets.groupMembersList')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	#end
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+		jQuery(function()
+		{
+			jQuery.telligent.evolution.widgets.groupMembersList.register({
+				wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+				loadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('full-list.vm'))',
+				thumbnailsContainer: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))'),
+				membershipTypeFilter: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('membershiptype'))'),
+				hasMore: '$hasMore',
+				searchPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('members_filter'))'
+			});
+		});
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Groups_TopGroupAuthorQualityUsers_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="Title" defaultValue="${resource:Groups_MembersList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="viewType" labelResourceName="View" defaultValue="simple" dataType="String">
+		<propertyValue value="simple" labelResourceName="View_Avatars" orderNumber="1000000" propertiesToShow="groupSelection,show,sortBy,sortOrder,pageSize,enablePaging" propertiesToHide="" />
+		<propertyValue value="simplelist" labelResourceName="View_Simple" orderNumber="1000001" propertiesToShow="groupSelection,show,sortBy,sortOrder,pageSize,enablePaging" propertiesToHide="" />
+		<propertyValue value="full" labelResourceName="View_Full" orderNumber="1000002" propertiesToHide="groupSelection,show,sortBy,sortOrder,pageSize,enablePaging" propertiesToShow="" />
+	</property>
+	<property id="groupSelection" labelResourceName="Group" defaultValue="IncludeSubGroups=%20False&amp;Group=0&amp;GroupPath=" dataType="Custom" template="core_v2_groupLookup" enableCurrent="true" />
+	<property id="show" labelResourceName="Show" defaultValue="owners" dataType="String">
+		<propertyValue value="owners" labelResourceName="Show_Owners" orderNumber="1000000" propertiesToShow="" propertiesToHide="sortBy,sortOrder" />
+		<propertyValue value="all" labelResourceName="Show_All" orderNumber="1000001" propertiesToShow="sortBy,sortOrder" propertiesToHide="" />
+	</property>
+	<property id="sortBy" labelResourceName="SortBy" defaultValue="Username" dataType="String">
+		<propertyValue value="DisplayName" labelResourceName="SortBy_Username" />
+		<propertyValue value="GroupQualityAuthorScore" labelResourceName="SortBy_GroupQualityAuthorScore" />
+	</property>
+	<property id="sortOrder" labelResourceName="SortOrder" defaultValue="Descending" dataType="String">
+		<propertyValue value="Ascending" labelResourceName="SortOrder_Ascending" />
+		<propertyValue value="Descending" labelResourceName="SortOrder_Descending" />
+	</property>
+	<property id="pageSize" labelResourceName="PageSize" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="enablePaging" labelResourceName="EnablePaging" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="EnablePaging">Enable Paging</resource>
+  <resource name="Filter_AllMemberTypes">All member types</resource>
+  <resource name="Filter_Managers">Managers</resource>
+  <resource name="Filter_Members">Members</resource>
+  <resource name="Filter_Owners">Owners</resource>
+  <resource name="Group">Select group to pull from</resource>
+  <resource name="Groups_Membership_NoMembers">This group currently has no members.</resource>
+  <resource name="Groups_Membership_NoMembers_WithCriteria">No members were found matching your criteria.</resource>
+  <resource name="Groups_MembersList_Description">Displays a list of group members</resource>
+  <resource name="Groups_MembersList_Name">Group - Members List</resource>
+  <resource name="manager">Manager</resource>
+  <resource name="member">Member</resource>
+  <resource name="members_filter">Search members...</resource>
+  <resource name="Options">Options</resource>
+  <resource name="owner">Owner</resource>
+  <resource name="PageSize">Number of items to display</resource>
+  <resource name="Show">Show</resource>
+  <resource name="Show_All">All Group Members</resource>
+  <resource name="Show_Owners">Group Owners Only</resource>
+  <resource name="SortBy">Sort By</resource>
+  <resource name="SortBy_GroupQualityAuthorScore">Group Author Quality Score</resource>
+  <resource name="SortBy_MembershipDate">Group Joined Date</resource>
+  <resource name="SortBy_Username">User Name</resource>
+  <resource name="SortOrder">Sort Order</resource>
+  <resource name="SortOrder_Ascending">Ascending</resource>
+  <resource name="SortOrder_Descending">Descending</resource>
+  <resource name="Title">Widget Title</resource>
+  <resource name="View">View Type</resource>
+  <resource name="View_Avatars">Avatar list</resource>
+  <resource name="View_Full">Thumbnails with filters and search</resource>
+  <resource name="View_Simple">Simple list</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

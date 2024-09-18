@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SelectTheme_Name}" version="11.0.0.0" description="${resource:SelectTheme_Description}" instanceIdentifier="cfab3076185647988ac4931b23f42d9b" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-select-theme" lastModified="2021-06-14 20:49:47Z" provider="154bd8881f9b4c8aaac165cb9cf37583">
+    <contentScript language="Velocity"><![CDATA[<p>
+	#if ($context.SupportsDefault)
+		$core_v2_language.FormatString($core_v2_language.GetResource('instructions'), $context.ThemeApplicationName)
+	#else
+		$core_v2_language.GetResource('instructions-nodefault')
+	#end
+</p>
+
+#foreach($theme in $context.Themes)
+#beforeall
+	<ul class="content-list content expandable simple">
+#each
+	<li class="content-item theme#if($theme.Id == $context.Theme.Id) selected#end">
+		<div class="content theme">
+		<h4 class="name">
+			$theme.Name
+		</h4>
+		<div class="content expanded-hidden single-line">
+			$!theme.Description
+		</div>
+		<div class="content expandable">
+			#if ($theme.PreviewImageUrl)
+				<img src="$core_v2_encoding.HtmlAttributeEncode($theme.PreviewImageUrl)" class="preview" alt="" />
+			#end
+			$!theme.Description
+		</div>
+		#if($theme.Id != $context.Theme.Id || $context.IsStaged)
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="theme.select" data-themeid="$theme.Id.ToString()" data-themename="$theme.Name">$core_v2_language.GetResource('select')</a>
+						</li>
+						#if ($theme.Id != $context.Theme.Id)
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="theme.preview" data-themeid="$theme.Id.ToString()">$core_v2_language.GetResource('preview')</a>
+							</li>
+						#else
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="theme.stoppreview">$core_v2_language.GetResource('stoppreviewing')</a>
+							</li>
+						#end
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			#end
+		</div>
+	</li>
+#afterall
+	</ul>
+#end
+
+
+#registerEndOfPageHtml('telligent.evolution.widgets.selectTheme')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.selectTheme.register({
+			selectThemeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('select-theme.vm'))',
+			previewThemeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('stage-theme.vm'))',
+			stopPreviewingThemeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-staged-theme.vm'))',
+			previewUrl: '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)',
+			text: {
+				selectThemeConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-confirm'))',
+				selectThemeSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-success'))',
+				previewStoppedSucess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview-stopped'))',
+				stagedThemeSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview-started'))'
+			}
+		})
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="instructions">Select the theme for '{0}':</resource>
+  <resource name="instructions-nodefault">Select the theme:</resource>
+  <resource name="more">More</resource>
+  <resource name="preview">Select for Preview</resource>
+  <resource name="preview-started">The theme used by preview has been updated.</resource>
+  <resource name="preview-stopped">The theme will no longer be used when previewing.</resource>
+  <resource name="select">Select and Publish</resource>
+  <resource name="select-confirm">Are you sure you want to set the theme to '{0}'?</resource>
+  <resource name="select-success">The theme has been changed. The page must now reload for the change to take effect.</resource>
+  <resource name="SelectTheme_Description">Choose from available themes to apply a new experience.</resource>
+  <resource name="SelectTheme_Name">Select a Theme</resource>
+  <resource name="stoppreviewing">Unselect for Preview</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

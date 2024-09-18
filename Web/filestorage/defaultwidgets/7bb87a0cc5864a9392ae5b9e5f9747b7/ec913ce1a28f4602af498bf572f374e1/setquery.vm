@@ -1,0 +1,132 @@
+#set ($dataSource = $core_v2_widget.GetStringValue('dataSource','context'))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 15))
+
+##
+## Get tagged content
+##
+#set ($taggedContent = false)
+#set ($query = "%{ PageSize = $pageSize, PageIndex = $pageIndex }")
+
+## context-defined content source
+#if ($dataSource == 'context')
+	#set($currentTags = $core_v2_tags.Current)
+	#if($currentTags && $currentTags.Count > 0)
+		$query.Add('Tags', $core_v2_utility.Join(',',$currentTags))
+	#else
+		$core_v2_widget.Hide()
+	#end
+
+	#if($core_v2_application.Current)
+		$query.Add('ApplicationIds', $core_v2_application.Current.ApplicationId)
+	#else
+		#if ($core_v2_applicationType.Current)
+			$query.Add('ApplicationTypeIds', $core_v2_applicationType.Current.Id)
+		#end
+		#if ($core_v2_container.Current)
+			$query.Add('ContainerIds', $core_v2_container.Current.ContainerId)
+	   #end
+	#end
+## user-defined content source
+#else
+	#set ($userTags = $core_v2_widget.GetStringValue('userDefinedTags',''))
+	#if ($userTags && $userTags.Length > 0)
+		#set ($logicallyOrTags = $core_v2_widget.GetBoolValue('logicallyOrTags',true))
+
+		$query.Add('Tags',$userTags)
+		$query.Add('LogicallyOrTags',$logicallyOrTags)
+
+		## parse search settings
+		#set ($searchType = $core_v2_widget.GetStringValue('searchType','group'))
+		## determine container type group or one of the app types
+		#if ($searchType == 'group')
+			## if it was a group, determine what sub apps are included
+			#set ($subGroups = $core_v2_widget.GetBoolValue('groupSubGroup', false))
+
+			#set ($groupLookupValue = $core_v2_widget.GetCustomValue('groupLookup',''))
+			#set ($groupLookupSettings = false)
+			#set ($groupLookupSettings = $core_v2_page.ParseQueryString($groupLookupValue))
+			#set ($groupId = -1)
+			#set ($groupId = $core_v2_utility.ParseInt($groupLookupSettings.Value('Group')))
+
+			## get either the current group or user-specified group
+			#set ($group = false)
+			#if ($groupId > 0)
+				#set ($group = $core_v2_group.Get("%{ Id = $groupId }"))
+			#else
+				#set ($group = $core_v2_group.Current)
+			#end
+			#if ($group && $group.Id != $core_v2_group.Root.Id)
+
+				## add filters for the group and any optional subgrops
+				#set($contentContainerIds = "$group.ContainerId")
+				#if ($subGroups)
+					#set ($groups = $core_v2_group.List("%{ IncludeAllSubGroups = 'true', PageSize = 50, ParentGroupId = $group.Id, Permission = 'Group_ReadGroup' }"))
+					#foreach ($subGroup in $groups)
+						#set ($contentContainerIds = "${contentContainerIds},${subGroup.ContainerId}")
+					#end
+				#end
+				$query.Add('ContainerIds', $contentContainerIds)
+			#end
+
+			## add filters regarding which content types are to be searched
+			#set ($applicationTypeIds = "")
+			#set ($groupApplicationTypesValue = $core_v2_widget.GetCustomValue('groupApplicationTypes',''))
+			#if ($groupApplicationTypesValue == 'all')
+				#set ($applicationTypeIds = "")
+				#set ($appTypes = $core_v2_applicationType.List())
+				#foreach ($appType in $appTypes)
+					#if ($applicationTypeIds.Length > 0)
+						#set ($applicationTypeIds = "${applicationTypeIds},")
+					#end
+					#set ($applicationTypeIds = "${applicationTypeIds}${appType.Id}")
+				#end
+			#else
+				#set ($groupApplicationTypesSettings = false)
+				#set ($groupApplicationTypesSettings = $core_v2_page.ParseQueryString($groupApplicationTypesValue))
+				#set ($appTypes = $groupApplicationTypesSettings.Values('ApplicationTypeId'))
+				#foreach ($appType in $appTypes)
+					#if ($applicationTypeIds.Length > 0)
+						#set ($applicationTypeIds = "${applicationTypeIds},")
+					#end
+					#set ($applicationTypeIds = "${applicationTypeIds}${appType}")
+				#end
+			#end
+			#if ($applicationTypeIds.Length > 0)
+				$query.Add('ApplicationTypeIds', $applicationTypeIds)
+			#end
+		## otherwise, user specified specific app(s)
+		#else
+			#set($applicationIds = '')
+
+			#set ($applicationLookupValue = $core_v2_widget.GetCustomValue('applicationLookup',''))
+			#set ($applicationLookupSettings = false)
+			#set ($applicationLookupSettings = $core_v2_page.ParseQueryString($applicationLookupValue))
+			#set ($serializedApplicationIds = $applicationLookupSettings.Values('Application'))
+			#foreach ($serializedApplicationId in $serializedApplicationIds)
+				#if ($serializedApplicationId == '-1')
+					#if ($core_v2_application.Current)
+						$query.Add('ApplicationIds', $core_v2_application.Current.ApplicationId)
+					#end
+				#else
+					#set($applicationIdPair = $core_v2_utility.Split(':', $serializedApplicationId))
+					#set($applicationId = false)
+					#foreach ($applicationIdPairPart in $applicationIdPair)
+						#set ($applicationId = $applicationIdPairPart)
+					#end
+				#end
+
+				#if ($applicationIds.Length > 0)
+					#set($applicationIds = "${applicationIds},")
+				#end
+				#set($applicationIds = "${applicationIds}${applicationId}")
+			#end
+
+			#if ($applicationIds.Length > 0)
+				$query.Add('ApplicationIds', $applicationIds)
+			#end
+		#end
+	#else
+		$core_v2_widget.Hide()
+	#end
+#end

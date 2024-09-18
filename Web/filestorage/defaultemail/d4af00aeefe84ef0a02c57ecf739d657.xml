@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Rating" version="13.0.0.0" description="Raises notifications to a content author upon content rating." id="d4af00aeefe84ef0a02c57ecf739d657" lastModified="2023-04-18 21:10:15Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $context_v1_email.Context.User.DisplayName
+#end
+]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $context_v1_email.Context.User.DisplayName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('user_name_link')
+    #set($profileUrl = false)
+    #set($profileUrl = $context_v1_email.Context.User.Url)
+    #if ($profileUrl)
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$context_v1_email.Context.User.DisplayName</a>
+	#else
+	    $context_v1_email.Context.User.DisplayName
+	#end
+#token('content_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Content.Url)">$context_v1_email.Context.Content.HtmlName('Web')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Settings(false))">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">{user_name_link} rated your content, {content_link}.</resource>
+  <resource name="Footer">You received this email because your content was rated by another user. You can disable these notifications {settings_link}.</resource>
+  <resource name="Settings">here</resource>
+  <resource name="Subject">{user_name} rated your content</resource>
+  <resource name="Header">{user_name} rated your content</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

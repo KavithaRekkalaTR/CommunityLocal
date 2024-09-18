@@ -1,0 +1,38 @@
+#set ($themes = $context.ListThemes())
+<div>
+	<div class="themes-available">
+		<form>
+			<fieldset>
+				<ul class="field-list">
+
+					<span>$core_v2_language.GetResource('ThemeSelectDesc')</span>
+
+					<li class="field-item provider-select">
+						<label class="field-item-name"><strong>$core_v2_language.GetResource('Theme')</strong></label>
+						<span class="field-item-description">$core_v2_language.GetResource('ThemeDesc')</span>
+						<span class="field-item-input">
+							<select class="theme-select">
+								<option value="00000000-0000-0000-0000-000000000000">$core_v2_language.GetResource('DefaultForAllThemes')</option>
+								#foreach ($theme in $themes)
+									<option value="$theme.Id">$core_v2_encoding.HtmlEncode($theme.Title)</option>
+								#end
+							</select>
+						</span>
+						<span class="field-item-validation" style="display:none;"></span>
+					</li>
+					<li class="field-item submit">
+						<span class="field-item-input">
+							<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+						</span>
+						<span class="field-item-input">
+							<a href="#" class="button continue">$core_v2_language.GetResource('Continue')</a>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+		</form>
+	</div>
+	<div class="themes-unavailable">
+		<p class="message">$core_v2_language.GetResource('NoThemesMessage')</p>
+	</div>
+</div>

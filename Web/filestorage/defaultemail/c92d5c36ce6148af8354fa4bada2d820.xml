@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Moderated Content" version="13.0.0.0" description="Sends notifications to a content author when the content has been moderated." id="c92d5c36ce6148af8354fa4bada2d820" lastModified="2023-04-20 16:29:51Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	#format($core_v2_language.GetResource('Subject_User'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#else
+	#format($core_v2_language.GetResource('Subject_Content'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	#format($core_v2_language.GetResource('Header_User'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#else
+	#format($core_v2_language.GetResource('Header_Content'))
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+    #format($core_v2_language.GetResource('Body_User'))
+    #token('user_name')
+	    $context_v1_email.Context.Content.HtmlName('Web')
+	#end
+#else
+	#format($core_v2_language.GetResource('Body_Content'))
+	#token('content_name')
+	    $context_v1_email.Context.Content.HtmlName('Web')
+	#token('application_name_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Content.Application.Url)">$context_v1_email.Context.Content.Application.HtmlName('Web')</a>
+	#end
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Content">Your content, {content_name} in {application_name_link}, was moderated and doesn't appear on the site right now. Your content will be reviewed soon and you'll be notified when a decision is made.</resource>
+  <resource name="Body_User">Your user account, {user_name}, requires approval. Your account will be reviewed soon and you'll be notified when a decision is made.</resource>
+  <resource name="Subject_Content">Your content on {site_name} requires review</resource>
+  <resource name="Subject_User">Your user account on {site_name} requires review</resource>
+  <resource name="Header_Content">Your content on {site_name} requires review</resource>
+  <resource name="Header_User">Your user account on {site_name} requires review</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

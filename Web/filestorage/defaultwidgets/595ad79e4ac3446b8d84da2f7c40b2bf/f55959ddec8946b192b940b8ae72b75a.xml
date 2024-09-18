@@ -1,0 +1,339 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:AuthenticationSettingsPanel_Name}" version="13.0.0.0" description="${resource:AuthenticationSettingsPanel_Description}" instanceIdentifier="f55959ddec8946b192b940b8ae72b75a" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="administration-authenticationsettings" lastModified="2024-02-08 22:22:39Z" provider="595ad79e4ac3446b8d84da2f7c40b2bf">
+    <contentScript language="Velocity"><![CDATA[#set($shouldDisable = $context.SSOEnabled)
+#set($disabledMessage = $core_v2_language.GetResource("SSO_NoSupport"))
+#set($disabledClass = "")
+#if($shouldDisable)
+    #set($disabledClass="disabled ui-tip")
+#end
+
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input auth-options">
+                    <a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+                    <div style="float: left; width: 50%">
+						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="1" data-direction="horizontal">
+							<ul>
+							<li class="navigation-list-item">
+								 #if(!$shouldDisable)
+						         	<a href="#" class="supplemental-button" data-messagename="logout-users" >$core_v2_language.GetResource('LogoutUsers')</a>
+						         #else
+						          <span class="disabled ui-tip" title="$disabledMessage">$core_v2_language.GetResource('LogoutUsers')</span>
+					        #end
+							</li>
+    						</ul>
+    					</div>
+    				</div>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item allow-login">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('AllowLogin')" #if($context.Settings.AllowLogin) checked="checked" #end />
+				<label for="$core_v2_widget.UniqueId('AllowLogin')">$core_v2_language.GetResource('AllowLogin')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('AllowLogin_Detail')</span>
+		</li>
+		<li class="field-item allow-registration">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('AllowRegistration')" #if($context.Settings.AllowNewUserRegistration) checked="checked" #end />
+				<label for="$core_v2_widget.UniqueId('AllowRegistration')">$core_v2_language.GetResource('AllowRegistration')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('AllowRegistration_Detail')</span>
+		</li>
+		<li class="field-item show-contact-checkboxes">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('ShowContactCheckboxes')" #if($context.Settings.ShowContactCheckboxes) checked="checked" #end  />
+				<label for="$core_v2_widget.UniqueId('ShowContactCheckboxes')">$core_v2_language.GetResource('ShowContactCheckboxes')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('ShowContactCheckboxes_Detail')</span>
+		</li>
+		<li class="field-item username-regex">
+			<label for="$core_v2_widget.UniqueId('UsernameRegex')" class="field-item-name">$core_v2_language.GetResource('UsernameRegex')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('UsernameRegex_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('UsernameRegex')" name="UsernameRegex" value="$!core_v2_encoding.HtmlAttributeEncode($context.Settings.UsernameRegex)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item username-minlength">
+			<label for="$core_v2_widget.UniqueId('UsernameMinLength')" class="field-item-name">$core_v2_language.GetResource('UsernameMinLength')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('UsernameMinLength_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('UsernameMinLength')" name="UsernameMinLength" value="$context.Settings.UsernameMinLength" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item username-maxlength">
+			<label for="$core_v2_widget.UniqueId('UsernameMaxLength')" class="field-item-name">$core_v2_language.GetResource('UsernameMaxLength')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('UsernameMaxLength_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('UsernameMaxLength')" name="UsernameMaxLength" value="$context.Settings.UsernameMaxLength" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item email-regex">
+			<label for="$core_v2_widget.UniqueId('EmailRegex')" class="field-item-name">$core_v2_language.GetResource('EmailRegex')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('EmailRegex_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('EmailRegex')" name="EmailRegex" value="$!core_v2_encoding.HtmlAttributeEncode($context.Settings.EmailRegex)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+	</ul>
+</fieldset>
+
+<p>$core_v2_language.GetResource('AuthenticationSettingsPanel_ExternalAuthInstructions')</p>
+
+<fieldset>
+	<ul class="field-list">
+			<li class="field-item account-activation-mode $disabledClass" #if($shouldDisable)title="$disabledMessage" #end>
+			<label class="field-item-name">$core_v2_language.GetResource('AccountActivationMode')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AccountActivationMode_Detail')</span>
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('AccountActivationMode')" name="$core_v2_widget.UniqueId('AccountActivationMode')" #if($context.SSOEnabled)disabled #end>>
+				    #if($shouldDisable)
+				     <option value="NotSupported" selected></option>
+				    #end
+				    <option value="Automatic" #if ($context.Settings.AccountActivation == "Automatic" && !$shouldDisable) selected #end>$core_v2_language.GetResource('Automatic')</option>
+					<option value="Email" #if ($context.Settings.AccountActivation == "Email"  && !$shouldDisable) selected #end>$core_v2_language.GetResource('Email')</option>
+					<option value="InvitationOnly" #if ($context.Settings.AccountActivation == "InvitationOnly"  && !$shouldDisable) selected #end>$core_v2_language.GetResource('InvitationOnly')</option>
+					<option value="AdminApproval" #if ($context.Settings.AccountActivation == "AdminApproval"  && !$shouldDisable) selected #end>$core_v2_language.GetResource('AdminApproval')</option>
+
+				</select>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item password-recovery $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('PasswordRecovery')">$core_v2_language.GetResource('PasswordRecovery')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('PasswordRecovery_Detail')</span>
+			<span class="field-item-input">
+					<select id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('PasswordRecovery'))" name="PasswordRecovery"  #if($context.SSOEnabled)disabled #end>
+				     #if($shouldDisable)
+				       <option value="NotSupported" selected></option>
+				    #end
+					<option value="Link" #if ($context.Settings.PasswordRecovery == "Link" && !$shouldDisable) selected #end>$core_v2_language.GetResource('Link')</option>
+					<option value="Reset" #if ($context.Settings.PasswordRecovery == "Reset"  && !$shouldDisable) selected #end>$core_v2_language.GetResource('Reset')</option>
+				</select>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		
+		<li class="field-item password-requirements $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+		    <label class="field-item-name">$core_v2_language.GetResource('PasswordRequirements')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('PasswordRequirements_Detail')</span>
+		    <span class="field-item-input">
+		        <input type="number" min="1" max="999999" #if($context.SSOEnabled)disabled #end id="$core_v2_widget.UniqueId('PasswordLength')" name="PasswordLength" #if($shouldDisable) value="" #else value="$context.Settings.PasswordMinLength" #end style="width: 5em;" /> <label for="$core_v2_widget.UniqueId('PasswordLength')">$core_v2_language.GetResource('PasswordLength')</label>
+		    </span>
+		    <span class="field-item-input">
+		        <input type="number" min="0" max="999999" #if($context.SSOEnabled)disabled #end id="$core_v2_widget.UniqueId('PasswordMinLowercase')" name="PasswordMinLowercase"  #if($shouldDisable) value="" #else value="$context.Settings.PasswordMinLowercaseCharacters"  #end style="width: 5em;" /> <label for="$core_v2_widget.UniqueId('PasswordMinLowercase')">$core_v2_language.GetResource('PasswordMinLowercase')</label>
+		    </span>
+		    <span class="field-item-input">
+				<input type="number" min="0" max="999999" #if($context.SSOEnabled)disabled #end id="$core_v2_widget.UniqueId('PasswordMinUppercase')" name="PasswordMinUppercase"  #if($shouldDisable) value="" #else value="$context.Settings.PasswordMinUppercaseCharacters"  #end style="width: 5em;" /> <label for="$core_v2_widget.UniqueId('PasswordMinUppercase')">$core_v2_language.GetResource('PasswordMinUppercase')</label>
+			</span>
+			<span class="field-item-input">
+				<input type="number" min="0" max="999999" #if($context.SSOEnabled)disabled #end id="$core_v2_widget.UniqueId('PasswordMinNumbers')" name="PasswordMinNumbers"  #if($shouldDisable) value="" #else value="$context.Settings.PasswordMinNumbers"  #end style="width: 5em;" /> <label for="$core_v2_widget.UniqueId('PasswordMinNumbers')">$core_v2_language.GetResource('PasswordMinNumbers')</label>
+			</span>
+			<span class="field-item-input">
+				<input type="number" min="0" max="999999" #if($context.SSOEnabled)disabled #end id="$core_v2_widget.UniqueId('PasswordMinSpecial')" name="PasswordMinSpecial"  #if($shouldDisable) value="" #else value="$context.Settings.PasswordMinSpecialCharacters"  #end style="width: 5em;" /> <label for="$core_v2_widget.UniqueId('PasswordMinSpecial')">$core_v2_language.GetResource('PasswordMinSpecial')</label>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+			<li class="field-item password-failures $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<label for="$core_v2_widget.UniqueId('PasswordFailAttempts')" class="field-item-name">$core_v2_language.GetResource('PasswordFailAttempts')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('PasswordFailAttempts_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('PasswordFailAttempts')" name="PasswordFailAttempts" #if($shouldDisable) value="" #else value="$context.Settings.PasswordMaxFailureAttempts" #end #if($context.SSOEnabled)disabled #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+			<li class="field-item password-failurewindow $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<label for="$core_v2_widget.UniqueId('PasswordFailWindow')" class="field-item-name">$core_v2_language.GetResource('PasswordFailWindow')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('PasswordFailWindow_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('PasswordFailWindow')" name="PasswordFailWindow" #if($shouldDisable) value="" #else value="$context.Settings.PasswordFailureWindowMinutes" #end #if($context.SSOEnabled)disabled #end/>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+			<li class="field-item password-lockout $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<label for="$core_v2_widget.UniqueId('LockoutTime')" class="field-item-name">$core_v2_language.GetResource('AccountLockTime')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AccountLockTime_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('LockoutTime')" name="LockoutTime" #if($shouldDisable) value="" #else value="$context.Settings.PasswordFailureWindowMinutes" #end #if($context.SSOEnabled)disabled #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		
+		
+		<li class="field-item auth-cookie-timeout $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<span class="field-item-input">
+				<label for="$core_v2_widget.UniqueId('AuthCookieTimeout')">$core_v2_language.GetResource('AuthCookieTimeout')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('AuthCookieTimeout_Detail')</span>
+				<input type="text" id="$core_v2_widget.UniqueId('AuthCookieTimeout')" name="AuthCookieTimeout" #if($shouldDisable) value="" #else value="$context.Settings.AuthenticationCookieTimeout"  #end #if($context.SSOEnabled)disabled #end/>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+    	<li class="field-item enable-sliding-auth $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('EnableSlidingAuth')" #if($context.Settings.EnableSlidingAuthentication && !$shouldDisable) checked #end   #if($context.SSOEnabled)disabled #end />
+				<label for="$core_v2_widget.UniqueId('EnableSlidingAuth')">$core_v2_language.GetResource('EnableSlidingAuth')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableSlidingAuth_Detail')</span>
+		</li>
+		<li class="field-item logout-on-browser-close $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('LogoutOnBrowserClose')" #if($context.Settings.LogoutOnBrowserClose && !$shouldDisable) checked #end  #if($context.SSOEnabled)disabled #end />
+				<label for="$core_v2_widget.UniqueId('LogoutOnBrowserClose')">$core_v2_language.GetResource('LogoutOnBrowserClose')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('LogoutOnBrowserClose_Detail')</span>
+		</li>
+
+    	<li class="field-item throttling $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('Throttling')" #if($context.Settings.ThrottleLoginAttempts && !$shouldDisable) checked #end  #if($context.SSOEnabled)disabled #end />
+				<label for="$core_v2_widget.UniqueId('Throttling')">$core_v2_language.GetResource('Throttling')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Throttling_Detail')</span>
+		</li>
+		<li class="field-item throttling-attempts $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<label for="$core_v2_widget.UniqueId('ThrottlingAttempts')" class="field-item-name">$core_v2_language.GetResource('ThrottlingAttempts')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ThrottlingAttempts_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('ThrottlingAttempts')" name="LoginThrottlingAttempts" #if($shouldDisable) value="" #else value="$context.Settings.LoginThrottlingAttempts" #end #if($context.SSOEnabled)disabled #end  />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item throttling-duration $disabledClass"  #if($shouldDisable)title="$disabledMessage" #end>
+			<label for="$core_v2_widget.UniqueId('ThrottlingDuration')" class="field-item-name">$core_v2_language.GetResource('ThrottlingDuration')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ThrottlingDuration_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('ThrottlingDuration')" name="LoginThrottlingDuration" #if($shouldDisable) value="" #else value="$context.Settings.LoginThrottlingDuration" #end  #if($context.SSOEnabled)disabled #end />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.leaderboardPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.authenticationSettingsPanel.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			inputs: {
+				allowLoginId: "#$core_v2_widget.UniqueId('AllowLogin')",
+				allowRegistrationId: "#$core_v2_widget.UniqueId('AllowRegistration')",
+				showContactCheckboxesId: "#$core_v2_widget.UniqueId('ShowContactCheckboxes')",
+				usernameRegexId: "#$core_v2_widget.UniqueId('UsernameRegex')",
+				usernameMinLengthId: "#$core_v2_widget.UniqueId('UsernameMinLength')",
+				usernameMaxLengthId: "#$core_v2_widget.UniqueId('UsernameMaxLength')",
+				emailRegexId:  "#$core_v2_widget.UniqueId('EmailRegex')",
+				accountActivationModeId:  "#$core_v2_widget.UniqueId('AccountActivationMode')",
+				passwordRecoveryId: "#$core_v2_widget.UniqueId('PasswordRecovery')",
+				passwordRegexId: "#$core_v2_widget.UniqueId('PasswordRegex')",
+				authCookieTimeout: "#$core_v2_widget.UniqueId('AuthCookieTimeout')",
+				logoutOnBrowserClose: "#$core_v2_widget.UniqueId('LogoutOnBrowserClose')",
+				enableSlidingAuth: "#$core_v2_widget.UniqueId('EnableSlidingAuth')",
+				throttlingId: "#$core_v2_widget.UniqueId('Throttling')",
+				throttlingAttemptsId: "#$core_v2_widget.UniqueId('ThrottlingAttempts')",
+				throttlingDurationId: "#$core_v2_widget.UniqueId('ThrottlingDuration')",
+				passwordLength:"#$core_v2_widget.UniqueId('PasswordLength')",
+				passwordMinLowercase:"#$core_v2_widget.UniqueId('PasswordMinLowercase')",
+				passwordMinUppercase:"#$core_v2_widget.UniqueId('PasswordMinUppercase')",
+				passwordMinNumbers:"#$core_v2_widget.UniqueId('PasswordMinNumbers')",
+				passwordMinSpecial:"#$core_v2_widget.UniqueId('PasswordMinSpecial')",
+				passwordFailAttempts:"#$core_v2_widget.UniqueId('PasswordFailAttempts')",
+				passwordFailWindow:"#$core_v2_widget.UniqueId('PasswordFailWindow')",
+				lockoutTime:"#$core_v2_widget.UniqueId('LockoutTime')"
+			},
+			resources: {
+				save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+				settingsUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SettingsUpdated'))",
+		        logoutUsersConfirm: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('LogoutUsers_Confirm'))",
+			},
+			urls: {
+				save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+    		    logoutUsers:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('LogoutUsers.jsm'))',
+			},
+			ssoEnabled:#if($shouldDisable)true #else false #end
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AccountActivationMode">Account Activation Mode</resource>
+  <resource name="AccountActivationMode_Detail">Controls how users obtain access to the site. 'Automatic' allows users to create their own accounts. 'Email' will email a password to the new user. 'Invitation Only' requires new users to have an invitation link to create a new user account. 'Admin Approval' requires the administrator to approve new users.</resource>
+  <resource name="AccountLockTime">Account Lockout Time</resource>
+  <resource name="AccountLockTime_Detail">How many minutes an account will be locked when a user fails to supply a correct password within the specified amount of attempts and window.</resource>
+  <resource name="AdminApproval">Admin Approval</resource>
+  <resource name="AllowLogin">Allow Login</resource>
+  <resource name="AllowLogin_Detail">When disabled, only administrators can login to the site.</resource>
+  <resource name="AllowRegistration">Allow New User Registration</resource>
+  <resource name="AllowRegistration_Detail">When disabled, new users cannot register.</resource>
+  <resource name="AuthCookieTimeout">Authentication Timeout</resource>
+  <resource name="AuthCookieTimeout_Detail">Timeout period in minutes in which the authentication cookie should be valid.  Changing this setting does not affect already issued cookies.  To change existing cookies, the users will need to be forcefully logged out.</resource>
+  <resource name="AuthenticationSettingsPanel_Description">Manage basic authentication options.</resource>
+  <resource name="AuthenticationSettingsPanel_ExternalAuthInstructions">The following settings are ignored when external Authentication is in use.</resource>
+  <resource name="AuthenticationSettingsPanel_Name">Authentication Options</resource>
+  <resource name="Automatic">Automatic</resource>
+  <resource name="Email">Email</resource>
+  <resource name="EmailRegex">Email Address Regular Expression Pattern</resource>
+  <resource name="EmailRegex_Detail">Defines a regular expression pattern that must be matched for user email addresses.</resource>
+  <resource name="EnableSlidingAuth">Enable Sliding Authentication</resource>
+  <resource name="EnableSlidingAuth_Detail">If enabled, a user's authentication expiration will be extended as they are actively using the community and inactive users with an open browser window will be prompted to stay authenticated just before their expiration would otherwise expire.  </resource>
+  <resource name="InvitationOnly">Invitation Only</resource>
+  <resource name="Link">Link</resource>
+  <resource name="LogoutOnBrowserClose">Logout On Session End</resource>
+  <resource name="LogoutOnBrowserClose_Detail">If enabled the authentication cookie is created as a session cookie and the user will be logged out when the session ends.  Changing this setting does not affect already issued cookies.  To change existing cookies, the users will need to be forcefully logged out.</resource>
+  <resource name="LogoutUsers">Logout All Users</resource>
+  <resource name="LogoutUsers_Confirm">Are you sure you wish to sign out all users?  This will force all existing authentication cookies to expire and all users currently accessing the site will be redirected to the sign in page.</resource>
+  <resource name="PasswordFailAttempts">Password Fail Attempts</resource>
+  <resource name="PasswordFailAttempts_Detail">The maximum number of times a user can enter an invalid password within the password failed attempt window before the account is temporarily locked.  A setting of zero removes this restriction.</resource>
+  <resource name="PasswordFailWindow">Failed Password Attempt Window</resource>
+  <resource name="PasswordFailWindow_Detail">The time in minutes a user has to enter a valid password before the account will become temporarily locked.</resource>
+  <resource name="PasswordLength">total characters</resource>
+  <resource name="PasswordMinLowercase">lowercase characters</resource>
+  <resource name="PasswordMinNumbers">numbers</resource>
+  <resource name="PasswordMinSpecial">special characters</resource>
+  <resource name="PasswordMinUppercase">uppercase characters</resource>
+  <resource name="PasswordRecovery">Password Recovery</resource>
+  <resource name="PasswordRecovery_Detail">Controls how users recover forgotten passwords. 'Link' emails the user a password reset link and is the recommended option. 'Reset' generates a new random password that is emailed to the user, and should only be used if 'Link' is not an option in your environment.</resource>
+  <resource name="PasswordRequirements">Password Minimum Requirements</resource>
+  <resource name="PasswordRequirements_Detail">Specify minimum requirements for new and generated passwords using the following options.</resource>
+  <resource name="Reset">Reset</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SettingsUpdated">Authentication settings have been updated.</resource>
+  <resource name="ShowContactCheckboxes">Show Contact Checkboxes</resource>
+  <resource name="ShowContactCheckboxes_Detail">When enabled, users will see two checkboxes for 'allow this site to contact me' and 'allow this site's partners to contact me'.</resource>
+  <resource name="SSO_NoSupport">This option is not supported based on your external authentication (SSO) configuration.</resource>
+  <resource name="Throttling">Throttle Login Attempts</resource>
+  <resource name="Throttling_Detail">When enabled, throttles login attempts by IP address.</resource>
+  <resource name="ThrottlingAllowedList">Throttling IP Allowed List</resource>
+  <resource name="ThrottlingAllowedList_Detail">IP addresses, identified here (one per line), which should be excluded from throttling of login attempts.</resource>
+  <resource name="ThrottlingAttempts">Throttling Login Attempts</resource>
+  <resource name="ThrottlingAttempts_Detail">Number of failed login attempts before throttling.</resource>
+  <resource name="ThrottlingDuration">Throttling Duration</resource>
+  <resource name="ThrottlingDuration_Detail">Number of minutes to review before throttling.</resource>
+  <resource name="UsernameMaxLength">Username Maximum Length</resource>
+  <resource name="UsernameMaxLength_Detail">Value must be equal to or less than 64.</resource>
+  <resource name="UsernameMinLength">Username Minimum Length</resource>
+  <resource name="UsernameMinLength_Detail">Value must be equal to or greater than 1.</resource>
+  <resource name="UsernameRegex">Username Regular Expression Pattern</resource>
+  <resource name="UsernameRegex_Detail">Defines a regular expression pattern that must be matched when new user accounts are created.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

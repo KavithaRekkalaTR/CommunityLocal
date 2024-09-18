@@ -1,0 +1,116 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+// content list
+.content-list {
+	&.content {
+		clear: both;
+		overflow: hidden;
+		>.content-item {
+			padding: @spacing * 3 0 @spacing * 3 0 ;
+			border-bottom: 1px solid -evo-decrease-contrast(@color-background, 14%, @color-foreground, @color-contrast);
+
+			&.highlight {
+				background-color: -evo-decrease-contrast(@color-background, 7%, @color-foreground, @color-contrast);
+				padding-left: @spacing;
+			}
+
+			.content {
+				.content.inline {
+					//margin: (@spacing * 2) 0 -(@spacing * 3) 0;
+					//background-color: -evo-decrease-contrast(@color-background, 2%, @color-foreground, @color-contrast);
+					//padding: @spacing;
+					color: -evo-decrease-contrast(@color-background, 42%, @color-foreground, @color-contrast);
+					margin-top: @spacing;
+					font-style: italic;
+				}
+				.attachment .viewer {
+					margin: @spacing 0 -(@spacing * 3) 0;
+					background-color: -evo-decrease-contrast(@color-background, 2%, @color-foreground, @color-contrast);
+					padding: @spacing;
+					color: -evo-decrease-contrast(@color-background, 42%, @color-foreground, @color-contrast);
+				}
+			}
+		}
+		&.simple {
+			>.content-item {
+				padding: (@spacing / 1.5) 0 (@spacing / 1.5) 0;
+				border-bottom: 1px solid -evo-decrease-contrast(@color-background, 9%, @color-foreground, @color-contrast);
+				.content {
+					.content:not(:empty) {
+						padding-top: 0px;
+					}
+				}
+			}
+		}
+	}
+	&.thumbnail {
+		width: 100%;
+		clear: both;
+		overflow: hidden;
+		.thumbnail-column {
+			width: 140px;
+			margin-right: @spacing;
+			.thumbnail {
+				margin-bottom: @spacing;
+			}
+		}
+		.thumbnail-column:last-child {
+			margin-right: 0;
+		}
+
+		&.small {
+			.thumbnail {
+				width: 48px;
+				display: inline-block;
+				float: none;
+				position: static;
+				margin-bottom: @spacing / 2;
+				margin-right: @spacing/ 2;
+
+				&:last-child {
+					margin-right: 0;
+				}
+
+				.avatar {
+					.round;
+					img {
+						.round;
+					}
+				}
+			}
+		}
+	}
+	&.grid {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+
+		margin: -@spacing;
+
+		.content-item {
+			flex: 1 1 auto;
+			width: calc(33% ~"-" (@spacing * 2));
+			margin: @spacing;
+
+			border-bottom: 0px;
+			padding: 0px;
+		}
+	}
+}
+
+@{small-sidebars} {
+	.content-list {
+		.thumbnail-column {
+			width: 105px;
+			.content.thumbnail {
+				width: 105px;
+			}
+		}
+	}
+}

@@ -1,0 +1,64 @@
+$core_v2_page.SetTitle($core_v2_language.GetResource('Email_Digest_Options'), false, false)
+
+<!DOCTYPE html>
+<html lang="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Code)" #if($core_v2_language.IsRightToLeft) class="direction-rtl" style="direction: rtl;" #else class="direction-ltr" style="direction: ltr;" #end>
+<head>
+	$core_v2_page.RenderThemeHeaders("%{IsModal = 'True'}")
+</head>
+<body>
+<form>
+<div class="content-fragment">
+
+	#set($group = $core_v2_group.Current)
+	#set($subscription = $core_v2_emailDigest.GetByGroup($group.Id))
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<label class="field-item-name" for="$core_v2_widget.UniqueId('emaildigest')">$core_v2_language.GetResource('Frequency')</label>
+				<span class="field-item-input">
+					<select id="$core_v2_widget.UniqueId('emaildigest')" data-context="group" data-contextid="$group.Id" data-subscriptionid="#if($subscription) $subscription.Id#else -1#end" class="email-digest ui-select">
+						<option value="0" #if(!$subscription || ($subscription.FrequencyInDays != 1 && $subscription.FrequencyIndays != 7)) selected#end>$core_v2_language.GetResource('NotSubscribed')</option>
+						<option value="1" #if($subscription && $subscription.FrequencyInDays == 1) selected#end>$core_v2_language.GetResource('Daily')</option>
+						<option value="7" #if($subscription && $subscription.FrequencyInDays == 7) selected#end>$core_v2_language.GetResource('Weekly')</option>
+					</select>
+				</span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button submit">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(j) {
+				j('a.submit').on('click', function() {
+					var e = j('select.email-digest');
+					j.telligent.evolution.post({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('emaildigestupdate.vm'))',
+						data: { 
+							subscriptionId: e.data('subscriptionid'),
+							frequency: e.val(),
+							context: e.data('context'),
+							contextId: e.data('contextid')
+						},
+						success: function(d) {
+							if (d.warnings && d.warnings.length > 0) {
+								jQuery.glowModal.opener(window).jQuery.telligent.evolution.notifications.show(d.warnings[0], {type: 'warning', duration: 5000});
+							} else if (d.message)  {
+                                jQuery.glowModal.opener(window).jQuery.telligent.evolution.notifications.show(d.message, {type: 'success', duration: 5000});
+							}
+							jQuery.glowModal.close();
+						}	
+					});
+				});
+			});
+		</script>
+	#end
+
+</div>
+</form>
+</body>
+</html>		

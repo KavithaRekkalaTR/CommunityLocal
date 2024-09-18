@@ -1,0 +1,20 @@
+﻿#set ($pluginTypeName = $core_v2_page.GetFormValue("_w_pluginTypeName"))
+#set ($enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue("_w_enabled")))
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($response = $core_v2_administrationPanels.SavePlugin($pluginTypeName, $enabled))
+	#set ($pluginPanel = false)
+	#set ($pluginPanel = $core_v2_administrationPanels.GetPluginPanel($pluginTypeName))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success": true,
+		"pluginTypeName": "${pluginTypeName}",
+		"state": "${pluginPanel.State}"
+	}
+#end

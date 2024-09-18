@@ -1,0 +1,36 @@
+﻿#set ($rawPanelId = false)
+#set ($rawPanelId = $core_v2_page.GetQueryStringValue("_w_panelId"))
+#if ($rawPanelId)
+	#set ($panelId = $core_v2_utility.ParseGuid($rawPanelId))
+#end
+
+#set($extraParameters = '')
+#set($extraParameters = $core_v2_page.GetQueryStringValue('_w_parameters'))
+
+$core_v2_page.SetContentType('application/json')
+
+#set ($panel = false)
+#set ($panel = $core_v2_administrationPanels.GetPanel($panelId, $extraParameters))
+#if (!$panel)
+	$core_v2_page.SetStatusCode(500)
+	{
+		"error": true,
+		"loggedIn": #if($core_v2_user.IsRegistered($core_v2_user.Accessing.Id)) true #else false #end
+	}
+#else
+	#set ($selectedCategoryId = false)
+	#set ($selectedCategoryId = $panel.AdministrativeCategoryId)
+	#set ($selectedPanelId = $panelId)
+
+	#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+	{
+		"categoryId": #if($selectedCategoryId) "$core_v2_encoding.JavascriptEncode($selectedCategoryId.ToString())" #else null #end,
+		"panelId": "$core_v2_encoding.JavascriptEncode($selectedPanelId.ToString())",
+		"panelName": "$core_v2_encoding.JavascriptEncode($panel.Name)",
+		"panelDescription": "$core_v2_encoding.JavascriptEncode($panel.Description)",
+		"panelCssClass": "$core_v2_encoding.JavascriptEncode($panel.CssClass)",
+		"panelHtml": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('render-panel.vm'))",
+		"backUrl": null,
+		"backLabel": #if($selectedCategoryId) null #else "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Back'))"#end
+	}
+#end

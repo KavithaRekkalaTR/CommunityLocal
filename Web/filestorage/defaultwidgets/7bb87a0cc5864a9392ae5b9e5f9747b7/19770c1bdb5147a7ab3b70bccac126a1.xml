@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeManagementTitle}" version="11.0.0.0" description="${resource:KnowledgeManagementTitle_Description}" instanceIdentifier="19770c1bdb5147a7ab3b70bccac126a1" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="knowledge-management-title" lastModified="2020-01-14 16:06:54Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($page = $km_v1_urls.Current)
+#set($collection = $km_v1_knowledgeCollections.Current)
+#set($document = $km_v1_documents.Current)
+#set($tag = $km_v1_tags.Current)
+
+#if ($page == 'Tag' && $tag)
+	#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Tag_Title'), $tag.Name))
+#elseif ($document)
+	#set($title = $document.Title)
+#else
+	#if (!$collection)
+		#set($title = $core_v2_language.GetResource('KnowledgeCollections_Title'))
+	#else
+		#set($title = $collection.Name)
+	#end
+#end
+
+#if($title)
+	$core_v2_page.SetTitle($title, true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:KnowledgeManagementTitle}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:KnowledgeCollections_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="KnowledgeCollections_Title">Knowledge Collections</resource>
+  <resource name="KnowledgeManagementTitle">Knowledge Management - Title</resource>
+  <resource name="KnowledgeManagementTitle_Description">Displays a title for knowledge management pages.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Tag_Title">{0}</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="fa4b088273114975b52d60fce4a1d86e" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

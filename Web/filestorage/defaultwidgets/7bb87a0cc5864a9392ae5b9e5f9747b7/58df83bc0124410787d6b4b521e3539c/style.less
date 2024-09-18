@@ -1,0 +1,416 @@
+.scale_replaced_icon(@size: -evo-themeconfig-unit('baseFontSizeValue', 14px), @padding: 0px) {
+	width: @size + (@padding * 2);
+	height: @size + (@padding * 2);
+	&:before {
+		width: @size + (@padding * 2);
+		height: @size + (@padding * 2);
+		top: @padding;
+		font-size: @size;
+		line-height: @size;
+	}
+}
+.content-fragment.conversations {
+	.ui-loading {
+		color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+	}
+
+	.region {
+		border: solid 1px -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 11%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		border-top-width: 0;
+
+		.region-inner {
+			padding: 10px;
+			opacity: 1;
+			&:after {
+				content: ' ';
+				height: 0px;
+				overflow: hidden;
+				clear: both;
+				display: block;
+			}
+		}
+
+		&.conversation-list-header, &.conversation-header, &.editor {
+			background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 2%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+			opacity: .98;
+
+			fieldset {
+				.field-list {
+					.field-item {
+						margin: 0;
+
+						.field-item-name { display: none; }
+						.field-item-input {
+							padding: 0;
+							margin: 0;
+							line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em);
+							font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.05;
+
+							select {
+								line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em);
+								height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em);
+								padding: 0 (10px / 2);
+							}
+
+							.glow-lookuptextbox {
+								padding: 4px !important;
+								margin-top: -(10px / 2);
+								margin-bottom: -(10px / 2);
+
+								> div > div {
+									padding: 4px !important;
+								}
+							}
+						}
+					}
+				}
+
+				&.participants {
+
+				}
+
+				&.actions {
+					float: right;
+					.field-list {
+						.field-item {
+							.button {
+								line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em);
+								height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em);
+								font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .95;
+								padding: 0 10px;
+								&.delete {
+									background-color: -evo-themeconfig-color('stateNegative', #E53935);
+									color: -evo-themeconfig-color('backgroundColor', #FFFFFF);
+								}
+
+								margin: 0 0 0 10px;
+							}
+						}
+					}
+				}
+			}
+
+		}
+
+		&.conversation-list-header, &.conversation-list {
+			border-right-width: 0;
+		}
+	}
+
+	.content-list > .content-item {
+		border-bottom: solid 1px -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 11%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+		padding: 10px 0;
+		position:relative;
+
+		> .content {
+			padding-left: 44px + 10px;
+			min-height: 44px;
+			position: relative;
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px);
+			overflow: hidden;
+			.author {
+				.avatar {
+					position: absolute;
+					left: 0px;
+					top: 0px;
+					border-radius: 500px;
+					img {
+						border-radius: 500px;
+					}
+				}
+				.user-name {
+					font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .95;
+					line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em) * .95;
+				}
+			}
+			.content {
+				clear: right;
+				font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .95;
+				line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em) * .95;
+				word-wrap: break-word;
+				p {
+					font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .95;
+					line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em) * .95;
+					margin: 0 0 1em 0;
+					&:last-of-type {
+						margin: 0;
+					}
+					word-wrap: break-word;
+				}
+			}
+			.attributes {
+				.attribute-list {
+					margin: 0;
+					padding: 0;
+					list-style: none;
+					font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .85;
+				}
+				float: right;
+				margin: 0 0 0 (10px / 2);
+				color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+			}
+		}
+	}
+
+	.region.conversation {
+		.region-inner {
+			padding-top: 0;
+			height: 100%;
+		}
+		.conversation-messageheader.fixed {
+			background-color: -evo-themeconfig-color('backgroundColor', #ffffff);
+			text-align: center;
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			width: 100%;
+			padding: 10px;
+			opacity: .85;
+			-webkit-box-shadow: 0 3px 2px -1px -evo-themeconfig-color('backgroundColor', #ffffff);
+			-moz-box-shadow: 0 3px 2px -1px -evo-themeconfig-color('backgroundColor', #ffffff);
+			box-shadow: 0 3px 2px -1px -evo-themeconfig-color('backgroundColor', #ffffff);
+			> .conversation-messageheader {
+				position: relative;
+				padding: 0;
+				margin: 0;
+				text-align: center;
+				opacity: 1;
+				.name {
+					margin: 0 auto;
+					text-align:center;
+					position: relative;
+					display: inline-block;
+					background-color: -evo-themeconfig-color('backgroundColor', #ffffff);
+					padding: 0 10px;
+					font-size: 10px * 1.5;
+					line-height: 10px * 2;
+					color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+					font-weight: 600;
+				}
+			}
+		}
+		.conversation-statusheader.fixed {
+			background-color: -evo-themeconfig-color('backgroundColor', #ffffff);
+			text-align: center;
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			width: 100%;
+			padding: 10px;
+			opacity: .85;
+			-webkit-box-shadow: 0 -3px 2px -1px -evo-themeconfig-color('backgroundColor', #ffffff);
+			-moz-box-shadow: 0 -3px 2px -1px -evo-themeconfig-color('backgroundColor', #ffffff);
+			box-shadow: 0 -3px 2px -1px -evo-themeconfig-color('backgroundColor', #ffffff);
+			> .conversation-statusheader {
+				position: relative;
+				padding: 0;
+				margin: 0;
+				text-align: center;
+				opacity: 1;
+				.status {
+					margin: 0 auto;
+					text-align:center;
+					position: relative;
+					display: inline-block;
+					background-color: -evo-themeconfig-color('backgroundColor', #ffffff);
+					padding: 0 10px;
+					font-size: 10px * 1.5;
+					line-height: 10px * 2;
+					color: -evo-themeconfig-color('linkFontColor', #2196F3);
+					font-weight: 600;
+				}
+			}
+		}
+		.message {
+			margin: 0;
+			border-width: 0;
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.25;
+			text-align: center;
+			height: 100%;
+			color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+			&:before {
+				content: ' ';
+				display: block;
+				height: 45%;
+				margin-top: -(-evo-themeconfig-unit('baseFontSizeValue', 14px) / 2);
+			}
+		}
+		.content-list > .content-item {
+			&.conversation-messageheader {
+				padding: 10px * 2 0 0 0;
+				border-bottom-width: 0;
+				> .conversation-messageheader {
+					position: relative;
+					padding: 0;
+					margin: 0;
+					min-height: 0;
+					text-align: center;
+					.name {
+						margin: 0 auto;
+						text-align:center;
+						position: relative;
+						display: inline-block;
+						background-color: -evo-themeconfig-color('backgroundColor', #ffffff);
+						padding: 0 10px;
+						font-size: 10px * 1.5;
+						line-height: 10px * 2;
+						color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+					}
+					&:before {
+						content: ' ';
+						display: block;
+						position: absolute;
+						width: 100%;
+						height: 10px / 2;
+						background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 11%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+						top: 10px * .75;
+					}
+				}
+			}
+
+			> .content {
+				.author {
+					font-weight: 600;
+				}
+				.content.deleted {
+					color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+					font-style: italic;
+				}
+				.actions {
+					float: right;
+					margin: 3px 0 0 (10px / 2);
+					font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * .85;
+
+					a[data-more] {
+						color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+						margin: 0;
+						padding: 0;
+						.scale_replaced_icon(-evo-themeconfig-unit('baseFontSizeValue', 14px) * .85, 0px);
+					}
+				}
+			}
+			&.unread:after {
+				content: ' ';
+				display: block;
+				position: absolute;
+				left: -(10px);
+				top: 0px;
+				height: 100%;
+				border-left: solid (10px / 2) -evo-themeconfig-color('accentColor', #2196F3);
+			}
+		}
+	}
+
+	.region.conversation-list {
+		.region-inner {
+			padding: 0;
+		}
+		.message {
+			border-width: 0;
+			color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 58%, -evo-themeconfig-color('backgroundColor', #FFFFFF), -evo-themeconfig-double('contrast', 0));
+		}
+		.content-list > .content-item {
+			padding: 10px;
+			margin: 0px;
+			cursor: pointer;
+			transition: background-color .15s;
+
+			&.unread:after {
+				content: ' ';
+				display: block;
+				position: absolute;
+				left: 0px;
+				top: 0px;
+				height: 100%;
+				border-left: solid (10px / 2) -evo-themeconfig-color('accentColor', #2196F3);
+			}
+
+			&.selected {
+				background-color: -evo-themeconfig-color('accentColor', #2196F3);
+				> .content {
+					.attributes {
+						color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF), 11%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+					}
+				}
+			}
+
+			> .content {
+				.author {
+					font-weight: 600;
+				}
+				.content {
+					color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A), 11%, -evo-themeconfig-color('backgroundColor', #ffffff), -evo-themeconfig-double('contrast', 0));
+					font-style: italic;
+				}
+			}
+		}
+	}
+
+	.participant-list {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+		.participant {
+			float: left;
+			margin-right: 10px;
+			font-size: -evo-themeconfig-unit('baseFontSizeValue', 14px) * 1.05;
+			line-height: -evo-themeconfig-unit('baseFontLineHeight', 1.5em);
+			font-weight: bold;
+			.presence {
+				margin-right: 10px / 4;
+			}
+			.username {
+			}
+			
+			&.disabled {
+			    font-weight: normal;
+			    .username, .username a {
+			        color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #ffffff), 42%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+    			    &:hover {
+    				    color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #ffffff), 31%, -evo-themeconfig-color('foregroundColor', #11171A), -evo-themeconfig-double('contrast', 0));
+    			    }
+			    }
+			}
+			.navigation-list {
+			    display: inline-block;
+			    height: auto !important;
+                line-height: 0;
+                position: relative;
+                top: 1px;
+                .container {
+                    height: auto !important;
+                }
+			    .more {
+    			    display: inline-block;
+                    -webkit-border-radius: 2px;
+                    -moz-border-radius: 2px;
+                    border-radius: 2px;
+                    -moz-background-clip: padding;
+                    -webkit-background-clip: padding-box;
+                    background-clip: padding-box;
+                    text-transform: uppercase;
+                    padding: 0 4px 4px 4px;
+                    line-height: 10px;
+                    font-size: 10px;
+                    margin-right: 10px;
+                    font-weight: bold;
+                    white-space: nowrap;
+                    background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF, 10), 30%, -evo-themeconfig-color('foregroundColor', #11171A, 10));
+                    color: -evo-decrease-contrast(-evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF, 10), 30%, -evo-themeconfig-color('foregroundColor', #11171A, 10)), 90%, -evo-themeconfig-unit('backgroundColor', #fff))
+
+                    &:hover, &.links-expanded {
+                        background-color: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF, 10), 50%, -evo-themeconfig-color('foregroundColor', #11171A, 10));    
+                    }
+			    }
+			}
+		}
+		&:after {
+			content: ' ';
+			height: 0px;
+			overflow: hidden;
+			clear: both;
+			display: block;
+		}
+	}
+
+}

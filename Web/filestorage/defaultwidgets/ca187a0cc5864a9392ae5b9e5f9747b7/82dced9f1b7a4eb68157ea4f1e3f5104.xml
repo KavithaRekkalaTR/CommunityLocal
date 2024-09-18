@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_EventAddEdit_Name}" version="12.0.0.0" description="${resource:Calendar_EventAddEdit_Description}" instanceIdentifier="82dced9f1b7a4eb68157ea4f1e3f5104" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="event-edit-widget" lastModified="2021-09-07 19:47:10Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($userId = $core_v2_user.Accessing.Id)
+#set($anonymousUser = $core_v2_user.Get("%{Username=$core_v2_user.AnonymousUserName}"))
+#set ($userTimeZoneId = $core_v2_user.Accessing.TimeZoneId)
+#set ($event = false)
+#set ($event = $calendar_v1_events.Current)
+#set ($calendar = $calendar_v1_calendars.Current)
+
+#set ($hasCreatePermission = $calendar_v1_calendars.HasPermission($calendar.Id,$calendar_v1_permissions.CreateEvent))
+#set ($hasEditPermission = $calendar_v1_calendars.HasPermission($calendar.Id,$calendar_v1_permissions.EditEvent))
+
+#if(!$hasCreatePermission || ($event && $event.EventCreatorId != $userId && !$hasEditPermission))
+	$core_v2_widget.Hide()
+#end
+
+#set ($geocodingEnabled = false)
+#if ($geocoding_v1_core.IsEnabled())
+		#set ($geocodingEnabled = true)
+#end
+
+<div class="field-list-header"></div>
+<form><fieldset class="field-list">
+
+	<h1>
+		#if ($event)
+			$event.EventTitle
+		#else
+			$core_v2_language.GetResource('Event_New')
+		#end
+	</h1>
+
+	<div class="message error" id="$core_v2_widget.GetUniqueId('ErrorMessageId')" style="display:none;"></div>
+
+	<ul class="field-list">
+		<li class="field-item required event-title">
+			<label for="$core_v2_widget.UniqueId('title')" class="field-item-header">$core_v2_language.GetResource('EventTitleLabel')</label>
+			<span class="field-item-input">
+			    <textarea rows="1" id="$core_v2_widget.UniqueId('title')" class="scaled" name="$core_v2_widget.UniqueId('title')" size="90">#if ($event)$event.EventTitle#end</textarea>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+		<li class="field-item event-location">
+			<label for="$core_v2_widget.UniqueId('location')" class="field-item-header">$core_v2_language.GetResource('EventLocationLabel')</label>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('location')" name="$core_v2_widget.UniqueId('location')" size="60" value="#if ($event)$event.EventLocation#end" />
+			</span>
+			<span id="$core_v2_widget.UniqueId('map_check_area')" name="$core_v2_widget.UniqueId('map_check_area')">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('chkMap')" name="$core_v2_widget.UniqueId('chkMap')" /> <label for="$core_v2_widget.UniqueId('chkMap')">$core_v2_language.GetResource('Calendar_GetMap')</label>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+			<div id="$core_v2_widget.UniqueId('mapLoader')" name="$core_v2_widget.UniqueId('mapLoader')" class="mapLoader"></div>
+			<div id="$core_v2_widget.UniqueId('copyLocLink')" name="$core_v2_widget.UniqueId('copyLocLink')" class="copyLocLink"><a href="#" id="$core_v2_widget.UniqueId('copy_loc_link')" name="$core_v2_widget.UniqueId('copy_loc_link')" style="display:none;"></a></div>
+			<div id="$core_v2_widget.UniqueId('geocode_subform_wrapper')" name="$core_v2_widget.UniqueId('geocode_subform_wrapper')" class="geocode_subform_wrapper">
+				 <input type="text" id="$core_v2_widget.UniqueId('txtLat')" name="$core_v2_widget.UniqueId('txtLat')" value="#if ($event && $event.Latitude >= -90 && $event.Latitude <= 90)$event.Latitude#end" />
+				 <input type="text" id="$core_v2_widget.UniqueId('txtLng')" name="$core_v2_widget.UniqueId('txtLng')" value="#if ($event && $event.Longitude >= -180 && $event.Longitude <= 180)$event.Longitude#end"  />
+				 <input type="text" id="$core_v2_widget.UniqueId('txtAddr')" name="$core_v2_widget.UniqueId('txtAddr')" value="#if ($event)$event.AddressString#end"  />
+			</div>
+		</li>
+
+		<li class="field-item event-url">
+			<label for="$core_v2_widget.UniqueId('url')" class="field-item-header">$core_v2_language.GetResource('EventUrlLabel')</label>
+			<span class="field-item-description" id="$core_v2_widget.UniqueId('url_desc')">$core_v2_language.GetResource('EventUrlDescription')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('url')" name="$core_v2_widget.UniqueId('url')" aria-describedby="$core_v2_widget.UniqueId('url_desc')" size="60" value="#if ($event)$event.EventReferenceUrl#end" />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+
+		<li class="field-item required event-startdate">
+		<label for="$core_v2_widget.UniqueId('startDate')" class="field-item-header">$core_v2_language.GetResource('EventStartDateLabel')</label>
+		<span class="field-item-input">
+			#if ($event)
+				#set($timeZoneId = $event.TimeZone.Id)
+				#set($startDateValue = $event.EventStartDate)
+				#set($endDateValue = $event.EventEndDate)
+			#elseif ($core_v2_page.GetQueryStringValue('startDate'))
+				#set($startDateValue = $calendar_v1_UI.ParseDateTimeExact($core_v2_page.GetQueryStringValue('startDate')))
+				#if(!$startDate || $startDate.Year == 1)
+					#set ($startDate = $calendar_v1_UI.RoundUp($core_v2_utility.CurrentDate, 30))
+				#end
+				#set($endDateValue = $startDateValue.AddHours(1))
+			#set($timeZoneId = $userTimeZoneId)
+			#else
+				#set($startDateValue = $calendar_v1_UI.RoundUp($core_v2_utility.CurrentDate, 30))
+				#set($endDateValue = $startDateValue.AddHours(1))
+				#set($timeZoneId = $userTimeZoneId)
+			#end
+			<input type="text" id="$core_v2_widget.UniqueId('startDate')" name="$core_v2_widget.UniqueId('startDate')" value="$core_v2_encoding.JavascriptEncode($startDateValue)" />
+		</span>
+		<span class="field-item-validation" style="display:none;"></span>
+	</li>
+	<li class="field-item event-enddate">
+		<label for="$core_v2_widget.UniqueId('endDate')" class="field-item-header">$core_v2_language.GetResource('EventEndDateLabel')</label>
+		<span class="field-item-input">
+			<input type="text" id="$core_v2_widget.UniqueId('endDate')" name="$core_v2_widget.UniqueId('endDate')" value="$core_v2_encoding.JavascriptEncode($endDateValue)" />
+		</span>
+		<span class="field-item-validation" style="display:none;"></span>
+	</li>
+
+		<li class="field-item setting-time-zone">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('timezone')">${core_v2_language.GetResource("EventTimeZone")}</label>
+			<span class="field-item-description" id="$core_v2_widget.UniqueId('timezone_desc')">$core_v2_language.GetResource('EventTimeZoneDescription')</span>
+			<span class="field-item-input">
+					#foreach($timezone in $core_v2_configuration.TimeZones)
+					#beforeall
+						<select id="$core_v2_widget.UniqueId('timezone')" name="$core_v2_widget.UniqueId('timezone')" class="ui-select" aria-describedby="$core_v2_widget.UniqueId('timezone_desc')">
+					#each
+							<option value="$timezone.Id"#if ($timezone.Id == $timeZoneId) selected="selected"#end>$timezone.Name</option>
+					#afterall
+						</select>
+					#end
+			</span>
+		</li>
+
+#set ($body='')
+#if ($event)
+		#set ($body = $event.EventRawDescription)
+#end
+
+		<li class="field-item required event-body">
+			<label for="$core_v2_widget.UniqueId('body')" class="field-item-header">$core_v2_language.GetResource('EventDescriptionLabel')</label>
+			<span class="field-item-input">$core_v2_editor.Render('body',"%{Width='100%', Height='250px', Value=$body, ContentTypeId=$calendar_v1_events.ContentTypeId, ApplicationId = $calendar.ApplicationId, ApplicationTypeId = $calendar_v1_calendars.ApplicationTypeId}")</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+#set ($registrationTypeResourcePrefix = 'RegistrationType_')
+
+		<li class="field-item event-registration">
+			<label for="$core_v2_widget.UniqueId('registrationType')" class="field-item-header">$core_v2_language.GetResource('EventRegistrationTypeLabel')</label>
+			<select id="$core_v2_widget.UniqueId('registrationType')" class="ui-select">
+				#foreach ($type in $calendar_v1_events.RegistrationTypes)
+				#each
+					#set ($registrationTypeResorce = "$registrationTypeResourcePrefix$type.Value")
+					<option value="$type.Key" #if($event.RegistrationType == $type.Value) selected="selected"#end>$core_v2_language.GetResource($registrationTypeResorce)</option>
+				#end
+			</select>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+
+#set($canReadCalendar=$core_v3_permission.CheckPermission($calendar_v1_permissions.ViewCalendar,$anonymousUser.Id,"%{ApplicationId=$calendar.ApplicationId,ApplicationTypeId=$calendar_v1_calendars.ApplicationTypeId}").IsAllowed)
+#set ($tmpChecked = false)
+#if ($event)
+		#set ($tmpChecked = $event.AllowAnonymousRegistrations && $canReadCalendar)
+#end
+		<li class="field-item post-anonymous" #if(!$canReadCalendar)style="display:none;"#end>
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('allowAnonymous')" #if($tmpChecked)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('allowAnonymous')">$core_v2_language.GetResource('AllowAnonymousRegistrationLabel')</label>
+			</span>
+		</li>
+
+		<li class="field-item event-maxregistrants" >
+				<label for="$core_v2_widget.UniqueId('maxRegistrations')" class="field-item-header">$core_v2_language.GetResource('EventMaxRegistrationLabel')</label>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('maxRegistrations')" name="$core_v2_widget.UniqueId('maxRegistrations')" value="#if ($event)$event.MaximumRegistrationsAllowed#end" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item post-tags">
+			<label for="$core_v2_widget.UniqueId('tags')" class="field-item-header">$core_v2_language.GetResource('CreateEditPost_Tags')</label>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('tags')" value="$core_v2_utility.Join(', ', $event.Tags)" size="60" />
+			</span>
+		</li>
+
+	</ul>
+</fieldset></form>
+<div class="field-list-footer"></div>
+
+<div class="field-list-header"></div>
+<fieldset class="field-list save-event-form">
+		<ul class="field-list">
+		<li class="field-item save-button">
+			<span class="field-item-input">
+				<a href="javascript:void(0);" id="$core_v2_widget.UniqueId('save')" class="internal-link save-post button">
+					<span></span> $core_v2_language.GetResource('EventCreateButton')
+				</a>
+				<a id="$core_v2_widget.UniqueId('cancel')" href="javascript:void(0);" class="internal-link inline-button cancel-post">$core_v2_language.GetResource('Cancel')</a>
+				<span class="processing" style="display: none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+<div class="field-list-footer"></div>
+
+#registerEndOfPageHtml('telligent.evolution.Calendar.widgets.eventeditui')
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+			#registerEndOfPageHtml()
+			<script type="text/javascript">
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+			jQuery(function()
+			{
+						jQuery.telligent.evolution.Calendar.widgets.editevent.register({
+								 eventId: #if($event) $event.Id#else -1#end
+								,calendarId: #if($calendar) $calendar.Id#else -1#end
+								,applicationId: '$calendar.ApplicationId'
+								,errorMessageId: '$core_v2_widget.UniqueId('ErrorMessageId')'
+								,eventContentTypeId: '$calendar_v1_events.ContentTypeId.ToString()'
+								,wrapperId: '$core_v2_widget.WrapperElementId'
+								#set($hourOffset = 0)
+								#set($hourOffset = $core_v2_configuration.GetTimeZone($timeZoneId, $startDateValue).HourOffset)
+								,startDateHourOffset: $hourOffset
+								#set($hourOffset = 0)
+								#set($hourOffset = $core_v2_configuration.GetTimeZone($timeZoneId, $endDateValue).HourOffset)
+								,endDateHourOffset: $hourOffset
+								,elements : {
+										save : '#$core_v2_widget.UniqueId('save')'
+										,maxRegistrations : $('.field-item.event-maxregistrants')
+								}
+								,inputs: {
+										startDate : '#$core_v2_widget.UniqueId('startDate')'
+										,endDate : '#$core_v2_widget.UniqueId('endDate')'
+										,eventTitle : '#$core_v2_widget.UniqueId('title')'
+										,location : '#$core_v2_widget.UniqueId('location')'
+										,url : '#$core_v2_widget.UniqueId('url')'
+										,registrationType : '#$core_v2_widget.UniqueId('registrationType')'
+										,allowAnonymous : '#$core_v2_widget.UniqueId('allowAnonymous')'
+										,maxRegistrations : '#$core_v2_widget.UniqueId('maxRegistrations')'
+										,tags : '#$core_v2_widget.UniqueId('tags')'
+										,timezone : '#$core_v2_widget.UniqueId('timezone')'
+										,save : '#$core_v2_widget.UniqueId('save')'
+								}
+								,map: {
+										geocodingEnabled: '$geocodingEnabled'
+										,map_check_area : '#$core_v2_widget.UniqueId('map_check_area')'
+										,chkMap : '#$core_v2_widget.UniqueId('chkMap')'
+										,txtLat : '#$core_v2_widget.UniqueId('txtLat')'
+										,txtLng : '#$core_v2_widget.UniqueId('txtLng')'
+										,txtAddr : '#$core_v2_widget.UniqueId('txtAddr')'
+										,mapLoader : '#$core_v2_widget.UniqueId('mapLoader')'
+										,copyLocLink : '#$core_v2_widget.UniqueId('copyLocLink')'
+										,geocode_subform_wrapper : '#$core_v2_widget.UniqueId('geocode_subform_wrapper')'
+								}
+								,urls: {
+										 COPYADDRESSLINK : '<a href="#" onclick="doLocationCopy({Address});return false;">{CopyText}</a>'
+								}
+								,resources: {
+										titleIsMissing : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_titleRequired'))'
+										,titleTooLong : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_titleLength'))'
+										,locationTooLong : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_locationLength'))'
+										,urlNotValid : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_invalidUrl'))'
+										,descriptionIsMissing : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_descriptionRequired'))'
+										,maxRegistrationsNotAnInteger : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_invalidMax'))'
+										,invalidDate : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_invalidDate'))'
+										,invalidDateRange : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('event_validator_invalidDateRange'))'
+										,saveErrorText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Event_SaveError'))'
+										,Calendar_CopyLink_Text : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Calendar_CopyLink_Text'))'
+										,calendar_addedit_maperror : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_addedit_maperror'))'
+										,calendar_addedit_mapunknown : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('calendar_addedit_mapunknown'))'
+										,errorLoadingMap : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MapErrorMessage'))'
+
+								}
+								, getBodyContent: function() { return $core_v2_editor.GetContentScript('body'); }
+								, attachBodyChangeScript: function(f) { $core_v2_editor.GetAttachOnChangeScript('body', 'f') }
+								, saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))'
+								, cancelLink: jQuery('#$core_v2_widget.UniqueId('cancel')')
+                    			, cancelConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CancelConfirmation'))'
+						});
+				});
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+			</script>
+			#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Calendar_EventAddEdit_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_EventAddEdit_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AllowAnonymousRegistrationLabel">Allow anonymous users to register</resource>
+  <resource name="calendar_addedit_maperror">There was an error processing the map.</resource>
+  <resource name="calendar_addedit_mapunknown">Could not find location. Try to be more specific.</resource>
+  <resource name="Calendar_CopyLink_Text">Did you mean </resource>
+  <resource name="Calendar_EventAddEdit_Description">Displays form for adding a new event or editing an existing event</resource>
+  <resource name="Calendar_EventAddEdit_Name">Event Calendar - Add/Edit Event</resource>
+  <resource name="Calendar_EventAddEdit_Title">Add/Edit Event</resource>
+  <resource name="Calendar_GetMap">Include a map</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CancelConfirmation">Are you sure you want to cancel? All unsaved changes will be lost.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="CreateEditPost_Tags">Tags</resource>
+  <resource name="Event_New">New Event</resource>
+  <resource name="Event_SaveError">Unable to save event, an error occurred.</resource>
+  <resource name="event_validator_descriptionRequired">Please enter a description</resource>
+  <resource name="event_validator_invalidDate">A start date is required.</resource>
+  <resource name="event_validator_invalidDateRange">The date range entered is not valid</resource>
+  <resource name="event_validator_invalidMax">Please enter a valid number</resource>
+  <resource name="event_validator_invalidUrl">Invalid Url</resource>
+  <resource name="event_validator_locationLength">Maximum location length is 256 characters</resource>
+  <resource name="event_validator_titleLength">Maximum title length is 256 characters</resource>
+  <resource name="event_validator_titleRequired">Title is required.</resource>
+  <resource name="EventCreateButton">Save</resource>
+  <resource name="EventDescriptionLabel">Description</resource>
+  <resource name="EventEndDateLabel">End</resource>
+  <resource name="EventLocationLabel">Location</resource>
+  <resource name="EventMaxRegistrationLabel">Maximum registrants</resource>
+  <resource name="EventRegistrationTypeLabel">Registrations</resource>
+  <resource name="EventStartDateLabel">Start</resource>
+  <resource name="EventTimeZone">Time Zone</resource>
+  <resource name="EventTimeZoneDescription">Identify event timezone to ensure that dates are shown relative to the event location.</resource>
+  <resource name="EventTitleLabel">Title</resource>
+  <resource name="EventUrlDescription">If this event has its own information site, provide that URL here.</resource>
+  <resource name="EventUrlLabel">Website</resource>
+  <resource name="MapErrorMessage">An error occurred while attempting to load the map.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="RegistrationType_ApprovalRequired">Registration (RSVP)</resource>
+  <resource name="RegistrationType_InvitationOnly">Invitation only</resource>
+  <resource name="RegistrationType_NotSet">No registration required</resource>
+  <resource name="RegistrationType_Open">Registration (no RSVP)</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="calendars.geocoderesult.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

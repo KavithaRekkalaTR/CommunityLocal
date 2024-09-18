@@ -1,0 +1,52 @@
+﻿#if ($core_v2_page.IsPost)
+	#set($type = $core_v2_page.GetFormValue('type'))
+	#set($subscribe = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscribe')))
+	$core_v2_page.SetContentType('application/json')
+	#set($response = false)
+
+	#if ($type == 'blog')
+		#set($response = $core_v2_blog.SetSubscribed($core_v2_utility.ParseInt($core_v2_page.GetFormValue('blogId')), $subscribe))
+		#if ($response && $response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+		{"subscribe":#if($subscribe) true#else false#end,"warnings":[
+			#foreach ($warning in $response.Warnings)
+				#each
+					"$core_v2_encoding.JavascriptEncode($warning.Message)"
+				#between
+					,
+			#end
+		]}
+	#elseif ($type == 'blogAnonymous')
+		#set($blogId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('blogId')))
+		#set($email = $core_v2_page.GetFormValue('email'))
+		#set($subscriptionResponse = $core_v2_blog.SubscribeAnonymously($blogId, $email))
+
+		#if($subscriptionResponse == 'Subscribed')
+			#set($message = $core_v2_language.GetResource('Weblog_Subscription_YourSubscribed'))
+		#elseif($subscriptionResponse == 'AlreadySubscribed')
+			#set($message = $core_v2_language.GetResource('Weblog_Subscription_AlreadySubscribed'))
+		#elseif($subscriptionResponse == 'AlreadyConfirmed')
+			#set($message = $core_v2_language.GetResource('Weblog_Subscription_AlreadyConfirmed'))
+		#else
+			#set($message = 'Subscription error')
+		#end
+
+		{"message":"$message"}
+	#elseif ($type == 'blogPost')
+		#set($response = $core_v2_blogPost.SetSubscribed($core_v2_utility.ParseInt($core_v2_page.GetFormValue('blogPostId')), $subscribe))
+		#if ($response && $response.HasErrors())
+			$core_v2_page.SendJsonError($response.Errors)
+		#end
+		{"subscribe":#if($subscribe) true#else false#end,"warnings":[
+			#foreach ($warning in $response.Warnings)
+				#each
+					"$core_v2_encoding.JavascriptEncode($warning.Message)"
+				#between
+					,
+			#end
+		]}
+	#else
+		$core_v2_page.SendJsonError("Unrecognized subscription type.")
+	#end
+#end

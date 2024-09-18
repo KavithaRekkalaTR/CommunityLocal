@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Forum Thread Moved To Private Group" version="13.0.0.0" description="Sends an email when a thread is moved to an area of the site the subscribed user doesn't have access to." id="ddb105caa593414a9bba9197c34bf518" lastModified="2023-05-08 18:56:48Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('thread_subject')
+    $context_v1_email.Context.ForumThread.Subject
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('thread_subject')
+    $context_v1_email.Context.ForumThread.Subject
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('thread_subject')
+    $context_v1_email.Context.ForumThread.Subject
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">The thread, {thread_subject}, needed to be moved. You won't be getting anymore notifications for this thread.</resource>
+  <resource name="Subject">{site_name}: {thread_subject} moved</resource>
+  <resource name="Header">{thread_subject} moved</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

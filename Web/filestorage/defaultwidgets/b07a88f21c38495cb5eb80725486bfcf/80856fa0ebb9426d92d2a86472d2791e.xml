@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Document Viewer Administration" version="11.0.0.0" description="" instanceIdentifier="80856fa0ebb9426d92d2a86472d2791e" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2020-03-18 21:01:55Z" provider="b07a88f21c38495cb5eb80725486bfcf">
+    <contentScript language="Velocity"><![CDATA[#set ($listId = $core_v2_widget.UniqueId('list'))
+<div id="$core_v2_widget.UniqueId('tab')">
+	<form>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('Status')">
+					<option value="">$core_v2_language.GetResource('All')</option>
+					<option value="NotConverted">$core_v2_language.GetResource('NotConverted')</option>
+					<option value="Converted">$core_v2_language.GetResource('Converted')</option>
+					<option value="Error">$core_v2_language.GetResource('Error')</option>
+				</select>
+			</span>
+		</li>
+	</ul>
+	</form>
+	#set ($documents = $context.List("", 5, 0))
+	<ul id="$core_v2_encoding.HtmlAttributeEncode($listId)" class="content-list expandable" style="margin-top: 0px">
+		$core_v2_widget.ExecuteFile('list.vm')
+	</ul>
+</div>
+#registerEndOfPageHtml('telligent.evolution.widgets.documentViewerAdmin')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	jQuery(function(){
+		jQuery.telligent.evolution.widgets.documentViewerAdmin.register({
+			api: $context.JsonApi,
+			wrapper: jQuery('#$core_v2_widget.UniqueId('tab')'),
+			listWrapper: jQuery('#$listId'),
+			inputs: {
+				status: jQuery('#$core_v2_widget.UniqueId('Status')')
+			},
+			urls: {
+				list: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.vm'))',
+				listItem: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-listitem.vm'))',
+				reconvert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-reconvert.vm'))',
+				cancelConvert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-cancelconvert.vm'))'
+			},
+			text: {
+				documents: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('documents'))',
+				reconvertConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reconvertConfirm'))',
+				deleteConfirm: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleteConfirm'))'
+			}
+		});
+	});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="All">All Documents</resource>
+  <resource name="Cancel">Cancel Processing</resource>
+  <resource name="Converted">Processed</resource>
+  <resource name="deleteConfirm">Are you sure you want to cancel processing of this document?</resource>
+  <resource name="documents">Documents</resource>
+  <resource name="DocumentViewerStatus_Description">Supports administration of viewable documents.</resource>
+  <resource name="DocumentViewerStatus_Name">Document Viewer Administration</resource>
+  <resource name="Download">Download</resource>
+  <resource name="Error">Error</resource>
+  <resource name="NotConverted">Not Processed</resource>
+  <resource name="reconvert">Reprocess</resource>
+  <resource name="reconvertConfirm">Are you sure you want to reprocess?</resource>
+  <resource name="Status">Status</resource>
+  <resource name="View">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

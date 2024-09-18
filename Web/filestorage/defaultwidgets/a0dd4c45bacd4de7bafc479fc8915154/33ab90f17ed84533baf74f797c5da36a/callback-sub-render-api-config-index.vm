@@ -1,0 +1,48 @@
+##
+## Configuration Property and Template Index Renderer
+##
+## Requires in scope:
+##   $propertyTemplates
+##   $propertyRules
+##
+
+<div>
+
+#if ($propertyTemplates)
+	#foreach ($propertyTemplate in $propertyTemplates)
+	#beforeall
+		<h3>$core_v2_language.GetResource('PropertyTemplates')</h3>
+		<ul>
+	#each
+		<li>
+			<a href="#"
+				data-name="$core_v2_encoding.HtmlAttributeEncode($propertyTemplate.Name)"
+				data-type="extension"
+				data-mode="template"
+				class="documentation-link">$propertyTemplate.Name</a>
+		</li>
+	#afterall
+		</ul>
+	#end
+#end
+
+#if ($propertyRules)
+	#foreach ($propertyRule in $propertyRules)
+	#beforeall
+		<h3>$core_v2_language.GetResource('PropertyRules')</h3>
+		<ul>
+	#each
+		<li>
+			<a href="#"
+				data-name="$core_v2_encoding.HtmlAttributeEncode($propertyRule.Name)"
+				data-type="extension"
+				data-mode="rule"
+				class="documentation-link">$propertyRule.Name</a>
+		</li>
+	#afterall
+		</ul>
+	#end
+#end
+
+
+</div>

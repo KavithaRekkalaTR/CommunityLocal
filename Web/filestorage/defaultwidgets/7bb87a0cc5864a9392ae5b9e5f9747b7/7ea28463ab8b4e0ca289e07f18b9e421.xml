@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Wikis_WikiTitle_Name}" version="12.0.0.0" description="${resource:Wikis_WikiTitle_Description}" instanceIdentifier="7ea28463ab8b4e0ca289e07f18b9e421" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="wiki-title" lastModified="2023-03-02 20:40:58Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($page = $core_v2_wikiUrls.Current)
+#set($wiki = $core_v2_wiki.Current)
+#set($wikiPage = $core_v2_wikiPage.CurrentOrDefault)
+#set($wikiPageRevision = $core_v2_wikiPageRevision.Current)
+#set($seoTitle = false)
+#if ($page == 'AddPage')
+	#set($title = $core_v2_language.GetResource('Wikis_AddPage'))
+#elseif ($page == 'GroupAggregateHome')
+    #set($title = $core_v2_language.GetResource('wikis'))
+#elseif ($page == 'Tags')
+	#set($title = $core_v2_language.GetResource('TagBrowser_Title'))
+#elseif ($page == 'EditPage')
+	#if ($wikiPage && $wikiPage.Id)
+		#set($title = $core_v2_language.FormatString($core_v2_language.GetResource('Wikis_Page_Editing'), $wikiPage.Title))
+	#else
+		#set($title = $core_v2_language.GetResource('Wikis_AddPage'))
+	#end
+#elseif ($page == 'DeletePage' && $wikiPage)
+	#set($title = "$core_v2_language.GetResource('Delete') $wikiPage.Title")
+#elseif ($page == 'AddChildPage')
+	#set($title = $core_v2_language.GetResource('Wikis_AddPage'))
+#elseif ($page == 'PageComments' && $wikiPage)
+	#set($title = "$wikiPage.Title $core_v2_language.GetResource('Wikis_Page_Comments')")
+#elseif ($page == 'Revision')
+	#if($wikiPageRevision && $wikiPageRevision.RevisionNumber > 1)
+		#set($title = "$core_v2_language.GetResource('Revision') #${wikiPageRevision.RevisionNumber}")
+	#else
+		#set($title = $core_v2_language.GetResource('Original'))
+	#end
+#elseif ($page == 'PageHistory' && $wikiPage)
+	#set($title = "$wikiPage.Title - $core_v2_language.GetResource('History')")
+#elseif ($wikiPage)
+    #set($title = $wikiPage.Title)
+    #set($seoTitle =  $wikiPage.MetaTitle)
+#else
+	#if (!$wiki)
+		#set($title = $core_v2_language.GetResource('wikis'))
+	#else
+		#set($title = $wiki.Name)
+	#end
+#end
+
+#if($title)
+    #if(!$seoTitle || $seoTitle == '')
+        #set($seoTitle = $title)
+    #end
+
+	$core_v2_page.SetTitle($seoTitle, true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Wikis_WikiTitle_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Wikis_WikiTitle_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="History">History</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Original">Original</resource>
+  <resource name="Revision">Revision</resource>
+  <resource name="TagBrowser_Title">Browse by Tags</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+  <resource name="wikis">Wikis</resource>
+  <resource name="Wikis_AddPage">Add Page</resource>
+  <resource name="Wikis_Page_Comments">Comments</resource>
+  <resource name="Wikis_Page_Editing">Edit '{0}' </resource>
+  <resource name="Wikis_WikiTitle_Description">Displays the title for wiki pages.</resource>
+  <resource name="Wikis_WikiTitle_Name">Wikis - Title</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="438f4b20be39493c908f292b4592f6fc" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

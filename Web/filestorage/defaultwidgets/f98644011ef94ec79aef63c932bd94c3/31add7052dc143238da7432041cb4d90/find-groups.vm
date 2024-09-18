@@ -1,0 +1,14 @@
+#set($searchText = $core_v2_page.GetQueryStringValue('w_SearchText'))
+#set($groups = $reporting.FindGroups($searchText))
+
+$core_v2_page.SetContentType('application/json')
+
+{"Groups":[
+    #foreach($group in $groups)
+        {
+            "id":"$group.ContainerId.ToString()",
+            "title":"$group.Name",
+            "preview":"$core_v2_encoding.JavascriptEncode($group.Name)#if ($group.ParentContainer && $group.ParentContainer.ContainerId != $group.ContainerId) ($core_v2_language.GetResource('In') $group.ParentContainer.Name)#end"
+        },
+    #end
+null]}

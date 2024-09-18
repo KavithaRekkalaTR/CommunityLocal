@@ -1,0 +1,6 @@
+﻿#set($type = $core_v2_page.GetFormValue('type'))
+#set($subscribe = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscribe')))
+$core_v2_page.SetContentType('application/json')
+
+$calendar_v1_calendars.SetSubscribed($core_v2_utility.ParseInt($core_v2_page.GetFormValue('calendarId')), $subscribe)
+{"subscribe":#if($subscribe) true#else false#end}

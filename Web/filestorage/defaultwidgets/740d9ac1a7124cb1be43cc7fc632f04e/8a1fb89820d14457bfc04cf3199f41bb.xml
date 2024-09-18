@@ -1,0 +1,47 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:PollVotes_Name}" cssClass="contextual-pollvotes" description="${resource:PollVotes_Description}" instanceIdentifier="8a1fb89820d14457bfc04cf3199f41bb" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<headerScript>
+<![CDATA[
+$!core_v2_language.FormatString($core_v2_language.GetResource('VotesOn'), $context.Question)
+]]>
+		</headerScript>
+		<contentScript>
+<![CDATA[
+
+$core_v2_widget.ExecuteFile('paged-votes.vm')
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.pollVotes.register({
+		votesList: jQuery('#$core_v2_widget.UniqueId('vote-list')'),
+		showCsvDownloadsLink: #if($votes.TotalCount > 0) true#else false#end,
+		urls: {
+			csvDownload: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('csv-download.vm'))',
+			pagedVotes: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('paged-votes.vm'))'
+		},
+		text: {
+			voteCount: #if($votes.TotalCount == 1) '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('VoteCount'), $core_v2_language.FormatNumber($votes.TotalCount)))'#else '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('VotesCount'), $core_v2_language.FormatNumber($votes.TotalCount)))'#end,
+			downloadCSV: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('DownloadCSV'))'
+		}
+	});
+});
+</script>
+
+]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+	<resource name="PollVotes_Name">Poll Votes</resource>
+	<resource name="PollVotes_Description">Lists votes on a specific poll and allows that report to be downloaded.</resource>
+
+	<resource name="VotesOn">Votes on '{0}'</resource>
+	<resource name="ViewUser">View User Profile</resource>
+	<resource name="NoVotes">No one has voted on this poll yet.</resource>
+	<resource name="VoteCount">{0} total vote</resource>
+	<resource name="VotesCount">{0} total votes</resource>
+	<resource name="DownloadCSV">Download as CSV</resource>
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

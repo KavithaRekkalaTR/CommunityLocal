@@ -1,0 +1,26 @@
+##
+## Gets a serialized Reply
+##
+## Paramters
+##
+##   _w_commentId
+##
+
+$core_v2_page.SetContentType('application/json')
+
+$core_v2_widget.ExecuteFile('common-config.vm')
+
+##
+## Parse Parameters
+##
+#set ($commentId = false)
+#set ($commentIdQuery = false)
+#set ($commentIdQuery = $core_v2_page.GetQueryStringValue('_w_commentId'))
+#if ($commentIdQuery && $commentIdQuery.length > 0)
+	#set ($commentId = $core_v2_utility.ParseGuid($commentIdQuery))
+#end
+
+#set ($comment = $core_v2_comments.Get($commentId))
+
+#set ($excludeContainer = false)
+$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')

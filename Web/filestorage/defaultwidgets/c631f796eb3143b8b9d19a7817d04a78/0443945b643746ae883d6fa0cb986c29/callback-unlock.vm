@@ -1,0 +1,12 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+    #set($result = false)
+    #set($result = $context.UnlockUser())
+
+	#if ($result.Errors.Count > 0)
+		$core_v2_page.SendJsonError($result.Errors)
+	#else
+		{"success":true}
+	#end
+#end

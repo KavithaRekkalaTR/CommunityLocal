@@ -1,0 +1,75 @@
+#set ($indicators = $context.ListIndicators())
+
+#*
+worst states:
+0: unknown or good
+1: warning
+2: critical
+*#
+#set ($worstState = 0)
+#foreach ($indicator in $indicators)
+	#if ($indicator.Status == "Warning" && $worstState < 1)
+		#set ( $worstState = 1 )
+	#elseif ($indicator.Status == "Critical" && $worstState < 2)
+		#set ( $worstState = 2 )
+	#end
+#end
+
+#if ($worstState == 0)
+	<div class="indicator message">$core_v2_language.GetResource('SystemOperational')</div>
+#elseif ($worstState == 1)
+	<div class="indicator message error">$core_v2_language.GetResource('SystemWarning')</div>
+#elseif ($worstState == 2)
+	<div class="indicator message error">$core_v2_language.GetResource('SystemCritical')</div>
+#end
+
+#foreach ($indicator in $indicators)
+#beforeall
+	<ul class="content-list content simple expandable system-indicators">
+#each
+	<li class="content-item system-indicator $indicator.CssClass" data-indicator="$indicator.Id">
+		<div class="content">
+			<h4 class="indicator name">$indicator.Name</h4>
+			<div class="indicator attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item status">
+						<span class="attribute-value">
+							#if ($indicator.Status == "Good")
+								<span class="pill positive">$core_v2_language.GetResource('Good')</span>
+							#elseif ($indicator.Status == "Warning")
+								<span class="pill negative">$core_v2_language.GetResource('Warning')</span>
+							#elseif ($indicator.Status == "Critical")
+								<span class="pill critical">$core_v2_language.GetResource('Critical')</span>
+							#elseif ($indicator.Status == "Information")
+								<span class="pill">$core_v2_language.GetResource('Information')</span>
+							#elseif ($indicator.Status == "Unknown")
+								<span class="pill">$core_v2_language.GetResource('Unknown')</span>
+							#end
+						</span>
+					</li>
+				</ul>
+			</div>
+
+			<div class="indicator content description expandable">
+				$indicator.ViewHtml()
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list view-more" #if (!$indicator.RelatedUrl) style="display:none" data-empty #end>
+					<ul>
+						<li class="navigation-list-item">
+							<a
+								#if ($indicator.RelatedUrl)
+									href="$core_v2_encoding.HtmlAttributeEncode($indicator.RelatedUrl)"
+								#else
+									href="#"
+								#end
+							>$core_v2_language.GetResource('view-more')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#end

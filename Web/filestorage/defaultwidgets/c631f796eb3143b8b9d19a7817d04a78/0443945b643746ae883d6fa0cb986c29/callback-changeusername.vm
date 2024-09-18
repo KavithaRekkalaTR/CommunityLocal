@@ -1,0 +1,18 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+	
+	#set($username = false)
+	#set($username = $core_v2_page.GetFormValue('Username'))
+	
+	#set($ignoreDisallowedNames = false)
+	#set($ignoreDisallowedNames = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('IgnoreDisallowedNames')))
+	
+    #set($result = false)
+    #set($result = $context.RenameUser($username, $ignoreDisallowedNames))
+
+	#if ($result.Errors.Count > 0)
+		$core_v2_page.SendJsonError($result.Errors)
+	#else
+		{"success":true}
+	#end
+#end

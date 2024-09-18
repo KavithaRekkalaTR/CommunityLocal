@@ -1,0 +1,49 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+@import "-evo-themefile-url('variables.less')";
+@import "-evo-themefile-url('icons.less')";
+@import "-evo-themefile-url('mixins.less')";
+
+*, *:before, *:after {
+	.box-sizing(border-box);
+}
+
+body {
+	background-color: @color-background;
+}
+
+h1, h2, h3, h4 {
+	font-size: 20px;
+}
+
+.tab-set table a {
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+html, body, body > form {
+	height: auto;
+	.content-fragment-page {
+		min-height: 0;
+	}
+}
+
+.field-item.tag-list { max-height: 200px; overflow: auto; }
+
+.activity-story-filter { clear: both; overflow: hidden; border-top: 1px solid -evo-decrease-contrast(@color-background, 8%, @color-foreground, @color-contrast); padding: 3px; margin: 3px 0px 0px 0px; }
+.activity-story-filter legend { width: 33%; float: left; }
+
+.login-and-create-user fieldset .field-item.profileFields input[type="button"] { margin: 5px 10px; }
+
+.content-fragment-modal.eventregistration {
+    .registration-buttons a {
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+}

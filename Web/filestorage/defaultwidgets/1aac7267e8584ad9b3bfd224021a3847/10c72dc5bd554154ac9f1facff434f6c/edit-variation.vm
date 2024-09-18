@@ -1,0 +1,132 @@
+#set($emoticonIdString = $core_v2_page.GetQueryStringValue('w_variationid'))
+#set($emoticonId = $core_v2_utility.ParseGuid($emoticonIdString))
+
+#set($emoticon = false)
+
+#if($emoticonId != '00000000-0000-0000-0000-000000000000')
+	#set($emoticon = $context.GetEmoticon($emoticonId))
+#end
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+#set($attachmentUrl = $emoticon.Url)
+#set($attachmentFileName = $context.GetFileNameFromImageUrl($attachmentUrl))
+
+<form><fieldset data-emoticonid="$emoticonId">
+    <ul class="field-list">
+        <li class="field-item post-attachment variation-attachment upload-with-preview" data-upload="true" data-link="false">
+            <label class="field-item-name">$core_v2_language.GetResource('EmoticonImage')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('EmoticonImage_Detail')</span>
+            <span class="field-item-input preview">
+            </span>
+            <span class="field-item-input upload">
+                <a href="#" class="upload add">$core_v2_language.GetResource('UploadFile')</a>
+            </span>
+            <span class="field-item-validation" style="display: none;"></span>
+        </li>
+		
+        <li class="field-item variation-name">
+            <label class="field-item-name">$core_v2_language.GetResource('Name')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Name_Detail_Emoticon')</span>
+            <span class="field-item-input">$!emoticon.Name</span>
+        </li>
+
+        <li class="field-item variation-shortcut">
+            <label class="field-item-name">$core_v2_language.GetResource('Shortcut')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Shortcut_Detail')</span>
+            <span class="field-item-input">$!emoticon.Shortcut</span>
+        </li>
+
+		<li class="field-item variation-enabled">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('VariationEnabled')" #if($emoticon.Enabled)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('VariationEnabled')" class="field-item-name">$core_v2_language.GetResource('Enabled_Field')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Enabled_Detail')</span>
+		</li>    
+
+    	#if ($emoticon)
+			<li class="field-item identifiers">
+				<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</li>
+			<li class="field-item identifiers id" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('EmoticonId')</label>
+				<span class="field-item-input">$!emoticon.Id</span>
+			</li>
+            #if($emoticon.UnicodeSequence && $emoticon.UnicodeSequence != '')
+                <li class="field-item identifiers unicode" style="display: none;">
+                    <label class="field-item-name">$core_v2_language.GetResource('UnicodeSequence')</label>
+                    <span class="field-item-input">$!emoticon.UnicodeSequence</span>
+                </li>
+            #end
+            #if($emoticon.ShortCode && $emoticon.ShortCode != '')
+                <li class="field-item identifiers shortcode" style="display: none;">
+                    <label class="field-item-name">$core_v2_language.GetResource('ShortCode')</label>
+                    <span class="field-item-input">$!emoticon.ShortCode</span>
+                </li>
+            #end
+            #if($emoticon.LegacyId && $emoticon.LegacyId > 0)
+                <li class="field-item identifiers legacyid" style="display: none;">
+                    <label class="field-item-name">$core_v2_language.GetResource('LegacyId')</label>
+                    <span class="field-item-input">$!emoticon.LegacyId</span>
+                </li>
+            #end   
+		#end
+
+    </ul>	
+</fieldset></form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('variation_headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input emoticon-options">
+					<a href="#" class="button save-variation">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.administrationEmoticonVariationEdit.register({
+		emoticonId: '$emoticonId',
+		emoticonName: '$core_v2_encoding.JavascriptEncode($emoticon.Name)',
+        default: #if($emoticon)'$emoticon.Default'#else'False'#end,
+		headerTemplateId: '$headerTemplateId',	
+		text: {
+			save: '$core_v2_language.GetResource('Save')',
+			variationUpdated: '$core_v2_language.GetResource('VariationUpdated')',
+			editVariation: '$core_v2_language.GetResource('Edit')',
+			fileRequired: '$core_v2_language.GetResource('FileRequired')',
+		},
+		inputs: {
+			enabledId: "#$core_v2_widget.UniqueId('VariationEnabled')",
+		},
+		urls: {
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-variation.vm'))',
+		},
+		file: {
+			fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+			url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+			isRemote:#if($attachmentIsRemote) true#else false#end,
+			isNew:#if($attachmentIsNew) true#else false#end
+		},
+		attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))'
+	});
+});
+</script>

@@ -1,0 +1,18 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($EnableRssSyndication = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableRssSyndication')))
+
+	$options.Add('EnableRssSyndication', $EnableRssSyndication)
+
+	#set($response = $context.Update($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

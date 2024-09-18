@@ -1,0 +1,101 @@
+#set ($answerCount = $thread.AnswerCount + $thread.SuggestedAnswerCount)
+
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "QAPage",
+      "mainEntity": {
+        "@type": "Question",
+        "name": "$core_v2_encoding.JavascriptEncode($thread.Subject)",
+        "text": "$core_v2_encoding.JavascriptEncode($core_v2_language.RemoveHtml($thread.Body()))",
+        "answerCount": $answerCount,
+        "upvoteCount": $thread.QualityScore,
+        "dateCreated": "$core_v2_utility.GetTimestamp($thread.Date)",
+        "author": {
+          "@type": "Person",
+          "name": "$core_v2_encoding.JavascriptEncode($thread.Author.DisplayName)"
+        }
+    #if($thread.AnswerCount > 0 || $thread.SuggestedAnswerCount > 0)
+        ,
+    #end
+    #if($thread.AnswerCount > 0)
+        #set($answers = $core_v2_forumReply.List($thread.Id, "%{ ForumReplyQueryType = 'verified-answers', SortBy = 'TotalVotes', SortOrder = 'Descending', PageSize = 20, PageIndex = 0, IncludeThreadStarter = 'False' }"))
+        #set($index = 0)
+        #foreach ($answer in $answers)
+        #each
+            #if ($index == 0)
+                "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "$core_v2_encoding.JavascriptEncode($core_v2_language.RemoveHtml($answer.Body()))",
+                "dateCreated": "$core_v2_utility.GetTimestamp($answer.Date)",
+                "upvoteCount": $answer.QualityScore,
+                "url": "$core_v2_encoding.JavascriptEncode($answer.Url)",
+                "author": {
+                    "@type": "Person",
+                    "name": "$core_v2_encoding.JavascriptEncode($answer.Author.DisplayName)"
+                    }
+                }
+                #if ($thread.AnswerCount > 1)
+                , "suggestedAnswer": [
+                #end
+            #else
+                {
+                "@type": "Answer",
+                "text": "$core_v2_encoding.JavascriptEncode($core_v2_language.RemoveHtml($answer.Body()))",
+                "dateCreated": "$core_v2_utility.GetTimestamp($answer.Date)",
+                "upvoteCount": $answer.QualityScore,
+                "url": "$core_v2_encoding.JavascriptEncode($answer.Url)",
+                "author": {
+                    "@type": "Person",
+                    "name": "$core_v2_encoding.JavascriptEncode($answer.Author.DisplayName)"
+                    }
+                }
+            #end
+
+            #set ($index = $index + 1)
+        #between
+            #if ($index > 1)
+            ,
+            #end
+        #afterall
+            #if ($thread.AnswerCount > 1 && $thread.SuggestedAnswerCount == 0)
+                ]
+            #end
+        #end
+    #end
+
+    #if ($thread.SuggestedAnswerCount > 0)
+        #set($suggestedAnswers = $core_v2_forumReply.List($thread.Id, "%{ ForumReplyQueryType = 'non-verified-answers', SortBy = 'TotalVotes', SortOrder = 'Descending', PageSize = 20, PageIndex = 0, IncludeThreadStarter = 'False' }"))
+    #end
+
+    #foreach ($answer in $suggestedAnswers)
+    #beforeall
+        #if ($thread.AnswerCount == 0 )
+            "suggestedAnswer": [
+        #end
+        #if ($thread.AnswerCount == 1 )
+            , "suggestedAnswer": [
+        #end
+        #if ($thread.AnswerCount > 1 )
+            ,
+        #end
+    #each
+            {
+            "@type": "Answer",
+            "text": "$core_v2_encoding.JavascriptEncode($core_v2_language.RemoveHtml($answer.Body()))",
+            "dateCreated": "$core_v2_utility.GetTimestamp($answer.Date)",
+            "upvoteCount": $answer.QualityScore,
+            "url": "$core_v2_encoding.JavascriptEncode($answer.Url)",
+            "author": {
+                "@type": "Person",
+                "name": "$core_v2_encoding.JavascriptEncode($answer.Author.DisplayName)"
+                }
+            }
+    #between
+        ,
+    #afterall
+            ]
+    #end
+      }
+    }
+    </script>

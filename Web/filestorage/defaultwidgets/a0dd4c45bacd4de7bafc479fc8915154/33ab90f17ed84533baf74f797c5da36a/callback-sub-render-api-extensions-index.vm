@@ -1,0 +1,134 @@
+##
+## API Extensions Index Renderer
+##
+## Requires in scope:
+##   $extensions
+##   $restResources
+##   $automationEvents
+##   $lessFunctions
+##   $propertyTemplates
+##   $propertyRules
+##
+
+#set ($currentCategory = false)
+#set ($extensionIndex = 0)
+<h2 class="documentation_title">$core_v2_language.GetResource('ExtensionIndex')</h2>
+<h3 id="velocity">$core_v2_language.GetResource('WidgetApis')</h3>
+<ul>
+#foreach ($extension in $extensions)
+
+	#set ($extensionCategory = $core_v2_language.GetResource('Uncategorized'))
+	#if ($extension.Category)
+		#set ($extensionCategory = $extension.Category)
+	#end
+
+	#if ($currentCategory == false)
+		#set ($currentCategory = $extensionCategory)
+		<h3>$extensionCategory</h3>
+		<ul>
+	#elseif ($currentCategory != $extensionCategory)
+		#set ($currentCategory = $extensionCategory)
+		</ul>
+		<h3>$extensionCategory</h3>
+		<ul>
+	#end
+		<li class="extension_item">
+			<a class="extension_link documentation-link" href="#" data-name="$core_v2_encoding.HtmlAttributeEncode($extension.Name)" data-type="extension">${extension.Name}</a>
+			#if ($extension.IsPrivate)
+				<span class="private_api">$core_v2_language.GetResource('PrivateExtension')</span>
+			#end
+			#if ($extension.Description)
+				<span class="extension_description">$core_v2_language.Truncate($extension.Description, 250, '…')</span>
+			#end
+		</li>
+	#if ($extensionIndex = $extensions.Count - 1)
+		</ul>
+	#end
+#end
+
+<h3 id="rest">$core_v2_language.GetResource('RestApis')</h3>
+<ul>
+	#foreach($resource in $restResources)
+		<li class="extension_item">
+			<a class="extension_link documentation-link" href="#" data-name="$core_v2_encoding.HtmlAttributeEncode($resource.Resource)" data-type="extension" data-mode="rest">$core_v2_encoding.HtmlEncode($resource.Resource)</a>
+			#set($operations = false)
+			#foreach($operation in $resource.Operations)
+				#if (!$operations)
+					#set($operations = $core_v2_encoding.HtmlEncode($operation.Action))
+				#else
+					#set($operations = "$operations, $core_v2_encoding.HtmlEncode($operation.Action)")
+				#end
+			#end
+			#if ($operations)
+				<span class="extension_description">
+					$core_v2_language.FormatString($core_v2_language.GetResource('RestResourceOperations'), $operations)
+				</span>
+			#end
+		</li>
+	#end
+</ul>
+
+#foreach ($lessFunction in $lessFunctions)
+#beforeall
+	<h3 id="less">$core_v2_language.GetResource('LessFunctions')</h3>
+	<ul>
+#each
+	<li class="extension_item">
+		<a class="extension_link documentation-link" href="#" data-name="$core_v2_encoding.HtmlAttributeEncode($lessFunction.Name)" data-type="extension" data-mode="less">${lessFunction.Name}</a>
+		#if ($lessFunction.Description)
+			<span class="extension_description">$lessFunction.Description</span>
+		#end
+	</li>
+#afterall
+	</ul>
+#end
+</ul>
+
+#foreach ($propertyTemplate in $propertyTemplates)
+#beforeall
+	<h3 id="template">$core_v2_language.GetResource('PropertyTemplates')</h3>
+	<ul>
+#each
+	<li class="extension_item">
+		<a class="extension_link documentation-link" href="#" data-name="$core_v2_encoding.HtmlAttributeEncode($propertyTemplate.Name)" data-type="extension" data-mode="template">${propertyTemplate.Name}</a>
+		#if ($propertyTemplate.Description)
+			<span class="extension_description">$propertyTemplate.Description</span>
+		#end
+	</li>
+#afterall
+	</ul>
+#end
+</ul>
+
+#foreach ($propertyRule in $propertyRules)
+#beforeall
+	<h3 id="rule">$core_v2_language.GetResource('PropertyRules')</h3>
+	<ul>
+#each
+	<li class="extension_item">
+		<a class="extension_link documentation-link" href="#" data-name="$core_v2_encoding.HtmlAttributeEncode($propertyRule.Name)" data-type="extension" data-mode="rule">${propertyRule.Name}</a>
+		#if ($propertyRule.Description)
+			<span class="extension_description">$propertyRule.Description</span>
+		#end
+	</li>
+#afterall
+	</ul>
+#end
+
+#if ($includeAutomationEvents)
+	<h3 id="events">$core_v2_language.GetResource('AutomationEvents')</h3>
+	<ul>
+	#foreach ($extension in $automationEvents)
+		<li class="extension_item">
+			<a class="extension_link documentation-link" href="#" data-name="$core_v2_encoding.HtmlAttributeEncode($extension.Name)" data-type="extension">${extension.Name}</a>
+			#if ($extension.IsPrivate)
+				<span class="private_api">$core_v2_language.GetResource('PrivateExtension')</span>
+			#end
+			#if ($extension.Description)
+				<span class="extension_description">$core_v2_language.Truncate($extension.Description, 250, '…')</span>
+			#end
+		</li>
+	#end
+
+	</ul>
+#end

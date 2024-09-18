@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:NotificationList_Name}" version="11.0.0.0" description="" instanceIdentifier="39aa3e84a898400d84f1fd7b8a2c033f" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="notification-list" lastModified="2021-08-09 14:58:38Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#if (!$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	$core_v2_widget.Hide()
+#end
+
+#set($inSidebar = true)
+#if ($core_v2_widget.RegionName == 'content' || $core_v2_widget.RegionName == 'header' || $core_v2_widget.RegionName == 'footer')
+	#set($inSidebar = false)
+	<div class="view">
+		<div>
+			<form>
+				<select class="ui-select category" data-query="w_ncid" id="$core_v2_widget.UniqueId('category')" aria-label="$core_v2_language.GetResource('category-filter')">
+					<option value="">$core_v2_language.GetResource('filter_all_categories')</option>
+					#foreach($nc in $core_v2_notificationCategory.List())
+						<option value="$nc.Id">$nc.Name</option>
+					#end
+				</select>
+				<select class="ui-select" data-query="w_nr" id="$core_v2_widget.UniqueId('status')" aria-label="$core_v2_language.GetResource('status-filter')">
+					<option value="">$core_v2_language.GetResource('filter_anyreadstatus')</option>
+					<option value="false">$core_v2_language.GetResource('filter_unreadonly')</option>
+					<option value="true">$core_v2_language.GetResource('filter_readonly')</option>
+				</select>
+			</form>
+		</div>
+		<div class="actions markall">
+			<a href="#" data-messagename="widget.${core_v2_widget.WrapperElementId}.markAsRead">$core_v2_language.GetResource('MarkAll')</a>
+		</div>
+	</div>
+
+
+	<div class="message norecords">$core_v2_language.GetResource('no_notifications_filtered')</div>
+#else
+	<div class="message norecords">$core_v2_language.GetResource('no_notifications')</div>
+#end
+
+$core_v2_widget.ExecuteFile('list.vm')
+
+<div class="ui-loading"></div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.notificationList')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.notificationList.register({
+				wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+				moreUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list.vm'))',
+				conversationNotificationTypeId: '$core_v2_conversationMessage.NotificationTypeId.ToString()',
+				pageIndexKey: '$core_v2_ui.PageIndexQueryStringKey()',
+				hasMore: #if ($hasMore) true #else false #end,
+				infiniteScroll: #if ($inSidebar) false #else true #end,
+				query: {
+					w_ncid: '',
+					w_nr: ''
+				},
+				maxItems: #if($inSidebar) 10 #else -1 #end,
+				markAllAsReadMessage: 'widget.${core_v2_widget.WrapperElementId}.markAsRead'
+			});
+		})
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:NotificationList_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:notifications}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="category-filter">Notification category</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="filter_all_categories">All notifications</resource>
+  <resource name="filter_anyreadstatus">With any read status</resource>
+  <resource name="filter_readonly">That are read</resource>
+  <resource name="filter_unreadonly">That aren't read</resource>
+  <resource name="mark">Mark as read</resource>
+  <resource name="MarkAll">Mark all as Read</resource>
+  <resource name="no_notifications">You don't have any notifications currently.</resource>
+  <resource name="no_notifications_filtered">You don't have any notifications that match your filter.</resource>
+  <resource name="NotificationList_Name">Notification List</resource>
+  <resource name="notifications">Notifications</resource>
+  <resource name="Options">Options</resource>
+  <resource name="status-filter">Notification read status</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="notifications.notifications.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

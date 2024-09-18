@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="bc0797ebdff546ce949b018ddc1c0443" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-09-10 16:11:23Z" provider="0b4dc8d6a56846ab9f9bb9e03b18abc8">
+    <contentScript language="Velocity"><![CDATA[<style>
+.content-fragment.threaded-comments .thread-start {
+    border-bottom: solid 1px #ccc;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+</style>
+
+#set($content = false)
+#set($content = $context.Comment.Content)
+
+#set($comments = false)
+#if ($context.Comment.ParentCommentId)
+    #set($hierarchalComments = $core_v2_comments.ListThreadedForComment("%{ ContentTypeId = $context.Comment.Content.ContentTypeId, ContentId = $context.Comment.Content.ContentId, Direction = 'FromComment', FlattenedDepth = 1, PageSize = 10, CommentId = $context.Comment.ParentCommentId }"))
+    #set ($comments = [])
+	#set ($threadedComments = $hierarchalComments)
+	$core_v2_widget.ExecuteFile('recurse.vm')
+#end
+
+<div class="content-fragment-page">
+    <div class="layout">
+        <div class="layout-header"></div>
+            <div class="layout-content content">
+    
+                <div class="layout-region content">
+                    <div class="layout-region-inner content">
+                        <div class="content-fragment threaded-comments no-wrapper with-spacing">
+                            <div class="content-fragment-content">
+
+                                #if ($content)
+                                    <div class="thread-start">
+    		                            $content.ViewHtml('Web')
+    		                        </div>
+    		                    #end
+
+                                <div class="threaded-wrapper-outer">
+                                	<div class="threaded-wrapper" style="display: block;">
+                                	    <div class="reply-header"></div>
+                                	    
+                                	    <ul class="content-list threaded" data-sortby="CreatedDate" data-sortorder="Ascending" data-filter="">
+                                	        #if ($comments)
+                                	            #set($first = true)
+                                	            #foreach ($comment in $comments)
+                                	                #if ($first)
+                                	                    #set($first = false)
+                                	                    #if ($comment.ParentCommentId)
+                                	                        <li class="load-more previous">
+                                                            	<a class="previous" href="#">View More</a>
+                                                            	<span class="ui-loading" data-width="24" data-height="24"></span>
+                                                            </li>
+                                	                    #end
+                                	                #end
+                                        	        <li class="threaded content-item" id="$comment.Id">
+                                                    	<div class="rendered-content">
+                                                            <div data-status="">
+                    	                                        <div class="author">
+                    		                                        <div class="avatar">
+                        							                    <a href="#" class="internal-link view-user-profile">
+                        							                        $core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 44, 44, "%{ ResizeMethod = 'ZoomAndCrop', alt = $comment.User.DisplayName }")
+                        				                                </a>
+                    					                            </div>
+                    		                                        <div class="meta">
+                    			                                        <span class="qa-votes">
+                    											        </span>
+                    			                                        <span class="user-name">
+                    									                    <a href="#" class="internal-link view-user-profile">
+                    						                                    $comment.User.DisplayName
+                    					                                    </a>
+                    							                        </span>
+                    						                            <a href="#" class="internal-link view-post navigable">
+                    						                                $core_v2_language.FormatAgoDate($comment.CreatedDate)
+                    			                                        </a>
+                    			                                        #if ($comment.ParentCommentId)
+                                                            				#set ($parentComment = false)
+                                                            				#set ($parentComment = $core_v2_comments.Get($comment.ParentCommentId))
+                                                            				#if ($parentComment)
+                                                            					<span class="parent">
+                                                            					    #format($core_v2_language.GetResource('InReplyTo'))
+        					                                                            #token('user')
+                                                            						        <a class="internal-link view-post navigable" href="#${comment.ParentCommentId}">$parentComment.User.DisplayName</a>
+                                                            						#end
+                                                            					</span>
+                                                            				#end
+                                                            			#end
+                    					                            </div>
+                    	                                        </div>
+                    		                                    <div class="content full threaded-reply-content user-defined-markup">
+                    					                            <div class="content">
+                    					                                $comment.Body('Web')
+                    					                           </div>
+                    			                                </div>
+                    
+                                                            	<div class="actions meta edit">
+                                                            	</div>
+                    	                                        <div class="actions meta default">
+                    	                                        </div>
+                                                            </div>
+                    	                                </div>
+                    	                           </li>
+                    	                       #end
+                    	                   #end
+                    	                   
+                    	                   <li class="threaded content-item permalinked" id="$context.Comment.Id">
+                                            	<div class="rendered-content">
+                                                    <div data-status="">
+            	                                        <div class="author">
+            		                                        <div class="avatar">
+                							                    <a href="#" class="internal-link view-user-profile">
+                							                        $core_v2_ui.GetResizedImageHtml($context.Comment.User.AvatarUrl, 44, 44, "%{ ResizeMethod = 'ZoomAndCrop', alt = $context.Comment.User.DisplayName }")
+                				                                </a>
+            					                            </div>
+            		                                        <div class="meta">
+            			                                        <span class="qa-votes">
+            											        </span>
+            			                                        <span class="user-name">
+            									                    <a href="#" class="internal-link view-user-profile">
+            						                                    $context.Comment.User.DisplayName
+            					                                    </a>
+            							                        </span>
+            						                            <a href="#" class="internal-link view-post navigable">
+            						                                $core_v2_language.FormatAgoDate($context.Comment.CreatedDate)
+            			                                        </a>
+            			                                        #if ($context.Comment.ParentCommentId)
+                                                    				#set ($parentComment = false)
+                                                    				#set ($parentComment = $core_v2_comments.Get($context.Comment.ParentCommentId))
+                                                    				#if ($parentComment)
+                                                    					<span class="parent">
+                                                    					    #format($core_v2_language.GetResource('InReplyTo'))
+					                                                            #token('user')
+                                                    						        <a class="internal-link view-post navigable" href="#${context.Comment.ParentCommentId}">$parentComment.User.DisplayName</a>
+                                                    						#end
+                                                    					</span>
+                                                    				#end
+                                                    			#end
+            					                            </div>
+            	                                        </div>
+            		                                    <div class="content full threaded-reply-content user-defined-markup">
+            					                            <div class="content">
+            					                                $context.Comment.Body('Web')
+            					                           </div>
+            			                                </div>
+            
+                                                    	<div class="actions meta edit">
+                                                    	</div>
+            	                                        <div class="actions meta default">
+            	                                        </div>
+                                                    </div>
+            	                                </div>
+            	                           </li>
+                    	                   
+            	                       </ul>
+                                    </div>
+                                </div>
+                    
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="layout-footer"></div>
+</div>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Enables previewing comments in abuse workflows.</resource>
+  <resource name="InReplyTo">in reply to {user}</resource>
+  <resource name="Name">Comment Preview</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

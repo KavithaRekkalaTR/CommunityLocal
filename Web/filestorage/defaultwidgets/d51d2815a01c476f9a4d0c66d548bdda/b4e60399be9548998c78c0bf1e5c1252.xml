@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ConfigureEmailTemplate_Name}" version="12.0.0.0" description="${resource:ConfigureEmailTemplate_Description}" instanceIdentifier="b4e60399be9548998c78c0bf1e5c1252" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-configure-emailtemplate with-header-filter" lastModified="2022-06-15 15:39:58Z" provider="d51d2815a01c476f9a4d0c66d548bdda">
+    <contentScript language="Velocity"><![CDATA[$context.RenderConfigurationForm($core_v2_widget.UniqueId('configuration'))
+
+#set ($languages = $context.ListLanguages())
+#set ($accessingUserLanguage = $core_v2_language.Lowercase($core_v2_user.Accessing.Language))
+#set ($selectLanguageTemplateId = $core_v2_widget.UniqueId('selectLanguageTemplate'))
+
+#registerClientTemplate($selectLanguageTemplateId)
+    <div class="select-language">
+        <form>
+            <p>$core_v2_language.GetResource('SampleLanguageSelect')</p>
+            <fieldset>
+                <ul class="field-list">
+                    <li class="field-item" id="">
+                        <label for="" class="field-item-name">$core_v2_language.GetResource('Language')</label>
+                        <span class="field-item-input select-language">
+                            <select>
+                                #foreach ($language in $languages)
+                                    <option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)" #if ($accessingUserLanguage == $language.Key) selected #end>$core_v2_encoding.HtmlEncode($language.Name)</option>
+                                #end
+                            </select>
+                        </span>
+                    </li>
+                    <li class="field-item submit">
+                        <span class="field-item-input">
+                            <a href="#" class="button continue">$core_v2_language.GetResource('SendSample')</a>
+                        </span>
+                    </li>
+                </ul>
+            </fieldset>
+        </form>
+    </div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.configureEmailTemplate')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.configureEmailTemplate.register({
+			form: jQuery('#$core_v2_widget.UniqueId('configuration')'),
+			revertOptionsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-options.vm'))',
+			revertUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert.vm'))',
+			saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			revertChangesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-stagedchanges.vm'))',
+			sendPreviewEmailUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('send-preview-email.vm'))',
+			getPreviewHtmlUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('get-preview-html.vm'))',
+			isStaged: #if($context.IsStaged) true #else false#end,
+			revertToPublishedUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert-to-published.vm'))',
+            selectLanguageTemplate: '$core_v2_encoding.JavascriptEncode($selectLanguageTemplateId)',
+            languagesCount: $languages.Count,
+			text: {
+			    previewEmail: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('preview-email'))',
+			    sendPreviewEmail: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('send-preview-email'))',
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save'))',
+				saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-successful'))',
+				saveFailed: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-failed'))',
+				revert: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert'))',
+				revertOptions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-options'))',
+				revertConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-confirmation'))',
+				revertSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-success'))',
+				selectAll: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-all'))',
+				selectNone: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('select-none'))',
+				instructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('instructions'), $context.ContextName.ToLower()))',
+				revertToPublished: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published'))',
+				revertToPublishedDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-description'))',
+				revertToPublishedConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-confirmation'))',
+				revertToPublishedSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-published-success'))',
+				revertToParent: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-default'))',
+				revertToParentDescription: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-to-default-description'))',
+				sendPreviewEmailSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('send-preview-email-success'))',
+                sendSample: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SendSample'))'
+			}
+		})
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ConfigureEmailTemplate_Description">Edit options for outgoing email.</resource>
+  <resource name="ConfigureEmailTemplate_Name">Email Template Options</resource>
+  <resource name="instructions">Set options to configure the format of all outgoing email related to this {0}.</resource>
+  <resource name="no-revert-options">There are no email template options to revert.</resource>
+  <resource name="open-preview">Open preview window</resource>
+  <resource name="preview-email">Preview Email</resource>
+  <resource name="property_description">Defined in '{0}'</resource>
+  <resource name="revert">Revert</resource>
+  <resource name="revert-confirmation">Are you sure you want to revert the selected email template options?</resource>
+  <resource name="revert-options">Reversion Options</resource>
+  <resource name="revert-options-instructions">Select the options you'd like to revert from the list below.</resource>
+  <resource name="revert-success">The selected email template options have been reverted successfully.</resource>
+  <resource name="revert-to-default">Revert to default</resource>
+  <resource name="revert-to-default-description">Select options you'd like to revert to the default.</resource>
+  <resource name="revert-to-published">Undo all unsaved changes</resource>
+  <resource name="revert-to-published-confirmation">Are you sure you want to revert all unsaved email template options?</resource>
+  <resource name="revert-to-published-description">All changes that have not yet been saved will be reverted.</resource>
+  <resource name="save">Save</resource>
+  <resource name="save-failed">An error occurred while saving the email template's configuration.</resource>
+  <resource name="save-successful">Your changes are now saved.</resource>
+  <resource name="select-all">Select all</resource>
+  <resource name="select-none">Select none</resource>
+  <resource name="send-preview-email">Send Preview Email</resource>
+  <resource name="send-preview-email-success">The preview email was sent to your email address.</resource>
+  <resource name="Language">Language</resource>
+  <resource name="SendSample">Send Sample</resource>
+  <resource name="SampleSent">Sample email has been sent</resource>
+  <resource name="SampleLanguageSelect">Select the email sample translation.</resource>
+  <resource name="Staged">Changes Staged</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,68 @@
+##
+## Renders an individual socket message bus connection summary
+## Expects in scope: $summary
+##
+
+<div class="web-server-summary summary #if ($summary.Connected) online #else offline #end">
+
+	<span class="type">
+		#if ($summary.ClientType == 'Web')
+			$core_v2_language.GetResource('WebServer')
+		#elseif ($summary.ClientType == 'Job')
+			$core_v2_language.GetResource('JobServer')
+		#end
+	</span>
+
+	<div class="name">
+		<span class="machine-name ui-tip" data-tip="Server Name">$summary.MachineName</span>
+		#if ($summary.IsLocal)
+			<span class="local">$core_v2_language.GetResource('ThisServer')</span>
+		#end
+	</div>
+
+	<ul class="attribute-list">
+
+		<li class="attribute-item connection-state #if ($summary.Connected) online #else offline #end">
+			<span class="attribute-name">
+				#if ($summary.Connected)
+					$core_v2_language.GetResource('ConnectedToBus')
+				#else
+					$core_v2_language.GetResource('NotConnectedToBus')
+				#end
+			</span>
+
+			#if ($summary.Connected && $summary.ConnectedAt)
+				<span class="attribute-value">
+					#format($core_v2_language.GetResource('ConnectedSince'))
+						#token('connected_at')
+							$core_v2_language.FormatDate($summary.ConnectedAt, "%{ Format = 'F' }")
+					#end
+				</span>
+			#end
+		</li>
+
+		#if ($summary.LastMessageSentAt)
+			<li class="attribute-item">
+				<span class="attribute-name">
+					$core_v2_language.GetResource('LastSentAt')
+				</span>
+				<span class="attribute-value">
+					$core_v2_language.FormatDate($summary.LastMessageSentAt, "%{ Format = 'F' }")
+				</span>
+			</li>
+		#end
+
+		#if ($summary.LastMessageReceivedAt)
+			<li class="attribute-item">
+				<span class="attribute-name">
+					$core_v2_language.GetResource('LastReceivedAt')
+				</span>
+				<span class="attribute-value">
+					$core_v2_language.FormatDate($summary.LastMessageReceivedAt, "%{ Format = 'F' }")
+				</span>
+			</li>
+		#end
+
+	</ul>
+
+</div>

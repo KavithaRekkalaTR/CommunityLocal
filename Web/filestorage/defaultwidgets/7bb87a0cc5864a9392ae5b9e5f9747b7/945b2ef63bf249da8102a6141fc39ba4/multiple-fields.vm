@@ -1,0 +1,72 @@
+#set($profileFieldIds = false)
+#set($profileFieldIds = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('profileFieldIds', '')).Values('profileFieldId'))
+#if (!$profileFieldIds || $profileFieldIds.Count == 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($index = 0)
+#set($xml = '')
+#set($originalValues = '')
+#set($first = true)
+#foreach($profileFieldId in $profileFieldIds)
+    #set($field = false)
+    #set($field = $core_v2_userProfileField.Get($profileFieldId))
+    #set($fieldXml = false)
+    #set($fieldXml = $core_v2_userProfileField.DynamicFormXml($profileFieldId, "%{OrderNumber = $index, ReadOnly = $readOnly}"))
+    #set($index = $index + 1)
+    #if ($fieldXml && $field)
+        #set($xml = "$xml$fieldXml")
+        #set($value = false)
+        #set($value = $data.Value($field.Name))
+        #if ($value)
+            #store($originalValues)
+                $originalValues
+                #if (!$first)
+                    ,
+                #end
+                "$core_v2_encoding.JavascriptEncode($field.Name)": jQuery.telligent.evolution.html.decode("$core_v2_encoding.JavascriptEncode($value)")
+            #end
+            #set($first = false)
+        #end
+    #end
+#end
+
+#if ($xml == '')
+    $core_v2_widget.Hide()
+#end
+#store($xml)
+    <propertyGroup id="fields" name="Fields">
+        $xml
+    </propertyGroup>>
+#end
+
+#set($formId = $core_v2_widget.UniqueId('form'))
+#if ($readOnly)
+	<div class="content full">
+		<div class="attributes">
+			<ul class="attribute-list">
+				#set($form = false)
+				#set($form = $core_v2_dynamicForm.RenderForm($formId, $xml, $data, "%{GroupFooterHtmlFormat='',GroupHeaderHtmlFormat='',PropertyFooterHtmlFormat=$readonlyPropertyFooterFormat,PropertyHeaderHtmlFormat=$readonlyPropertyHeaderFormat,HidePropertiesWithoutValues='true'}"))
+				#if (!$form || $form.Length == 0)
+					$core_v2_widget.Hide()
+				#else
+					$form
+				#end
+			</ul>
+		</div>
+	</div>
+#else
+	<fieldset class="field-list">
+		<ul class="field-list">
+			#set($form = false)
+			#set($form = $core_v2_dynamicForm.RenderForm($formId, $xml, $data, "%{GroupFooterHtmlFormat='',GroupHeaderHtmlFormat='',PropertyFooterHtmlFormat=$editablePropertyFooterFormat,PropertyHeaderHtmlFormat=$editablePropertyHeaderFormat}"))
+			#if (!$form || $form.Length == 0)
+				$core_v2_widget.Hide()
+			#else
+				$form
+			#end
+		</ul>
+	</fieldset>
+
+	$core_v2_widget.ExecuteFile('ui.vm')
+#end

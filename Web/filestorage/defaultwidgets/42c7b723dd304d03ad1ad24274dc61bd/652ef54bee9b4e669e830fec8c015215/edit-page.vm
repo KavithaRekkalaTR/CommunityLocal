@@ -1,0 +1,17 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($existingPageName = $core_v2_page.GetFormValue('ExistingPageName'))
+    #set($pageName = $core_v2_page.GetFormValue('PageName'))
+	#set($pageTitle = $core_v2_page.GetFormValue('PageTitle'))
+    #set($roleIds = $core_v2_page.GetFormvalue('RoleIds'))
+
+  #set($response = $context.Update($existingPageName, $pageName, $pageTitle, $roleIds))
+
+  #if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+  {"success":true}
+
+#end

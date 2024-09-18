@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_EventRegistrationList_Name}" version="11.0.0.0" description="${resource:Calendar_EventRegistrationList_Description}" instanceIdentifier="0b4814f2885d4374bf18de5d71221981" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="true" cssClass="event-registration-list" lastModified="2020-01-14 16:09:28Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($event = $calendar_v1_events.Current)
+
+#set($sortBy = $core_v2_page.GetQueryStringValue('SortBy'))
+#if (!$sortBy || $sortBy == '')
+		#set($sortBy = 'User')
+#end
+
+<div id="$core_v2_widget.UniqueId('content')">
+		$core_v2_widget.ExecuteFile('load.vm')
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.EventRegistrationList')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+	jQuery(function()
+	{
+		jQuery.telligent.evolution.widgets.eventRegistrationList.register({
+			wrapperId  : '$core_v2_widget.WrapperElementId',
+			eventId    : $event.Id,
+			confirmUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('confirm.vm'))',
+			cancelUrl  : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('cancel.vm'))',
+			loadUrl    : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('load.vm'))',
+			baseUrl    : '$core_v2_encoding.JavascriptEncode($core_v2_page.Url)',
+			content    : '#$core_v2_widget.UniqueId('content')'
+			});
+	});
+	//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+	</script>
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Calendar_EventRegistrationList_Title}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="linkArea" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_EventRegistrationList_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageSize" labelResourceName="CF_Comment_PageSize" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Calendar_EventRegistrationList_DeleteConfirmation">Are you sure you want to delete this comment?</resource>
+  <resource name="Calendar_EventRegistrationList_Description">Displays registrations for an event.</resource>
+  <resource name="Calendar_EventRegistrationList_Error">Error retrieving comments.</resource>
+  <resource name="Calendar_EventRegistrationList_Name">Event Calendar - Event Registration List</resource>
+  <resource name="Calendar_EventRegistrationList_Title">Registrations</resource>
+  <resource name="Calendar_RegisterSortBy_Date">Date Registered</resource>
+  <resource name="Calendar_RegisterSortBy_Status">Registration Status</resource>
+  <resource name="Calendar_RegisterSortBy_User">Username</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CF_Comment_PageSize">Number of comments to display per page</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Confirm_Registration">Confirm</resource>
+  <resource name="Email">Email</resource>
+  <resource name="No_Registrations">There are currently no registrations</resource>
+  <resource name="Options">Options</resource>
+  <resource name="RegisteredName">Name</resource>
+  <resource name="Registrations">Registrations</resource>
+  <resource name="RegistrationStatus_Cancelled">Cancelled</resource>
+  <resource name="RegistrationStatus_Confirmed">Confirmed</resource>
+  <resource name="RegistrationStatus_Expired">Expired</resource>
+  <resource name="RegistrationStatus_Invited">Invitation Sent</resource>
+  <resource name="RegistrationStatus_NotApproved">Pending</resource>
+  <resource name="RegistrationStatus_NotSet">Unknown</resource>
+  <resource name="SortBy">Sort By</resource>
+  <resource name="Status">Status</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="ca14a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

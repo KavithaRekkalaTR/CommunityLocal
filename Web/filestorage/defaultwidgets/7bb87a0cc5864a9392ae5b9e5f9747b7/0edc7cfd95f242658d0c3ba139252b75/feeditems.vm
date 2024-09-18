@@ -1,0 +1,40 @@
+#set ($feedUrl = $core_v2_widget.GetUrlValue('feedUrl', ''))
+#set ($pageSize = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageSize')))
+#set ($feedItems = $core_v2_rssFeedItem.List($feedUrl, "%{ PageSize = $pageSize }"))
+#set ($viewType = $core_v2_page.GetQueryStringValue('w_viewType'))
+
+#set ($index = 0)
+
+#foreach ($item in $feedItems)
+#beforeall
+	<div class="content abbreviated">
+		<div class="summary">
+			<div class="content">
+				<ul>
+#each
+					<li>
+						<h3 class="name">
+							<a class="external-link view-rss-item" href="$core_v2_encoding.HtmlAttributeEncode($item.Url)">
+								<span></span>$core_v2_encoding.HtmlEncode($item.Title)
+							</a>
+						</h3>
+						<div>$core_v2_language.FormatAgoDate($item.Date)</div>
+						#if ($viewType != 'simple' && $index == 0)
+							<p>$core_v2_encoding.HtmlEnsureEncoded($item.Description)</p>
+						#end
+					</li>
+					#set ($index = ($index + 1))
+#afterall
+				</ul>
+			</div>
+		</div>
+	</div>
+#nodata
+	<div class="content full">
+		<div class="summary">
+			<h2 class="name">
+				<a class="external-link rss" href="$core_v2_encoding.HtmlAttributeEncode($feedUrl)">$core_v2_encoding.HtmlEncode($feedUrl)</a>
+			</h2>
+		</div>
+	</div>
+#end

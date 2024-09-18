@@ -1,0 +1,27 @@
+#if ($core_v2_page.IsPost) 
+    #set($wikiId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('id')))
+    #set($scheduledFileProgressKey = 'wiki-migratewiki:${wikiId}')
+    
+    #set($parameters = "%{}")
+    $parameters.Add('wikiId', $wikiId)
+    
+    #set ($status = $core_v2_widget.GetScheduledFileStatus($scheduledFileProgressKey))
+    #if (!$status || ($status.State != 'Scheduled' && $status.State != 'Running'))
+        $core_v2_widget.ScheduleFile('task-migratewiki.jsm', "%{ ProgressKey = $scheduledFileProgressKey, Durable = 'True', Parameters = $parameters }")
+    #end
+    $core_v2_ui.ScheduledFile($scheduledFileProgressKey, "%{ IncludeProgress = 'True', IncludeAllMessages = 'False', IncludeLatestMessage = 'True' }")
+    
+    #set($successMessage = $core_v2_language.GetResource('Wiki_MigrationSuccessful'))
+    
+    <script type="text/javascript">
+        jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+            jQuery.telligent.evolution.messaging.subscribe('scheduledFile.complete', function (data) {
+    			if ('$scheduledFileProgressKey' == data.progressKey) {
+        			    jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($successMessage)', { type: 'success' });
+        			    jQuery.telligent.evolution.messaging.publish('migration.complete', data.result);
+        			    jQuery.telligent.evolution.administration.close();
+    			}
+    		});
+        });
+    </script>
+#end

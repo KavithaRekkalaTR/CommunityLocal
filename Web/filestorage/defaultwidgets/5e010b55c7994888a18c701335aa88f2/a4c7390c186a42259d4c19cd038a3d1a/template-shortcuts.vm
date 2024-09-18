@@ -1,0 +1,70 @@
+<div class="keyboard-shortcuts">
+
+<table>
+<% foreach(shortcuts, function(shortcut){ %>
+	<tr>
+		<td class="combination">
+			<% foreach(shortcut.routes, function(route, i){ %>
+				<% if(i > 0) { %>
+					<span class="divider">$core_v2_language.GetResource('or')</span>
+				<% } %>
+
+				<% if(route.ctrlKey) { %>
+					<span class="modifier">$core_v2_language.GetResource('ModifierControl')</span>
+				<% } %>
+
+				<% if(route.altKey) { %>
+					<% if(os.ios || os.mac) { %>
+						<span class="modifier">$core_v2_language.GetResource('ModifierOption')</span>
+					<% } else { %>
+						<span class="modifier">$core_v2_language.GetResource('ModifierAlt')</span>
+					<% } %>
+				<% } %>
+
+				<% if(route.shiftKey) { %>
+					<span class="modifier">$core_v2_language.GetResource('ModifierShift')</span>
+				<% } %>
+
+				<% if(route.metaKey) { %>
+					<% if(os.ios || os.mac) { %>
+						<span class="modifier">$core_v2_language.GetResource('ModifierCommand')</span>
+					<% } else if(os.windows) { %>
+						<span class="modifier">$core_v2_language.GetResource('ModifierWindows')</span>
+					<% } else { %>
+						<span class="modifier">$core_v2_language.GetResource('ModifierMeta')</span>
+					<% } %>
+				<% } %>
+
+				<span class="key">
+					<% if(route.keyCharacter == 'LEFT') { %>
+						$core_v2_language.GetResource('KeyLeft')
+					<% } else if(route.keyCharacter == 'UP') { %>
+						$core_v2_language.GetResource('KeyUp')
+					<% } else if(route.keyCharacter == 'RIGHT') { %>
+						$core_v2_language.GetResource('KeyRight')
+					<% } else if(route.keyCharacter == 'DOWN') { %>
+						$core_v2_language.GetResource('KeyDown')
+					<% } else if(route.keyCharacter == 'TAB') { %>
+						$core_v2_language.GetResource('KeyTab')
+					<% } else if(route.keyCharacter == 'COMMA') { %>
+						$core_v2_language.GetResource('KeyComma')
+					<% } else if(route.keyCharacter == 'SLASH') { %>
+						$core_v2_language.GetResource('KeySlash')
+					<% } else if(route.keyCharacter == 'PERIOD') { %>
+						$core_v2_language.GetResource('KeyPeriod')
+					<% } else { %>
+						<%: route.keyCharacter %>
+					<% } %>
+				</span>
+
+			<% }); %>
+		</td>
+
+		<td class="description">
+			<%: (shortcut.description || '') %>
+		</td>
+	</tr>
+<% }); %>
+</table>
+
+</div>

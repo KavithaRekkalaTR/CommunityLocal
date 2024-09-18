@@ -1,0 +1,22 @@
+<p>$core_v2_language.GetResource('revert-options-instructions')</p>
+
+<form><fieldset>
+
+	#foreach($property in $scopedProperties)
+		#beforeall
+			<ul class="field-list checkbox-list">
+		#each
+			<li class="field-item property">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($property.Id))" value="$core_v2_encoding.HtmlAttributeEncode($property.Id)" data-refresh="true" data-type="scopedproperty" #if($property.IsStaged) checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId($core_v2_encoding.HtmlAttributeEncode($property.Id))">$property.Title</label>
+				</span>
+				<span class="field-item-description">$property.Description</span>
+			</li>
+		#afterall
+			</ul>
+	#end
+
+</fieldset></form>
+
+<p></p>

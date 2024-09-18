@@ -1,0 +1,79 @@
+<li class="content-item staged-item" data-id="$core_v2_encoding.HtmlAttributeEncode($item.Id)" data-state="$core_v2_encoding.HtmlAttributeEncode($item.ReviewState)"#if ($item.PreviewUrl) data-previewurl="$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AbsoluteUrl($item.PreviewUrl))"#end>
+	<div class="content staged-item">
+		<h4 class="name">
+			$item.Name
+		</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<span class="value not-reviewed" #if($item.ReviewState != 'NotReviewed') style="display:none;"#end>$core_v2_language.GetResource('not-reviewed')</span>
+					<span class="value approved" #if($item.ReviewState != 'Approve') style="display:none;"#end>$core_v2_language.GetResource('approved')</span>
+					<span class="value denied" #if($item.ReviewState != 'Deny') style="display:none;"#end>$core_v2_language.GetResource('denied')</span>
+				</li>
+				#set($themeName = false)
+				#set($themeName = $item.ThemeName)
+				#set($contextName = false)
+				#set($contextName = $item.ContextName)
+				#if (($themeName && $themeName.Length > 0) || ($contextName && $contextName.Length > 0))
+    				<li class="attribute-item">
+    				    <span class="value context">
+    				        #if ($themeName && $themeName.Length > 0 && $contextName && $contextName.Length > 0)
+    				            $contextName ($themeName)
+    				        #elseif ($themeName && $themeName.Length)
+    				            $themeName
+    				        #else
+    				            $contextName
+    				        #end
+    				    </span>
+    				</li>
+				#end
+			</ul>
+		</div>
+		<div class="content expandable">
+			$!item.Description
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					#if ($item.PreviewUrl)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($item.PreviewUrl)">$core_v2_language.GetResource('view')</a>
+						</li>
+					#end
+
+					#if ($item.ReviewState != 'Approve')
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="stageditem.set-review-state" data-id="$core_v2_encoding.HtmlAttributeEncode($item.Id)" data-state="Approve">$core_v2_language.GetResource('approve')</a>
+						</li>
+					#end
+					#if ($item.ReviewState != 'Deny')
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="stageditem.set-review-state" data-id="$core_v2_encoding.HtmlAttributeEncode($item.Id)" data-state="Deny">$core_v2_language.GetResource('deny')</a>
+						</li>
+					#end
+
+					#if ($item.ReviewState != 'NotReviewed')
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="stageditem.set-review-state" data-id="$core_v2_encoding.HtmlAttributeEncode($item.Id)" data-state="NotReviewed">$core_v2_language.GetResource('set-not-reviewed')</a>
+						</li>
+					#end
+
+					#set ($editUrl = false)
+					#set ($editUrl = $item.EditUrl)
+					#if ($editUrl)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($editUrl)">$core_v2_language.GetResource('edit')</a>
+						</li>
+					#end
+
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</li>

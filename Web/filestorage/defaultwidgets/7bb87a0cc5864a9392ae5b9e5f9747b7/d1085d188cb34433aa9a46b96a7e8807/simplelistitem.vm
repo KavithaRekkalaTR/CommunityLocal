@@ -1,0 +1,27 @@
+##
+## Renders an individual article
+## Expects in context: $article
+##
+
+<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">
+	<div class="author">
+   		#if ($displayTypeImage && $article.Type.ImageUrl)
+    		<div class="avatar no-rounding">
+				<a $core_v2_ui.ContentPeek($article.ContentId, $articles_v1_articles.ContentTypeId, 'internal-link view-full-post navigable')
+                    href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">
+                    $core_v2_ui.GetResizedImageHtml($article.Type.ImageUrl, 30, 30, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt=$article.Type.Name }")
+				</a>
+	    	</div>
+		#end
+        <a $core_v2_ui.ContentPeek($article.ContentId, $articles_v1_articles.ContentTypeId, 'internal-link view-full-post navigable')
+            href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">
+            <div class="content">$core_v2_language.Truncate($article.HtmlName('Web'), 200, "...")</div>
+        </a>
+        <div class="meta">
+            <a $core_v2_ui.ContentPeek($article.ContentId, $articles_v1_articles.ContentTypeId, 'internal-link view-full-post navigable')
+                href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">
+                $core_v2_language.Truncate($article.Body('WebQuote'), $excerptSize, "%{ Ellipsis = '…' }")
+            </a>
+        </div>
+	</div>
+</li>

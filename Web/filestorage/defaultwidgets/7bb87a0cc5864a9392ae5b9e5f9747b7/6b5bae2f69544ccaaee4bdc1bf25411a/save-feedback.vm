@@ -1,0 +1,11 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('contentId')))
+#set($feedback = $core_v2_page.GetFormValue('feedback'))
+#set($response = $km_v1_documents.SendFeedback($contentId, $feedback))
+
+#if($response.HasErrors())
+	$core_v2_page.SendJsonError($response.Errors)
+#else
+	{"success":true}
+#end

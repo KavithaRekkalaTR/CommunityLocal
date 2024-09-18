@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:name}" version="12.0.0.0" description="${resource:description}" instanceIdentifier="079541a203c74f01b1bddfb619cf8b13" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="articles-article" lastModified="2022-10-06 19:30:46Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($article = false)
+
+#set ($selectedArticleType = $core_v2_widget.GetStringValue('selectedArticleType', 'article'))
+#set ($titleVisible = $core_v2_widget.GetBoolValue('titleVisible', true))
+#set ($iconVisible = $core_v2_widget.GetStringValue('iconVisible', 'article'))
+#set ($roundIcon = $core_v2_widget.GetBoolValue('roundIcon', false))
+#set ($category = false)
+#set ($category = $articles_v1_categories.Current)
+
+
+## Specific or current article
+#if ($selectedArticleType == 'article')
+	#set ($emptyArticleId = $core_v2_utility.ParseGuid('00000000-0000-0000-0000-000000000000'))
+	#set ($selectedArticleQuery = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue("selectedArticle", "")))
+	#set ($selectedArticleId = $core_v2_utility.ParseGuid($selectedArticleQuery.Value('Article')))
+
+	## Current article
+	#if ($selectedArticleId == $emptyArticleId)
+		#set($article = $articles_v1_articles.Current)
+	## Specific article
+	#else
+		#set($article = $articles_v1_articles.Get("%{ Id = $selectedArticleId }"))
+	#end
+
+## Current collection's default article
+#elseif ($selectedArticleType == 'collection')
+	#set($collection = $articles_v1_articleCollections.Current)
+	#if (!$collection)
+		$core_v2_widget.Hide()
+	#end
+	#set ($article = $collection.DefaultArticle)
+
+## Current cagegory's default article
+#elseif ($selectedArticleType == 'category')
+	#set($category = $articles_v1_categories.Current)
+	#if (!$category)
+		$core_v2_widget.Hide()
+	#end
+
+	#set ($article = $category.DefaultArticle)
+#end
+
+#if (!$article)
+	$core_v2_widget.Hide()
+#end
+
+$articles_v1_articles.IncrementViewCount($article.ContentId)
+
+#set ($iconUrl = false)
+#set ($iconAlt = false)
+#if ($iconVisible == 'article' && $article.Type && $article.Type.ImageUrl)
+	#set ($iconUrl = $article.Type.ImageUrl)
+	#set ($iconAlt = $article.Type.Name)
+#elseif ($iconVisible == 'category' && $category && $category.ImageUrl)
+	#set ($iconUrl = $category.ImageUrl)
+	#set ($iconAlt = $category.Name)
+#end
+
+<div class="content full text #if ($iconUrl) with-icon #if ($roundIcon) round #end #end">
+	#if ($titleVisible)
+		<h1 class="name">
+			#if ($iconUrl)
+				<span class="icon do-not-print">
+					$core_v2_ui.GetResizedImageHtml($iconUrl, 32, 32, "%{ResizeMethod = 'ZoomAndCrop', border='0px', alt='$iconAlt' }")
+				</span>
+			#end
+			$article.Title
+		</h1>
+	#end
+
+	<div class="content">$article.Body()</div>
+</div>]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="title" defaultValue="${resource:name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="titleVisible" labelResourceName="Title_Visible" defaultValue="true" dataType="Bool" />
+	<property id="iconVisible" labelResourceName="Icon_Visible" defaultValue="article" dataType="string">
+		<propertyValue value="" labelResourceName="Icon_Visible_None" propertiesToHide="roundIcon"  />
+		<propertyValue value="article" labelResourceName="Icon_Visible_Article" propertiesToShow="roundIcon" />
+		<propertyValue value="category" labelResourceName="Icon_Visible_Category" propertiesToShow="roundIcon" />
+	</property>
+	<property id="roundIcon" labelResourceName="roundIcon" dataType="bool" defaultValue="false" />
+	<property id="selectedArticleType" labelResourceName="ArticleType" defaultValue="article" dataType="String">
+		<propertyValue value="article" labelResourceName="SpecificArticle" propertiesToShow="selectedArticle" propertiesToHide="" />
+		<propertyValue value="collection" labelResourceName="CollectionDefault" propertiesToShow="" propertiesToHide="selectedArticle" />
+		<propertyValue value="category" labelResourceName="CategoryDefault" propertiesToShow="" propertiesToHide="selectedArticle" />
+	</property>
+	<property id="selectedArticle" labelResourceName="Select" defaultValue="Article=00000000-0000-0000-0000-000000000000" dataType="Custom" template="articles_v1_articleLookup" enableCurrent="true" maxSelections="1" format="query" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ArticleType">Show</resource>
+  <resource name="CategoryDefault">Current article category default</resource>
+  <resource name="CollectionDefault">Current article collection default</resource>
+  <resource name="description">Renders an article</resource>
+  <resource name="Icon_Visible">Include icon</resource>
+  <resource name="Icon_Visible_Article">Article Type</resource>
+  <resource name="Icon_Visible_Category">Category Icon</resource>
+  <resource name="Icon_Visible_None">(None)</resource>
+  <resource name="name">Articles - Article</resource>
+  <resource name="Options">Options</resource>
+  <resource name="roundIcon">Round icon</resource>
+  <resource name="Select">Article</resource>
+  <resource name="SpecificArticle">Specific article</resource>
+  <resource name="title">Title</resource>
+  <resource name="Title_Visible">Include title</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+    <requiredContext>
+      <context id="459387784fe24dd7a7b67e122f9f3945" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

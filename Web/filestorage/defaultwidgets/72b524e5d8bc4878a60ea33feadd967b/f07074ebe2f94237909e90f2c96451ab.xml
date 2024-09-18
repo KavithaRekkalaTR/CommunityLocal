@@ -1,0 +1,117 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ForumEmbeddingManagement_Name}" cssClass="contextual-forumembedding" description="${resource:ForumEmbeddingManagement_Description}" instanceIdentifier="f07074ebe2f94237909e90f2c96451ab" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<contentScript>
+<![CDATA[
+
+#set($forum = $context.Forum)
+
+#set($domains='')
+#if ($forum.AllowedEmbeddingDomains && $forum.AllowedEmbeddingDomains.Length > 0)
+	#set($domains = $core_v2_utility.Join("&#013;&#010;", $forum.AllowedEmbeddingDomains))
+#else
+	#set($domains = $core_v2_page.AbsoluteUrl('/').Replace('http://','').Replace('https://','').Replace('/',''))
+#end
+
+#set($embedCode = $core_v2_encoding.HtmlAttributeEncode("<script type='text/javascript' src='$core_v2_page.AbsoluteUrl($context.EmbedUrl)'></script>"))
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id = $forum.EmbeddedThreadUserID}"))
+
+<div id="$core_v2_widget.WrapperElementId">
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item enable-embedding">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('enableEmbedding')" name="enableEmbedding" #if($forum.EnableEmbedding)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('enableEmbedding')" class="field-item-name">$core_v2_language.GetResource('EnableEmbedding')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableEmbedding_Description')</span>
+		</li>
+
+		<li class="field-item enable-embedding-alldomains">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('enableEmbeddingAllDomains')" name="enableEmbeddingAllDomains" #if($forum.AllowedEmbeddingDomains.Length == 0 && $forum.EnableEmbedding)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('enableEmbeddingAllDomains')" class="field-item-name">$core_v2_language.GetResource('EnableEmbedding_AllDomains')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnableEmbedding_AllDomains_Description')</span>
+		</li>
+
+		<li class="field-item allowed-domains" #if($forum.AllowedEmbeddingDomains.Length == 0)style="display: none;"#end>
+			<label for="$core_v2_widget.UniqueId('allowedDomains')" class="field-item-name">$core_v2_language.GetResource('AllowedDomains')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('AllowedDomains_Description')</span>
+			<span class="field-item-input">
+				<textarea id="$core_v2_widget.UniqueId('allowedDomains')">$domains</textarea>
+			</span>
+		</li>
+
+		<li class="field-item new-threads-user">
+			<label for="$core_v2_widget.UniqueId('newThreadsUser')" class="field-item-name">$core_v2_language.GetResource('CreateNewThreadsAs')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('CreateNewThreadsAs_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('newThreadsUser')" />
+			</span>
+		</li>
+
+		<li class="field-item embed-code" #if(!$forum.EnableEmbedding)style="display: none;"#end>
+			<label for="$core_v2_widget.UniqueId('embedCode')" class="field-item-name">$core_v2_language.GetResource('EmbedCode')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('EmbedCode_Description')</span>
+			<span class="field-item-input">
+				<textarea readonly="readonly" id="$core_v2_widget.UniqueId('embedCode')">$embedCode</textarea>
+			</span>
+		</li>
+
+	</ul>
+</fieldset></form>
+
+
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.forumEmbeddingManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.forumEmbeddingManagement.register({
+			wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+			applicationId: '$context.ApplicationId',
+			applicationTypeId: '$context.ApplicationTypeId',
+			enableEmbeddingId: "#$core_v2_widget.UniqueId('enableEmbedding')",
+			enableEmbeddingAllDomainsId: "#$core_v2_widget.UniqueId('enableEmbeddingAllDomains')",
+			allowedDomainsId: "#$core_v2_widget.UniqueId('allowedDomains')",
+			newThreadsUserId: "#$core_v2_widget.UniqueId('newThreadsUser')",
+			findUsersUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))',
+			noUsersMatchText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserLookUp_NoMatches'))",
+			saveLabel: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+			saveUrl: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			defaultUserId: #if($user) $user.Id #else 0 #end,
+			defaultUserName: #if($user) '$core_v2_encoding.JavascriptEncode($user.DisplayName)#if($user.DisplayName != $user.Username) ($core_v2_encoding.JavascriptEncode($user.Username))#end' #else '' #end,
+			forumUpdatedLabel: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForumUpdated'))"
+		});
+	});
+	</script>
+#end
+]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+	<resource name="ForumEmbeddingManagement_Name">Embedding</resource>
+	<resource name="ForumEmbeddingManagement_Description">Manage forum embedding.</resource>
+	<resource name="EnableEmbedding">Enable Embedding</resource>
+	<resource name="EnableEmbedding_Description">When embedding is enabled, the embed code (below) can be inserted into external web pages to support discussing that page using auto-created threads in this forum.</resource>
+	<resource name="EnableEmbedding_AllDomains">Enable Embedding on All Domains</resource>
+	<resource name="EnableEmbedding_AllDomains_Description">When enabled, this forum can be embedded on any external web site. If disabled, the list of allowed domains can be specified.</resource>
+	<resource name="AllowedDomains">Allowed Domains</resource>
+	<resource name="AllowedDomains_Description">The list of domains that can embed this forum. One domain per line.</resource>
+	<resource name="CreateNewThreadsAs">Create New Threads As</resource>
+	<resource name="CreateNewThreadsAs_Description">New threads are created for each remote URL being discussed. The initial post in that thread will be created as this user.</resource>
+	<resource name="EmbedCode">Embed Code</resource>
+	<resource name="EmbedCode_Description">This HTML can be inserted into allowed sites to embed an auto-created discussion thread from this forum.</resource>
+	<resource name="UserLookUp_NoMatches">A matching user could not be found.</resource>
+	<resource name="Save">Save</resource>
+	<resource name="ForumUpdated">Forum embedding options have been updated.</resource>
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

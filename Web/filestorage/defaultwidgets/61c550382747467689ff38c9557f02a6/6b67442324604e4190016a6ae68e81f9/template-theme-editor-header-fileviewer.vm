@@ -1,0 +1,39 @@
+<fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_tid=<%: Id %>&_ttid=<%: TypeId %>&_tt=overview" class="hierarchy theme-name ui-tip" data-tip="<%: Name %> $core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Overview'))"><%: ThemeName %></a>
+				<span class="divider"> / </span>
+				<span class="hierarchy theme ui-tip" data-tip="<%: TypeName %>"><%: TypeName %></span>
+				<span class="divider"> / </span>
+				<div class="editor-components template-editor-components"></div>
+				<div class="editor-actions-wrapper template-editor-actions"></div>
+				<ul class="ui-links file-actions" data-maxlinks="0" data-minlinks="0">
+					<% if(typeof(deleted) == 'undefined' || !deleted) { %>
+						<li class="navigation-list-item">
+							<a href="#" class="delete-current-attachment file-actions" data-messagename="mt.view.file.delete" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('DeleteFile')</a>
+						</li>
+					<% } else { %>
+						<li class="navigation-list-item">
+							<a href="#" class="restore-current-file restore-file" data-messagename="mt.view.file.restore" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('RestoreFile')</a>
+						</li>
+					<% } %>
+					<li class="navigation-list-item">
+						<a href="<%: Url %>" class="download-current-file" download>$core_v2_language.GetResource('downloadFile')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a class="node-actions-more" href="#" data-more>$core_v2_language.GetResource('FileActions')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+					</li>
+				</ul>
+			</span>
+		</li>
+		<li class="field-item restore-note">
+			<div class="message error">
+				$core_v2_language.GetResource('restoreNote') <a href="#" data-messagename="mt.view.file.restore" data-reqkey="<%: requestKey %>">$core_v2_language.GetResource('restored')</a>.
+			</div>
+		</li>
+	</ul>
+</fieldset>

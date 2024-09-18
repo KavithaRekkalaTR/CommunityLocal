@@ -1,0 +1,88 @@
+#set($queryType = $core_v2_widget.GetStringValue('queryType',''))
+#set($sortBy = $core_v2_widget.GetStringValue('sortBy','alphabetical'))
+#set($sortOrder = $core_v2_widget.GetStringValue('sortOrder','ascending'))
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize',10))
+#set($viewType = $core_v2_widget.GetStringValue('viewType','standard'))
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#if ($queryType == '')
+	#if($core_v2_urls.Current == 'Home')
+		$core_v2_widget.SetStringValue('queryType','accessingUser')
+	#elseif($core_v2_user.Current)
+		$core_v2_widget.SetStringValue('queryType','currentUser')
+	#else
+		$core_v2_widget.SetStringValue('queryType','subGroups')
+	#end
+	#set($queryType = $core_v2_widget.GetStringValue('queryType',''))
+#end
+
+#if($queryType == 'subGroups')
+	#set($sortBy = $core_v2_widget.GetStringValue('sortByCustom','alphabetical'))
+	#set($sortOrder = $core_v2_widget.GetStringValue('sortOrderCustom','ascending'))
+#end
+
+#if ($sortOrder == 'descending')
+	#set($sortOrder = 'Descending')
+#else
+	#set($sortOrder = 'Ascending')
+#end
+
+#if ($sortBy == 'alphabetical')
+	#set($sortBy = 'Name')
+#elseif ($sortBy == 'lastupdate')
+	#set($sortBy = 'LastUpdate')
+#elseif ($sortBy == 'containeridsorder')
+	#set($sortBy = 'ContainerIdsOrder')
+#else
+	#set($sortBy = 'SortOrder')
+#end
+
+#set($content = 'group')
+#if ($queryType=='subGroups')
+	#set($query = "%{ParentGroupId=$core_v2_group.Current.Id,PageSize=$pageSize,PageIndex=$pageIndex,SortBy='$sortBy',SortOrder='$sortOrder',GroupTypes='all'}")
+
+	#set($groupSelection = false)
+	#set($groupSelection = $core_v2_widget.GetCustomValue('groupSelectionCustom', ''))
+	#if ($groupSelection && $groupSelection.Length > 0)
+		#set($groupSelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($groupSelection).Values('group')))
+		$query.Add('ContainerIds', $groupSelection)
+	#end
+
+	#set($groups = $core_v2_group.List($query))
+#elseif($queryType=='currentUser')
+
+	#set($user = false)
+	#set($user = $core_v2_user.Current)
+
+	#set ($filter = false)
+	#if ($user.EnableFavoriteSharing || $user.Id == $core_v2_user.Accessing.Id)
+		#set ($filter = $core_v2_page.GetQueryStringValue('group-filter'))
+	#end
+
+	#if ($filter == 'bookmarks')
+		#set($content = 'bookmark')
+		#set($groups = $core_v2_bookmark.List("%{UserId = $user.Id, PageSize = $pageSize, PageIndex = $pageIndex, ContentTypeIds= $core_v2_group.ContentTypeId.ToString()}"))
+	#else
+		#set($groups = $core_v2_group.List("%{UserId=$core_v2_user.Current.Id,PageSize=$pageSize,PageIndex=$pageIndex,SortBy='$sortBy',SortOrder='$sortOrder'}"))
+	#end
+#else
+	#set ($includePendingMemberships = true)
+	#set ($filter = false)
+	#set ($filter = $core_v2_page.GetQueryStringValue('group-filter'))
+	#if ($filter == 'bookmarks')
+		#set($content = 'bookmark')
+		#set($groups = $core_v2_bookmark.List("%{UserId = $core_v2_user.Accessing.Id, PageSize = $pageSize, PageIndex = $pageIndex, ContentTypeIds= $core_v2_group.ContentTypeId.ToString()}"))
+	#else
+		#set($groups = $core_v2_group.List("%{UserId=$core_v2_user.Accessing.Id,PageSize=$pageSize,PageIndex=$pageIndex,SortBy='$sortBy',SortOrder='$sortOrder',IncludePendingMemberships=$includePendingMemberships}"))
+	#end
+#end
+
+#if($viewType=='thumbnails')
+	#set ($hasMore = false)
+	#set ($currentPagedQuantity = ($groups.PageIndex + 1) * $groups.PageSize)
+	#if ($groups.TotalCount > $currentPagedQuantity)
+	    #set ($hasMore = true)
+	#end
+	$core_v2_widget.ExecuteFile('thumbnails.vm')
+#else
+	$core_v2_widget.ExecuteFile('list.vm')
+#end

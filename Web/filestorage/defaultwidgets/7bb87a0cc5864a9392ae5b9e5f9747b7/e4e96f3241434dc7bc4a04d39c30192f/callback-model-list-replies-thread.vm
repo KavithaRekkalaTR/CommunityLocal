@@ -1,0 +1,15 @@
+##
+##
+## Expects in scope: $content, $parentId, $flattenedDepth, $endReplyId, $startReplyId, $sortBy, $sortOrder, $pageSize, $flattenedSortBy, $flattenedSortOrder, $initialPage
+##
+
+## Places $comments in scope if not already in scope from the pre-check for permalinks on a first page
+#if (!$comments)
+	$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-query.vm')
+#end
+
+$core_v2_page.SetContentType('application/json')
+{
+	"initialPage": #if ($initialPage) true #else false #end,
+	"replies": $core_v2_widget.ExecuteFile('callback-serialize-replies.vm')
+}

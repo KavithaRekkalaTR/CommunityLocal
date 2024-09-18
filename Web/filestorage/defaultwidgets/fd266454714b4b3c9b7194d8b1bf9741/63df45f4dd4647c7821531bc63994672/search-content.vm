@@ -1,0 +1,35 @@
+﻿#foreach ($category in $panelCategories)
+#beforeall
+	<ul class="navigation-list contextual-administration-links contextual-categories">
+#each
+	#set ($name = $category.Name)
+	#if ($category.PanelType == 'Container' || $category.PanelType == 'Application')
+		#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('CategoryName'), $category.Name))
+	#elseif($category.PanelType == 'Theme')
+		#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('ThemeCategoryName'), $category.Name))
+	#end
+
+	<li class="navigation-list-item category">
+		<a href="$core_v2_encoding.HtmlAttributeEncode($category.Url)">
+			<div>
+				<span class="name">$name</span>
+				<span class="badge" data-type="$category.PanelType" data-contextid="$category.Id" data-count="$category.BadgeCount">$category.BadgeCount</span>
+			</div>
+		</a>
+	</li>
+	#foreach ($panel in $category.Panels)
+		<li class="navigation-list-item panel">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($panel.Url)">
+				<div>
+					<span class="name">$panel.Name</span>
+					<span class="description">$panel.Description</span>
+					<span class="badge" data-type="$category.PanelType" data-panelid="$panel.Id" data-count="$panel.BadgeCount">$panel.BadgeCount</span>
+				</div>
+			</a>
+		</li>
+	#end
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+#afterall
+	</ul>
+#end

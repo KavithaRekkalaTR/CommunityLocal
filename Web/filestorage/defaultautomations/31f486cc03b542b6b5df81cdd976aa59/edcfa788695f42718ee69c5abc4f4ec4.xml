@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="10.2.0.0" description="${resource:Description}" id="edcfa788695f42718ee69c5abc4f4ec4" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-02-22 22:41:33Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="forumreply.aftercreate" />
+      <event key="forumreply.afterdelete" />
+      <event key="forumthread.aftercreate" />
+      <event key="forumthread.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[
+var threadType = core_v2_widget.GetStringValue('threadType', '');
+var userId = null;
+
+if (context_v2_automationTrigger.Entity == 'ForumReply') {
+    var thread = core_v2_forumThread.Get(context_v2_automationTrigger.Arguments.ThreadId);
+    if (thread && !thread.HasErrors()) {
+        userId = thread.Author.Id;
+    }
+} else if (context_v2_automationTrigger.Entity == 'ForumThread') {
+    userId = context_v2_automationTrigger.Arguments.Author.Id;
+}
+
+if (!userId) {
+    return;
+}
+
+//read min/max configuration values
+var ranges = core_v2_widget.GetStringValue('ranges', '');
+if (ranges === '') {
+    var minReplyCount = core_v2_widget.GetIntValue('minReplyCount', 0);
+    var maxReplyCount = 0;
+    var minThreadCount = core_v2_widget.GetIntValue('minThreadCount', 1);
+    var maxThreadCount = 0;
+} else if (ranges == 'replies') {
+    var replyRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('replyCountRange', ''));
+    var minReplyCount = core_v2_utility.ParseInt(replyRangeQuery.Value('Minimum'));
+    var maxReplyCount = core_v2_utility.ParseInt(replyRangeQuery.Value('Maximum'));
+    var minThreadCount = core_v2_widget.GetIntValue('minThreadCount', 1);
+    var maxThreadCount = 0;
+} else if (ranges == 'threads') {
+    var minReplyCount = core_v2_widget.GetIntValue('minReplyCount', 0);
+    var maxReplyCount = 0;
+    var threadRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('threadCountRange', ''));
+    var minThreadCount = core_v2_utility.ParseInt(threadRangeQuery.Value('Minimum'));
+    var maxThreadCount = core_v2_utility.ParseInt(threadRangeQuery.Value('Maximum'));
+}
+
+var result = null;
+
+//remove achievement if range has been selected and exceeded
+if (ranges == 'replies' && maxReplyCount > 0) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId,
+        IncludeSubGroups: true,
+        MinimumReplyCount: maxReplyCount + 1
+    };
+
+    if (threadType == 'Question') {
+        query.IncludeQuestions = true;
+        query.IncludeDiscussions = false;
+    } else if (threadType == 'Discussion') {
+        query.IncludeQuestions = false;
+        query.IncludeDiscussions = true;
+    }
+
+    var totalCount = core_v2_forumThread.List(query).TotalCount;
+    if (totalCount >= minThreadCount) {
+        result = 'revoke';
+    }
+}
+
+if (result === null) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId,
+        IncludeSubGroups: true
+    };
+    if (minReplyCount > 0) {
+        query.MinimumReplyCount = minReplyCount;
+    }
+    if (maxReplyCount > 0) {
+        query.MaximumReplyCount = maxReplyCount;
+    }
+
+    if (threadType == 'Question') {
+        query.IncludeQuestions = true;
+        query.IncludeDiscussions = false;
+    } else if (threadType == 'Discussion') {
+        query.IncludeQuestions = false;
+        query.IncludeDiscussions = true;
+    }
+
+    var totalCount = core_v2_forumThread.List(query).TotalCount;
+    if (totalCount >= minThreadCount && (maxThreadCount === 0 || totalCount <= maxThreadCount)) {
+        result = 'award';
+    } else {
+        result = 'revoke';
+    }
+}
+
+if (result !== null) {
+    var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+
+    if (result == 'award') {
+        if (!hasAchievement) {
+            context_v1_achievementAutomation.Award(userId);
+        }
+    } else if (result == 'revoke') {
+        if (hasAchievement) {
+            context_v1_achievementAutomation.Revoke(userId);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="threadType" labelResourceName="ThreadType" descriptionResourceName="ThreadType_Description" dataType="String" defaultValue="">
+        <propertyValue value="" labelResourceName="ThreadType_Any" />
+        <propertyValue value="Discussion" labelResourceName="ThreadType_Discussion" />
+        <propertyValue value="Question" labelResourceName="ThreadType_Question" />
+    </property>
+    <property id="ranges" resourceName="Ranges" descriptionResourceName="Ranges_Description" dataType="string" defaultValue="" controlType="Telligent.Evolution.Controls.PropertyVisibilityValueSelectionControl, Telligent.Evolution.Platform">
+            <propertyValue value="" resourceName="Ranges_None" propertiesToShow="minReplyCount,minThreadCount" propertiesToHide="replyCountRange,threadCountRange" />
+            <propertyValue value="threads" resourceName="Ranges_Threads" propertiesToShow="minReplyCount,threadCountRange" propertiesToHide="minThreadCount,replyCountRange" />
+            <propertyValue value="replies" resourceName="Ranges_Replies"  propertiesToShow="minThreadCount,replyCountRange" propertiesToHide="minReplyCount,threadCountRange" />
+    </property>
+    <property id="minThreadCount" labelResourceName="ThreadCount" descriptionResourceName="ThreadCount_Description" dataType="Int" defaultValue="5" >
+        <propertyRule name="minmax" min="1" />
+    </property>
+    <property id="threadCountRange" labelResourceName="ThreadCountRange" descriptionResourceName="ThreadCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+    <property id="minReplyCount" labelResourceName="ReplyCount" descriptionResourceName="ReplyCount_Description" dataType="Int" defaultValue="0" >
+        <propertyRule name="minmax" min="0" />
+    </property>
+    <property id="replyCountRange" labelResourceName="ReplyCountRange" descriptionResourceName="ReplyCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="0" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Grants or revokes an achievement based on the number of threads an author has created and their level of interaction.</resource>
+  <resource name="ReplyCount">Required reply count per thread</resource>
+  <resource name="ReplyCount_Description">The required minimum number of replies, per forum thread, to include the thread in the total count.</resource>
+  <resource name="ReplyCountRange">Reply count range</resource>
+  <resource name="ReplyCountRange_Description">The minimum and maximum number of replies required on forum threads by the author to award the achievement.</resource>
+  <resource name="ThreadCount">Required total thread count</resource>
+  <resource name="ThreadCount_Description">The required minimum number of forum threads authored by a member to award the achievement.</resource>
+  <resource name="ThreadCountRange">Thread count range</resource>
+  <resource name="ThreadCountRange_Description">The minimum and maximum count of threads by the author that must have the required reply count to award the achievement.</resource>
+  <resource name="ThreadType">Types of threads to count</resource>
+  <resource name="ThreadType_Any">Any</resource>
+  <resource name="ThreadType_Description">Select the type of threads to include in the total count.</resource>
+  <resource name="ThreadType_Discussion">Discussions only</resource>
+  <resource name="ThreadType_Question">Questions only</resource>
+  <resource name="Title">Award to authors of forum threads by their total thread count</resource>
+  <resource name="Ranges">Range</resource>
+  <resource name="Ranges_Threads">On thread count</resource>
+  <resource name="Ranges_Replies">On reply count</resource>
+  <resource name="Ranges_Description">A range allows a minimum and maximum value to be set for the selected item.  If the maximum or minimum value is no longer met, the achievement will be removed.  If 'No range' is selected, the achievement will only be removed if the minimum values are no longer met.</resource>
+  <resource name="Ranges_None">No range</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

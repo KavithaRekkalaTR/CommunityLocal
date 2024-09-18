@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:About_Name}" version="13.0.0.0" description="${resource:About_Description}" instanceIdentifier="69d182105cee4c909aff83dc7a3ce4e4" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="about" lastModified="2023-04-14 08:11:54Z" provider="21b7d1e2b1094313ab05060fc4d82b5b">
+    <contentScript language="Velocity"><![CDATA[#set ($announcementsWrapperId = $core_v2_widget.UniqueId('announcementsWrapper'))
+#set ($licenseMessage = false)
+#set($licenseMessage = $context.LicenseMessage)
+#if ($licenseMessage)
+	#if ($licenseMessage.IsError)
+		<div class="message error">
+	#elseif ($licenseMessage.IsWarning)
+		<div class="message information">
+	#else
+		<div class="message">
+	#end
+		$licenseMessage.Message
+	</div>
+#end
+
+#set($info = $core_v2_infoResult.Get())
+<table>
+	<tr>
+		<th>
+			$core_v2_language.GetResource('Version')
+		</th>
+		<td>
+			$info.Platform
+			#if ($context.UpdateAvailable)
+				<a class="inline-button" href="$core_v2_encoding.HtmlAttributeEncode($context.UpdateRelatedUrl)">$core_v2_language.GetResource('UpdateAvailable')</a>
+			#end
+			#if ($context.DeveloperModeEnabled)
+                $core_v2_language.GetResource('DeveloperModeEnabled')
+        	#end
+			<a href="#" id="$core_v2_widget.UniqueId('component-versions')">$core_v2_language.GetResource('Review_Component_Versions')</a>
+		</td>
+	</tr>
+	#if ($context.LicenseType)
+		<tr>
+			<th>
+				$core_v2_language.GetResource('License_Type')
+			</th>
+			<td>
+				$context.LicenseType
+			</td>
+		</tr>
+	#end
+	<tr>
+		<th>
+			$core_v2_language.GetResource('Operating_System')
+		</th>
+		<td>
+			$context.OperatingSystem
+		</td>
+	</tr>
+	<tr>
+		<th>
+			$core_v2_language.GetResource('Machine_Name')
+		</th>
+		<td>
+			$context.MachineName
+		</td>
+	</tr>
+	<tr>
+		<th>
+			$core_v2_language.GetResource('Legacy_Rendering_Enabled')
+		</th>
+		<td>
+			#if ($context.LegacyRenderingEnabled)
+			    $core_v2_language.GetResource('Legacy_Rendering_Enabled_True')
+			#else
+			    $core_v2_language.GetResource('Legacy_Rendering_Enabled_False')
+			#end
+		</td>
+	</tr>
+</table>
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($announcementsWrapperId)">
+	<div style="margin-top: 10px">
+	    <span class="ui-loading"></span>
+	</div>
+</div>
+
+<div class="attributions">
+	$core_v2_widget.ExecuteFile('attributions.vm')
+</div>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+				    <a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('diagnostics.vm'))" class="button">$core_v2_language.GetResource('Download_Diagnostics')</a>
+				    #if ($context.HasAccess)
+    					<div style="float: left; width: 50%">
+    						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="0" data-direction="horizontal">
+    							<ul>
+    								<li class="navigation-list-item">
+    									<a href="#" data-messagename="about.expireuicache">$core_v2_language.GetResource('ExpireUICaches')</a>
+    								</li>
+    								<li class="navigation-list-item">
+    									<a href="#" data-messagename="about.expirecache">$core_v2_language.GetResource('ExpireCaches')</a>
+    								</li>
+    								<li class="navigation-list-item">
+    									<a href="#" data-messagename="about.reloadplugins">$core_v2_language.GetResource('ReloadPlugins')</a>
+    								</li>
+    								<li class="navigation-list-item">
+    									<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+    								</li>
+    								<li class="navigation-list-item">
+    									<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+    								</li>
+    							</ul>
+    						</div>
+    					</div>
+    				#end
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.administration.header(jQuery.telligent.evolution.template.compile('$core_v2_widget.UniqueId('headerTemplateId')')());
+
+		jQuery('#$core_v2_widget.UniqueId('component-versions')').on('click', function() {
+			jQuery.telligent.evolution.administration.open({
+				name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Component_Versions'))',
+				content: jQuery.telligent.evolution.get({
+					url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('versions.vm'))'
+				})
+			});
+
+			return false;
+		});
+
+		jQuery.telligent.evolution.messaging.subscribe('about.expireuicache', function (data) {
+			jQuery.telligent.evolution.post({
+			    url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-expireuicache.vm'))'
+			})
+			    .then(function() {
+			        jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExpireUICaches_Success'))', {
+						type: 'success'
+					});
+			    });
+
+			return false;
+		});
+
+		jQuery.telligent.evolution.messaging.subscribe('about.expirecache', function (data) {
+			jQuery.telligent.evolution.post({
+			    url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-expirecache.vm'))'
+			})
+			    .then(function() {
+			        jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExpireCaches_Success'))', {
+						type: 'success'
+					});
+			    });
+
+			return false;
+		});
+
+		jQuery.telligent.evolution.messaging.subscribe('about.reloadplugins', function (data) {
+			jQuery.telligent.evolution.post({
+			    url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-reloadplugins.vm'))'
+			})
+			    .then(function() {
+			        jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ReloadPlugins_Success'))', {
+						type: 'success'
+					});
+			    });
+
+			return false;
+		});
+
+		// asynchronously load announcements
+		jQuery.telligent.evolution.get({
+			url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('announcements.vm'))'
+		}).then(function(r){
+			var wrapper = jQuery('#$announcementsWrapperId');
+			wrapper
+				.empty()
+				.css({ opacity: 0 })
+				.html(r);
+			var newHeight = wrapper.height();
+			wrapper
+				.css({ height: 0, overflow: 'hidden' })
+				.evolutionTransform({ opacity: 1, height: newHeight }, { duration: 150, complete: function() { wrapper.css({ height: 'auto' })} });
+		});
+	});
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+			#set($info = $core_v2_infoResult.Get())
+			$core_v2_language.FormatString($core_v2_language.GetResource('About_Product'), $info.Product)
+		]]></headerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="About_Description">About the platform.</resource>
+  <resource name="About_Name">About</resource>
+  <resource name="About_Product">About {0}</resource>
+  <resource name="Announcements">Announcements</resource>
+  <resource name="Attributions">Attributions</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="Component">Component</resource>
+  <resource name="Component_Versions">Component Versions</resource>
+  <resource name="DeveloperModeEnabled">(Developer mode)</resource>
+  <resource name="Download_Diagnostics">Download Diagnostics</resource>
+  <resource name="ExpireCaches">Expire Data Caches</resource>
+  <resource name="ExpireCaches_Success">All data caches have been expired.</resource>
+  <resource name="ExpireUICaches">Expire User Interface Caches</resource>
+  <resource name="ExpireUICaches_Success">All user interface caches have been expired.</resource>
+  <resource name="Last_Modified">Last Modified</resource>
+  <resource name="Legacy_Rendering_Enabled">Legacy Rendering Enabled</resource>
+  <resource name="Legacy_Rendering_Enabled_False">No</resource>
+  <resource name="Legacy_Rendering_Enabled_True">Yes. The global &amp;lt;form&amp;gt; element will be rendered.</resource>
+  <resource name="License_Type">License</resource>
+  <resource name="Machine_Name">Machine Name</resource>
+  <resource name="more">More</resource>
+  <resource name="UpdateAvailable">Update Available</resource>
+  <resource name="Operating_System">Operating System</resource>
+  <resource name="ReloadPlugins">Reload All Plugins</resource>
+  <resource name="ReloadPlugins_Success">Plugins have been reloaded.</resource>
+  <resource name="Review_Component_Versions">Review component versions</resource>
+  <resource name="TwemojiAttribution">Emoji art supplied by</resource>
+  <resource name="Version">Version</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

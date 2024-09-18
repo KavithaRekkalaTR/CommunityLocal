@@ -1,0 +1,28 @@
+#set($beginDate = $core_v2_utility.ParseDate($core_v2_page.GetQueryStringValue('w_year'), $core_v2_page.GetQueryStringValue('w_month'), '1'))
+#set($totalDays =  $calendar_v1_UI.DaysInMonth($beginDate.Year.ToString(),$beginDate.Month.ToString()))
+#set($startDay =  $calendar_v1_UI.GetStartDayOfWeek($beginDate))
+#set($endDay = $beginDate.AddMonths(1).AddDays(-1).Day)
+#set($groupId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_groupId')))
+#set($calendarIds = $core_v2_page.GetQueryStringValue('w_calendarIds'))
+#set($includeSubGroups = $core_v2_utility.ParseBool($core_v2_page.GetQueryStringValue('w_includeSubGroups')))
+#set($calendarId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_calendarId')))
+
+#set ($query = "%{ PageSize = 999, PageIndex = 0, SortBy = 'StartDate', SortOrder='Ascending', DateRangeStart=$beginDate.AddDays(-1), DateRangeEnd=$beginDate.AddMonths(1).AddDays(2) }")
+
+#if($groupId && $groupId > 0)
+    $query.Add('CalendarContext', 'Group')
+    $query.Add('CalendarReferenceId', $groupId)
+#end
+
+$query.Add('IncludeSubGroups', $includeSubGroups)
+
+#if($calendarIds && $calendarIds.Length > 0 && $calendarIds != "-1")
+	$query.Add('FilterByCalendarIdList', $calendarIds)
+#end
+
+#if(!$groupId || $groupId <= 0)
+    #if (!$calendarIds || $calendarIds == -1 || $calendarIds.Length <= 0)
+        $query.Add('CalendarId', $calendarId)
+    #end
+#end
+#set($events = $calendar_v1_events.List($query))

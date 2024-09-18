@@ -1,0 +1,45 @@
+<ul class="navigation-list contextual-administration-links contextual-categories">
+
+	#foreach ($category in $panelCategories)
+	#each
+		#set ($name = $category.Name)
+		#if ($category.PanelType == 'Container' || $category.PanelType == 'Application')
+			#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('CategoryName'), $category.Name))
+		#elseif($category.PanelType == 'Theme')
+			#set ($name = $core_v2_language.FormatString($core_v2_language.GetResource('ThemeCategoryName'), $category.Name))
+		#end
+
+		<li class="navigation-list-item">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($category.Url)">
+				<div>
+					<span class="name">$name</span>
+					<span class="badge" data-type="$category.PanelType" data-contextid="$category.Id" data-count="$category.BadgeCount">$category.BadgeCount</span>
+				</div>
+			</a>
+		</li>
+	#end
+
+	#set ($systemNotificationsUrl = $core_v2_contextualPanelsAdministrationContext.SystemNotificationsUrl)
+	#if ($systemNotificationsUrl)
+		<li class="navigation-list-item">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($systemNotificationsUrl)">
+				<div>
+					<span class="name">$core_v2_language.GetResource('SystemNotifications')</span>
+					<span class="badge" data-type="systemnotifications" data-count="$core_v2_contextualPanelsAdministrationContext.UnresolvedSystemNotifications">$core_v2_contextualPanelsAdministrationContext.UnresolvedSystemNotifications</span>
+				</div>
+			</a>
+		</li>
+	#end
+
+	#set ($adminReturnUrl = $core_v2_contextualPanelsAdministrationContext.AdministrationReturnUrl)
+	#if ($adminReturnUrl)
+		<li class="navigation-list-item">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($adminReturnUrl)">
+				<div>
+					<span class="name">$core_v2_language.GetResource('Administration')</span>
+					<span class="badge" data-type="administration" data-count="$core_v2_contextualPanelsAdministrationContext.AdministrationBadgeCount">$core_v2_contextualPanelsAdministrationContext.AdministrationBadgeCount</span>
+				</div>
+			</a>
+		</li>
+	#end
+</ul>

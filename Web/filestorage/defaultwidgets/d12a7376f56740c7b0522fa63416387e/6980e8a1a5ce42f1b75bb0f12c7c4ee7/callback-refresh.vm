@@ -1,0 +1,9 @@
+#set($config = $context.GetScoreConfiguration())
+
+$core_v2_page.SetContentType('application/json')
+{
+    "metrics": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('list-weightedmetrics.vm'))",
+    "enabledecay": #if($config.IsDecayEnabled) true #else false #end,
+    "halflife": "$config.HalfLife",
+    "enableoverrides": #if($config.AreDecayOverridesEnabled) true #else false #end
+}

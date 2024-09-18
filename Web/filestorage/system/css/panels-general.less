@@ -1,0 +1,36 @@
+ -webkit-font-smoothing: antialiased;
+ line-height: @ap-line-height;
+
+*, *:before, *:after {
+	.box-sizing(border-box);
+}
+h1, h2, h3, h4, h5 {
+	margin: 0px;
+}
+ul {
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}
+a {
+	.transition(all (@ap-transition-duration / 2) ease 0s);
+	color: @ap-content-color-accent;
+	text-decoration: none;
+	outline: none;
+	div {
+		outline: none;
+	}
+	&:hover, &:active, &:visited, &:focus {
+		outline: none;
+		div {
+			outline: none;
+		}
+	}
+	&.disabled {
+		color: fade(@ap-content-color-foreground, 20%);
+		cursor: default;
+	}
+}
+
+font-family: @ap-font-family;
+font-size: @ap-font-size;

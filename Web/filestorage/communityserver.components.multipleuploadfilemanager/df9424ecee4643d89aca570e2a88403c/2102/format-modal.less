@@ -1,0 +1,57 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+// modals
+div.modal-mask {
+	opacity: .7;
+}
+
+div.modal {
+	.round(3px);
+	padding: @spacing * 2;
+	margin: 20px;
+	.popup-border;
+	background-color: @color-background;
+	.modal-footer,
+	.modal-resize {
+		display: none;
+	}
+	.modal-close-wrapper {
+		float: right;
+		position: relative;
+		top: -(@spacing / 2);
+		right: -(@spacing);
+		.modal-close {
+			background-image: none;
+			.replace_with_icon(@cancel-circled, 22px);
+			&:hover {
+				color: @color-link;
+			}
+		}
+	}
+	.modal-title {
+		margin: 0 0 (@spacing * 2) 0;
+		padding: 0 0 (@spacing / 2) 0;
+		border-bottom: 1px solid -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+		font-family: @font-family;
+		font-weight: @font-weight;
+		color: @color-foreground;
+		font-size: @font-size * 1.4;
+	}
+	.modal-content {
+		background-color: @color-background;
+		iframe {
+			-webkit-overflow-scrolling: touch;
+		}
+	}
+	&:focus {
+		outline: 1px dotted -evo-increase-contrast(@color-accent, 40%, @color-background, @color-contrast);
+		outline: 1px dotted invert;
+		outline-offset: -1px;
+	}
+}

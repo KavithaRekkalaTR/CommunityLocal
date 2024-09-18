@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_ThreadList_Name}" version="13.0.0.0" description="${resource:Forums_ThreadList_Description}" instanceIdentifier="c6af9d06240940beae71ade1bf750570" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="thread-list" lastModified="2023-12-01 10:46:20Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+
+#set ($showSidebarList = false)
+#set ($region = $core_v2_widget.RegionName.ToLower())
+#set ($layout = $core_v2_page.Layout.ToLower())
+
+#if ($region == 'split-sidebar-left' || $region == 'split-sidebar-right' || $region == 'left-sidebar')
+	#set ($showSidebarList = true)
+#elseif ($region == 'right-sidebar' && !$layout.Contains('split-content') && !$layout.Contains('split-sidebar'))
+	#set ($showSidebarList = true)
+#end
+
+#if($showSidebarList)
+	$core_v2_widget.ExecuteFile('sidebar.vm')
+#else
+	$core_v2_ui.PagedContent('list.vm')
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery(function(j){
+		    var openDelay = 500;
+	        var closeDelay = 250;
+		    
+		    j('#$core_v2_widget.WrapperElementId')
+    		    .on('glowDelayedMouseEnter', '.answer-status a', openDelay, function(e) {
+    				var link = $(this);
+    				j.telligent.evolution.get({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('answer.jsm'))',
+						data: {
+							threadId: link.data('threadid'),
+							answerType: link.data('answertype')
+						}
+					}).then(function(a){
+					    if (a.ContentId && a.ContentTypeId) {
+    						j.telligent.evolution.contentPeek.show(link.get(0), {
+    							contentTypeId: a.ContentTypeId,
+    							contentId: a.ContentId
+    						});
+					    }
+					});
+    			})
+    			.on('glowDelayedMouseLeave', '.internal-link.view-user-profile, .internal-link.view-profile, .avatar > a', closeDelay, function(e) {
+					j.telligent.evolution.contentPeek.hide(this);
+    			});
+		});
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+#set ($forumOrGroup = $core_v2_page.ParseQueryString($core_v2_widget.GetStringValue('selectedForumOrGroup', '')))
+
+#if($header == '' || $header == '${resource:Forums_ThreadList_Name}')
+	#if ($forumOrGroup.Value('Forum'))
+		#set ($forumId = $core_v2_utility.ParseInt($forumOrGroup.Value('Forum')))
+		#set ($header = $core_v2_forum.Get($forumId).Name)
+	#elseif ($forumOrGroup.Value('Group'))
+		#set ($groupId = $core_v2_utility.ParseInt($forumOrGroup.Value('Group')))
+		#set ($header = $core_v2_group.Get("%{Id=$groupId}").Name)
+	#elseif ($core_v2_forum.Current)
+		#set ($header = $core_v2_forum.Current.Name)
+	#else
+		#set ($header = $core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_ThreadList_Name}'))
+	#end
+#end
+
+$core_v2_widget.ApplyTokens($header)
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_ThreadList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="includeDiscussions" labelResourceName="CF_IncludeDiscussions" defaultValue="true" dataType="Bool" />
+	<property id="includeQuestions" labelResourceName="CF_IncludeQuestions" defaultValue="true" dataType="Bool" />
+	<property id="supportUserFiltering" labelResourceName="CF_SupportUserFiltering" defaultValue="true" dataType="Bool" />
+	<property id="filter" labelResourceName="CF_Filter" defaultValue="all" dataType="String">
+		<propertyValue value="Active" labelResourceName="CF_Filter_All" />
+		<propertyValue value="Unread" labelResourceName="CF_Filter_Unread" />
+		<propertyValue value="Answered" labelResourceName="CF_Filter_Answered" />
+		<propertyValue value="Unanswered" labelResourceName="CF_Filter_Unanswered" />
+		<propertyValue value="AnsweredNotVerified" labelResourceName="CF_Filter_AnsweredNotVerified" />
+		<propertyValue value="AnsweredWithNotVerified" labelResourceName="CF_Filter_AnsweredIncludingNotVerified" />
+		<propertyValue value="MyThreads" labelResourceName="CF_Filter_MyThreads" />
+		<propertyValue value="Authored" labelResourceName="CF_Filter_Authored" />
+		<propertyValue value="ContextualMyThreads" labelResourceName="CF_Filter_MyThreads_Contextual" />
+		<propertyValue value="ContextualAuthored" labelResourceName="CF_Filter_Authored_Contextual" />
+	</property>
+	<property id="age" labelResourceName="CF_Age" defaultValue="0" dataType="String">
+		<propertyValue value="0" labelResourceName="CF_Filter_AllAges" />
+		<propertyValue value="-3" labelResourceName="CF_Filter_3Months" />
+		<propertyValue value="-6" labelResourceName="CF_Filter_6Months" />
+		<propertyValue value="-12" labelResourceName="CF_Filter_12Months" />
+	</property>
+	<property id="sortBy" labelResourceName="CF_SortBy" defaultValue="LastPost" dataType="String">
+		<propertyValue value="LastPost" labelResourceName="CF_ForumThreadList_Sort_DateTime" />
+		<propertyValue value="Date" labelResourceName="CF_ForumThreadList_Sort_ThreadDate" />
+		<propertyValue value="Replies" labelResourceName="CF_ForumThreadList_Sort_Replies" />
+		<propertyValue value="Views" labelResourceName="CF_ForumThreadList_Sort_Views" />
+		<propertyValue value="Topic" labelResourceName="CF_ForumThreadList_Sort_Topic" />
+		<propertyValue value="ContentQuality" labelResourceName="CF_ForumThreadList_Sort_Quality" />
+		<propertyValue value="TotalVotes" labelResourceName="CF_ForumThreadList_Sort_Votes" />
+		<propertyValue value="QualityScore" labelResourceName="CF_ForumThreadList_Sort_QualityVotes" />
+	</property>
+	<property id="sortOrder" labelResourceName="CF_SortOrder" defaultValue="Descending" dataType="String">
+		<propertyValue value="Ascending" labelResourceName="SortOrderDropDownList_Asc" />
+		<propertyValue value="Descending" labelResourceName="SortOrderDropDownList_Desc" />
+	</property>
+	<property id="popularOnly" labelResourceName="CF_ForumThreadList_PopularOnly" defaultValue="false" dataType="Bool" />
+	<property id="selectedForumOrGroup" labelResourceName="CF_Forum_SelectGroupAndForum" dataType="Custom" template="core_v2_forumLookup" maxForumSelections="1" enableCurrentGroup="true" />
+	<property id="pageSize" labelResourceName="Pagesize" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="hideEmpty" labelResourceName="CF_ForumThreadList_HideEmpty" defaultValue="false" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AllRecent">All recent questions and discussions</resource>
+  <resource name="AllRecent_Discussions">All recent discussions</resource>
+  <resource name="AllRecent_Questions">All recent questions</resource>
+  <resource name="Announcement">Announcement</resource>
+  <resource name="AnsweredNotVerified">Questions with suggested answers</resource>
+  <resource name="AnsweredWithNotVerified">Answered questions and discussions</resource>
+  <resource name="AnsweredWithNotVerified_Discussions">Answered discussions</resource>
+  <resource name="AnsweredWithNotVerified_Questions">Answered questions</resource>
+  <resource name="Authored">Questions and discussions you've started</resource>
+  <resource name="Authored_Discussions">Discussions you've started</resource>
+  <resource name="Authored_Questions">Questions you've asked</resource>
+  <resource name="by">by</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Age">Maximum Age of threads to display</resource>
+  <resource name="CF_Filter">Default Filter</resource>
+  <resource name="CF_Filter_12Months">12 Months</resource>
+  <resource name="CF_Filter_3Months">3 Months</resource>
+  <resource name="CF_Filter_6Months">6 Months</resource>
+  <resource name="CF_Filter_All">None (Show All)</resource>
+  <resource name="CF_Filter_AllAges">None (Show All)</resource>
+  <resource name="CF_Filter_Answered">Only Answered</resource>
+  <resource name="CF_Filter_AnsweredIncludingNotVerified">Only Answered (including Not Verified Answers)</resource>
+  <resource name="CF_Filter_AnsweredNotVerified">Only Answered but not Verified</resource>
+  <resource name="CF_Filter_Authored">Accessing User has Authored</resource>
+  <resource name="CF_Filter_Authored_Contextual">Contextual User has Authored</resource>
+  <resource name="CF_Filter_MyThreads">Accessing User has Participated In</resource>
+  <resource name="CF_Filter_MyThreads_Contextual">Contextual User has Participated In</resource>
+  <resource name="CF_Filter_Unanswered">Only Unanswered</resource>
+  <resource name="CF_Filter_Unread">Unread by Accessing User</resource>
+  <resource name="CF_Forum_SelectGroupAndForum">Select group/forum to pull content from</resource>
+  <resource name="CF_ForumAdministration">Administer forum</resource>
+  <resource name="CF_ForumLinks_Subscribe">Turn Forum notifications on</resource>
+  <resource name="CF_ForumLinks_Unsubscribe">Turn Forum notifications off</resource>
+  <resource name="CF_ForumsModeration_Plural">{0} posts to moderate</resource>
+  <resource name="CF_ForumsModeration_Singular">{0} post to moderate</resource>
+  <resource name="CF_ForumThreadList_HideEmpty">Hide if empty</resource>
+  <resource name="CF_ForumThreadList_PopularOnly">Show only popular threads</resource>
+  <resource name="CF_ForumThreadList_Sort_ContentQuality">Content Quality Score</resource>
+  <resource name="CF_ForumThreadList_Sort_DateTime">By last reply date</resource>
+  <resource name="CF_ForumThreadList_Sort_Quality">By quality</resource>
+  <resource name="CF_ForumThreadList_Sort_QualityVotes">By votes</resource>
+  <resource name="CF_ForumThreadList_Sort_Replies">By reply count</resource>
+  <resource name="CF_ForumThreadList_Sort_ThreadDate">By thread date</resource>
+  <resource name="CF_ForumThreadList_Sort_Topic">By name</resource>
+  <resource name="CF_ForumThreadList_Sort_Views">By view count</resource>
+  <resource name="CF_ForumThreadList_Sort_Votes">By most asked</resource>
+  <resource name="CF_IncludeDiscussions">Include Discussion Threads</resource>
+  <resource name="CF_IncludeQuestions">Include Question and Answer Threads</resource>
+  <resource name="CF_SortBy">Sort By</resource>
+  <resource name="CF_SortOrder">Sort Order</resource>
+  <resource name="CF_SupportUserFiltering">Support User Filtering and Sorting</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Contextual_Authored">Questions and discussions this user has started</resource>
+  <resource name="Contextual_Authored_Discussions">Discussions this user has started</resource>
+  <resource name="Contextual_Authored_Questions">Questions this user has asked</resource>
+  <resource name="Contextual_Your">Questions and discussions this user has participated in</resource>
+  <resource name="Contextual_Your_Discussions">Discussions this user has participated in</resource>
+  <resource name="Contextual_Your_Questions">Questions this user has participated in</resource>
+  <resource name="Date">Date</resource>
+  <resource name="Discussion">start a discussion</resource>
+  <resource name="Discussion_Tip">Discussion</resource>
+  <resource name="Forums_ThreadList_Description">Displays a list of forum threads.</resource>
+  <resource name="Forums_ThreadList_Name">Forum - Thread List</resource>
+  <resource name="FrequentlyAsked">Frequently Asked</resource>
+  <resource name="LatestReplyFormat">&lt;a href="{0}" {2}&gt;Latest {1}&lt;/a&gt;&lt;br /&gt;</resource>
+  <resource name="Locked">Locked</resource>
+  <resource name="Locked_Tip">You can no longer post new replies to this discussion.</resource>
+  <resource name="MarkAllRead_Threads_Link">Mark all read</resource>
+  <resource name="more">More</resource>
+  <resource name="NoResponse">Questions and discussions with no replies</resource>
+  <resource name="NoResponse_Discussions">Discussions with no replies</resource>
+  <resource name="NoResponse_Questions">Questions with no replies</resource>
+  <resource name="NotAnswered_Tip">Unanswered question</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Pagesize">Number of items to display</resource>
+  <resource name="Question">ask a question</resource>
+  <resource name="Question_or_Discussion">ask a question or start a discussion</resource>
+  <resource name="Recent_Questions">Recent Questions</resource>
+  <resource name="ReplyCount_Plural">replies</resource>
+  <resource name="ReplyCount_Singular">reply</resource>
+  <resource name="SortOrderDropDownList_Asc">Ascending</resource>
+  <resource name="SortOrderDropDownList_Desc">Descending</resource>
+  <resource name="StartedFormat">&lt;a href="{0}" {2}&gt;Started {1}&lt;/a&gt;&lt;br /&gt;</resource>
+  <resource name="Status_Discussion">Discussion</resource>
+  <resource name="Status_NotAnswered">Not Answered</resource>
+  <resource name="Status_SuggestedAnswer">Suggested Answer</resource>
+  <resource name="Status_VerifiedAnswer">Answered</resource>
+  <resource name="Sticky">Sticky</resource>
+  <resource name="tags">Tags</resource>
+  <resource name="Unanswered">Unanswered questions and discussions</resource>
+  <resource name="Unanswered_Discussions">Unanswered discussions</resource>
+  <resource name="Unanswered_Questions">Unanswered questions</resource>
+  <resource name="Unread">Unread questions and discussions</resource>
+  <resource name="Unread_Discussions">Unread discussions</resource>
+  <resource name="Unread_Questions">Unread questions</resource>
+  <resource name="View">View</resource>
+  <resource name="ViewCount_Plural">views</resource>
+  <resource name="ViewCount_Singular">view</resource>
+  <resource name="ViewThreads_FilterByTopic">By title</resource>
+  <resource name="ViewThreads_NoTopics">There are no posts to show. This could be because there are no posts in this forum or due to a filter.</resource>
+  <resource name="ViewThreads_NoTopics_Link">There are no posts to show.  Be the first to &lt;a href="{0}"&gt; {1}&lt;/a&gt;.</resource>
+  <resource name="Your">Questions and discussions you've participated in</resource>
+  <resource name="Your_Discussions">Discussions you've participated in</resource>
+  <resource name="Your_Questions">Questions you've participated in</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,25 @@
+﻿#set($pageIndex = 0)
+#set($pageIndex = $core_v2_page.GetQueryStringValue('w_pageIndex'))
+#set($offset = 0)
+#set($offset = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_offset')))
+#if($offset < 0)
+	#set($offset = 0)
+#end
+
+#set($gallery = $core_v2_gallery.Current)
+
+#set($medias = $core_v2_media.List("%{GalleryId=$gallery.Id,SortBy='PostDate',SortOrder='Descending',PageSize=10,PageIndex=$pageIndex}"))
+#if($pageIndex == $medias.PageIndex)
+	#foreach($media in $medias)
+		<div class="slideshow-item" style="left:${offset}px">
+			<div>
+				<input type="hidden" value="$media.Id" />
+				<div class="preview">
+					$core_v2_ui.GetPreviewHtml($media.File.FileUrl, "%{ Width=64, Height=32 }")
+				</div>
+				<div class="preview-title">$core_v2_language.Truncate($media.Title, 10, '...')</div>
+			</div>
+		</div>
+		#set($offset = $offset + 90)
+	#end
+#end

@@ -1,0 +1,68 @@
+<li class="content-item invitation" data-invitationkey="$invitation.InvitationKey">
+	<h4 class="name">$core_v2_encoding.HtmlEncode($invitation.Email)</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+			    <li class="attribute-item invitation">
+			        <span class="value">
+			            #set($membershipType = $core_v2_language.GetResource('membershiptype-unknown'))
+			            #if ($invitation.GroupMembershipType == 'Member')
+			                #set($membershipType = $core_v2_language.GetResource('membershiptype-member'))
+			            #elseif ($invitation.GroupMembershipType == 'Manager')
+			                #set($membershipType = $core_v2_language.GetResource('membershiptype-manager'))
+			            #elseif ($invitation.GroupMembershipType == 'Owner')
+			                #set($membershipType = $core_v2_language.GetResource('membershiptype-owner'))
+			            #end
+			            $core_v2_language.FormatString($core_v2_language.GetResource('invitation'), $membershipType.ToLower(), $core_v2_language.FormatDate($invitation.DateInvited))
+			        </span>
+			    </li>
+			    #if ($invitation.State.ToString() == 'Accepted')
+			        <li class="attribute-item accepted">
+			            <span class="value">
+    			            #set($acceptedUser = false)
+    			            #set($acceptedUser = $core_v2_user.Get("%{Id = $invitation.AcceptedByUserID}"))
+    			            #if ($acceptedUser)
+    			                #set($userHtml = '')
+    			                #if ($acceptedUser.ProfileUrl)
+    			                    #set($userHtml = "<a href='$core_v2_encoding.HtmlAttributeEncode($acceptedUser.ProfileUrl)'>$acceptedUser.DisplayName</a>")
+    			                #else
+    			                    #set($userHtml = $acceptedUser.DisplayName)
+    			                #end
+    			                $core_v2_language.FormatString($core_v2_language.GetResource('accepted'), $core_v2_language.FormatDate($invitation.DateAccepted), $userHtml)
+    			            #else
+    			                $core_v2_language.FormatString($core_v2_language.GetResource('accepted-nouser'), $core_v2_language.FormatDate($invitation.DateAccepted))
+    			            #end
+			            </span>
+			        </li>
+			    #elseif ($invitation.State.ToString() == 'Expired')
+    			    <li class="attribute-item expired">
+    			        <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('expired'), $core_v2_language.FormatDate($invitation.DateExpired))</span>
+    			    </li>
+    			#end
+			</ul>
+		</div>
+		<div class="content expandable">
+			$!invitation.Message
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+				    #if($invitation.State.ToString() != 'Accepted')
+    					<li class="navigation-list-item resend">
+    						<a href="#" data-messagename="groupmembers.resend" data-invitationkey="$invitation.InvitationKey">$core_v2_language.GetResource('resend-invitation')</a>
+    					</li>
+    				#end
+					#if ($invitation.State.ToString() == 'Pending')
+    					<li class="navigation-list-item cancel">
+    						<a href="#" data-messagename="groupmembers.cancel" data-invitationkey="$invitation.InvitationKey">$core_v2_language.GetResource('cancel-invitation')</a>
+    					</li>
+    				#end
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+  </li>

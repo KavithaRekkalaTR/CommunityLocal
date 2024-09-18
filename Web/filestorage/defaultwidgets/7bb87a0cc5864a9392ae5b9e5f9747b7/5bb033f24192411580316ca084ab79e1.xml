@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="5bb033f24192411580316ca084ab79e1" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="user-logout-warning" lastModified="2021-08-24 08:18:03Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+		<contentScript language="Velocity"><![CDATA[
+
+#if (!$core_v2_user.IsRegistered($core_v2_user.Accessing.Id) || $core_v2_user.Accessing.IsSystemAccount)
+	$core_v2_widget.Hide()
+#end
+
+#set ($warningThreshold = $core_v2_widget.GetIntValue('warningThreshold', 45))
+#set ($modalTemplateId = $core_v2_widget.UniqueId('modalTemplate'))
+
+#registerClientTemplate($modalTemplateId)
+	<form>
+		<p class="message warning">
+			#format($core_v2_language.GetResource('SlidingWarningMessage'))
+				#token('seconds')
+					<strong><%: remainingSeconds %></strong>
+			#end
+		</p>
+		<% if(renewable) { %>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item submit">
+						<span class="field-item-input">
+							<a href="#" data-messagename="widget.user-logout-warning.renew" class="button">
+								$core_v2_language.GetResource('Stay')
+							</a>
+							<span class="processing" style="display:none;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+		<% } %>
+	</form>
+#end
+
+#set ($notificationTemplateId = $core_v2_widget.UniqueId('notificationTemplate'))
+#registerClientTemplate($notificationTemplateId)
+	#format($core_v2_language.GetResource('WarningMessage'))
+		#token('seconds')
+			<strong><%: remainingSeconds %></strong>
+	#end
+#end
+
+#registerEndOfPageHtml()
+	<script>
+	jQuery(function(j){
+
+		var modalContent;
+		var modalTemplate;
+		var notificationTemplate;
+
+        // configure warning threshold
+        j.telligent.evolution.authentication.configure({
+            warningThresholdSeconds: $warningThreshold
+        });
+
+		// show or update warning modal
+		j.telligent.evolution.messaging.subscribe('user.logout.warning', function(data) {
+			modalTemplate = j.telligent.evolution.template('$core_v2_encoding.JavaScriptEncode($modalTemplateId)');
+			notificationTemplate = j.telligent.evolution.template('$core_v2_encoding.JavaScriptEncode($notificationTemplateId)');
+
+			if (data.renewable) {
+				if (!modalContent) {
+					modalContent = j('<div></div>').html(modalTemplate(data));
+
+					var modal = j.glowModal({
+						title: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('StillThere'))',
+						html: modalContent,
+						width: 450,
+						onClose: function () {
+							modalContent = null;
+						}
+					});
+				} else {
+					modalContent.html(modalTemplate(data));
+				}
+			} else {
+				j.telligent.evolution.notifications.show(notificationTemplate(data), {
+					id: '_logout_warning',
+					type: 'warning'
+				});
+			}
+		});
+
+		// hide warning modal
+		j.telligent.evolution.messaging.subscribe('user.logout.warning.canceled', function() {
+			j.glowModal.close();
+			j.telligent.evolution.notifications.hide('_logout_warning');
+		});
+
+		// manually renew authentication via modal's button
+		j.telligent.evolution.messaging.subscribe('widget.user-logout-warning.renew', function(data) {
+			j(data.target).addClass('disabled').parent().find('.processing').show();
+			j.telligent.evolution.authentication.renew();
+		});
+	});
+	</script>
+#end
+
+]]></contentScript>
+	<headerScript><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Name}'))
+	]]></headerScript>
+	<configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="Title" defaultValue="${resource:Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="warningThreshold" labelResourceName="WarningThreshold" descriptionResourceName="WarningThresholdDesc" defaultValue="45" dataType="Int">
+		<propertyRule name="minmax" min="1" max="600" />
+	</property>
+</propertyGroup>
+	]]></configuration>
+	<languageResources><language key="en-us">
+  <resource name="Name">User - Logout Warning</resource>
+  <resource name="Description">Indicates when a user's session is about to expire.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Title">Title</resource>
+  <resource name="WarningThreshold">Warning threshold</resource>
+  <resource name="WarningThresholdDesc">Seconds before automatic sign out at which to warn.</resource>
+  <resource name="SlidingWarningMessage">Due to a period of inactivity, you will be signed out in {seconds} seconds.</resource>
+  <resource name="WarningMessage">For your security, you will be signed out in {seconds} seconds. Please save your work.</resource>
+  <resource name="Stay">Keep me signed in</resource>
+  <resource name="StillThere">Are you still there?</resource>
+</language></languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

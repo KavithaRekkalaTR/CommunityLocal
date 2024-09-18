@@ -1,0 +1,12 @@
+##
+## Rendered API Type Callback
+##
+
+#set ($name = $core_v2_page.GetQueryStringValue("_w_name"))
+#set ($restResource = $shellApi.GetRestResource($name))
+
+$core_v2_page.SetContentType('application/json')
+{
+	"index": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-restresource-index.vm'))",
+	"member": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-restresource.vm'))"
+}

@@ -1,0 +1,71 @@
+$core_v2_page.SetContentType('application/json')
+
+#set($reviewableContentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ReviewableContentId')))
+#set($approveDeny = $core_v2_page.GetFormValue('ApproveDeny'))
+#set($formData = '')
+#set($formData = $core_v2_page.GetFormValue('FormData'))
+
+#set($groupHeaderHtmlFormat = '<fieldset><ul class="field-list">')
+#set($groupFooterHtmlFormat = '</ul></fieldset>')
+#set($subGroupHeaderHtmlFormat = '')
+#set($subGroupFooterHtmlFormat = '')
+#set($propertyHeaderHtmlFormat = '<li class="field-item" id="{PropertyWrapperId}"><label class="field-item-name" for="{PropertyUniqueId}">{PropertyName}</label><span class="field-item-input">')
+#set($propertyFooterHtmlFormat = '</span></li>')
+    
+#set($reviewableContent = false)
+#set($reviewableContent = $context.GetReviewableContent($reviewableContentId))
+#if (!$reviewableContent)
+    {
+        "success": false
+    }
+#elseif ($approveDeny == 'Approve')
+    #set($hasApprovalRequirements = false)
+    #if ($reviewableContent.ApprovalOptionsXml && $reviewableContent.ApprovalOptionsXml.Length > 0)
+        #set($hasApprovalRequirements = true)
+    #end
+    
+    #if (!$hasApprovalRequirements || ($formData && $formData.Length > 0))
+        #set($response = $context.ApproveReviewableContent($reviewableContent.Id, $core_v2_page.ParseQueryString($formData)))
+        #if ($response.HasErrors())
+            $core_v2_page.SendJsonError($response.Errors)
+        #else
+            {
+                "success": true
+            }
+        #end
+    #else
+        #set($formId = "reviewableapproval_${reviewableContent.Id}")
+        {
+            "success": false,
+            "formId": "$core_v2_encoding.JavascriptEncode($formId)",
+            "formHtml": "$core_v2_encoding.JavascriptEncode($context.RenderReviewableContentApprovalForm($formId, $reviewableContentId, "%{ GroupHeaderHtmlFormat = $groupHeaderHtmlFormat, GroupFooterHtmlFormat = $groupFooterHtmlFormt, SubGroupHeaderHtmlFormat = $subGroupHeaderHtmlFormat, SubGroupFooterHtmlFormat = $subGroupFooterHtmlFormat, PropertyHeaderHtmlFormat = $propertyHeaderHtmlFormat, PropertyFooterHtmlFormat = $propertyFooterHtmlFormat }"))"
+        }
+    #end
+#elseif ($approveDeny == 'Deny')
+    #set($hasDenialRequirements = false)
+    #if ($reviewableContent.DenialOptionsXml && $reviewableContent.DenialOptionsXml.Length > 0)
+        #set($hasDenialRequirements = true)
+    #end
+    
+    #if (!$hasDenialRequirements || ($formData && $formData.Length > 0))
+        #set($response = $context.DenyReviewableContent($reviewableContent.Id, $core_v2_page.ParseQueryString($formData)))
+        #if ($response.HasErrors())
+            $core_v2_page.SendJsonError($response.Errors)
+        #else
+            {
+                "success": true
+            }
+        #end
+    #else
+        #set($formId = "reviewabledenial_${reviewableContent.Id}")
+        {
+            "success": false,
+            "formId": "$core_v2_encoding.JavascriptEncode($formId)",
+            "formHtml": "$core_v2_encoding.JavascriptEncode($context.RenderReviewableContentDenialForm($formId, $reviewableContentId, "%{ GroupHeaderHtmlFormat = $groupHeaderHtmlFormat, GroupFooterHtmlFormat = $groupFooterHtmlFormt, SubGroupHeaderHtmlFormat = $subGroupHeaderHtmlFormat, SubGroupFooterHtmlFormat = $subGroupFooterHtmlFormat, PropertyHeaderHtmlFormat = $propertyHeaderHtmlFormat, PropertyFooterHtmlFormat = $propertyFooterHtmlFormat }"))"
+        }
+    #end
+#else
+    {
+        "success": false
+    }
+#end

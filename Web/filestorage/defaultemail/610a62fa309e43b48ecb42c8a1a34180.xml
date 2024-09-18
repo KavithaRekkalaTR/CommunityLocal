@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Abusive Author Content" version="13.0.0.0" description="Raises notifications to a content author when the content has been classified as abusive." id="610a62fa309e43b48ecb42c8a1a34180" lastModified="2023-05-11 19:58:19Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+    #format($core_v2_language.GetResource('Subject_User'))
+    #token('site_name')
+    	$core_v2_infoResult.Get().SiteName
+	#end
+#else
+    #format($core_v2_language.GetResource('Subject'))
+    #token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#token('site_name')
+	    $core_v2_infoResult.Get().SiteName
+	#end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+    $core_v2_language.GetResource('Header_User')
+#else
+    #format($core_v2_language.GetResource('Header'))
+    #token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+	<p>
+	#format($core_v2_language.GetResource('Body_User_Introduction'))
+	#token('content_name')
+    	$context_v1_email.Context.Content.HtmlName('Web')
+	#token('abuse_identification')
+	    $context_v1_email.Context.AbuseAppeal.IdentificationExplanation
+	#end
+	</p>
+	<p>
+	#format($core_v2_language.GetResource('Body_User_Appeal'))
+	#token('appeal_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.AbuseAppeal($context_v1_email.Context.AbuseAppeal.AppealId))">$core_v2_language.GetResource('Appeal')</a>
+	#token('appeal_expires')
+	    $core_v2_language.FormatDateAndTime($context_v1_email.Context.AbuseAppeal.AppealExpires)
+	#end
+	</p>
+#else
+	<p>
+	#format($core_v2_language.GetResource('Body_Introduction'))
+	#token('contenttype_name')
+	    $core_v2_contentType.Get($context_v1_email.Context.AbuseAppeal.Content.ContentTypeId).Name
+	#token('content_name')
+    	$context_v1_email.Context.Content.HtmlName('Web')
+    #token('application_name_link')
+        #set($applicationUrl = $context_v1_email.Context.Content.Application.Url)
+    	#if ($applicationUrl)
+    		<a href="$core_v2_encoding.HtmlAttributeEncode($applicationUrl)">$context_v1_email.Context.Content.Application.HtmlName('Web')</a>
+    	#else
+    	    $context_v1_email.Context.Content.Application.HtmlName('Web')
+    	#end
+	#token('abuse_identification')
+	    $context_v1_email.Context.AbuseAppeal.IdentificationExplanation
+	#end
+	</p>
+	<p>
+	#format($core_v2_language.GetResource('Body_Appeal'))
+	#token('appeal_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.AbuseAppeal($context_v1_email.Context.AbuseAppeal.AppealId))">$core_v2_language.GetResource('Appeal')</a>
+	#token('appeal_expires')
+	    $core_v2_language.FormatDateAndTime($context_v1_email.Context.AbuseAppeal.AppealExpires)
+	#end
+	</p>
+#end
+</p>
+#if($context_v1_email.Context.AbuseAppeal.BoardResponse && $context_v1_email.Context.AbuseAppeal.BoardResponse.Length > 0)
+    <p><em>$context_v1_email.Context.AbuseAppeal.BoardResponse</em></p>
+#end]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Appeal">this form</resource>
+  <resource name="Body_Appeal">Please help us keep the community content safe and enjoyable for everyone. If you feel your content shouldn't be&amp;nbsp;removed from the site, please let us know. You can use {appeal_link} to appeal the finding before {appeal_expires}.</resource>
+  <resource name="Body_Introduction">An issue was identified with your {contenttype_name}, {content_name}, in {application_name_link}: {abuse_identification}</resource>
+  <resource name="Body_User_Appeal">Please help us keep the community safe and enjoyable for everyone. If you feel this identification was in error, please let us know. You can use {appeal_link} and we'll promptly review it. If you do not appeal before {appeal_expires}, your account will be removed from the community.</resource>
+  <resource name="Body_User_Introduction">An issue was identified with your user account, {content_name}: {abuse_identification}</resource>
+  <resource name="Subject">{site_name}: An issue with your {contenttype_name}</resource>
+  <resource name="Subject_User">{site_name}: An issue with your user account</resource>
+  <resource name="Header">An issue with your {contenttype_name}</resource>
+  <resource name="Header_User">An issue with your user account</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

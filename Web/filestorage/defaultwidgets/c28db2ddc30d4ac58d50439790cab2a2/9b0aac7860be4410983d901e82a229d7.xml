@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:WikiPagePeek}" cssClass="wiki-page" description="${resource:WikiPagePeek_Description}" provider="c28db2ddc30d4ac58d50439790cab2a2" instanceIdentifier="9b0aac7860be4410983d901e82a229d7" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript><![CDATA[
+
+#set ($content = $context.Content)
+#if (!$content)
+	$core_v2_widget.Hide()
+#end
+
+#set ($page = $core_v2_wikiPage.Get($content.ContentId))
+#if (!$page)
+	$core_v2_widget.Hide()
+#end
+
+#set ($target = $context.Target)
+#set ($title = $content.HtmlName($target))
+#set ($body = $content.HtmlDescription($target))
+
+#if ($content.CreatedDate)
+	#set ($date = $content.CreatedDate)
+#end
+
+#if($content.Application)
+	#set($applicationName = $content.Application.HtmlName($target))
+	#set($applicationUrl = $content.Application.Url)
+#end
+
+#if($content.Application && $content.Application.Container)
+	#set ($containerName = $content.Application.Container.HtmlName($target))
+	#set ($containerUrl = $content.Application.Container.Url)
+#end
+
+<div class="content-peek">
+	<div class="content-peek-heading">
+		<div class="content-peek-name">
+			<div class="content-peek-title">
+				<a title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Truncate($core_v2_encoding.HtmlDecode($title), 100, '...'))" href="$core_v2_encoding.HtmlAttributeEncode($content.Url)">
+					$core_v2_language.Truncate($title, 100, '...')
+				</a>
+			</div>
+		</div>
+	</div>
+	<div class="content-peek-excerpt">
+		#if ($body && $body != '')
+			$core_v2_language.Truncate($body, 200, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'false' }")
+		#end
+	</div>
+	<div class="content-peek-details">
+		<div class="content-peek-detail">
+			<div class="content-peek-detail-component">
+				#format($core_v2_language.GetResource('by'))
+					#token('date')
+						#if ($page.LastModifiedDate)
+							$core_v2_ui.AgoDate($page.LastModifiedDate)
+						#end
+					#token('container')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($containerUrl)">$containerName</a>
+					#token('application')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($applicationUrl)">$applicationName</a>
+				#end
+			</div>
+		</div>
+
+		<div class="content-peek-detail">
+			## Rating
+			#set($rating = $core_v2_ratedItem.Get($content.ContentId))
+			#if ($rating && $rating.Count > 0)
+				<div class="content-peek-detail-component">
+					$core_v2_ui.Rate($content.ContentId, $content.ContentTypeId, "%{ ReadOnly = 'True' }")
+				</div>
+			#end
+
+			## Comment Count
+			#set($comments = $core_v2_comments.List("%{ ContentId = $content.ContentId, ContentTypeId = $content.ContentTypeId, IncludeChildren = 'True', IsApproved = 'True', PageIndex = 0, PageSize = 1 }"))
+			#if ($comments.TotalCount > 0)
+				<div class="content-peek-detail-component">
+					#if ($comments.TotalCount == 1)
+						#set ($countResource = 'replies_singular')
+					#else
+						#set ($countResource = "replies_plural")
+					#end
+					#format($core_v2_language.GetResource($countResource))
+						#token('count')
+							$comments.TotalCount
+					#end
+				</div>
+			#end
+		</div>
+	</div>
+
+	## Actions
+	#set ($includeBookmark = $core_v2_bookmark.SupportsBookmarks($content.ContentTypeId) && $core_v2_bookmark.CanBookmark($content.ContentId, $content.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($content.ContentId, $content.ContentTypeId))
+	#set ($includeSubscriptions = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v2_contentSubscription.SupportsSubscriptions($content.ContentTypeId) && $core_v2_contentSubscription.CanSubscribe($content.ContentId, $content.ContentTypeId))
+	#set ($includeLike = $core_v2_like.SupportsLikes($content.ContentTypeId) && $core_v2_like.CanLike($content.ContentId, $content.ContentTypeId) && $core_v2_like.CanUnlike($content.ContentId, $content.ContentTypeId))
+	#set ($includeModeration = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v2_abuseReport.CanBeMarkedAsAbusive($content.ContentTypeId))
+
+	#set ($maxLinks = 0)
+	#set ($totalLinks = 0)
+
+	#if ($includeBookmark)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeLike)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeSubscriptions)
+		#set ($maxLinks = $maxLinks + 1)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($includeModeration)
+		#set ($totalLinks = $totalLinks + 1)
+	#end
+
+	#if ($totalLinks > 0 )
+		<div class="content-peek-actions">
+			<ul class="ui-links" data-maxlinks="$maxLinks" data-direction="horizontal">
+				#if ($includeBookmark)
+					<li class="navigation-list-item">$core_v2_ui.Bookmark($content.ContentId, $content.ContentTypeId, "%{ addBookmarkText = $core_v2_language.GetResource('bookmark'), deleteBookmarkText = $core_v2_language.GetResource('unbookmark') }")</li>
+				#end
+
+				#if ($includeSubscriptions)
+					#set ($subscription = $core_v2_contentSubscription.Get($content.ContentId, "%{}"))
+					#set ($isSubscribed = $subscription.IsSubscribed)
+					<li class="navigation-list-item">
+						<a data-messagename="widget.${core_v2_widget.WrapperElementId}.subscribe"
+							data-value="$isSubscribed"
+							data-labelon="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Subscribe'))"
+							data-labeloff="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Unsubscribe'))"
+							data-labelontip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SubscribeTip'))"
+							data-labelofftip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('UnsubscribeTip'))"
+							data-labelprocess="…"
+							title="#if ($isSubscribed) $core_v2_language.GetResource('UnsubscribeTip') #else $core_v2_language.GetResource('SubscribeTip') #end"
+							href="#">
+							#if ($isSubscribed) $core_v2_language.GetResource('Unsubscribe') #else $core_v2_language.GetResource('Subscribe') #end
+						</a>
+					</li>
+				#end
+
+				#if ($includeLike)
+					<li class="navigation-list-item">$core_v2_ui.Like($content.ContentId, $content.ContentTypeId)</li>
+				#end
+
+				#if ($includeModeration)
+					<li class="navigation-list-item">$core_v2_ui.Moderate($content.ContentId, $content.ContentTypeId, "%{ }")</li>
+				#end
+				<li><a href="#" data-more><span class="more">$core_v2_language.GetResource('More')</span></a></li>
+				<li><a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a></li>
+			</ul>
+
+			#if ($includeSubscriptions)
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.contentSubscribe")
+					<script>
+					jQuery(function(j){
+						j.telligent.evolution.messaging.unsubscribe('widget.${core_v2_widget.WrapperElementId}.subscribe');
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.subscribe', function(data){
+							var link = j(data.target);
+							var targetSubscriptionState = (link.data('value') === true || link.data('value') === 'True') ? false : true;
+							link.html(link.data('labelprocess'));
+							j.telligent.evolution.put({
+								url: j.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/content/subscription.json',
+								data: {
+									ContentId: '$content.ContentId',
+									ContentTypeId: '$content.ContentTypeId',
+									IsSubscribed: targetSubscriptionState
+								}
+							}).then(function(){
+								link.data('value', targetSubscriptionState);
+								if (targetSubscriptionState === true) {
+									link.html(link.data('labeloff'))
+										.prop('title', link.data('labelofftip'));
+								} else {
+									link.html(link.data('labelon'))
+										.prop('title', link.data('labelontip'));
+								}
+							})
+						});
+					});
+					</script>
+				#end
+			#end
+		</div>
+	#end
+</div>
+
+]]></contentScript>
+<headerScript></headerScript>
+<languageResources>
+<language key="en-us">
+	<resource name="WikiPagePeek">Wiki Page Peek</resource>
+	<resource name="WikiPagePeek_Description">Displays content for peeked wiki pages.</resource>
+	<resource name="by">Last edited {date} in {container} &lt;span class="hierarchy"&gt;&gt;&lt;/span&gt; {application}</resource>
+	<resource name="More">&#8230;</resource>
+	<resource name="Cancel">Cancel</resource>
+	<resource name="replies_singular">{count} comment</resource>
+	<resource name="replies_plural">{count} comments</resource>
+	<resource name="Subscribe">Subscribe</resource>
+	<resource name="SubscribeTip">Subscribe to notifications</resource>
+	<resource name="Unsubscribe">Unsubscribe</resource>
+	<resource name="UnsubscribeTip">Unsubscribe from notifications</resource>
+	<resource name="bookmark">Bookmark</resource>
+	<resource name="unbookmark">Unbookmark</resource>
+</language>
+</languageResources>
+<restScopes>
+  <scope id="subscriptions.content.modify" />
+</restScopes>
+	</scriptedContentFragment>
+</scriptedContentFragments>

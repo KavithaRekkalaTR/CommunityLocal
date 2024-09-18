@@ -1,0 +1,43 @@
+<ul class="attribute-list">
+	<li class="attribute-item">
+		<span class="attribute-name">$core_v2_language.GetResource('WidgetID')</span>
+		<span class="attribute-value"><%: InstanceIdentifier %></span>
+	</li>
+	<% if(ThemeId) { %>
+		<li class="attribute-item">
+			<span class="attribute-name">$core_v2_language.GetResource('ThemeName')</span>
+			<span class="attribute-value"><%: (ThemeTitle || '') %></span>
+		</li>
+		<li class="attribute-item">
+			<span class="attribute-name">$core_v2_language.GetResource('ThemeID')</span>
+			<span class="attribute-value"><%: ThemeId %></span>
+		</li>
+	<% } else { %>
+		<li class="attribute-item">
+			<span class="attribute-name">$core_v2_language.GetResource('Theme')</span>
+			<span class="attribute-value">$core_v2_language.GetResource('NotThemed')</span>
+		</li>
+	<% } %>
+	<% if(FactoryDefaultProvider) { %>
+		<li class="attribute-item">
+			<span class="attribute-name">$core_v2_language.GetResource('DefaultProviderName')</span>
+			<span class="attribute-value"><%: (FactoryDefaultProviderName || '') %></span>
+		</li>
+		<li class="attribute-item">
+			<span class="attribute-name">$core_v2_language.GetResource('DefaultProviderId')</span>
+			<span class="attribute-value"><%: FactoryDefaultProvider %></span>
+		</li>
+	<% } %>
+	<% if(FilePath) { %>
+		<li class="attribute-item path source-path">
+			<span class="attribute-name">$core_v2_language.GetResource('FilePath')</span>
+			<span class="attribute-value"><%: (FilePath || '') %></span>
+		</li>
+	<% } %>
+	<% if(AttachmentFilePath) { %>
+		<li class="attribute-item path attachment-source-path">
+			<span class="attribute-name">$core_v2_language.GetResource('AttachmentFilePath')</span>
+			<span class="attribute-value"><%: (AttachmentFilePath || '') %></span>
+		</li>
+	<% } %>
+</ul>

@@ -1,0 +1,39 @@
+﻿#if ($core_v2_page.IsPost)
+	#set ($subscriptionId = -1)
+	#set ($subscriptionId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('subscriptionId')))
+	#set ($frequency = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('frequency')))
+	#set ($context = $core_v2_page.GetFormValue('context'))
+	#set ($contextId = -1)
+	#set ($contextId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('contextId')))
+	$core_v2_page.SetContentType('application/json')
+
+	{
+	#if($frequency == 0 && $subscriptionId > 0)
+		#set($deleteInfo = $core_v2_emailDigest.Delete($subscriptionId))
+		#set($warnings = $deleteInfo.Warnings)
+		"success" : "true",
+		"action" : "delete"
+	#elseif($frequency > 0 && $subscriptionId > 0)
+		#set($sub = $core_v2_emailDigest.Update($subscriptionId, $frequency))
+		#set($warnings = $sub.Warnings)
+		"success" : "true",
+		"action" : "update"
+	#elseif($frequency > 0 && $subscriptionId <= 0)
+		#set($sub = $core_v2_emailDigest.Create($context, $contextId, $frequency))
+		#set($warnings = $sub.Warnings)
+		"success" : "true",
+		"action" : "create",
+		"subscriptionId" : "$sub.Id"
+	#else
+		"success" : "true",
+		"action" : "none"
+	#end
+	, "warnings":[
+		#foreach ($warning in $warnings)
+			#each
+				"$core_v2_encoding.JavascriptEncode($warning.Message)"
+			#between
+				,
+		#end
+	]}
+#end

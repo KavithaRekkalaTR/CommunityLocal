@@ -1,0 +1,14 @@
+##
+## Expects in scope: $themes, $inProcess
+##
+
+#foreach ($theme in $themes)
+	<li class="content-item theme" data-id="$theme.Id" data-typeid="$!theme.TypeId"
+		data-themename="$core_v2_encoding.HtmlAttributeEncode($theme.Name)">
+		$core_v2_widget.ExecuteFile('render-item.vm')
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end

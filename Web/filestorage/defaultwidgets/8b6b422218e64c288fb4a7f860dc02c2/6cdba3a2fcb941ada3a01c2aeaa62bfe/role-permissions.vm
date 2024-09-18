@@ -1,0 +1,88 @@
+#if($cloneRoleId > 0)
+	#set($perms = $context.GetPermissions($cloneRoleId))
+#else
+	#set($perms = $context.GetPermissions($roleId))
+#end
+
+#set($appType = '')
+
+<form><fieldset>
+    #set($readOnlyMode = $role.IsAdministratorRole)
+    #if ($readOnlyMode)
+        <div class="message information">$core_v2_language.GetResource('ReadOnlyMode')</div>
+    #end
+
+	<ul class="field-list">
+		<li class="field-item permission-filter">
+			<span class="field-item-input"><input type="text" name="search" placeholder="$core_v2_language.GetResource('Find')"></input></span>
+		</li>
+        #if (!$readOnlyMode)
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="inline-button revert-to-default">$core_v2_language.GetResource("RevertToDefault")</a>
+                </span>
+            </li>
+        #end
+	</ul>
+</fieldset>
+
+#set ($index = 0)
+#foreach($perm in $perms)
+#beforeall
+	<fieldset>
+#each
+	#set ($index = $index + 1)
+	#set ($inputId = "${core_v2_widget.UniqueId('permissionInputId')}${index}")
+
+	#if($appType != $perm.Permission.ApplicationTypeId && $appType != '')
+		</ul>
+	</div>
+	#end
+
+	#if($appType != $perm.Permission.ApplicationTypeId)
+		<div class="permission-group">
+			<h4 class="permission-group-header">
+				$core_v2_language.FormatString($core_v2_language.GetResource('ItemPermissions'), $core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name)
+			</h4>
+            #if (!$readOnlyMode)
+                <div class="post-attributes">
+                    <ul class="field-list">
+                        <li class="field-item" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower())">
+                            <span class="field-item-input">
+                                <a href="#" class="inline-button checkall">$core_v2_language.GetResource('SelectAll')</a>
+                                <a href="#" class="inline-button checknone">$core_v2_language.GetResource('SelectNone')</a>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            #end
+			<ul class="field-list">
+	#end
+
+    #if($perm.Permission.Id == $core_v2_sitePermissions.ReadDefaultContent)
+        <li style="display:none;">
+    		<input type="checkbox" name="permissions" value="$perm.Permission.Id" #if($perm.IsAllowed)checked="checked"#end #if($role.IsAdministratorRole) disabled="disabled" #end  data-value="$perm.IsAllowed.ToString().ToLowerInvariant()" data-templateValue="$perm.IsAllowedByFactoryDefault.ToString().ToLowerInvariant()" />
+    	</li>
+    #else
+    	<li class="field-item permission" data-text="$core_v2_encoding.HtmlAttributeEncode($perm.Permission.Name.ToLower()) $core_v2_encoding.HtmlAttributeEncode($core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name).ToLower() $core_v2_encoding.HtmlAttributeEncode($perm.Permission.Description).ToLower()">
+    		<span class="field-item-input">
+    			<input type="checkbox" name="permissions" id="$inputId" value="$perm.Permission.Id" #if($perm.IsAllowed)checked="checked"#end #if($role.IsAdministratorRole) disabled="disabled" #end  data-value="$perm.IsAllowed.ToString().ToLowerInvariant()" data-templateValue="$perm.IsAllowedByFactoryDefault.ToString().ToLowerInvariant()" />
+    			<label for="$inputId">$perm.Permission.Name
+                    #if($perm.IsAllowed && !$perm.IsAllowedByFactoryDefault)
+                        <span class="pill">$core_v2_language.GetResource('DefaultDenied')</span>
+                    #elseif(!$perm.IsAllowed && $perm.IsAllowedByFactoryDefault)
+                        <span class="pill">$core_v2_language.GetResource('DefaultAllowed')</span>
+                    #end
+                </label>
+    		</span>
+    		<span class="field-item-description">$perm.Permission.Description</span>
+    	</li>
+    #end
+
+	#set($appType = $perm.Permission.ApplicationTypeId)
+#afterall
+		</ul>
+	</fieldset>
+#end
+</form>
+<div class="message norecords" #if($perms.Count > 0) style="display: none;"#end>$core_v2_language.GetResource("NoPermissionsFound")</div>

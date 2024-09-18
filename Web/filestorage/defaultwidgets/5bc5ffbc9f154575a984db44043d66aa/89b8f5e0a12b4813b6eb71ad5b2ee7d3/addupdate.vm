@@ -1,0 +1,56 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($pointFactorId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('PointFactorId')))
+	#set($title = $core_v2_page.GetFormValue('Title'))
+	#set($description = $core_v2_page.GetFormValue('Description'))
+	#set($points = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('Points')))
+	#set($updatePoints = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('UpdatePoints')))
+	#set($enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enabled')))
+
+	#set($automationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('AutomationId')))
+	#set($removeAutomation = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('RemoveAutomation')))
+	#set($automationConfiguration = $core_v2_page.GetFormValue('AutomationConfiguration'))
+
+	#set($options = "%{}")
+
+	#if ($description)
+		$options.Add('Description', $description)
+	#end
+	#if ($points)
+		$options.Add('Points', $points)
+	#end
+
+	$options.Add('UpdatePoints', $updatePoints)
+	$options.Add('Enabled', $enabled)
+
+	#if ($automationId)
+		$options.Add('AutomationId', $automationId)
+	#end
+	#if ($removeAutomation)
+		$options.Add('RemoveAutomation', $removeAutomation)
+	#end
+	#if ($automationConfiguration)
+		$options.Add('AutomationConfiguration', $automationConfiguration)
+	#end
+
+
+
+	#if(!$pointFactorId || $pointFactorId == '00000000-0000-0000-0000-000000000000')
+		#set($pointFactorResult = $context.SavePointFactor($title, $options))
+	#else
+		#if ($title)
+			$options.Add('Title', $title)
+		#end
+		#set($pointFactorResult = $context.UpdatePointFactor($pointFactorId, $options))
+	#end
+
+	#if ($pointFactorResult.HasErrors())
+		$core_v2_page.SendJsonError($pointFactorResult.Errors)
+	#else
+		#set ($pointFactor = $pointFactorResult.Model)
+	#end
+
+	{"success":true}
+
+#end

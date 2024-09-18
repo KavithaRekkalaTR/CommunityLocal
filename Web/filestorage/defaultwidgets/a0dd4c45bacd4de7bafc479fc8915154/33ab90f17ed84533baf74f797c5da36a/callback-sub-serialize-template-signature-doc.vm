@@ -1,0 +1,13 @@
+##
+## Renders a signature of a property template
+##
+## Requires in scope:
+##   $propertyTemplate
+##
+
+#set ($optionsAttributes = "")
+#set ($dq = '"')
+#foreach ($option in $propertyTemplate.Options)
+	#set ($optionsAttributes = "${optionsAttributes} ${option.Name}=${dq}${option.Default}${dq}")
+#end
+template="${propertyTemplate.Name}"$optionsAttributes

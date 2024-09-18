@@ -1,0 +1,118 @@
+##
+## Server-rendered permalinked comment + contextual comments
+##
+## Expects in scope:
+##   $commentId
+##   $sortBy
+##   $sortOrder
+##   $content
+##   $includeSiblings - potentially include siblings of permalinked item
+##   $startReplyId - optional
+##   $endReplyId - optional
+##
+
+## Load comment
+#set ($comment = false)
+#set ($comment = $core_v2_comments.Get($commentId))
+#if (!$comment)
+	$core_v2_page.SendJsonError($core_v2_language.GetResource('ReplyDeleted'))
+#end
+#if ($comment.Errors.Count > 0)
+	$core_v2_page.SendJsonError($comment.Errors)
+#end
+#set ($permalinkedComment = $comment)
+
+## Load comments' ancestors
+#set ($parents = [])
+#set ($child = $comment)
+$core_v2_widget.ExecuteFile('common-load-parents.vm')
+
+#set ($flattenAt = $flattenedDepth - $parents.Count)
+
+## Load Children
+#if ($flattenAt >= 0 && $child.ReplyCount > 0)
+	#set ($listThreadedOptions = "%{}")
+	$listThreadedOptions.add('ContentId', $content.ContentId)
+	$listThreadedOptions.add('ContentTypeId', $content.ContentTypeId)
+	$listThreadedOptions.add('ParentCommentId', $commentId)
+	$listThreadedOptions.add('FlattenedDepth', $flattenAt)
+	$listThreadedOptions.add('RootPageSize', $pageSize)
+	$listThreadedOptions.add('ChildPageSize', $pageSize)
+	$listThreadedOptions.add('IsApproved', 'True')
+	#if ($sortBy)
+		$listThreadedOptions.add('ThreadedSortBy', $sortBy)
+	#end
+	#if ($sortOrder)
+		$listThreadedOptions.add('ThreadedSortOrder', $sortOrder)
+	#end
+	#if ($flattenedSortBy)
+		$listThreadedOptions.add('FlattenedSortBy', $flattenedSortBy)
+	#end
+	#if ($flattenedSortOrder)
+		$listThreadedOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+	#end
+
+	#if ($startReplyId)
+		$listThreadedOptions.add('StartCommentId', $startReplyId)
+	#end
+	#if ($endReplyId)
+		$listThreadedOptions.add('EndCommentId', $endReplyId)
+	#end
+
+	#set ($children = false)
+	#set ($children = $core_v2_comments.ListThreaded($listThreadedOptions))
+#else
+	#set ($children = [])
+#end
+
+## Reply Siblings
+#set ($replySiblings = [])
+#if ($includeSiblings && ($flattenAt >= 0 || !$topMostAncestors || $topMostAncestors.Count == 0))
+	#set ($includeSiblings = false)
+#end
+#if ($includeSiblings)
+	#set ($siblingFlatten = $flattenAt - 1)
+	#if ($siblingFlatten < 0)
+		#set ($siblingFlatten = 0)
+	#end
+
+	#set ($effectiveParent = false)
+	#foreach ($parent in $topMostAncestors)
+		#set ($effectiveParent = $parent)
+	#end
+
+	#set ($listThreadedOptions = "%{}")
+	$listThreadedOptions.add('ContentId', $content.ContentId)
+	$listThreadedOptions.add('ContentTypeId', $content.ContentTypeId)
+	$listThreadedOptions.add('ParentCommentId', $effectiveParent.CommentId)
+	$listThreadedOptions.add('FlattenedDepth', $siblingFlatten)
+	$listThreadedOptions.add('RootPageSize', $pageSize)
+	$listThreadedOptions.add('ChildPageSize', $pageSize)
+	$listThreadedOptions.add('StartCommentId', $commentId)
+	$listThreadedOptions.add('IsApproved', 'True')
+	#if ($sortBy)
+		$listThreadedOptions.add('ThreadedSortBy', $sortBy)
+	#end
+	#if ($sortOrder)
+		$listThreadedOptions.add('ThreadedSortOrder', $sortOrder)
+	#end
+	#if ($flattenedSortBy)
+		$listThreadedOptions.add('FlattenedSortBy', $flattenedSortBy)
+	#end
+	#if ($flattenedSortOrder)
+		$listThreadedOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+	#end
+	#set ($replySiblings = $core_v2_comments.ListThreaded($listThreadedOptions))
+#end
+
+$core_v2_page.SetContentType('application/json')
+{
+	"replyId": "$permalinkedComment.CommentId",
+	"childrenCount": $children.Count,
+	"parentCount": $parents.Count,
+
+	#set ($replyWithParents = $parents)
+	#set ($replyChildren = $children)
+	#set ($permalinkedId = $commentId)
+	"replies": $core_v2_widget.ExecuteFile('callback-serialize-replies-permalink.vm')
+}

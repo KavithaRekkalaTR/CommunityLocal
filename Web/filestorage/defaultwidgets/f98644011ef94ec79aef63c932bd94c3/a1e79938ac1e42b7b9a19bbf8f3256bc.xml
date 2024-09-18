@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:CommunityDashboard_Name}"
+                           version="10.0.0.0"
+                           description="${resource:CommunityDashboard_Description}"
+                           instanceIdentifier="a1e79938ac1e42b7b9a19bbf8f3256bc"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c932bd94c3">
+		<contentScript><![CDATA[
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id))
+    #set($options = "%{ target = 'tile'}")
+    $options.Add("parentId", $context.Id)
+    $options.Add("tabKey", $context.TabKey)
+
+    #set($miniOptions = "%{ target = 'card'}")
+    $miniOptions.Add("parentId", $context.Id)
+    $miniOptions.Add("tabKey", $context.TabKey)
+
+    #set ($query = $core_v2_page.ParseQueryString($context.TabKey))
+    #set ($dashboard = $reporting.GetReport($context.Id))
+
+    <div class="community-health-summary">
+        <div class="view-header dashboard">
+            <span class="view-title">
+                <span class="hierarchy name">$dashboard.Name</span>
+            </span>
+            <div class="description">$dashboard.Description</div>
+            <div class="filter-container">
+                <ul class="global-filters">
+                    <li>$reporting.RenderFilter($reporting_filters.DateRangeFilter, "%{tabKey=$context.TabKey}")</li>
+                    <li>$reporting.RenderFilter($reporting_filters.DatePeriodFilter, "%{tabKey=$context.TabKey}")</li>
+                    <li>$reporting.RenderFilter($reporting_filters.ResetFilter, "%{tabKey=$context.TabKey}")</li>
+                </ul>
+            </div>
+        </div>
+        <div class="view-body dashboard">
+            <ul class="flex-tile-reports">
+                <li class="content-report">$reporting.RenderReport($reporting_reports.Content, $options)</li>
+                <li class="interactions-report">$reporting.RenderReport($reporting_reports.Interactions, $options)</li>
+                <li class="active-content">$reporting.RenderReport($reporting_reports.ActiveContent, $options)</li>
+                <li class="viewed-content">$reporting.RenderReport($reporting_reports.ViewedContent, $options)</li>
+                <li class="active-users">$reporting.RenderReport($reporting_reports.ActiveMembers, $options)</li>
+                <li class="new-users">$reporting.RenderReport($reporting_reports.NewMembers, $options)</li>
+                <li class="active-groups">$reporting.RenderReport($reporting_reports.ActiveGroups, $options)</li>
+                <li class="new-groups">$reporting.RenderReport($reporting_reports.NewGroups, $options)</li>
+            </ul>
+
+            <ul class="cards">
+                <li class="content-blue card">
+                    $reporting.RenderReport($reporting_reports.Content, $miniOptions)
+                </li>
+                <li class="interactions-orange card">
+                    $reporting.RenderReport($reporting_reports.Interactions, $miniOptions)
+                </li>
+                <li class="members-green card">
+                    $reporting.RenderReport($reporting_reports.NewMembers, $miniOptions)
+                </li>
+                <li class="groups-purple card">
+                    $reporting.RenderReport($reporting_reports.NewGroups, $miniOptions)
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    #registerEndOfPageHtml('telligent.reporting.widgets.communityDashboard')
+        <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+    #end
+
+    #registerEndOfPageHtml()
+    <script type="text/javascript">
+        jQuery.telligent.reporting.widgets.communityDashboard.register({
+            resources: {
+            title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CommunityDashboard_Name'))',
+            }
+        });
+    </script>
+    #end
+
+ #else
+    <div class="dashboard community-dashboard">
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+ #end
+
+]]></contentScript>
+		<languageResources>
+      <language key="en-us">
+        <resource name="CommunityDashboard_Name">Community Health Summary</resource>
+        <resource name="CommunityDashboard_Description">Displays summary of community health.</resource>
+        <resource name="Dashboard_Description">Overview of the community engagement, activity and membership.</resource>
+        <resource name="PermissionDenied">You do not have permission to view this dashboard.</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

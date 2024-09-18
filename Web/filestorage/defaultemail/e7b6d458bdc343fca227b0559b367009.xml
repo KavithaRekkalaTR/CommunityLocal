@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Moderation Review Needed" version="13.0.0.0" description="Sends notifications to a review board notifying them when content is newly moderated." id="e7b6d458bdc343fca227b0559b367009" lastModified="2023-04-20 13:29:09Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+$core_v2_language.GetResource('Body_Introduction')
+</p>
+<p>
+#format($core_v2_language.GetResource('Body_Review'))
+#token('review_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.AppealQueue(false))">$core_v2_language.GetResource('Review')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Introduction">You have content in your community requiring moderation.</resource>
+  <resource name="Body_Review">{review_link}.</resource>
+  <resource name="Review">Review to approve/deny the content now</resource>
+  <resource name="Subject">Moderation needed on {site_name}</resource>
+  <resource name="Header">Moderation needed on {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

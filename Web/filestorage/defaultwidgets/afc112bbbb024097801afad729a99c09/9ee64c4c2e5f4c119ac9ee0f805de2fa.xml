@@ -1,0 +1,251 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupOptionsManagement_Name}" version="10.0.0.0" description="${resource:GroupOptionsManagement_Description}" instanceIdentifier="9ee64c4c2e5f4c119ac9ee0f805de2fa" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-groupoptions" provider="afc112bbbb024097801afad729a99c09">
+    <contentScript><![CDATA[#set($group = $context.Group)
+
+#if ($context.Group.ParentGroupID != -1)
+	#set($parentGroup = $core_v2_group.Get("%{Id = $context.Group.ParentGroupID}" ))
+#end
+
+#set ($canDeleteGroups = $core_v3_permission.CheckPermission($core_v2_groupPermissions.DeleteGroup, $core_v2_user.Accessing.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+<div id="$core_v2_widget.WrapperElementId">
+
+	#set($attachmentFileName = false)
+	#set($attachmentContextId = false)
+	#set($attachmentUrl = false)
+
+	#if (!$attachmentContextId)
+		#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+	#end
+
+	#set($attachmentUrl = $group.AvatarUrl)
+	#set($attachmentFileName = $context.GetFileNameFromImageUrl($attachmentUrl))
+
+	<form><fieldset>
+		<ul class="field-list">
+
+			<li class="field-item name">
+				<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('Name')" name="GroupName" maxlength="256" value="$core_v2_encoding.HtmlDecode($!group.Name)" #if($group.ParentGroupID == -1) placeholder="$core_v2_infoResult.Get().SiteName" #end /> 
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			<li class="field-item required post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false">
+				<label class="field-item-name">$core_v2_language.GetResource('GroupAvatar')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('GroupAvatar_Detail')</span>
+				<span class="field-item-input preview">
+				</span>
+				<span class="field-item-input upload">
+				    #if ($context.EnableAvatarUploading)
+					    <a href="#" style="margin-right: 1em;" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+					#end
+					#if ($context.EnableAvatarSelection)
+					    <a href="#" style="margin-right: 1em;" class="select add" id="$core_v2_widget.UniqueId('select')">$core_v2_language.GetResource('SelectFile')</a>
+					#end
+					<a href="#" class="remove">$core_v2_language.GetResource('RemoveFile')</a>
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+			</li>		
+
+            #if($context.Group.ParentGroupID != -1)
+    			<li class="field-item application-key">
+    				<label for="$core_v2_widget.UniqueId('ApplicationKey')" class="field-item-name">$core_v2_language.GetResource('ApplicationKey')</label>
+    				<span class="field-item-description">$core_v2_language.GetResource('ApplicationKey_Detail')</span>
+    				<span class="field-item-input">
+    					<input type="text" id="$core_v2_widget.UniqueId('ApplicationKey')" name="ApplicationKey" maxlength="256" value="$core_v2_encoding.HtmlDecode($!group.ApplicationKey)" /> 
+    				</span>
+    				<span class="field-item-validation" style="display:none;"></span>
+    			</li>
+			#end
+
+			<li class="field-item description">
+				<label for="$core_v2_widget.UniqueId('Description')" class="field-item-name">$core_v2_language.GetResource('Description')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+				<span class="field-item-input">
+					<textarea name="Description" maxlength="256" id="$core_v2_widget.UniqueId('Description')">$!group.Description</textarea>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			## Hide certain options for the root group.
+			#if($context.Group.ParentGroupID != -1)
+				<li class="field-item group-type">
+					<label class="field-item-name">$core_v2_language.GetResource('GroupType')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('GroupType_Detail')</span>
+					<span class="field-item-input">
+						<fieldset>
+							<ul class="field-list">
+								<li class="field-item">
+									<span class="field-item-input">
+										<input type="radio" name="GroupType" value="Joinless" #if($group.GroupType =="Joinless")checked='checked'#end>$core_v2_language.GetResource('Joinless')</input>
+									</span>
+									<span class="field-item-description">$core_v2_language.GetResource('Joinless_Detail')</span>
+								</li>
+								<li class="field-item">					
+									<span class="field-item-input">
+										<input type="radio" name="GroupType" value="PublicOpen" #if($group.GroupType =="PublicOpen")checked='checked'#end>$core_v2_language.GetResource('PublicOpen')</input>
+									</span>
+									<span class="field-item-description">$core_v2_language.GetResource('PublicOpen_Detail')</span>
+								</li>
+								<li class="field-item">					
+									<span class="field-item-input">
+										<input type="radio" name="GroupType" value="PublicClosed" #if($group.GroupType =="PublicClosed")checked='checked'#end>$core_v2_language.GetResource('PublicClosed')</input>
+									</span>
+									<span class="field-item-description">$core_v2_language.GetResource('PublicClosed_Detail')</span>
+								</li>
+								<li class="field-item">					
+									<span class="field-item-input">
+										<input type="radio" name="GroupType" value="PrivateListed" #if($group.GroupType =="PrivateListed")checked='checked'#end>$core_v2_language.GetResource('PrivateListed')</input>
+									</span>
+									<span class="field-item-description">$core_v2_language.GetResource('PrivateListed_Detail')</span>
+								</li>
+								<li class="field-item">					
+									<span class="field-item-input">
+										<input type="radio" name="GroupType" value="PrivateUnlisted" #if($group.GroupType =="PrivateUnlisted")checked='checked'#end>$core_v2_language.GetResource('PrivateUnlisted')</input>
+									</span>
+									<span class="field-item-description">$core_v2_language.GetResource('PrivateUnlisted_Detail')</span>
+								</li>
+							</ul>
+						</fieldset>
+					</span>
+				</li>	
+
+				<li class="field-item parent-group">
+					<label for="$core_v2_widget.UniqueId('ParentGroup')" class="field-item-name">$core_v2_language.GetResource('ParentGroup')</label>
+					<span class="field-item-description">$core_v2_language.GetResource('ParentGroup_Detail')</span>
+
+					<span class="field-item-input">
+						<input type="text" id="$core_v2_widget.UniqueId('ParentGroup')" /> 
+					</span>
+					<span class="field-item-validation" style="display:none;"></span>
+				</li>
+			#end
+
+			<li class="field-item enable-contactform">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableContactForm')" #if($group.EnableContact)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('EnableContactForm')" class="field-item-name">$core_v2_language.GetResource('EnableContactForm')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableContactForm_Detail')</span>
+			</li>
+
+			<li class="field-item enable-messages">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_widget.UniqueId('EnableMessages')" #if($group.EnableGroupMessages)checked="checked"#end />
+					<label for="$core_v2_widget.UniqueId('EnableMessages')" class="field-item-name">$core_v2_language.GetResource('EnableMessages')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnableMessages_Detail')</span>
+			</li>
+
+			#if ($group)
+				<li class="field-item identifiers">
+					<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+				</li>			
+				<li class="field-item identifiers entityid" style="display: none;">
+					<label class="field-item-name">$core_v2_language.GetResource('EntityId')</label>
+					<span class="field-item-input">$group.ID</span>
+				</li>
+				<li class="field-item identifiers contentid" style="display: none;">
+					<label class="field-item-name">$core_v2_language.GetResource('ContainerId')</label>
+					<span class="field-item-input">$!group.ApplicationId</span>
+				</li>
+				<li class="field-item identifiers contenttypeid" style="display: none;">
+					<label class="field-item-name">$core_v2_language.GetResource('ContainerTypeId')</label>
+					<span class="field-item-input">$!group.ApplicationTypeId</span>
+				</li>
+			#end
+
+		</ul>
+	</fieldset></form>
+
+	#if($canDeleteGroups && $context.Group.ParentGroupID != -1)
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item submit">
+					<span class="field-item-input"><a href="#" class="button delete">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))</a></span>
+				</li>
+			</ul>
+		</fieldset>
+	#end
+
+</div>
+
+#set($childGroups = $core_v2_group.List("%{ParentGroupId = $context.Group.ID, IncludeAllSubGroups = 'true' }"))
+#set($hasChildGroups = false)
+#if($childGroups.Count > 0)
+	#set($hasChildGroups = true)
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.groupOptionsPanel')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.groupOptionsPanel.register({
+			wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+			containerId: '$context.ContainerId',
+			containerTypeId: '$context.ContainerTypeId',
+			groupId: '$context.Group.ID',
+			groupName: '$core_v2_encoding.JavascriptEncode($context.Group.Name)',
+			parentGroupId: '$context.Group.ParentGroupID',
+			parentGroupName: #if($parentGroup) '$core_v2_encoding.JavascriptEncode($parentGroup.Name)' #else '' #end,
+			originalGroupType: '$context.Group.GroupType',
+			originalApplicationKey: '$group.ApplicationKey',
+			hasChildGroups: '$hasChildGroups',
+			canDeleteGroups: '$canDeleteGroups',
+			inputs: {
+				nameId: "#$core_v2_widget.UniqueId('Name')",
+				applicationKeyId: "#$core_v2_widget.UniqueId('ApplicationKey')",
+				descriptionId: "#$core_v2_widget.UniqueId('Description')",
+				parentGroupId: "#$core_v2_widget.UniqueId('ParentGroup')",
+				enableMessagesId: "#$core_v2_widget.UniqueId('EnableMessages')",
+				enableContactFormId: "#$core_v2_widget.UniqueId('EnableContactForm')"
+			},
+			resources: {
+				noGroupsMatch: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupLookUp_NoMatches'))",
+				save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+				delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+				addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))",
+				groupTypeChangeWarning: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupTypeChangeWarning'))",
+				deleteConfirmation: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteGroupWarning'))",
+				childGroupMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChildGroupMessage'))",
+				groupUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GroupUpdated'))",
+				requiredText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RequiredText'))",
+				selectAvatar: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectAvatar'))"
+			},
+			urls: {
+				lookupGroups:  "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/groups.json')",
+				save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+				groupDeleteRedirect:  "$core_v2_page.AbsoluteUrl($core_v2_urls.Home())",
+				selectAvatar: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('select-avatar.vm'))'
+			},
+			file: {
+				fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+				url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+				isRemote:#if($attachmentIsRemote) true#else false#end,
+				isNew:#if($attachmentIsNew) true#else false#end
+			},
+		  attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		  attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		  attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		  attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		  previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		  uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		  uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+		});
+	});
+	</script>
+#end
+]]></contentScript>
+    <languageResources><language key="en-us"><resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource><resource name="ApplicationKey">URL</resource><resource name="ApplicationKey_Detail">Unique value used to identify this ${group_lowercase}. This value should not be changed. Only numbers, letters, "-", and "_" are valid characters.</resource><resource name="ChangeFile">Upload</resource><resource name="ChildGroupMessage">This ${group_lowercase} has child ${groups_lowercase}.  All child ${groups_lowercase} must be removed before this ${group_lowercase} can be deleted.</resource><resource name="ContainerId">Container Identifier</resource><resource name="ContainerTypeId">Container Type Identifier</resource><resource name="Delete">Delete</resource><resource name="DeleteGroupWarning">Deleting this ${group_lowercase} will also permanently delete the content associated with the ${group_lowercase} (blogs, forums, etc).Are you sure you want to delete this ${group_lowercase}? This action cannot be undone.</resource><resource name="Description">Description</resource><resource name="Description_Detail">The description for the ${group_lowercase} (256 chars)</resource><resource name="EnableContactForm">Enable Contact Form</resource><resource name="EnableContactForm_Detail">The contact form allows ${group_lowercase} visitors to send email messages to ${group_lowercase} owners.</resource><resource name="EnableMessages">Enable Messages</resource><resource name="EnableMessages_Detail">Allows users to post status messages to the ${group_lowercase}.</resource><resource name="EntityId">Identifier</resource><resource name="GroupAvatar">${group_propercase} Avatar</resource><resource name="GroupAvatar_Detail">The image that identifies this ${group_lowercase}. Default ${group_lowercase} avatar will be used if not provided.</resource><resource name="GroupLookUp_NoMatches">A matching ${group_lowercase} could not be found.</resource><resource name="GroupOptionsManagement_Description">Manage ${group_lowercase} options.</resource><resource name="GroupOptionsManagement_Name">${group_propercase} Options</resource><resource name="GroupType">${group_propercase} Privacy</resource><resource name="GroupType_Detail">The membership and visibility setting for this ${group_lowercase}</resource><resource name="GroupTypeChangeWarning">Changing the group type will reset any custom permissions that were setup in each group application and apply the default permissions for the built-in group type. This includes roles added as group members.</resource><resource name="GroupUpdated">${group_propercase} options have been updated.</resource><resource name="Joinless">Joinless</resource><resource name="Joinless_Detail">All content is public. No membership required.</resource><resource name="Name">Name</resource><resource name="Name_Detail">The name for the ${group_lowercase}.</resource><resource name="ParentGroup">Parent ${group_propercase}</resource><resource name="ParentGroup_Detail">The parent ${group_lowercase} identifies where this ${group_lowercase} will be categorized within the site.</resource><resource name="PrivateListed">Private (Listed)</resource><resource name="PrivateListed_Detail">Content is private. ${group_propercase} name and description are public. Membership approval required to contribute.</resource><resource name="PrivateUnlisted">Private (Unlisted)</resource><resource name="PrivateUnlisted_Detail">Content is private. ${group_propercase} is hidden to non-members. Membership approval required to contribute.</resource><resource name="PublicClosed">Public (Closed Membership)</resource><resource name="PublicClosed_Detail">All content is public. Membership approval required to contribute.</resource><resource name="PublicOpen">Public (Open Membership)</resource><resource name="PublicOpen_Detail">All content is public. Membership is required to contribute.</resource><resource name="RemoveFile">Remove</resource><resource name="RequiredText">This field is required.</resource><resource name="Save">Save</resource><resource name="SelectAvatar">Select an Avatar</resource><resource name="SelectFile">Select</resource><resource name="UploadFile">Upload</resource><resource name="UploadProgress">Uploading ({0}%)...</resource><resource name="ViewIdentifiers">View Identifiers</resource></language></languageResources>
+		<restScopes>
+			<scope id="groups.groups.readonly" />
+			<scope id="groups.groups.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

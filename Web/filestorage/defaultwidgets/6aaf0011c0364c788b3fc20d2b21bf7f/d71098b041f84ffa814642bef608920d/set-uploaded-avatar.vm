@@ -1,0 +1,22 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($uploadContextId = $core_v2_page.GetFormValue('uploadContextId'))
+	#set($filename = $core_v2_page.GetFormValue('filename'))
+
+	#set($response = $context.AddGroupAvatar($uploadContextId, $filename))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+		#set($options = "%{}")
+		$options.Add('DefaultGroupAvatarUrl', $response.Url)
+		#set($response2 = $context.UpdateSettings($options))
+
+		#if($response2.HasErrors())
+			$core_v2_page.SendJsonError($response2.Errors)
+		#end
+	#end
+
+	{"success":true, "url": " $response.Url"}
+#end

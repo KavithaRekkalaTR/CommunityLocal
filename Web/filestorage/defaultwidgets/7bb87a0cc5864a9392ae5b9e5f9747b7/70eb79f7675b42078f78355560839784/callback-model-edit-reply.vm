@@ -1,0 +1,51 @@
+##
+## Edits and serializes a Reply
+##
+## Paramters
+##
+##   _w_replyId
+##   _w_body
+##   _w_suggestAnswer
+##
+
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	$core_v2_widget.ExecuteFile('common-config.vm')
+
+	##
+	## Parse Parameters
+	##
+	#set ($options = "%{}")
+
+	#set ($replyId = false)
+	#set ($replyIdQuery = false)
+	#set ($replyIdQuery = $core_v2_page.GetFormValue('_w_replyId'))
+	#if ($replyIdQuery)
+		#set ($replyId = $core_v2_utility.ParseInt($replyIdQuery))
+	#end
+
+	#set ($bodyQuery = false)
+	#set ($bodyQuery = $core_v2_page.GetFormValue('_w_body'))
+	#if ($bodyQuery)
+		$options.Add("Body", $bodyQuery)
+	#end
+
+	#set ($suggestAnswerQuery = false)
+	#set ($suggestAnswerQuery = $core_v2_page.GetFormValue('_w_suggestAnswer'))
+	#if ($suggestAnswerQuery)
+		$options.Add('IsSuggestedAnswer', $core_v2_utility.ParseBool($suggestAnswerQuery))
+	#end
+
+	#set ($existingReply = "value")
+	#set ($existingReply = $core_v2_forumReply.Get($replyId))
+	#if ($existingReply)
+
+		#set ($forumReply = $core_v2_forumReply.Update($replyId, $existingReply.ThreadId, $existingReply.ForumId, $options))
+		#set ($excludeContainer = false)
+
+		$core_v2_widget.ExecuteFile('callback-serialize-reply.vm')
+
+	#end
+
+#end

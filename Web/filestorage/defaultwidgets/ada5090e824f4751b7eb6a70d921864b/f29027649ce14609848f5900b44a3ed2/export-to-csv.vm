@@ -1,0 +1,59 @@
+#set ($headerTemplateId = $core_v2_widget.UniqueId('exportMembersHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button export">$core_v2_language.GetResource('Action_ExportAsCSV')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('ExportInstructions')</p>
+
+<form><fieldset class="export-options">
+    #set($lastCategory = '')
+    #foreach ($field in $context.GetExportFields())
+        #if ($lastCategory != $field.Category)
+            #if ($lastCategory != '')
+                </ul>
+            #end
+            <h3>$field.Category</h3>
+            <div class="export-selectallnone">
+                <a href="#" class="select-all">$core_v2_language.GetResource('SelectAll')</a>
+                <a href="#" class="select-none">$core_v2_language.GetResource('SelectNone')</a>
+            </div>
+            <ul class="field-list">
+            #set($lastCategory = $field.Category)
+        #end
+        <li class="field-item">
+            <span class="field-item-input">
+                <input type="checkbox" value="$field.Id" id="$core_v2_widget.UniqueId($field.Id)" #if($field.EnabledByDefault) checked="checked"#end>
+                <label for="$core_v2_widget.UniqueId($field.Id)" class="field-item-name">$field.Label</label>
+            </span>
+		</li>
+    #end
+    #if ($lastCategory != '')
+        </ul>
+    #end
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.usersAdministrationExport')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('export-to-csv.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.membersExport.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    query: '$core_v2_encoding.JavascriptEncode($core_v2_page.GetQueryStringValue('w_query'))',
+		    urls: {
+		        csvExport: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-exporttocsv.vm'))',
+		        saveFieldSelections: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-saveexportselection.jsm'))'
+		    }
+    	});
+	});
+	</script>
+#end

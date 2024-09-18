@@ -1,0 +1,13 @@
+##
+## Recursively searches $forumReplies tree to see if $replyId is included. If so, sets $inInitialPage to true
+## Expects in scope: $forumRepliesToSearch, $inInitialPage, $replyId
+##
+
+#foreach ($forumReply in $forumRepliesToSearch)
+	#if ($forumReply.Id == $replyId)
+		#set ($inInitialPage = true)
+	#elseif (!$inInitialPage && $forumReply.Children)
+		#set ($forumRepliesToSearch = $forumReply.Children)
+		$core_v2_widget.ExecuteFile('callback-model-list-replies-thread-search.vm')
+	#end
+#end

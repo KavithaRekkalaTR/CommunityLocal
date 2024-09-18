@@ -1,0 +1,14 @@
+$core_v2_widget.ExecuteFile('is-sidebar.vm')
+$core_v2_widget.ExecuteFile("subview-perform-query.vm")
+
+#if ($isSpecificDay)
+    <p>$core_v2_language.FormatString($core_v2_language.GetResource('EventsOn'), $core_v2_language.FormatDate($startDate))</p>
+#else
+    <p>$core_v2_language.GetResource('UpcomingEvents')</p>
+#end
+#if($isInSidebar)
+    $core_v2_widget.ExecuteFile('sidebar.vm')
+#else
+    $core_v2_widget.ExecuteFile('list.vm')
+#end
+<div class="pager-data" data-pagesize="$events.PageSize" data-totalitems="$events.TotalCount" #if($isSpecificDay) data-date="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.FormatDate($startDate))" #end></div>

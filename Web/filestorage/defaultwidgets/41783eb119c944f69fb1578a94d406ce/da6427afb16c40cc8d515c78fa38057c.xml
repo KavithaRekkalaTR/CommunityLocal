@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:IdeaActivityStory_Name}" version="12.0.0.0" description="${resource:IdeaActivityStory_Description}" instanceIdentifier="da6427afb16c40cc8d515c78fa38057c" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2022-09-30 19:00:56Z" provider="41783eb119c944f69fb1578a94d406ce">
+    <contentScript language="Velocity"><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+
+	#set($idea = $telligentIdeas_v1_ideas.Get($context.Story.ContentId))
+	#if(!$idea)
+		$core_v2_widget.Hide()
+	#else
+		#set($actor = $context.Story.PrimaryUser)
+		#if ($actor.Url)
+		    #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+		#else
+		    #set($profile0Html = $actor.DisplayName)
+		#end
+
+		#if($isPreview)
+			#format($core_v2_language.GetResource('activity_preview_format'))
+				#token('user')
+					$profile0Html
+				#token('idea')
+    				<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)">$idea.Name</a>
+	    		#token('ideation')
+					#if ($content.Application.Container.ParentContainer)
+						<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+							href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+						<span class="group-application-separator">&gt;</span>
+					#end
+					<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+					href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+			#end
+		#else
+
+			<div class="activity-summary idea">
+    			#format($core_v2_language.GetResource('activity_view_in'))
+    				#token('user')
+    					$profile0Html
+    				#token('ideation')
+    					#if ($content.Application.Container.ParentContainer)
+    						<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+    							href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+    						<span class="group-application-separator">&gt;</span>
+    					#end
+    						<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+        						href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+    			#end
+			</div>
+
+			<div class="activity-container idea">
+				<div class="post-voting">$telligentIdeas_v1_ideas.UpDownVoteUI($idea.Id, "%{LoginWithReturnUrl = 'false', ReadOnly = 'false'}")</div>
+
+				<div class="activity-content idea">
+					<div class="activity-title idea">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)" class="internal-link view-idea">$idea.Name</a>
+					</div>
+
+					<div class="activity-description idea user-defined-markup">
+							#set($rawBody = $idea.Description())
+									#set($body = $core_v2_language.Truncate($rawBody, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+									$body
+									#if ($body.Length < $rawBody.Length)
+											<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Url)">$core_v2_language.GetResource('read-more')</a>
+									#end
+					</div>
+				</div>
+			</div>
+
+		#end
+	#end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="activity_preview_format">{user} submitted {idea} to {ideation}.</resource>
+  <resource name="activity_view_in">{user} in {ideation}:</resource>
+  <resource name="IdeaActivityStory_Description">Story for ideas.</resource>
+  <resource name="IdeaActivityStory_Name">Idea Activity Story</resource>
+  <resource name="read-more">Read more.</resource>
+  <resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,34 @@
+#set($collectionIdString = $core_v2_page.GetQueryStringValue('w_collectionid'))
+#set($collectionId = $core_v2_utility.ParseGuid($collectionIdString))
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 100)
+
+#set($options = "%{ EmoticonCollectionId = '$collectionId', PageSize = $pageSize, PageIndex = $pageIndex, IncludeVariations = 'False' }")
+
+#set($emoticons = $context.ListEmoticons($options))
+
+#set ($hasMore = 'false')
+#if ($emoticons.Count == $pageSize)
+	#set ($hasMore = 'true')
+#end
+
+#foreach($emoticon in $emoticons)
+#beforeall
+	<ul class="emoticon-list sortable" data-hasmore="$hasMore">
+#each
+	<li class="emoticon-item ui-tip #if(!$emoticon.Enabled) disabled #end" data-id="$emoticon.Id" data-order="$emoticon.OrderNumber" data-tip="$core_v2_encoding.HtmlAttributeEncode($emoticon.Name)">
+		<a href="#" data-messagename="administration.emoticon.edit" data-emoticonid="$emoticon.Id" data-emoticonname="$core_v2_encoding.HtmlAttributeEncode($emoticon.Name)">
+			$!core_v2_ui.GetPreviewHtml($emoticon.Url, "%{Width=50, Height=50, OutputIsPersisted='False'}")
+			#if(!$emoticon.Enabled)<span class="disabled">$core_v2_language.GetResource('Disabled')</span>#end
+		</a>
+	</li>
+#afterall
+	</ul>
+	<div class="message no-emoticons" data-hasmore="false" style="display: none;">$core_v2_language.GetResource('NoEmoticons')</div>
+#nodata
+	<ul class="emoticon-list" data-hasmore="$hasMore">
+	</ul>
+	<div class="message no-emoticons" data-hasmore="false">$core_v2_language.GetResource('NoEmoticons')</div>
+#end

@@ -1,0 +1,24 @@
+﻿#set($parentPageIdToExclude = false)
+#set($parentPageIdToExclude = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_ParentPageIdToExclude')))
+#if (!$parentPageIdToExclude)
+	#set($parentPageIdToExclude = -1)
+#end
+#set($searchText = $core_v2_page.GetQueryStringValue('w_SearchText').ToLower())
+#set($totalMatches = 0)
+#set($ignoreUntilLevel = -1)
+$core_v2_page.SetContentType('application/json')
+
+{"pages":[
+#if($core_v2_wiki.Current)
+	#foreach($page in $core_v2_utility.FlattenHierarchy($core_v2_wikiToc.List($core_v2_wiki.Current.Id), 'Children'))
+		#if($totalMatches < 20)
+			#if ($ignoreUntilLevel > 0 && $ignoreUntilLevel >= $page.Level)#set($ignoreUntilLevel = -1)#end
+			#if ($page.Item.Id == $parentPageIdToExclude)#set($ignoreUntilLevel = $page.Level)#end
+			#if ($ignoreUntilLevel == -1 && $page.Item.Title.ToLower().Contains($searchText))
+				{"pageId":"$page.Item.Id","title":"$core_v2_encoding.JavaScriptEncode($core_v2_language.Truncate($page.Item.Title, 55, "..."))"},
+				#set($totalMatches = $totalMatches + 1)
+			#end
+		#end
+	#end
+#end
+null]}

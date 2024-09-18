@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:name}" version="12.0.0.0" description="${resource:description}" instanceIdentifier="c64dff29618e4d828218e1dd84f4635b" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="content-dynamic-toc" lastModified="2022-01-19 20:10:17Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($containerTemplate = $core_v2_widget.UniqueId('containerTemplate'))
+#set ($wrapper = $core_v2_widget.UniqueId('wrapper'))
+#set ($maxDepth = $core_v2_widget.GetIntValue('depth', 2))
+#set ($collapseAt = $core_v2_widget.GetIntValue('collapseAt', 1))
+#set ($inline = $core_v2_widget.GetBoolValue('inline', false))
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($wrapper)"></div>
+
+#registerClientTemplate($containerTemplate)
+	<ul class="content-toc"></ul>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.contentDynamicToc')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+jQuery(function(j) {
+	j.telligent.evolution.widgets.contentDynamicToc.register({
+		containerTemplate: '$core_v2_encoding.JavascriptEncode($containerTemplate)',
+		wrapper: '#$core_v2_encoding.JavascriptEncode($wrapper)',
+		maxDepth: $maxDepth,
+		collapseAt: $collapseAt,
+		renderInline: #if ($inline) true #else false #end,
+		scrollOffset: 120
+	});
+});
+</script>
+#end
+
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set ($typeName = '')
+#set ($content = $core_v2_content.Current)
+#if ($content)
+	#set ($contentType = $core_v2_contentType.Get($content.ContentTypeId))
+	#if ($contentType)
+		#set ($typeName = $contentType.Name)
+	#end
+#end
+
+#set ($title = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:InThis}')))
+#format ($title)
+	#token('type')
+		$typeName
+#end
+]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="title" defaultValue="${resource:InThis}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="depth" labelResourceName="depth" descriptionResourceName="depthDesc" defaultValue="2" dataType="Int">
+		<propertyValue value="0" labelResourceName="depth_1" propertiesToShow="" propertiesToHide="collapseAt" />
+		<propertyValue value="1" labelResourceName="depth_2" propertiesToShow="collapseAt" propertiesToHide="" />
+		<propertyValue value="2" labelResourceName="depth_3" propertiesToShow="collapseAt" propertiesToHide="" />
+		<propertyValue value="3" labelResourceName="depth_4" propertiesToShow="collapseAt" propertiesToHide="" />
+		<propertyValue value="4" labelResourceName="depth_5" propertiesToShow="collapseAt" propertiesToHide="" />
+		<propertyValue value="5" labelResourceName="depth_6" propertiesToShow="collapseAt" propertiesToHide="" />
+	</property>
+	<property id="collapseAt" labelResourceName="collapseAt" descriptionResourceName="collapseAtDesc" defaultValue="1" dataType="Int">
+		<propertyValue value="0" labelResourceName="collapse_1" />
+		<propertyValue value="1" labelResourceName="collapse_2" />
+		<propertyValue value="2" labelResourceName="collapse_3" />
+		<propertyValue value="3" labelResourceName="collapse_4" />
+		<propertyValue value="4" labelResourceName="collapse_5" />
+	</property>
+	<property id="inline" labelResourceName="inline" descriptionResourceName="inlineDesc" dataType="bool" defaultValue="false" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="collapse_1">1</resource>
+  <resource name="collapse_2">2</resource>
+  <resource name="collapse_3">3</resource>
+  <resource name="collapse_4">4</resource>
+  <resource name="collapse_5">5</resource>
+  <resource name="collapseAt">Dynamic collapse depth</resource>
+  <resource name="collapseAtDesc">Depth at which the tree, as defined by the maximum indentation depth, will be dynamically collapsed and expanded as content is viewed.</resource>
+  <resource name="depth">Maximum indentation depth</resource>
+  <resource name="depth_1">1 (Flattened)</resource>
+  <resource name="depth_2">2</resource>
+  <resource name="depth_3">3</resource>
+  <resource name="depth_4">4</resource>
+  <resource name="depth_5">5</resource>
+  <resource name="depth_6">6</resource>
+  <resource name="depthDesc">Maximum indentation limits the tree's visual depth. Deeper items will be flattened within the same level. Indentation levels are inferred from the structure of content headings.</resource>
+  <resource name="description">Displays a dynamically linked table of contents against content</resource>
+  <resource name="inline">Render inline</resource>
+  <resource name="inlineDesc">Inline rendering injects the tree directly alongside the content, facilitating narrower layouts. The tree will not dynamically collapse and expand when inline.</resource>
+  <resource name="InThis">In this {type}</resource>
+  <resource name="name">Content - Table of Contents</resource>
+  <resource name="Options">Options</resource>
+  <resource name="title">Title</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

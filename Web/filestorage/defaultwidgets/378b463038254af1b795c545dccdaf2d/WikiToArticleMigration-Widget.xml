@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MigrateApplication_Title}" version="12.0.0.0" description="${resource:MigrateApplication_Description}" instanceIdentifier="688a72bc6ea04aec9eeb31cbad742725" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="contextual-content-conversion" lastModified="2022-01-20 18:56:53Z" provider="378b463038254af1b795c545dccdaf2d">
+    <contentScript language="Velocity"><![CDATA[#set($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+#set($application = false)
+#set($application = $core_v2_application.Get($context.ApplicationId, $context.ApplicationTypeId))
+#set($targetApplicationType = false)
+#set($targetApplicationType = $context.TargetApplicationType)
+#set($scheduledFileProgressKey = "wiki-migratewiki:${context.Wiki.ID}")
+
+#set ($status = $core_v2_widget.GetScheduledFileStatus($scheduledFileProgressKey))
+
+#if ($status && ($status.State == 'Scheduled' || $status.State == 'Running'))
+	$core_v2_ui.ScheduledFile($scheduledFileProgressKey, "%{ IncludeProgress = 'True', IncludeAllMessages = 'False', IncludeLatestMessage = 'True' }")
+#else
+    #if (!$targetApplicationType)
+        <div class="message error">
+            $core_v2_language.FormatString($core_v2_language.GetResource('NoMigrationOptions'), $application.HtmlName('Web'))
+        </div>
+    #else
+        <p>
+            $core_v2_language.GetResource('MigrateApplication_Instructions')
+        </p>
+        
+        <script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+        	<fieldset>
+        		<ul class="field-list">
+        			<li class="field-item">
+        				<span class="field-item-input">
+        					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Migrate')</a>
+        				</span>
+        			</li>
+        		</ul>
+        	</fieldset>
+        </script>
+        
+        <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+        <script type="text/javascript">
+        jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+        	jQuery.telligent.evolution.widgets.wikiToArticleMigrationPanel.register({
+        	    sourceWikiId: '$context.Wiki.ID.ToString()',
+        	    sourceWikiName: '$core_v2_encoding.HtmlDecode($context.Wiki.Name)',
+        	    targetApplicationTypeId: '$context.TargetApplicationType.Id.ToString()',
+        	    currentContainerId: '$!application.Container.ContainerId.ToString()',
+        	    currentContainerName: '$!core_v2_encoding.JavascriptEncode($!application.Container.HtmlName('Web'))',
+        	    headerTemplate: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+        	    urls: {
+    				migrateWiki: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('panel-migratewiki.vm'))',
+        		    groupRedirect:  '$core_v2_encoding.JavascriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Wiki.Group.Id)))'
+        	    },
+        		text: {
+        		    success: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Success'))',
+    			    migrateWikiConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wiki_MigrateConfirmation'))',
+    			    migrateWiki: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Wiki_Migrating'))',
+        		}
+        	});
+        });
+        </script>
+    #end
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="From">From:</resource>
+  <resource name="Migrate">Migrate</resource>
+  <resource name="MigrateApplication_Description">Migrate all pages to an article collection</resource>
+  <resource name="MigrateApplication_Instructions">Creates a new article collection and migrates all pages as articles within the article collection.  Url redirects will be created and the existing wiki and pages deleted once the migration is completed.</resource>
+  <resource name="MigrateApplication_Title">Migrate Wiki to Article Collection</resource>
+  <resource name="Success">The migration has been completed.  Would you like to view the new article collection?</resource>
+  <resource name="Wiki_MigrateConfirmation">Are you sure you want to migrate the {0} wiki to an article collection.  Once migrated url redirects will be created and the wiki deleted.</resource>
+  <resource name="Wiki_Migrating">Migrating {0}...</resource>
+  <resource name="Wiki_MigrationSuccessful">The migration completed successfully</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

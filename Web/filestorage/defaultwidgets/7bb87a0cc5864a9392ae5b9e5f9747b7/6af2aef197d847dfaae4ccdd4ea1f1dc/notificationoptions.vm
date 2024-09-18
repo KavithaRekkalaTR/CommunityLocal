@@ -1,0 +1,102 @@
+#set ($notificationTypes = $core_v2_notificationType.List())
+#set ($notificationDistributionTypes = $core_v2_notificationDistributionType.List())
+#set ($userPreferences = $core_v2_notificationUserPreference.List())
+#set ($distributionTypeCount = false)
+#set ($distributionTypeCount = $notificationDistributionTypes.count)
+#set ($distributionColumns = $distributionTypeCount * 1)
+#set ($totalColumns = 3 + $distributionColumns)
+#set ($category = "")
+
+#foreach ($notificationType in $notificationTypes)
+        #set ($notificationTypeEnabled = false)
+        #foreach($preference in $userPreferences.Preferences)
+		#if ($preference.NotificationTypeId == $notificationType.NotificationTypeId && !$preference.DistributionType)
+			#set($notificationTypeEnabled = $preference.IsEnabled)
+		#end
+	#end
+        #if ($notificationType.Category != $category)
+		#if ($category != '')
+								</tbody>
+							</table>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+		#end
+
+            #set ($category = $notificationType.Category)
+	    <form><fieldset>
+	    <h3>$notificationType.Category</h3>
+	    <ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+            <table class="form">
+		<thead>
+	            <tr>
+	                <th>
+			    $core_v2_language.GetResource('Notifications_NotifyWhen')
+	                    <a href="#" class="multiselect all" data-category="$category">$core_v2_language.GetResource('SelectAll')</a>
+	                    <a href="#" class="multiselect none" data-category="$category">$core_v2_language.GetResource('DeSelectAll')</a>
+	                </th>
+	                #foreach ($distributionType in $notificationDistributionTypes)
+	                    <th  class="notification-distribution-type-header">
+	                        #set ($multiSelectorCategory = "${category}-${distributionType.DistributionTypeId}")
+	                        $distributionType.Name
+	                        <a href="#" class="multiselect all" data-category="$multiSelectorCategory">$core_v2_language.GetResource('SelectAll')</a>
+	                        <a href="#" class="multiselect none" data-category="$multiSelectorCategory">$core_v2_language.GetResource('DeSelectAll')</a>
+	                    </th>
+	                #end
+	            </tr>
+		</thead>
+		<tbody>
+        #end
+        <tr #if (!$notificationTypeEnabled) class="disabled" #end
+            class="notification-setting-item">
+            #set ($notificationTypeName = $core_v2_widget.UniqueId("notificationType:${notificationType.NotificationTypeId}"))
+            <td style="width: 100%;">
+                <input type="checkbox"
+                    class="notificationType multiSelectable"
+                    data-category="$category"
+                    name="$core_v2_encoding.HtmlAttributeEncode($notificationTypeName)"
+                    id="$core_v2_encoding.HtmlAttributeEncode($notificationTypeName)"
+                    value="$notificationType.NotificationTypeId"
+                    #if ($notificationTypeEnabled) data-enabled="true" #else data-enabled="false" #end
+                    data-notificationtype="$notificationType.NotificationTypeId"
+                    #if ($notificationTypeEnabled) checked="checked" #end />
+                <label for="$core_v2_encoding.HtmlAttributeEncode($notificationTypeName)">$notificationType.Description</label>
+            </td>
+            #foreach ($distributionType in $notificationDistributionTypes)
+                #set ($distributionTypeEnabled = false)
+                #foreach($preference in $userPreferences.Preferences)
+			#if ($preference.NotificationTypeId == $notificationType.NotificationTypeId && $preference.DistributionTypeId == $distributionType.DistributionTypeId)
+				#set($distributionTypeEnabled = $preference.IsEnabled)
+			#end
+		#end
+                #set ($multiSelectorCategory = "${category}-${distributionType.DistributionTypeId}")
+                <td>
+                    #set ($id = "${core_v2_widget.UniqueId('DistributionTypeId')}-${notificationType.NotificationTypeId}-${distributionType.DistributionTypeId}")
+                    <input type="checkbox"
+                        id="$id"
+                        class="distributionType multiSelectable"
+                        data-category="$multiSelectorCategory"
+                        value="$distributionType.DistributionTypeId"
+                        data-notificationtype="$notificationType.NotificationTypeId"
+                        data-distributiontype="$distributionType.DistributionTypeId"
+                        #if ($distributionTypeEnabled) data-enabled="true" #else data-enabled="false" #end
+                        #if (!$notificationTypeEnabled) disabled="disabled" #end
+                        #if ($distributionTypeEnabled) checked="checked" #end />
+			<label for="$id" class="field-item-name hidden">$distributionType.Name</label>
+                </td>
+            #end
+        </tr>
+    #end
+
+#if ($category != '')
+						</tbody>
+					</table>
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+#end
+

@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:title}" version="11.0.0.0" description="${resource:description}" instanceIdentifier="1ca2bd58d8e048b9904e1e5db8841e51" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="keyboard-shortcuts" lastModified="2021-05-12 20:24:58Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+	<contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($glossaryTemplateId = $core_v2_widget.UniqueId('glossaryTemplate'))
+#registerClientTemplate($glossaryTemplateId)
+	<div class="keyboard-shortcuts">
+		<table>
+		<% foreach(shortcuts, function(shortcut){ %>
+			<tr>
+				<td class="combination">
+					<% foreach(shortcut.routes, function(route , i){ %>
+
+						<% if(i > 0) { %>
+							<span class="divider">$core_v2_language.GetResource('or')</span>
+						<% } %>
+
+						<% if(route.ctrlKey) { %>
+							<span class="modifier">$core_v2_language.GetResource('ModifierControl')</span>
+						<% } %>
+
+						<% if(route.altKey) { %>
+							<% if(os.ios || os.mac) { %>
+								<span class="modifier">$core_v2_language.GetResource('ModifierOption')</span>
+							<% } else { %>
+								<span class="modifier">$core_v2_language.GetResource('ModifierAlt')</span>
+							<% } %>
+						<% } %>
+
+						<% if(route.shiftKey) { %>
+							<span class="modifier">$core_v2_language.GetResource('ModifierShift')</span>
+						<% } %>
+
+						<% if(route.metaKey) { %>
+							<% if(os.ios || os.mac) { %>
+								<span class="modifier">$core_v2_language.GetResource('ModifierCommand')</span>
+							<% } else if(os.windows) { %>
+								<span class="modifier">$core_v2_language.GetResource('ModifierWindows')</span>
+							<% } else { %>
+								<span class="modifier">$core_v2_language.GetResource('ModifierMeta')</span>
+							<% } %>
+						<% } %>
+
+						<span class="key">
+							<% if(route.keyCharacter == 'LEFT') { %>
+								$core_v2_language.GetResource('KeyLeft')
+							<% } else if(route.keyCharacter == 'UP') { %>
+								$core_v2_language.GetResource('KeyUp')
+							<% } else if(route.keyCharacter == 'RIGHT') { %>
+								$core_v2_language.GetResource('KeyRight')
+							<% } else if(route.keyCharacter == 'DOWN') { %>
+								$core_v2_language.GetResource('KeyDown')
+							<% } else if(route.keyCharacter == 'TAB') { %>
+								$core_v2_language.GetResource('KeyTab')
+							<% } else if(route.keyCharacter == 'COMMA') { %>
+								$core_v2_language.GetResource('KeyComma')
+							<% } else if(route.keyCharacter == 'SLASH') { %>
+								$core_v2_language.GetResource('KeySlash')
+							<% } else if(route.keyCharacter == 'PERIOD') { %>
+								$core_v2_language.GetResource('KeyPeriod')
+							<% } else { %>
+								<%= route.keyCharacter %>
+							<% } %>
+						</span>
+
+					<% }); %>
+				</td>
+
+				<td class="description">
+					<%= (shortcut.description || '') %>
+				</td>
+			</tr>
+		<% }); %>
+		</table>
+	</div>
+#end
+
+#set ($notificationTemplateId = $core_v2_widget.UniqueId('notificationTemplate'))
+#registerClientTemplate($notificationTemplateId)
+	#format($core_v2_language.GetResource('notification'))
+		#token('shortcut')
+			<span style="border: solid 1px; border-radius: 3px; padding: 0 4px; margin: 0 2px;">
+				<% if(os.ios || os.mac) { %>
+					$core_v2_language.GetResource('ModifierOption')<% } else { %>
+					$core_v2_language.GetResource('ModifierAlt')<% } %></span>
+			<span style="border: solid 1px; border-radius: 3px; padding: 0 4px; margin: 0 2px;">K</span>
+	#end
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.keyboardShortcuts')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+		jQuery(function(j){
+			j.telligent.evolution.widgets.keyboardShortcuts.register({
+				templates: {
+					shortcuts: '$core_v2_encoding.JavascriptEncode($glossaryTemplateId)',
+					notification: '$core_v2_encoding.JavascriptEncode($notificationTemplateId)'
+				},
+				text: {
+					showShortcuts: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('list'))',
+					shortcutsTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('title'))'
+				}
+			});
+		});
+	</script>
+#end
+
+]]></contentScript>
+	<headerScript language="Unknown" />
+	<languageResources><![CDATA[<language key="en-us">
+  <resource name="description">Displays available keyboard shortcuts</resource>
+  <resource name="KeyComma">,</resource>
+  <resource name="KeyDown">Down</resource>
+  <resource name="KeyLeft">Left</resource>
+  <resource name="KeyPeriod">.</resource>
+  <resource name="KeyRight">Right</resource>
+  <resource name="KeySlash">/</resource>
+  <resource name="KeyTab">Tab</resource>
+  <resource name="KeyUp">Up</resource>
+  <resource name="list">List available shortcuts</resource>
+  <resource name="ModifierAlt">Alt</resource>
+  <resource name="ModifierCommand">Command</resource>
+  <resource name="ModifierControl">Control</resource>
+  <resource name="ModifierMeta">Meta</resource>
+  <resource name="ModifierOption">Option</resource>
+  <resource name="ModifierShift">Shift</resource>
+  <resource name="ModifierWindows">Windows</resource>
+  <resource name="notification">Press {shortcut} to view current shortcuts.</resource>
+  <resource name="or">or</resource>
+  <resource name="shortcut">Shortcut</resource>
+  <resource name="shortcut_desc">Keyboard shortcut which lists available shortcuts</resource>
+  <resource name="title">Keyboard Shortcuts</resource>
+</language>]]></languageResources>
+	<additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

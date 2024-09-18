@@ -1,0 +1,64 @@
+#set($options = "%{}")
+
+#set ($id = $core_v2_page.GetQueryStringValue('fr_id'))
+#if($id)
+    $options.Add('selectedApplications', $id)
+#end
+
+#set ($wiki = $context.GetWikiSummaryDetailReport($options))
+#if($wiki && !$wiki.HasErrors())
+    #set ($apiWiki = $core_v2_wiki.Get($wiki.ApplicationId))
+
+    <div class="data">
+        <ul class="report-details">
+            <li class="report-name">
+                #if ($apiWiki.Url) <a href="$apiWiki.Url">$wiki.Name</a> #else $wiki.Name #end
+            </li>
+            <li class="report-info">
+                    $core_v2_language.GetResource('in')
+                    #if ($apiWiki.Container.Url) <a href="$apiWiki.Container.Url">$wiki.Container.Name</a> #else $wiki.Container.Name #end
+            </li>
+        </ul>
+
+        <table class="wiki-data large-data">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>$core_v2_language.GetResource('Last1Day')</th>
+                    <th>$core_v2_language.GetResource('Last3Day')</th>
+                    <th>$core_v2_language.GetResource('Last7Day')</th>
+                    <th>$core_v2_language.GetResource('Last30Day')</th>
+                    <th>$core_v2_language.GetResource('Last90Day')</th>
+                    <th>$core_v2_language.GetResource('Last180Day')</th>
+                </tr>
+            </thead>
+            </tbody>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewPages'), $core_v2_language.GetResource('NewPages_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $wiki.NewPageCountLast1Day, $wiki.NewPageCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $wiki.NewPageCountLast3Days, $wiki.NewPageCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $wiki.NewPageCountLast7Days, $wiki.NewPageCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $wiki.NewPageCountLast30Days, $wiki.NewPageCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $wiki.NewPageCountLast90Days, $wiki.NewPageCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $wiki.NewPageCountLast180Days, $wiki.NewPageCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewComments'), $core_v2_language.GetResource('NewComments_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $wiki.NewCommentCountLast1Day, $wiki.NewCommentCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $wiki.NewCommentCountLast3Days, $wiki.NewCommentCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $wiki.NewCommentCountLast7Days, $wiki.NewCommentCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $wiki.NewCommentCountLast30Days, $wiki.NewCommentCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $wiki.NewCommentCountLast90Days, $wiki.NewCommentCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $wiki.NewCommentCountLast180Days, $wiki.NewCommentCount180DayTrend)
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

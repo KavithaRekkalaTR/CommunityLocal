@@ -1,0 +1,12 @@
+﻿#set ($nameFilter = $core_v2_page.GetQueryStringValue("_w_name"))
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("_w_pageIndex")))
+#set ($pageSize = 100)
+
+#set ($options = "%{}")
+$options.Add('NameFilter', $nameFilter)
+$options.Add('PageIndex', $pageIndex)
+$options.Add('PageSize', $pageSize)
+
+#set ($jobs = $context.ListJobs($options))
+
+$core_v2_widget.ExecuteFile('jobs-render.vm')

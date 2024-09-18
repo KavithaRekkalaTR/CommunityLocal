@@ -1,0 +1,93 @@
+    #foreach($client in $context.List())
+        #beforeall
+            <ul class="content-list content expandable simple">
+        #each
+            <li class="content-item" data-clientid="$client.Id.ToString()">
+            	<div class="content">
+                	<h4 class="name">
+                        $core_v2_encoding.HtmlEncode($client.Name)
+                	</h4>
+                    <div class="attributes">
+                		<ul class="attribute-list">
+                		    <li class="attribute-item">
+                				<span class="attribute-value">
+                				    #if ($client.ClientType == 'Confidential')
+                				        $core_v2_language.GetResource('Confidential')
+                				    #else
+                				        $core_v2_language.GetResourcE('Public')
+                				    #end
+            				    </span>
+            				</li>
+                			<li class="attribute-item">
+                				<span class="attribute-value">
+                				    #set($grantTypes = '')
+                				    #if ($client.AuthorizationCode)
+                				        #if ($grantTypes.Length > 0)
+                				            #set($grantTypes = "$grantTypes, ")
+                				        #end
+                				        #set($grantTypes = "$grantTypes${core_v2_language.GetResource('AuthorizationCode')}")
+                				    #end
+                				    #if ($client.Password)
+                				        #if ($grantTypes.Length > 0)
+                				            #set($grantTypes = "$grantTypes, ")
+                				        #end
+                				        #set($grantTypes = "$grantTypes${core_v2_language.GetResource('Password')}")
+                				    #end
+                				    #if ($client.ClientCredentials)
+                				        #if ($grantTypes.Length > 0)
+                				            #set($grantTypes = "$grantTypes, ")
+                				        #end
+                				        #set($grantTypes = "$grantTypes${core_v2_language.GetResource('ClientCredentials')}")
+                				    #end
+                				    $grantTypes
+                				</span>
+                			</li>
+                			#if ($client.AuthorizationCode && $client.IsTrusted)
+                			    <li class="attribute-item">
+                    				<span class="attribute-value">
+                				        $core_v2_language.GetResource('Trusted')
+                				    </span>
+                				</li>
+                			#end
+                		</ul>
+                	</div>
+            
+                	<div class="content expandable">
+                	    <p>$core_v2_encoding.HtmlEncode($!client.Description)</p>
+                	</div>
+                	<div class="actions expandable">
+                		<div class="navigation-list ui-links" data-direction="horizontal">
+                			<ul>
+                			    #if ($client.MainUrl)
+                    				<li class="navigation-list-item">
+                    					<a href="$core_v2_encoding.HtmlAttributeEncode($client.MainUrl)" target="_blank">
+                    						$core_v2_language.GetResource('View')
+                    					</a>
+                    				</li>
+                    			#end
+                				<li class="navigation-list-item">
+                					<a href="#" data-messagename="oauthclients.edit" data-clientid="$client.Id.ToString()" data-clientname="$core_v2_encoding.HtmlEncode($client.Name)">
+                						$core_v2_language.GetResource('Edit')
+                					</a>
+                				</li>
+                				<li class="navigation-list-item">
+                					<a href="#" data-messagename="oauthclients.delete" data-clientid="$client.Id.ToString()" data-clientname="$core_v2_encoding.HtmlEncode($client.Name)">
+                						$core_v2_language.GetResource('Delete')
+                					</a>
+                				</li>
+                				<li class="navigation-list-item">
+                					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+                				</li>
+                				<li class="navigation-list-item">
+                					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                				</li>
+                			</ul>
+                		</div>
+                	</div>
+                </div>
+            </li>
+        #afterall
+            </ul>
+        #nodata
+            <div class="message information">No items!</div>
+    #end

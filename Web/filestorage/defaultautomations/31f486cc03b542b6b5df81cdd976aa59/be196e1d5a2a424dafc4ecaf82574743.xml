@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="be196e1d5a2a424dafc4ecaf82574743" executeAsServiceUser="true" trigger="Job" schedule="06:00 Monday" lastModified="2019-06-10 19:18:51Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <executionScript language="JavaScript"><![CDATA[
+var sendNotification = function(user) {
+    var attrKey = 'LastVisitedNotification_' + core_v2_widget.WrapperElementId;
+    var attrValue = user.LastVisitedDate.toUTCString();
+    
+    var notificationAttr = user.ExtendedAttributes.Get(attrKey);
+    if (notificationAttr && notificationAttr.Value == attrValue) {
+        return;
+    }
+    
+    var tokens = {
+        dayssincelastactive: (Math.round(((new Date()) - user.LastVisitedDate) / (1000 * 60 * 60 * 24))).toString(),
+        userdisplayname: user.DisplayName
+    };
+    
+    var notificationType = core_v2_widget.GetStringValue('notificationType', 'conversation');
+    var subject = core_v2_language.FormatString(core_v2_widget.GetStringValue('subject', ''), tokens);
+    var body = core_v2_language.FormatString(core_v2_widget.GetHtmlValue('body', ''), tokens);
+    
+    if (!body || body.length == 0) {
+        return;
+    }
+    
+    if (notificationType != 'conversation' && (!subject || subject.length == 0)) {
+        return;
+    }
+    
+    if (notificationType == 'conversation') {
+        core_v2_conversation.Create(body, user.Username);
+    } else if (notificationType == 'email') {
+        core_v2_email.Send(subject, body, {
+           ToUserId: user.Id 
+        });
+    }
+    
+    var updateData = {
+        Id: user.Id
+    };
+    updateData['_ExtendedAttributes_' + attrKey] = attrValue;
+    
+    core_v2_user.Update(updateData);
+};
+
+var daysOfInactivity = core_v2_widget.GetIntValue('days', 0);
+if (daysOfInactivity <= 0) {
+    return;
+}
+
+var inactiveDate = new Date();
+inactiveDate.setDate(inactiveDate.getDate() - daysOfInactivity);
+inactiveDate.setHours(0);
+inactiveDate.setMinutes(0);
+inactiveDate.setSeconds(0);
+inactiveDate.setMilliseconds(0);
+
+var pageIndex = 0;
+var done = false;
+while (!done) {
+    var users = core_v2_user.List({
+        SortBy: 'LastVisitedDate',
+        SortOrder: 'Ascending',
+        PageIndex: pageIndex,
+        PageSize: 100
+    });
+    
+    for (var i = 0; i < users.Count && !done; i++) {
+        if (!users[i].LastVisitedDate) {
+            // ignore if they've never visisted
+        } else if (users[i].LastVisitedDate > inactiveDate) {
+            done = true;
+        } else {
+            sendNotification(users[i]);
+        }
+    }
+    
+    done = done || (users.TotalCount <= ((pageIndex + 1) * 100));
+    pageIndex++;
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="days" labelResourceName="Days" descriptionResourceName="Days_Description">
+        <propertyRule name="minmax" min="0" />
+    </property>
+    <property id="notificationType" dataType="string" labelResourceName="NotificationType" descriptionResourceName="NotificationType_Description" defaultValue="conversation">
+        <propertyValue value="conversation" labelResourceName="NotificationType_Conversation" propertiesToShow="body" propertiesToHide="subject" />
+        <propertyValue value="email" labelResourceName="NotificationType_Email" propertiesToShow="body,subject" propertiesToHide="" />
+    </property>
+    <property id="subject" dataType="string" labelResourceName="Subject" descriptionResourceName="Subject_Description" template="core_v2_customTokenizedString">
+        <propertyValue value="userdisplayname" labelResourceName="Token_UserDisplayName" />
+        <propertyValue value="dayssincelastactive" labelResourceName="Token_DaysSinceLastActive" />
+    </property>
+    <property id="body" dataType="html" labelResourceName="Body" descriptionResourceName="Body_Description" template="core_v2_customTokenizedHtml" rows="15" columns="40">
+        <propertyValue value="userdisplayname" labelResourceName="Token_UserDisplayName" />
+        <propertyValue value="dayssincelastactive" labelResourceName="Token_DaysSinceLastActive" />
+    </property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Body</resource>
+  <resource name="Body_Description">The body of the communication sent to members who haven't visited the community recently.</resource>
+  <resource name="Days">Number of days since last visit</resource>
+  <resource name="Days_Description">The minimum number of days a member must not visit the community before they are contacted.</resource>
+  <resource name="Description">Send a message to members who haven't visited the community for a period of time.</resource>
+  <resource name="NotificationType">Type of contact</resource>
+  <resource name="NotificationType_Conversation">Private message</resource>
+  <resource name="NotificationType_Description">Choose how you'd like to communicate with members who haven't visited the community recently.</resource>
+  <resource name="NotificationType_Email">Email</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Subject">Subject</resource>
+  <resource name="Subject_Description">The subject of the communication sent to members who haven't visited the community recently.</resource>
+  <resource name="Title">Contact members who have visited the community</resource>
+  <resource name="Token_DaysSinceLastActive">Days Since Last Visit</resource>
+  <resource name="Token_UserDisplayName">Member Display Name</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WikiTableOfContents_Name}" version="12.0.0.0" description="${resource:WikiTableOfContents_Description}" instanceIdentifier="d7b498abfd084f5390b5760175b46d0c" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-10-18 19:47:46Z" provider="04ffd09528384d3ba4cc92bf35987cc2">
+    <contentScript language="Velocity"><![CDATA[<p>$core_v2_language.GetResource('instructions')</p>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+		    <span class="field-item-input">
+                <select id="$core_v2_widget.UniqueId('tree')" style="width: 300px; height:400px;" size="10">
+                </select>
+            </span>
+        </li>
+		<li class="field-item tree-options">
+			<span class="field-item-input">
+				<a href="#" id="$core_v2_widget.UniqueId('hidetoggle')" class="show-hide inline-button"></a>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+
+#registerEndOfPageHtml('telligent.evolution.widgets.wikiTocManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.wikiTocManagement.register({
+			wikiId: $context.Wiki.Id,
+			tree: jQuery('#$core_v2_widget.UniqueId('tree')'),
+			hideToggle: jQuery('#$core_v2_widget.UniqueId('hidetoggle')'),
+			urls: {
+			    getChildNodes: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('get-child-nodes.vm'))',
+			    expandedImage: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('expanded.png'))',
+			    collapsedImage: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('collapsed.png'))',
+			    blankImage: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('blank.gif'))'
+			},
+			text: {
+			    hiddenPage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('hidden-page'))',
+			    hide: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('hide'))',
+			    show: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('show'))',
+			    saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save-successful'))'
+			}
+		});
+	});
+	</script>
+#end
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="hidden-page">&lt;i&gt;Hidden: {0}&lt;/i&gt;</resource>
+  <resource name="hide">Hide in table of contents</resource>
+  <resource name="instructions">Drag and drop pages to customize the table of contents. You can also hide and show pages.</resource>
+  <resource name="save-successful">The table of contents changes have been saved successfully.</resource>
+  <resource name="show">Show in table of contents</resource>
+  <resource name="WikiTableOfContents_Description">Reorder and manage the table of contents.</resource>
+  <resource name="WikiTableOfContents_Name">Table of Contents</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="wikis.pages.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Tracing_Name}" version="11.0.0.0" description="${resource:Tracing_Description}" instanceIdentifier="dd129400168747eb9b587b8112683609" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="tracing" lastModified="2020-02-05 18:03:57Z" provider="0d2fba73a9e0451f894682906ee16007">
+    <contentScript language="Velocity"><![CDATA[<ul class="content-list content simple" id="$core_v2_widget.UniqueId('trace')">
+</ul>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('request-template'))">
+	<li class="content-item request" data-requestid="<%: RequestId %>">
+		<div class="content request">
+			<div class="timing">
+				<%: TotalTime %>
+			</div>
+			<h4 class="name">
+				<%:Method %>: <%: Url %>
+			</h4>
+			<div class="post-attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item trace-items">
+						<%:TraceItems %>
+					</li>
+				</ul>
+			</div>
+			<div class="content"></div>
+			<div class="actions">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="tracing.view" data-requestid="<%: RequestId %>">$core_v2_language.GetResource('details')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="tracing.delete" data-requestid="<%: RequestId %>">$core_v2_language.GetResource('delete')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+</script>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('trace-overview-template'))">
+	<div class="content request">
+		<h4 class="name">
+			<%:Method %>: <%: Url %>
+		</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					<%: TotalTime %>
+				</li>
+				<li class="attribute-item">
+					<% if (TraceItems == 1) { %> <%: TraceItems %> $core_v2_language.GetResource('action') <% } else { %> <%:TraceItems %>  $core_v2_language.GetResource('actions') <% } %>
+				</li>
+			</ul>
+		</div>
+	</div>
+</script>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('trace-template'))">
+	<li class="content-item trace" data-text="<%: Message.toLowerCase() %><% foreach(Tags, function(tag) { %> <%: tag.toLowerCase() %><% }); %>">
+		<div class="content trace" style="padding-left: <%= Math.min(Depth * 16, 208) %>px;">
+			<div class="timing">
+				<%: TotalTime %>
+				<span class="timing-offset">+<%: OffsetTime %></span>
+			</div>
+			<div class="post-attributes">
+				<ul class="attribute-list">
+					<% foreach(Tags, function(tag) { %>
+            <li class="attribute-item"><%: tag %></li>
+        	<% }); %>
+				</ul>
+			</div>
+			<div class="content"><%: Message %></div>
+		</div>
+	</li>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.tracing')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.tracing.register({
+			traceList: jQuery('#$core_v2_widget.UniqueId('trace')'),
+			requestTemplate: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('request-template'))',
+			traceOverviewTemplate: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('trace-overview-template'))',
+			traceTemplate: '$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('trace-template'))',
+			text: {
+				connecting: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('connecting'))',
+				start: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('start'))',
+				stop: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('stop'))',
+				clear: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('clear-all'))',
+				milliseconds: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('milliseconds'))',
+				seconds: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('seconds'))',
+				minutes: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('minutes'))',
+				instructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('instructions'))',
+				download: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('download'))',
+				action: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('action'))',
+				actions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('actions'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="action">action</resource>
+  <resource name="actions">actions</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="clear-all">Clear all requests.</resource>
+  <resource name="connecting">Connecting...</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="details">Details</resource>
+  <resource name="download">Download as CSV</resource>
+  <resource name="instructions">Traced web requests made by your user account, when tracing is enabled, are shown below.</resource>
+  <resource name="milliseconds">ms</resource>
+  <resource name="minutes">min</resource>
+  <resource name="more">More</resource>
+  <resource name="seconds">sec</resource>
+  <resource name="start">Start</resource>
+  <resource name="stop">Stop</resource>
+  <resource name="Tracing_Description">Records details about platform activity by the accessing user.</resource>
+  <resource name="Tracing_Name">Tracing</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,135 @@
+#set ($developerModeEnabled = $context.DeveloperModeEnabled)
+#set ($providers = false)
+#set ($hasProviders = false)
+#if ($developerModeEnabled)
+	#set ($providers = $context.ListProviders("%{ DeveloperEnabledOnly = 'true' }"))
+	#foreach ($provider in $providers)
+		#set ($hasProviders = true)
+	#end
+#end
+
+<div class="managed-item-import-dialog">
+
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				<% if((!newFragments || newFragments.length == 0) && (!updatedFragments || updatedFragments.length == 0)) { %>
+
+					<p class="message">$core_v2_language.GetResource('NoImportMessage')</p>
+
+				<% } else { %>
+
+					#if ($developerModeEnabled)
+						<li class="field-item provider-select">
+							<label class="field-item-name"><strong>$core_v2_language.GetResource('FactoryDefaultProvider')</strong></label>
+							#if ($hasProviders)
+								<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderDesc')</span>
+								<span class="field-item-input">
+									<select class="provider-select">
+									#set ($category = '')
+									#foreach ($provider in $providers)
+									#each
+										#if ($provider.CategoryName != $category)
+											#if ($category != '')
+												</optgroup>
+											#end
+											<optgroup label="$core_v2_encoding.HtmlAttributeEncode($provider.CategoryName)">
+										#end
+										<option value="$provider.Id" #if ($provider.Id == $context.CoreProvider) selected #end>
+											$core_v2_encoding.HtmlEncode($provider.Name)
+										</option>
+
+										#set ($category = $provider.CategoryName)
+									#afterall
+										</optgroup>
+									#end
+									</select>
+								</span>
+							#else
+								<span class="field-item-description">$core_v2_language.GetResource('FactoryDefaultProviderNoneDesc')</span>
+							#end
+							<span class="field-item-validation" style="display:none;"></span>
+						</li>
+					#end
+
+					#if (!$developerModeEnabled || $hasProviders)
+
+						<span>$core_v2_language.GetResource('ImportInstruction')</span>
+
+						<% if(newFragments && newFragments.length > 0) { %>
+							<li class="field-item managed-items new-fragments">
+
+								<label class="field-item-name"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('NewWidgets') <% } else { %> $core_v2_language.GetResource('NewWidgetResources') <% } %> (<%= newFragments.length %>)</strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('TheFollowingWidgetsAreNew')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(newFragments, function(fragment) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb<%: fragment.InstanceIdentifier %>" class="importable-fragment" data-request="_fid=<%: fragment.InstanceIdentifier %>&_ftid=<%: ( fragment.ThemeId || '') %>&_ft=overview" checked />
+										<label  for="cb<%: fragment.InstanceIdentifier %>" class="field-item-name ui-tip" data-tip="<%: fragment.ProcessedDescription %>">
+											<span class="name"><%: fragment.ProcessedName %></span>
+											<% if(fragment.ProcessedDescription) { %>
+												<span class="theme"><%: fragment.ProcessedDescription %></span>
+											<% } %>
+											<% if(fragment.ThemeTitle) { %>
+												<span class="theme">(<%: fragment.ThemeTitle %>)</span>
+											<% } %>
+										</label>
+									</span>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if(updatedFragments && updatedFragments.length > 0) { %>
+							<li class="field-item managed-items updated-fragments">
+								<label class="field-item-name"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('UpdatedWidgets') <% } else { %> $core_v2_language.GetResource('UpdatedWidgetResources') <% } %></strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('UpdatedWidgetDesc')</span>
+								<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+								<% foreach(updatedFragments, function(fragment) { %>
+									<span class="field-item-input managed-item">
+										<input type="checkbox" id="cb<%: fragment.InstanceIdentifier %>" class="importable-fragment" data-request="_fid=<%: fragment.InstanceIdentifier %>&_ftid=<%: ( fragment.ThemeId || '') %>&_ft=overview" checked />
+										<label for="cb<%: fragment.InstanceIdentifier %>" class="field-item-name ui-tip" data-tip="<%: fragment.ProcessedDescription %>">
+											<span class="name"><%: fragment.ProcessedName %></span>
+											<% if(fragment.ProcessedDescription) { %>
+												<span class="theme"><%: fragment.ProcessedDescription %></span>
+											<% } %>
+											<% if(fragment.ThemeTitle) { %>
+												<span class="theme">(<%: fragment.ThemeTitle %>)</span>
+											<% } %>
+										</label>
+									</span>
+								<% }); %>
+							</li>
+						<% } %>
+
+						<% if(matchingFragments && matchingFragments > 0) { %>
+							<li class="field-item">
+								<label class="field-item-name"><strong>$core_v2_language.GetResource('ExistingWidgets')</strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('UnmodifiedCountLabel') <strong><%= (matchingFragments) %></strong></span>
+							</li>
+						<% } %>
+
+						<% if(invalidFragments && invalidFragments > 0) { %>
+							<li class="field-item">
+								<label class="field-item-name"><strong>$core_v2_language.GetResource('InvalidWidgets')</strong></label>
+								<span class="field-item-description">$core_v2_language.GetResource('InvalidWidgetsLabel') <strong><%= (invalidFragments) %></strong></span>
+							</li>
+						<% } %>
+
+						<li class="field-item submit">
+							<span class="field-item-input">
+								<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+							</span>
+							<span class="field-item-input">
+								<a href="#" class="button continue">$core_v2_language.GetResource('Import')</a>
+							</span>
+						</li>
+
+					#end
+
+				<% } %>
+
+			</ul>
+		</fieldset>
+	</form>
+</div>

@@ -1,0 +1,50 @@
+<div class="navigation-list managed-items">
+	<ul class="ui-links components" data-maxlinks="0">
+		<li data-type="overview" data-request="_eid=<%: Id %>&_et=overview" class="component navigation-list-item">
+			<a #if ($selectedTab && $selectedTab == 'overview') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'overview') { %> data-selected <% } %> class="component-link overview" href="$context.PanelUrl&_eid=<%: Id %>&_et=overview">$core_v2_language.GetResource('Overview')</a>
+		</li>
+		<% if(State != 'NotPersisted') { %>
+			<li data-type="configuration" data-request="_eid=<%: Id %>&_et=configuration" class="component navigation-list-item">
+				<a #if ($selectedTab && $selectedTab == 'configuration') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'configuration') { %> data-selected <% } %> class="component-link configuration" href="$context.PanelUrl&_eid=<%: Id %>&_et=configuration">$core_v2_language.GetResource('Configuration')</a>
+			</li>
+
+			<% if(Type == 'Template') { %>
+				<li data-type="templatescript" data-request="_eid=<%: Id %>&_et=templatescript" class="component navigation-list-item">
+					<a #if ($selectedTab && $selectedTab == 'templatescript') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'templatescript') { %> data-selected <% } %> class="component-link templatescript" href="$context.PanelUrl&_eid=<%: Id %>&_et=templatescript">$core_v2_language.GetResource('Template')</a>
+				</li>
+			<% } else { %>
+				<li data-type="subjectscript" data-request="_eid=<%: Id %>&_et=subjectscript" class="component navigation-list-item">
+					<a #if ($selectedTab && $selectedTab == 'subjectscript') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'subjectscript') { %> data-selected <% } %> class="component-link subjectscript" href="$context.PanelUrl&_eid=<%: Id %>&_et=subjectscript">$core_v2_language.GetResource('Subject')</a>
+				</li>
+				<li data-type="headerscript" data-request="_eid=<%: Id %>&_et=headerscript" class="component navigation-list-item">
+					<a #if ($selectedTab && $selectedTab == 'headerscript') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'headerscript') { %> data-selected <% } %> class="component-link headerscript" href="$context.PanelUrl&_eid=<%: Id %>&_et=headerscript">$core_v2_language.GetResource('Header')</a>
+				</li>
+				<li data-type="footerscript" data-request="_eid=<%: Id %>&_et=footerscript" class="component navigation-list-item">
+					<a #if ($selectedTab && $selectedTab == 'footerscript') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'footerscript') { %> data-selected <% } %> class="component-link footerscript" href="$context.PanelUrl&_eid=<%: Id %>&_et=footerscript">$core_v2_language.GetResource('Footer')</a>
+				</li>
+				<li data-type="bodyscript" data-request="_eid=<%: Id %>&_et=bodyscript" class="component navigation-list-item">
+					<a #if ($selectedTab && $selectedTab == 'bodyscript') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'bodyscript') { %> data-selected <% } %> class="component-link bodyscript" href="$context.PanelUrl&_eid=<%: Id %>&_et=bodyscript">$core_v2_language.GetResource('Body')</a>
+				</li>
+			<% } %>
+
+			<li data-type="resources" data-request="_eid=<%: Id %>&_et=resources" class="component navigation-list-item">
+				<a #if ($selectedTab && $selectedTab == 'resources') data-selected #end <% if(typeof(selected) !== 'undefined' && selected === 'resources') { %> data-selected <% } %> class="component-link resources" href="$context.PanelUrl&_eid=<%: Id %>&_et=resources">$core_v2_language.GetResource('Resources')</a>
+			</li>
+			<% if(typeof(Files) !== 'undefined') { %>
+				<% foreach(Files, function(file){ %>
+					<li data-type="file" data-file="<%: file.Name %>" data-request="_eid=<%: Id %>&_et=file&_en=<%: file.Name %>" class="component navigation-list-item">
+						<a #if ($selectedTab)  <% if(file.Name == '$selectedTab') { %> data-selected <% } %> #end <% if(typeof(selected) !== 'undefined' && selected === file.Name) { %> data-selected <% } %> class="component-link <% if(file.IsEditable) { %>editable-attachment<% } else { %>non-editable-attachment<% } %>" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: Id %>&_et=file&_en=<%: file.Name %>"><%: file.Name %></a>
+					</li>
+				<% }); %>
+			<% } %>
+		<% } %>
+		<li class="navigation-list-item">
+			<a href="#" data-more class="more ui-tip hierarchy type" data-tip="More components of this email">
+				#if ($selectedTabName) $selectedTabName #else #end <% if(typeof(selectedTabName) !== 'undefined') { %> <%= selectedTabName %> <% } %>
+			</a>
+		</li>
+		<li class="navigation-list-item">
+			<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+		</li>
+	</ul>
+</div>

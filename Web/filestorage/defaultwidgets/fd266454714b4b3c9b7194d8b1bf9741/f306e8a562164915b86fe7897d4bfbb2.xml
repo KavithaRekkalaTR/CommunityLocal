@@ -1,0 +1,34 @@
+﻿<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:AnonymousContextualPanelShell_Name}" version="9.0.0.0" description="${resource:AnonymousContextualPanelShell_Description}" instanceIdentifier="f306e8a562164915b86fe7897d4bfbb2" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="fd266454714b4b3c9b7194d8b1bf9741">
+	<contentScript><![CDATA[<script type="text/javascript">
+if (window === window.top) {
+	jQuery(function(j){
+		var redirected = false;
+		var ensureLoggedIn = function(){
+			if (!redirected) {
+				var hashData = jQuery.telligent.evolution.url.hashData();
+				if (hashData._cptype){
+					redirected = true;
+					window.location = jQuery.telligent.evolution.url.modify({
+						url:'$core_v2_encoding.JavascriptEncode($core_v2_urls.Login())',
+						query: {
+							ReturnUrl:window.location+''
+						},
+						hash: ''
+					});
+				}
+			}
+		};
+		jQuery(window).on('hashchange', function(){
+			ensureLoggedIn();
+		});
+		ensureLoggedIn()
+	});
+}
+</script>]]></contentScript>
+	<languageResources><language key="en-us">
+  <resource name="AnonymousContextualPanelShell_Name">Anonymous Contextual Panel Shell</resource>
+  <resource name="AnonymousContextualPanelShell_Description">Handles login redirects when anonymous users attempt to access a contextual panel.</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,33 @@
+<% if(fragments && fragments.length > 0) { %>
+	<% if(fragments && fragments.length > 0) { %>
+		<ul class="child-items">
+		<% foreach(fragments, function(fragment){ %>
+			<li class="child-item <%: fragment.InstanceIdentifier %>" data-comparison="<%: fragment.Comparison %>">
+				<div>
+					<% if(fragment.IsStaged) { %>
+						<%= template('studioShell-stagedIndicator') %>
+					<% } %>
+					<% if(fragment.Url) { %>
+						<a href="<%: fragment.Url %>" target="sample" class="name"><%: fragment.Name %></a>
+					<% } else { %>
+						<span class="name"><%: fragment.Name %></span>
+					<% } %>
+				</div>
+				<% if(fragment.Description) { %>
+					<span class="description"><%: fragment.Description %></span>
+				<% } %>
+				<ul class="actions">
+					<% if(fragment.SampleUrl) { %>
+						<li><a href="<%: fragment.SampleUrl %>" class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ViewSample'))" target="sample">$core_v2_language.GetResource('View')</a></li>
+					<% } %>
+					<% if(fragment.EditUrl) { %>
+						<li><a href="<%: fragment.EditUrl %>" target="sample">$core_v2_language.GetResource('Edit')</a></li>
+					<% } %>
+				</ul>
+			</li>
+		<% }); %>
+		</ul>
+	<% } else { %>
+		<div class="message">$core_v2_language.GetResource('NoneDefined')</div>
+	<% } %>
+<% } %>

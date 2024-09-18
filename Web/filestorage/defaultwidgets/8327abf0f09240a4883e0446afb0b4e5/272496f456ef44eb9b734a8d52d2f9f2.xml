@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:BlogPostActivityStory_Name}" version="11.0.0.0" description="${resource:BlogPostActivityStory_Description}" instanceIdentifier="272496f456ef44eb9b734a8d52d2f9f2" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" lastModified="2019-11-21 19:54:43Z" provider="8327abf0f09240a4883e0446afb0b4e5">
+	<contentScript language="Velocity"><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+	#set($blogPost = $context.GetAdjustedForExternalPost())
+	#if(!$blogPost || !$blogPost.Author)
+		$core_v2_widget.Hide()
+	#else
+		#set($actor = $blogPost.Author)
+		#if ($actor.Url)
+		 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+		#else
+			#set($profile0Html = $actor.DisplayName)
+		#end
+
+		#if($isPreview)
+				#format($core_v2_language.GetResource('NewBlogPost_Preview'))
+						#token('user')
+							$profile0Html
+					#token('post')
+							<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.Url)">$blogPost.Title</a>
+					#token('blog')
+							#if ($content.Application.Container.ParentContainer)
+										<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+											href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">
+											$content.Application.Container.HtmlName('Web')
+										</a>
+										<span class="group-application-separator">&gt;</span>
+								#end
+								<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+									href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+						#end
+		#else
+			<div class="activity-summary blog-post">
+								#format($core_v2_language.GetResource('in'))
+										#token('user')
+									$profile0Html
+							#token('blog')
+									#if ($content.Application.Container.ParentContainer)
+											<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+												href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+											<span class="group-application-separator">&gt;</span>
+									#end
+									<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+										href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+								#end
+						</div>
+
+			<span class="activity-title">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.Url)" class="internal-link view-post"><span>$blogPost.Title</span></a>
+			</span>
+			<div class="activity-description user-defined-markup">
+				#if($blogPost.Excerpt && $blogPost.Excerpt != '')
+					$blogPost.Excerpt
+				#else
+					#set($blog = $core_v2_blog.Get($blogPost.Application.ApplicationId))
+					#if($blog)
+						#set ($summaryLength = $blog.PostSummaryLengthDefault)
+					#else
+						#set ($summaryLength = 250)
+					#end
+					#set($rawBody = $blogPost.Body('Web'))
+					#set($body = $core_v2_language.Truncate($rawBody, $summaryLength, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+					$body
+					#if ($body.Length < $rawBody.Length)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.Url)">$core_v2_language.GetResource('read-more')</a>
+					#end
+				#end
+			</div>
+
+			#if ($blogPost.File && $blogPost.File.FileUrl != '')
+				#set ($mediaType = $core_v2_ui.GetMediaType($blogPost.File.FileUrl, "%{ ViewType = 'View', OutputIsPersisted='False' }"))
+				#if($mediaType == 'Audio' || $mediaType == 'Video')
+						<div class="post-attachment-viewer">
+								$core_v2_ui.GetViewHtml($blogPost.File.FileUrl, "%{ Width=320, Height=240, OutputIsPersisted = 'false' }")
+						</div>
+				#elseif ($mediaType == 'Image')
+						<div class="post-attachment-viewer">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.File.FileUrl)" class="internal-link" data-imagepreviewurl="$core_v2_encoding.HtmlAttributeEncode($blogPost.File.FileUrl)">
+										$!core_v2_ui.GetPreviewHtml($blogPost.File.FileUrl, "%{Width=320, Height=240, OutputIsPersisted='False'}")
+								</a>
+						</div>
+				#elseif ($mediaType != 'Empty')
+						<div class="post-attachment-viewer">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.File.FileUrl)" class="internal-link ui-theater" data-theaterurl="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('theater-view.vm'))">
+										$!core_v2_ui.GetPreviewHtml($blogPost.File.FileUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+								</a>
+						</div>
+				#else
+						<div class="post-attachment-viewer">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($blogPost.File.FileUrl)" class="internal-link">
+										$!core_v2_ui.GetPreviewHtml($blogPost.File.FileUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+								</a>
+						</div>
+				#end
+			#end
+		#end
+	#end
+#end]]></contentScript>
+	<headerScript language="Unknown" />
+	<languageResources><![CDATA[<language key="en-us">
+  <resource name="BlogPostActivityStory_Description">Story for blog posts.</resource>
+  <resource name="BlogPostActivityStory_Name">Blog Post Activity Story</resource>
+  <resource name="in">{user} in {blog}:</resource>
+  <resource name="NewBlogPost_Preview">{user} posted {post} in {blog}.</resource>
+  <resource name="read-more">Read more.</resource>
+  <resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource>
+</language>]]></languageResources>
+	<additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

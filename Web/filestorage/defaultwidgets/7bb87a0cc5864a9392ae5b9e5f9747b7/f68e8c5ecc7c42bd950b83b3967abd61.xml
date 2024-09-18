@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:LeaderboardList_Name}" version="11.0.0.0" description="${resource:LeaderboardList_Description}" instanceIdentifier="f68e8c5ecc7c42bd950b83b3967abd61" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="leaderboard-list" lastModified="2020-01-14 16:09:18Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = 10)
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize', 10))
+
+#set($options = "%{}")
+$options.Add("PageSize", $pageSize)
+$options.Add("PageIndex", $pageIndex)
+$options.Add('DisplayStatus', 'Displayed')
+
+#set ($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'ApplicationName'))
+#set ($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#if ($sortBy == 'ApplicationName')
+	$options.Add("SortBy", 'Name')
+	$options.Add("SortOrder", 'Ascending')
+#elseif ($sortBy == 'ContentIdsOrder')
+	$options.Add("SortBy", 'ContentIdsOrder')
+	$options.Add("SortOrder", 'Ascending')
+#end
+
+#set($leaderboardSelection = false)
+#set ($leaderboardSelection = $core_v2_widget.GetCustomValue('leaderboardSelection', ''))
+#if ($leaderboardSelection && $leaderboardSelection.Length > 0)
+	#set($leaderboardIds = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($leaderboardSelection).Values('leaderboard')))
+	$options.Add('ContentIds', $leaderboardIds)
+#else
+	#set($groupId = false)
+	#set($groupId = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('group', '')).Value('Group')))
+	#set($rootGroup = $core_v2_group.Root)
+
+	#if ($groupId > 0)
+		#set($group = $core_v2_group.Get("%{Id = $groupId}"))
+	#else
+		#set($group = $core_v2_group.Current)
+	#end
+
+	#if ($group.Id == $rootGroup.Id)
+		$options.Add('Scope', 'Global')
+	#else
+		$options.Add('ContainerId', $group.ContainerId)
+	#end
+#end
+
+#set($leaderboards = $core_v2_leaderboard.List($options))
+
+#set($leadersSize = $core_v2_widget.GetIntValue('leadersSize', 3))
+#set($showValue = $core_v2_widget.GetBoolValue('showValue', true))
+#set($showCurrentUser = $core_v2_widget.GetBoolValue('showCurrentUser', true))
+#set($numberOfColumns = $core_v2_widget.GetStringValue('numberOfColumns', 'two-column'))
+
+#foreach($leaderboard in $leaderboards)
+#beforeall
+<ul class="content-list simple leaderboards $numberOfColumns">
+#each
+	<li class="content-item simple leaderboard">
+		<h2><a href="$leaderboard.Url">$leaderboard.Name</a></h2>
+		<div class="description">$!leaderboard.Description</div>
+
+		#set($leaders = $core_v2_leader.List($leaderboard.Id, "%{PageSize = $leadersSize}"))
+
+		#if(!$core_v2_user.Accessing.IsSystemAccount && $core_v2_user.Accessing.EnableDisplayInMemberList && $showCurrentUser && $leaderboard.LastCalculatedDate && $pageIndex == 0 && $leaders.TotalCount > 0 && $core_v2_leaderboard.UserIsEligible($leaderboard.Id))
+			#set($currentUserInList = false)
+			#foreach ($leader in $leaders)
+				#if($leader.user.Id == $core_v2_user.Accessing.Id)
+					#set($currentUserInList = true)
+				#end
+			#end
+			#if(!$currentUserInList)
+				#set($currentLeader = $core_v2_leader.Get($leaderboard.Id))
+				#if ($currentLeader && $currentLeader.LeaderboardId > 0)
+					$leaders.Add($currentLeader)
+				#end
+			#end
+		#end
+
+		#foreach ($leader in $leaders)
+		#beforeall
+			<div class="leaders">
+				<ul class="leaders">
+				<li class="row leader-header">
+					<div class="column rank-column">$core_v2_language.GetResource("Rank")</div>
+					<div class="column name-column">$core_v2_language.GetResource("Name")</div>
+					#if ($showValue)
+						<div class="column points-column">$core_v2_language.GetResource("Points")</div>
+					#end
+				</li>
+		#each
+				<li class="row leader-item #if($leader.user.Id == $core_v2_user.Accessing.Id)current-leader-item#end">
+					<div class="column rank-column">#if($leader.Rank != -1)$leader.Rank #else $core_v2_language.GetResource("NotRanked") #end</div>
+					<div class="column name-column">
+						#if ($leader.user.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($leader.user.ProfileUrl)" class="internal-link view-user-profile avatar">
+								$core_v2_ui.GetResizedImageHtml($leader.user.AvatarUrl, 35, 35, "%{ alt = $leader.user.DisplayName, ResizeMethod='ZoomAndCrop' }")
+							</a>
+							<a href="$core_v2_encoding.HtmlAttributeEncode($leader.user.ProfileUrl)" class="internal-link view-user-profile username">
+								$leader.user.DisplayName
+							</a>
+						#else
+							$core_v2_ui.GetResizedImageHtml($leader.user.AvatarUrl, 35, 35, "%{ alt = $leader.user.DisplayName, ResizeMethod='ZoomAndCrop' }")
+							<span class="username">$leader.user.DisplayName</span>
+						#end
+
+					</div>
+					#if ($showValue)
+						<div class="column points-column">#if($leader.Value != -1)$core_v2_language.FormatNumber($leader.Value) #else &nbsp; #end</div>
+					#end
+				</li>
+		#afterall
+				</ul>
+				<div class="actions">
+					<a href="$leaderboard.Url">$core_v2_language.GetResource("ViewLeaderboard")</a>
+				</div>
+			</div>
+		#nodata
+			#if($leaderboard.LastCalculatedDate)
+				<div class="message">$core_v2_language.GetResource("NoLeaders")</div>
+			#else
+				<div class="message">$core_v2_language.GetResource("LeaderboardNotCalculated")</div>
+			#end
+
+			<div class="actions">
+				<a href="$leaderboard.Url">$core_v2_language.GetResource("ViewLeaderboard")</a>
+			</div>
+
+		#end
+
+	</li>
+#afterall
+</ul>
+
+$core_v2_ui.Pager($leaderboards.PageIndex, $leaderboards.PageSize, $leaderboards.TotalCount)
+
+#nodata
+	<div class="message">$core_v2_language.GetResource("NoLeaderboardsFound")</div>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:LeaderboardList_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:LeaderboardList_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="group" labelResourceName="Group" defaultValue="Group=-1" dataType="Custom" template="core_v2_groupLookup" enableCurrent="true" />
+	<property id="pageSize" labelResourceName="PageSize" defaultValue="10" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="defaultSortOrder" labelResourceName="DefaultSortOrder" defaultValue="ApplicationName" dataType="String">
+		<propertyValue value="ApplicationName" labelResourceName="SortBy_ApplicationName" />
+		<propertyValue value="ContentIdsOrder" labelResourceName="SortBy_Custom" />
+	</property>
+	<property id="leaderboardSelection" labelResourceName="LeaderboardInclusion" dataType="Custom" template="core_v2_leaderboardOrder" key="leaderboard" visibilityPropertyId="defaultSortOrder" visibilityPropertyValue="ContentIdsOrder" groupPropertyId="group" />
+	<property id="numberOfColumns" labelResourceName="NumberOfColumns" defaultValue="two-column" dataType="String">
+		<propertyValue value="one-column" labelResourceName="OneColumn" />
+		<propertyValue value="two-column" labelResourceName="TwoColumn" />
+	</property>
+	<property id="leadersSize" labelResourceName="LeadersSize" defaultValue="3" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="showValue" labelResourceName="ShowValueColumn" defaultValue="true" dataType="Bool" />
+	<property id="showCurrentUser" labelResourceName="ShowCurrentUserPosition" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="DefaultSortOrder">Default Sort Order</resource>
+  <resource name="Group">Filter to group</resource>
+  <resource name="IncludeGroupName">Include group name in header</resource>
+  <resource name="LeaderboardInclusion">Include leaderboards</resource>
+  <resource name="LeaderboardList_Description">Displays the list of leaderboards avaiable for a group.</resource>
+  <resource name="LeaderboardList_Name">Leaderboards</resource>
+  <resource name="LeaderboardNotCalculated">Leaderboard has not been calculated yet.</resource>
+  <resource name="LeadersSize">Leaders per leaderboard</resource>
+  <resource name="Name">Name</resource>
+  <resource name="NoLeaderboardsFound">No leaderboards found.</resource>
+  <resource name="NoLeaders">No leaders found.</resource>
+  <resource name="NotRanked">--</resource>
+  <resource name="NumberOfColumns">Number of columns</resource>
+  <resource name="OneColumn">One column</resource>
+  <resource name="Options">Options</resource>
+  <resource name="PageSize">Leaderboards per page</resource>
+  <resource name="Points">Points</resource>
+  <resource name="Rank">Rank</resource>
+  <resource name="ShowCurrentUserPosition">Show current user's position</resource>
+  <resource name="ShowValueColumn">Show points column</resource>
+  <resource name="SortBy_ApplicationName">By name</resource>
+  <resource name="SortBy_Custom">By 'Include leaderboards' order</resource>
+  <resource name="TwoColumn">Two columns</resource>
+  <resource name="ViewLeaderboard">View Full Leaderboard</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

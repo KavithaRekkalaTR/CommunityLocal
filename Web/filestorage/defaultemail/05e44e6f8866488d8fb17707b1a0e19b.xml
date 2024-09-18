@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Group Mention" version="13.0.0.0" description="Raises notifications on group mentions to members." id="05e44e6f8866488d8fb17707b1a0e19b" lastModified="2023-05-05 20:32:24Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('group_name')
+    $context_v1_email.Context.Group.Name
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('group_name')
+    $context_v1_email.Context.Group.Name
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('group_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Group.Url)">$context_v1_email.Context.Group.Name</a>
+#token('content_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Content.Url)">$context_v1_email.Context.Content.HtmlName('Web')</a>
+#token('author_name_link')
+    #set($author = false)
+    #set($author = $core_v2_user.Get("%{ Id=$context_v1_email.Context.Content.CreatedByUserId }"))
+    #if ($author)
+        #set($authorUrl = false)
+        #set($authorUrl = $author.Url)
+        #if ($authorUrl)
+        	<a href="$core_v2_encoding.HtmlAttributeEncode($authorUrl)">$author.DisplayName</a>
+        #else
+            $author.DisplayName
+        #end
+    #else
+        $context_v1_email.Context.Content.CreatedByUserId
+    #end
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('group_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Group.Url)">$context_v1_email.Context.Group.Name</a>
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Settings(false))">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">{group_name_link} was mentioned in {content_name_link} by {author_name_link}.</resource>
+  <resource name="Footer">You received this email because you're a member of {group_name_link} and it was mentioned by another user. You can disable these notifications {settings_link}.</resource>
+  <resource name="Settings">here</resource>
+  <resource name="Subject">{site_name}: {group_name} Mentioned</resource>
+  <resource name="Header">{group_name} Mentioned</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

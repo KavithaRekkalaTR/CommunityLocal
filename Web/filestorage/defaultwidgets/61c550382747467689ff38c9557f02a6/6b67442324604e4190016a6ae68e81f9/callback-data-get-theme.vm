@@ -1,0 +1,42 @@
+##
+## Get Theme Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#set ($options = "%{}")
+
+#set ($idQuery = $core_v2_page.GetQueryStringValue("_w_id"))
+#if ($idQuery)
+	$options.Add('Id', $idQuery)
+#end
+
+#set ($typeIdQuery = $core_v2_page.GetQueryStringValue("_w_typeId"))
+#if ($typeIdQuery)
+	$options.Add('TypeId', $typeIdQuery)
+#end
+
+#set ($stagedQuery = $core_v2_page.GetQueryStringValue("_w_staged"))
+#if ($stagedQuery)
+	$options.Add('Staged', $core_v2_utility.ParseBool($stagedQuery))
+#end
+
+#set ($factoryDefaultQuery = $core_v2_page.GetQueryStringValue("_w_factoryDefault"))
+#if ($factoryDefaultQuery)
+	$options.Add('FactoryDefault', $core_v2_utility.ParseBool($factoryDefaultQuery))
+#end
+
+#set ($includeFileDigestsQuery = $core_v2_page.GetQueryStringValue("_w_includeFileDigests"))
+#if ($includeFileDigestsQuery)
+	#set ($includeFileDigests = $core_v2_utility.ParseBool($includeFileDigestsQuery))
+#end
+
+#set ($theme = $context.GetTheme($options))
+#if ($theme && $theme.HasErrors())
+	$core_v2_page.SendJsonError($theme.Errors)
+#end
+
+#if (!$theme)
+	null
+#else
+	$core_v2_widget.ExecuteFile('callback-sub-serialize-theme-full.vm')
+#end

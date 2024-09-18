@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="71cf0046302c4e0fa4babd96f821afe2" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="user-emailverification" lastModified="2020-06-26 18:48:25Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#if ($core_v2_urls.Current != 'UserEmailVerification')
+    $core_v2_widget.Hide()
+#end
+
+#set($identifier = false)
+#set($context = false)
+#set($loggedIn = false)
+
+#set($context = $core_v2_page.GetQueryStringValue("verificationcontext"))
+#set($user = $core_v2_user.Accessing)
+
+#if($user.Username != $core_v2_user.AnonymousUserName)
+    #set($loggedIn = true)
+#end
+
+#if($loggedIn)
+    #set($identifier = $user.Id)
+#elseif($context)
+    #set($identifier = $core_v2_utility.ParseGuid($context))
+#end
+
+<div class="message" style="display:none" id="$core_v2_widget.UniqueId('message')" name="$core_v2_widget.UniqueId('message')"></div>
+
+#set($records = false)
+#if($identifier)
+    #set($records = $core_v2_user.ListUnverifiedEmails($identifier))
+#end
+
+#foreach($record in $records)
+    <li>
+        <h4>$record.EmailAddress</h4>
+    </li>
+#beforeall
+    #if($records.Count > 1)
+        $core_v2_language.GetResource('Message_Unverified_AddressPluralSnippet')
+    #else
+        $core_v2_language.GetResource('Message_Unverified_AddressSingularSnippet')
+    #end
+    
+    <ul style="padding-top:1em;">
+#afterall
+    </ul>
+    <fieldset>
+        <ul class="field-list">
+    		<li class="field-item submit-button">
+    			<span class="field-item-input">
+    				<a href='#' class="internal-link button" id="$core_v2_widget.UniqueId('resendEmail')"
+    				    data-user="$record.UserId" #if($context) data-context="$context" #end>$core_v2_language.GetResource('ResendEmail')</a>
+    				<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+    			</span>
+    		</li>
+    	</ul>
+    </fieldset>
+#nodata
+    #if($loggedIn)
+        <p>$core_v2_language.GetResource('Message_NoUnverifiedEmails')</p>
+        <p><a href="$core_v2_urls.Home()">$core_v2_language.GetResource('Link_Home')</a></p>
+    #else
+        #set($key = false)
+        #set($key = $core_v2_page.GetQueryStringValue("verificationkey"))
+        #if(!$key)
+            $core_v2_page.Redirect($core_v2_urls.LogIn())
+        #end
+    #end
+#end
+
+#set($verifiedMessage = $core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_Verified')))
+#if(!$loggedIn)
+    #set($verifiedMessage = $core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_Verified_Login')))
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.verifyEmail')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.verifyEmail.register({
+			    key: "$!core_v2_page.GetQueryStringValue("verificationkey")",
+			    context: "$!core_v2_page.GetQueryStringValue("verificationcontext")",
+			    messages: {
+                    verified: '$verifiedMessage',
+                    invalid: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_Invalid'))',
+                    invalid_short: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_Invalid_Short'))',
+                    resent: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_EmailResent'))',
+                    alreadyverified: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_AlreadyVerified'))'
+			    },
+			    selectors: {
+				    resendEmailLink: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId("resendEmail"))",
+			        message: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId("message"))"
+			    },
+                urls: {
+                    resend: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl("resend.vm"))",
+                    verifykey: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl("verifykey.vm"))",
+                    login: "$core_v2_urls.LogIn("%{ ReturnToCurrentUrl = 'false' }", false)",
+                    returnUrl: '?ReturnUrl=$core_v2_encoding.UrlEncode($core_v2_urls.Message(24, true))',
+                    home: "$core_v2_urls.Home()"
+                }
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Displays messages and action steps for email verification workflow.</resource>
+  <resource name="Link_Home">Go to Home Page</resource>
+  <resource name="Message_AlreadyVerified">You have already verified that email address.</resource>
+  <resource name="Message_EmailResent">Email sent!</resource>
+  <resource name="Message_Invalid">Verification could not be completed because the link is not valid. Please retry the link from the verification email, or log in to see options to resend the email.</resource>
+  <resource name="Message_Invalid_Short">Verification could not be completed.</resource>
+  <resource name="Message_NoUnverifiedEmails">You have no unverified email addresses.</resource>
+  <resource name="Message_Unverified_AddressPluralSnippet">Emails have been sent to the addresses below. Click the link sent in the email to complete the verification of that email address.</resource>
+  <resource name="Message_Unverified_AddressSingularSnippet">An email has been sent to the address below. Click the link sent in the email to complete the verification of that email address.</resource>
+  <resource name="Message_Verified">Your email address has been successfully verified.</resource>
+  <resource name="Message_Verified_Login">Your email address has been successfully verified. Please login to continue.</resource>
+  <resource name="ResendEmail">Resend</resource>
+  <resource name="Title">User - Email Verification</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

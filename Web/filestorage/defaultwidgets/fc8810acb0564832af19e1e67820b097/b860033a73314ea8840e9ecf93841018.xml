@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:AuditPanel_Name}" version="11.0.0.0" description="${resource:AuditPanel_Description}" instanceIdentifier="b860033a73314ea8840e9ecf93841018" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="auditing" lastModified="2021-03-31 02:47:05Z" provider="fc8810acb0564832af19e1e67820b097">
+    <contentScript language="Velocity"><![CDATA[#set ($auditListId = $core_v2_widget.UniqueId('auditList'))
+#set ($searchInputId = $core_v2_widget.UniqueId('searchInput'))
+#set ($memberSearchInputId = $core_v2_widget.UniqueId('memberSearchInput'))
+#set ($machineNamesId = $core_v2_widget.UniqueId('machineNames'))
+#set ($auditActionsId = $core_v2_widget.UniqueId('auditActions'))
+#set ($auditSourcesId = $core_v2_widget.UniqueId('auditSources'))
+#set ($auditCountId = $core_v2_widget.UniqueId('auditCount'))
+#set ($headerTemplateId = $core_v2_widget.UniqueId('listHeaderTemplate'))
+
+#set ($initialStartDate = $core_v2_utility.CurrentUserDate.AddDays(-7))
+
+<div class="tab auditing">
+    $core_v2_widget.ExecuteFile('tab-auditing.vm')
+</div>
+
+<div class="tab archive" style="visibility: hidden;">
+    $core_v2_widget.ExecuteFile('tab-archive.vm')
+</div>
+
+#registerClientTemplate($headerTemplateId)
+	<ul class="filter">
+	    <li class="filter-option selected"><a href="#" data-tab="auditing">$core_v2_language.GetResource('Tab_Auditing')</a></li>
+	    <li class="filter-option"><a href="#" data-tab="archive">$core_v2_language.GetResource('Tab_Archive')</a></li>
+	</ul>
+#end
+
+#registerEndOfPageHtml('auditPanel')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.auditPanel.register({
+				listCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+				exportCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export.jsm'))',
+				exportAllCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-all.jsm'))',
+                findUsersUrl : '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))',
+				headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+				auditListId: '#$core_v2_encoding.JavascriptEncode($auditListId)',
+				auditCountId: '#$core_v2_encoding.JavascriptEncode($auditCountId)',
+				machineNamesId: '#$core_v2_encoding.JavascriptEncode($machineNamesId)',
+                auditActionsId:  '#$core_v2_encoding.JavascriptEncode($auditActionsId)',
+                auditSourcesId:  '#$core_v2_encoding.JavascriptEncode($auditSourcesId)',
+				searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+				memberSearchInputId: '#$core_v2_encoding.JavascriptEncode($memberSearchInputId)',
+                startDateId: "#$core_v2_widget.UniqueId('startDate')",
+                endDateId: "#$core_v2_widget.UniqueId('endDate')",
+                startDate: '$core_v2_encoding.JavascriptEncode($initialStartDate)',
+                exportText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Export'))',
+                exportAllText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportAll'))',
+				noActionsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+                userLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('byanymember'))',
+    			noUsersMatchText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UserLookUp_NoMatches'))"
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Actions_Plural">{0} Actions</resource>
+  <resource name="Actions_Singular">{0} Action</resource>
+  <resource name="after">after</resource>
+  <resource name="and">and</resource>
+  <resource name="Archive_Instructions">Older auditing entires are archived as downloadable CSV files.  The available audit archives are listed below.</resource>
+  <resource name="as">as</resource>
+  <resource name="AuditPanel_Description">View platform audit actions.</resource>
+  <resource name="AuditPanel_Name">Auditing</resource>
+  <resource name="between">that occurred between</resource>
+  <resource name="byanymember">by any member</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="containing">containing</resource>
+  <resource name="Export">Export as CSV</resource>
+  <resource name="ExportAll">Export as CSV</resource>
+  <resource name="from">from</resource>
+  <resource name="Instructions">Below is a listing of actions occurring throughout the site.</resource>
+  <resource name="Instructions_WithAuditDateRange">Below is a listing of actions occurring throughout the site. Records can be queried from {0} through now. Older records can be downloaded from the Archive tab.</resource>
+  <resource name="more">More</resource>
+  <resource name="Node_Any">Any node</resource>
+  <resource name="NoDetails">No additional details avaialble.</resource>
+  <resource name="NoResults">No actions match the filter.</resource>
+  <resource name="on">on</resource>
+  <resource name="Refresh">Refresh</resource>
+  <resource name="Source_All">Any source</resource>
+  <resource name="Source_ApiKey">Any API key source</resource>
+  <resource name="Source_Individual">Only {0}</resource>
+  <resource name="Source_Local">This site</resource>
+  <resource name="Source_OAuth">Any OAuth source</resource>
+  <resource name="Tab_Archive">Archive</resource>
+  <resource name="Tab_Auditing">Auditing</resource>
+  <resource name="Type_All">All actions</resource>
+  <resource name="UserLookUp_NoMatches">A matching member could not be found.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

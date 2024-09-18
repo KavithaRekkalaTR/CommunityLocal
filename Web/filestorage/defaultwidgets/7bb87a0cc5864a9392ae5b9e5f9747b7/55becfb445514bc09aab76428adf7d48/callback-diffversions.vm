@@ -1,0 +1,115 @@
+#set($articleId = false)
+#set($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('articleId')))
+
+#set($versionA = false)
+#set($versionA = $articles_v1_articleVersions.Get($articleId, $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('versionA'))))
+
+#set($versionB = false)
+#set($versionB = $articles_v1_articleVersions.Get($articleId, $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('versionB'))))
+
+#set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+
+#if ($versionA && !$versionA.HasErrors() && $versionB && !$versionB.HasErrors())
+    #if ($versionA.LastUpdateDate > $versionB.LastUpdateDate)
+        #set($versionC = $versionB)
+        #set($versionB = $versionA)
+        #set($versionA = $versionC)
+    #end
+    
+    <div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource('Showing_DifferenceBetweenVersions'), $versionA.Title, $core_v2_language.FormatDateAndTime($versionA.LastUpdateDate), $versionB.Title, $core_v2_language.FormatDateAndTime($versionB.LastUpdateDate))</div>
+     <div class="content full">
+        <h2 class="name">$core_v2_ui.Merge($versionA.Title, $versionB.Title)</h2>
+        <div class="content">
+            $core_v2_ui.Merge($versionA.Body('Web'), $versionB.Body('Web'))
+            
+            #set($categoriesA = '')
+            #foreach($category in $versionA.Categories)
+                #if ($categoriesA.Length > 0)
+                    #set($categoriesA = "$categoriesA, ")
+                #end
+                #set($categoriesA = "${categoriesA}${category.Category.Name}${api.getCategoryLocation($category.Category)}")
+            #end
+            
+            #set($categoriesB = '')
+            #foreach($category in $versionB.Categories)
+                #if ($categoriesB.Length > 0)
+                    #set($categoriesB = "$categoriesB, ")
+                #end
+                #set($categoriesB = "${categoriesB}${category.Category.Name}${api.getCategoryLocation($category.Category)}")
+            #end
+            #if ($categoriesA.Length > 0 || $categoriesB.Length > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Categories')</strong> $core_v2_ui.Merge($categoriesA, $categoriesB)
+                </p>
+            #end
+            
+            #set($tagsA = '')
+            #if ($versionA.Tags.Count > 0)
+                #set($tagsA = $core_v2_utility.Join(', ', $versionA.Tags))
+            #end
+            
+            #set($tagsB = '')
+            #if ($versionB.Tags.Count > 0)
+                #set($tagsB = $core_v2_utility.Join(', ', $versionB.Tags))
+            #end
+            
+            #if ($tagsA.Length > 0 || $tagsB.Length > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Tags')</strong> $core_v2_ui.Merge($tagsA, $tagsB)
+                </p>
+            #end
+        </div>
+    </div>
+#elseif ($versionA && !$versionA.HasErrors())
+    <div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource('Showing_Version'), $versionA.Title, $core_v2_language.FormatDateAndTime($versionA.LastUpdateDate))</div>
+     <div class="content full">
+        <h2 class="name">$versionA.Title</h2>
+        <div class="content">
+            $versionA.Body('Web')
+            #set($categories = '')
+            #foreach($category in $versionA.Categories)
+                #if ($categories.Length > 0)
+                    #set($categories = "$categories, ")
+                #end
+                #set($categories = "${categories}${category.Category.Name}${api.getCategoryLocation($category.Category)}")
+            #end
+            #if ($categories.Length > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Categories')</strong> $categories
+                </p>
+            #end
+            #if ($versionA.Tags.Count > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Tags')</strong> $core_v2_utility.Join(', ', $versionA.Tags)
+                </p>
+            #end
+        </div>
+    </div>
+#elseif ($versionB && !$versionB.HasErrors())
+    <div class="message information">$core_v2_language.FormatString($core_v2_language.GetResource('Showing_Version'), $versionB.Title, $core_v2_language.FormatDateAndTime($versionB.LastUpdateDate))</div>
+    <div class="content full">
+        <h2 class="name">$versionB.Title</h2>
+        <div class="content">
+            $versionB.Body('Web')
+            #set($categories = '')
+            #foreach($category in $versionB.Categories)
+                #if ($categories.Length > 0)
+                    #set($categories = "$categories, ")
+                #end
+                #set($categories = "${categories}${category.Category.Name}${api.getCategoryLocation($category.Category)}")
+            #end
+            #if ($categories.Length > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Categories')</strong> $categories
+                </p>
+            #end
+            #if ($versionB.Tags.Count > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Tags')</strong> $core_v2_utility.Join(', ', $versionB.Tags)
+                </p>
+            #end
+        </div>
+    </div>
+#else
+    <div class="message error">$core_v2_language.GetResource('DifferencesCouldNotBeLoaded')</div>
+#end

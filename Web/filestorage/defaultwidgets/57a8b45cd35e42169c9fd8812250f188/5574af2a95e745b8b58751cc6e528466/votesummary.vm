@@ -1,0 +1,13 @@
+#set($voteSummary = $telligentIdeas_v1_userVoteSummaries.Get($core_v2_utility.ParseGuid($core_v2_page.GetFormValue('challengeid'))))
+#if ($voteSummary && !$voteSummary.HasErrors())
+    #if ($voteSummary.TotalVotes == 1)
+        $core_v2_language.FormatString($core_v2_language.GetResource('TotalVotes_Singular'), '?filter=myvotes&amp;status=!held', $core_v2_language.FormatNumber($voteSummary.TotalVotes))
+    #else
+        $core_v2_language.FormatString($core_v2_language.GetResource('TotalVotes_Plural'), '?filter=myvotes&amp;status=!held', $core_v2_language.FormatNumber($voteSummary.TotalVotes))
+    #end
+    #if ($voteSummary.RemainingVotes == 1)
+        $core_v2_language.FormatString($core_v2_language.GetResource('AvailableVotes_Singular'), '?filter=all&amp;status=!open', $core_v2_language.FormatNumber($voteSummary.RemainingVotes))
+    #else
+        $core_v2_language.FormatString($core_v2_language.GetResource('AvailableVotes_Plural'), '?filter=all&amp;status=!open', $core_v2_language.FormatNumber($voteSummary.RemainingVotes))
+    #end
+#end

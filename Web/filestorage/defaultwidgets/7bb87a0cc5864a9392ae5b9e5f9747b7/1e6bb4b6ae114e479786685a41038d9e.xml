@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:BlogDetails_Name}" version="11.0.0.0" description="${resource:BlogDetails_Description}" instanceIdentifier="1e6bb4b6ae114e479786685a41038d9e" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="blog-details" lastModified="2020-01-14 16:06:58Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+
+#set ($accessingUserIsRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+#set ($blogPost = $core_v2_blogPost.Current)
+
+#if(!$blogPost)
+	$core_v2_widget.Hide()
+#end
+
+<div class="content-details">
+
+	#if ($blogPost.Tags)
+		#foreach ($tag in $blogPost.Tags)
+		#beforeall
+			<div class="content-tags">
+				<ul class="tag-list">
+		#each
+			#set ($tagUrl = false)
+			#set ($tagUrl = $core_v2_urls.Tags("%{ Tags = $tag }"))
+			#if ($tagUrl)
+				<li class="tag-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($tagUrl)" rel="tag">$tag</a>
+				</li>
+			#end
+		#afterall
+				</ul>
+			</div>
+		#end
+	#end
+
+	<ul class="attribute-list">
+
+		#set ($canLike = false)
+		#if ($accessingUserIsRegistered && $core_v2_like.CanLike($blogPost.ContentId, $blogPost.ContentTypeId) && $core_v2_like.CanUnlike($blogPost.ContentId, $blogPost.ContentTypeId))
+			#set ($canLike = true)
+		#end
+
+		#set ($likes = false)
+		#set ($likes = $core_v2_like.List("%{ ContentId = $blogPost.ContentId, ContentTypeId = $blogPost.ContentTypeId, PageSize = 1 }"))
+
+		#if ($canLike || $likes.TotalCount > 0)
+			<li class="attribute-item like #if ($canLike) can-like #end">
+				<span class="attribute-name"></span>
+				<span class="attribute-value">
+					#if ($canLike)
+						#set ($likeFormat = '{toggle} {count}')
+					#else
+						#set ($likeFormat = '{count}')
+					#end
+					$core_v2_ui.Like($blogPost.ContentId, $blogPost.ContentTypeId, "%{ Format = $likeFormat, IncludeLike = 'true', IncludeTip = 'true' }")
+				</span>
+			</li>
+		#end
+
+		#if ($core_v2_blogPost.AreRatingsEnabled($blogPost.Id))
+			<li class="attribute-item rating">
+				<span class="attribute-name"></span>
+				<span class="attribute-value">
+					$core_v2_ui.Rate($blogPost.ContentId, $blogPost.ContentTypeId)
+				</span>
+			</li>
+		#end
+	</ul>
+</div>
+
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:BlogDetails_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:BlogDetails_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="BlogDetails_Description">Displays blog details</resource>
+  <resource name="BlogDetails_Name">Blog - Details</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="94b4a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

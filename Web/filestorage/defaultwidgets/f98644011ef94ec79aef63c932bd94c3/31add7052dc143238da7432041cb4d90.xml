@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:SingleGroupFilter_Name}"
+                           version="10.0.0.0"
+                           description="${resource:SingleGroupFilter_Description}"
+                           instanceIdentifier="31add7052dc143238da7432041cb4d90"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+
+#set($groupPicker = $core_v2_widget.UniqueId("singleGroupPicker"))
+
+<div id="$groupPicker" class="custom-filter">
+    <span></span> <b class="caret"></b>
+</div>
+
+#registerEndOfPageHtml('telligent.reporting.widgets.singleGroupFilter')
+  <script type="text/javascript" src="$core_v2_widget.GetFileUrl('grouppicker.js')"></script>
+  <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+
+#registerEndOfPageHtml()
+<script type="text/javascript">
+      jQuery.telligent.reporting.widgets.singleGroupFilter.register({
+        tabKey: '$filterContext.TabKey',
+        fields: {
+          groupPickerId: '#$groupPicker',
+        },
+      	resources: {
+      		selectAGroup:  '$core_v2_language.GetResource('SelectAGroup')',
+        },
+      	urls: {
+      		lookupGroups:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-groups.vm'))',
+        }
+      });
+</script>
+#end
+
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="SingleGroupFilter_Name">Single Group Filter</resource>
+        <resource name="SingleGroupFilter_Description">Displays single group filter for reports and dashboards</resource>
+        <resource name="SelectAGroup">Required: Select a group</resource>
+        <resource name="In">in</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

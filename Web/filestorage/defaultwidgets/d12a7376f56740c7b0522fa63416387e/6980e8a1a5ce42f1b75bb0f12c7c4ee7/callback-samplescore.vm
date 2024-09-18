@@ -1,0 +1,21 @@
+#set($contentId = false)
+#set($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentId')))
+
+#set($contentTypeId = false)
+#set($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contenttypeid')))
+
+#if ($contentId && $contentTypeId)
+    #set($weightedMetrics = $context.GetWeightedMetrics())
+    #set($lowHighlightValue = $core_v2_utility.ParseDouble('0.34'))
+    #set($highHighlightValue = $core_v2_utility.ParseDouble('0.67'))
+
+    #set($sampleScore = false)
+    #set($sampleScore = $context.GetSampleScoreValue($contentId, $contentTypeId))
+    #if($sampleScore)
+        <ul class="content-list content simple sample-scores">
+        $core_v2_widget.ExecuteFile('render-samplescore.vm')
+        </ul>
+    #else
+        <div class="message norecords">$core_v2_language.GetResource('no-score-sample-for-content')</div>
+    #end
+#end

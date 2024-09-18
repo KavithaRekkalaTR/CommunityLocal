@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Idea Vote Notifications" version="13.0.0.0" description="Raises notifications to an Idea Author when a vote occurs." id="714032186bc24abb970d113d9011dd6d" lastModified="2023-04-26 20:09:56Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('idea_name')
+    $core_v2_language.Truncate($context_v1_email.Context.Idea.Name, 100, '...')
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('idea_name')
+    $core_v2_language.Truncate($context_v1_email.Context.Idea.Name, 100, '...')
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<table border="0">
+<tbody>
+<tr>
+<td>
+<div style="text-align: center; top: 20px; width: 100px;">
+<div style="border: 1px solid #B3B3B3; border-bottom: 0px; padding: 10px;"><b>
+$core_v2_language.FormatNumber($context_v1_email.Context.Idea.TotalVotes)
+</b>
+<p style="margin: 0;">
+$core_v2_language.GetResource('Body_Votes')
+</p>
+</div>
+<div style="background: #f6f6f6; border: 1px solid #999; color: #999999; font-size: .7em; padding: 5px 0; text-transform: uppercase;">
+$context_v1_email.Context.Idea.Status.Name
+</div>
+</div>
+</td>
+<td style="font-size: 12pt; padding-left: 10px;">
+#format($core_v2_language.GetResource('Body_Status'))
+#token('idea_name_link')
+    #set($url = $context_v1_email.Context.Idea.Url)
+    #if ($url)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$context_v1_email.Context.Idea.Name</a>
+    #end
+#token('up_votes')
+$core_v2_language.FormatNumber($context_v1_email.Context.Idea.YesVotes)
+#token('down_votes')
+$core_v2_language.FormatNumber($context_v1_email.Context.Idea.NoVotes)
+#end
+</td>
+</tr>
+</tbody>
+</table>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Settings(false))">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Status">Your Idea, {idea_name_link}, has {up_votes} up vote(s) and {down_votes} down vote(s).</resource>
+  <resource name="Body_Votes">vote(s)</resource>
+  <resource name="Footer">You received this email because your content was voted on by another user. You can disable these notifications {settings_link}.</resource>
+  <resource name="Settings">here</resource>
+  <resource name="Subject">Vote update on {idea_name}</resource>
+  <resource name="Header">Vote update on {idea_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

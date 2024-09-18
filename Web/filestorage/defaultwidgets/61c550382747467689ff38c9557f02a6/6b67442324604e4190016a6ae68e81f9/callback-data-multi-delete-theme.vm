@@ -1,0 +1,200 @@
+##
+## Delete/Revert to Default Multiple Themes Callback
+##
+#if ($core_v2_page.IsPost)
+
+	## Reverted staged changes	
+	#set ($revertedThemes = [])
+	#set ($deletedThemes = [])
+
+	#set ($themeIds = $core_v2_page.GetFormValue('_w_themeIds'))
+	#set ($serializedThemeRequests = $core_v2_utility.split(',', $themeIds))
+
+	## First make sure this selection contains no requests to delete the last of a type
+	#set ($wouldDeleteLastOfType = false)
+	#foreach ($serializedThemeRequest in $serializedThemeRequests)
+		#if (!$wouldDeleteLastOfType)
+			#set ($themeRequestParts = $core_v2_utility.split(':', $serializedThemeRequest, 2).ToArray())
+			#set ($typeId = false)
+			#if ($themeRequestParts.length > 1)
+				#set ($typeId = $themeRequestParts.get(1))
+			#end
+
+			## Count how many themes of this type are in current request that
+			## would be actually deleted. That is, they're either custom OR default and editable.
+			## a customized default would be merely reverted to default and not actually deleted
+			#set ($actualDeleteRequestsOfType = 0)
+			#foreach ($serializedThemeRequestForType in $serializedThemeRequests)
+				#set ($themeRequestPartsForType = $core_v2_utility.split(':', $serializedThemeRequestForType, 2).ToArray())
+				#if ($themeRequestPartsForType.length > 1)
+					#set ($targetThemeId = $themeRequestPartsForType.get(0))
+					#set ($targetTypeId = $themeRequestPartsForType.get(1))
+					#if ($targetTypeId == $typeId)
+						#set ($targetTheme = false)
+						#set ($targetTheme = $context.GetTheme("%{ Id = $targetThemeId, TypeId = $targetTypeId }"))
+						#if ($targetTheme && ($targetTheme.State == 'Custom' || ($targetTheme.State == 'FactoryDefault' && $targetTheme.IsEditable)))
+							#set ($actualDeleteRequestsOfType = $actualDeleteRequestsOfType  + 1)
+						#end
+					#end
+				#end
+			#end
+
+			## Count how many themes of this type exist
+			#set ($themesOfThisType = false)
+			#set ($themesOfThisType = $context.ListThemes("%{ TypeId = $typeId }"))
+
+			#if ($themesOfThisType.Count <= $actualDeleteRequestsOfType)
+				#set ($wouldDeleteLastOfType = true)
+			#end
+		#end
+	#end
+
+	#if ($wouldDeleteLastOfType)
+		$core_v2_page.SendJsonError($core_v2_language.GetResource('LastOfThemeTypeError'))
+	#else
+
+		#set ($hasRevertibleChildren = false)
+		#set ($hasStagingDirectives = false)
+		#set ($stagedPages = 0)
+		#set ($stagedHeaders = 0)
+		#set ($stagedFooters = 0)
+		#set ($stagedFragments = 0)
+
+		#set ($revertStagedPagesQuery = $core_v2_page.GetFormValue("_w_revertStagedPages"))
+		#if ($revertStagedPagesQuery)
+			#set ($hasStagingDirectives = true)
+		#end
+
+		#set ($revertStagedHeadersQuery = $core_v2_page.GetFormValue("_w_revertStagedHeaders"))
+		#if ($revertStagedHeadersQuery)
+			#set ($hasStagingDirectives = true)
+		#end
+
+		#set ($revertStagedFootersQuery = $core_v2_page.GetFormValue("_w_revertStagedFooters"))
+		#if ($revertStagedFootersQuery)
+			#set ($hasStagingDirectives = true)
+		#end
+
+		#set ($revertStagedFragmentsQuery = $core_v2_page.GetFormValue("_w_revertStagedFragments"))
+		#if ($revertStagedFragmentsQuery)
+			#set ($hasStagingDirectives = true)
+		#end
+
+		## Count child components for all themes
+		#foreach ($themeId in $serializedThemeRequests)
+			#set ($themeRequestComponents = $core_v2_utility.split(':', $themeId, 2).ToArray())
+
+			#set ($options = "%{}")
+			#if ($themeRequestComponents.length > 0)
+				$options.Add('Id', $themeRequestComponents.get(0))
+				#if ($themeRequestComponents.length > 1)
+					$options.Add('TypeId', $themeRequestComponents.get(1))
+				#end
+			#end
+
+			## Count revertible children
+			#set ($revertibleChildren = false)
+			#set ($revertibleChildren = $context.GetRevertibleChildState($options))
+
+			#if ($revertibleChildren && $revertibleChildren.HasStagedChildren)
+				#set ($hasRevertibleChildren = true)
+				#set ($stagedPages = $stagedPages + $revertibleChildren.StagedPages)
+				#set ($stagedHeaders = $stagedHeaders + $revertibleChildren.StagedHeaders)
+				#set ($stagedFooters = $stagedFooters + $revertibleChildren.StagedFooters)
+				#set ($stagedFragments = $stagedFragments + $revertibleChildren.StagedFragments)
+			#end
+		#end
+
+		## Delete Themes
+		## Perform actual deletion if there are no child components or staging directives are included
+		#if (!$hasRevertibleChildren || $hasStagingDirectives)
+			#foreach ($themeId in $serializedThemeRequests)
+				#set ($themeRequestComponents = $core_v2_utility.split(':', $themeId, 2).ToArray())
+
+				#set ($options = "%{}")
+				#if ($themeRequestComponents.length > 0)
+					$options.Add('Id', $themeRequestComponents.get(0))
+					#if ($themeRequestComponents.length > 1)
+						$options.Add('TypeId', $themeRequestComponents.get(1))
+					#end
+				#end
+
+				#if ($revertStagedPagesQuery)
+					$options.Add('RevertStagedPages', $core_v2_utility.ParseBool($revertStagedPagesQuery))
+				#end
+
+				#if ($revertStagedHeadersQuery)
+					$options.Add('RevertStagedHeaders', $core_v2_utility.ParseBool($revertStagedHeadersQuery))
+				#end
+
+				#if ($revertStagedFootersQuery)
+					$options.Add('RevertStagedFooters', $core_v2_utility.ParseBool($revertStagedFootersQuery))
+				#end
+
+				#if ($revertStagedFragmentsQuery)
+					$options.Add('RevertStagedFragments', $core_v2_utility.ParseBool($revertStagedFragmentsQuery))
+				#end
+
+				## If revertible children returned, then nothing was performed and more input is required
+				#set ($revertibleChildren = false)
+				#set ($revertibleChildren = $context.DeleteTheme($options))
+
+				## get post delete theme.
+				## a delete coud have staged a revision to default, staged a default
+				## or just reverted staged changes
+				## track the ones that are just staged changes
+				#set ($theme = false)
+				#set ($theme = $context.GetTheme($options))
+
+				## Item in which this delete does not stage a change, but rather
+				## Just undoes _staged_ changes to an item which cannot be
+				## undone, like a FD
+				#if ($theme && !$theme.IsStaged)
+					#set ($addedAt = $revertedThemes.Add($theme))
+				## Fully deleted (staged custom with no saved version, so not staging any reversion, just gone)
+				## Items which are being fully deleted without staging
+				#elseif (!$theme)
+					#set ($addedAt = $deletedThemes.Add($options))
+				#end
+			#end
+		#end
+
+		## Serialize reverted themes
+		#set ($themes = $revertedThemes)
+		#set ($serializedRevertedThemes = $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summaries.vm'))
+
+		## return list of staged themes
+		#set ($themes = $context.ListThemes("%{ Staged = 'true' }"))
+		#set ($serializedStagedThemes = $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summaries.vm'))
+
+		$core_v2_page.SetContentType('application/json')
+		{
+			#if ($hasRevertibleChildren && !$hasStagingDirectives)
+				"revertibleChildren": {
+					"StagedPages": $stagedPages,
+					"StagedHeaders": $stagedHeaders,
+					"StagedFooters": $stagedFooters,
+					"StagedFragments": $stagedFragments
+				},
+				"reverted": false,
+				"deleted": false,
+			#else
+				"reverted": true,
+				"deleted": true,
+			#end
+			"stagedThemes": $serializedStagedThemes,
+			"revertedThemes": $serializedRevertedThemes,
+			"deletedThemes": [
+				#foreach ($deletedTheme in $deletedThemes)
+				#between
+					,
+				#each
+					{
+						"Id": "$deletedTheme.Id",
+						"TypeId": #if ($deletedTheme.TypeId) "$deletedTheme.TypeId" #else "" #end
+					}
+				#end
+			]
+		}
+	#end
+#end

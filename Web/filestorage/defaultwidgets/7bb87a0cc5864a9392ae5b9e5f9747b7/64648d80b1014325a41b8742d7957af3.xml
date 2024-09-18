@@ -1,0 +1,375 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_ForumLinks_Name}" version="11.0.0.0" description="${resource:Forums_ForumLinks_Description}" instanceIdentifier="64648d80b1014325a41b8742d7957af3" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="forum-links" lastModified="2020-09-11 19:55:54Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=forumCreate&amp;Link=forumModeration&amp;Link=forumSubscriptions&amp;Link=forumFavorites&amp;Link=forumRss&amp;Link=forumMarkAllRead')))
+#set($hasLinks = false)
+#set($currentGroup = $core_v2_group.Current)
+#set($currentForum = $core_v2_forum.Current)
+#set($currentForumThread = $core_v2_forumThread.Current)
+
+#set ($collapse = $core_v2_widget.GetBoolValue('collapsed', false))
+#set ($forumLinks = $links.Values('Link'))
+
+#set ($linksToShow = $forumLinks.Count * 2)
+#if ($collapse)
+	#set ($linksToShow = 0)
+#end
+
+#foreach($link in $forumLinks)
+#beforeall
+	<div class="ui-links navigation-list links" data-minlinks="2" data-direction="vertical" data-minlinks="$linksToShow" data-maxlinks="$linksToShow">
+		<ul class="navigation-list">
+#each
+		#set($url = false)
+		#if($link == 'forumCreatePost')
+			#if ($currentForum)
+				#set($url = $core_v2_forumUrls.AddThread($currentForum.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link add-application forum">$core_v2_language.GetResource('CF_ForumLinks_CreatePost')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'forumSubscriptions')
+			## Forum Subscribing
+			#if ($currentForum && (!$currentForumThread || !$currentForumThread.Subject) && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReadForum, $core_v2_user.Accessing.Id, "%{ ApplicationId = $currentForum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+
+				<li class="navigation-list-item">
+					<a class="forumSubscribe" data-messagename="widget.${core_v2_widget.WrapperElementId}.forumSubscribe" data-forumid="$currentForum.Id" data-subscribed="false" href="#" #if($core_v2_forum.IsSubscribed($currentForum.Id)) style="display:none" #end>$core_v2_language.GetResource('CF_ForumLinks_Subscribe')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a class="forumSubscribe" data-messagename="widget.${core_v2_widget.WrapperElementId}.forumSubscribe" data-forumid="$currentForum.Id" data-subscribed="true" href="#" #if(!$core_v2_forum.IsSubscribed($currentForum.Id)) style="display:none" #end>$core_v2_language.GetResource('CF_ForumLinks_Unsubscribe')</a>
+				</li>
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.forumSubscribe")
+					<script type="text/javascript">
+					jQuery(function(j){
+						function update(value, link) {
+							j.telligent.evolution.post({
+								url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+								data: {
+									type: 'forum',
+									subscribe: value,
+									forumId: link.data('forumid')
+								},
+								dataType: 'json'
+							}).then(function(){
+								if(value) {
+									link.closest('ul').find('a.forumSubscribe[data-subscribed="false"]').hide();
+									link.closest('ul').find('a.forumSubscribe[data-subscribed="true"]').show();
+								} else {
+									link.closest('ul').find('a.forumSubscribe[data-subscribed="false"]').show();
+									link.closest('ul').find('a.forumSubscribe[data-subscribed="true"]').hide();
+								}
+							});
+						}
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.forumSubscribe', function(data){
+							update(!j(data.target).data('subscribed'), j(data.target));
+						});
+					});
+					</script>
+				#end
+
+				#set($hasLinks = true)
+			#end
+
+			## Thread Muting
+			#if ($currentForum && $currentForumThread && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReadForum, $core_v2_user.Accessing.Id, "%{ ApplicationId = $currentForum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed && $core_v2_forum.SubscriptionType($currentForum.Id) == 'Post')
+				<li class="navigation-list-item">
+					<a data-messagename="widget.${core_v2_widget.WrapperElementId}.forumThreadMute" data-forumthreadid="$currentForumThread.Id" data-mute="false" href="#" #if($core_v2_forumThread.IsMuted($currentForumThread.Id)) style="display:none" #end>$core_v2_language.GetResource('CF_ForumLinks_ThreadMute')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a data-messagename="widget.${core_v2_widget.WrapperElementId}.forumThreadMute" data-forumthreadid="$currentForumThread.Id" data-mute="true" href="#" #if(!$core_v2_forumThread.IsMuted($currentForumThread.Id)) style="display:none" #end>$core_v2_language.GetResource('CF_ForumLinks_ThreadUnMute')</a>
+				</li>
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.forumThreadMute")
+					<script type="text/javascript">
+					jQuery(function(j){
+						function update(value, link) {
+							j.telligent.evolution.post({
+								url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('mute.vm'))',
+								data: {
+									type: 'forumThread',
+									mute: value,
+									forumThreadId: link.data('forumthreadid')
+								},
+								dataType: 'json'
+							}).then(function(){
+								if(value) {
+									link.closest('ul').find('a[data-mute="false"]').hide();
+									link.closest('ul').find('a[data-mute="true"]').show();
+								} else {
+									link.closest('ul').find('a[data-mute="false"]').show();
+									link.closest('ul').find('a[data-mute="true"]').hide();
+								}
+							});
+						}
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.forumThreadMute', function(data){
+							update(!j(data.target).data('mute'), j(data.target));
+						});
+					});
+					</script>
+				#end
+
+				#set($hasLinks = true)
+			## Forum Thread Subscribing
+			#elseif ($currentForumThread && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && ($core_v2_forumThread.SubscriptionType($currentForumThread.Id) == 'Thread' || $core_v2_forumThread.SubscriptionType($currentForumThread.Id) == 'None'))
+				<li class="navigation-list-item">
+					<a class="forumThreadSubscribe" data-messagename="widget.${core_v2_widget.WrapperElementId}.forumThreadSubscribe" data-forumthreadid="$currentForumThread.Id" data-subscribed="false" href="#" #if($core_v2_forumThread.IsSubscribed($currentForumThread.Id)) style="display:none" #end>$core_v2_language.GetResource('CF_ForumLinks_ThreadSubscribe')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a class="forumThreadSubscribe" data-messagename="widget.${core_v2_widget.WrapperElementId}.forumThreadSubscribe" data-forumthreadid="$currentForumThread.Id" data-subscribed="true" href="#" #if(!$core_v2_forumThread.IsSubscribed($currentForumThread.Id)) style="display:none" #end>$core_v2_language.GetResource('CF_ForumLinks_ThreadUnsubscribe')</a>
+				</li>
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.forumThreadSubscribe")
+					<script type="text/javascript">
+					jQuery(function(j){
+						function update(value, link) {
+							j.telligent.evolution.post({
+								url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+								data: {
+									type: 'forumThread',
+									subscribe: value,
+									forumThreadId: link.data('forumthreadid')
+								},
+								dataType: 'json'
+							}).then(function(response){
+								if(response.warnings && response.warnings.length >= 1) {
+									j.telligent.evolution.notifications.show(response.warnings.join('<br />'));
+								}
+								if(value) {
+									link.closest('ul').find('a.forumThreadSubscribe[data-subscribed="false"]').hide();
+									link.closest('ul').find('a.forumThreadSubscribe[data-subscribed="true"]').show();
+								} else {
+									link.closest('ul').find('a.forumThreadSubscribe[data-subscribed="false"]').show();
+									link.closest('ul').find('a.forumThreadSubscribe[data-subscribed="true"]').hide();
+								}
+							});
+						}
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.forumThreadSubscribe', function(data){
+							update(!j(data.target).data('subscribed'), j(data.target));
+						});
+					});
+					</script>
+				#end
+
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'forumRss')
+			#if ($currentForum)
+				#set($url = $core_v2_forumUrls.Rss($currentForum.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link rss">$core_v2_language.GetResource('Forums_SubscribeRss')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'forumMarkAllRead')
+			#if($currentForum && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+				<li class="navigation-list-item">
+					<a data-messagename="widget.${core_v2_widget.WrapperElementId}.forumMarkAllRead" data-forumid="$currentForum.Id" href="#">$core_v2_language.GetResource('MarkAllRead_Threads_Link')</a>
+				</li>
+				#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.forumMarkAllRead")
+					<script type="text/javascript">
+					jQuery(function(j){
+						function update(forumId, link) {
+							j.telligent.evolution.post({
+								url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('read.vm'))',
+								data: {
+									type: 'forum',
+									read: true,
+									forumId: forumId
+								},
+								dataType: 'json'
+							}).then(function(response){
+								if(response.read)
+									window.location.reload();
+							});
+						}
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.forumMarkAllRead', function(data){
+							update(j(data.target).data('forumid'), j(data.target));
+						});
+					});
+					</script>
+				#end
+
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'forumFavorites')
+			#if ($currentForum && $core_v2_bookmark.SupportsBookmarks($core_v2_forum.ContentTypeId) && $core_v2_bookmark.CanBookmark($currentForum.ContentId, $core_v2_forum.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($currentForum.ContentId, $core_v2_forum.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($currentForum.ContentId, $core_v2_forum.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'forumThreadFavorites')
+			#if ($currentForumThread && $core_v2_bookmark.SupportsBookmarks($core_v2_forumThread.ContentTypeId) && $core_v2_bookmark.CanBookmark($currentForumThread.ContentId, $core_v2_forumThread.ContentTypeId) && $core_v2_bookmark.CanUnBookmark($currentForumThread.ContentId, $core_v2_forumThread.ContentTypeId))
+				<li class="navigation-list-item">$core_v2_ui.Bookmark($currentForumThread.ContentId, $core_v2_forumThread.ContentTypeId)</li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'forumThreadShare')
+			#if ($currentForumThread)
+				#set($url = $core_v2_forumUrls.ShareForumThread($currentForumThread.Id, "%{Modal='False'}"))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlEncode($url)" class="internal-link email-post">$core_v2_language.GetResource('CF_ForumLinks_ThreadShare')</a></li>
+				#else
+					<li class="navigation-list-item"><a href="mailto:?subject=$currentForumThread.Subject&body=$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AbsoluteUrl($currentForumThread.Url))" class="internal-link email-post">$core_v2_language.GetResource('CF_ForumLinks_ThreadShare')</a></li>
+				#end
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'forumCapture')
+			#if ($currentForumThread)
+				#set($url = $core_v2_forumUrls.CaptureForumThread($currentForumThread.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="#" onclick="Telligent_Modal.Open('$core_v2_encoding.HtmlEncode($core_v2_encoding.JavaScriptEncode($url))',550,300,null);" class="internal-link capture-post forum">$core_v2_language.GetResource('Wiki_CopyToWiki')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'forumCaptureToArticle')
+		    #if ($currentForumThread)
+				#set($url = $core_v2_captureThreadToArticle.CaptureUrl($currentForumThread.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$url" class="internal-link capture-post forum">$core_v2_language.GetResource('CaptureToArticle')</a></li>
+		        #end
+		    #end
+		#elseif($link == 'forumModeration')
+			#if ($currentForum)
+				#set($url = $core_v2_forumUrls.ModerateForum($currentForum.Id))
+				#if($url)
+					#if($currentForum.PostsToModerate == 1)
+						<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-moderation-active">$core_v2_language.FormatString($core_v2_language.GetResource('CF_ForumsModeration_Singular'), $currentForum.PostsToModerate.ToString())</a></li>
+						#set($hasLinks = true)
+					#elseif($currentForum.PostsToModerate > 1)
+						<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-moderation-active">$core_v2_language.FormatString($core_v2_language.GetResource('CF_ForumsModeration_Plural'), $currentForum.PostsToModerate.ToString())</a></li>
+						#set($hasLinks = true)
+					#end
+				#end
+			#end
+		#elseif($link == 'forumSettings')
+			#if ($currentForum)
+				#set($url = $core_v2_forumUrls.EditForum($currentForum.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-control-panel">$core_v2_language.GetResource('CF_ForumAdministration')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'forumCreate')
+			#if ($currentGroup)
+				#set($url = $core_v2_forumUrls.AddForum($currentGroup.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link add-application forum">$core_v2_language.GetResource('CF_ForumCreate')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'forumManageSubscriptions')
+			#if ($currentGroup)
+				#set($url = $core_v2_forumUrls.Subscriptions($currentGroup.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link edit-subscriptions">$core_v2_language.GetResource('Forums_ManageSubscriptions')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'feature')
+			#if ($currentForumThread)
+				#if ($core_v3_feature.CanFeature($currentForumThread.ContentId, $currentForumThread.ContentTypeId))
+					<li class="navigation-list-item">$core_v2_ui.Feature($currentForumThread.ContentId, $currentForumThread.ContentTypeId)</li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif($link == 'tags')
+			#if ($currentForum)
+				#set ($url = $core_v2_forumUrls.Tags($currentForum.Id))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($url)" class="internal-link view-control-panel">$core_v2_language.GetResource('CF_tags')</a></li>
+					#set($hasLinks = true)
+				#end
+			#end
+		#elseif ($link == 'convert' && $currentForumThread)
+            #set($convert = false)
+    		#set($convert = $core_v2_ui.ConvertContent($currentForumThread.ContentId, $currentForumThread.GlobalContentTypeId))
+    		#if ($convert)
+    		    <li class="navigation-list-item">
+    		        $convert
+    		    </li>
+    		    #set($hasLinks = true)
+    		#end
+		#end
+#afterall
+			<li class="navigation-list-item">
+				<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+			</li>
+		</ul>
+	</div>
+#end
+
+#if($hasLinks == false)
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_ForumLinks_Title_Options}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_ForumLinks_Title_Options}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="collapsed" labelResourceName="collapsed" defaultValue="false" dataType="Bool" />
+	<property id="links" labelResourceName="Forums_ForumLinks_Links" defaultValue="Link=forumCreate&amp;Link=forumSettings&amp;Link=forumModeration&amp;Link=forumSubscriptions&amp;Link=forumFavorites&amp;Link=forumRss&amp;Link=forumMarkAllRead" dataType="Custom" template="core_v2_sortableList" height="300" key="Link">
+		<propertyValue value="forumCreatePost" labelResourceName="CF_ForumLinks_CreatePost_Link" orderNumber="1000000" />
+		<propertyValue value="forumMarkAllRead" labelResourceName="MarkAllRead_Threads" orderNumber="1000001" />
+		<propertyValue value="forumSubscriptions" labelResourceName="CF_ForumLinks_Subscriptions" orderNumber="1000002" />
+		<propertyValue value="forumManageSubscriptions" labelResourceName="CF_ForumLinks_ManageSubscription" orderNumber="1000003" />
+		<propertyValue value="forumThreadFavorites" labelResourceName="CF_ForumLinks_ThreadFavorites" orderNumber="1000004" />
+		<propertyValue value="forumFavorites" labelResourceName="CF_ForumLinks_Favorites" orderNumber="1000005" />
+		<propertyValue value="forumModeration" labelResourceName="CF_ForumsModeration_Title" orderNumber="1000006" />
+		<propertyValue value="forumCreate" labelResourceName="CF_ForumCreate" orderNumber="1000007" />
+		<propertyValue value="forumSettings" labelResourceName="CF_ForumAdministration" orderNumber="1000008" />
+		<propertyValue value="forumRss" labelResourceName="Forums_SubscribeRss" orderNumber="1000009" />
+		<propertyValue value="forumCapture" labelResourceName="Forums_CaptureWiki" orderNumber="1000010" />
+		<propertyValue value="forumCaptureToArticle" labelResourceName="Forums_CaptureToArticle" orderNumber="1000011" />
+		<propertyValue value="forumThreadShare" labelResourceName="CF_ForumLinks_ThreadShare_Link" orderNumber="1000012" />
+		<propertyValue value="feature" labelResourceName="CF_feature" orderNumber="1000013" />
+		<propertyValue value="tags" labelResourceName="CF_tags" orderNumber="1000014" />
+		<propertyValue value="convert" labelResourceName="Convert" orderNumber="1000015" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="CaptureToArticle">Capture to article</resource>
+  <resource name="CF_feature">Feature</resource>
+  <resource name="CF_ForumAdministration">Administer forum</resource>
+  <resource name="CF_ForumCreate">Create forum</resource>
+  <resource name="CF_ForumLinks_CreatePost">New thread</resource>
+  <resource name="CF_ForumLinks_CreatePost_Link">New thread</resource>
+  <resource name="CF_ForumLinks_Favorites">Bookmark forum</resource>
+  <resource name="CF_ForumLinks_ManageSubscription">Manage subscriptions</resource>
+  <resource name="CF_ForumLinks_Subscribe">Turn Forum notifications on</resource>
+  <resource name="CF_ForumLinks_Subscriptions">Notifications</resource>
+  <resource name="CF_ForumLinks_ThreadFavorites">Bookmark thread</resource>
+  <resource name="CF_ForumLinks_ThreadMute">Mute</resource>
+  <resource name="CF_ForumLinks_ThreadShare">Share</resource>
+  <resource name="CF_ForumLinks_ThreadShare_Link">Share</resource>
+  <resource name="CF_ForumLinks_ThreadSubscribe">Turn Reply notifications on</resource>
+  <resource name="CF_ForumLinks_ThreadUnMute">Unmute</resource>
+  <resource name="CF_ForumLinks_ThreadUnsubscribe">Turn Reply notifications off</resource>
+  <resource name="CF_ForumLinks_Unsubscribe">Turn Forum notifications off</resource>
+  <resource name="CF_ForumsModeration_Plural">{0} posts to moderate</resource>
+  <resource name="CF_ForumsModeration_Singular">{0} post to moderate</resource>
+  <resource name="CF_ForumsModeration_Title">Moderate</resource>
+  <resource name="CF_tags">Tags</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="collapsed">Collapsed</resource>
+  <resource name="Convert">Move thread</resource>
+  <resource name="Forums_CaptureToArticle">Capture to article</resource>
+  <resource name="Forums_CaptureWiki">Capture to wiki</resource>
+  <resource name="Forums_ForumLinks_Description">Displays a list of common forum links.</resource>
+  <resource name="Forums_ForumLinks_Links">Select, rearrange, and enable the links to be displayed</resource>
+  <resource name="Forums_ForumLinks_Name">Forums - Links</resource>
+  <resource name="Forums_ForumLinks_Title_Options">Options</resource>
+  <resource name="Forums_ManageSubscriptions">Manage subscriptions</resource>
+  <resource name="Forums_SubscribeRss">RSS</resource>
+  <resource name="MarkAllRead_Threads">Mark all read</resource>
+  <resource name="MarkAllRead_Threads_Link">Mark all read</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Wiki_CopyToWiki">Capture to wiki</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="4112947a2c1a4ac3b10b20fc86f3d8b7" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

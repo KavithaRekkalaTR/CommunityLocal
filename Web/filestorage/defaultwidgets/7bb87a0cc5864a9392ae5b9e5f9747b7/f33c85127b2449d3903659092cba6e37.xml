@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_CaptureThread_Name}" version="11.0.0.0" description="${resource:Forums_CaptureThread_Description}" instanceIdentifier="f33c85127b2449d3903659092cba6e37" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="capture-thread" lastModified="2020-01-14 16:09:12Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+
+#set ($thread = $core_v2_forumThread.Current)
+#set ($hasEnabledWikis = true)
+#if (!$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#set ($hasEnabledWikis = false)
+#end
+
+#set ($wikis = false)
+#set ($wikis = $core_v2_wiki.List("%{ GroupId = $core_v2_group.Current.Id }"))
+#if (!$wikis || $wikis.Count == 0)
+	#set ($hasEnabledWikis = false)
+#end
+
+#set ($wikiSelectId = $core_v2_widget.UniqueId('wikiSelect'))
+#set ($submitCaptureId = $core_v2_widget.UniqueId('submitCapture'))
+#set ($defaultWikiCaptureUrl = false)
+
+#set ($enabledWikis = [])
+#foreach ($wiki in $wikis)
+	#if ($wiki.Enabled && $core_v3_permission.CheckPermission($core_v2_wikiPermissions.CreatePage, $core_v2_user.Accessing.Id, "%{ ApplicationId = $wiki.ApplicationId, ApplicationTypeId = $core_v2_wiki.ApplicationTypeId }").IsAllowed)
+		#set ($index = $enabledWikis.Add($wiki))
+		#if (!$defaultWikiCaptureUrl)
+			#set ($defaultWikiCaptureUrl = $core_v2_wikiUrls.AddPage($wiki.Id, "%{ ForumThreadId = $thread.Id }"))
+		#end
+	#end
+#end
+
+#if ($enabledWikis.Count == 0)
+	#set ($hasEnabledWikis = false)
+#end
+
+#if (!$hasEnabledWikis)
+	<div class="message warning">$core_v2_language.GetResource('Wiki_NoWikisToCapture')</div>
+#else
+	<form><fieldset>
+		<p>$core_v2_language.GetResource('Wiki_CopyToWiki')</p>
+		<ul class="field-list">
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($wikiSelectId)" class="field-item-name">$core_v2_language.GetResource('Wiki_CaptureDesc')</label>
+				<span class="field-item-input">
+					<select name="$core_v2_encoding.HtmlAttributeEncode($wikiSelectId)" id="$core_v2_encoding.HtmlAttributeEncode($wikiSelectId)">
+					#foreach ($wiki in $enabledWikis)
+						#set ($captureUrl = $core_v2_wikiUrls.AddPage($wiki.Id, "%{ ForumThreadId = $thread.Id }"))
+						#set ($name = $wiki.Name)
+						#if ($wiki.Group && $wiki.Group.ParentGroupId > 0)
+							#set ($name = "${wiki.Group.Name} / ${name}")
+						#end
+						<option value="$core_v2_encoding.HtmlAttributeEncode($captureUrl)">$name</option>
+					#end
+					</select>
+				</span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button" name="$core_v2_encoding.HtmlAttributeEncode($submitCaptureId)" id="$core_v2_encoding.HtmlAttributeEncode($submitCaptureId)">$core_v2_language.GetResource('Wiki_Capture')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.captureThread')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.captureThread.register({
+				wrapperId: '$core_v2_widget.WrapperElementId',
+				wikiCaptureUrl: #if ($enabledWikis.Count == 1 && $defaultWikiCaptureUrl) '$core_v2_encoding.JavascriptEncode($defaultWikiCaptureUrl)' #else null #end,
+				wikiSelect: '#$core_v2_encoding.JavascriptEncode($wikiSelectId)',
+				submitCapture: '#$core_v2_encoding.JavascriptEncode($submitCaptureId)'
+			});
+		});
+	</script>
+#end
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_CaptureThread_Name}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_CaptureThread_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Forums_CaptureThread_Description">Displays the capture thread to wiki form.</resource>
+  <resource name="Forums_CaptureThread_Name">Forum - Capture Thread</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Wiki_Capture">Capture</resource>
+  <resource name="Wiki_CaptureDesc">Select the wiki to capture the thread into.</resource>
+  <resource name="Wiki_CopyToWiki">Capture to wiki</resource>
+  <resource name="Wiki_NoWikisToCapture">There are no wikis that you have access to create pages for.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="3e42a61fe20447f78ea9b0bb99a5c6a5" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

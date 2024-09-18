@@ -1,0 +1,17 @@
+#set($targetApplicationTypeId = false)
+#set($targetApplicationTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_targetApplicationTypeId')))
+#set($targetApplicationId = false)
+#set($targetApplicationId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_targetApplicationId')))
+#set($optionsFormId = '')
+#set($optionsFormId = $core_v2_page.GetQueryStringValue('_w_formId'))
+
+#set($formXml = false)
+#set($formXml = $core_v2_applicationMerge.DynamicFormXml($context.ApplicationTypeId, $context.ApplicationId, $targetApplicationTypeId, $targetApplicationId))
+#set($propertyHeaderFormat = '<li class="field-item {PropertyDataType}-type"><label class="field-item-name">{PropertyName}</label><span class="field-item-input"><span class="field-item-description">{PropertyDescription}</span>')
+#set($propertyFooterFormat = '</span></li>')
+#set($propertyGroupHeaderFormat = '<fieldset><ul class="field-list">')
+#set($propertyGroupFooterFormat = '</ul></fieldset>')
+
+#if ($formXml && $formXml != '')
+    $core_v2_dynamicForm.RenderForm($optionsFormId, $formXml, "%{PropertyHeaderHtmlFormat=$propertyHeaderFormat,PropertyFooterHtmlFormat=$propertyFooterFormat,GroupHeaderHtmlFormat=$propertyGroupHeaderFormat,GroupFooterHtmlFormat=$propertyGroupFooterFormat,SubGroupHeaderHtmlFormat='',SubGroupFooterHtmlFormat=''}")
+#end

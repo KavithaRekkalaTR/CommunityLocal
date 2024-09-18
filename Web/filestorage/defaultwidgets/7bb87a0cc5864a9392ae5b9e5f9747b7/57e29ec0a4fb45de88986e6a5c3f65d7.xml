@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Site_FrameEmbedding_Name}" version="11.0.0.0" description="${resource:Site_FrameEmbedding_Description}" instanceIdentifier="57e29ec0a4fb45de88986e6a5c3f65d7" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="site-iframe-embedding" lastModified="2020-01-14 16:07:32Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#if ($core_v2_widget.IsInWidgetPreviewMode)
+	#set ($iframeId = $core_v2_widget.UniqueId('iframe'))
+	#set ($rootUrl = $core_v2_page.AbsoluteUrl('/'))
+	#set ($currentUrl = $core_v2_page.AbsoluteUrl($core_v2_page.Url))
+	#set ($urlIsUsable = true)
+	#if ($core_v2_page.GetQueryStringValue('PageName'))
+		#set($currentUrl = $core_v2_language.GetResource('UrlName'))
+		#set($urlIsUsable = false)
+	#end
+	#set ($oauthCurrentUrl = $core_v2_page.AdjustQueryString($currentUrl, "client_id=${core_v2_language.GetResource('OAuthClientIDName')}&url=${core_v2_language.GetResource('LocalUrlName')}"))
+
+	<p>$core_v2_language.GetResource('Config')</p>
+	<ul>
+		<li>$core_v2_language.GetResource('Config_Name')</li>
+		<li>$core_v2_language.GetResource('Config_Description')</li>
+		<li>$core_v2_language.GetResource('Config_Main_Url') $rootUrl</li>
+		<li>$core_v2_language.GetResource('Config_Callback_Url') $rootUrl</li>
+		<li>$core_v2_language.GetResource('Config_Client_Type')</li>
+		<li>$core_v2_language.GetResource('Config_Grants')</li>
+	</ul>
+	<p>
+		#if ($urlIsUsable)
+			$core_v2_language.GetResource('Embed_With_Url')
+		#else
+			$core_v2_language.GetResource('Embed_Without_Url')
+		#end
+	</p>
+
+	<pre>
+	&lt;iframe src="<strong>$oauthCurrentUrl</strong>"
+	        id="$iframeId" width="100%" height="100" scrolling="no" frameborder="0"&gt;&lt;/iframe&gt;
+	&lt;script type="text/javascript"&gt;
+	(function() {
+	    var lastHeight = 100,
+	        iframe = document.getElementById('$iframeId'),
+	        handleResize = function(event) {
+	            if (event.source === iframe.contentWindow) {
+	                var data = (event.data || '').split(':');
+	                var height = 0;
+	                if (data.length == 2 &amp;&amp; data[0] == 'height' &amp;&amp; !isNaN(height = parseInt(data[1], 10))) {
+	                    if (height != lastHeight) {
+	                        iframe.style.height = (lastHeight = height) + 'px';
+	                    }
+	                }
+	            }
+	        };
+
+	    if (iframe) {
+	        if (window.addEventListener) {
+	            window.addEventListener('message', handleResize, false);
+	        } else if (window.attachEvent) {
+	            window.attachEvent('onmessage', handleResize);
+	        }
+	    }
+	})();
+	&lt;/script&gt;
+	</pre>
+#else
+	#set($hideHeader = $core_v2_widget.GetBoolValue('hideHeader', true))
+	#set($hideFooter = $core_v2_widget.GetBoolValue('hideFooter', true))
+	#set($redirectToHost = $core_v2_widget.GetBoolValue('redirectToHostPage', true))
+	#set($overrideXFrameOptions = $core_v2_widget.GetBoolValue('overrideXFrameOptions', true))
+	#set($backgroundColor = $core_v2_widget.GetColorValue('backgroundColor', '#FFFFFF'))
+	#set($linkTarget = $core_v2_widget.GetStringValue('linkTarget', '_parent'))
+	#if ($overrideXFrameOptions)
+		$core_v2_page.SetXFrameOptions('')
+	#end
+	#set($url = false)
+	#set($url = $core_v2_page.GetQueryStringValue('url'))
+
+	#registerEndOfPageHtml()
+		<style type="text/css">
+			.content-fragment-page .layout-header { display: none; }
+			.content-fragment-page .layout { width: 100%; min-width: 0; max-width: none; }
+			.content-fragment-page { min-height: 0; }
+			html, body, .content-fragment-page { background: $backgroundColor }
+			#if ($hideHeader)
+				.header-fragments-header, .header-fragments, .header-fragments-footer { display: none; }
+			#end
+			#if ($hideFooter)
+				.footer-fragments-header, .footer-fragments, .footer-fragments-footer { display: none; }
+			#end
+			#if ($linkTarget && $linkTarget.length > 0)
+			    .contextual-administration-handle { display: none; }
+			#end
+		</style>
+		<script type="text/javascript">
+		jQuery(function(){
+			var lastHeight = 0;
+			window.setInterval(function() {
+				var height = jQuery('body').outerHeight(true);
+				if (height !== lastHeight) {
+					try {
+						window.parent.postMessage('height:' + (lastHeight = height), '*');
+					} catch (e) { }
+				}
+			}, 149);
+
+			#if ($hideHeader)
+				jQuery(document).on('customizepage', function() {
+					jQuery('.admin-bar-header, .admin-bar, .admin-bar-footer').css({'display': 'block'});
+				});
+
+				if (jQuery('.page-management').length == 0) {
+					jQuery('.admin-bar-header, .admin-bar, .admin-bar-footer').css({'display': 'none'});
+				}
+			#end
+
+			#if ($linkTarget && $linkTarget.Length > 0)
+				jQuery('head').append('<base target="$linkTarget" />');
+			#end
+			
+			#if ($redirectToHost && $url)
+				try {
+					if (window == window.parent) {
+						window.location.replace('$core_v2_encoding.JavascriptEncode($url)');
+					}
+				} catch (e) {
+				}
+			#end
+		});
+		</script>
+	#end
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Site_FrameEmbedding_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Site_FrameEmbedding_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="hideHeader" labelResourceName="HideHeader" descriptionResourceName="HideHeaderDesc" defaultValue="true" dataType="Bool" />
+	<property id="hideFooter" labelResourceName="HideFooter" descriptionResourceName="HideFooterDesc" defaultValue="true" dataType="Bool" />
+	<property id="overrideXFrameOptions" labelResourceName="OverrideXFrameOptions" descriptionResourceName="OverrideXFrameOptionsDesc" defaultValue="true" dataType="Bool" />
+	<property id="redirectToHostPage" labelResourceName="RedirectToHostPage" descriptionResourceName="RedirectToHostPageDesc" defaultValue="true" dataType="Bool" />
+	<property id="backgroundColor" labelResourceName="BackgroundColor" descriptionResourceName="BackgroundColorDesc" defaultValue="#FFFFFF" dataType="Color" />
+	<property id="linkTarget" labelResourceName="LinkTarget" descriptionResourceName="LinkTargetDesc" defaultValue="_parent" dataType="String" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="BackgroundColor">Background Color</resource>
+  <resource name="BackgroundColorDesc">Background color of the embedded page</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Config">To embed this page in an external host page's &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt;, the host must be configured as an OAuth Client with parameters:</resource>
+  <resource name="Config_Callback_Url">Callback URL:</resource>
+  <resource name="Config_Client_Type">Client Type:</resource>
+  <resource name="Config_Description">Description: [external host site description]</resource>
+  <resource name="Config_Grants">Allowed Authorization Grants: (Select none)</resource>
+  <resource name="Config_Main_Url">Main URL:</resource>
+  <resource name="Config_Name">Name: [external host site name]</resource>
+  <resource name="Embed_With_Url">And given the resulting &lt;strong&gt;URL-OF-PAGE-CONTAINING-IFRAME&lt;/strong&gt; and &lt;strong&gt;OAUTH-CLIENT-ID&lt;/strong&gt;, the host page can embed this page by including the script:</resource>
+  <resource name="Embed_Without_Url">And given the resulting &lt;strong&gt;URL-OF-PAGE-CONTAINING-IFRAME&lt;/strong&gt;, &lt;strong&gt;OAUTH-CLIENT-ID&lt;/strong&gt; and &lt;strong&gt;URL-OF-THIS-PAGE&lt;/strong&gt;, the host page can embed this page by including the script:</resource>
+  <resource name="HideFooter">Hide Footer</resource>
+  <resource name="HideFooterDesc">When enabled, hides theme footers on the embedded page</resource>
+  <resource name="HideHeader">Hide Header</resource>
+  <resource name="HideHeaderDesc">When enabled, hides theme headers on the embedded page</resource>
+  <resource name="LinkTarget">Link Target</resource>
+  <resource name="LinkTargetDesc">Any link clicked within the IFRAME will open in this named target window. The default, "_parent", opens links in the window of the page including this IFRAME to make links within this IFRAME function as they would if they were rendered directly in the parent page.</resource>
+  <resource name="LocalUrlName">URL-OF-PAGE-CONTAINING-IFRAME</resource>
+  <resource name="OAuthClientIDName">OAUTH-CLIENT-ID</resource>
+  <resource name="Options">Options</resource>
+  <resource name="OverrideXFrameOptions">Enable Frame Embedding</resource>
+  <resource name="OverrideXFrameOptionsDesc">When enabled, overrides the site-wide X-FRAME-OPTIONS header to enable embedding</resource>
+  <resource name="RedirectToHostPage">Redirect to Host Page</resource>
+  <resource name="RedirectToHostPageDesc">When enabled, if a host URL is defined on the querystring via the 'url' parameter and the page is not hosted within a frame, users will be redirected to the host's URL</resource>
+  <resource name="Site_FrameEmbedding_Description">Enhances the page to better support embedding within an external iframe</resource>
+  <resource name="Site_FrameEmbedding_Name">Site - IFrame Embedding</resource>
+  <resource name="UrlName">URL-OF-THIS-PAGE</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,20 @@
+##
+## Export Themes
+##
+#set ($options = "%{}")
+
+#set ($idsQuery = $core_v2_page.GetQueryStringValue("_w_ids"))
+#if ($idsQuery)
+	$options.Add('Ids', $idsQuery)
+#end
+
+#set ($idsStorageKeyQuery = $core_v2_page.GetQueryStringValue("_w_idsStorageKey"))
+#if ($idsStorageKeyQuery)
+	$options.Add('IdsStorageKey', $idsStorageKeyQuery)
+#end
+
+#if($idsStorageKeyQuery || $idsQuery)
+	$context.ExportThemes($options)
+#else
+	$context.ExportAllThemes($options)
+#end

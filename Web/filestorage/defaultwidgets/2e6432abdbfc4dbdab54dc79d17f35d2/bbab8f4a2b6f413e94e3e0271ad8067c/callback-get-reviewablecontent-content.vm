@@ -1,0 +1,9 @@
+#set($reviewableContent = false)
+#set($reviewableContentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ReviewableContentId')))
+
+#set($reviewableContent = $context.GetReviewableContent($reviewableContentId))
+#set($reviewableContentReadOnly = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('ReadOnly')))
+
+#if (!$reviewableContent.HasErrors())
+    $core_v2_widget.ExecuteFile('reviewablecontent-content.vm')
+#end

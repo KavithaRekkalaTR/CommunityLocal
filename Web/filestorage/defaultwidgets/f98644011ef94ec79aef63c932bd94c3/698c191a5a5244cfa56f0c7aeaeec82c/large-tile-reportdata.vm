@@ -1,0 +1,17 @@
+$core_v2_widget.ExecuteFile('large-tile-parse-options.vm')
+
+#set ($current = $context.GetAggregate($options))
+#set ($trend = $context.GetTrend($options))
+#set ($graph = $context.GetAggregateByTypeByPeriodSeries($options))
+
+<div class="report-tile" data-report-id="$context.Id">
+    <div class="report-summary-container">
+        <div class="title">$core_v2_language.GetResource('Report_Title')</div>
+        <div class="report-summary">
+            <div class="total">$current.Aggregate.ToString("N0")</div>
+            $reporting_ui.TrendHtml($trend)
+        </div>
+    <div>
+    <div class="sparkline"></div>
+    <pre class="graphData" style="display:none;">$graph</pre>
+</div>

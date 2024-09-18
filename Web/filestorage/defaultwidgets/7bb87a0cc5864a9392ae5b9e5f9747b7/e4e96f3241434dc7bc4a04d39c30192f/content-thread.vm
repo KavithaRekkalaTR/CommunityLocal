@@ -1,0 +1,31 @@
+#set ($preFocus = false)
+#set ($preFocusQuery = false)
+#set ($preFocusQuery = $core_v2_page.GetQueryStringValue('focus'))
+#if ($preFocusQuery)
+	#set ($preFocus = $core_v2_utility.ParseBool($preFocusQuery))
+#end
+
+#set ($preRenderedWrapperId = $core_v2_widget.UniqueId('preRenderedWrapperId'))
+#set ($editorWrapperWrapperId = $core_v2_widget.UniqueId('editorWrapperWrapper'))
+#set ($replyEditorId = $core_v2_widget.UniqueId('replyEditor'))
+
+<div class="threaded-wrapper-outer">
+	<div class="typing-status-wrapper root"></div>
+	<div class="threaded-wrapper" id="$core_v2_encoding.HtmlAttributeEncode($preRenderedWrapperId)">
+		$core_v2_widget.ExecuteFile('pre-rendered.vm')
+	</div>
+</div>
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($editorWrapperWrapperId)" style="display:none">
+	#set ($submittableEditorOptions = "%{}")
+	$submittableEditorOptions.Add('ContentTypeId', $core_v2_comments.ContentTypeId.ToString())
+	$submittableEditorOptions.Add('Width','100%')
+	$submittableEditorOptions.Add('Height','60px')
+	$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('EnterToSubmitPrompt'))
+	$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('SubmitLabel'))
+	$submittableEditorOptions.Add('AutoResize', true)
+	$core_v2_submittableEditor.Render($replyEditorId, "function() { jQuery.telligent.evolution.messaging.publish('widgets.threadedComments.submit') }", $submittableEditorOptions)
+</div>
+
+#set ($emptyGuid = '00000000-0000-0000-0000-000000000000')
+#set ($deleteCommentPanelUrl = $core_v2_urls.DeleteComment($core_v2_utility.ParseGuid($emptyGuid)))

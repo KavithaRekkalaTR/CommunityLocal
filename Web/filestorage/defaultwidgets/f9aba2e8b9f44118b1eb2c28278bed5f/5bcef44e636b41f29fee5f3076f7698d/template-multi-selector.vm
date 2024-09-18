@@ -1,0 +1,37 @@
+<fieldset class="fieldset-multiselctor">
+	<ul class="field-list actions">
+	<% foreach(actions, function(action) { %>
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" data-messagename="multiselect-action"
+					data-action="<%: action.message %>"
+					<% if (count > 0) { %> class="button internal-link" <% } else { %> class="button internal-link disabled" <% } %>>
+					<%: action.label %>
+					<% if (count > 0) { %> (<%= count %>)<% } %>
+				</a>
+			</span>
+		</li>
+	<% }); %>
+	</ul>
+	<div class="navigation-list ui-links" data-direction="horizontal" data-maxlinks="3">
+		<ul>
+			<li class="navigation-list-item select-all">
+				<a href="#" data-messagename="multiselect-select-all">$core_v2_language.GetResource('SelectAll')</a>
+			</li>
+			<% if (count > 0) { %>
+				<li class="navigation-list-item deselect-all">
+					<a href="#" data-messagename="multiselect-deselect-all">$core_v2_language.GetResource('DeselectAll')</a>
+				</li>
+			<% } %>
+			<li class="navigation-list-item cancel">
+				<a href="#" data-messagename="multiselect-cancel">$core_v2_language.GetResource('cancel')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+			</li>
+		</ul>
+	</div>
+</fieldset>

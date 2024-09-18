@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WidgetManagementTitle}" version="11.0.0.0" description="${resource:WidgetManagementDesc}" instanceIdentifier="910d885cde84497ea9d93b7fe249e276" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="2fcc730add134749a42dc2675fa19c03">
+	<contentScript><![CDATA[
+
+#set ($providerSelectId = $core_v2_widget.UniqueId('providerSelect'))
+#set ($themeSelectId = $core_v2_widget.UniqueId('themeSelect'))
+#set ($stateSelectId = $core_v2_widget.UniqueId('stateSelect'))
+#set ($publishSelectId = $core_v2_widget.UniqueId('publishSelect'))
+#set ($searchInputId = $core_v2_widget.UniqueId('searchInput'))
+#set ($stagingMessageId = $core_v2_widget.UniqueId('stagingMessage'))
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('listHeaderTemplate'))
+#set ($multiSelectorTemplateId = $core_v2_widget.UniqueId('multiSelectorTemplate'))
+
+#set ($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#set ($uploadUrl = $core_v2_uploadedFile.GetUploadUrl($uploadContextId))
+
+#set ($providers = $context.ListProviders())
+#set ($themes = $context.ListThemes())
+
+#set ($fragmentListId = $core_v2_widget.UniqueId('fragmentList'))
+
+#set ($pageSize = 100)
+#set ($pageIndex = 0)
+
+#set ($stagedFragments = $context.ListFragments("%{ PageSize = 1, PageIndex = 0, IsStaged = 'true' }"))
+<div id="$core_v2_encoding.HtmlAttributeEncode($stagingMessageId)" class="message information" #if (!$stagedFragments || $stagedFragments.TotalCount == 0) style="display:none" #end>
+	#format ($core_v2_language.GetResource('StagedChangesMessage'))
+		#token ('begin-review-link')
+			<a href="#" class="inline-button" data-messagename="fragment-reviewstaging">
+		#token ('end-review-link')
+			</a>
+		#token ('begin-publish-all-link')
+			<a href="#" class="inline-button" data-messagename="fragment-publish-all">
+		#token ('end-publish-all-link')
+			</a>
+		#token ('begin-revert-all-link')
+			<a href="#" class="inline-button" data-messagename="fragment-revert-all">
+		#token ('end-revert-all-link')
+			</a>
+	#end
+</div>
+
+<form>
+	<fieldset>
+		<div class="filter-selector">
+			<div>
+				<select class="provider-select" id="$core_v2_encoding.HtmlAttributeEncode($providerSelectId)">
+					#set ($category = '')
+					#foreach ($provider in $providers)
+					#each
+						#if ($provider.CategoryName != $category)
+							#if ($category != '')
+								</optgroup>
+							#end
+							<optgroup label="$core_v2_encoding.HtmlAttributeEncode($provider.CategoryName)">
+						#end
+						#if ($category == '')
+							<option value="all">$core_v2_language.GetResource('AllProviders')</option>
+						#end
+						<option value="$provider.Id">$core_v2_encoding.HtmlEncode($provider.Name)</option>
+						#set ($category = $provider.CategoryName)
+					#afterall
+						</optgroup>
+					#end
+				</select>
+
+				<select class="theme-select" id="$core_v2_encoding.HtmlAttributeEncode($themeSelectId)">
+					<option value="all">$core_v2_language.GetResource('AnyTheme')</option>
+					#foreach ($theme in $themes)
+						<option value="$theme.Id">$core_v2_encoding.HtmlEncode($theme.Title)</option>
+					#end
+				</select>
+
+				<select class="state-select" id="$core_v2_encoding.HtmlAttributeEncode($stateSelectId)">
+					<option value="all">$core_v2_language.GetResource('InAnyState')</option>
+					<option value="Custom">$core_v2_language.GetResource('UserInstalled')</option>
+					<option value="FactoryDefault">$core_v2_language.GetResource('Default')</option>
+					<option value="CustomizedDefault">$core_v2_language.GetResource('EditedDefault')</option>
+				</select>
+
+				<select class="publish-select" id="$core_v2_encoding.HtmlAttributeEncode($publishSelectId)">
+					<option value="all">$core_v2_language.GetResource('RegardlessOfPublish')</option>
+					<option value="published">$core_v2_language.GetResource('Published')</option>
+					<option value="staged">$core_v2_language.GetResource('Staged')</option>
+				</select>
+
+				<input type="search" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)" style="max-width:25%" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('SearchFor'))" />
+			</div>
+		</div>
+	</fieldset>
+</form>
+
+<ul class="content-list content simple margin-bottom expandable fragments" id="$core_v2_encoding.HtmlAttributeEncode($fragmentListId)">
+	#set ($inProcess = true)
+	#set ($fragments = $context.ListFragments("%{ PageSize = $pageSize, PageIndex = $pageIndex }"))
+	$core_v2_widget.ExecuteFile('render-list.vm')
+</ul>
+
+#registerClientTemplate($multiSelectorTemplateId)
+	$core_v2_widget.ExecuteFile('template-multi-selector.vm')
+#end
+#registerClientTemplate($headerTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-list.vm')
+#end
+#registerEndOfPageHtml('fragmentsPanel')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.fragmentAdministration.register({
+				pageSize: $pageSize,
+
+				listCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+				importCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-import.jsm'))',
+				importPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-import.vm'))',
+				exportCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export.jsm'))',
+				exportStoreCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-export-store.jsm'))',
+				revertCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revert.jsm'))',
+				revertMultiCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-revert.jsm'))',
+				publishCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-publish.jsm'))',
+				publishMultiCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-multi-publish.jsm'))',
+				deleteCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.jsm'))',
+				headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+				multiSelectorTemplateId: '$core_v2_encoding.JavascriptEncode($multiSelectorTemplateId)',
+				fragmentsListId: '#$core_v2_encoding.JavascriptEncode($fragmentListId)',
+				uploadContextId: '$uploadContextId',
+				uploadUrl: '$core_v2_encoding.JavascriptEncode($uploadUrl)',
+				availabilityPanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-availability.vm'))',
+				replacePanelUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('panel-replace.vm'))',
+
+				providerSelectId: '#$core_v2_encoding.JavascriptEncode($providerSelectId)',
+				themeSelectId: '#$core_v2_encoding.JavascriptEncode($themeSelectId)',
+				stateSelectId: '#$core_v2_encoding.JavascriptEncode($stateSelectId)',
+				publishSelectId: '#$core_v2_encoding.JavascriptEncode($publishSelectId)',
+				searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+				stagingMessageId: '#$core_v2_encoding.JavascriptEncode($stagingMessageId)',
+
+				noFragmentsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+				importFragmentsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ImportFragments'))',
+				exportText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Export'))',
+				exportResourcesText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportResources'))',
+				publishConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishConfirm'))',
+				revertConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertConfirm'))',
+				publishAllConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishConfirmAll'))',
+				revertAllConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertConfirmAll'))',
+				importCompleteText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RevertConfirmAll'))'
+			});
+		});
+	</script>
+#end
+
+]]></contentScript>
+<languageResources><![CDATA[<language key="en-us">
+	<resource name="Add">Add</resource>
+	<resource name="WidgetManagementDesc">Manage widgets.</resource>
+	<resource name="WidgetManagementTitle">Widgets</resource>
+	<resource name="SelectAll">Select All</resource>
+	<resource name="DeselectAll">Deselect All</resource>
+	<resource name="cancel">Cancel</resource>
+	<resource name="more">More</resource>
+	<resource name="All">All theme page widgets</resource>
+	<resource name="UserInstalled">User installed</resource>
+	<resource name="Default">Default</resource>
+	<resource name="EditedDefault">Edited default</resource>
+	<resource name="Any">Any</resource>
+	<resource name="AllProviders">All widgets</resource>
+	<resource name="InAnyState">In any state</resource>
+	<resource name="AnyTheme">For any theme</resource>
+	<resource name="RegardlessOfPublish">Regardless of publish state</resource>
+	<resource name="Published">Published</resource>
+	<resource name="Staged">Staged</resource>
+	<resource name="SearchFor">Search</resource>
+	<resource name="Import">Import</resource>
+	<resource name="SelectMultiple">Select Multiple</resource>
+	<resource name="ExportAll">Export All</resource>
+	<resource name="ExportAllResources">Export All Language Resources</resource>
+	<resource name="Studio">Widget Studio</resource>
+	<resource name="NoResults">No widgets.</resource>
+	<resource name="ImportFragments">Import Widgets</resource>
+	<resource name="Export">Export</resource>
+	<resource name="ExportResources">Export Resources</resource>
+	<resource name="EditFragment">Edit Widget</resource>
+	<resource name="Translated">Translated</resource>
+	<resource name="FactoryDefault">Default</resource>
+	<resource name="Custom">Custom</resource>
+	<resource name="CustomizedDefault">Customized Default</resource>
+	<resource name="Delete">Delete</resource>
+	<resource name="Deleted">Deletion</resource>
+	<resource name="Reverted">Reversion</resource>
+	<resource name="Changed">Updated</resource>
+	<resource name="Preview">Preview</resource>
+	<resource name="RevertToDefault">Revert to Factory Default</resource>
+	<resource name="PublishStagedChanges">Publish Staged Changes</resource>
+	<resource name="RevertStagedChanges">Revert Staged Changes</resource>
+	<resource name="DeletedDesc">When published, this widget will be deleted.</resource>
+	<resource name="RevertedDesc">When published, this widget will return to its default version.</resource>
+	<resource name="PublishConfirm">Publishing will make staged changes to this widget public. Are you sure?</resource>
+	<resource name="PublishConfirmAll">Publishing all will make all changes to all staged widgets public. Are you sure?</resource>
+	<resource name="RevertConfirm">Reverting will erase staged changes to this widget. Are you sure?</resource>
+	<resource name="RevertConfirmAll">Reverting all will erase all changes to all staged widgets. Are you sure?</resource>
+	<resource name="StagedChangesMessage">You have staged widget changes. You can {begin-review-link}review staged changes{end-review-link}, {begin-publish-all-link}publish all changes {end-publish-all-link}, or {begin-revert-all-link}revert all changes {end-revert-all-link}.</resource>
+	<resource name="ImportEmpty">The import contains no changes from current widgets.</resource>
+	<resource name="ImportDevMode">With Developer Mode enabled, {studio} should be used instead for importing.</resource>
+	<resource name="NewFragmentResources">New Widget Resources</resource>
+	<resource name="NewFragments">New Widgets</resource>
+	<resource name="TheFollowingFragmentsAreNew">The following widgets are new.</resource>
+	<resource name="UpdatedFragmentResources">Updated Widget Resources</resource>
+	<resource name="UpdatedFragments">Updated Widgets</resource>
+	<resource name="UpdatedFragmentDesc">The following updated widgets will overwrite existing. To stage and compare detailed implementation differences, {studio-begin-link}import in Widget Studio{studio-end-link}.</resource>
+	<resource name="AlreadyInstalled">The import also contains other components already installed in your community.</resource>
+	<resource name="ImportComplete">Import Complete</resource>
+	<resource name="Import">Import</resource>
+	<resource name="ImportFragmentStudio">Import through Widget Studio</resource>
+	<resource name="AccessibilityTitle">{name} Availability</resource>
+	<resource name="Availability">Availability</resource>
+	<resource name="AvailableWithin">Available Within</resource>
+	<resource name="AvailableWithinDesc">{name} can be configured within the following theme types:</resource>
+	<resource name="Save">Save</resource>
+	<resource name="RevertToDefault">Revert to Default</resource>
+	<resource name="DefaultEnabled">Default: Enabled</resource>
+	<resource name="DefaultDisabled">Default: Disabled</resource>
+	<resource name="UnsavedChange">Unsaved Change</resource>
+	<resource name="ReplacementTitle">{name} Replacement</resource>
+	<resource name="Replacement">Replacement</resource>
+	<resource name="StageAndPreviewReplacement">Stage and Preview Replacements</resource>
+	<resource name="Theme">Replace within theme:</resource>
+	<resource name="ReplacementWidget">Replace all uses of &quot;{target}&quot; in pages, headers, and footers with:</resource>
+	<resource name="replacedMessage">Widget replacements staged successfully</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

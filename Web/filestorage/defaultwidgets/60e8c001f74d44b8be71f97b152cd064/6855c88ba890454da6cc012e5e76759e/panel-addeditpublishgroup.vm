@@ -1,0 +1,76 @@
+#set($id = false)
+#set($id = $core_v2_page.GetFormValue('id'))
+
+#set($publishGroup = false)
+#if ($id)
+    #set($publishGroup = $articles_v1_publishGroups.Get($core_v2_utility.ParseInt($id)))
+    #if($publishGroup.HasErrors())
+        $core_v2_page.SendJsonError($publishGroup.Errors)
+    #end
+#end
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item name">
+		    <label for="$core_v2_widget.UniqueId('name')" class="field-item-name">$core_v2_language.GetResource('PublishGroup_Name')</label>
+		    <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('name')" #if($publishGroup) value="$core_v2_encoding.HtmlEnsureEncoded($publishGroup.Name)" #end />
+            </span>
+            <span class="field-item-validation" style="display: none;" id="$core_v2_widget.UniqueId('name-validation')"></span>
+        </li>
+        <li class="field-item default-article">
+		    <label for="$core_v2_widget.UniqueId('publishdate')" class="field-item-name">$core_v2_language.GetResource('PublishGroup_PublishDate')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('PublishGroup_PublishDate_Description')</span>
+		    <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('publishdate')" #if($publishGroup && $publishGroup.PublishDate) value="$core_v2_utility.GetTimestamp($publishGroup.PublishDate)" #end />
+            </span>
+        </li>
+        <li class="field-item default-article">
+		    <label for="$core_v2_widget.UniqueId('unpublishdate')" class="field-item-name">$core_v2_language.GetResource('PublishGroup_UnpublishDate')</label>
+		    <span class="field-item-description">$core_v2_language.GetResource('PublishGroup_UnpublishDate_Description')</span>
+		    <span class="field-item-input">
+                <input type="text" id="$core_v2_widget.UniqueId('unpublishdate')" #if($publishGroup && $publishGroup.PublishEndDate) value="$core_v2_utility.GetTimestamp($publishGroup.PublishEndDate)" #end />
+            </span>
+        </li>
+	</ul>
+</fieldset></form>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('addUpdateHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input"><a href="#" class="button save">$core_v2_language.GetResource('Save')</a></span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.addUpdatePublishGroup')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui-addupdatepublishgroup.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.addUpdatePublishGroupPanel.register({
+			articleCollectionId: '$context.ArticleCollection.Id',
+			publishGroupId: #if ($id) '$id' #else null #end,
+			selectors: {
+			    name: '#$core_v2_widget.UniqueId('name')',
+			    nameValidation: '#$core_v2_widget.UniqueId('name-validation')'
+			},
+			inputs: {
+			    name: jQuery('#$core_v2_widget.UniqueId('name')'),
+			    publishdate: jQuery('#$core_v2_widget.UniqueId('publishdate')'),
+			    unpublishdate: jQuery('#$core_v2_widget.UniqueId('unpublishdate')')
+			},
+			templates: {
+                header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)' 
+			},
+			text: {
+			    saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_SaveSuccessful'))'
+			}
+		});
+	});
+	</script>
+#end

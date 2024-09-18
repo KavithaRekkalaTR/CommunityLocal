@@ -1,0 +1,64 @@
+#set ($headerTemplateId = $core_v2_widget.UniqueId('reverteaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button revert">$core_v2_language.GetResource('revert')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('revert-instructions')</p>
+    
+<form><fieldset>
+<ul class="field-list">
+    
+    <li class="field-item">
+	    <span class="field-item-input">
+            <input type="checkbox" id="$core_v2_widget.UniqueId('RevertMetrics')" name="$core_v2_widget.UniqueId('RevertMetrics')" />
+		    <label for="$core_v2_widget.UniqueId('RevertMetrics')" class="field-item-name">$core_v2_language.GetResource('Field_RevertMetrics')</label>
+		</span>
+		<span class="field-item-description">
+		    $core_v2_language.GetResource('Field_RevertMetrics_Desc')
+		</span>
+	</li>
+	#if ($context.DecaySupported)
+    	<li class="field-item">
+    	    <span class="field-item-input">
+                <input type="checkbox" id="$core_v2_widget.UniqueId('RevertDecay')" name="$core_v2_widget.UniqueId('RevertDecay')" />
+    		    <label for="$core_v2_widget.UniqueId('RevertDecay')" class="field-item-name">$core_v2_language.GetResource('Field_RevertDecay')</label>
+    		</span>
+    		<span class="field-item-description">
+    		    $core_v2_language.GetResource('Field_RevertDecay_Desc')
+    		</span>
+    	</li>
+    #end
+
+</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.scorePluginRevert')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('revert.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.scorePluginRevert.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        revertMetrics: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('RevertMetrics'))'),
+		        revertDecay: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('RevertDecay'))')
+		    },
+		    urls: {
+		        revert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-revert.vm'))'
+		    },
+		    text: {
+		        revertSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('revert-succesful'))'
+		    }
+    	});
+	});
+	</script>
+#end

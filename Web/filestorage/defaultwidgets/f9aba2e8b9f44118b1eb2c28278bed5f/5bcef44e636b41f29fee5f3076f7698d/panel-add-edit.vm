@@ -1,0 +1,166 @@
+#set ($configuredAutomationId = false)
+#set ($configuredAutomationIdQuery = $core_v2_page.GetQueryStringValue('configuredAutomationId'))
+#if ($configuredAutomationIdQuery)
+	#set ($configuredAutomationId = $core_v2_utility.ParseGuid($configuredAutomationIdQuery))
+#end
+
+#set ($configuredAutomation = false)
+#if ($configuredAutomationId)
+	#set ($configuredAutomationResult = $context.GetConfiguredAutomation($configuredAutomationId))
+	#if ($configuredAutomationResult.Model)
+		#set ($configuredAutomation = $configuredAutomationResult.Model)
+	#end
+#end
+
+#set ($nameInputId = "${core_v2_widget.UniqueId('nameInput')}-${configuredAutomationId}")
+#set ($descriptionInputId = "${core_v2_widget.UniqueId('descriptionInput')}-${configuredAutomationId}")
+#set ($configuredAutomationTypeSelectId = "${core_v2_widget.UniqueId('configuredAutomationTypeSelectId')}-${configuredAutomationId}")
+#set ($enabledInputId = "${core_v2_widget.UniqueId('enabledInput')}-${configuredAutomationId}")
+#set ($unselectableMessageId = "${core_v2_widget.UniqueId('unselectableMessage')}-${configuredAutomationId}")
+
+<form>
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item name">
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($nameInputId)">$core_v2_language.GetResource('Name')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('NameDesc')</span>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($nameInputId)"
+						name="$core_v2_encoding.HtmlAttributeEncode($nameInputId)"
+						#if ($configuredAutomation) value="$core_v2_encoding.HtmlAttributeEncode($configuredAutomation.Name)" #end>
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item description">
+				<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($descriptionInputId)">$core_v2_language.GetResource('Description')</label>
+				<span class="field-item-description">$core_v2_language.GetResource('DescriptionDesc')</span>
+				<span class="field-item-input">
+					#set ($body = $configuredAutomation.Description)
+					$core_v2_editor.Render('configuredAutomationDescription',"%{Width='100%', Height='25%', Value='$!body' }")
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item enabled">
+				<span class="field-item-input">
+					<input type="checkbox" id="$core_v2_encoding.HtmlAttributeEncode($enabledInputId)" name="$core_v2_encoding.HtmlAttributeEncode($enabledInputId)" #if ($configuredAutomation.IsEnabled) checked #end />
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($enabledInputId)">$core_v2_language.GetResource('Enabled')</label>
+				</span>
+				<span class="field-item-description">$core_v2_language.GetResource('EnabledDesc')</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+
+			#set ($automations = false)
+			#set ($automations = $context.ListAutomations("%{ IsStaged = 'false', SpecifyHost = 'true' }"))
+			#if ($automations.Count > 0)
+
+				<li class="field-item type">
+					<label class="field-item-name" for="$core_v2_encoding.HtmlAttributeEncode($configuredAutomationTypeSelectId)">$core_v2_language.GetResource('Type')</label>
+					<span class="field-item-description">
+						#format($core_v2_language.GetResource('TypeDesc'))
+							#token('studio')
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl())">$core_v2_language.GetResource('AutomationStudio')</a>
+						#end
+					</span>
+					#set ($nonSelectablOptionSelected = false)
+					<span class="field-item-input">
+						<select id="$core_v2_encoding.HtmlAttributeEncode($configuredAutomationTypeSelectId)">
+							<option value="">$core_v2_language.GetResource('AutomationType')</option>
+							#foreach ($automation in $automations)
+
+								#set ($selectable = true)
+								#if ($automation.IsSingleton)
+									#if ($automation.EnabledConfigurations.Count > 1)
+										#set ($selectable = false)
+									#elseif ($automation.EnabledConfigurations.Count == 1)
+										#foreach ($enabledConfigurationId in $automation.EnabledConfigurations)
+											#if ($configuredAutomationId != $enabledConfigurationId)
+												#set ($selectable = false)
+											#end
+										#end
+									#end
+								#end
+
+								#set ($automationOptionValue = "${automation.Id}")
+								#if ($selectable)
+									#set ($automationOptionValue = "${automationOptionValue}:1")
+								#else
+									#set ($automationOptionValue = "${automationOptionValue}:0")
+								#end
+
+								#set ($selected = false)
+								#if ($configuredAutomation && $configuredAutomation.Automation && $configuredAutomation.Automation.Id == $automation.Id)
+									#set ($selected = true)
+								#end
+
+								#if (!$selectable && $selected)
+									#set ($nonSelectablOptionSelected = true)
+								#end
+
+								<option value="$automationOptionValue" #if ($selected) selected #end>
+									$core_v2_encoding.HtmlEncode($automation.ProcessedName)
+									#if (!$selectable)
+										($core_v2_language.GetResource('unavailable'))
+									#end
+								</option>
+							#end
+						</select>
+					</span>
+
+					<span class="field-item-description" id="$core_v2_encoding.HtmlAttributeEncode($unselectableMessageId)" #if (!$nonSelectablOptionSelected) style="display:none" #end>
+						$core_v2_language.GetResource('SingletonInUse')
+					</span>
+					<span class="field-item-validation" style="display:none;"></span>
+				</li>
+
+				#if ($configuredAutomation)
+					#set($automationId = false)
+					#set($automationId = $configuredAutomation.Automation.Id)
+
+					#set($automationConfigurationData = false)
+					#set($automationConfigurationDataResult = $context.GetConfiguration($configuredAutomation.Id))
+					#if ($automationConfigurationDataResult && !$automationConfigurationDataResult.HasErrors())
+						#set($automationConfigurationData = $automationConfigurationDataResult.Model)
+					#end
+
+					<div class="automation-configuration-form">
+						$core_v2_widget.ExecuteFile('render-configuration.vm')
+					</div>
+				#end
+			#end
+
+		</ul>
+	</fieldset>
+</form>
+
+#set ($saveTemplateId = $core_v2_widget.UniqueId('saveTemplate'))
+#registerClientTemplate($saveTemplateId)
+	$core_v2_widget.ExecuteFile('template-panel-header-add-edit.vm')
+#end
+#registerEndOfPageHtml('configuredAutomationsPanel.addEdit')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('panel-add-edit.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+		jQuery.telligent.evolution.widgets.automationAdministration.addEdit.register({
+			configuredAutomationId: #if ($configuredAutomation) '$configuredAutomation.Id' #else null #end,
+			automationId: #if ($configuredAutomation && $configuredAutomation.Automation) '$configuredAutomation.Automation.Id' #else null #end,
+			saveCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.jsm'))',
+			configurationCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-configuration.jsm'))',
+			saveTemplateId: '$core_v2_encoding.JavascriptEncode($saveTemplateId)',
+			nameInputId: '#$core_v2_encoding.JavascriptEncode($nameInputId)',
+			configuredAutomationTypeSelectId: '#$core_v2_encoding.JavascriptEncode($configuredAutomationTypeSelectId)',
+			enabledInputId: '#$core_v2_encoding.JavascriptEncode($enabledInputId)',
+			unselectableMessageId: '#$core_v2_encoding.JavascriptEncode($unselectableMessageId)',
+			getDescriptionValue: function() { return $core_v2_editor.GetContentScript('configuredAutomationDescription'); },
+			getAutomationConfigurationValues: function() {
+				try {
+					return ($core_v2_dynamicForm.GetValuesScript($core_v2_widget.UniqueId('AutomationConfiguration')));
+				} catch (e) {
+					return null;
+				}
+			}
+		});
+	});
+	</script>
+#end

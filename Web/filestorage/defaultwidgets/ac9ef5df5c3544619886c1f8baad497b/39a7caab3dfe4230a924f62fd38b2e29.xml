@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GalleryOptionsManagement_Name}" version="13.0.0.0" description="${resource:GalleryOptionsManagement_Description}" instanceIdentifier="39a7caab3dfe4230a924f62fd38b2e29" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-galleryoptions" lastModified="2023-06-07 11:26:23Z" provider="ac9ef5df5c3544619886c1f8baad497b">
+    <contentScript language="Velocity"><![CDATA[#set($gallery = $context.Gallery)
+#set ($group = false)
+#set ($group = $context.Group)
+#set ($canDelete = $core_v3_permission.CheckPermission($core_v2_groupPermissions.DeleteMediaGallery, $core_v2_user.Accessing.Id, "%{ ApplicationId = $context.Gallery.Group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+<div id="$core_v2_widget.WrapperElementId">
+
+<form><fieldset>
+	<ul class="field-list">
+
+		<li class="field-item name">
+			<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Name')" name="galleryName" maxlength="256" value="$core_v2_encoding.HtmlDecode($!gallery.Name)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item web-address">
+			<label for="$core_v2_widget.UniqueId('WebAddress')" class="field-item-name">$core_v2_language.GetResource('WebAddress')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('WebAddress_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('WebAddress')" name="webAddress" maxlength="256" value="$core_v2_encoding.HtmlDecode($!gallery.ApplicationKey)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item description">
+			<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+			<span class="field-item-input">
+				#set($description = $context.ApiGallery.HtmlDescription('raw'))
+				$core_v2_editor.Render('Description',"%{Width='100%', Height='25%', Value='$description', ContentTypeId=$core_v2_galleries.ContentTypeId }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>		
+
+		<li class="field-item owners">
+			<label for="$core_v2_widget.UniqueId('Owners')" class="field-item-name">$core_v2_language.GetResource('Owners')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Owners_Detail')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Owners')" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item group">
+			<label for="$core_v2_widget.UniqueId('Group')" class="field-item-name">$core_v2_language.GetResource('Group')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Group_Detail')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Group')" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item enabled">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('Enabled')" #if($gallery.IsActive)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('Enabled')" class="field-item-name">$core_v2_language.GetResource('IsActive')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('IsActive_Detail')</span>
+		</li>
+
+		<li class="field-item sitemap">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('Sitemap')" #if($gallery.IsIncludedInSitemap)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('Sitemap')" class="field-item-name">$core_v2_language.GetResource('Sitemap')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Sitemap_Detail')</span>
+		</li>
+
+		<li class="field-item view-type">
+			<label for="$core_v2_widget.UniqueId('ViewType')" class="field-item-name">$core_v2_language.GetResource('ViewType')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ViewType_Detail')</span>
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('ViewType')">
+					<option value="Thumbnail" #if($gallery.ViewType =="Thumbnail")selected='selected'#end>$core_v2_language.GetResource('ThumbnailView')</option>
+					<option value="List" #if($gallery.ViewType =="List")selected='selected'#end>$core_v2_language.GetResource('ListView')</option>
+				</select>
+			</span>
+		</li>
+
+		#if ($gallery)
+			<li class="field-item identifiers">
+				<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</li>
+			<li class="field-item identifiers entityid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('EntityId')</label>
+				<span class="field-item-input">$gallery.SectionID</span>
+			</li>
+			<li class="field-item identifiers contentid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+				<span class="field-item-input">$!gallery.ApplicationId</span>
+			</li>
+			<li class="field-item identifiers contenttypeid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+				<span class="field-item-input">$!gallery.ApplicationTypeId</span>
+			</li>
+		#end
+
+	</ul>
+</fieldset></form>
+
+#if($canDelete)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input"><a href="#" class="button delete">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))</a></span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+</div>
+
+#set($redirect = false)
+#if($core_v2_gallery.Current && $core_v2_gallery.Current.Id == $context.Gallery.SectionID)
+	#set($redirect = true)
+#end
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+	var owners = [];
+	#foreach($owner in $gallery.Owners)
+        owners.push({id: '$owner.UserId', name: '$core_v2_encoding.JavascriptEncode($owner.DisplayName)#if($owner.DisplayName != $owner.Username) ($core_v2_encoding.JavascriptEncode($owner.Username))#end'});
+	#end
+
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.galleryOptionsManagement.register({
+		wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		applicationKey: '$context.Gallery.ApplicationKey',
+		groupId: #if ($group) '$group.Id' #else null #end,
+		groupName: #if ($group) '$group.Name' #else null #end,
+		galleryId: '$context.Gallery.SectionID',
+		hasPermissionOverrides: '$context.HasCustomPermissions()',
+		redirect: '$redirect',
+		canDelete: '$canDelete',
+		owners: owners,
+		getDescription: function() { return $core_v2_editor.GetContentScript('Description'); },
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			webAddressId: "#$core_v2_widget.UniqueId('WebAddress')",
+			groupId: "#$core_v2_widget.UniqueId('Group')",
+			ownersId: "#$core_v2_widget.UniqueId('Owners')",
+			enabledId: "#$core_v2_widget.UniqueId('Enabled')",
+			sitemapId: "#$core_v2_widget.UniqueId('Sitemap')",
+			viewTypeId: "#$core_v2_widget.UniqueId('ViewType')"
+		},
+		resources: {
+			save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+			delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+			galleryUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('GalleryUpdated'))",
+			deleteConfirmation: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteGalleryWarning'))",
+			addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))",
+			moveWarning: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ValidateMove'))",
+			noGroupsMatch: "$core_v2_language.GetResource('GroupLookUp_NoMatches')",
+			noUsersMatch: "$core_v2_language.GetResource('UserLookUp_NoMatches')",
+			requiredText: "$core_v2_language.GetResource('RequiredText')",
+            alreadySelected: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AlreadySelected'))',
+		},
+		urls: {
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			groupRedirect:  "$core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Gallery.Group.Id))",
+			lookupGroups:  "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/groups.json')",
+			lookupUsers:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('find-users.vm'))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource>
+  <resource name="AlreadySelected">Already an owner</resource>
+  <resource name="ApplicationId">Application Identifier</resource>
+  <resource name="ApplicationTypeId">Application Type Identifier</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteGalleryWarning">Are you sure you want to delete this media gallery?</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Description_Detail">A brief description of this media gallery.</resource>
+  <resource name="EntityId">Identifier</resource>
+  <resource name="FileCountQuota">File Count Quota</resource>
+  <resource name="FileCountQuota_Detail">The total number of files allowed in this media gallery. (0 for unlimited)</resource>
+  <resource name="GalleryOptionsManagement_Description">Manage gallery options.</resource>
+  <resource name="GalleryOptionsManagement_Name">Gallery Options</resource>
+  <resource name="GalleryUpdated">Gallery options were successfully saved.</resource>
+  <resource name="Group">${group_propercase}</resource>
+  <resource name="Group_Detail">The ${group_lowercase} that contains this gallery.</resource>
+  <resource name="GroupLookUp_NoMatches">A matching group could not be found.</resource>
+  <resource name="IsActive">Enable Media Gallery</resource>
+  <resource name="IsActive_Detail">When disabled, the media gallery is not accessible</resource>
+  <resource name="ListView">List View</resource>
+  <resource name="Name">Gallery Name</resource>
+  <resource name="Name_Detail">The name of the gallery.</resource>
+  <resource name="Owners">Owner(s)</resource>
+  <resource name="Owners_Detail">The list of users who have owner access to this media gallery. These users can upload, edit, and remove content from this media gallery and they do not need to be assigned a specific role level permission.</resource>
+  <resource name="RequiredText">This field is required</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Sitemap">Include Files in Sitemap</resource>
+  <resource name="Sitemap_Detail">When enabled, files are included in sitemap.</resource>
+  <resource name="ThumbnailView">Thumbnail View</resource>
+  <resource name="TotalFileSizeQuota">Total Storage Quota (megabytes)</resource>
+  <resource name="TotalFileSizeQuota_Detail">The amount of storage space allowed for this media gallery. (0 for unlimited)</resource>
+  <resource name="UserLookUp_NoMatches">A matching user could not be found.</resource>
+  <resource name="ValidateMove">You have selected to move the media gallery to another ${group_lowercase}. There are permission overrides on this media gallery that will be removed if you choose to continue.</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+  <resource name="ViewType">View Type</resource>
+  <resource name="ViewType_Detail">Choose the default way to present files in this media gallery.</resource>
+  <resource name="WebAddress">Web Address</resource>
+  <resource name="WebAddress_Detail">Unique value used to identify this media gallery. This value should not be changed. White spaces are not available. Only numbers, letters, "-", and "_" are valid characters.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="groups.groups.readonly" />
+      <scope id="galleries.galleries.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

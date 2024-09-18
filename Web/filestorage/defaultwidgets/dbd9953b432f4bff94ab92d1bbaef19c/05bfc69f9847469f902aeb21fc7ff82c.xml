@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Name}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="05bfc69f9847469f902aeb21fc7ff82c" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="dbd9953b432f4bff94ab92d1bbaef19c">
+    <contentScript language="Velocity"><![CDATA[
+#if ($context.Status.UpdateState == 'JobUnavailable' || $context.Status.UpdateState == 'Failure')
+  $core_v2_language.GetResource($context.Status.UpdateState.ToString())
+#elseif ($context.Status.Notes && $context.Status.Notes.length >0)
+  $context.Status.Notes
+#else
+  $core_v2_language.GetResource('NoUpdates')
+#end
+
+#if ($context.Target == 'Web')
+  #set($updateActionId = $core_v2_widget.UniqueId('update'))
+  #set($lastCheckedWrapperId = $core_v2_widget.UniqueId('last-checked'))
+  #set($loadingId = $core_v2_widget.UniqueId('loading'))
+
+  <p id="$core_v2_encoding.HtmlAttributeEncode($lastCheckedWrapperId)">
+    #format($core_v2_language.GetResource('last-checked'))
+    #token('when')
+        $core_v2_ui.AgoDate($context.Status.LastChecked)
+    #end
+    <a class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($updateActionId)" href="#">$core_v2_language.GetResource('check-now')</a>
+  </p>
+  <div id="$core_v2_encoding.HtmlAttributeEncode($loadingId)" style="display:none">
+    <span class="ui-loading" data-width="24" data-height="24"></span>
+  </div>
+
+  <script>
+  var updateActionId = '$core_v2_encoding.JavascriptEncode($updateActionId)';
+  var lastCheckedWrapperId = '$core_v2_encoding.JavascriptEncode($lastCheckedWrapperId)';
+  var loadingId = '$core_v2_encoding.JavascriptEncode($loadingId)';
+  var checkUrl = '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('check.jsm'))';
+
+  jQuery(function(j){
+    j('#' + updateActionId).on('click', function(e){
+      e.preventDefault();
+
+      j('#' + updateActionId).hide();
+      j('#' + loadingId).show();
+
+      // fire and forget a request on the bus to check
+      // for an update on the job server
+      j.telligent.evolution.post({ url: checkUrl })
+
+      return false;
+    });
+  });
+  </script>
+#end
+]]></contentScript>
+    <headerScript language ="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Widget-Description">Platform Updates System Indicator</resource>
+  <resource name="Widget-Name">Updates</resource>
+  <resource name="last-checked">Last checked {when}.</resource>
+  <resource name="check-now">Check Now</resource>
+  <resource name="JobUnavailable">The update check failed because the job server is not responding. Please review the health status of the job server and message bus.</resource>
+  <resource name="Failure">The update check failed, and an error was logged. Please ensure the Platform Updates System Indicator is configured with the correct update URL.</resource>
+  <resource name="NoUpdates">There are no updates currently available.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

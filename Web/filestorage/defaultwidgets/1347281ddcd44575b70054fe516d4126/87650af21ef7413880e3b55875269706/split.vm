@@ -1,0 +1,20 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($replyId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ReplyId')))
+	#set($forumId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('ForumId')))
+	#set($sendEmail = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('SendEmail')))
+
+	#set($forum = $core_v2_forum.Get($forumId))
+	#set($reply = $core_v2_forumReply.Get($replyId))
+
+	#set($response = $context.SplitThread($replyId, $forumId, $sendEmail))
+	#if ($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#else
+		{
+			"message":"$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('splitSuccessfully'), $core_v2_encoding.HtmlDecode($reply.Subject), $core_v2_encoding.HtmlDecode($forum.Name)))",
+			"url":"$core_v2_encoding.JavascriptEncode($response.Url)"
+		}
+	#end
+#end

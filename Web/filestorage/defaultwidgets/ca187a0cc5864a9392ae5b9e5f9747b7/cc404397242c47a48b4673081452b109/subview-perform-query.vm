@@ -1,0 +1,97 @@
+#set($user = false)
+#set($user = $core_v2_user.Accessing)
+
+#set($viewType = $core_v2_widget.GetStringValue("viewType", "upcoming"))
+#set($MaxMonths = $core_v2_widget.GetIntValue("maxMonths", 3))
+#set($maxEvents = $core_v2_widget.GetIntValue("maxEvents", 5))
+
+#set($endDate = false)
+#set($startDate = false)
+#set($isSpecificDay = false)
+#if ($viewType == 'calendar' && $core_v2_page.GetQueryStringValue('w_date') && $core_v2_page.GetQueryStringValue('w_date').Length > 0)
+    #set($startDate = $calendar_v1_UI.ParseDateTimeExact($core_v2_page.GetQueryStringValue('w_date')))
+    #set($isSpecificDay = true)
+#elseif($viewType == 'calendar' && $core_v2_page.GetQueryStringValue('w_year') && $core_v2_page.GetQueryStringValue('w_year').Length > 0 && $core_v2_page.GetQueryStringValue('w_month') && $core_v2_page.GetQueryStringValue('w_month').Length > 0)
+    #set($startDate = $core_v2_utility.ParseDate($core_v2_page.GetQueryStringValue('w_year'), $core_v2_page.GetQueryStringValue('w_month'), "1"))
+#elseif ($core_v2_page.GetQueryStringValue('calendarDate'))
+    #set($startDate = $calendar_v1_UI.ParseDateTimeExact($core_v2_encoding.HtmlDecode($core_v2_page.GetQueryStringValue('calendarDate'))))
+    #set($isSpecificDay = true)
+#end
+
+#if(!$startDate || $startDate.Year == 1)
+	#set ($startDate = $core_v2_utility.CurrentDate)
+	#if ($viewType != 'calendar')
+	    #set ($endDate = $core_v2_utility.ParseDate("$startDate.Year", "$startDate.Month", "1").AddMonths($MaxMonths).AddMinutes(-1))
+	#end
+	#set ($filtered = false)
+#elseif ($isSpecificDay)
+    #set ($endDate = $startDate.AddDays(1).AddMinutes(-1))
+    #set ($filtered = true)
+#end
+
+#set($selectedCalendarOrGroup = $core_v2_widget.GetStringValue("selectedCalendarOrGroup", ""))
+#set($parsedCalendarOrGroup = $core_v2_page.ParseQueryString($selectedCalendarOrGroup))
+#set($calendars = false)
+
+#set($calendars = $parsedCalendarOrGroup.Values('Calendar'))
+#set($group = false)
+#set($group = $parsedCalendarOrGroup.Value('Group'))
+#set($includeSubGroups = $parsedCalendarOrGroup.Value('IncludeSubGroups'))
+#if ($selectedCalendarOrGroup.length == 0)
+  #set ($includeSubGroups = false)
+#end
+
+#set ($query = "%{ PageSize = $maxEvents, IncludeSubGroups = $includeSubGroups, DateRangeStart = $startDate, QueryType = 'DateRange', SortBy = 'StartDate' }")
+$query.Add('PageIndex', $core_v2_ui.GetCurrentPageIndex())
+#if ($endDate)
+    $query.Add('DateRangeEnd', $endDate)
+#end
+#if ($viewType == "myevents")
+    $query.Add('RegisteredUserId', $user.Id)
+    
+    #set($status = $core_v2_widget.GetStringValue("status", "Confirmed"))
+    $query.Add('RegisteredUserRegistrationStatus', $status)
+#end    
+
+#set($calendarIds = false)
+#set($currentCalendar = -1)
+
+#if (!$calendars && !$group)
+#if ($calendar_v1_calendars.Current)
+  #set($currentCalendarId = $calendar_v1_calendars.Current.Id)
+  $query.Add('CalendarId', $currentCalendarId)
+#elseif($core_v2_group.Current)
+  $query.Add('CalendarReferenceId', $core_v2_group.Current.Id)
+  $query.Add('CalendarContext', 'Group')
+#end
+#elseif($calendars)
+	#foreach ($calendar in $calendars)
+		## id of -1 means use the current calendar
+		#if ($calendar == -1)
+			#set ($calendar = $calendar_v1_calendars.Current.Id)
+		#end
+		#if($calendar > 0)
+			#if($calendarIds)
+				#set($calendarIds = "$calendarIds,$calendar")
+			#else
+				#set($calendarIds = "$calendar")
+			#end
+		#end
+	#end
+    #if($calendar)
+        $query.Add('CalendarId', $currentCalendarId)
+    #elseif($calendarIds)
+		$query.Add('FilterByCalendarIdList', $calendarIds)
+	#end
+#else
+	## get posts related to a group
+	#if($group == 0 || !$group)
+		#set($groupId = $core_v2_group.Current.Id)
+	#else
+		#set($groupId = $group)
+	#end
+
+	$query.Add('CalendarReferenceId', $groupId)
+	$query.Add('CalendarContext', 'Group')
+#end
+#set ($events = $calendar_v1_events.List($query))

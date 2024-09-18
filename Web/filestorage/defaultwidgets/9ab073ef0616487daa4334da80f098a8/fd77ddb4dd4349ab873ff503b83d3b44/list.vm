@@ -1,0 +1,119 @@
+##
+## Expects in scope: $contentId, $contentTypeId, $pageIndex
+##
+
+#set ($pageSize = 10)
+#if ($contentId && $contentTypeId)
+	#set ($comments = $core_v2_comments.List("%{ ContentId = $contentId, ContentTypeId = $contentTypeId, PageSize = $pageSize, PageIndex = $pageIndex, OrderBy = 'CreatedUtcDate', SortOrder = 'Descending', IncludeChildren = 'True' }"))
+#elseif ($applicationId)
+	#set ($comments = $core_v2_comments.List("%{ ApplicationId = $applicationId, PageSize = $pageSize, PageIndex = $pageIndex, OrderBy = 'CreatedUtcDate', SortOrder = 'Descending', IncludeChildren = 'True' }"))
+#end
+
+#foreach ($comment in $comments)
+	<li class="content-item with-avatar">
+
+		<div class="content comment" data-commentid="$comment.CommentId">
+			<div class="author">
+				<div class="avatar">
+					#if ($comment.User.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)" class="internal-link view-user-profile">
+							$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 44, 44, "%{border='0px', alt=$comment.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+						</a>
+					#else
+						$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 44, 44, "%{border='0px', alt=$comment.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+					#end
+				</div>
+				<span class="user-name">
+					#if ($comment.User.ProfileUrl)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)" class="internal-link view-user-profile">
+							$comment.User.DisplayName
+						</a>
+					#else
+						$comment.User.DisplayName
+					#end
+				</span>
+			</div>
+			<div class="post-attributes">
+				<ul class="attribute-list">
+					<li class="attribute-item approval">
+						#if ($comment.IsApproved)
+							<span class="value">$core_v2_language.GetResource('Approved')</span>
+						#else
+							<span class="value highlight">$core_v2_language.GetResource('NotApproved')</span>
+						#end
+					</li>
+                    <li class="attribute-item date">
+                        <span class="value">$core_v2_language.FormatDateAndTime($comment.CreatedDate)</span>
+                    </li>
+                    #if ($comment.UpdatedDate != $comment.CreatedDate)
+                    <li class="attribute-item update-date">
+                        <span class="value">$core_v2_language.FormatString($core_v2_language.GetResource('Updated'), $core_v2_language.FormatDateAndTime($comment.UpdatedDate))</span>
+                    </li>
+                    #end
+					#set ($commentContent = false)
+					#set ($commentContent = $comment.Content)
+					#if ($commentContent)
+						<li class="attribute-item blog">
+							<span class="name"></span>
+							<span class="value">
+								#if ($commentContent.Url)
+									#set ($contentLink = "<a href='${core_v2_encoding.HtmlAttributeEncode($commentContent.Url)}'>${commentContent.HtmlName('Web')}</a>")
+									$core_v2_language.FormatString($core_v2_language.GetResource('InReplyTo'), $contentLink)
+								#else
+									$core_v2_language.FormatString($core_v2_language.GetResource('InReplyTo'), $commentContent.HtmlName('Web'))
+								#end
+							</span>
+						</li>
+					#end
+				</ul>
+			</div>
+			<div class="content expandable">
+				$comment.Body('Web')
+			</div>
+			<div class="content expanded-hidden">
+				$core_v2_language.Truncate($comment.Body('Web'), 100, "...")
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($comment.Url)">$core_v2_language.GetResource('view')</a>
+						</li>
+						#if ($core_v2_comments.CanModifyComment($comment.CommentId))
+							<li class="navigation-list-item">
+								<a href="/" data-messagename="contextual-edit-comment" data-commentid="$comment.CommentId">$core_v2_language.GetResource('edit')</a>
+							</li>
+						#end
+						#if ($core_v2_comments.CanDeleteComment($comment.CommentId))
+							<li class="navigation-list-item">
+								<a href="/" data-messagename="inline-contextual-delete-comment" data-commentid="$comment.CommentId">$core_v2_language.GetResource('delete')</a>
+							</li>
+						#end
+						#set($convert = false)
+                		#set($convert = $core_v2_ui.ConvertContent($comment.CommentId, $comment.CommentContentTypeId))
+                		#if ($convert)
+                		    <li class="navigation-list-item">
+                		        $convert
+                		    </li>
+                		#end
+						#if ($accessingUserIsRegistered)
+							<li class="navigation-list-item">
+								$core_v2_ui.Moderate($comment.CommentId, $comment.CommentContentTypeId)
+							</li>
+						#end
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#nodata
+	#if ($inProcess)
+		<div class="message norecords">$core_v2_language.GetResource('NoResults')</div>
+	#end
+#end

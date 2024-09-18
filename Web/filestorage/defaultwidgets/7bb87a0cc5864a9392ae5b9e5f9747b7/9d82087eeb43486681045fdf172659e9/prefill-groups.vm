@@ -1,0 +1,39 @@
+##
+## Custom Group Bookmark and User Groups callback to support also retrieving resized AvatarHtml over what's possible from REST
+##
+
+$core_v2_page.SetContentType('application/json')
+
+#set ($pageSize = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("pageSize")))
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue("pageIndex")))
+#set ($userId = $core_v2_user.Accessing.Id)
+
+#set ($userGroups = $core_v2_group.List("%{ PageIndex = $pageIndex, PageSize = $pageSize, UserId = $userId, IncludeAllSubGroups = 'true' }"))
+#set ($bookmarkedGroups = $core_v2_bookmark.List("%{ UserId = $userId, PageIndex = $pageIndex, PageSize = $pageSize, ContentTypeIds = $core_v2_group.ContentTypeId.ToString() }"))
+
+{
+	"memberships": [
+#foreach ($group in $userGroups)
+		{
+			"name": "$core_v2_encoding.JavascriptEncode($group.Name)",
+			"id": "$core_v2_encoding.JavascriptEncode($group.ContainerId.ToString())",
+            "avatarHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($group.AvatarUrl, 16, 16, "%{ ResizeMethod = 'ZoomAndCrop', alt = $group.Name }"))",
+            "date": "$core_v2_encoding.JavascriptEncode($core_v2_language.FormatDate($group.CreatedDate, "%{ Format = 'yyyy-MM-ddTHH:mm:ss' }"))"
+		}
+#between
+,
+#end
+	],
+	"bookmarks": [
+#foreach ($bookmark in $bookmarkedGroups)
+		{
+			"name": "$core_v2_encoding.JavascriptEncode($bookmark.Content.HtmlName('Web'))",
+			"id": "$core_v2_encoding.JavascriptEncode($bookmark.Content.ContentId.ToString())",
+            "avatarHtml": "$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($bookmark.Content.AvatarUrl, 16, 16, "%{ ResizeMethod = 'ZoomAndCrop', alt=$bookmark.Content.HtmlName('Web') }"))",
+            "date": "$core_v2_encoding.JavascriptEncode($core_v2_language.FormatDate($bookmark.CreatedDate, "%{ Format = 'yyyy-MM-ddTHH:mm:ss' }"))"
+		}
+#between
+,
+#end
+	]
+}

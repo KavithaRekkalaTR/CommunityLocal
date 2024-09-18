@@ -1,0 +1,367 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Idea_Name}" version="12.0.0.0" description="${resource:Idea_Description}" instanceIdentifier="80fbac27fe0b47bdab294d1d1a91f09f" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="idea-post" lastModified="2020-01-14 16:06:28Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($accessingUserIsRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+#set($group = false)
+#set($group = $core_v2_group.Current)
+
+#set($challenge = $telligentIdeas_v1_challenges.Current)
+
+#set($idea = false)
+#set($idea = $telligentIdeas_v1_ideas.Current)
+
+#if(!$group)
+  $core_v2_widget.Hide()
+#elseif (!$idea || $idea.Application.Id != $challenge.Id)
+  <div class="message error">$core_v2_language.GetResource('IdeaNotFound')</div>
+#else
+
+$telligentIdeas_v1_ideas.IncrementViewCount($idea.Id)
+
+	<div class="content idea-status-notes status-$idea.Status.Key">
+		<div class="idea-status-notes-header">
+			#if ($idea.Status.Key == 'comingsoon')
+				#set ($icon = 'clock')
+			#elseif ($idea.Status.Key == 'complete')
+				#set ($icon = 'check')
+			#elseif ($idea.Status.Key == 'notplanned')
+				#set ($icon = 'cancel-circled')
+			#elseif ($idea.Status.Key == 'underreview')
+				#set ($icon = 'eye')
+			#else
+				#set ($icon = 'light-up')
+			#end
+			<div class="status-name prepend-icon $icon">
+				$idea.Status.Name
+			</div>
+			<div class="attributes">
+				<div class="date">
+					$core_v2_language.FormatAgoDate($idea.CurrentStatus.CreatedDate)
+				</div>
+				<div class="actions">
+					<div class="ui-links navigation-list" data-minlinks="0" data-direction="horizontal" data-maxlinks="0">
+						<ul class="navigation-list">
+							#set($statusUrl = false)
+							#set($statusUrl = $telligentIdeas_v1_urls.AddIdeaStatus($idea.Id, true))
+							#if ($statusUrl)
+								<li class="navigation-list-item">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($statusUrl)">$core_v2_language.GetResource('IdeaLinks_AddIdeaStatus')</a>
+								</li>
+							#end
+
+							#set($statusUrl = false)
+							#set($statusUrl = $telligentIdeas_v1_urls.EditIdeaStatus($idea.Id, $idea.CurrentStatus.Id, true))
+							#if ($statusUrl)
+								<li class="navigation-list-item">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($statusUrl)">$core_v2_language.GetResource('IdeaLinks_EditIdeaStatus')</a>
+								</li>
+							#end
+
+							#if ($telligentIdeas_v1_ideaPermissions.CanManageIdeaStatus($challenge.Id))
+								<li class="navigateion-list-item">
+									<a href="#" data-messagename="ideas.delete-ideastatus" data-ideastatusid="$idea.CurrentStatus.Id" data-ideaid="$idea.Id.ToString()">$core_v2_language.GetResource('IdeaLinks_DeleteIdeaStatus')</a>
+								</li>
+								<script type="text/javascript">
+									jQuery(function() {
+										jQuery.telligent.evolution.messaging.subscribe('ideas.delete-ideastatus', function(data){
+											var ideaStatusId = $(data.target).data('ideastatusid');
+											var ideaId = $(data.target).data('ideaid');
+											if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('VerifyIdeaStatusDeletion'))')) {
+												jQuery.telligent.evolution.del({
+													url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/ideas/status.json',
+													data: {
+														IdeaId: ideaId,
+														IdeaStatusId: ideaStatusId
+													}
+												})
+													.then(function() {
+													   window.location.reload(true);
+													});
+											}
+										});
+									});
+								</script>
+							#end
+
+							#set($statusUrl = false)
+							#set($statusUrl = $telligentIdeas_v1_urls.IdeaStatusHistory($idea.Id, true))
+							#if ($statusUrl)
+								<li class="navigation-list-item">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($statusUrl)">$core_v2_language.GetResource('IdeaLinks_ViewIdeaStatusHistory')</a>
+								</li>
+							#end
+
+							<li class="navigation-list-item">
+								<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+							</li>
+							<li class="navigation-list-item">
+									<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		#if($idea.StatusNotes() && $idea.StatusNotes().Length > 0)
+			<div class="idea-status-notes-content content">$idea.StatusNotes()</div>
+		#end
+	</div>
+
+<div class="content full">
+	$telligentIdeas_v1_ideas.UpDownVoteUI($idea.Id)
+
+	<h1 class="name">$idea.Name</h1>
+
+	<div class="content">$!idea.Description()</div>
+
+#set($Tags = $core_v2_tags.Get($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId, "%{}"))
+#if ($Tags)
+	#foreach ($tag in $Tags)
+	#beforeall
+		<div class="content-tags">
+			<ul class="tag-list">
+	#each
+		#set ($tagUrl = false)
+		#set ($tagUrl = $core_v2_groupUrls.Tags($idea.Challenge.Group.Id, $core_v2_utility.MakeList($tag.TagName)))
+		#if ($tagUrl)
+			<li class="tag-item">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($tagUrl)" rel="tag">$tag.TagName</a>
+			</li>
+		#end
+	#afterall
+			</ul>
+		</div>
+	#end
+#end
+
+<div class="author">
+	#if ($idea.Author)
+		<span class="user-name">
+			#if ($idea.Author.ProfileUrl)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Author.ProfileUrl)" class="internal-link view-user-profile">
+					$idea.Author.DisplayName
+				</a>
+			#else
+				$idea.Author.DisplayName
+			#end
+		</span>
+		<div class="avatar">
+			#if ($idea.Author.ProfileUrl)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($idea.Author.ProfileUrl)">
+					$core_v2_ui.GetResizedImageHtml($idea.Author.AvatarUrl, 32, 32, "%{border='0', alt=$idea.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+				</a>
+			#else
+				$core_v2_ui.GetResizedImageHtml($idea.Author.AvatarUrl, 32, 32, "%{border='0', alt=$idea.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+			#end
+		</div>
+		#end
+</div>
+
+#set($deletePerm  = false)
+#set($deletePerm = $core_v2_permission.Get($telligentIdeas_v1_ideaPermissions.DeleteIdeas,$core_v2_user.Accessing.Id,$idea.Id,$telligentIdeas_v1_ideas.ContentTypeId))
+#set($editPerm = false)
+#set($editPerm = $core_v2_permission.Get($telligentIdeas_v1_ideaPermissions.EditIdeas,$core_v2_user.Accessing.Id,$idea.Id,$telligentIdeas_v1_ideas.ContentTypeId))
+
+#set ($postActionsId = $core_v2_widget.UniqueId("postActions-${post.ContentId}"))
+#set ($canEdit = $editPerm && $editPerm.IsAllowed)
+#set ($canDelete = $deletePerm && $deletePerm.IsAllowed)
+
+#set($categoryName = false)
+#if ($idea.Category || $telligentIdeas_v1_ideaCategories.List($telligentIdeas_v1_challenges.Current.Id).Count > 0)
+	#if ($idea.Category && $idea.Category.Name)
+		#set($categoryName = $idea.Category.Name)
+	#else
+		#set($categoryName = $core_v2_language.GetResource('NotCategorized'))
+	#end
+#end
+
+#set($maxLinks = 1)
+#if ($categoryName)
+	#set($maxLinks = $maxLinks + 1)
+#end
+#if ($canEdit)
+	#set($maxLinks = $maxLinks + 1)
+#end
+
+#set($addStatusUrl = false)
+#set($addStatusUrl = $telligentIdeas_v1_urls.AddIdeaStatus($idea.Id, true))
+#if ($addStatusUrl)
+	#set($maxLinks = $maxLinks + 1)
+#end
+
+<div class="actions">
+	<div class="ui-links navigation-list" data-minlinks="$maxLinks" data-direction="horizontal" data-maxlinks="$maxLinks" id="$core_v2_encoding.HtmlAttributeEncode($postActionsId)">
+		<ul class="navigation-list">
+				<li class="navigation-list-item date">
+					<span class="attribute-value">$core_v2_language.FormatDate($idea.CreatedDate)</span>
+				</li>
+
+				#if ($categoryName)
+					<li class="navigation-list-item date">
+						<span class="attribute-value">$categoryName</span>
+					</li>
+				#end
+
+					#if ($canEdit)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($telligentIdeas_v1_urls.EditIdea($idea.Id, true))" class="internal-link edit-post">$core_v2_language.GetResource("IdeaLinks_EditIdea")</a>
+						</li>
+					#end
+
+					#if ($addStatusUrl)
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($addStatusUrl)" class="internal-link add-status">$core_v2_language.GetResource("IdeaLinks_AddIdeaStatus")</a>
+						</li>
+					#end
+
+					#set($statusHistoryUrl = false)
+					#set($statusHistoryUrl = $telligentIdeas_v1_urls.IdeaStatusHistory($idea.Id, true))
+					#if ($statusHistoryUrl)
+						<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlAttributeEncode($statusHistoryUrl)">$core_v2_language.GetResource('IdeaLinks_ViewIdeaStatusHistory')</a></li>
+					#end
+
+                    #set($voteUrl = false)
+                    #set($voteUrl = $telligentIdeas_v1_urls.ViewIdeaVotes($idea.Id))
+                    #if ($voteUrl)
+                        <li class="navigation-list-item">
+                            <a href="$core_v2_encoding.HtmlAttributeEncode($voteUrl)">$core_v2_language.GetResource('IdeaLinks_Votes')</a>
+                        </li>
+                    #end
+
+					#if ($canDelete)
+						<li class="navigation-list-item"><a href="#" data-messagename="ideaDelete" data-mediaid="$idea.Id" data-challengeid="$idea.Challenge.Id" data-successurl="$core_v2_encoding.HtmlAttributeEncode($telligentIdeas_v1_urls.Ideas($challenge.Id))" id="$core_v2_widget.UniqueId('deletepost')" class="internal-link delete-post">$core_v2_language.GetResource('IdeaLinks_DeleteIdea')</a></li>
+						<script type="text/javascript">
+						jQuery(function(j){
+							j.telligent.evolution.messaging.subscribe('ideaDelete', function(data) {
+								if (window.confirm('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleteidea_confirmation'))'))
+								{
+									jQuery.telligent.evolution.del({
+										url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/ideas/idea.json?Id={Id}',
+										data: {
+											Id: '$idea.Id'
+										},
+										success: function(response) {
+											window.location = j(data.target).data('successurl');
+										},
+										defaultErrorMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleteidea_error'))'
+									});
+								}
+							});
+						});
+						</script>
+					#end
+
+					#set($convert = false)
+                    #set($convert = $core_v2_ui.ConvertContent($idea.ContentId, $idea.ContentTypeId))
+                    #if ($convert)
+                            <li class="navigation-list-item">
+                                    $convert
+                            </li>
+                    #end
+
+					#if($core_v3_feature.CanFeature($idea.ContentId, $idea.ContentTypeId))
+						<li class="navigation-list-item">$core_v2_ui.Feature($idea.ContentId, $idea.ContentTypeId)</li>
+					#end
+
+					#if ($accessingUserIsRegistered)
+						<li class="navigation-list-item">
+							$core_v2_ui.Moderate($idea.ContentId, $telligentIdeas_v1_ideas.ContentTypeId, "%{ }")
+						</li>
+					#end
+
+					#if ($idea && $accessingUserIsRegistered)
+
+						#set($subscription = $core_v2_contentSubscription.Get($idea.Id, "%{IncludeApplicationSubscriptions='false'}"))
+
+						<li class="navigation-list-item">
+							<a class="internal-link idea-comment-subscribe" data-messagename="widget.${core_v2_widget.WrapperElementId}.commentSubscribe" data-ideaid="$idea.Id" data-subscribed="true" href="#" #if(!$subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_CommentUnsubscribe')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a class="internal-link idea-comment-subscribe" data-messagename="widget.${core_v2_widget.WrapperElementId}.commentSubscribe" data-ideaid="$idea.Id" data-subscribed="false" href="#" #if($subscription.IsSubscribed) style="display:none" #end>$core_v2_language.GetResource('IdeaLinks_CommentSubscribe')</a>
+						</li>
+						#registerEndOfPageHtml("widget.${core_v2_widget.WrapperElementId}.commentSubscribe")
+							<script type="text/javascript">
+							jQuery(function(j){
+								function update(value, link) {
+									j.telligent.evolution.post({
+										url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+										data: {
+											typeId: '$telligentIdeas_v1_ideas.CommentSubscriptionTypeId',
+											subscribe: value,
+											ideaId: link.data('ideaid')
+										},
+										dataType: 'json'
+									}).then(function(){
+										if(value) {
+											link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="false"]').hide();
+											link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="true"]').show();
+										} else {
+											link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="false"]').show();
+											link.closest('ul').find('a.idea-comment-subscribe[data-subscribed="true"]').hide();
+										}
+									});
+								}
+								j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.commentSubscribe', function(data){
+									update(!j(data.target).data('subscribed'), j(data.target));
+								});
+							});
+							</script>
+						#end
+					#end
+
+					<li class="navigation-list-item">
+							<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+		</ul>
+	</div>
+	</div>
+</div>
+
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Idea_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Idea_Title}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="by">by</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Comments">Comments</resource>
+  <resource name="deleteidea_confirmation">Are you sure you want to delete this idea?</resource>
+  <resource name="deleteidea_error">An error occurred while attempting to delete this idea.</resource>
+  <resource name="Idea_Description">Displays an idea</resource>
+  <resource name="Idea_Name">Ideas - Idea</resource>
+  <resource name="Idea_Title">Ideas</resource>
+  <resource name="IdeaLinks_AddIdeaStatus">Update Status</resource>
+  <resource name="IdeaLinks_CommentSubscribe">Turn Idea status and comment notifications on</resource>
+  <resource name="IdeaLinks_CommentUnsubscribe">Turn Idea status and comment notifications off</resource>
+  <resource name="IdeaLinks_DeleteIdea">Delete</resource>
+  <resource name="IdeaLinks_DeleteIdeaStatus">Delete Current Status</resource>
+  <resource name="IdeaLinks_EditIdea">Edit</resource>
+  <resource name="IdeaLinks_EditIdeaStatus">Edit Status Note</resource>
+  <resource name="IdeaLinks_ViewIdeaStatusHistory">View Status History</resource>
+  <resource name="IdeaLinks_Votes">View Votes</resource>
+  <resource name="IdeaNotFound">No matching idea was found</resource>
+  <resource name="more">More</resource>
+  <resource name="NotCategorized">Not categorized</resource>
+  <resource name="Options">Options</resource>
+  <resource name="responded">responded:</resource>
+  <resource name="Status">Status:</resource>
+  <resource name="StatusUpdate">Status</resource>
+  <resource name="VerifyIdeaStatusDeletion">Are you sure you want to delete the current status for this idea?</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="17db2a1129bd4739a986e65b09f7f36a" />
+    </requiredContext>
+		<restScopes>
+			<scope id="ideas.ideas.modify" />
+			<scope id="ideas.ideastatuses.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

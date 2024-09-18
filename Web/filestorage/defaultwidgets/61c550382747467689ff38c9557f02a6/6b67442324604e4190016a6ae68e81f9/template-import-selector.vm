@@ -1,0 +1,88 @@
+<div class="managed-item-import-dialog">
+
+	<form>
+		<fieldset>
+			<ul class="field-list">
+
+				<% if((!newThemes || newThemes.length == 0) && (!updatedThemes || updatedThemes.length == 0)) { %>
+
+					<p class="message">$core_v2_language.GetResource('NoImportMessage')</p>
+
+				<% } else { %>
+
+					<span>$core_v2_language.GetResource('ImportInstruction')</span>
+
+					<% if(newThemes && newThemes.length > 0) { %>
+						<li class="field-item managed-items new-themes">
+
+							<label class="field-item-name"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('NewThemes') <% } else { %> $core_v2_language.GetResource('NewThemeResources') <% } %> (<%= newThemes.length %>)</strong></label>
+							<span class="field-item-description">$core_v2_language.GetResource('TheFollowingThemesAreNew')</span>
+							<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+							<% foreach(newThemes, function(theme) { %>
+								<span class="field-item-input managed-item">
+									<input type="checkbox" id="cb<%: theme.Id %>" class="importable-theme" data-request="_tid=<%: theme.Id %>&_ttid=<%: ( theme.TypeId || '') %>&_tt=overview" checked />
+									<label  for="cb<%: theme.Id %>" class="field-item-name ui-tip" data-tip="<%: theme.Description %>">
+										<span class="name"><%: theme.Name %></span>
+										<% if(theme.Description) { %>
+											<span class="theme"><%: theme.Description %></span>
+										<% } %>
+										<% if(theme.TypeName) { %>
+											<span class="theme">(<%: theme.TypeName %>)</span>
+										<% } %>
+									</label>
+								</span>
+							<% }); %>
+						</li>
+					<% } %>
+
+					<% if(updatedThemes && updatedThemes.length > 0) { %>
+						<li class="field-item managed-items updated-themes">
+							<label class="field-item-name"><strong><% if(!resourceOnly) { %> $core_v2_language.GetResource('UpdatedThemes') <% } else { %> $core_v2_language.GetResource('UpdatedThemeResources') <% } %></strong></label>
+							<span class="field-item-description">$core_v2_language.GetResource('UpdatedThemeDesc')</span>
+							<span><a href="#" class="select-all" style="display:none">$core_v2_language.GetResource('SelectAll')</a>  <a href="#" class="de-select-all" style="display:none">$core_v2_language.GetResource('DeselectAll')</a></span>
+							<% foreach(updatedThemes, function(theme) { %>
+								<span class="field-item-input managed-item">
+									<input type="checkbox" id="cb<%: theme.Id %>" class="importable-theme" data-request="_tid=<%: theme.Id %>&_ttid=<%: ( theme.TypeId || '') %>&_tt=overview" checked />
+									<label for="cb<%: theme.Id %>" class="field-item-name ui-tip" data-tip="<%: theme.Description %>">
+										<span class="name"><%: theme.Name %></span>
+										<% if(theme.Description) { %>
+											<span class="theme"><%: theme.Description %></span>
+										<% } %>
+										<% if(theme.TypeName) { %>
+											<span class="theme">(<%: theme.TypeName %>)</span>
+										<% } %>
+									</label>
+								</span>
+							<% }); %>
+						</li>
+					<% } %>
+
+					<% if(matchingThemes && matchingThemes > 0) { %>
+						<li class="field-item">
+							<label class="field-item-name"><strong>$core_v2_language.GetResource('ExistingThemes')</strong></label>
+							<span class="field-item-description">$core_v2_language.GetResource('UnmodifiedCountLabel') <strong><%= (matchingThemes) %></strong></span>
+						</li>
+					<% } %>
+
+					<% if(invalidThemes && invalidThemes > 0) { %>
+						<li class="field-item">
+							<label class="field-item-name"><strong>$core_v2_language.GetResource('InvalidThemes')</strong></label>
+							<span class="field-item-description">$core_v2_language.GetResource('InvalidThemesLabel') <strong><%= (invalidThemes) %></strong></span>
+						</li>
+					<% } %>
+
+					<li class="field-item submit">
+						<span class="field-item-input">
+							<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+						</span>
+						<span class="field-item-input">
+							<a href="#" class="button continue">$core_v2_language.GetResource('Import')</a>
+						</span>
+					</li>
+
+				<% } %>
+
+			</ul>
+		</fieldset>
+	</form>
+</div>

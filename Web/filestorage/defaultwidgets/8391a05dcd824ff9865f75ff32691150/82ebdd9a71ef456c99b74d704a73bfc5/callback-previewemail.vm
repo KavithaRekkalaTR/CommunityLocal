@@ -1,0 +1,25 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+    $core_v2_widget.ExecuteFile('update-templates.vm')
+    
+    #set($language = $core_v2_page.GetFormValue('language'))
+    #set($sendEmail = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('sendEmail')))
+
+    #if ($sendEmail)
+    	#set($response = $context.SendPreviewEmail($language))
+    #else
+        #set($response = $context.PreviewEmail($language))
+    #end
+
+	#if(!$response || $response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success": true
+		#if (!$sendEmail)
+		    ,"preview": $response
+		#end
+	}
+#end

@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Calendar_EventList_Name}" version="13.0.0.0" description="${resource:Calendar_EventList_Description}" instanceIdentifier="cc404397242c47a48b4673081452b109" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="event-list" lastModified="2023-12-01 10:30:19Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($viewType = $core_v2_widget.GetStringValue("viewType", "upcoming"))
+#if ($viewType == 'calendar')
+		<div id="$core_v2_widget.UniqueId('content')">
+		</div>
+		<div id="$core_v2_widget.UniqueId('pager')"></div>
+		#registerEndOfPageHtml('telligent.evolution.Calendar.widgets.eventList')
+			<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+		#end
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+			jQuery(function(j)
+			{
+				j.telligent.evolution.Calendar.widgets.eventList.register({
+					month: $core_v2_utility.CurrentDate.Month,
+					year: $core_v2_utility.CurrentDate.Year,
+					date: '',
+					pageIndexParameter: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)',
+					content: j('#$core_v2_widget.UniqueId('content')'),
+					pager: j('#$core_v2_widget.UniqueId('pager')'),
+					loadingUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-listcalendarevents.vm'))',
+					eventsOnText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EventsOn'))',
+					upcomingEventsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UpcomingEvents'))',
+					wrapper: j('#$core_v2_widget.WrapperElementId')
+				});
+			});
+			//>
+			</script>
+		#end
+#else
+		$core_v2_widget.ExecuteFile('is-sidebar.vm')
+		#if($isInSidebar)
+				$core_v2_widget.ExecuteFile("subview-perform-query.vm")
+				$core_v2_widget.ExecuteFile('sidebar.vm')
+		#else
+				$core_v2_ui.PagedContent('callback-listevents.vm')
+				$core_v2_ui.Pager($events.PageIndex, $events.PageSize, $events.TotalCount)
+		#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Calendar_EventList_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Calendar_EventList_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="viewType" labelResourceName="ViewType" defaultValue="upcoming" dataType="String">
+		<propertyValue value="upcoming" labelResourceName="UpcomingEvents" orderNumber="1000000" propertiesToHide="status" propertiesToShow="maxMonths,maxEvents" />
+		<propertyValue value="myevents" labelResourceName="MyEvents" orderNumber="1000001" propertiesToShow="status,maxMonths,maxEvents" />
+		<propertyValue value="calendar" labelResourceName="View_Calendar" orderNumber="1000002" propertiesToHide="status,maxMonths" propertiesToShow="maxEvents" />
+	</property>
+	<property id="status" labelResourceName="Status" defaultValue="Confirmed" dataType="String">
+		<propertyValue value="Confirmed" labelResourceName="Confirmed" />
+		<propertyValue value="Cancelled" labelResourceName="Cancelled" />
+		<propertyValue value="Invited" labelResourceName="Invited" />
+		<propertyValue value="NotApproved" labelResourceName="NotApproved" />
+	</property>
+	<property id="maxMonths" labelResourceName="calendar_EventLinks_MaxMonths" defaultValue="3" dataType="Int" />
+	<property id="maxEvents" labelResourceName="calendar_EventLinks_MaxEvents" defaultValue="5" dataType="Int" />
+	<property id="selectedCalendarOrGroup" labelResourceName="calendar_SelectGroupAndCalendar" dataType="Custom" template="calendar_v1_calendarLookup" width="95%" maxCalendarSelections="20" includeCurrentGroup="True" format="csv" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="calendar_Edit">Edit</resource>
+  <resource name="calendar_EventLinks_MaxEvents">Events to show</resource>
+  <resource name="calendar_EventLinks_MaxMonths">Months to show</resource>
+  <resource name="Calendar_EventList_Description">Displays list of calendar events</resource>
+  <resource name="Calendar_EventList_Name">Event Calendar - Event List</resource>
+  <resource name="Calendar_EventList_Title">Upcoming Events</resource>
+  <resource name="calendar_SelectGroupAndCalendar">Select group/calendar to pull content from</resource>
+  <resource name="Cancelled">Cancelled</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Clear">Clear...</resource>
+  <resource name="Confirmed">Confirmed</resource>
+  <resource name="EventsOn">Events on {0}</resource>
+  <resource name="Invited">Invited</resource>
+  <resource name="MyEvents">My Events</resource>
+  <resource name="NoData">No upcoming events were found.</resource>
+  <resource name="NoData_Date">No events occur on {0}.</resource>
+  <resource name="NoData_Date_Link">No events occur on {0}. Be the first to &lt;a href="{1}"&gt;add an event&lt;/a&gt;.</resource>
+  <resource name="NoData_Link">No upcoming events were found.  Be the first to &lt;a href="{0}"&gt;add an event&lt;/a&gt;.</resource>
+  <resource name="NoData_Upcoming">No events occur after {0}.</resource>
+  <resource name="NoData_Upcoming_Link">No events occur after {0}. Be the first to &lt;a href="{1}"&gt;add an event&lt;/a&gt;.</resource>
+  <resource name="NotApproved">NotApproved</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Status">Registration Status</resource>
+  <resource name="to">to</resource>
+  <resource name="UpcomingEvents">Events</resource>
+  <resource name="View">View</resource>
+  <resource name="View_Calendar">Synchronize with calendar on the same page</resource>
+  <resource name="ViewType">View Type</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[view-$core_v2_widget.GetStringValue('viewType', 'upcoming')]]></additionalCssScript>
+  </scriptedContentFragment>
+</scriptedContentFragments>

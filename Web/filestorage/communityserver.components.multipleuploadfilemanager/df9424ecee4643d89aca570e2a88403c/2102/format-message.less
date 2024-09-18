@@ -1,0 +1,43 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.message, .button-style.message {
+	clear: both;
+	line-height: @line-height;
+	font-size: @font-size * .9;
+	padding: @spacing;
+	color: -evo-decrease-contrast(@color-foreground, 22%, @color-background, @color-contrast);
+	border: 1px solid -evo-decrease-contrast(@color-background, 14%, @color-foreground, @color-contrast);
+	font-style: italic;
+	.round(3px);
+	a {
+		text-decoration: underline;
+	}
+	&.warning, &.error {
+		font-style: normal;
+		a {
+			color: @color-attention;
+		}
+	}
+	&.error {
+		background-color: -evo-decrease-contrast(@color-accent, 100%, @color-background, @color-contrast);
+		color: @color-attention;
+		border: 1px solid @color-attention;
+	}
+	&.warning {
+		background-color: @color-background;
+		color: @color-foreground;
+		border: 1px solid @color-pending;
+	}
+	&:only-child {
+		margin-top: @spacing;
+	}
+	&.loading {
+		margin-top: @spacing;
+	}
+}

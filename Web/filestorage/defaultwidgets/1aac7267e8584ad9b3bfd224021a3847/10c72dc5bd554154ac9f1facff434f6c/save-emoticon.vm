@@ -1,0 +1,53 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($emoticonId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('EmoticonId')))
+	#set ($collectionId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('CollectionId')))
+
+	#set($name = false)
+	#set($name = $core_v2_page.GetFormValue('Name'))
+
+	#set($shortcut = false)
+	#set($shortcut = $core_v2_page.GetFormValue('Shortcut'))
+
+	#set($enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enabled')))
+
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 1/0
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+
+	#set($options = "%{}")
+
+    #if ($shortcut)
+		$options.Add('Shortcut', $shortcut)
+	#end
+
+	$options.Add('Enabled', $enabled)
+	
+	#if ($fileChanged == '1')
+		#set($file = false)
+		#set($file = $core_v2_uploadedFile.Get($fileContextId, $fileName))
+		#if ($file)
+			$options.Add('FileUploadContext', $fileContextId)
+			$options.Add('FileName', $file.Name)
+		#end
+	#end
+
+	#if ($emoticonId == '00000000-0000-0000-0000-000000000000')
+		#set($response = $context.SaveEmoticon($name, $collectionId, $options))
+	#else
+        #if ($name && $name != '')
+            $options.Add('Name', $name)
+        #end
+
+		#set($response = $context.UpdateEmoticon($emoticonId, $options))
+	#end
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "emoticonId": "$response.Id", "collectionId": "$response.EmoticonCollectionId"}
+#end

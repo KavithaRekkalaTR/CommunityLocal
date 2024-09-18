@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UserProfileFields}" version="11.0.0.0" description="${resource:UserProfileFields_Description}" instanceIdentifier="e936b21c78c34f2c957d8dc8c8087dbf" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2019-06-05 20:01:28Z" provider="e936b21c78c34f2c957d8dc8c8087dbf">
+    <contentScript language="Velocity"><![CDATA[#set($values = false)
+#set($values = $core_v2_page.ParseQueryString($context.Value).Values('Name'))
+
+#if ($context.Editable)
+    #if ($context.SingleSelect)
+        <select id="$context.UniqueId">
+            <option value=""></option>
+            #foreach ($field in $core_v2_userProfileField.List())
+                <option value="$core_v2_encoding.HtmlAttributeEncode($field.Name)" #if($values.Contains($field.Name)) selected="selected"#end>$field.Title</option>
+            #end
+        </select>
+        <script type="text/javascript">
+            jQuery(function() {
+                var api = $context.JsonApi;
+                var i = jQuery('#${context.UniqueId}');
+                var v = function(val) { 
+                    if (typeof val == 'undefined') {
+                        val = i.val();
+                        if (!val || val.length == 0) {
+                            return '';
+                        } else {
+                            return 'Name=' + val;
+                        }
+                    } else {
+                        if (val.indexOf('Name=') == 0) {
+                            val = val.substr(6);
+                        }
+                        i.val(val);
+                    }
+                };
+                api.register({
+                    val: v,
+                    hasValue: function() { return v().length > 0 }
+                });
+                i.on('change', function() { api.changed(i.val()); });
+            });
+        </script>
+    #else
+        <div id="$context.UniqueId">
+            #set($i = 0)
+            #foreach ($field in $core_v2_userProfileField.List())
+                #set($i = $i + 1)
+                #set($id = "${context.UniqueId}_${i}")
+                <div>
+                    <input type="checkbox" name="$id" id="$id" value="$core_v2_encoding.HtmlAttributeEncode($field.Name)" #if($values.Contains($field.Name)) checked="checked"#end />
+                    <label for="$id">$field.Title</label>
+                </div>
+            #end
+        </div>
+        <script type="text/javascript">
+            jQuery(function() {
+                var api = $context.JsonApi,
+                    input = jQuery('#${context.UniqueId}'),
+                    getValue = function() {
+                        if (input.find('input[type="checkbox"]:not(:checked)').length == 0) {
+                            return '';
+                        }
+                        var v = [];
+                        input.find('input[type="checkbox"]:checked').each(function() {
+                            if (v.length > 0) {
+                                v.push('&');
+                            }
+                            v.push('Name=');
+                            v.push(jQuery(this).val());
+                        });
+                        return v.join('');
+                    },
+                    setValue = function(v) {
+                        input.find('input[type="checkbox"]').prop('checked', false);
+                        jQuery.each((v || '').split('&'), function(i, keyValue) {
+                            keyValue = keyValue.split('=');
+                            if (keyValue.length == 2 && keyValue[0] == 'Name') {
+                                input.find('input[type="checkbox"][value="' + keyValue[1] + '"]').prop('checked', true);
+                            }
+                        });
+                    };
+        
+                api.register({
+                    val: function(val) { return (typeof val == 'undefined') ? getValue() : setValue(val); },
+                    hasValue: function() { return getValue() != ''; }
+                });
+            
+                input.on('change', 'input[type="checkbox"]', function(e) {
+                    api.changed(getValue());
+                });    
+            });
+        </script>
+    #end
+#else
+    #if ($values && $values.Count > 0)
+        #set($hasWritten = false)
+        #foreach ($field in $core_v2_userProfileField.List())
+            #if($values.Contains($field.Name))
+                #if ($hasWritten),#end
+                $field.Title
+                #set($hasWritten = true)
+            #end
+        #end
+    #end
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="UserProfileFields">User Profile Fields</resource>
+  <resource name="UserProfileFields_Description">Enables properties to select from available user profile fields.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

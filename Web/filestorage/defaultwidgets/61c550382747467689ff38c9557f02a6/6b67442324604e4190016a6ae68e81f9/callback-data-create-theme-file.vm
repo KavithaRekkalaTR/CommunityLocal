@@ -1,0 +1,36 @@
+##
+## Create Theme File Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+
+	#set ($options = "%{}")
+
+	#set ($idQuery = $core_v2_page.GetFormValue("_w_id"))
+	#if ($idQuery)
+		$options.Add('Id', $idQuery)
+	#end
+
+	#set ($typeIdQuery = $core_v2_page.GetFormValue("_w_typeId"))
+	#if ($typeIdQuery)
+		$options.Add('TypeId', $typeIdQuery)
+	#end
+
+	#set ($typeQuery = $core_v2_page.GetFormValue("_w_type"))
+	#if ($typeQuery)
+		$options.Add('Type', $typeQuery)
+	#end
+
+	#set ($themeFile = $context.CreateThemeFile($options))
+	#if ($themeFile && $themeFile.HasErrors())
+		$core_v2_page.SendJsonError($themeFile.Errors)
+	#end
+
+	#set ($theme = $context.GetTheme($options))
+	#if ($theme && $theme.HasErrors())
+		$core_v2_page.SendJsonError($theme.Errors)
+	#end
+
+	$core_v2_widget.ExecuteFile('callback-sub-serialize-theme-file.vm')
+#end

@@ -1,0 +1,164 @@
+#set($options = "%{}")
+
+#set ($id = $core_v2_page.GetQueryStringValue('fr_id'))
+#if($id)
+    $options.Add('selectedApplications', $id)
+#end
+
+#set ($forum = $context.GetForumSummaryDetailReport($options))
+#if($forum && !$forum.HasErrors())
+    #set ($apiForum = $core_v2_forum.Get($forum.ApplicationId))
+
+    <div class="data">
+        <ul class="report-details">
+            <li class="report-name">
+                #if ($apiForum.Url) <a href="$apiForum.Url">$forum.Name</a> #else $forum.Name #end
+            </li>
+            <li class="report-info">
+                    $core_v2_language.GetResource('in')
+                    #if ($apiForum.Container.Url) <a href="$apiForum.Container.Url">$forum.Container.Name</a> #else $forum.Container.Name #end
+            </li>
+        </ul>
+
+        <table class="forum-data large-data">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>$core_v2_language.GetResource('Last1Day')</th>
+                    <th>$core_v2_language.GetResource('Last3Day')</th>
+                    <th>$core_v2_language.GetResource('Last7Day')</th>
+                    <th>$core_v2_language.GetResource('Last30Day')</th>
+                    <th>$core_v2_language.GetResource('Last90Day')</th>
+                    <th>$core_v2_language.GetResource('Last180Day')</th>
+                </tr>
+            </thead>
+            </tbody>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('ResponseRate'), $core_v2_language.GetResource('ResponseRate_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.ResponseRateLast1Day, $forum.ResponseRate1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.ResponseRateLast3Days, $forum.ResponseRate3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.ResponseRateLast7Days, $forum.ResponseRate7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.ResponseRateLast30Days, $forum.ResponseRate30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.ResponseRateLast90Days, $forum.ResponseRate90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.ResponseRateLast180Days, $forum.ResponseRate180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('SuggestedAnswerRate'), $core_v2_language.GetResource('SuggestedAnswerRate_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.SuggestedAnswerRateLast1Day, $forum.SuggestedAnswerRate1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.SuggestedAnswerRateLast3Days, $forum.SuggestedAnswerRate3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.SuggestedAnswerRateLast7Days, $forum.SuggestedAnswerRate7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.SuggestedAnswerRateLast30Days, $forum.SuggestedAnswerRate30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.SuggestedAnswerRateLast90Days, $forum.SuggestedAnswerRate90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.SuggestedAnswerRateLast180Days, $forum.SuggestedAnswerRate180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('VerifiedAnswerRate'), $core_v2_language.GetResource('VerifiedAnswerRate_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.AnswerRateLast1Day, $forum.AnswerRate1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.AnswerRateLast3Days, $forum.AnswerRate3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.AnswerRateLast7Days, $forum.AnswerRate7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.AnswerRateLast30Days, $forum.AnswerRate30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.AnswerRateLast90Days, $forum.AnswerRate90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.AnswerRateLast180Days, $forum.AnswerRate180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('1DayAnswerRate'), $core_v2_language.GetResource('1DayAnswerRate_Description'))
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.AnswerRate1DayLast30Days, $forum.AnswerRate1Day30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.AnswerRate1DayLast90Days, $forum.AnswerRate1Day90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.AnswerRate1DayLast180Days, $forum.AnswerRate1Day180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('3DayAnswerRate'), $core_v2_language.GetResource('3DayAnswerRate_Description'))
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.AnswerRate3DayLast30Days, $forum.AnswerRate3Day30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.AnswerRate3DayLast90Days, $forum.AnswerRate3Day90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.AnswerRate3DayLast180Days, $forum.AnswerRate3Day180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('7DayAnswerRate'), $core_v2_language.GetResource('7DayAnswerRate_Description'))
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    <td><div class="value">$core_v2_language.GetResource('NA')</div></td>
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.AnswerRate7DayLast30Days, $forum.AnswerRate7Day30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.AnswerRate7DayLast90Days, $forum.AnswerRate7Day90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.AnswerRate7DayLast180Days, $forum.AnswerRate7Day180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('AverageResponseTime'), $core_v2_language.GetResource('AverageResponseTime_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.AverageResponseTimeLast1Day, $forum.AverageResponseTime1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.AverageResponseTimeLast3Days, $forum.AverageResponseTime3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.AverageResponseTimeLast7Days, $forum.AverageResponseTime7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.AverageResponseTimeLast30Days, $forum.AverageResponseTime30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.AverageResponseTimeLast90Days, $forum.AverageResponseTime90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.AverageResponseTimeLast180Days, $forum.AverageResponseTime180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('AverageSuggestedAnswerTime'), $core_v2_language.GetResource('AverageSuggestedAnswerTime_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.AverageSuggestedAnswerTimeLast1Day, $forum.AverageSuggestedAnswerTime1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.AverageSuggestedAnswerTimeLast3Days, $forum.AverageSuggestedAnswerTime3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.AverageSuggestedAnswerTimeLast7Days, $forum.AverageSuggestedAnswerTime7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.AverageSuggestedAnswerTimeLast30Days, $forum.AverageSuggestedAnswerTime30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.AverageSuggestedAnswerTimeLast90Days, $forum.AverageSuggestedAnswerTime90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.AverageSuggestedAnswerTimeLast180Days, $forum.AverageSuggestedAnswerTime180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('AverageAnswerTime'), $core_v2_language.GetResource('AverageAnswerTime_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.AverageAnswerTimeLast1Day, $forum.AverageAnswerTime1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.AverageAnswerTimeLast3Days, $forum.AverageAnswerTime3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.AverageAnswerTimeLast7Days, $forum.AverageAnswerTime7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.AverageAnswerTimeLast30Days, $forum.AverageAnswerTime30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.AverageAnswerTimeLast90Days, $forum.AverageAnswerTime90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.AverageAnswerTimeLast180Days, $forum.AverageAnswerTime180DayTrend)
+                </tr>
+
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewThreads'), $core_v2_language.GetResource('NewThreads_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.NewThreadCountLast1Day, $forum.NewThreadCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.NewThreadCountLast3Days, $forum.NewThreadCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.NewThreadCountLast7Days, $forum.NewThreadCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.NewThreadCountLast30Days, $forum.NewThreadCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.NewThreadCountLast90Days, $forum.NewThreadCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.NewThreadCountLast180Days, $forum.NewThreadCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewReplies'), $core_v2_language.GetResource('NewReplies_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.NewReplyCountLast1Day, $forum.NewReplyCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.NewReplyCountLast3Days, $forum.NewReplyCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.NewReplyCountLast7Days, $forum.NewReplyCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.NewReplyCountLast30Days, $forum.NewReplyCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.NewReplyCountLast90Days, $forum.NewReplyCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.NewReplyCountLast180Days, $forum.NewReplyCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewSuggestedAnswers'), $core_v2_language.GetResource('NewSuggestedAnswers_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.NewSuggestedAnswerCountLast1Day, $forum.NewSuggestedAnswerCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.NewSuggestedAnswerCountLast3Days, $forum.NewSuggestedAnswerCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.NewSuggestedAnswerCountLast7Days, $forum.NewSuggestedAnswerCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.NewSuggestedAnswerCountLast30Days, $forum.NewSuggestedAnswerCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.NewSuggestedAnswerCountLast90Days, $forum.NewSuggestedAnswerCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.NewSuggestedAnswerCountLast180Days, $forum.NewSuggestedAnswerCount180DayTrend)
+                </tr>
+                <tr>
+                    $reporting_ui.LargeTableCellTitleHtml($core_v2_language.GetResource('NewAnswers'), $core_v2_language.GetResource('NewAnswers_Description'))
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last1Day'), $forum.NewAnswerCountLast1Day, $forum.NewAnswerCount1DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last3Day'), $forum.NewAnswerCountLast3Days, $forum.NewAnswerCount3DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last7Day'), $forum.NewAnswerCountLast7Days, $forum.NewAnswerCount7DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last30Day'), $forum.NewAnswerCountLast30Days, $forum.NewAnswerCount30DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last90Day'), $forum.NewAnswerCountLast90Days, $forum.NewAnswerCount90DayTrend)
+                    $reporting_ui.LargeTableCellHtml($core_v2_language.GetResource('Last180Day'), $forum.NewAnswerCountLast180Days, $forum.NewAnswerCount180DayTrend)
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+#else
+    <div class="data">
+        <div class="message error norecords">
+            $core_v2_language.GetResource("Error")
+        </div>
+    </div>
+#end

@@ -1,0 +1,31 @@
+﻿#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set($editPermission = $core_v2_utility.ParseGuid('AF3C88CF-A94D-446B-82CC-1DF974FCD4AA'))
+#set($group = $context.Group)
+
+#set($leaderboards = $core_v2_leaderboard.List("%{ ContainerId = '$context.ContainerId', SortBy = 'Name', SortOrder = 'Ascending', PageSize = $pageSize, PageIndex = $pageIndex, PermissionId = '$core_v2_leaderboard.Permissions.ViewLeaderboard' }"))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($leaderboards.PageIndex + 1) * $leaderboards.PageSize)
+#if ($leaderboards.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" id="$core_v2_encoding.HtmlAttributeEncode($leaderboardsListId)">
+
+#foreach($leaderboard in $leaderboards)
+#each
+	$core_v2_widget.ExecuteFile('listitem.vm')
+#nodata
+	#set($applicationName = '?')
+	#set($application = $core_v2_application.Get($context.ContainerId, $context.ContainerTypeId))
+	#if ($application && !$application.HasErrors())
+		#set($applicationName = $application.HtmlName('Web'))
+	#end
+	<div class="message norecords" data-hasmore="false">
+		$core_v2_language.FormatString($core_v2_language.GetResource('NoRecordsFormat'), $applicationName)
+	</div>
+#end
+
+</ul>

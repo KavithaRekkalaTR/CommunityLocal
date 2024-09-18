@@ -1,0 +1,10 @@
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+    #set($response = $core_v2_user.RequestExport())
+    #if (!$response.HasErrors())
+    	{ "success": true }
+    #else
+    	$core_v2_page.SendJsonError($response.Errors)
+    #end
+#end

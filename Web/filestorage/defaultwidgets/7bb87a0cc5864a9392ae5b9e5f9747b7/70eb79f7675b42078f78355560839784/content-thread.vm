@@ -1,0 +1,248 @@
+#set ($preFocus = false)
+#set ($preFocusQuery = false)
+#set ($preFocusQuery = $core_v2_page.GetQueryStringValue('focus'))
+#if ($preFocusQuery)
+	#set ($preFocus = $core_v2_utility.ParseBool($preFocusQuery))
+#end
+
+#set ($preRenderedWrapperId = $core_v2_widget.UniqueId('preRenderedWrapperId'))
+#set ($editorWrapperWrapperId = $core_v2_widget.UniqueId('editorWrapperWrapper'))
+#set ($editorId = $core_v2_widget.UniqueId('editor'))
+#set ($suggestId = $core_v2_widget.UniqueId('suggest'))
+
+$core_v2_widget.ExecuteFile('templates.vm')
+
+#set ($accessingUserIsAuthor = false)
+#if ($accessingUser.Id == $thread.Author.Id)
+	#set ($accessingUserIsAuthor = true)
+#end
+
+#set ($accessingUserVotedForThread = false)
+#set ($threadVote = false)
+#set ($threadVote = $core_v2_forumThreadVote.Get($thread.Id))
+#if ($threadVote && !$threadVote.HasErrors())
+	#set ($accessingUserVotedForThread = true)
+#end
+
+#set ($accessingUserEffectivelyHasQuestion = false)
+#if ($accessingUserIsAuthor || $accessingUserVotedForThread)
+	#set ($accessingUserEffectivelyHasQuestion = true)
+#end
+
+<div class="threaded-wrapper-outer">
+	<div class="typing-status-wrapper root"></div>
+	<div class="threaded-wrapper #if ($accessingUserEffectivelyHasQuestion) has-question #end" id="$core_v2_encoding.HtmlAttributeEncode($preRenderedWrapperId)">
+		#if ($isFlat)
+			$core_v2_widget.ExecuteFile('flat-thread-init.vm')
+		#else
+			$core_v2_widget.ExecuteFile('pre-rendered.vm')
+		#end
+	</div>
+</div>
+
+#set ($dq = '"')
+<div id="$core_v2_encoding.HtmlAttributeEncode($editorWrapperWrapperId)" style="display:none">
+	<form>
+	#set ($submittableEditorOptions = "%{}")
+	$submittableEditorOptions.Add('ContentTypeId', $core_v2_forumReply.ContentTypeId.ToString())
+	$submittableEditorOptions.Add('Width','100%')
+	$submittableEditorOptions.Add('Height','60px')
+	$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('EnterToSubmitPrompt'))
+	$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('SubmitLabel'))
+	$submittableEditorOptions.Add('EnableEnterToSubmitToggle', false)
+	#set ($fullEditorLink = '')
+	#if ($enableFullEditor)
+		#set ($fullEditorLink = "<a href=${dq}#${dq} data-messagename=${dq}telligent.evolution.widgets.thread.fullEditor${dq} class=${dq}button${dq}>${core_v2_language.GetResource('full_editor')}</a>")
+	#end
+	#if ($thread.ThreadType == 'QuestionAndAnswer')
+		#set ($suggestAnswer = "<span class=${dq}suggest-field${dq}><input type=${dq}checkbox${dq} id=${dq}${suggestId}${dq} class=${dq}suggest${dq} /><label for=${dq}${suggestId}${dq}>${core_v2_language.GetResource('suggest_as_answer')}</label></span>")
+		$submittableEditorOptions.Add('BeforeHtml', "${fullEditorLink}${suggestAnswer}")
+	#else
+		$submittableEditorOptions.Add('BeforeHtml', "${fullEditorLink}")
+	#end
+	$submittableEditorOptions.Add('AutoResize', true)
+	$core_v2_submittableEditor.Render($editorId, "function() { jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.thread.submit', { from: '${core_v2_widget.WrapperElementId}-nested' }); }", $submittableEditorOptions)
+	</form>
+</div>
+
+#set ($deleteForumReplyPanelUrl = $core_v2_urls.DeleteForumReply(0))
+
+#if (!$replyId && $currentReply)
+	#set ($replyId = $currentReply.id)
+#end
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery(function() {
+
+		jQuery.telligent.evolution.widgets.thread.register({
+			flat: #if ($isFlat) true #else false #end,
+			replyId: #if ($replyId) '$replyId' #else null #end,
+			preFocus: #if ($preFocus) true #else false #end,
+			wrapper: '#${core_v2_widget.WrapperElementId}',
+			container: '#${preRenderedWrapperId}',
+			forumId: $forum.Id,
+			threadUrl: '$core_v2_encoding.JavascriptEncode($thread.Url)',
+			threadId: $thread.Id,
+			sortOrder: '$core_v2_encoding.JavascriptEncode($sortOrder)',
+			sortBy: '$core_v2_encoding.JavascriptEncode($sortBy)',
+			filter: #if ($filter) '$core_v2_encoding.JavascriptEncode($filter)' #else null #end,
+			flattenedSortBy: '$core_v2_encoding.JavascriptEncode($flattenedSortBy)',
+			flattenedSortOrder: '$core_v2_encoding.JavascriptEncode($flattenedSortOrder)',
+			flattenedDepth: $flattenedDepth,
+			pageSize: $pageSize,
+			#if ($replyOffsetId)
+				replyOffsetId: $replyOffsetId,
+			#end
+			#if ($replyOffsetDirection)
+				replyOffsetDirection: '$core_v2_encoding.JavascriptEncode($replyOffsetDirection)',
+			#end
+			endlessScroll: #if ($endlessScroll) true #else false #end,
+			includeFooterReplyForm: #if ($includeFooterReplyForm) true #else false #end,
+			highlightNewSeconds: $highlightNewSeconds,
+			listRepliesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-list-replies.vm'))',
+			addReplyUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-add-reply.vm'))',
+			editReplyUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-edit-reply.vm'))',
+			getReplyUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-get-reply.vm'))',
+			advancedReplyUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-advancedreply.vm'))',
+			loadMoreTemplate: '$core_v2_encoding.JavascriptEncode($loadMoreTemplateId)',
+			newRepliesTemplate: '$core_v2_encoding.JavascriptEncode($newRepliesTemplateId)',
+			replyTemplate: '$core_v2_encoding.JavascriptEncode($replyTemplateId)',
+			typingIndicatorTemplate: '$core_v2_encoding.JavascriptEncode($typingIndicatorTemplateId)',
+			replyListTemplate: '$core_v2_encoding.JavascriptEncode($replyListTemplateId)',
+			replyFormTemplate: '$core_v2_encoding.JavascriptEncode($replyFormTemplateId)',
+			deleteForumReplyPanelUrl: '$core_v2_encoding.JavascriptEncode($deleteForumReplyPanelUrl)',
+			loginUrl: '$core_v2_encoding.JavascriptEncode($core_v2_urls.LogIn())',
+			headerTemplate: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			filterWrapper: '#$core_v2_widget.UniqueId('filter')',
+			noRepliesMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noRepliesMessage'))',
+			moreActionsUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-more-reply-actions.vm'))",
+			moreLinkMessage: '$core_v2_encoding.JavascriptEncode("widget.${core_v2_widget.WrapperElementId}.more")',
+			replyEditor: {
+				appendTo: function(container) {
+					$core_v2_submittableEditor.GetMoveScript($editorId, 'container');
+					var contextId = 'forumreply-' + (container.closest('.content-item').data('id') || '');
+				    $core_v2_submittableEditor.SetContextScript($editorId, 'contextId');
+					$core_v2_submittableEditor.GetAttachOnKeyDownScript($editorId, "function(e) { jQuery.telligent.evolution.messaging.publish('widgets.thread.typing', { container: container }) }");
+				},
+				checkedVal: function(val) {
+					if(typeof(val) !== 'undefined') {
+						if(val) {
+							jQuery('#${suggestId}').prop('checked', true);
+						} else {
+							jQuery('#${suggestId}').prop('checked', false);
+						}
+					}
+					return jQuery('#${suggestId}').is(':checked');
+				},
+				remove: function() {
+					// removing the editor technically just moves it back to a hidden location
+					var wrapper = '#$editorWrapperWrapperId';
+					$core_v2_submittableEditor.GetMoveScript($editorId, 'wrapper');
+				},
+				val: function(val) {
+					if (typeof(val) !== 'undefined') {
+						$core_v2_submittableEditor.GetUpdateContentScript($editorId, 'val')
+						return val;
+					}
+					return $core_v2_submittableEditor.GetContentScript($editorId)
+				},
+				focus: function() {
+					$core_v2_submittableEditor.GetFocusScript($editorId)
+				},
+				insert: function(val) {
+					$core_v2_submittableEditor.GetInsertContentScript($editorId, 'val')
+				}
+			},
+			text: {
+				more: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('more'))',
+				peopleWhoVoted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('People_Who_Voted'))',
+				noVotes: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noVotes'))',
+				deleted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('reply_deleted'))'
+			},
+			bestRepliesWrapperId: '$core_v2_encoding.JavascriptEncode($bestRepliesWrapperId)',
+			listBestUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-list-best.vm'))',
+			wrapperId: '$core_v2_widget.WrapperElementId',
+			unlinkUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-unlink.vm'))",
+			pagedMessage: "$core_v2_encoding.JavascriptEncode($core_v2_ui.PagedContentPagedEvent)",
+			replyModerated: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ReplyModerated'))',
+			moreStartLinkMessage: '$core_v2_encoding.JavascriptEncode("widget.${core_v2_widget.WrapperElementId}.threadstart.more")',
+			moreStartActionsUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-more-start-actions.vm'))",
+			muteUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-mute.vm'))",
+			subscribeUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-model-subscribe.vm'))",
+			confirmDeleteThreadMessage: '$core_v2_language.GetResource("Confirm_Delete_Thread")',
+			confirmDeleteReplyMessage: '$core_v2_language.GetResource("Confirm_Delete_Reply")',
+			successMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('success'))',
+			anonBodySelector : '#$core_v2_widget.UniqueId('anonymous-body')',
+			loginSelector: '#$core_v2_widget.UniqueId('login')',
+			forumReplyContentTypeId: '$core_v2_forumReply.ContentTypeId.ToString()',
+			tempBody: '$core_v2_encoding.JavascriptEncode($tempBody)',
+			createWrapperId: '$replyFormId',
+			pagedMessage: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PagedContentPagedEvent)',
+			#if ($thread.LastReadDate && $thread.LastReadDate.Ticks > 0)
+				lastReadDate: '$thread.LastReadDate.Ticks',
+			#else
+				lastReadDate: null,
+			#end
+			createEditor: {
+				attachOnChange: function() {
+					$core_v2_submittableEditor.GetAttachOnKeyDownScript($createEditorId, "function(e) { jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.thread.typing', { from: '$core_v2_widget.WrapperElementId' }) }");
+				},
+				val: function(val) {
+					if (typeof(val) !== 'undefined') {
+						$core_v2_submittableEditor.GetUpdateContentScript($createEditorId, 'val')
+						return val;
+					} else {
+					    return $core_v2_submittableEditor.GetContentScript($createEditorId)
+					}
+				},
+				checkedVal: function(val) {
+					if(typeof(val) !== 'undefined') {
+						if(val) {
+							jQuery('#${createSuggestId}').prop('checked', true);
+						} else {
+							jQuery('#${createSuggestId}').prop('checked', false);
+						}
+					}
+					return jQuery('#${createSuggestId}').is(':checked');
+				},
+				focus: function() {
+					$core_v2_submittableEditor.GetFocusScript($createEditorId)
+				},
+				insert: function(val) {
+					$core_v2_submittableEditor.GetInsertContentScript($createEditorId, 'val')
+				}
+			}
+			#if ($includeFooterReplyForm)
+				,footerCreateEditor: {
+					attachOnChange: function() {
+						$core_v2_submittableEditor.GetAttachOnKeyDownScript($footerCreateEditorId, "function(e) { jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.thread.typing', { from: '$core_v2_widget.WrapperElementId' }) }");
+					},
+					val: function(val) {
+						if (typeof(val) !== 'undefined') {
+							$core_v2_submittableEditor.GetUpdateContentScript($footerCreateEditorId, 'val')
+						}
+						return $core_v2_submittableEditor.GetContentScript($footerCreateEditorId)
+					},
+					checkedVal: function(val) {
+						if(typeof(val) !== 'undefined') {
+							if(val) {
+								jQuery('#${createSuggestId}').prop('checked', true);
+							} else {
+								jQuery('#${createSuggestId}').prop('checked', false);
+							}
+						}
+						return jQuery('#${createSuggestId}').is(':checked');
+					},
+					focus: function() {
+						$core_v2_submittableEditor.GetFocusScript($footerCreateEditorId)
+					},
+					insert: function(val) {
+						$core_v2_submittableEditor.GetInsertContentScript($footerCreateEditorId, 'val')
+					}
+				}
+			#end
+		});
+	});
+	</script>
+#end

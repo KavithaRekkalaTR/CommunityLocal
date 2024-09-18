@@ -1,0 +1,23 @@
+##
+## Rendered API Type Callback
+##
+
+#set ($name = $core_v2_page.GetQueryStringValue("_w_name"))
+
+#set ($fragmentId = false)
+#set ($fragmentIdQuery = $core_v2_page.GetQueryStringValue("_w_fragmentId"))
+#if ($fragmentIdQuery)
+	#set ($fragmentId = $core_v2_utility.ParseGuid($fragmentIdQuery))
+#end
+
+#if ($fragmentId)
+	#set ($extension = $shellApi.GetExtension($name, $fragmentId))
+#else
+	#set ($extension = $shellApi.GetExtension($name))
+#end
+
+$core_v2_page.SetContentType('application/json')
+{
+	"index": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-member-index.vm'))",
+	"member": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('callback-sub-render-api-extension.vm'))"
+}

@@ -1,0 +1,143 @@
+@contrastColor: -evo-themeconfig-unit('backgroundColor', #fff);
+@publishedColor: -evo-decrease-contrast(-evo-themeconfig-color('backgroundColor', #FFFFFF, 10), 30%, -evo-themeconfig-color('foregroundColor', #11171A, 10));
+
+.content-fragment.article-create-edit {
+    .filter {
+        width: 320px;
+        float: right;
+        
+        li {
+            padding: 0; margin: 0;
+
+            .glow-lookuptextbox {
+                width: 320px !important;
+            }
+        }
+    }
+    
+    fieldset { 
+        clear: right;
+    }
+    
+    .message {
+        clear: right;
+        margin: 2em 0;
+    }
+    
+    .field-list.buttons {
+        margin-top: 30px;
+    }
+    
+    .version-list {
+        max-height: 300px;
+        overflow-y: auto;
+        
+        .table-item {
+            .table-header-column {
+                vertical-align: bottom;
+            }
+        
+            .table-column:first-child {
+                padding-right: 0;
+                
+                input[type="checkbox"] {
+                    margin-right: 0;
+                }
+            }
+            
+            .byline {
+                font-size: 80%;
+                color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A, 10), 40%, -evo-themeconfig-color('backgroundColor', #FFFFFF, 10));
+            }
+            
+            .status {
+                -webkit-border-radius: 2px;
+                -moz-border-radius: 2px;
+                border-radius: 2px;
+                -moz-background-clip: padding;
+                -webkit-background-clip: padding-box;
+                background-clip: padding-box;
+                text-transform: uppercase;
+                padding: 2px 4px;
+                font-size: 10px;
+                margin-right: 10px;
+                font-weight: bold;
+                white-space: nowrap;
+                
+                &.published {
+                    background-color: -evo-themeconfig-color('statePositive', #9CCC65, 10);
+                    color: -evo-decrease-contrast(-evo-themeconfig-color('statePositive', #9CCC65, 10), 90%, @contrastColor)
+                }
+                
+                &.readytopublish, &.pendingreview {
+                    background-color: -evo-themeconfig-color('statePending', #FFB300, 10);
+                    color: -evo-decrease-contrast(-evo-themeconfig-color('statePending', #FFB300, 10), 90%, @contrastColor)
+                }
+                
+                &.draft {
+                    background-color: -evo-themeconfig-color('statePending', #FFB300, 10);
+                    color: -evo-decrease-contrast(-evo-themeconfig-color('statePending', #FFB300, 10), 90%, @contrastColor)
+                }
+                
+                &.unpublished {
+                    background-color: @publishedColor;
+                    color: -evo-decrease-contrast(@publishedColor, 90%, @contrastColor)
+                }
+            }
+            
+            .table-column.secondary {
+                color: -evo-decrease-contrast(-evo-themeconfig-color('foregroundColor', #11171A, 10), 40%, -evo-themeconfig-color('backgroundColor', #FFFFFF, 10));
+            }
+        }
+    }
+    
+    .version-actions {
+        .inline-button {
+            margin-right: 10px;
+        }
+    }
+    
+    .history-viewer {
+        margin: 40px 0;
+    }
+    
+    .instructions {
+        margin-bottom: 20px;
+    }
+    
+    .content-list.helpfulness-list  {
+        max-height: 450px;
+        overflow-y: auto;
+
+        > .content-item.helpfulness {
+            padding: 10px 0 0 0;
+            .content.abbreviated {
+                input[type="checkbox"] {
+                    position: relative;
+                    top: 11px;
+                }
+                .actions {
+                    margin: 0;
+                    float: none;
+                    width: auto;
+                    border-width: 0;
+                }
+            }
+        }
+    }
+}
+
+.article-type {
+    padding-left: 40px;
+    min-height: 32px;
+    position: relative;
+    padding-top: 6px;
+    font-size: 14px;
+    .article-type-icon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 32px;
+        height: 32px;
+    }
+}

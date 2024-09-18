@@ -1,0 +1,40 @@
+#set($data = $context.GetConfigurationData())
+#set($propertyHeaderFormat = '<li class="field-item {PropertyDataType}-type" id="{PropertyWrapperId}"><label class="field-item-name">{PropertyName}</label><span class="field-item-description">{PropertyDescription}</span><span class="field-item-input">')
+#set($propertyFooterFormat = '</span></li>')
+#set($groupHeaderFormat = '<div class="group"><h2>{GroupName}</h2><fieldset class="field-list"><ul class="field-list">')
+#set($groupFooterFormat = '</ul></fieldset></div>')
+#set($formId = $core_v2_widget.UniqueId('form'))
+#set($formWrapperId = $core_v2_widget.UniqueId('formwrapper'))
+
+<div id="$formWrapperId">
+    $context.RenderForm($formId, "%{GroupFooterHtmlFormat=$groupFooterFormat,GroupHeaderHtmlFormat=$groupHeaderFormat,PropertyFooterHtmlFormat=$propertyFooterFormat,PropertyHeaderHtmlFormat=$propertyHeaderFormat}")
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.configurablePlugin')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+    jQuery(function(){
+        var groups = [];
+        $('#$formWrapperId div.group > h2').each(function() {
+            var g = $(this).hide();
+            var w = g.parent();
+            w.attr('id', '${formWrapperId}_' + groups.length);
+            groups.push({
+                title: g.html(),
+                id: w.attr('id'),
+                formId: '${formId}'
+            });
+        });
+
+        var api = $context.JsonApi;
+		jQuery.telligent.evolution.widgets.configurablePlugin.register({
+			api: api,
+			type: 'inline',
+			configurationGroups: groups,
+			saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))'
+		});
+	});
+</script>
+#end

@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" instanceIdentifier="04636cebb5ea4c01abdc30ad569ae08d" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="capture-thread-to-article" lastModified="2020-09-14 20:05:37Z" provider="da2b9fcaa77743539877a96a70575e13">
+    <contentScript language="Velocity"><![CDATA[#set($articleCollectionId = false)
+#set($articleCollectionId = $context.ArticleCollectionId)
+
+#set($thread = false)
+#set($thread = $core_v2_forumThread.Get($context.ThreadId))
+#if (!$thread || $thread.HasErrors())
+    <div class="message error">
+    	$core_v2_language.GetResource('ThreadNotFound')
+    </div>
+#else
+    #set($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+	<form><fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<label class="field-item-name">$core_v2_language.GetResource('CaptureThread')</label>
+				<span class="field-item-input">
+					$thread.Subject
+				</span>
+			</li>
+
+			<li class="field-item">
+				<label class="field-item-name">$core_v2_language.GetResource('To')</label>
+				<span class="field-item-input">
+					<input type="text" id="$core_v2_widget.UniqueId('ArticleCollection')" name="$core_v2_widget.UniqueId('ArticleCollection')" />
+				</span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+		</ul>
+	</fieldset></form>
+
+	<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-input">
+						<a href="#" class="button save disabled">$core_v2_language.GetResource('Capture')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</script>
+
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.captureThreadToArticle.register({
+			threadId: '$context.ThreadId',
+			templates: {
+			    header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)'
+			},
+			fields: {
+				articleCollection: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('ArticleCollection'))')
+			},
+			urls: {
+				findArticleCollections:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-findarticlecollections.jsm'))',
+				getCreateArticleUrl:  '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getcreatearticleurl.jsm'))'
+			},
+			text: {
+				noArticleCollectionsFound: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoArticleCollectionsFound'))',
+				findArticleCollection: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FindArticleCollection'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Answer">Answer</resource>
+  <resource name="Capture">Capture</resource>
+  <resource name="CaptureThread">Capture</resource>
+  <resource name="Description">Capture a thread's content to a new article.</resource>
+  <resource name="Discussion">Discussion</resource>
+  <resource name="FindArticleCollection">Find article collection...</resource>
+  <resource name="InvalidArticleCollection">Cannot Author</resource>
+  <resource name="Name">Capture Thread to Article</resource>
+  <resource name="NoArticleCollectionsFound">No matching article collections were found.</resource>
+  <resource name="ThreadNotFound">The requested thread could not be found. It cannot be captured to an article.</resource>
+  <resource name="To">To</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

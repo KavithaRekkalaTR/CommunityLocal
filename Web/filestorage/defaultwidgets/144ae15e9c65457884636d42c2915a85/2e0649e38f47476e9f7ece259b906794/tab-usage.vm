@@ -1,0 +1,83 @@
+<p>$core_v2_language.GetResource('Usage-Instructions')</p>
+
+#set($isOver = false)
+#foreach ($productUsage in $context.GetProductUsage())
+    #foreach($usage in $productUsage.Usages)
+        #if ($usage.IsOver)
+            #set($isOver = true)
+        #end
+    #end
+#end
+
+#if($isOver)
+    <div class="message error">$core_v2_language.GetResource('OverUsageAllowances')</div>
+#end
+
+#foreach ($productUsage in $context.GetProductUsage())
+    #beforeall
+        <ul class="content-list content simple product-usage">
+    #each
+        #set($isOver = false)
+        #foreach($usage in $productUsage.Usages)
+            #if ($usage.IsOver)
+                #set($isOver = true)
+            #end
+        #end
+        <li class="content-item product-usage#if($isOver) over-allowances#end">
+            <div class="expiration #if ($productUsage.ExpiresDate < $core_v2_utility.CurrentDate) expired#end">
+                #if ($productUsage.ExpiresDate)
+                    #if ($productUsage.ExpiresDate < $core_v2_utility.CurrentDate)
+                        $core_v2_language.FormatString($core_v2_language.GetResource('Expired'), $core_v2_language.FormatDate($productUsage.ExpiresDate))
+                    #else
+                        $core_v2_language.FormatString($core_v2_language.GetResource('Expires'), $core_v2_language.FormatDate($productUsage.ExpiresDate))
+                    #end
+                #end
+            </div>
+            <div class="content-container">
+                <h4 class="name">
+                    $productUsage.Name
+                </h4>
+                <div class="content">
+                    #foreach($usage in $productUsage.Usages)
+                        #beforeall
+                            <h5 class="license-label">$core_v2_language.GetResource('Usage')</h5>
+                            <div class="license-attributes">
+                        #each
+                            <span class="license-attribute#if ($usage.IsOver) over-allowance#end ui-tip" title="$usage.Name">
+                                #if ($usage.Percentage && $usage.Percentage < 100)
+                                    <span class="attribute-graph" style="width: ${usage.Percentage}%;"></span>
+                                #end
+                                <span class="attribute-name">$usage.Name</span>
+                                <span class="attribute-value">$usage.Value</span>
+                            </span>
+                        #afterall
+                            </div>
+                    #end
+                    #foreach($capability in $productUsage.Capabilities)
+                        #beforeall
+                            <h5 class="license-label">$core_v2_language.GetResource('Capabilities')</h5>
+                            <div class="license-attributes">
+                        #each
+                            <span class="license-attribute without-value ui-tip" title="$capability.Name">
+                                <span class="attribute-name">$capability.Name</span>
+                            </span>
+                        #afterall
+                            </div>
+                    #end
+                    #foreach($restriction in $productUsage.Restrictions)
+                        #beforeall
+                            <h5 class="license-label">$core_v2_language.GetResource('Restrictions')</h5>
+                            <div class="license-attributes">
+                        #each
+                            <span class="license-attribute without-value ui-tip" title="$restriction.Name">
+                                <span class="attribute-name">$restriction.Name</span>
+                            </span>
+                        #afterall
+                            </div>
+                    #end
+                </div>
+            </div>
+        </li>
+    #afterall
+        </ul>
+#end

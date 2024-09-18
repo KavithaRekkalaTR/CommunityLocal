@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeDocument}" version="11.0.0.0" description="${resource:KnowledgeDocument_Description}" instanceIdentifier="6b5bae2f69544ccaaee4bdc1bf25411a" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="knowledge-document" lastModified="2020-01-14 16:07:43Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($document = false)
+#set($documentId = $core_v2_utility.ParseGuid($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('documentId', '')).Value('DocumentId')))
+#if ($documentId && $documentId.ToString('N') != '00000000000000000000000000000000')
+	#set($document = $km_v1_documents.Get($documentId))
+#else
+	#set ($document = $km_v1_documents.Current)
+#end
+#if (!$document || $document.HasErrors())
+	$core_v2_widget.Hide()
+#end
+
+ $km_v1_documents.MarkAsViewed($document.ContentId)
+
+#set ($collection = false)
+#set($collection = $km_v1_knowledgeCollections.Get($document.KnowledgeCollectionId))
+#if (!$collection || $collection.HasErrors())
+	$core_v2_widget.Hide()
+#end
+
+#set ($body = $document.Body())
+
+<div class="content full without-author text">
+	<h1 class="name">$document.Title</h1>
+	<div class="content">
+		$!body
+
+		#if($document.Attachments && $document.Attachments.Count > 0)
+			#foreach($attachment in $document.Attachments)
+			#beforeall
+				<div class="content-list thumbnail ui-masonry margin-top" data-columnclass="thumbnail-column">
+			#each
+				<div class="content-item content thumbnail" data-hasmore="false" data-url="$core_v2_encoding.HtmlAttributeEncode($attachment.Url)">
+					<div class="avatar">
+						$core_v2_ui.GetPreviewHtml($attachment.Url, "%{ Width = 140 }")
+						</div>
+						<h3 class="name">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($attachment.Url)">$core_v2_encoding.HtmlEncode($attachment.FileName)</a>
+						</h3>
+				</div>
+			#afterall
+				</div>
+			#end
+		#end
+	</div>
+
+	#if ($document.Tags)
+		#foreach ($tag in $document.Tags)
+		#beforeall
+			<div class="content-tags">
+				<ul class="tag-list">
+		#each
+			#set ($tagUrl = false)
+			#set ($tagUrl = $tag.Url)
+			#if ($tagUrl)
+				<li class="tag-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($tagUrl)" rel="tag">$tag.Name</a>
+				</li>
+			#end
+		#afterall
+				</ul>
+			</div>
+		#end
+	#end
+
+	<div class="actions">
+		#set($maxLinks = 1)
+		#set($rating = false)
+		#set($userRating = false)
+		#if ($km_v1_documents.AreRatingsEnabled($document.ContentId))
+			#set($maxLinks = $maxLinks + 1)
+			#set($userRating = $core_v2_rating.Get($document.ContentId, "%{TypeId=$km_v1_documents.HelpfulRatingTypeId}"))
+			#if (!$userRating || $userRating.HasErrors())
+				#set($userRating = false)
+			#end
+			#set($rating = $core_v2_ratedItem.Get($document.ContentId, "%{TypeId=$km_v1_documents.HelpfulRatingTypeId}"))
+			#if ($rating && !$rating.HasErrors() && $rating.Count > 0)
+				#set($rating = $rating.AverageValue * $rating.Count)
+				#set($rating = $rating.ToString('0'))
+				#if ($rating == '0')
+					#set($rating = false)
+				#else
+					#set($maxLinks = $maxLinks + 1)
+				#end
+			#else
+				#set($rating = false)
+			#end
+		#end
+		<div class="ui-links navigation-list" data-minlinks="$maxLinks" data-direction="horizontal" data-maxlinks="$maxLinks">
+			<ul class="navigation-list">
+				#if ($km_v1_documents.AreRatingsEnabled($document.ContentId))
+					<li class="navigation-list-item rating">
+						<span>$core_v2_language.GetResource('was-helpful')</span>
+						<a href="#" data-messagename="knowledgedocument.helpful" data-documentid="$document.ContentId" data-value="1.00" #if ($userRating && $userRating.Value.ToString('0') == '1') class="selected" #end>$core_v2_language.GetResource('helpful-yes')</a>
+						<a href="#" data-messagename="knowledgedocument.helpful" data-documentid="$document.ContentId" data-value="0" data-showfeedback="true" #if ($userRating && $userRating.Value.ToString('0') == '0') class="selected" #end>$core_v2_language.GetResource('helpful-no')</a>
+					</li>
+
+					#if ($rating)
+						<li class="navigation-list-item current-rating">
+							<span>
+								#if ($rating == '1')
+									$core_v2_language.FormatString($core_v2_language.GetResource('foundhelpful-singular'), $rating)
+								#else
+									$core_v2_language.FormatString($core_v2_language.GetResource('foundhelpful-plural'), $rating)
+								#end
+							</span>
+						</li>
+					#end
+				#end
+
+				#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+					#set ($likeFormat = '{toggle} <span class="count"><span class="icon"></span>{count}</span>')
+				#else
+					#set ($likeFormat = '<span class="count"><span class="icon"></span>{count}</span>')
+				#end
+				<li class="navigation-list-item like">
+					$core_v2_ui.Like($document.ContentId, $km_v1_documents.ContentTypeId, "%{ Format = $likeFormat, IncludeTip = 'true' }")
+				</li>
+
+				#set($url = false)
+				#set($url = $core_v2_urls.AddConversation($document.ContentId, $km_v1_documents.ContentTypeId, "%{Modal='False'}"))
+				#if($url)
+					<li class="navigation-list-item"><a href="$core_v2_encoding.HtmlEncode($url)" class="internal-link email-post"><span></span>$core_v2_language.GetResource('share-document')</a></li>
+				#else
+					<li class="navigation-list-item"><a href="mailto:?subject=$document.Title&body=$core_v2_encoding.HtmlAttributeEncode($core_v2_page.AbsoluteUrl($document.Url))" class="internal-link email-post"><span></span>$core_v2_language.GetResource('share-document')</a></li>
+				#end
+
+				#if ($core_v3_feature.CanFeature($document.ContentId, $km_v1_documents.ContentTypeId))
+				  <li class="navigation-list-item">$core_v2_ui.Feature($document.ContentId, $km_v1_documents.ContentTypeId)</li>
+				#end
+
+				<li class="navigation-list-item">
+					<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.knowledgeManagementDocument')
+<script type="text/javascript">
+	jQuery(function() {
+	   jQuery.telligent.evolution.messaging.subscribe('knowledgedocument.helpful', function(data) {
+		 var e = jQuery(data.target);
+		 var contentId = e.data('documentid');
+		 var val = parseFloat(e.data('value'));
+		 var showFeedback = e.data('showfeedback');
+		 if (contentId) {
+			 jQuery.telligent.evolution.post({
+				 url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/ratings.json',
+				 data: {
+					 ContentId: contentId,
+					 ContentTypeId: '$km_v1_documents.ContentTypeId',
+					 TypeId: '$km_v1_documents.HelpfulRatingTypeId',
+					 Value: val
+				 }
+			 }).then(function() {
+				 e.closest('.rating').find('a').removeClass('selected');
+				 e.addClass('selected');
+				 if (showFeedback) {
+					 jQuery.glowModal({
+						 title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('feedback-title'))',
+						 html: jQuery.telligent.evolution.get({
+							 url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('feedback.vm'))',
+							 data: {
+								 w_contentId: contentId
+							 }
+						 })
+					 });
+				 } else {
+					 jQuery.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('rating-successful'))', { type: 'success' });
+				 }
+			 });
+		 }
+	   });
+	});
+</script>
+#end
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:KnowledgeDocument}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:KnowledgeDocument}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="documentId" labelResourceName="Document" descriptionResourceName="Document-Description" defaultValue="DocumentId=00000000000000000000000000000000" dataType="Custom" template="km_v1_documentLookup" enableCurrent="true" maxSelections="1" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Document">Document</resource>
+  <resource name="Document-Description">If specified, the selected document will be shown. Otherwise, the contextual document will be shown if available. Search by keywords, URL, or identifier.</resource>
+  <resource name="feedback-instructions">Could you identify how this document could have been more helpful?</resource>
+  <resource name="feedback-send">Send</resource>
+  <resource name="feedback-title">Feedback</resource>
+  <resource name="foundhelpful-plural">{0} people found this helpful</resource>
+  <resource name="foundhelpful-singular">{0} person found this helpful</resource>
+  <resource name="helpful-no">No</resource>
+  <resource name="helpful-yes">Yes</resource>
+  <resource name="KnowledgeDocument">Knowledge Management - Document</resource>
+  <resource name="KnowledgeDocument_Description">Shows a knowledge document.</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+  <resource name="rating-successful">Thank you for your feedback.</resource>
+  <resource name="share-document">Share</resource>
+  <resource name="was-helpful">Was this helpful?</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="ratings.ratings.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

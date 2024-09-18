@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget_Name}" version="11.0.0.0" description="${resource:Widget_Description}" instanceIdentifier="6855c88ba890454da6cc012e5e76759e" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="contextual-article-releasesets" lastModified="2020-07-17 16:39:20Z" provider="60e8c001f74d44b8be71f97b152cd064">
+    <contentScript language="Velocity"><![CDATA[#set ($pagesListId = $core_v2_widget.UniqueId('pagesListId'))
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+    <fieldset>
+        <ul class="field-list">
+            <li class="field-item">
+                <span class="field-item-input">
+                    <a href="#" class="button add" data-messagename="publishgroups.add">$core_v2_language.GetResource('Add')</a>
+                </span>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<select id="$core_v2_widget.UniqueId('filter')" style="width: 100%;">
+					<option value="active">$core_v2_language.GetResource('Filter_Active')</option>
+					<option value="inactive">$core_v2_language.GetResource('Filter_Inactive')</option>
+					<option value="deleted">$core_v2_language.GetResource('Filter_Deleted')</option>
+				</select>
+			</span>
+		</li>
+		<li class="field-item">
+		    <span class="field-item-input">
+		        <input id="$core_v2_widget.UniqueId('find')" type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Find'))">
+		    </span>
+		</li>
+	</ul>
+</fieldset></form>
+
+$core_v2_widget.ExecuteFile('paged-publishgroups.vm')
+
+#registerEndOfPageHtml('telligent.evolution.widgets.articlePublishGroupManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.articlePublishGroupManagement.register({
+			collectionId: '$context.ArticleCollection.Id',
+			templates: {
+			    header: '$core_v2_encoding.JavascriptEncode($headerTemplateId)'
+			},
+			fields: {
+			  filter: jQuery('#$core_v2_widget.UniqueId('filter')'),
+			  find: jQuery('#$core_v2_widget.UniqueId('find')')
+			},
+			urls: {
+				pagedPublishGroups: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-publishgroups.vm'))',
+				addEditPublishGroup: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('panel-addeditpublishgroup.vm'))',
+				publishUnpublishPublishGroup: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('panel-publishunpublishpublishgroup.vm'))',
+				undeletePublishGroup: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-undeletepublishgroup.jsm'))'
+			},
+			text: {
+			    addPublishGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_Adding'))',
+			    editPublishGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_Editing'))',
+			    noPublishGroups: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoPublishGroupsFound'))',
+			    deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_DeleteConfirmation'))',
+			    deleteSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_DeleteSuccessful'))',
+			    undeleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_UndeleteConfirmation'))',
+			    undeleteSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_UndeleteSuccessful'))',
+			    publishPublishGroupConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_PublishConfirmation'))',
+			    unpublishPublishGroupConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_UnpublishConfirmation'))',
+			    publishPublishGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_Publishing'))',
+			    unpublishPublishGroup: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishGroup_Unpublishing'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">Add</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="Filter_Active">Active Publish Groups</resource>
+  <resource name="Filter_Deleted">Deleted Publish Groups</resource>
+  <resource name="Filter_Inactive">Inactive Publish Groups</resource>
+  <resource name="Find">Find...</resource>
+  <resource name="More">More</resource>
+  <resource name="NoPublishGroupsFound">There are no publish groups matching the filter.</resource>
+  <resource name="PublishGroup_Adding">Add Publish Group</resource>
+  <resource name="PublishGroup_Delete">Delete</resource>
+  <resource name="PublishGroup_DeleteConfirmation">Are you sure you want to delete the {0} publish group?</resource>
+  <resource name="PublishGroup_DeletedDate">Deleted {0}</resource>
+  <resource name="PublishGroup_DeleteSuccessful">The publish group has been deleted.</resource>
+  <resource name="PublishGroup_Description">Contains {0} unpublished and {1} published articles.</resource>
+  <resource name="PublishGroup_Edit">Edit</resource>
+  <resource name="PublishGroup_Editing">Edit {0}</resource>
+  <resource name="PublishGroup_Name">Name</resource>
+  <resource name="PublishGroup_Publish">Publish</resource>
+  <resource name="PublishGroup_PublishConfirmation">Are you sure you want to publish the articles ready for publication in the {0} publish group?</resource>
+  <resource name="PublishGroup_PublishDate">Publish Date</resource>
+  <resource name="PublishGroup_PublishDate_Description">If specified, related articles that are ready for publication will be published automatically on this date.</resource>
+  <resource name="PublishGroup_PublishedDate">Published {0}</resource>
+  <resource name="PublishGroup_Publishing">Publishing {0}...</resource>
+  <resource name="PublishGroup_PublishingDate">Publishing {0}</resource>
+  <resource name="PublishGroup_PublishSuccessful">The publish group has been published successfully.</resource>
+  <resource name="PublishGroup_SaveSuccessful">The publish group was saved successfully.</resource>
+  <resource name="PublishGroup_Undelete">Undelete</resource>
+  <resource name="PublishGroup_UndeleteConfirmation">Are you sure you want to undelete and restore the {0} publish group?</resource>
+  <resource name="PublishGroup_UndeleteSuccessful">The publish group has been undeleted.</resource>
+  <resource name="PublishGroup_Unpublish">Unpublish</resource>
+  <resource name="PublishGroup_UnpublishConfirmation">Are you sure you want to unpublish the articles in the {0} publish group?</resource>
+  <resource name="PublishGroup_UnpublishDate">Unpublish Date</resource>
+  <resource name="PublishGroup_UnpublishDate_Description">If specified, related articles will be automatically unpublished on this date.</resource>
+  <resource name="PublishGroup_Unpublishing">Unpublishing {0}...</resource>
+  <resource name="PublishGroup_UnpublishingDate">Unpublishing {0}</resource>
+  <resource name="PublishGroup_UnpublishSuccessful">The publish group has been unpublished successfully.</resource>
+  <resource name="PublishGroup_ViewArticles">View Articles</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Widget_Description">Manage coordinated article publish groups.</resource>
+  <resource name="Widget_Name">Publish Groups</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+    <restScopes>
+        <scope id="articlecollections.publishgroups.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

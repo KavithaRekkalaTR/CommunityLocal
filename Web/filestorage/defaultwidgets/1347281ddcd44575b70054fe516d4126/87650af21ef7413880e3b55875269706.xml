@@ -1,0 +1,76 @@
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:SplitForumThread_Name}" cssClass="split-forum-thread" description="${resource:SplitForumThread_Description}" instanceIdentifier="87650af21ef7413880e3b55875269706" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+		<![CDATA[
+#set($reply = false)
+#set($reply = $core_v2_forumReply.Get($context.ForumReplyId))
+
+<p>
+	$core_v2_language.GetResource('instructions')
+</p>
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+      <label class="field-item-name">$core_v2_language.GetResource('label_split')</label>
+			<span class="field-item-input">$core_v2_language.FormatString($core_v2_language.GetResource('split_thread'), $reply.Subject, $reply.Author.DisplayName)</span>
+		</li>
+		<li class="field-item" id="$core_v2_widget.UniqueId('forumidcontainer')">
+			<label class="field-item-name" for="$core_v2_widget.UniqueId('forumid')">$core_v2_language.GetResource('label_splitto')</label>
+			<span class="field-item-input"><input type="text" id="$core_v2_widget.UniqueId('forumid')" /></span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('sendemail')" checked="checked" />
+				<label for="$core_v2_widget.UniqueId('sendemail')">$core_v2_language.GetResource('sendemail')</label>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.splitForumThread')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.splitForumThread.register({
+        forumSelectorWrapperId: '$core_v2_widget.UniqueId('forumidcontainer')',
+        forumSelector: jQuery('#$core_v2_widget.UniqueId('forumid')'),
+        replyId: '$reply.Id',
+        sendEmail: jQuery('#$core_v2_widget.UniqueId('sendemail')'),
+        splitUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('split.vm'))',
+        findForumsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-forums.vm'))',
+        text: {
+          noMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noMatches'))',
+          lookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('lookupPlaceholder'))',
+          required: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('required'))',
+          split: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('split'))'
+        }
+			});
+		});
+	</script>
+#end
+
+		]]>
+	</contentScript>
+	<languageResources>
+		<language key="en-us">
+			<resource name="SplitForumThread_Name">Split Question/Discussion</resource>
+			<resource name="SplitForumThread_Description">Splits a question/discussion into multiple questions/discussions.</resource>
+
+      <resource name="instructions">Split a reply and its children into a new question/discussion.</resource>
+      <resource name="label_split">Split</resource>
+      <resource name="split_thread">{0} by {1}</resource>
+      <resource name="label_splitto">Split to forum</resource>
+      <resource name="noMatches">No matching forums were found</resource>
+      <resource name="lookupPlaceholder">Name, ID, or URL...</resource>
+      <resource name="splitSuccessfully">'{0}' was split to '{1}' successfully.</resource>
+      <resource name="sendemail">Notify author by email</resource>
+      <resource name="split">Split</resource>
+      <resource name="required">Required</resource>
+		</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,16 @@
+﻿#foreach ($tag in $event.Tags)
+  #beforeall
+    <div class="content-tags">
+    <ul class="tag-list">
+  #each
+    #set($tagUrl = false)
+    #set($tagUrl = $core_v2_urls.Tags($core_v2_utility.MakeList($tag)))
+    #if ($tagUrl)
+      <li class="tag-item">
+        <a href="$core_v2_encoding.HtmlAttributeEncode($tagUrl)" rel="tag">$tag</a>
+      </li>
+    #end
+  #afterall
+    </ul>
+    </div>
+#end

@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:User_Badges_Name}" version="11.0.0.0" description="${resource:User_Badges_Description}" instanceIdentifier="cff782541ff74ebaa98d2c0f8b3f1c8d" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="user-badges" lastModified="2020-01-14 16:08:57Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($user = false)
+#set ($user = $core_v2_user.Current)
+#if (!$user)
+	$core_v2_widget.Hide()
+#end
+
+#set($roleAvatars = $core_v2_role.List("%{IncludeWithAvatarOnly='True',Include='user',UserId=$user.Id}"))
+#if (!$roleAvatars || $roleAvatars.Count == 0)
+	$core_v2_widget.Hide()
+#end
+
+#foreach ($roleAvatar in $roleAvatars)
+#beforeall
+	<div class="content-list thumbnail ui-masonry margin-top" data-columnclass="thumbnail-column">
+#each
+	<div class="content-item content thumbnail">
+		<div class="avatar">
+			$core_v2_ui.GetResizedImageHtml($roleAvatar.AvatarUrl, 140, 140, "%{alt=$achievement.Title,border='0',ResizeMethod = 'ZoomAndCrop'}")
+		</div>
+		<h3 class="name">
+			$roleAvatar.Name
+		</h3>
+	</div>
+#afterall
+	</div>
+#end
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set ($defaultTitle = $core_v2_language.GetResource('User_Badges_Name'))
+#set ($title = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:User_Badges_Name}')))
+## only attempt to set an automatic user-specific title if a default title is being used
+#if ($title == $defaultTitle)
+	#set ($currentUser = $core_v2_user.Current)
+	#set ($accessingUser = $core_v2_user.Accessing)
+	#if ($currentUser)
+		#if ($accessingUser && $accessingUser.Id == $currentUser.Id)
+			## My Badges
+			#set ($title = $core_v2_language.GetResource('My_Badges'))
+		#else
+			## {Current User}'s Badges
+			#set ($title = $core_v2_language.FormatString($core_v2_language.GetResource('Users_Badges'), $currentUser.DisplayName))
+		#end
+	#end
+#end
+$title
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:User_Badges_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Badges">Badges</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="My_Badges">My Badges</resource>
+  <resource name="Options">Options</resource>
+  <resource name="User_Badges_Description">Displays a user's role and rank badges</resource>
+  <resource name="User_Badges_Name">User - Badges</resource>
+  <resource name="Users_Badges">{0}'s Badges</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="0233cbb383784e11a1e5e541f3b0a795" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

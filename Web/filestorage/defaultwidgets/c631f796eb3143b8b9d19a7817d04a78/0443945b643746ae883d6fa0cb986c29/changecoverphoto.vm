@@ -1,0 +1,96 @@
+#if ($context.UserId < 0)
+	$core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+	$core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('changeCoverPhotoHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button changecoverphoto">$core_v2_language.GetResource('ChangeCoverPhoto')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#if ($user.CoverPhotoUrl)
+	<p>$core_v2_language.GetResource('ChangeCoverPhotoInstructions_CoverPhoto1')</p>
+	$core_v2_ui.GetResizedImageHtml($user.CoverPhotoUrl, 800, 600, "%{OutputIsPersisted='False', alt='$user.DisplayName'}")
+	<p>$core_v2_language.GetResource('ChangeCoverPhotoInstructions_CoverPhoto2')</p>
+#else
+	<p>$core_v2_language.GetResource('ChangeCoverPhotoInstructions')</p>
+#end
+
+<form><fieldset>
+	<ul class="field-list" id="$core_v2_widget.UniqueId('CoverPhotoOptions')">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="radio" name="$core_v2_widget.UniqueId('CoverPhotoOptions')" value="default" id="$core_v2_widget.UniqueId('CoverPhotoOptions_Default')" />
+				<label for="$core_v2_widget.UniqueId('CoverPhotoOptions_Default')">$core_v2_language.GetResource("Field_CoverPhotoOptions_Default")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_CoverPhotoOptions_Default_Desc')</span>
+		</li>
+
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="radio" name="$core_v2_widget.UniqueId('CoverPhotoOptions')" value="upload" id="$core_v2_widget.UniqueId('CoverPhotoOptions_Upload')" />
+				<label for="$core_v2_widget.UniqueId('CoverPhotoOptions_Upload')">$core_v2_language.GetResource("Field_CoverPhotoOptions_Upload")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_CoverPhotoOptions_Upload_Desc')</span>
+			<span class="field-item-input preview options">
+			</span>
+			<span class="field-item-input upload options">
+				<a href="#" class="upload add" id="$core_v2_widget.UniqueId('Upload')">$core_v2_language.GetResource('UploadCoverPhoto')</a>
+				<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveCoverPhoto')</a>
+			</span>
+		</li>
+
+	</ul>
+</fieldset></form>
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+	#set($userTitle = $user.DisplayName)
+	#if ($user.Username != $user.DisplayName)
+		#set($userTitle = "$userTitle ($user.Username)")
+	#end
+#end
+
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationChangeCoverPhoto')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('changecoverphoto.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministrationChangeCoverPhoto.register({
+			userId: $context.UserId,
+			headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+			fields: {
+				options: jQuery('#$core_v2_widget.UniqueId('CoverPhotoOptions')'),
+				upload: jQuery('#$core_v2_widget.UniqueId('Upload')')
+			},
+			urls: {
+				uploadFile : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+				preview: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-upload.vm'))',
+				save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-changecoverphoto.vm'))'
+			},
+			text: {
+				changeCoverPhotoSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('ChangeCoverPhotoSuccessful'), $userTitle))',
+				uploadProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+				uploadChange: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeUploadedAvatar'))',
+				uploadAdd: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadAvatar'))',
+			}
+		});
+	});
+	</script>
+#end

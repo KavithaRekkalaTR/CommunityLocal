@@ -1,0 +1,54 @@
+#set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+<li class="content-item sample-score" style="position:relative;">
+    <div class="sample-value">
+        <div class="value">
+            $api.round($sampleScore.Score.Value)
+        </div>
+        <div class="calculated">
+            #if ($sampleScore.HalfLifeDays && $sampleScore.AgeDays)
+                #set($decayFormat = 'samplescore-decay-singular')
+                #if ($sampleScore.AgeDays != 1)
+                    #set($decayFormat = 'samplescore-decay-plural')
+                #end
+                $core_v2_language.FormatString($core_v2_language.GetResource($decayFormat), $core_v2_language.FormatNumber($sampleScore.AgeDays), $api.round($sampleScore.Decay)),
+            #end
+            $core_v2_language.FormatString($core_v2_language.GetResource('samplescores-caculated'), $core_v2_language.FormatDateAndTime($sampleScore.Score.CalculatedDate))
+        </div>
+    </div>
+	<div class="content-container">
+	    #set($content = false)
+        #set($content = $core_v2_content.Get($sampleScore.Score.ContentId, $sampleScore.Score.ContentTypeId))
+    	<h4 class="name">
+    	    #if ($content && !$content.HasErrors())
+    	        #set($contentName = false)
+    	        #set($contentName = $content.HtmlName('Web'))
+    	        #if (!$contentName || $contentName.Trim().Length == 0)
+    	            #set($contentName = $sampleScore.Score.ContentId.ToString())
+    	        #end
+    	        #if ($content.Url)
+                    <a href="$core_v2_encoding.HtmlAttributeEncode($content.url)" target="_blank">$contentName</a>
+                #else
+                    $contentName
+                #end
+            #else
+                $sampleScore.Score.ContentId
+            #end
+    	</h4>
+    	<div class="content">
+    	    #foreach($metric in $weightedMetrics)
+                #set($value = false)
+                #set($value = $sampleScore.GetMetricValue($metric.Metric.Id))
+                <span class="ui-tip metric-value" title="$metric.Metric.Name" style="background-color: $api.getHeatmapBackgroundHtmlColor($value);">
+                    <span class="metric-name">$metric.Metric.Name</span>
+                    <span class="metric-value">
+                        #if ($value)
+                            $api.round($value)
+                        #else
+                            &nbsp;
+                        #end
+                    </span>
+                </span>
+            #end
+    	</div>
+    </div>
+</li>

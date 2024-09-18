@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UserLinks_Name}" version="12.0.0.0" description="${resource:UserLinks_Description}" instanceIdentifier="7da26916d0dd49598ae6ec754e2d4343" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="user-links" lastModified="2021-09-01 20:11:54Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($links = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('links','Link=editProfile&Link=cancelEditProfile&Link=administer&Link=moderate')))
+#set($hasLinks = false)
+#set($user = $core_v2_user.Current)
+
+#set ($collapse = $core_v2_widget.GetBoolValue('collapsed', false))
+#set ($userLinks = $links.Values('Link'))
+#set ($linksToShow = $userLinks.Count)
+#if ($collapse)
+	#set ($linksToShow = 0)
+#end
+
+#foreach($link in $userLinks)
+	#beforeall
+		<div class="ui-links navigation-list links" data-minlinks="2" data-direction="vertical" data-minlinks="$linksToShow" data-maxlinks="$linksToShow">
+			<ul class="navigation-list">
+	#each
+		#set($url = false)
+		#if ($link == 'editProfile')
+			#set($isEditable = true)
+			#if (!$user || $user.Id != $core_v2_user.Accessing.Id || !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+				#set($isEditable = false)
+			#end
+			#set ($isInEditMode = true)
+			#if (!$isEditable || !$core_v2_editableGroup.IsEditable('User'))
+				#set ($isInEditMode = false)
+			#end
+			#if ($isEditable)
+				#if ($isInEditMode)
+					<li class="navigation-list-item"><a href="#" data-messagename="widget.${core_v2_widget.WrapperElementId}.saveUserProfile" class="internal-link save-user-profile">$core_v2_language.GetResource('saveprofile')</a></li>
+					#registerEndOfPageHtml()
+						<script type="text/javascript">
+						//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+						jQuery(function(j) {
+							j.telligent.evolution.navigationConfirmation.enable();
+
+							j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.saveUserProfile', function(data) {
+								j.telligent.evolution.editableGroup.save('User', {
+									success: function() {
+										j.telligent.evolution.navigationConfirmation.ignoreClick();
+										j.telligent.evolution.notifications.show('$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('save_successful'))', { type: 'success' });
+										window.setTimeout(function() {
+										    window.location = '$core_v2_encoding.JavascriptEncode($core_v2_editableGroup.GetViewUrl('User'))';
+										}, 1000);
+									}
+								});
+
+								return false;
+							});
+						});
+						//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+						</script>
+					#end
+				#else
+					<li class="navigation-list-item" ><a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_editableGroup.GetEditUrl('User'))" $core_v2_tourTip.Render($core_v2_language.GetResource('TourTip'), "%{ CssClass = 'internal-link edit-user-profile' }")>$core_v2_language.GetResource('editprofile')</a></li>
+				#end
+			#end
+			#set($hasLinks = true)
+		#elseif ($link == 'cancelEditProfile')
+			#set($isEditable = true)
+			#if (!$user || $user.Id != $core_v2_user.Accessing.Id || !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+				#set($isEditable = false)
+			#end
+			#set ($isInEditMode = true)
+			#if (!$isEditable || !$core_v2_editableGroup.IsEditable('User'))
+				#set ($isInEditMode = false)
+			#end
+			#if ($isEditable && $isInEditMode)
+				<li class="navigation-list-item"><a href="#" data-messagename="widget.${core_v2_widget.WrapperElementId}.cancelEditUserProfile" class="internal-link cancel">$core_v2_language.GetResource('cancel')</a></li>
+				#registerEndOfPageHtml()
+					<script type="text/javascript">
+					//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+					jQuery(function(j) {
+						j.telligent.evolution.messaging.subscribe('widget.${core_v2_widget.WrapperElementId}.cancelEditUserProfile', function(data) {
+							j.telligent.evolution.navigationConfirmation.ignoreClick();
+							window.location = '$core_v2_encoding.JavascriptEncode($core_v2_editableGroup.GetViewUrl('User'))';
+						});
+					});
+					//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+					</script>
+				#end
+			#end
+			#set($hasLinks = true)
+		#elseif ($link == 'administer')
+			#set($administerUrl = false)
+			#set($administerUrl = $core_v2_urls.EditUser($user.Id))
+			#if ($administerUrl)
+				<li class="navigation-list-item"><a href="$administerUrl">$core_v2_language.GetResource('link_administer')</a></li>
+				#set($hasLinks = true)
+			#end
+		#elseif($link == 'moderate' && $user.Id != $core_v2_user.Accessing.Id && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+			<li class="navigation-list-item inline">
+				$core_v2_ui.Moderate($user.ContentId, $core_v2_user.ContentTypeId, "%{ }")
+			</li>
+			#set($hasLinks = true)
+		#end
+	#afterall
+			 <li class="navigation-list-item">
+					<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+			</ul>
+		</div>
+#end
+
+#if($hasLinks == false)
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:UserLinks_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:UserLinks_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="collapsed" labelResourceName="collapsed" defaultValue="false" dataType="Bool" />
+	<property id="links" labelResourceName="Links" defaultValue="Link=editProfile&amp;Link=cancelEditProfile&amp;Link=administer" dataType="Custom" template="core_v2_sortableList" height="275" key="Link">
+		<propertyValue value="editProfile" labelResourceName="link_editprofile" orderNumber="1000000" />
+		<propertyValue value="cancelEditProfile" labelResourceName="link_canceleditprofile" orderNumber="1000001" />
+		<propertyValue value="administer" labelResourceName="link_administer" orderNumber="1000002" />
+		<propertyValue value="moderate" labelResourceName="link_moderate" orderNumber="1000003" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="collapsed">Collapsed</resource>
+  <resource name="editprofile">Edit Profile</resource>
+  <resource name="link_administer">Administer</resource>
+  <resource name="link_canceleditprofile">Cancel Editing Profile</resource>
+  <resource name="link_editprofile">Edit Profile</resource>
+  <resource name="link_moderate">Report Abuse</resource>
+  <resource name="Links">Select, rearrange, and enable the links to be displayed</resource>
+  <resource name="more">More</resource>
+  <resource name="Options">Options</resource>
+  <resource name="save_successful">Your profile has been saved successfully.</resource>
+  <resource name="saveprofile">Save Profile</resource>
+  <resource name="TourTip">Looks like you haven't updated your profile yet. Click this button and you can share information about yourself with the community and update your photo.</resource>
+  <resource name="UserLinks_Description">Displays links related to a user.</resource>
+  <resource name="UserLinks_Name">User - Links</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

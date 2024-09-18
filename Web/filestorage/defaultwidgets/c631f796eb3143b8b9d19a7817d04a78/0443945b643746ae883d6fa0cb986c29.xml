@@ -1,0 +1,565 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Member_Name}" version="12.0.0.0" description="${resource:Member_Description}" instanceIdentifier="0443945b643746ae883d6fa0cb986c29" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="administer-user" lastModified="2021-10-25 22:20:21Z" provider="c631f796eb3143b8b9d19a7817d04a78">
+    <contentScript language="Velocity"><![CDATA[#if ($context.UserId < 0)
+	$core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+	$core_v2_widget.Hide()
+#end
+
+<div class="tab administration">
+	$core_v2_widget.ExecuteFile('user-administration.vm')
+</div>
+
+<div class="tab profile">
+	$core_v2_widget.ExecuteFile('user-profile.vm')
+</div>
+
+<div class="tab settings">
+	$core_v2_widget.ExecuteFile('user-settings.vm')
+</div>
+
+<div class="tab groups">
+	$core_v2_widget.ExecuteFile('user-groups.vm')
+</div>
+
+<div class="tab roles">
+	$core_v2_widget.ExecuteFile('user-roles.vm')
+</div>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input user-options">
+					<a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+					<div style="float: left; width: 50%">
+						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="3" data-direction="horizontal">
+							<ul>
+							#if ($user.ProfileUrl)
+								<li class="navigation-list-item">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)">$core_v2_language.GetResource('Options_View')</a>
+								</li>
+							#end
+						    #if (!$user.IsSystemAccount)
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.delete" data-userid="$context.UserId">$core_v2_language.GetResource('Options_Delete')</a>
+								</li>
+					        #end
+					        #if ($context.UserIsLocked)
+						        <li class="navigation-list-item">
+						            <a href="#" data-messagename="administeruser.unlock">$core_v2_language.GetResource('Options_Unlock')</a>
+						        </li>
+						    #end
+							#if (!$user.IsSystemAccount && $core_v3_permission.CheckPermission($core_v2_sitePermissions.ImpersonateUser, $core_v2_user.Accessing.Id).IsAllowed)
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.impersonate" data-userid="$context.UserId">$core_v2_language.GetResource('Options_Impersonate')</a>
+								</li>
+							#end
+						    #if (!$user.IsSystemAccount)
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.merge" data-userid="$context.UserId">$core_v2_language.GetResource('Options_Merge')</a>
+								</li>
+					        #end
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.changeavatar" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangeAvatar')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.changecoverphoto" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangeCoverPhoto')</a>
+								</li>
+							#if (!$user.IsSystemAccount)
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.changeusername" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangeUserName')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.changepassword" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangePassword')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.addremovepoints" data-userid="$context.UserId">$core_v2_language.GetResource('Options_AddRemovePoints')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.addtorole" data-userid="$context.UserId">$core_v2_language.GetResource('Options_AddToRole')</a>
+								</li>
+							#end
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.exportuserdata" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ExportUserData')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.forcelogin" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ForceLogin')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</span>
+				<span class="field-item-input role-options">
+				#if(!$user.IsSystemAccount)
+					<a href="#" class="button addtorole" data-messagename="administeruser.addtorole" data-userid="$context.UserId" >$core_v2_language.GetResource('Options_AddToRole')</a>
+				#else
+				    <a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+				#end
+					<div style="float: left; width: 50%">
+						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="3" data-direction="horizontal">
+							<ul>
+							#if ($user.ProfileUrl)
+								<li class="navigation-list-item">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.User($context.UserId))">$core_v2_language.GetResource('Options_View')</a>
+								</li>
+							#end
+							#if (!$user.IsSystemAccount)
+    							<li class="navigation-list-item">
+    								<a href="#" data-messagename="administeruser.delete" data-userid="$context.UserId">$core_v2_language.GetResource('Options_Delete')</a>
+    							</li>
+							#end
+							#if ($context.UserIsLocked)
+    						    <li class="navigation-list-item">
+    						        <a href="#" data-messagename="administeruser.unlock">$core_v2_language.GetResource('Options_Unlock')</a>
+    						    </li>
+                            #end
+							#if (!$user.IsSystemAccount && $core_v3_permission.CheckPermission($core_v2_sitePermissions.ImpersonateUser, $core_v2_user.Accessing.Id).IsAllowed)
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.impersonate" data-userid="$context.UserId">$core_v2_language.GetResource('Options_Impersonate')</a>
+								</li>
+							#end
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.changeavatar" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangeAvatar')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.changecoverphoto" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangeCoverPhoto')</a>
+								</li>
+							#if (!$user.IsSystemAccount)
+    							<li class="navigation-list-item">
+    								<a href="#" data-messagename="administeruser.merge" data-userid="$context.UserId">$core_v2_language.GetResource('Options_Merge')</a>
+    							</li>
+							#end
+							#if (!$user.IsSystemAccount)
+    							<li class="navigation-list-item">
+    								<a href="#" data-messagename="administeruser.changeusername" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangeUserName')</a>
+    							</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.changepassword" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ChangePassword')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.addremovepoints" data-userid="$context.UserId">$core_v2_language.GetResource('Options_AddRemovePoints')</a>
+								</li>
+							#end
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.exportuserdata" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ExportUserData')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administeruser.forcelogin" data-userid="$context.UserId">$core_v2_language.GetResource('Options_ForceLogin')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-more>$core_v2_language.GetResource('more')</a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+
+	#if ($user.IsSystemAccount)
+		<div class="message error">$core_v2_language.GetResource('SystemUserWarning')</div>
+	#end
+	#if ($context.UserIsLocked)
+	    <div class="message warning">$core_v2_language.GetResource('LockedUserWarning')</div>
+	#end
+
+	<ul class="filter">
+		<li class="filter-option selected"><a href="#" data-tab="administration">$core_v2_language.GetResource('Tab_Administration')</a></li>
+		<li class="filter-option"><a href="#" data-tab="profile">$core_v2_language.GetResource('Tab_Profile')</a></li>
+		<li class="filter-option"><a href="#" data-tab="settings">$core_v2_language.GetResource('Tab_Settings')</a></li>
+		<li class="filter-option "><a href="#" data-tab="groups">$core_v2_language.GetResource('Tab_Groups')</a></li>
+		<li class="filter-option "><a href="#" data-tab="roles">$core_v2_language.GetResource('Tab_Roles')</a></li>
+	</ul>
+</script>
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+	#set($userTitle = $user.DisplayName)
+	#if ($user.Username != $user.DisplayName)
+		#set($userTitle = "$userTitle ($user.Username)")
+	#end
+#end
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministration')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministration.register({
+			userId: $context.UserId,
+			userName: '$core_v2_encoding.JavascriptEncode($user.Username)',
+			headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+			avatarHtml: #if ($user.AvatarUrl) '$core_v2_encoding.JavascriptEncode($core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 32, 32, "%{OutputIsPersisted='False',ResizeMethod='ZoomAndCrop', alt='$user.DisplayName'}"))' #else null #end,
+			signatureMaxLength: $core_v2_configuration.SignatureMaxLength,
+			fieldIds: {
+			  accountStatus: '$core_v2_widget.UniqueId('AccountStatus')',
+			  bannedReason: '$core_v2_widget.UniqueId('BannedReason')',
+			  bannedUntil: '$core_v2_widget.UniqueId('BannedUntil')',
+			  moderationLevel: '$core_v2_widget.UniqueId('ModerationLevel')',
+			  isIgnored: '$core_v2_widget.UniqueId('IsIgnored')',
+			  displayName: '$core_v2_widget.UniqueId('DisplayName')',
+			  profileForms: [
+				  $profileFormIds
+			  ],
+			  privateEmail: '$core_v2_widget.UniqueId('PrivateEmail')',
+			  enableEmail: '$core_v2_widget.UniqueId('EnableEmail')',
+			  enableHtmlEmail: '$core_v2_widget.UniqueId('EnableHtmlEmail')',
+			  allowSiteToContact: '$core_v2_widget.UniqueId('AllowSiteToContact')',
+			  allowSitePartnersToContact: '$core_v2_widget.UniqueId('AllowSitePartnersToContact')',
+			  editor: '$core_v2_widget.UniqueId('Editor')',
+			  timezone: '$core_v2_widget.UniqueId('Timezone')',
+			  dateFormat: '$core_v2_widget.UniqueId('DateFormat')',
+			  allowConversationsFrom: '$core_v2_widget.UniqueId('ConversationContactType')',
+			  enablePresenceTracking: '$core_v2_widget.UniqueId('EnablePresenceTracking')',
+			  shareFavorites: '$core_v2_widget.UniqueId('ShareFavorites')',
+			  enableDisplayInMemberList: '$core_v2_widget.UniqueId('EnableDisplayInMemberList')',
+			  enableUserSignatures: '$core_v2_widget.UniqueId('EnableUserSignatures')',
+			  activityVisibility: '$core_v2_widget.UniqueId('ActivityVisibilityOptions')',
+			  verifyBypass: '$core_v2_widget.UniqueId('verifyBypass')',
+			  verifyBypassCallout: '$core_v2_widget.UniqueId('verifyBypassCallout')',
+              noGroupResults: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('nogroupresults'))')
+			},
+			editors: {
+				#if ($core_v2_configuration.EnableSignatures)
+					signature: {
+						getHtml: function() { return $core_v2_editor.GetContentScript('Signature'); },
+						attachChangeScript: function(f) { $core_v2_editor.GetAttachOnChangeScript('Signature', 'f'); },
+						validationId: '$core_v2_widget.UniqueId('SignatureValidation')'
+					},
+				#end
+				biography: {
+					getHtml: function() { return $core_v2_editor.GetContentScript('Biography'); },
+					attachChangeScript: function(f) { $core_v2_editor.GetAttachOnChangeScript('Biography', 'f'); },
+					validationId: '$core_v2_widget.UniqueId('BiographyValidation')'
+				}
+			},
+			urls: {
+				saveStoryLoggingPreference: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-story-logging-preference.vm'))',
+				del: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+				merge: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('merge.vm'))',
+				impersonate: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('impersonate.vm'))',
+				changeavatar: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('changeavatar.vm'))',
+				changecoverphoto: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('changecoverphoto.vm'))',
+				changeusername: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('changeusername.vm'))',
+				changepassword: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('changepassword.vm'))',
+				addremovepoints: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('addremovepoints.vm'))',
+				addtorole: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('addtorole.vm'))',
+				update: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-update.vm'))',
+				unlock: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-unlock.vm'))',
+				exportData: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-exportdata.vm'))',
+				verifyBypass: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('verifyemailwithoutkey.vm'))',
+                listGroups: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-groups.vm'))',
+                listGroupsPending: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-groups-pending.vm'))',
+				refreshGroupMember: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('refresh-groupmember.vm'))',
+				forceLogin: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-forcelogin.vm'))'
+			},
+			text: {
+				signatureTooLong: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Validation_SignatureTooLong'), $core_v2_language.FormatNumber($core_v2_configuration.SignatureMaxLength)))',
+				bannedDateRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validation_BannedDateRequired'))',
+				saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_SaveSuccessful'))',
+				del: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_Delete'), $userTitle))',
+				merge: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_Merge'), $userTitle))',
+				impersonate: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_Impersonate'), $userTitle))',
+				changeavatar: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_ChangeAvatar'), $userTitle))',
+				changecoverphoto: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_ChangeCoverPhoto'), $userTitle))',
+				changeusername: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_ChangeUsername'), $userTitle))',
+				changepassword: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_ChangePassword'), $userTitle))',
+				addremovepoints: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_AddRemovePoints'), $userTitle))',
+				addtorole: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('Title_AddToRole'), $userTitle))',
+				removedFromRoleSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('RemoveMemberFromRoleSuccessful'), $userTitle, '{0}'))',
+				removeMemberFromRoleConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('RemoveMemberFromRoleConfirmation'), $userTitle, '{0}'))',
+				roleMembersCannotBeDeletedAsUsers: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('role-members-cannot-be-deleted-as-users'))',
+				unlockSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Message_UnlockSuccessful'))',
+				exportRequested: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportRequested'))',
+				forceLoginRequested: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ForceLoginRequested'))',
+				verifyBypassConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Verification_Verify_Confirm'))',
+				verifyBypassSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Verification_Verify_Success'))',
+				confirmDeleteGroup: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('confirm-deletegroup'))',
+				userMembershipTypeAffectedByRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('user-membership-type-affected-by-roles'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[#set($user = false)
+#if ($context.UserId > 0)
+	#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#end
+#if ($user && !$user.HasErrors())
+	$user.DisplayName#if ($user.Username != $user.DisplayName) ($user.Username)#end
+#else
+	$core_v2_language.GetResource('Unknown_User')
+#end]]></headerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="accept-user">Accept</resource>
+  <resource name="AccountStatus_ApprovalPending">Pending Approval</resource>
+  <resource name="AccountStatus_Approved">Approved</resource>
+  <resource name="AccountStatus_Banned">Banned</resource>
+  <resource name="AccountStatus_Disapproved">Disapproved</resource>
+  <resource name="AccountStatus_PendingDeletion">Pending Deletion</resource>
+  <resource name="AddRemovePoints">Save</resource>
+  <resource name="AddRemovePointsInstructions">Use this form to adjust points for  member.</resource>
+  <resource name="AddRemovePointsSuccessful">The point adjustment for {0} has been applied successfully.</resource>
+  <resource name="AddRoleSomeSuccessful">{0} has been added to the some of the selected roles successfully.</resource>
+  <resource name="AddRoleSuccessful">{0} has been added to the selected roles successfully.</resource>
+  <resource name="AddToRole">Add</resource>
+  <resource name="AddToRoleInstructions">Add this member to one or more roles to expand their allowed interactions on this site.</resource>
+  <resource name="AlreadyInRole">Already A Member</resource>
+  <resource name="BanReason_Advertising">Advertising</resource>
+  <resource name="BanReason_Aggressive">Aggressive</resource>
+  <resource name="BanReason_BadSignature">Bad signature</resource>
+  <resource name="BanReason_BadUsername">Bad user name</resource>
+  <resource name="BanReason_BanDodging">Ban dodging</resource>
+  <resource name="BanReason_Other">Other</resource>
+  <resource name="BanReason_Profanity">Profanity</resource>
+  <resource name="BanReason_Spam">SPAM</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="ChangeAvatar">Save</resource>
+  <resource name="ChangeAvatarInstructions">Use this form to update this member's avatar.</resource>
+  <resource name="ChangeAvatarInstructions_WithAvatar1">This member's current avatar is:</resource>
+  <resource name="ChangeAvatarInstructions_WithAvatar2">Use this form to update this member's avatar.</resource>
+  <resource name="ChangeAvatarSuccessful">{0}'s avatar has been updated successfully.</resource>
+  <resource name="ChangeCoverPhoto">Save</resource>
+  <resource name="ChangeCoverPhotoInstructions">Use this form to update this member's cover photo.</resource>
+  <resource name="ChangeCoverPhotoInstructions_CoverPhoto1">This member's current cover photo is:</resource>
+  <resource name="ChangeCoverPhotoInstructions_CoverPhoto2">Use this form to update this member's cover photo.</resource>
+  <resource name="ChangeCoverPhotoSuccessful">{0}'s cover photo has been updated successfully.</resource>
+  <resource name="ChangePassword">Save</resource>
+  <resource name="ChangePasswordInstructions">Use this form to change the member's password. When changed, the member will receive an email identifying that the password has changed. You can also &lt;a{0}&gt;send the member an email allowing them to reset their own password&lt;/a&gt;.</resource>
+  <resource name="ChangePasswordSuccessful">{0}'s password has been changed successfully.</resource>
+  <resource name="ChangeUploadedAvatar">Change file</resource>
+  <resource name="ChangeUsername">Save</resource>
+  <resource name="ChangeUsernameInstructions">Use this form to change the member's username. All existing content will continue to be associated to this member.</resource>
+  <resource name="ChangeUsernameSuccessful">{0}'s username is now {1}.</resource>
+  <resource name="confirm-deletegroup">Are you sure you want to remove the member from this group?</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteConfirm">Are you sure you want to delete {0}?</resource>
+  <resource name="DeleteInstructions">To delete this member, select how you would like to handle this member's content. You can choose to reassign it to another user or delete it along with the member.</resource>
+  <resource name="DeleteSuccessful">{0} has been deleted successfully.</resource>
+  <resource name="delete-user">Remove</resource>
+  <resource name="Merge">Merge</resource>
+  <resource name="MergeConfirm">Are you sure you want to merge these members?</resource>
+  <resource name="MergeInstructions">Select which user to merge {0} into.</resource>
+  <resource name="MergeInstructions_Desc">This option should only be used if the user being merged was created mistakenly as a duplicate account of the existing user.  If selected, in addition to content being reassigned to the reassign user, all group memberships, profile data, security roles, conversations, subscriptions, notification settings and friendships will be merged.  Users cannot be merged with system accounts.</resource>
+  <resource name="MergeSuccessful">The member has been merged successfully.</resource>
+  <resource name="MergeInto">Merge into</resource>
+  <resource name="DeSelectAll">Select none</resource>
+  <resource name="EditRole">Edit role</resource>
+  <resource name="edit-to-manager">Change to manager</resource>
+  <resource name="edit-to-member">Change to member</resource>
+  <resource name="edit-to-owner">Change to owner</resource>
+  <resource name="ExportRequested">The member data export has been requested. You will receive a notification when the export is ready to be downloaded.</resource>
+  <resource name="ForceLoginRequested">The member will be forced to sign in on next access.</resource>
+  <resource name="Field_AccountStatus">Account status</resource>
+  <resource name="Field_AccountStatus_Desc">The state of this account. Banned users are temporarily prevented from accessing the site. Disapproved accounts are permanently disabled and do not count against per-seat licenses. To completely remove this member, you can &lt;a{0}&gt;delete them&lt;/a&gt;.</resource>
+  <resource name="Field_AccountStatus_Desc_Basic">The state of this account.</resource>
+  <resource name="Field_AllowConversationsFrom">Allow private messages from</resource>
+  <resource name="Field_AllowConversationsFrom_AllUsers">Everyone</resource>
+  <resource name="Field_AllowConversationsFrom_FriendsOnly">Friends only</resource>
+  <resource name="Field_AllowConversationsFrom_None">No one</resource>
+  <resource name="Field_AllowSitePartnersToContact">Allow site partners to contact</resource>
+  <resource name="Field_AllowSitePartnersToContact_Desc">Shows the member's consent to be contacted by site partners.</resource>
+  <resource name="Field_AllowSiteToContact">Allow site to contact</resource>
+  <resource name="Field_AllowSiteToContact_Desc">Shows the member's consent to be contacted by the site.</resource>
+  <resource name="Field_AvatarOptions_Default">Revert to the default avatar</resource>
+  <resource name="Field_AvatarOptions_Default_Desc">Remove this member's avatar and use the default avatar instead.</resource>
+  <resource name="Field_AvatarOptions_Link">Link to an avatar by URL</resource>
+  <resource name="Field_AvatarOptions_Link_Desc">Use an image stored elsewhere, linked by the image's URL.</resource>
+  <resource name="Field_AvatarOptions_Select">Select an avatar</resource>
+  <resource name="Field_AvatarOptions_Select_Desc">Select an avatar from the site-defined list of available member avatars.</resource>
+  <resource name="Field_AvatarOptions_Upload">Upload an avatar</resource>
+  <resource name="Field_AvatarOptions_Upload_Desc">Upload an avatar from your computer for this member to use.</resource>
+  <resource name="Field_BannedUntil">Banned Until</resource>
+  <resource name="Field_BannedUntil_Desc">The date through which this member will be banned from accessing the site. If you would rather permanently prevent this member from accessing the site, consider setting their account status to 'Disapproved' or &lt;a{0}&gt;deleting their account&lt;/a&gt;.</resource>
+  <resource name="Field_BanReason">Ban Reason</resource>
+  <resource name="Field_BanReason_Desc">The reason for banning this member. This will be visible to the member when they attempt to access the site.</resource>
+  <resource name="Field_Biography">Biography</resource>
+  <resource name="Field_ContentId">Content identifier</resource>
+  <resource name="Field_ContentReassignment">What do you want to do with this member's content?</resource>
+  <resource name="Field_CoverPhotoOptions_Default">Remove cover photo</resource>
+  <resource name="Field_CoverPhotoOptions_Default_Desc">Remove this member's cover photo.</resource>
+  <resource name="Field_CoverPhotoOptions_Upload">Upload a cover photo</resource>
+  <resource name="Field_CoverPhotoOptions_Upload_Desc">Upload a cover photo from your computer for this member to use.</resource>
+  <resource name="Field_CurrentPoints">Current points</resource>
+  <resource name="Field_CurrentPoints_Desc">This member's current point total, for reference.</resource>
+  <resource name="Field_DateFormat">Date format</resource>
+  <resource name="Field_DateFormat_Desc">The member's preferred format for representing dates.</resource>
+  <resource name="Field_DisplayInMemberList">Include in search</resource>
+  <resource name="Field_DisplayInMemberList_Desc">When enabled, this member can be found via search.</resource>
+  <resource name="Field_DisplayName">Display name</resource>
+  <resource name="Field_DisplayName_Desc">The name to show for this member. This can be different than the user name without requiring changing the user name.</resource>
+  <resource name="Field_DoNotReassign">Delete all of this member's content permanently</resource>
+  <resource name="Field_DoNotReassign_Desc">All of this member's content will be deleted. Note that this is done via a background process and will take several minutes to complete.</resource>
+  <resource name="Field_Editor">Content editor</resource>
+  <resource name="Field_Editor_Desc">Select the editor this member should use.</resource>
+  <resource name="Field_EnableEmail">Enable email contact</resource>
+  <resource name="Field_EnableEmail_Desc">When disabled, this user will not receive any emails from the site.</resource>
+  <resource name="Field_EnableHtmlEmail">Enable HTML email</resource>
+  <resource name="Field_EnableHtmlEmail_Desc">For email clients that support rich (HTML) email.</resource>
+  <resource name="Field_EnablePresenceTracking">Enable presence tracking</resource>
+  <resource name="Field_EnablePresenceTracking_Desc">When enabled, other members will be able to see when you're online.</resource>
+  <resource name="Field_EnableUserSignatures">Display user signatures</resource>
+  <resource name="Field_EnableUserSignatures_Desc">When enabled, this member will see other member's signatures within their member information popups.</resource>
+  <resource name="Field_Id">Identifier</resource>
+  <resource name="Field_IgnoreDisallowedNames">Ignore disallowed usernames</resource>
+  <resource name="Field_IgnoreDisallowedNames_Desc">When enabled, username validation logic is bypassed when changing the member's username.</resource>
+  <resource name="Field_IsIgnored">Hide this member's content from other members</resource>
+  <resource name="Field_IsIgnored_Desc">This functionality is currently only supported within the forums application.</resource>
+  <resource name="Field_Joined">Joined</resource>
+  <resource name="Field_LastVisited">Last Visited</resource>
+  <resource name="Field_ModerationLevel">Moderation</resource>
+  <resource name="Field_ModerationLevel_Desc">When moderated, all content created by the member in supporting applications must be approved by a moderator.</resource>
+  <resource name="Field_NewPassword1">New Password</resource>
+  <resource name="Field_NewPassword1_Desc">Enter the member's new password.</resource>
+  <resource name="Field_NewPassword2">Verify New Password</resource>
+  <resource name="Field_NewPassword2_Desc">Enter the new password again to verify that you've typed it correctly.</resource>
+  <resource name="Field_NewUsername">New Username</resource>
+  <resource name="Field_NewUsername_Desc">The new username to associate with this member.</resource>
+  <resource name="Field_Points">Points</resource>
+  <resource name="Field_PointsReason">Reason for point adjustment</resource>
+  <resource name="Field_PointsReason_Desc">The reason for the point adjustment.</resource>
+  <resource name="Field_PointsToAdd">Points to add/remove</resource>
+  <resource name="Field_PointsToAdd_Desc">The number of points to add or remove. Positive values are additions and negative values are removals.</resource>
+  <resource name="Field_Posts">Posts</resource>
+  <resource name="Field_PrivateEmail">Private email address</resource>
+  <resource name="Field_PrivateEmail_Desc">This is the email address used by the site to contact this member.</resource>
+  <resource name="Field_ReassignToFormerMember">Reassign to {0}</resource>
+  <resource name="Field_ReassignToFormerMember_Desc">By reassigning to this system account, the content is preserved while also not artificially benefiting any real user via point or achievement awards.</resource>
+  <resource name="Field_ReassignToUser">Reassign to: </resource>
+  <resource name="Field_ReassignToUser_Desc">Note that assigning content to an existing user will result in the new user being credited with points and/or achievements because of their inherited content.</resource>
+  <resource name="Field_ReassignToUser_Placeholder">Select member...</resource>
+  <resource name="Field_MergeToUser_Placeholder">Select member...</resource>
+  <resource name="Field_RoleToAdd">Roles to add</resource>
+  <resource name="Field_RoleToAdd_Desc">Select one or more roles to which this member should be added .</resource>
+  <resource name="Field_ShareFavorites">Share bookmarks</resource>
+  <resource name="Field_ShareFavorites_Desc">When enabled, other members can view this member's bookmarks.</resource>
+  <resource name="Field_Signature">Signature</resource>
+  <resource name="Field_Signature_Desc">This signature will be shown within this member's information popup.</resource>
+  <resource name="Field_TermsOfServiceAccepted">Terms of Service last accepted</resource>
+  <resource name="Field_Timezone">Time zone</resource>
+  <resource name="Field_Timezone_Desc">The timezone from which this member accesses the site.</resource>
+  <resource name="FieldGroup_ActivityVisibility">Activity visibility</resource>
+  <resource name="FieldGroup_ActivityVisibility_Desc">Only checked activity story types will be created/updated based on actions made by this member.</resource>
+  <resource name="FindAGroup">Find a group...</resource>
+  <resource name="FindARole">Find a role...</resource>
+  <resource name="HasNotAccepted">Has not accepted</resource>
+  <resource name="Impersonate">Impersonate</resource>
+  <resource name="ImpersonateInstructions">Click the "Impersonate" button to start impersonating {0} and using the site as this member.</resource>
+  <resource name="ImpersonateInstructions2">While impersonating, you may have access to some administrative options, such as Tracing, that the member wouldn't normally have access to when not being impersonated.</resource>
+  <resource name="ImpersonateSuccessful">You are now impersonating {0}. You will be redirected to the site home page to start browsing as this user. To stop impersonating, look for the "Stop Impersonating" option where you'd normally log out.</resource>
+  <resource name="LockedUserWarning">This account has been locked due to a high number of incorrect password attempts.</resource>
+  <resource name="ManageGroupMembers">Manage Group Members</resource>
+  <resource name="Member_Description">Manage this member.</resource>
+  <resource name="Member_Name">Member</resource>
+  <resource name="memberships">Memberships</resource>
+  <resource name="memberships-pending">Pending Memberships</resource>
+  <resource name="membershiptype-all">Any Member Type</resource>
+  <resource name="membershiptype-manager">Manager</resource>
+  <resource name="membershiptype-member">Member</resource>
+  <resource name="membershiptype-owner">Owner</resource>
+  <resource name="membershiptype-pending">Pending</resource>
+  <resource name="membershiptype-unknown">Unknown</resource>
+  <resource name="Message_SaveSuccessful">The member changes were saved successfully.</resource>
+  <resource name="Message_UnlockSuccessful">The account has been unlocked.</resource>
+  <resource name="ModerationLevel_Moderated">Moderated</resource>
+  <resource name="ModerationLevel_Unmoderated">Not moderated</resource>
+  <resource name="more">More</resource>
+  <resource name="NeverVisited">Never visited.</resource>
+  <resource name="NoMatchingGroups">No matching groups were found.</resource>
+  <resource name="NoMatchingRoles">No matching roles were found.</resource>
+  <resource name="NoMatchingUsers">No matching members were found.</resource>
+  <resource name="NoSelectableAvatars">No selectable avatars are currently available.</resource>
+  <resource name="Options_AddRemovePoints">Add/remove points</resource>
+  <resource name="Options_AddToRole">Add to role</resource>
+  <resource name="Options_ChangeAvatar">Change avatar</resource>
+  <resource name="Options_ChangeCoverPhoto">Change cover photo</resource>
+  <resource name="Options_ChangePassword">Change password</resource>
+  <resource name="Options_ChangeUserName">Change user name</resource>
+  <resource name="Options_Delete">Delete</resource>
+  <resource name="Options_Merge">Merge into</resource>
+  <resource name="Options_ExportUserData">Export data</resource>
+  <resource name="Options_Impersonate">Impersonate</resource>
+  <resource name="Options_SendPasswordResetEmail">Send password reset email</resource>
+  <resource name="Options_Unlock">Unlock</resource>
+  <resource name="Options_View">View</resource>
+  <resource name="Options_ForceLogin">Force sign in</resource>
+  <resource name="OutOfDate">(out of date)</resource>
+  <resource name="PointCount">{0} point</resource>
+  <resource name="PointsCount">{0} points</resource>
+  <resource name="PostCount">{0} post</resource>
+  <resource name="PostsCount">{0} posts</resource>
+  <resource name="reject-user">Reject</resource>
+  <resource name="RemoveAvatar">Remove file</resource>
+  <resource name="RemoveCoverPhoto">Remove file</resource>
+  <resource name="RemoveMemberFromGroup">Remove member from group</resource>
+  <resource name="RemoveMemberFromGroupConfirmation">Are you sure you want to remove {0} from {1}?</resource>
+  <resource name="RemoveMemberFromGroupSuccessful">{0} has been removed from {1} successfully.</resource>
+  <resource name="RemoveMemberFromRole">Remove member from role</resource>
+  <resource name="RemoveMemberFromRoleConfirmation">Are you sure you want to remove {0} from the {1} role?</resource>
+  <resource name="RemoveMemberFromRoleSuccessful">{0} has been removed from the {1} role successfully.</resource>
+  <resource name="roleanddirectmember">{0} by role and direct membership</resource>
+  <resource name="role-member">{0} by role membership</resource>
+  <resource name="role-members-cannot-be-deleted-as-users">This site member is a member of this group due to their inclusion in a role which itself is a member of this group. This group member cannot be individually removed from this group. Instead, the role's inclusion in this group or the site members inclusion in the role should be changed.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SelectAll">Select all</resource>
+  <resource name="SelectRoles">Find a role...</resource>
+  <resource name="SendPasswordResetEmailConfirmation">Are you sure you want to send this member an email allowing them to reset their password?</resource>
+  <resource name="SendPasswordResetEmailSuccessful">{0} will be sent an email that will allow them to reset their password.</resource>
+  <resource name="SystemUserWarning">This is a system account. Many options are disabled because changes made to system accounts may negatively impact the functionality of this site. Changes are not recommended.</resource>
+  <resource name="Tab_Administration">Administration</resource>
+  <resource name="Tab_Groups">Groups</resource>
+  <resource name="Tab_Profile">Profile</resource>
+  <resource name="Tab_Roles">Roles</resource>
+  <resource name="Tab_Settings">Settings</resource>
+  <resource name="Title_AddRemovePoints">Add/Remove Points for {0}</resource>
+  <resource name="Title_AddToRole">Add {0} to Roles</resource>
+  <resource name="Title_ChangeAvatar">Change {0}'s Avatar</resource>
+  <resource name="Title_ChangeCoverPhoto">Change {0}'s Cover Photo</resource>
+  <resource name="Title_ChangePassword">Change {0}'s Password</resource>
+  <resource name="Title_ChangeUsername">Change {0}'s Username</resource>
+  <resource name="Title_Delete">Delete {0}</resource>
+  <resource name="Title_Merge">Merge Member {0}</resource>
+  <resource name="Title_Impersonate">Impersonate {0}</resource>
+  <resource name="Unknown_User">(User Unknown)</resource>
+  <resource name="UploadAvatar">Select file</resource>
+  <resource name="UploadCoverPhoto">Select file</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="user-membership-type-affected-by-roles">The member's effective membership type was not updated because the member is also included by a role with higher privileges within this group. The highest privilege from all role and direct memberships is the effective membership type.</resource>
+  <resource name="Validation_BannedDateRequired">When banning a member, the banned until date must be after today.</resource>
+  <resource name="Validation_PasswordsDontMatch">The passwords don't match. </resource>
+  <resource name="Validation_PointsRequired">A positive or negative numeric points value is required.</resource>
+  <resource name="Validation_SignatureTooLong">Must be {0} characters or less.</resource>
+  <resource name="Verification_EmailChanging">Change to '{0}' pending verification.</resource>
+  <resource name="Verification_Verify">Verify this change</resource>
+  <resource name="Verification_Verify_Confirm">This will bypass the email verification process for this member, for this email. Continue?</resource>
+  <resource name="Verification_Verify_Success">Email verified.</resource>
+  <resource name="ViewGroup">View</resource>
+  <resource name="ViewIdentifiers">View identifiers</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+			<scope id="points.transactions.modify" />
+			<scope id="users.roles.modify" />
+			<scope id="users.users.modify" />
+			<scope id="groups.users.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,71 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:Widget_Name}" version="9.0.0.1" description="${resource:Widget_Description}" instanceIdentifier="6238486b70f046d49532c18c7626946f" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="webhook-administration">
+		<contentScript>
+<![CDATA[
+
+$core_v2_widget.ExecuteFile('list.vm')
+
+#registerEndOfPageHtml('telligent.evolution.widgets.webhookManagement')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+      jQuery(function(j){
+          jQuery.telligent.evolution.widgets.webhookManagement.register({
+		  	urls: {
+            	editWebhook: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('edit-webhook.vm'))',
+            	deleteWebhook: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete.vm'))',
+            	enable: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('enable-webhook.vm'))'
+  		    },
+			resources: {
+				editWebhook: '$core_v2_language.GetResource('EditWebhook')',
+				addWebhook: '$core_v2_language.GetResource('AddWebhook')',
+				deleteSuccess: '$core_v2_language.GetResource('DeleteSuccess')',
+				confirmDelete: '$core_v2_language.GetResource('Delete_Confirm')',
+				enable: '$core_v2_language.GetResource('Enable')',
+				disable: '$core_v2_language.GetResource('Disable')',
+				enabled: '$core_v2_language.GetResource('Enabled')',
+				disabled: '$core_v2_language.GetResource('Disabled')',
+			}
+          });
+      });
+	</script>
+#end
+]]>
+		</contentScript>
+		<languageResources>
+			<language key="en-us">
+				<resource name="Widget_Name">Webhooks</resource>
+				<resource name="Widget_Description">Register and manage webhooks.</resource>
+				<resource name="AddWebhook">Register Webhook</resource>
+				<resource name="EditWebhook">Edit Webhook</resource>
+				<resource name="WebhookUrl">URL</resource>
+				<resource name="WebhookUrl_Detail">The Url to deliver the message to</resource>
+				<resource name="SecretToken">Event signature private key</resource>
+				<resource name="SecretToken_Detail">Used to validate the X-Webhook-Signature HTTP header against the content of the message using the SHA-256 hash generation algorithm</resource>
+				<resource name="Edit_Hooks">Subscribed Events</resource>
+				<resource name="List_NoWebHooks">No webhooks are registered.</resource>
+				<resource name="Edit">Edit</resource>
+				<resource name="Delete">Unregister</resource>
+				<resource name="Save">Save</resource>
+				<resource name="Cancel">Cancel</resource>
+				<resource name="Delete_Confirm">Are you sure you want to unregister this webhook?</resource>
+				<resource name="DeleteSuccess">Webhook deleted.</resource>
+				<resource name="UpdateSuccess">Webhook changes saved.</resource>
+				<resource name="SaveSuccess">Webhook created.</resource>
+				<resource name="Find">Filter Events</resource>
+				<resource name="Enable">Enable</resource>
+				<resource name="Disable">Disable</resource>
+				<resource name="Enabled">Enabled</resource>
+				<resource name="Disabled">Disabled</resource>
+				<resource name="Enabled_Detail">Messages will not be sent unless the webhook is enabled.</resource>
+				<resource name="UrlRetrying">Unable to send message to remote URL. Please check remote setup to ensure messages can be received. Retrying at {0}.</resource>
+				<resource name="UrlInvalid">Unable to send message to remote URL. Please check remote setup to ensure messages can be received. Once the issue is resolved, disable and re-enable this webhook to resume operation.</resource>
+				<resource name="RegenerateSecret">Regenerate Secret</resource>
+				<resource name="SecretRegenerated">Secret Token has been updated.</resource>
+				<resource name="ShowSample">Show sample message</resource>
+				<resource name="HideSample">Hide sample message</resource>
+			</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

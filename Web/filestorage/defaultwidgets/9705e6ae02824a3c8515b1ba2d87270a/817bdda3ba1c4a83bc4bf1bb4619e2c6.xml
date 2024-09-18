@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PanelName}" version="11.0.0.0" description="${resource:PanelDescription}" instanceIdentifier="817bdda3ba1c4a83bc4bf1bb4619e2c6" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="article-subscribers with-header-filter" lastModified="2020-07-24 21:05:26Z" provider="9705e6ae-0282-4a3c-8515-b1ba2d87270a">
+    <contentScript language="Velocity"><![CDATA[#set ($currentCollection = false)
+#set ($currentCollection = $context.ArticleCollection)
+#set ($currentArticle = $articles_v1_articles.Current)
+
+#if (!$currentCollection)
+	$core_v2_widget.Hide()
+#end
+
+#set ($subscribersListId = $core_v2_widget.UniqueId('subscribersListId'))
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+
+<form><fieldset class="filter-form">
+	<ul class="field-list">
+		<li class="field-item article-filter" #if(!$currentArticle) style="display: none;" #end>
+			<span class="field-item-component">
+				<input type="text" class="filter-article" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-component">
+				<input type="text" class="filter-username" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('findUsername'))">
+			</span>
+		</li>
+		<li class="field-item article-filter" #if(!$currentArticle) style="display: none;" #end>
+			<span class="field-item-component">
+                <select class="filter-subscription-type">
+                    <option value="$articles_v1_subscriptionTypes.ArticleUpdates" selected="selected">$core_v2_language.GetResource('ArticleUpdates')</option>
+                    <option value="$articles_v1_subscriptionTypes.ArticleComments">$core_v2_language.GetResource('ArticleComments')</option>
+                </select>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+<div>
+    <div class="subscribers"><div class="subscriber-total"></div></div>
+    <ul class="content-list content expandable simple" id="$core_v2_encoding.HtmlAttributeEncode($subscribersListId)"></ul>
+    <div class="message norecords" style="display:none;">$core_v2_language.GetResource('NoSubscribers')</div>
+</div>
+
+#set ($csvUrl = "$core_v2_widget.GetExecutedFileUrl('csv-download.vm')&applicationId=$context.applicationId")
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button download-csv">$core_v2_language.GetResource('DownloadCSV')</a>
+				</span>
+			</li>
+		</ul>
+
+		<ul class="filter">
+			<li class="filter-option articles #if($currentArticle) selected #end">
+				<a href="#" data-messagename="contextualArticleSubscribers.filter" data-filter="article">$core_v2_language.GetResource('ArticleSubscriptions')</a>
+			</li>
+			<li class="filter-option collection #if(!$currentArticle) selected #end">
+				<a href="#" data-messagename="contextualArticleSubscribers.filter" data-filter="">$core_v2_language.GetResource('CollectionSubscriptions')</a>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function() {
+	jQuery.telligent.evolution.widgets.articleSubscribersApplicationPanel.register({
+   		headerTemplateId: #if ($csvUrl) '$core_v2_encoding.JavascriptEncode($headerTemplateId)' #else false #end,
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+        filter: jQuery.telligent.evolution.url.hashData().articleId ? 'article' : #if($currentArticle) 'article' #else '' #end,
+        articleId: jQuery.telligent.evolution.url.hashData().articleId ?  jQuery.telligent.evolution.url.hashData().articleId : #if($currentArticle) '$currentArticle.Id' #else undefined #end,
+        articleName: jQuery.telligent.evolution.url.hashData().articleName ?  jQuery.telligent.evolution.url.hashData().articleName : #if($currentArticle)  '$core_v2_encoding.JavaScriptEncode($core_v2_language.Truncate($currentArticle.Title, 50, "..."))' #else undefined #end,
+        data: {
+    		w_applicationId: '$context.ApplicationId'
+        },
+	    urls: {
+			pagedSubscribers: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-subscribers.vm'))',
+    		csvBaseUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('csv-download.vm'))',
+            findArticlesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-articles.vm'))',
+	    },
+		fields: {
+       		subscribersList: '#$core_v2_encoding.JavascriptEncode($subscribersListId)',
+		},
+		text: {
+            subscribers: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Subscribers'))',
+            noMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('noMatches'))',
+            lookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('lookupPlaceholder'))',
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="PanelDescription">View and export article collection subscriber lists.</resource>
+  <resource name="PanelName">Subscribers</resource>
+  <resource name="find">Find an article...</resource>
+  <resource name="findUsername">Filter by username....</resource>
+  <resource name="DownloadCSV">Download CSV</resource>
+  <resource name="Subscribers">Subscribers</resource>
+  <resource name="SubscribersDescription">Members who have subscribed to updates on this article are listed below.  </resource>
+  <resource name="NoSubscribers">No members have subscribed to updates on this article.</resource>
+  <resource name="CollectionSubscriptions">Collection</resource>
+  <resource name="ArticleSubscriptions">Article</resource>
+  <resource name="ArticleComments">Subscribed to new comments</resource>
+  <resource name="ArticleUpdates">Subscribed to article updates</resource>
+  <resource name="ViewUser">View User Profile</resource>
+  <resource name="ApplicationSubscriber">Subscribed to Collection</resource>
+  <resource name="ContentSubscriber">Subscribed to Article</resource>
+  <resource name="SubscriberTotal_Singular">{0} Subscriber</resource>
+  <resource name="SubscriberTotal_Plural">{0} Subscribers</resource>
+  <resource name="noMatches">No matching articles were found</resource>
+  <resource name="lookupPlaceholder">Name, Identifier, or URL...</resource>
+  <resource name="Muted">Muted</resource>
+  <resource name="NoSubscribers">No subscribers found.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

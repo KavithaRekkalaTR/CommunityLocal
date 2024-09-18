@@ -1,0 +1,17 @@
+#if ($selectedAutomationId)
+    #if (!$automationConfigurationData)
+        #set($automationConfigurationData = $core_v2_page.ParseQueryString(''))
+    #end
+    
+    #set($fieldHeader = '<li class="field-item" id="{PropertyWrapperId}"><label for="{PropertyUniqueId}" class="field-item-name">{PropertyName}</label><span class="field-item-description">{PropertyDescription}</span><span class="field-item-input">')
+    #set($fieldFooter = '</span></li>')
+    
+    #set($options = "%{ GroupFooterHtmlFormat = '', GroupHeaderHtmlFormat = '', PropertyFooterHtmlFormat = $fieldFooter, PropertyHeaderHtmlFormat = $fieldHeader, SubGroupFooterHtmlFormat = '', SubGroupHeaderHtmlFormat = '' }")
+    #if ($achievement)
+        $options.Add('AchievementId', $achievement.Id)
+    #elseif ($achievementId)
+        $options.Add('AchievementId', $achievementId)
+    #end
+
+    $context.RenderAutomationConfigurationForm($core_v2_widget.UniqueId('AutomationConfiguration'), $selectedAutomationId, $automationConfigurationData, $options)
+#end

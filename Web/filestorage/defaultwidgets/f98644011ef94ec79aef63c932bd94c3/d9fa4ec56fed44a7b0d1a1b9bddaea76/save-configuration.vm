@@ -1,0 +1,11 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#if ($core_v2_page.GetFormValue('TimeZone'))
+		$core_v2_widget.SetStringValue('TimeZone', $core_v2_page.GetFormValue('TimeZone'))
+	#end
+
+	{
+		"timeZone": "$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetStringValue('TimeZone', $context.SiteTimeZone).ToString())"
+	}
+#end

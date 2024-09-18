@@ -1,0 +1,75 @@
+#if ($context.UserId < 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+    $core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('changeUsernameHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button changeusername">$core_v2_language.GetResource('ChangeUsername')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>$core_v2_language.GetResource('ChangeUsernameInstructions')</p>
+
+#set($userTitle = $core_v2_language.GetResource('Unknown_User'))
+#if ($user)
+    #set($userTitle = $user.DisplayName)
+    #if ($user.Username != $user.DisplayName)
+        #set($userTitle = "$userTitle ($user.Username)")
+    #end
+#end
+
+<form><fieldset>
+    <ul class="field-list">
+		<li class="field-item">
+			<label for="$core_v2_widget.UniqueId('NewUsername')" class="field-item-name">$core_v2_language.GetResource("Field_NewUsername")</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_NewUsername_Desc')</span>
+			<span class="field-item-input">
+				<input type="text" name="$core_v2_widget.UniqueId('NewUsername')" value="" id="$core_v2_widget.UniqueId('NewUsername')" />
+			</span>
+		</li>
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="checkbox" name="$core_v2_widget.UniqueId('IgnoreDisallowedNames')" id="$core_v2_widget.UniqueId('IgnoreDisallowedNames')" />
+				<label for="$core_v2_widget.UniqueId('IgnoreDisallowedNames')">$core_v2_language.GetResource("Field_IgnoreDisallowedNames")</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Field_IgnoreDisallowedNames_Desc')</span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.userAdministrationChangeUsername')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('changeusername.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.userAdministrationChangeUsername.register({
+		    userId: $context.UserId,
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        newUsername: jQuery('#$core_v2_widget.UniqueId('NewUsername')'),
+		        ignoreDisallowedNames: jQuery('#$core_v2_widget.UniqueId('IgnoreDisallowedNames')')
+		    },
+		    urls: {
+		        changeUsername: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-changeusername.vm'))'
+		    },
+		    text: {
+		        changeUsernameSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('ChangeUsernameSuccessful'), $userTitle, '{newusername}'))'
+		    }
+    	});
+	});
+	</script>
+#end

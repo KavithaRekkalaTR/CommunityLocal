@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:CF_UserProfileGroup}" version="11.0.0.0" description="${resource:CF_UserProfileGroupDesc}" instanceIdentifier="945b2ef63bf249da8102a6141fc39ba4" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="user-profile-group-content-fragment" lastModified="2020-01-14 16:08:14Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($readOnly = $core_v2_widget.GetBoolValue('forceReadOnly', false))
+#set($user = false)
+#if($core_v2_widget.GetStringValue('user', 'context') == 'context')
+	#set($user = $core_v2_user.Current)
+#else
+	#set($user = $core_v2_user.Accessing)
+#end
+#if (!$user)
+	$core_v2_widget.Hide()
+#end
+
+#if (!$core_v2_editableGroup.IsEditable('User') || $user.Id != $core_v2_user.Accessing.Id || !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#set($readOnly = true)
+#end
+#set($data = $core_v2_page.ParseQueryString(''))
+#foreach($profileField in $user.ProfileFields)
+	$data.Add($profileField.Label, $core_v2_encoding.HtmlDecode($profileField.Value))
+#end
+
+#store($readonlyPropertyHeaderFormat)
+	<li class="attribute-item">
+		<span class="attribute-name">{PropertyName}$core_v2_language.GetResource('CF_UserProfileGroup_AttributeNameSuffix')</span>
+		<span class="attribute-value">
+#end
+#set($readonlyPropertyFooterFormat = '</span></li>')
+
+#set($editablePropertyHeaderFormat = '<li class="field-item {PropertyDataType}-type"><label class="field-item-name">{PropertyName}</label><span class="field-item-input">')
+#set($editablePropertyFooterFormat = '</span></li>')
+
+#set($mode = $core_v2_widget.GetStringValue('mode', 'MultipleProfileGroups'))
+#if ($mode == 'MultipleProfileFields')
+	$core_v2_widget.ExecuteFile('multiple-fields.vm')
+#else
+	$core_v2_widget.ExecuteFile('multiple-groups.vm')
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:CF_UserProfileGroup}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:CF_UserProfileGroup}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="mode" labelResourceName="mode" defaultValue="MultipleProfileGroups" dataType="String">
+		<propertyValue value="MultipleProfileGroups" labelResourceName="mode_MultipleProfileGroups" orderNumber="1000000" propertiesToShow="profileFieldGroupIds" propertiesToHide="profileFieldIds" />
+		<propertyValue value="MultipleProfileFields" labelResourceName="mode_MultipleProfileFields" orderNumber="1000001" propertiesToShow="profileFieldIds" propertiesToHide="profileFieldGroupIds" />
+	</property>
+	<property id="profileFieldGroupIds" labelResourceName="CF_UserProfileGroup_ProfileFieldGroups" descriptionResourceName="CF_UserProfileGroup_ProfileFieldGroupsDesc" dataType="Custom" template="core_v2_userProfileGroupOrder" key="profileFieldGroupId" enableByDefault="false" />
+	<property id="profileFieldIds" labelResourceName="CF_UserProfileGroup_ProfileFields" descriptionResourceName="CF_UserProfileGroup_ProfileFieldsDesc" dataType="Custom" template="core_v2_userProfileFieldOrder" key="profileFieldId" enableByDefault="false" />
+	<property id="user" labelResourceName="CF_UserProfileGroup_ShowProfileInformationFor" descriptionResourceName="CF_UserProfileGroup_ShowProfileInformationForDesc" defaultValue="context" dataType="String">
+		<propertyValue value="context" labelResourceName="CF_UserProfileGroup_ShowProfileInformationFor_Contextual" />
+		<propertyValue value="accessing" labelResourceName="CF_UserProfileGroup_ShowProfileInformationFor_Accessing" />
+	</property>
+	<property id="forceReadOnly" labelResourceName="CF_UserProfileGroup_ReadOnly" descriptionResourceName="CF_UserProfileGroup_ReadOnlyDesc" defaultValue="false" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="CF_UserProfileGroup">User Profile Fields</resource>
+  <resource name="CF_UserProfileGroup_AttributeNameSuffix">:</resource>
+  <resource name="CF_UserProfileGroup_ProfileFieldGroups">Profile Field Groups</resource>
+  <resource name="CF_UserProfileGroup_ProfileFieldGroupsDesc">Select and order the profile groups that should be shown together.</resource>
+  <resource name="CF_UserProfileGroup_ProfileFields">Profile Fields</resource>
+  <resource name="CF_UserProfileGroup_ProfileFieldsDesc">Select one or more profile fields.</resource>
+  <resource name="CF_UserProfileGroup_ReadOnly">Read Only</resource>
+  <resource name="CF_UserProfileGroup_ReadOnlyDesc">If checked, field data will not be editable. If unchecked, the user whose data is shown will be able to change it.</resource>
+  <resource name="CF_UserProfileGroup_ShowProfileInformationFor">Show Profile Information For</resource>
+  <resource name="CF_UserProfileGroup_ShowProfileInformationFor_Accessing">Accessing User</resource>
+  <resource name="CF_UserProfileGroup_ShowProfileInformationFor_Contextual">Contextual User</resource>
+  <resource name="CF_UserProfileGroup_ShowProfileInformationForDesc">Select which user to display profile data for.</resource>
+  <resource name="CF_UserProfileGroupDesc">Displays a group of user profile fields.</resource>
+  <resource name="EditProfile_UnverifiedEmailDesc">Your recent public email address change ({0}) is &lt;a href="{1}"&gt;pending verification&lt;/a&gt;.</resource>
+  <resource name="mode">View</resource>
+  <resource name="mode_MultipleProfileFields">Selected profile fields</resource>
+  <resource name="mode_MultipleProfileGroups">Selected profile field groups</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[#if($core_v2_widget.GetStringValue('user', 'context') == 'context')
+	#set($user = $core_v2_user.Current)
+#else
+	#set($user = $core_v2_user.Accessing)
+#end
+#if ($core_v2_editableGroup.IsEditable('User') && !$core_v2_widget.GetBoolValue('forceReadOnly', false) && $user.Id == $core_v2_user.Accessing.Id && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	editable
+#end
+#set($mode = $core_v2_widget.GetStringValue('mode', 'SingleProfileFieldGroup'))
+#if ($mode == 'MultipleProfileGroups')
+	multiple-groups
+#elseif ($mode == 'MultipleProfileFields')
+	multiple-fields
+#else
+	single-group
+#end]]></additionalCssScript>
+		<restScopes>
+			<scope id="users.users.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

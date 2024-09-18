@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:UserParticipationReport_Name}"
+                           version="10.0.0.0"
+                           description="${resource:UserParticipationReport_Description}"
+                           instanceIdentifier="d6586e1f135c49d6bf9fb90d0fa3b785"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+#set ($containerId = $core_v2_widget.UniqueId('container'))
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id) || $reporting.HasGroupReportingPermission($core_v2_user.Accessing.Id))
+    $core_v2_widget.ExecuteFile('full-content.vm')
+#else
+    <div id="$containerId">
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+#end
+]]></contentScript>
+	<languageResources>
+      <language key="en-us">
+        <resource name="UserParticipationReport_Name">Participation</resource>
+        <resource name="UserParticipationReport_Description">Displays the level of participation members have reached on the site</resource>
+        <resource name="Report_Title">Participation</resource>
+        <resource name="Report_Description">Overview of the level of participation members have reached</resource>
+        <resource name="engagers">Unique Engagers</resource>
+        <resource name="originators">Unique Originators</resource>
+        <resource name="contributors">Unique Contributors</resource>
+        <resource name="viewers">Unique Viewers</resource>
+        <resource name="Line">Line</resource>
+        <resource name="Bar">Bar</resource>
+
+        <resource name="User">Member</resource>
+        <resource name="Joined">Joined</resource>
+        <resource name="engagements">Engagements</resource>
+        <resource name="contributions">Contributions</resource>
+        <resource name="originations">Originations</resource>
+        <resource name="views">Views</resource>
+        <resource name="Filter">Showing {0} for </resource>
+        <resource name="ClearFilter">Show All</resource>
+        <resource name="NoData">No participating members match the current filters.</resource>
+        <resource name="Error">Error retrieving report. The selected ${groups_lowercase} or applications may no longer exist or you may no longer have access to view reports for the selected items.</resource>
+        <resource name="PermissionDenied">You do not have permission to view this report.</resource>
+        <resource name="Export">Export</resource>
+        <resource name="Cancel">Cancel</resource>
+        <resource name="ExportChartasCSV">Export Chart as CSV</resource>
+        <resource name="ExportChartasPNG">Export Chart as PNG</resource>
+        <resource name="ExportListasCSV">Export List as CSV</resource>
+        <resource name="NoApplicationOrGroupSelected">Select one or more groups or applications to view report.</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

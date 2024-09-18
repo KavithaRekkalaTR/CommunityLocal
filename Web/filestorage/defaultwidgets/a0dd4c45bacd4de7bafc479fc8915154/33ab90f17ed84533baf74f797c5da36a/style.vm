@@ -1,0 +1,129 @@
+## Triangle
+#set ($iconTriangleRight = $core_v2_widget.GetFileUrl('icon-triangle-right.svg'))
+#set ($iconTriangleDown = $core_v2_widget.GetFileUrl('icon-triangle-down.svg'))
+
+## Chevron
+#set ($iconChevronLeft = $core_v2_widget.GetFileUrl('icon-chevron-left.svg'))
+#set ($iconChevronRight = $core_v2_widget.GetFileUrl('icon-chevron-right.svg'))
+
+## Arrow
+#set ($iconArrowBlue = $core_v2_widget.GetFileUrl('icon-arrow-blue.svg'))
+#set ($iconArrowDark = $core_v2_widget.GetFileUrl('icon-arrow-dark.svg'))
+#set ($iconArrowLight = $core_v2_widget.GetFileUrl('icon-arrow-light.svg'))
+
+## Dots
+#set ($iconDotsBlue = $core_v2_widget.GetFileUrl('icon-dots-blue.svg'))
+#set ($iconDotsDark = $core_v2_widget.GetFileUrl('icon-dots-dark.svg'))
+#set ($iconDotsLight = $core_v2_widget.GetFileUrl('icon-dots-light.svg'))
+
+## Pencil
+#set ($iconPencilDark = $core_v2_widget.GetFileUrl('icon-pencil-dark.svg'))
+#set ($iconPencilLight = $core_v2_widget.GetFileUrl('icon-pencil-light.svg'))
+
+## Pin
+#set ($iconPinDark = $core_v2_widget.GetFileUrl('icon-pin-dark.svg'))
+#set ($iconPinLight = $core_v2_widget.GetFileUrl('icon-pin-light.svg'))
+
+## Types
+#set ($iconCogDark = $core_v2_widget.GetFileUrl('icon-cog.svg'))
+#set ($iconBrowserDark = $core_v2_widget.GetFileUrl('icon-browser-dark.svg'))
+#set ($iconCodeDark = $core_v2_widget.GetFileUrl('icon-code-dark.svg'))
+#set ($iconPaletteDark = $core_v2_widget.GetFileUrl('icon-palette-dark.svg'))
+#set ($iconLanguageDark = $core_v2_widget.GetFileUrl('icon-language-dark.svg'))
+
+## Glass
+#set ($iconGlassDark = $core_v2_widget.GetFileUrl('icon-glass-dark.svg'))
+#set ($iconGlassLight = $core_v2_widget.GetFileUrl('icon-glass-light.svg'))
+
+<style>
+## Triangles
+
+.studio-shell.browse .node-content .expander .handle::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconTriangleRight})');
+}
+.studio-shell.browse .node.expanded > .node-content .expander .handle::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconTriangleDown})');
+}
+
+## Chevrons
+
+.studio-shell.browse .browse-header-wrapper .browse-actions .collapse::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconChevronLeft})');
+}
+.collapsed-categories .studio-shell.browse .browse-header-wrapper .browse-actions .collapse::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconChevronRight})');
+}
+
+## Arrows
+
+.studio-shell.tab-list .tabs li .more .handle::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconArrowLight})');
+}
+.studio-shell.tab-list .tabs li .actions::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconArrowLight})');
+}
+.studio-shell.tab-list .tabs li .actions:hover::after,
+.studio-shell.tab-list .tabs li .actions.links-expanded::after,
+.studio-shell.tab-list .tabs li .selected .actions.links-expanded::after,
+.studio-shell.tab-list .tabs li .selected .actions.links-expanded:hover::after{
+	background-image: url('$core_v2_encoding.UriEscape(${iconArrowLight})');
+}
+.studio-shell.tab-list .tabs li .selected .actions::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconArrowDark})');
+}
+.studio-shell.tab-list .tabs li .selected .actions:hover::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconArrowLight})');
+}
+
+## Dots
+
+.staged-items li a.staging-actions {
+	background-image: url('$core_v2_encoding.UriEscape(${iconDotsDark})');
+}
+.staged-items .staging-all li a.staging-actions {
+	background-image: url('$core_v2_encoding.UriEscape(${iconDotsLight})');
+}
+.studio-shell.browse .browse-header-wrapper .browse-actions .more::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconDotsDark})');
+}
+
+## Pencil
+
+.staged-indicator::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconPencilLight})');
+}
+
+## Dock
+
+.studio-shell.dock-view-wrapper .dock-pin::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconPinDark})');
+}
+.studio-shell.dock-view-wrapper.docked .dock-pin::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconPinLight})');
+}
+.studio-shell.dock-view-wrapper .search-result-item .search-result-meta .type-indicator.overview::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconBrowserDark})');
+}
+.studio-shell.dock-view-wrapper .search-result-item .search-result-meta .type-indicator.content::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconCodeDark})');
+}
+.studio-shell.dock-view-wrapper .search-result-item .search-result-meta .type-indicator.configuration::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconCogDark})');
+}
+.studio-shell.dock-view-wrapper .search-result-item .search-result-meta .type-indicator.header::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconBrowserDark})');
+}
+.studio-shell.dock-view-wrapper .search-result-item .search-result-meta .type-indicator.css::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconPaletteDark})');
+}
+.studio-shell.dock-view-wrapper .search-result-item .search-result-meta .type-indicator.language::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconLanguageDark})');
+}
+.studio-shell.dock-view-wrapper .search-result-item .search-result-meta .type-indicator.attachment::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconCodeDark})');
+}
+.studio-shell.dock-view-wrapper .global-search-wrapper .global-search-form .field-list .field-item.query .field-item-input.submit .global-search-submit::after {
+	background-image: url('$core_v2_encoding.UriEscape(${iconGlassLight})');
+}
+
+</style>

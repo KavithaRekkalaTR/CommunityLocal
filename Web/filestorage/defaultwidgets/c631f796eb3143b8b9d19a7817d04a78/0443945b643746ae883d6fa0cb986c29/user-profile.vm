@@ -1,0 +1,67 @@
+<form><fieldset>
+	<ul class="field-list">
+	#if ($core_v2_configuration.EnableDisplayNames)
+	    <li class="field-item required">
+			<label for="$core_v2_widget.UniqueId('DisplayName')" class="field-item-name">$core_v2_language.GetResource('Field_DisplayName')</label>
+			<span class="field-item-description">$core_v2_language.GetResource("Field_DisplayName_Desc")</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('DisplayName')" name="$core_v2_widget.UniqueId('DisplayName')" value="$core_v2_encoding.HtmlAttributeEncode($user.DisplayName)" #if($user.IsSystemAccount && $user.Username == $core_v2_user.ServiceUserName) disabled #end />
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+	#end
+		<li class="field-item">
+			<label for="$core_v2_widget.UniqueId('Biography')" class="field-item-name">$core_v2_language.GetResource('Field_Biography')</label>
+			<span class="field-item-input">
+				$core_v2_editor.Render('Biography', "%{Value=$user.Bio('raw'),Width='100%',ContentTypeId=$core_v2_user.ContentTypeId}")
+			</span>
+			<span class="field-item-validation" style="display: none;" id="$core_v2_widget.UniqueId('BiographyValidation')"></span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#set($data = $core_v2_page.ParseQueryString(''))
+#foreach($profileField in $user.ProfileFields)
+	$data.Add($profileField.Label, $core_v2_encoding.HtmlDecode($profileField.Value))
+#end
+
+#set($profileFormIds = '')
+
+#set($displayedFields = "%{}")
+#foreach($profileFieldGroup in $core_v2_userProfileFieldGroup.List())
+    #set($xml = '')
+    #set($orderNumber = 1)
+    #set($formId = "$core_v2_widget.UniqueId('Profile-')$profileFieldGroup.Id")
+    #foreach($profileField in $core_v2_userProfileField.List("%{UserProfileFieldGroupId=$profileFieldGroup.Id}"))
+        #if (!$displayedFields.Contains($profileField.Name))
+            #set($fieldXml = $core_v2_userProfileField.DynamicFormXml($profileField.Name, "%{OrderNumber=$orderNumber}"))
+            #set($xml = "$xml$fieldXml")
+            #set($orderNumber = $orderNumber + 1)
+            $displayedFields.Add($profileField.Name, 'True')
+        #end
+    #end
+
+    #if ($xml != '')
+        #set($dq = '"')
+        #set($xml = "<propertyGroup id=${dq}profile${dq} name=${dq}${dq}>$xml</propertyGroup>")
+
+        #set($propertyHeaderFormat = '<li class="field-item {PropertyDataType}-type"><label class="field-item-name">{PropertyName}</label><span class="field-item-input">')
+    	#set($propertyFooterFormat = '</span></li>')
+    
+        #set($form = false)
+    	#set($form = $core_v2_dynamicForm.RenderForm($formId, $xml, $data, "%{GroupFooterHtmlFormat='',GroupHeaderHtmlFormat='',PropertyFooterHtmlFormat=$propertyFooterFormat,PropertyHeaderHtmlFormat=$propertyHeaderFormat}"))
+    	#if ($form && $form.Length > 0)
+    	    #if($profileFormIds.Length > 0)
+    	        #set($profileFormIds = "$profileFormIds,")
+            #end
+            #set($profileFormIds = "$profileFormIds'$formId'")
+    	
+    		<fieldset class="field-list">
+    		    <h3>$profileFieldGroup.Title</h3>
+        		<ul class="field-list">
+        			$form
+        		</ul>
+        	</fieldset>
+    	#end
+    #end
+#end

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Forum Disabled" version="13.0.0.0" description="Sends an email when a user tries to post via email to a forum that's disabled." id="e878b9f9a13040e9998b1653dbe31bfc" lastModified="2023-05-08 20:35:57Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Subject')]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Header')]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('forum_name')
+    $context_v1_email.Context.Forum.Name
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Your message could not be sent to {forum_name} or distributed to the group members. Unfortunately, the group owner has disabled this forum. For further options, please contact the group owner or site administrator.</resource>
+  <resource name="Subject">Message not posted: forum disabled</resource>
+  <resource name="Header">Message not posted: forum disabled</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

@@ -1,0 +1,13 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($statusKey = $core_v2_page.GetFormValue('StatusKey'))
+	#set($reassignKey = $core_v2_page.GetFormValue('ReassignKey'))
+	#set($response = $telligentIdeas_v1_statuses.Delete($statusKey, $reassignKey))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+#end

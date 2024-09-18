@@ -1,0 +1,35 @@
+﻿##
+## Tab Item Template
+##
+<% if(request.type === 'attachment') { %>
+	<span class="primary ui-tip" data-tip="<%: model.FragmentProcessedName %>">
+		<% if(model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% } %>
+		<%: model.FragmentProcessedName %>
+	</span>
+	<span class="secondary attachment ui-tip" data-tip="<%: model.Name %>">
+		<%: model.Name %>
+	</span>
+<% } else { %>
+	<span class="primary ui-tip" data-tip="<%: model.ProcessedName %>">
+		<% if(model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% } %>
+		<%: model.ProcessedName %>
+	</span>
+	<span class="secondary <%: request.type %>"><% if(request.type == 'overview') { %>
+		$core_v2_language.GetResource('Overview')
+	<% } else if(request.type == 'content') { %>
+		$core_v2_language.GetResource('Content')
+	<% } else if(request.type == 'css') { %>
+		$core_v2_language.GetResource('CSSScript')
+	<% } else if(request.type == 'header') { %>
+		$core_v2_language.GetResource('Header')
+	<% } else if(request.type == 'language') { %>
+		$core_v2_language.GetResource('Resources')
+	<% } else if(request.type == 'configuration') { %>
+		$core_v2_language.GetResource('Configuration')
+	<% } %>
+	</span>
+<% } %>

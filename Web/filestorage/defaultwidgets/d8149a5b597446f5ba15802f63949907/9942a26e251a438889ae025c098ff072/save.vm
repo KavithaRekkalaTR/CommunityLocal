@@ -1,0 +1,61 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set ($ApplicationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ApplicationId')))
+
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#set($Description = $core_v2_page.GetFormValue('Description'))
+	#set($Address = $core_v2_page.GetFormValue('Address'))
+	#set($GroupId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GroupId')))
+	#set($Enabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enabled')))
+	#set($Sitemap = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Sitemap')))
+	#set($Moderated = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Moderated')))
+	#set($EnablePostStatistics = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnablePostStatistics')))
+	#set($EnableQualityVoting = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableQualityVoting')))
+	#set($SuggestedAnswerVoteThreshold = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('SuggestedAnswerVoteThreshold')))
+	#set($VerifiedAnswerVoteThreshold = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('VerifiedAnswerVoteThreshold')))
+	#set($AllowedThreadTypes = $core_v2_page.GetFormValue('AllowedThreadTypes'))
+	#set($ThreadDefaultType = $core_v2_page.GetFormValue('ThreadDefaultType'))
+    #set($AutoLockingEnabled = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('AutoLockingEnabled')))
+    
+   #set($autoInterval = false)
+   #set($autoInterval = $core_v2_page.GetFormValue('AutoLockingDefaultInterval'))
+    
+
+	#if ($Name && $Name != '')
+		$options.Add('Name', $Name)
+	#end
+	#if ($GroupId > 0)
+		$options.Add('GroupId', $GroupId)
+	#end
+
+	$options.Add('Description', $Description)
+	$options.Add('Address', $Address)
+	$options.Add('Enabled', $Enabled)
+	$options.Add('Sitemap', $Sitemap)
+	$options.Add('Moderated', $Moderated)
+	$options.Add('EnablePostStatistics', $EnablePostStatistics)
+	$options.Add('EnableQualityVoting', $EnableQualityVoting)
+	$options.Add('SuggestedAnswerVoteThreshold', $SuggestedAnswerVoteThreshold)
+	$options.Add('VerifiedAnswerVoteThreshold', $VerifiedAnswerVoteThreshold)
+	$options.Add('AllowedThreadTypes', $AllowedThreadTypes)
+	$options.Add('ThreadDefaultType', $ThreadDefaultType)
+    $options.Add('AutoLockingEnabled',$AutoLockingEnabled)
+    
+    #if($autoInterval)
+        $options.Add('AutoLockingDefaultInterval',$core_v2_utility.ParseInt($autoInterval))
+   #end
+	
+	#set($response = $context.Update($options))
+
+	#if ($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	#set($forum = $core_v2_forum.Get($ApplicationId))
+
+	{"success":true, "redirectUrl":"$forum.Url"}
+
+#end

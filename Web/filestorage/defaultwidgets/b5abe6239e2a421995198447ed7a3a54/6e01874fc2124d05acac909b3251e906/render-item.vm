@@ -1,0 +1,91 @@
+<input type="checkbox" id="$exception.ExceptionId" name="$exception.ExceptionId"></input>
+
+<h4 class="name">$exception.Category.Name</h4>
+
+<div class="attributes expanded-hidden">
+    <ul class="attribute-list">
+        <li class="attribute-item">
+            <span class="attribute-value">$core_v2_language.FormatDateAndTime($exception.DateLastOccurred)</span>
+        </li>
+        <li class="attribute-item">
+            <span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('Occurrences'), $exception.Frequency.ToString())</span>
+        </li>
+        #if ($exception.IPAddress && $exception.IPAddress.Length > 0)
+            <li class="attribute-item">
+                <span class="attribute-name">IP</span>
+                <span class="attribute-value">$core_v2_encoding.HtmlEncode($exception.IPAddress)</span>
+            </li>
+        #end
+    </ul>
+</div>
+
+<div class="content">
+    $core_v2_encoding.HtmlEnsureEncoded($exception.Message)
+</div>
+
+<div class="content expandable">
+    <table>
+        <tr>
+            <th>$core_v2_language.GetResource('FirstOccurred')</th>
+            <td>$core_v2_language.FormatDateAndTime($exception.DateCreated)</td>
+        </tr>
+        <tr>
+            <th>$core_v2_language.GetResource('LastOccurred')</th>
+            <td>$core_v2_language.FormatDateAndTime($exception.DateLastOccurred)</td>
+        </tr>
+        <tr>
+            <th>$core_v2_language.GetResource('TotalOccurrences')</th>
+            <td>$exception.Frequency</td>
+        </tr>
+        <tr>
+            <th>$core_v2_language.GetResource('Server')</th>
+            <td>$exception.ServerName</td>
+        </tr>
+
+        <tr>
+            <th>$core_v2_language.GetResource('Request')</th>
+            <td>$exception.HttpVerb $core_v2_encoding.HtmlEncode($exception.HttpPathAndQuery)</td>
+        </tr>
+        <tr>
+            <th>$core_v2_language.GetResource('IPAddress')</th>
+            <td>$core_v2_encoding.HtmlEncode($exception.IPAddress)</td>
+        </tr>
+        <tr>
+            <th>$core_v2_language.GetResource('UserAgent')</th>
+            <td>$core_v2_encoding.HtmlEncode($exception.UserAgent)</td>
+        </tr>
+        <tr>
+            <th>$core_v2_language.GetResource('Referrer')</th>
+            <td>$core_v2_encoding.HtmlEncode($exception.HttpReferrer)</td>
+        </tr>
+    </table>
+</div>
+
+<div class="content expandable">
+    <pre>$core_v2_encoding.HtmlEnsureEncoded($exception.Exception)</pre>
+</div>
+
+<div class="actions expandable">
+    <div class="navigation-list ui-links" data-direction="horizontal">
+        <ul>
+            <li class="navigation-list-item">
+                <a href="#" data-messagename="export-exception"
+                    data-exceptionid="$exception.ExceptionId">
+                    $core_v2_language.GetResource('Export')
+                </a>
+            </li>
+            <li class="navigation-list-item">
+                <a href="#" data-messagename="delete-exception"
+                    data-exceptionid="$exception.ExceptionId">
+                    $core_v2_language.GetResource('Delete')
+                </a>
+            </li>
+            <li class="navigation-list-item">
+                <a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+            </li>
+            <li class="navigation-list-item">
+                <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+            </li>
+        </ul>
+    </div>
+</div>

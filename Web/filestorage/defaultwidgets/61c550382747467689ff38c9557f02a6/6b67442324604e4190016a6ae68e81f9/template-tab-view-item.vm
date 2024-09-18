@@ -1,0 +1,40 @@
+##
+## Tab Item Template
+##
+<% if(request.type === 'file' || request.type === 'script' || request.type === 'style') { %>
+	<span class="primary ui-tip" data-tip="<%: model.ThemeName %>">
+		<% if(model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% } %>
+		<%: model.ThemeName %> <%: model.TypeName %>
+	</span>
+	<span class="secondary <%: request.type %> attachment ui-tip" data-tip="<%: model.Name %>">
+		<%: model.Name %>
+	</span>
+<% } else { %>
+	<span class="primary ui-tip" data-tip="<%: model.Name %>">
+		<% if(model.IsStaged) { %>
+			<%= template('studioShell-stagedIndicator') %>
+		<% } %>
+		<%: model.Name %>  <%: model.TypeName %>
+	</span>
+	<span class="secondary <%: request.type %>">
+	<% if(request.type == 'overview') { %>
+		$core_v2_language.GetResource('Overview')
+	<% } else if(request.type == 'configuration') { %>
+		$core_v2_language.GetResource('Configuration')
+	<% } else if(request.type == 'headscript') { %>
+		$core_v2_language.GetResource('HeadScript')
+	<% } else if(request.type == 'bodyscript') { %>
+		$core_v2_language.GetResource('BodyScript')
+	<% } else if(request.type == 'resources') { %>
+		$core_v2_language.GetResource('Resources')
+	<% } else if(request.type == 'palettes') { %>
+		$core_v2_language.GetResource('Palettes')
+	<% } else if(request.type == 'layouts') { %>
+		$core_v2_language.GetResource('Layouts')
+	<% } else if(request.type == 'fragments') { %>
+		$core_v2_language.GetResource('Fragments')
+	<% } %>
+	</span>
+<% } %>

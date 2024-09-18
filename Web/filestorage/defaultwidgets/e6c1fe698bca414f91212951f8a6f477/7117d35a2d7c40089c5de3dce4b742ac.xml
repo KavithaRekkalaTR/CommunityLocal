@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:UserAvatarActivityStory_Name}" version="10.0.0.0" description="${resource:UserAvatarActivityStory_Description}" instanceIdentifier="7117d35a2d7c40089c5de3dce4b742ac" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="e6c1fe698bca414f91212951f8a6f477">
+    <contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+
+	#set($actor = $context.Story.PrimaryUser)
+	#if ($actor.Url)
+	 #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+	#else
+		#set($profile0Html = $actor.DisplayName)
+	#end
+	<div class="activity-summary">
+		$core_v2_language.FormatString($core_v2_language.GetResource('UserAvatar_View'), $profile0Html)
+	</div>
+
+	#if(!$isPreview)
+		<div class="activity-avatar">
+			<span class="avatar">
+				#if ($actor.ProfileUrl)
+					<a class="internal-link view-user-profile activity-summary-user" data-userhover="ignore" href="$core_v2_encoding.HtmlAttributeEncode($actor.ProfileUrl)">$!core_v2_ui.GetResizedImageHtml($actor.AvatarUrl, 320, 320, "%{border='0px', alt='$actor.User.DisplayName'}")</a>
+				#else
+					$!core_v2_ui.GetResizedImageHtml($actor.AvatarUrl, 320, 320, "%{border='0px', alt='$actor.User.DisplayName'}")
+				#end
+			</span>
+		</div>
+	#end
+#end
+]]></contentScript>
+    <languageResources><language key="en-us"><resource name="UserAvatar_Preview">{0} has a new profile photo.</resource><resource name="UserAvatar_View">{0} updated their profile photo.</resource><resource name="UserAvatarActivityStory_Description">Story for users changing their avatar.</resource><resource name="UserAvatarActivityStory_Name">User Avatar Activity Story</resource><resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

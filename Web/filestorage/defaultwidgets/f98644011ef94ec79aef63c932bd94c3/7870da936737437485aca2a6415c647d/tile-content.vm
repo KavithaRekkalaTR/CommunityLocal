@@ -1,0 +1,28 @@
+#set ($query = $core_v2_page.ParseQueryString($context.TabKey))
+
+#if($query.Value("tab"))
+	#set($reportContainerId = $core_v2_widget.UniqueId($query.Value("tab")))
+
+	<div id="$reportContainerId">
+		<div class="graph-content"><span class="ui-loading"></span></div>
+	</div>
+
+	#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.reporting.widgets.activeGroupsTileReport.register({
+				target: '$context.Target',
+				tabKey: '$context.TabKey',
+				fields: {
+					reportContainerId: '#$reportContainerId',
+				},
+                urls: {
+    				reportData: '$core_v2_widget.GetExecutedFileUrl('tile-reportdata.vm')',
+                }
+			});
+		});
+	</script>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end

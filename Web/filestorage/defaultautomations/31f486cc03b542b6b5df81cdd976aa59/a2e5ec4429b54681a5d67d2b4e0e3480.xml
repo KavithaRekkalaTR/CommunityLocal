@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="12.0.0.0" description="${resource:Description}" id="a2e5ec4429b54681a5d67d2b4e0e3480" executeAsServiceUser="true" isSingleton="false" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2021-10-18 22:30:30Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="article.aftercreate" />
+      <event key="article.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[var userId = context_v2_automationTrigger.Arguments.UserId;
+if (!userId) {
+    return;
+}
+
+var result = null;
+
+var rangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('pointRange', ''));
+var minArticleCount= core_v2_utility.ParseInt(rangeQuery.Value('Minimum'));
+var maxArticleCount = core_v2_utility.ParseInt(rangeQuery.Value('Maximum'));
+
+//remove achievement if range has been selected and exceeded
+var totalCount = articles_v1_articles.List(query).TotalCount;
+if (totalCount >= minArticleCount) {
+    result = 'revoke';
+}
+
+if (result === null) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId,
+    };
+
+    var totalCount = articles_v1_articles.List(query).TotalCount;
+    if (totalCount >= minArticleCount && (maxArticleCount === 0 || totalCount <= maxArticleCount)) {
+        result = 'award';
+    } else {
+        result = 'revoke';
+    }
+}
+
+if (result !== null) {
+    var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+
+    if (result == 'award') {
+        if (!hasAchievement) {
+            context_v1_achievementAutomation.Award(userId);
+        }
+    } else if (result == 'revoke') {
+        if (hasAchievement) {
+            context_v1_achievementAutomation.Revoke(userId);
+        }
+    }
+}]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="ArticleCountRange" labelResourceName="ArticleCountRange" descriptionResourceName="ArticleCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="ArticleCountRange">Article count range</resource>
+  <resource name="ArticleCountRange_Description">The minimum and maximum count of published articles by the author to award the achievement.</resource>
+  <resource name="Description">Grants or revokes an achievement based on the number of articles an author has created and their level of interaction.</resource>
+  <resource name="Title">Award to authors of articles by their published article count</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

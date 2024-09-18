@@ -1,0 +1,110 @@
+## Global Search Template
+<div class="global-search-wrapper">
+	<div class="global-search-form">
+
+		<form>
+			<fieldset>
+				<ul class="field-list">
+					<li class="field-item query">
+						<span class="field-item-input input">
+							<input type="search" size="40" class="global-search-input-query" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Query'))" id="$core_v2_widget.UniqueId('GlobalSearch-Query')" />
+						</span>
+						<span class="field-item-input submit">
+							<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('RunSearch'))" class="ui-tip global-search-submit button">$core_v2_language.GetResource('RunSearch')</a>
+						</span>
+					</li>
+					<li class="field-item global-search-component-scopes">
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-caseSensitive')" class="global-search-case-sensitive-input" />
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-caseSensitive')">$core_v2_language.GetResource('CaseSensitive')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-regEx')" class="global-search-regex-input" />
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-regEx')">$core_v2_language.GetResource('UseRegEx')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-OnlyStaged')" class="global-search-regex-only-staged" />
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-OnlyStaged')">$core_v2_language.GetResource('OnlyStaged')</label>
+						</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+							#set ($providers = $context.ListProviders())
+							#set ($themes = $context.ListThemes())
+							<select class="provider-select">
+								#set ($category = '')
+								#foreach ($provider in $providers)
+								#beforeall
+									<option value="current">$core_v2_language.GetResource('InCurrentWidget')</option>
+									<option value="all-global" selected>$core_v2_language.GetResource('InAllWidgetsGlobal')</option>
+									<option value="Custom">$core_v2_language.GetResource('InUserInstalledWidgets')</option>
+									<option value="FactoryDefault">$core_v2_language.GetResource('InDefaultWidgets')</option>
+									<option value="CustomizedDefault">$core_v2_language.GetResource('InEditedDefaultWidgets')</option>
+
+									#set ($category = $core_v2_language.GetResource('ThemePageWidgets'))
+									<optgroup label="$core_v2_encoding.HtmlAttributeEncode($category)">
+									<option value="all-themepage">$core_v2_language.GetResource('InAllWidgets')</option>
+								#each
+									#if ($provider.CategoryName != $category)
+										#if ($category != '')
+											</optgroup>
+										#end
+										<optgroup label="$core_v2_encoding.HtmlAttributeEncode($provider.CategoryName)">
+									#end
+									<option value="Provider:$provider.Id">$core_v2_language.GetResource('In') $core_v2_encoding.HtmlEncode($provider.Name)</option>
+									#set ($category = $provider.CategoryName)
+								#afterall
+									</optgroup>
+								#end
+							</select>
+						</span>
+					</li>
+					<li class="field-item">
+						<span class="field-item-input">
+							<select class="theme-select">
+								<option value="all">$core_v2_language.GetResource('ForAnyTheme')</option>
+								#foreach ($theme in $themes)
+									<option value="$theme.Id">$core_v2_language.GetResource('For') $core_v2_encoding.HtmlEncode($theme.Title)</option>
+								#end
+							</select>
+						</span>
+					</li>
+					<li class="field-item global-search-component-scopes">
+						<label class="field-item-name">$core_v2_language.GetResource('Including')</label>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-overview')"  value="overview" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-overview')">$core_v2_language.GetResource('Overview')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-content')"  value="content" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-content')">$core_v2_language.GetResource('Content')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-language')"  value="language" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-language')">$core_v2_language.GetResource('Resources')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-configuration')"  value="configuration" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-configuration')">$core_v2_language.GetResource('Configuration')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-header')"  value="header" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-header')">$core_v2_language.GetResource('Header')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-css')"  value="css" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-css')">$core_v2_language.GetResource('CSSScript')</label>
+						</span>
+						<span class="field-item-input">
+							<input type="checkbox" id="$core_v2_widget.UniqueId('GlobalSearch-component-attachment')"  value="attachment" checked/>
+							<label for="$core_v2_widget.UniqueId('GlobalSearch-component-attachment')">$core_v2_language.GetResource('Attachments')</label>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+		</form>
+	</div>
+	<div class="global-search-output">
+		<ul class="global-search-results"></ul>
+	</div>
+</div>

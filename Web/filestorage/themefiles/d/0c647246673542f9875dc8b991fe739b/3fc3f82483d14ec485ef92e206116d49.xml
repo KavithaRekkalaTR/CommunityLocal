@@ -1,0 +1,470 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<themes>
+  <theme name="Social" version="13.0.0.29206" description="Configurable 'Social' Site Theme" id="3fc3f82483d14ec485ef92e206116d49" themeTypeId="0c647246673542f9875dc8b991fe739b" lastModified="2024-05-30 15:01:25Z" isFactoryDefault="true" mediaMaxHeightPixels="" mediaMaxWidthPixels="">
+    <headScript language="Velocity"><![CDATA[$context_v2_themeHeader.RenderStylesheetFiles()
+$context_v2_themeHeader.RenderJavascriptFiles()
+
+]]></headScript>
+    <bodyScript language="Velocity"><![CDATA[
+#set ($minWidthUnit = $core_v2_theme.GetUnitValue('minWidth', '670px', 10))
+#set ($minWidth = $core_v2_utility.ParseInt($core_v2_utility.Replace($minWidthUnit, 'px', '')))
+
+#set ($wrappingFormats = [])
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-NoBorderWithNoSpacing'),CssClass='no-wrapper',IncludeHeader='false'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-NoBorderWithSpacing'),CssClass='no-wrapper with-spacing',IncludeHeader='false'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-NoBorderWithSpacingAndHeader'),CssClass='no-wrapping with-spacing with-header',IncludeHeader='true'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-TopBorder'),CssClass='top-border with-spacing',IncludeHeader='false'}"))
+#set ($ignore = $wrappingFormats.Add("%{Name=$core_v2_language.GetResource('WrappingFormat-TopBorderAndHeader'),CssClass='top-border with-spacing with-header',IncludeHeader='true'}"))
+#set ($options = "%{ WrappingFormats = $wrappingFormats, DefaultWrappingFormatWithHeader = 'top-border with-spacing with-header reponsive-1', DefaultWrappingFormatWithoutHeader = 'no-wrapper responsive-1', LayoutReflowMinWidth = $minWidth }")
+
+$context_v2_themeBody.RenderHeader($options)
+$context_v2_themeBody.RenderPage($options)
+$context_v2_themeBody.RenderFooter($options)
+		]]></bodyScript>
+    <configuration><![CDATA[<propertyGroup id="fontsAndColors" labelResourceName="fontsAndColors" visible="true">
+	<propertySubGroup id="fontsAndColorsGeneral" labelResourceName="colors" visible="true">
+		<property id="colorLabel" descriptionResourceName="fontsAndColorsDesc" dataType="String" editable="false" visible="true" />
+		<property id="bannerColorLabel" labelResourceName="banners" descriptionResourceName="bannersDesc" dataType="String" editable="false" visible="true" />
+		<property id="backgroundColor" labelResourceName="background" defaultValue="#FFFFFF" dataType="Color" />
+		<property id="foregroundColor" labelResourceName="foreground" defaultValue="#22252C" dataType="Color" />
+		<property id="accentColor" labelResourceName="accent" descriptionResourceName="accentDesc" defaultValue="#006FFF" dataType="Color" />
+		<property id="linkFontColor" labelResourceName="link" descriptionResourceName="linkDesc" defaultValue="#006FFF" dataType="Color" />
+		<property id="contrast" labelResourceName="contrast" descriptionResourceName="contrastDesc" defaultValue="0" dataType="Double" inputType="range" min="-1" max="1" step=".1" rangeTicks="5" rangeLabel="true" rangeLabelFormat="Percent" />
+	</propertySubGroup>
+	<propertySubGroup id="fontsAndColorsBaseFont" labelResourceName="fonts" visible="true">
+		<property id="fontsAndColorsBaseFontLabel" descriptionResourceName="fontsDesc" dataType="String" editable="false" visible="true" />
+		<property id="baseFont" labelResourceName="font" defaultValue="system" dataType="String">
+			<propertyValue value="system" labelResourceName="system" propertiesToHide="baseFontCustom" />
+			<propertyValue value="helvetica" labelResourceName="helvetica" propertiesToHide="baseFontCustom" />
+			<propertyValue value="source-sans-pro" labelResourceName="sourceSansPro" propertiesToHide="baseFontCustom" />
+			<propertyValue value="open-sans" labelResourceName="spenSans" propertiesToHide="baseFontCustom" />
+			<propertyValue value="fira-sans" labelResourceName="firaSans" propertiesToHide="baseFontCustom" />
+			<propertyValue value="custom" labelResourceName="customFont" propertiesToShow="baseFontCustom" />
+		</property>
+		<property id="baseFontCustom" labelResourceName="custom" descriptionResourceName="customFontDesc" dataType="Url" allowedFileExtensions="woff" allowLocal="true" enablePreview="true" />
+		<property id="baseFontSizeValue" labelResourceName="size" defaultValue="14px" dataType="Unit" />
+		<property id="baseFontWeight" labelResourceName="weight" defaultValue="400" dataType="Int">
+			<propertyValue value="100" labelText="100" />
+			<propertyValue value="200" labelText="200" />
+			<propertyValue value="300" labelText="300" />
+			<propertyValue value="400" labelText="400" />
+			<propertyValue value="500" labelText="500" />
+			<propertyValue value="600" labelText="600" />
+			<propertyValue value="700" labelText="700" />
+			<propertyValue value="800" labelText="800" />
+			<propertyValue value="900" labelText="900" />
+		</property>
+		<property id="baseFontStyle" labelResourceName="style" defaultValue="normal" dataType="String">
+			<propertyValue value="normal" labelResourceName="normal" />
+			<propertyValue value="italic" labelResourceName="italic" />
+		</property>
+		<property id="baseFontLineHeight" labelResourceName="lineHeight" defaultValue="1.5em" dataType="Unit" />
+	</propertySubGroup>
+	<propertySubGroup id="fontsAndColorsStateColors" labelResourceName="specialtyColors" visible="true">
+		<property id="fontsAndColorsStateColorsLabel" descriptionResourceName="specialtyColorsDesc" dataType="String" editable="false" visible="true" />
+		<property id="statePositive" labelResourceName="positive" descriptionResourceName="positiveDesc" defaultValue="#00CE7E" dataType="Color" />
+		<property id="statePending" labelResourceName="pending" descriptionResourceName="pendingDesc" defaultValue="#FF8C00" dataType="Color" />
+		<property id="stateAttention" labelResourceName="attention" descriptionResourceName="attentionDesc" defaultValue="#FF8C00" dataType="Color" />
+		<property id="stateNegative" labelResourceName="negative" descriptionResourceName="negativeDesc" defaultValue="#E53935" dataType="Color" />
+	</propertySubGroup>
+</propertyGroup>
+<propertyGroup id="logo" labelResourceName="logo" visible="true">
+	<property id="siteLogoLabel" labelResourceName="siteLogo" descriptionResourceName="siteLogoDesc" dataType="String" editable="false" visible="true" />
+	<property id="favicon" labelResourceName="favicon" descriptionResourceName="faviconDesc" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false" />
+</propertyGroup>
+<propertyGroup id="dimensions" labelResourceName="dimensions" visible="true">
+	<property id="layoutsLabel" labelResourceName="layouts" descriptionResourceName="layoutsDesc" dataType="String" editable="false" visible="true" />
+	<property id="minWidth" labelResourceName="minimumWidth" descriptionResourceName="minimumWidthDesc" defaultValue="670px" dataType="Unit" />
+	<property id="maxWidth" labelResourceName="maximumWidth" descriptionResourceName="maximumWidthDesc" defaultValue="1060px" dataType="Unit" />
+	<property id="siteHeader" labelResourceName="siteHeaderBehavior" descriptionResourceName="siteHeaderBehaviorDesc" defaultValue="adaptive" dataType="String">
+		<propertyValue value="adaptive" labelResourceName="siteHeaderAdaptiveDesc" />
+		<propertyValue value="static" labelResourceName="siteHeaderStaticDesc" />
+	</property>
+	<property id="sidebar" labelResourceName="sidebarBehavior" descriptionResourceName="sidebarBehaviorDesc" defaultValue="adaptive" dataType="String">
+		<propertyValue value="adaptive" labelResourceName="sidebarBehaviorAdaptive" />
+		<propertyValue value="static" labelResourceName="sidebarBehaviorStatic" />
+	</property>
+</propertyGroup>]]></configuration>
+    <paletteTypes><![CDATA[<paletteType id="siteBanner" name="${resource:palette_type_site}">
+    <palette id="blue" name="${resource:palette_blue}" previewCss="background-color:#006FFF; color:#FFFFFF; padding:15px; font-weight:600;">
+        <value id="background-color" dataType="Color">#006FFF</value>
+        <value id="foreground-color" dataType="Color">#B9CEFC</value>
+        <value id="search-color" dataType="Color">#006FFF</value>
+        <value id="active-color" dataType="Color">#FFFFFF</value>
+        <value id="border-color" dataType="Color">#006FFF</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="dark-blue" name="${resource:palette_dark_blue}" previewCss="background-color:#0D3E86; color:#FFFFFF; padding:15px; font-weight:600;">
+        <value id="background-color" dataType="Color">#0D3E86</value>
+        <value id="foreground-color" dataType="Color">#ADB9D1</value>
+        <value id="search-color" dataType="Color">#244FA6</value>
+        <value id="active-color" dataType="Color">#FFFFFF</value>
+        <value id="border-color" dataType="Color">#0D3E86</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="light-gray" name="${resource:palette_light_gray}" previewCss="background-color:#EFF0F1; color:#22252C; padding:15px; font-weight:600;">
+        <value id="background-color" dataType="Color">#EFF0F1</value>
+        <value id="foreground-color" dataType="Color">#6D6F74</value>
+        <value id="search-color" dataType="Color">#F7F8F8</value>
+        <value id="active-color" dataType="Color">#22252C</value>
+        <value id="border-color" dataType="Color">#EFF0F1</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="dark-gray" name="${resource:palette_dark_gray}" previewCss="background-color:#22252C; color:#FFFFFF; padding:15px; font-weight:600;" default="true">
+        <value id="background-color" dataType="Color">#22252C</value>
+        <value id="foreground-color" dataType="Color">#768199</value>
+        <value id="search-color" dataType="Color">#31373E</value>
+        <value id="active-color" dataType="Color">#FFFFFF</value>
+        <value id="border-color" dataType="Color">#22252C</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="green" name="${resource:palette_green}" previewCss="background-color:#00CE7E; color:#FFFFFF; padding:15px; font-weight:600;">
+        <value id="background-color" dataType="Color">#00CE7E</value>
+        <value id="foreground-color" dataType="Color">#C9EED6</value>
+        <value id="search-color" dataType="Color">#00CE7E</value>
+        <value id="active-color" dataType="Color">#FFFFFF</value>
+        <value id="border-color" dataType="Color">#22252C</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+</paletteType>
+<paletteType id="contextBanner" name="${resource:palette_type_context}">
+    <palette id="blue" name="${resource:palette_blue}" previewCss="background: linear-gradient(to right, #006FFF, #2685ff); color:#ffffff; padding:15px; font-weight:600;" default="true">
+        <value id="background-color" dataType="Color">#006fff</value>
+        <value id="background-color-to" dataType="Color">#2685ff</value>
+        <value id="foreground-color" dataType="Color">#ffffff</value>
+        <value id="include-shadow" dataType="Int">0</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="dark-blue" name="${resource:palette_dark_blue}" previewCss="background: #0D3E86; color:#ffffff; padding:15px; font-weight:600;" >
+        <value id="background-color" dataType="Color">#0D3E86</value>
+        <value id="foreground-color" dataType="Color">#ffffff</value>
+        <value id="include-shadow" dataType="Int">0</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="light-gray" name="${resource:palette_light_gray}" previewCss="background: #EFF0F1; color:#22252C; padding:15px; font-weight:600;">
+        <value id="background-color" dataType="Color">#EFF0F1</value>
+        <value id="foreground-color" dataType="Color">#22252C</value>
+        <value id="include-shadow" dataType="Int">0</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="dark-gray" name="${resource:palette_dark_gray}" previewCss="background: #22252C; color:#FFFFFF; padding:15px; font-weight:600;">
+        <value id="background-color" dataType="Color">#22252C</value>
+        <value id="foreground-color" dataType="Color">#FFFFFF</value>
+        <value id="include-shadow" dataType="Int">0</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+    <palette id="green" name="${resource:palette_green}" previewCss="background: #00CE7E; color:#ffffff; padding:15px; font-weight:600;">
+        <value id="background-color" dataType="Color">#00CE7E</value>
+        <value id="foreground-color" dataType="Color">#ffffff</value>
+        <value id="include-shadow" dataType="Int">0</value>
+        <value id="include-border" dataType="Int">0</value>
+    </palette>
+	<palette id="white" name="${resource:palette_white}" previewCss="background:#ffffff; color:#263238; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#ffffff</value>
+		<value id="foreground-color" dataType="Color">#263238</value>
+		<value id="include-shadow" dataType="Int">1</value>
+		<value id="include-border" dataType="Int">1</value>
+	</palette>
+	<palette id="tropic" name="${resource:palette_tropic}" previewCss="background: linear-gradient(to right, #2BC0E4, #EAECC6); color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#2BC0E4</value>
+		<value id="background-color-to" dataType="Color">#EAECC6</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="stellar" name="${resource:palette_stellar}" previewCss="background: linear-gradient(to right, #7474BF, #348AC7); color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#7474BF</value>
+		<value id="background-color-to" dataType="Color">#348AC7</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="river" name="${resource:palette_river}" previewCss="background: linear-gradient(to right, #43cea2, #185a9d); color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#43cea2</value>
+		<value id="background-color-to" dataType="Color">#185a9d</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="city" name="${resource:palette_city}" previewCss="background: linear-gradient(to right, #3494E6, #EC6EAD); color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#3494E6</value>
+		<value id="background-color-to" dataType="Color">#EC6EAD</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="scooter" name="${resource:palette_scooter}" previewCss="background: linear-gradient(to right, #36D1DC, #5B86E5); color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#36D1DC</value>
+		<value id="background-color-to" dataType="Color">#5B86E5</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="limeade" name="${resource:palette_limeade}" previewCss="background: linear-gradient(to right, #A1FFCE, #FAFFD1); color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#A1FFCE</value>
+		<value id="background-color-to" dataType="Color">#FAFFD1</value>
+		<value id="foreground-color" dataType="Color">#000000</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="sunny" name="${resource:palette_sunny}" previewCss="background: linear-gradient(to right, #EDE574, #E1F5C4); color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#EDE574</value>
+		<value id="background-color-to" dataType="Color">#E1F5C4</value>
+		<value id="foreground-color" dataType="Color">#000000</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="moonrise" name="${resource:palette_moonrise}" previewCss="background: linear-gradient(to right, #DAE2F8, #D6A4A4); color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#DAE2F8</value>
+		<value id="background-color-to" dataType="Color">#D6A4A4</value>
+		<value id="foreground-color" dataType="Color">#000000</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="peach" name="${resource:palette_peach}" previewCss="background: linear-gradient(to right, #ED4264, #FFEDBC); color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#ED4264</value>
+		<value id="background-color-to" dataType="Color">#FFEDBC</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="sunset" name="${resource:palette_sunset}" previewCss="background: linear-gradient(to right, #ee0979, #ff6a00); color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#ee0979</value>
+		<value id="background-color-to" dataType="Color">#ff6a00</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="amber" name="${resource:palette_amber}" previewCss="background: #FFC107; color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#FFC107</value>
+		<value id="foreground-color" dataType="Color">#000000</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="bluegray" name="${resource:palette_bluegray}" previewCss="background: #455A64; color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#455A64</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="cyan" name="${resource:palette_cyan}" previewCss="background: #00BCD4; color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#00BCD4</value>
+		<value id="foreground-color" dataType="Color">#000000</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="lightblue" name="${resource:palette_lightblue}" previewCss="background: #03a9f4; color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#03a9f4</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="lightbluegray" name="${resource:palette_lightbluegray}" previewCss="background: #ECEFF1; color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#ECEFF1</value>
+		<value id="foreground-color" dataType="Color">#263238</value>
+		<value id="include-shadow" dataType="Int">1</value>
+		<value id="include-border" dataType="Int">1</value>
+	</palette>
+	<palette id="lime" name="${resource:palette_lime}" previewCss="background: #CDDC39; color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#CDDC39</value>
+		<value id="foreground-color" dataType="Color">#000000</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="pink" name="${resource:palette_pink}" previewCss="background: #E91E63; color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#E91E63</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="purple" name="${resource:palette_purple}" previewCss="background: #9C27B0; color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#9C27B0</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="red" name="${resource:palette_red}" previewCss="background: #F44336; color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#F44336</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+	<palette id="teal" name="${resource:palette_teal}" previewCss="background: #009688; color:#ffffff; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#009688</value>
+		<value id="foreground-color" dataType="Color">#ffffff</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">1</value>
+	</palette>
+	<palette id="yellow" name="${resource:palette_yellow}" previewCss="background: #FFEB3B; color:#000000; padding:15px; font-weight:600;">
+		<value id="background-color" dataType="Color">#FFEB3B</value>
+		<value id="foreground-color" dataType="Color">#000000</value>
+		<value id="include-shadow" dataType="Int">0</value>
+		<value id="include-border" dataType="Int">0</value>
+	</palette>
+</paletteType>]]></paletteTypes>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="accent">Accent</resource>
+  <resource name="accentDesc">Used for buttons, borders, and some links</resource>
+  <resource name="attention">Attention State</resource>
+  <resource name="attentionDesc">Used when indicating both warning states as well as toggled active button states.</resource>
+  <resource name="background">Background</resource>
+  <resource name="banners">Banners</resource>
+  <resource name="bannersDesc">Site, group, and blog banner color palettes can be selected directly within the configuration of those widgets.</resource>
+  <resource name="colors">Colors</resource>
+  <resource name="contrast">Contrast adjustment</resource>
+  <resource name="contrastDesc">Contrast adjustments influence generated colors.</resource>
+  <resource name="custom">Custom</resource>
+  <resource name="customFont">Custom Font</resource>
+  <resource name="customFontDesc">Web Open Font Format (WOFF) File</resource>
+  <resource name="dimensions">Layout</resource>
+  <resource name="favicon">Favicon</resource>
+  <resource name="faviconDesc">The favicon displays on browser tabs and home screens. PNG format and high resolution (256x256) are recommended.</resource>
+  <resource name="firaSans">Fira Sans</resource>
+  <resource name="font">Font</resource>
+  <resource name="fonts">Fonts</resource>
+  <resource name="fontsAndColors">Fonts and Colors</resource>
+  <resource name="fontsAndColorsDesc">These colors represent a baseline and will be slightly adjusted by the theme as necessary.</resource>
+  <resource name="fontsDesc">These font settings represent a baseline and will be adjusted by the theme as necessary.</resource>
+  <resource name="foreground">Foreground</resource>
+  <resource name="helvetica">Helvetica, Arial</resource>
+  <resource name="italic">Italic</resource>
+  <resource name="layouts">Page Layouts</resource>
+  <resource name="layoutsDesc">Page, header, and footer layouts can be edited by visiting the page and selecting Manage Theme &gt; Edit this Page.</resource>
+  <resource name="lineHeight">Line Height</resource>
+  <resource name="link">Link</resource>
+  <resource name="linkDesc">Used for most links</resource>
+  <resource name="logo">Logo</resource>
+  <resource name="maximumWidth">Maximum Width</resource>
+  <resource name="maximumWidthDesc">Maximum width, in pixels, beyond which the layout will not expand.</resource>
+  <resource name="minimumWidth">Minimum Width</resource>
+  <resource name="minimumWidthDesc">Minimum width, in pixels, beyond which the layout will transition to a single-column mobile-friendly layout.</resource>
+  <resource name="negative">Negative</resource>
+  <resource name="negativeDesc">Used when indicating problematic states such as rejecting an answer.</resource>
+  <resource name="normal">Normal</resource>
+  <resource name="palette_amber">Amber</resource>
+  <resource name="palette_blue">Blue</resource>
+  <resource name="palette_bluegray">Blue Gray</resource>
+  <resource name="palette_city">City</resource>
+  <resource name="palette_cyan">Cyan</resource>
+  <resource name="palette_dark">Dark</resource>
+  <resource name="palette_dark_blue">Dark Blue</resource>
+  <resource name="palette_dark_gray">Dark Gray</resource>
+  <resource name="palette_green">Green</resource>
+  <resource name="palette_light">Light</resource>
+  <resource name="palette_light_gray">Light Gray</resource>
+  <resource name="palette_lightblue">Light Blue</resource>
+  <resource name="palette_lightbluegray">Light Blue Gray</resource>
+  <resource name="palette_lime">Lime</resource>
+  <resource name="palette_limeade">Limeade</resource>
+  <resource name="palette_moonrise">Moonrise</resource>
+  <resource name="palette_peach">Peach</resource>
+  <resource name="palette_pink">Pink</resource>
+  <resource name="palette_purple">Purple</resource>
+  <resource name="palette_red">Red</resource>
+  <resource name="palette_river">River</resource>
+  <resource name="palette_scooter">Scooter</resource>
+  <resource name="palette_stellar">Stellar</resource>
+  <resource name="palette_sunny">Sunny</resource>
+  <resource name="palette_sunset">Sunset</resource>
+  <resource name="palette_teal">Teal</resource>
+  <resource name="palette_tropic">Tropic</resource>
+  <resource name="palette_type_context">Group and Blog Banners, Navigation, Featured Content</resource>
+  <resource name="palette_type_site">Site Banner</resource>
+  <resource name="palette_white">White</resource>
+  <resource name="palette_yellow">Yellow</resource>
+  <resource name="pending">Pending State</resource>
+  <resource name="pendingDesc">Used when indicating pending states such as suggested answers.</resource>
+  <resource name="positive">Positive State</resource>
+  <resource name="positiveDesc">Used when indicating approved states such as verified answers.</resource>
+  <resource name="sidebarBehavior">Sidebar Behavior</resource>
+  <resource name="sidebarBehaviorAdaptive">Attempt to keep the sidebar visible.</resource>
+  <resource name="sidebarBehaviorDesc">When the page scrolls,</resource>
+  <resource name="sidebarBehaviorStatic">Allow the sidebar to scroll out of view.</resource>
+  <resource name="siteHeaderAdaptiveDesc">Shrink the site header and keep it visible.</resource>
+  <resource name="siteHeaderBehavior">Site Header Behavior</resource>
+  <resource name="siteHeaderBehaviorDesc">When the page scrolls,</resource>
+  <resource name="siteHeaderStaticDesc">Allow the site header to scroll out of view.</resource>
+  <resource name="siteLogo">Community Logo</resource>
+  <resource name="siteLogoDesc">Your community's logo can be changed by configuring the Site Banner widget.</resource>
+  <resource name="size">Size</resource>
+  <resource name="sourceSansPro">Source Sans Pro</resource>
+  <resource name="specialtyColors">Specialty Colors</resource>
+  <resource name="specialtyColorsDesc">These colors are used to convey specific messages.</resource>
+  <resource name="spenSans">Open Sans</resource>
+  <resource name="style">Style</resource>
+  <resource name="system">System</resource>
+  <resource name="weight">Weight</resource>
+  <resource name="WrappingFormat-NoBorderWithNoSpacing">No Border with No Spacing</resource>
+  <resource name="WrappingFormat-NoBorderWithSpacing">No Border with Spacing</resource>
+  <resource name="WrappingFormat-NoBorderWithSpacingAndHeader">No Border with Spacing and Header</resource>
+  <resource name="WrappingFormat-TopBorder">Top Border</resource>
+  <resource name="WrappingFormat-TopBorderAndHeader">Top Border and Header</resource>
+</language>]]></languageResources>
+    <previewImage name="social-site.png" />
+    <files>
+      <file name="covercontain.png" />
+      <file name="covercover.png" />
+      <file name="coverdynamic.png" />
+      <file name="downtriangle.svg" />
+      <file name="entypo.eot" />
+      <file name="entypo.svg" />
+      <file name="entypo.ttf" />
+      <file name="entypo.woff" />
+      <file name="favicon.png" />
+      <file name="fira-sans.woff" />
+      <file name="format-activity-story.less" />
+      <file name="format-avatar-list.less" />
+      <file name="format-banner.less" />
+      <file name="format-banner-notification.less" />
+      <file name="format-breadcrumbs.less" />
+      <file name="format-content.less" />
+      <file name="format-content-details.less" />
+      <file name="format-content-list.less" />
+      <file name="format-forms.less" />
+      <file name="format-hierarchy-list.less" />
+      <file name="format-links-popup-panel.less" />
+      <file name="format-masonry.less" />
+      <file name="format-message.less" />
+      <file name="format-modal.less" />
+      <file name="format-navigation-list.less" />
+      <file name="format-navigation-tiles.less" />
+      <file name="format-page.less" />
+      <file name="format-pager.less" />
+      <file name="format-popup-list.less" />
+      <file name="format-push-notification.less" />
+      <file name="format-sort-filter-view.less" />
+      <file name="format-tabbed-contents.less" />
+      <file name="format-tab-set.less" />
+      <file name="format-tag-list.less" />
+      <file name="format-theater.less" />
+      <file name="format-threaded.less" />
+      <file name="format-tips.less" />
+      <file name="format-title.less" />
+      <file name="format-user-defined-markup.less" />
+      <file name="general.less" />
+      <file name="icons.less" />
+      <file name="layouts.less" />
+      <file name="mixins.less" />
+      <file name="normalize.less" />
+      <file name="open-sans.woff" />
+      <file name="source-sans-pro.woff" />
+      <file name="uicomponents.less" />
+      <file name="variables.less" />
+      <file name="variables.vm" />
+    </files>
+    <javascriptFiles>
+      <file name="theme.js" />
+      <file name="theme-init.vm" />
+    </javascriptFiles>
+    <styleFiles>
+      <file name="screen.less" applyToAuthorizationRequests="false" applyToModals="true" applyToNonModals="true" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="" />
+      <file name="modal.less" applyToAuthorizationRequests="false" applyToModals="true" applyToNonModals="false" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="" />
+      <file name="print.css" applyToAuthorizationRequests="false" applyToModals="true" applyToNonModals="true" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="print" />
+      <file name="oauth.css" applyToAuthorizationRequests="true" applyToModals="true" applyToNonModals="true" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="" />
+      <file name="handheld.less" applyToAuthorizationRequests="false" applyToModals="false" applyToNonModals="true" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="only screen and (max-width: 670px)" />
+      <file name="tablet.less" applyToAuthorizationRequests="false" applyToModals="false" applyToNonModals="true" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="only screen and (min-device-width: 671px) and (max-device-width: 1024px) and (orientation: landscape), only screen and (min-device-width: 671px) and (max-device-width: 1024px) and (orientation: portrait)" />
+      <file name="modalhandheld.less" applyToAuthorizationRequests="false" applyToModals="true" applyToNonModals="false" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="only screen and (max-width: 670px)" />
+      <file name="meta.vm" applyToAuthorizationRequests="false" applyToModals="false" applyToNonModals="false" internetExplorerMaxVersion="" isRightToLeft="" mediaQuery="" />
+    </styleFiles>
+  </theme>
+</themes>

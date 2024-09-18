@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_ErrorNotFound_Name}" version="11.0.0.0" description="${resource:Core_ErrorNotFound_Description}" instanceIdentifier="6259543df09b4d8daeafa09e31380a64" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="error-not-found" lastModified="2020-01-14 16:07:33Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+<p>$core_v2_language.GetResource("Error_NotFound_Description")</p>
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_ErrorNotFound_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_ErrorNotFound_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_ErrorNotFound_Description">Displays an error message that requested resource was not found, and provides a site search form.</resource>
+  <resource name="Core_ErrorNotFound_Name">Message - Not Found</resource>
+  <resource name="Error_NotFound_Description">Unfortunately, the page you've requested no longer exists. Please use the search form above to locate the information you're interested in.</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

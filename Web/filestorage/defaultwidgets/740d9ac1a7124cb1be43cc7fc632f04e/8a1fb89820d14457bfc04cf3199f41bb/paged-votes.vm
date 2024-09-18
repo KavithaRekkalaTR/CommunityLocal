@@ -1,0 +1,40 @@
+﻿#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($pageSize = 20)
+
+#set($votes = $context.GetVotes($pageSize, $pageIndex))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($votes.PageIndex + 1) * $votes.PageSize)
+#if ($votes.TotalItems > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#foreach($vote in $votes)
+	#beforeall
+		<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$votes.TotalItems" id="$core_v2_widget.UniqueId('vote-list')">
+	#each
+		<li class="content-item vote">
+		<h4 class="name">$vote.User.DisplayName</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item vote">
+						<span class="value">$vote.OptionName</span>
+				</li>
+			</ul>
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+				#if ($vote.User.ProfileUrl)
+					<li class="navigation-list-item view-file">
+						<a href="$core_v2_page.AbsoluteUrl($vote.User.ProfileUrl)">$core_v2_language.GetResource('ViewUser')</a>
+					</li>
+				#end
+				</ul>
+			</div>
+		</div>
+		</li>
+	#afterall
+		</ul>
+	#nodata
+		<div class="message information">$core_v2_language.GetResource('NoVotes')</div>
+#end

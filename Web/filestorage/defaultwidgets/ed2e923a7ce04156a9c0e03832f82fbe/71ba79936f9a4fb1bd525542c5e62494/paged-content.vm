@@ -1,0 +1,52 @@
+﻿#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#set($tagName = $core_v2_page.GetQueryStringValue('w_tag'))
+#set($taggedContents = $core_v2_taggedContent.List("%{ ApplicationIds = $context.ApplicationId, ApplicationTypeIds = $context.ApplicationTypeId, PageSize = 25, PageIndex = $pageIndex, Tags = $tagName}"))
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($taggedContents.PageIndex + 1) * $taggedContents.PageSize)
+#if ($taggedContents.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+#foreach($taggedContent in $taggedContents)
+#beforeall
+	<ul class="content-list content simple expandable" data-hasmore="$hasMore">
+#each
+	<li class="content-item">
+		<div class="content tagged-content" data-contentid="$core_v2_encoding.HtmlAttributeEncode($taggedContent.Content.ContentId.ToString())" data-tagname="$core_v2_encoding.HtmlAttributeEncode($tagName)">
+			<h4 class="name">$taggedContent.Content.HtmlName('Web')</h4>
+			<div class="content expandable">
+				$core_v2_language.Truncate($taggedContent.Content.HtmlDescription('Web'), 200, '...')
+			</div>
+			<div class="actions expandable">
+				<div class="navigation-list ui-links" data-direction="horizontal">
+					<ul>
+						<li class="navigation-list-item">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($taggedContent.Content.Url)">$core_v2_language.GetResource('view')</a>
+						</li>
+						#if ($core_v2_tags.CanRemoveTags($taggedContent.Content.ContentId, $taggedContent.Content.ContentTypeId))
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="contextual-remove-tag-from-content" data-contentid="$core_v2_encoding.HtmlAttributeEncode($taggedContent.Content.ContentId.ToString())" data-contenttypeid="$core_v2_encoding.HtmlAttributeEncode($taggedContent.Content.ContentTypeId.ToString())" data-contentname="$taggedContent.Content.HtmlName('Web')" data-tagname="$core_v2_encoding.HtmlAttributeEncode($tagName)">$core_v2_language.GetResource('remove_tag_from_content')</a>
+							</li>
+						#end
+						<li class="navigation-list-item">
+							<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</li>
+#nodata
+	#set($applicationName = '?')
+	#set($application = $core_v2_application.Get($context.ApplicationId, $context.ApplicationTypeId))
+	#if ($application && !$application.HasErrors())
+		#set($applicationName = $application.HtmlName('Web'))
+	#end
+	<div class="message norecords">$core_v2_language.FormatString($core_v2_language.GetResource('no_tagged_content'), $core_v2_encoding.HtmlEncode($tagName), $applicationName)</div>
+#afterall
+	</ul>
+#end

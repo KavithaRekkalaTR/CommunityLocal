@@ -1,0 +1,44 @@
+##
+## Server-rendered flattened thread
+##
+## Expects in scope: $content, $sortBy, $sortOrder
+##
+
+#set ($listOptions = "%{}")
+$listOptions.add('ContentId', $content.ContentId)
+$listOptions.add('ContentTypeId', $content.ContentTypeId)
+
+## Sorting
+
+#if ($sortBy)
+	$listOptions.add('SortBy', $sortBy)
+#end
+#if ($sortOrder)
+	$listOptions.add('SortOrder', $sortOrder)
+#end
+
+## Flat Threaded Paging
+
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize', $pageSize))
+
+$listOptions.Add('PageIndex', $pageIndex)
+$listOptions.Add('PageSize', $pageSize)
+$listOptions.add('IncludeChildren', 'true')
+
+## Request Comments
+
+#set ($comments = $core_v2_comments.List($listOptions))
+
+## Render flattened
+
+#foreach ($comment in $comments)
+#beforeall
+	<ul>
+#each
+	$core_v2_widget.ExecuteFile('pre-rendered-reply.vm')
+#afterall
+	</ul>
+#end
+
+$core_v2_ui.Pager($comments.PageIndex, $comments.PageSize, $comments.TotalCount)

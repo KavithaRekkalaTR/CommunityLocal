@@ -1,0 +1,66 @@
+#set($options = "%{}")
+
+#set ($endDate = $core_v2_page.GetQueryStringValue('fr_endDate'))
+#if($endDate)
+    $options.Add('endDate', $endDate)
+#end
+
+#set ($startDate = $core_v2_page.GetQueryStringValue('fr_startDate'))
+#if($startDate)
+    $options.Add('startDate', $startDate)
+#end
+
+#set ($includeUsers = $core_v2_page.GetQueryStringValue('fr_includeUsers'))
+#if($includeUsers)
+    $options.Add('includeUsers', $includeUsers)
+#end
+
+#set ($includeRoles = $core_v2_page.GetQueryStringValue('fr_includeRoles'))
+#if($includeRoles)
+    $options.Add('includeRoles', $includeRoles)
+#end
+
+#set ($includeAnonymous = $core_v2_page.GetQueryStringValue('fr_includeAnonymous'))
+#if($includeAnonymous)
+    $options.Add('includeAnonymous', $includeAnonymous)
+#end
+
+#set ($selectedUsers = $core_v2_page.GetQueryStringValue('fr_selectedUsers'))
+#if($selectedUsers)
+    $options.Add('selectedUsers', $selectedUsers)
+#end
+
+#set ($selectedRoles = $core_v2_page.GetQueryStringValue('fr_selectedRoles'))
+#if($selectedRoles)
+    $options.Add('selectedRoles', $selectedRoles)
+#end
+
+#set ($includeGroups = $core_v2_page.GetQueryStringValue('fr_includeGroups'))
+#if($includeGroups)
+    $options.Add('includeGroups', $includeGroups)
+#end
+
+#set ($includeSubGroups = $core_v2_page.GetQueryStringValue('fr_includeSubGroups'))
+#if($includeSubGroups)
+    $options.Add('includeSubGroups', $includeSubGroups)
+#end
+
+#set ($selectedGroups = $core_v2_page.GetQueryStringValue('fr_selectedGroups'))
+#if($selectedGroups)
+    $options.Add('selectedGroups', $selectedGroups)
+#end
+
+#set ($datePeriod = $core_v2_page.GetQueryStringValue('fr_datePeriod'))
+#if($datePeriod)
+    $options.Add('datePeriod', $datePeriod)
+#end
+
+#set ($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#if($sortBy)
+    $options.Add('SortBy', $sortBy)
+#end
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('sortOrder'))
+#if($sortOrder)
+    $options.Add('SortOrder', $sortOrder)
+#end

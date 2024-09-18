@@ -1,0 +1,37 @@
+##
+## Renders an api method as JSON
+##
+## Requires in scope:
+##   $apiMethod
+##
+
+#if (!$language)
+	#set ($language = "velocity")
+#end
+
+#set ($overloadWithMostParameters = false)
+#if ($apiMethod.Overloads)
+	#foreach ($apiOverload in $apiMethod.Overloads)
+		#if (!$overloadWithMostParameters)
+			#set ($overloadWithMostParameters = $apiOverload)
+		#end
+		#if($apiOverload.Parameters.Count >= $overloadWithMostParameters.Parameters.Count)
+			#set ($overloadWithMostParameters = $apiOverload)
+		#end
+	#end
+#end
+{
+	"Name": #if ($apiMethod.Name) "$core_v2_encoding.JavascriptEncode($apiMethod.Name)" #else "" #end,
+	#set ($description = false)
+	#if ($apiMethod.Overloads)
+		#foreach ($apiOverload in $apiMethod.Overloads)
+			#if ($apiOverload.Description)
+				#set ($description = $apiOverload.Description)
+			#end
+		#end
+	#end
+	"Description": #if ($description) "$core_v2_encoding.JavascriptEncode($description)" #else "" #end,
+	"RenderedDoc": "$core_v2_encoding.JavascriptEncode($core_v2_utility.Trim($core_v2_widget.ExecuteFile('callback-sub-serialize-api-method-rendered-doc.vm')))",
+	"Signature": "$core_v2_encoding.JavascriptEncode($shellApi.BuildSyntaxSample($overloadWithMostParameters, false, $language))",
+	"Type": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Method'))"
+}

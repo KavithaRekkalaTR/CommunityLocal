@@ -1,0 +1,30 @@
+#set ($containerId = false)
+#set ($containerId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_containerid')))
+#set ($containerTypeId = false)
+#set ($containerTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_containertypeid')))
+
+#set($applicationId = false)
+#set($applicationId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_applicationid')))
+#set($applicationTypeId = false)
+#set($applicationTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_applicationtypeid')))
+
+#set($guidEmpty = $core_v2_utility.ParseGuid(''))
+$core_v2_page.SetContentType('application/json')
+
+{
+#if ($applicationId && $applicationTypeId && $applicationId != $guidEmpty && $applicationTypeId != $guidEmpty)
+	#set($application = false)
+	#set($application = $core_v2_application.Get($applicationId, $applicationTypeId))
+	#if ($application)
+		"Title": "$core_v2_encoding.JavascriptEncode($application.HtmlName('Web'))",
+		"Value": "a:$applicationTypeId.ToString():$applicationId.ToString()"
+	#end
+#elseif ($containerId && $containerTypeId && $containerId != $guidEmpty && $containerTypeId != $guidEmpty)
+	#set($container = false)
+	#set($container = $core_v2_container.Get($containerId, $containerTypeId))
+	#if ($container)
+		"Title": "$core_v2_encoding.JavascriptEncode($container.HtmlName('Web'))",
+		"Value": "c:$containerTypeId.ToString():$containerId.ToString()"
+	#end
+#end
+}

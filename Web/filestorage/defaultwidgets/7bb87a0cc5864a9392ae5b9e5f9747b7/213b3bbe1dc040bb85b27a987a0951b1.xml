@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:name}" version="11.0.0.0" description="${resource:description}" instanceIdentifier="213b3bbe1dc040bb85b27a987a0951b1" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="content-tags" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+	<contentScript language="Velocity"><![CDATA[#set ($content = false)
+#set ($content = $core_v2_content.Current)
+#if (!$content)
+	$core_v2_widget.Hide()
+#end
+
+#set ($tags = false)
+#set ($tags = $core_v2_tags.Get($content.ContentId, $content.ContentTypeId))
+#if (!$tags)
+	$core_v2_widget.Hide()
+#end
+
+#foreach ($tag in $tags)
+#beforeall
+	<div class="content-details">
+		<div class="content-tags">
+			<ul class="tag-list">
+#each
+	#set ($tagUrl = false)
+	#set ($tagUrl = $core_v2_urls.Tags("%{ Tags = $tag.TagName, ApplicationId = $tag.ApplicationId, ApplicationTypeId = $tag.ApplicationTypeId }"))
+	#if ($tagUrl)
+		<li class="tag-item">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($tagUrl)" rel="tag">$tag.TagName</a>
+		</li>
+	#end
+#afterall
+			</ul>
+		</div>
+	</div>
+#end
+]]></contentScript>
+	<headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:name}'))]]></headerScript>
+	<configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="title" defaultValue="${resource:name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+<languageResources><![CDATA[<language key="en-us">
+  <resource name="name">Content - Tag List</resource>
+  <resource name="description">Displays content tags</resource>
+  <resource name="Options">Options</resource>
+  <resource name="title">Title</resource>
+</language>]]></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,74 @@
+$core_v2_widget.ExecuteFile('full-parse-options.vm')
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_pageindex')))
+$options.Add('PageIndex', $pageIndex)
+
+#set($pageSize = 15)
+$options.Add('PageSize', $pageSize)
+
+#set ($activities = $context.GetActivityDetailSummary($options))
+
+#foreach($activity in $activities)
+#beforeall
+<div class="responsive-wrapper">
+	<table class="scrollable-table">
+	<thead>
+		<tr>
+            <th>$core_v2_language.GetResource('Activity')</th>
+            <th>$core_v2_language.GetResource('Content')</th>
+            <th>$core_v2_language.GetResource('Application')</th>
+            <th>$core_v2_language.GetResource('Group')</th>
+            <th>$core_v2_language.GetResource('Member')</th>
+            $reporting_ui.SortableTableHeader("", "ActivityDate", "ascending", $core_v2_language.GetResource('ActivityDate'), $sortBy, $sortOrder, 2)
+
+		</tr>
+	</thead>
+	<tbody>
+#each
+        #set ($apiContent = false)
+		#set ($apiContent = $core_v2_content.Get($activity.PrimaryContent.ContentId, $activity.PrimaryContent.ContentTypeId))
+
+        #set($title = '')
+
+        #if ($apiContent && !$apiContent.HasErrors())
+            #set($title = $apiContent.HtmlName('web'))
+        #end
+        #if (!$title || $title.Length == 0)
+            #if ($activity.PrimaryContent.Subject && $activity.PrimaryContent.Subject.Length > 0)
+                #set ($title = $activity.PrimaryContent.Subject)
+            #else
+                #set ($title = $core_v2_language.GetResource('Unknown'))
+            #end
+        #end
+
+		<tr data-id="$activity.ActivityKey">
+            <td data-title="$core_v2_language.GetResource('Activity')">
+				$!activity.Description
+			</td>
+  			$reporting_ui.ContentNameTableCellWithActions($activity.PrimaryContent.ContentId, $title, $apiContent.Url)
+            <td data-title="$core_v2_language.GetResource('Application')">
+				$!activity.PrimaryContent.Application.Name
+			</td>
+            <td data-title="$core_v2_language.GetResource('Group')">
+                $!activity.PrimaryContent.Application.Container.Name
+            </td>
+            <td data-title="$core_v2_language.GetResource('Member')">
+                $!activity.User.ExpandedName
+            </td>
+			<td data-title="$core_v2_language.GetResource('ActivityDate')">
+                $core_v2_language.FormatDateAndTime($activity.ActivityDate, "%{AdjustTimeZone = 'false'}")
+			</td>
+		</tr>
+#afterall
+	</tbody>
+	</table>
+</div>
+<div class="pager-data" data-pagesize="$activities.PageSize" data-totalitems="$activities.TotalCount"></div>
+#nodata
+	#if ($pageIndex == 0)
+		<div class="message norecords">
+			$core_v2_language.GetResource("NoData")
+		</div>
+	#end
+#end

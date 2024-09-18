@@ -1,0 +1,31 @@
+##
+## REST Resource Member Index Renderer
+##
+## Requires in scope:
+##   $restResource
+##
+#if ($restResource)
+
+	<div>
+
+	<h3>$core_v2_encoding.HtmlEncode($restResource.Resource)</h3>
+
+	#if ($restResource.Operations && $restResource.Operations.Count > 0)
+		<h3>$core_v2_language.GetResource('RestOperations')</h3>
+		<ul>
+			#foreach($operation in $restResource.Operations)
+				<li>
+					<a href="#" 
+						data-name="$core_v2_encoding.HtmlAttributeEncode($restResource.Resource)" 
+						data-type="extension" 
+						data-mode="rest"
+						data-target="$core_v2_encoding.HtmlAttributeEncode($operation.Action)" 
+						class="documentation-link">$core_v2_encoding.HtmlEncode($operation.Action)</a>
+				</li>		
+			#end
+		</ul>
+	#end
+
+	</div>
+
+#end

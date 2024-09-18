@@ -1,0 +1,7 @@
+#set($attachmentUrl = $context.AttachmentUrl)
+#if (!$attachmentUrl || $attachmentUrl == '')
+    #set($attachmentUrl = $context.ReferencedUrl)
+#end
+#if ($attachmentUrl && $attachmentUrl != '' && $context.HasAccessToUrl($attachmentUrl))
+    $core_v2_ui.GetViewHtml($attachmentUrl, "%{ OutputIsPersisted = 'false', AdjustToContainer = 'true' }")
+#end

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:FlattenThreadedReplies_Title}" version="10.0.0.0" description="${resource:FlattenThreadedReplies_Description}" instanceIdentifier="7e76578652fe45299897323c146c97ea" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="flatten-threaded-replies-panel" provider="ae6914a55e644d0c98842ade6cce7527">
+    <contentScript><![CDATA[<p class="panel-instructions">
+	$core_v2_language.GetResource('FlattenThreadedReplies_Instructions')
+</p>
+<fieldset class="field-list">
+	<ul class="field-list">
+		<li class="field-item submit">
+			<span class="field-item-input">
+				<a href="#" class="button save" data-messagename="flatten-threaded-replies" >$core_v2_language.GetResource('FlattenThreadedReplies')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.flattenForumRepliesPanel.register({
+		flattenConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Flatten_Confirmation'))',
+		threadedRepliesFlattened : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ThreadedReplies_Flattened'))',
+		scheduleJobUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('schedule-job.vm'))'
+	});
+});
+</script>
+	]]></contentScript>
+    <languageResources><language key="en-us">
+  <resource name="FlattenThreadedReplies_Title">Flatten Threaded Replies</resource>
+  <resource name="FlattenThreadedReplies_Description">Flattens all threaded forum replies.</resource>
+  <resource name="FlattenThreadedReplies_Instructions">Click 'Flatten All Threaded Replies' below to reset all existing forum replies to flatten the reply hierarchy.  The visual representation of the reply hierarchy is only enabled when the Social theme is updated to the latest release. It may be beneficial to perform the Social theme upgrade or migration first, review the existing forum content on this site, and then return to this notification and process the forceful flattening of existing forum replies only if necessary.</resource>
+  <resource name="FlattenThreadedReplies">Flatten All Threaded Replies</resource>
+  <resource name="Flatten_Confirmation">Are you sure you want to reset all existing forum replies to flatten the reply hierarchy?  This cannot be undone.</resource>
+  <resource name="ThreadedReplies_Flattened">A background process has been scheduled to reset all existing forum replies to flatten the reply hierarchy.  The process may take several minutes before the change is present of the site.</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

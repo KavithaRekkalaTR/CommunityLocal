@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:CF_RssFeed}" version="11.0.0.0" description="${resource:CF_TempRssDesc}" instanceIdentifier="0edc7cfd95f242658d0c3ba139252b75" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="temporary-rss-feed-item-list" lastModified="2020-01-14 16:06:46Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+	
+#set ($feedUrl = $core_v2_widget.GetUrlValue('feedUrl', ''))
+#set ($viewType = $core_v2_widget.GetStringValue('viewType', 'simple'))
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 5))
+#if ($feedUrl.length == 0)
+	$core_v2_widget.Hide()
+#end
+
+<div id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('feedWrapper'))">
+	<div class="content abbreviated">
+		<div class="summary">
+			<h2 class="name">
+				<a class="external-link rss" href="$core_v2_encoding.HtmlAttributeEncode($feedUrl)">$core_v2_encoding.HtmlEncode($feedUrl)</a>
+			</h2>
+		</div>
+	</div>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.temporaryRssFeedItemList')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function(){
+			jQuery.telligent.evolution.widgets.temporaryRssFeedItemList.register({
+				feedWrapper: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('feedWrapper'))',
+				feedItemsUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('feeditems.vm'))",
+				viewType: '$core_v2_encoding.JavascriptEncode($viewType)',
+				pageSize: $pageSize
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set ($feedUrl = $core_v2_widget.GetUrlValue('feedUrl', ''))
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:CF_RssFeed}'))
+#if ($feedUrl.length > 0)
+	<a class="internal-link rss" href="$core_v2_encoding.HtmlAttributeEncode($feedUrl)"><span></span>$core_v2_language.GetResource('Rss')</a>
+#end
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:CF_RssFeed}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="feedUrl" labelResourceName="CF_FeedUrl" descriptionResourceName="CF_FeedUrl_Description" dataType="Url" />
+	<property id="viewType" labelResourceName="CF_TempFeed_ViewType" defaultValue="simple" dataType="String">
+		<propertyValue value="simple" labelResourceName="CF_TempFeed_NotFiltered" />
+		<propertyValue value="simpleExpanded" labelResourceName="CF_TempFeed_FirstPostExcerpt" />
+	</property>
+	<property id="pageSize" labelResourceName="CF_TempFeed_PageSize" defaultValue="5" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_FeedUrl">Feed URL</resource>
+  <resource name="CF_FeedUrl_Description">The full URL of the RSS feed to retrieve and display.</resource>
+  <resource name="CF_RssFeed">RSS Feed</resource>
+  <resource name="CF_TempFeed_FirstPostExcerpt">Not Paged/Not Filtered/First Post Excerpt</resource>
+  <resource name="CF_TempFeed_NotFiltered">Not Paged/Not Filtered</resource>
+  <resource name="CF_TempFeed_PageSize">Number of items to show</resource>
+  <resource name="CF_TempFeed_ViewType">View type</resource>
+  <resource name="CF_TempRssDesc">Displays the latest items from an RSS feed.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Rss">RSS</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,66 @@
+#set ($blogId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('BlogId')))
+
+#set ($blog = false)
+#set ($blog = $core_v2_blog.Get("%{Id = $blogId}"))
+
+$core_v2_page.SetTitle($core_v2_language.GetResource('Subscribe_ByEmail'), false, false)
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	$core_v2_page.RenderThemeHeaders("%{IsModal = 'True'}")
+</head>
+<body>
+<form>
+<div class="content-fragment">
+
+	<fieldset class="field-list email-subscription-form">
+		<ul class="field-list">
+			<li class="field-item">
+				<label for="$core_v2_widget.UniqueId('blogSubscribeEmail')" class="field-item-name">$core_v2_language.GetResource('EmailAddress')</label>
+				<span class="field-item-input">
+					<input id="$core_v2_widget.UniqueId('blogSubscribeEmail')" name="blogSubscribeEmail" type="text" />
+					<span class="field-item-validation"></span>
+				</span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-input">
+					<a id="$core_v2_widget.UniqueId('blogSubscribe')" href="#" class="button">$core_v2_language.GetResource('Weblog_Subscription_Subscribe')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+
+	<script type="text/javascript">
+		jQuery(function(j){
+			j('#$core_v2_widget.UniqueId('blogSubscribe')').evolutionValidation({
+				validateOnLoad: false,
+				onSuccessfulClick: function(e) {
+					j.telligent.evolution.post({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('subscribe.vm'))',
+						data: {
+							type:'blogAnonymous',
+							email:j('#$core_v2_widget.UniqueId('blogSubscribeEmail')').val(),
+							blogId:$blog.Id
+						},
+						success: function(response) {
+							jQuery.glowModal.opener(window).jQuery.telligent.evolution.notifications.show(response.message, { type: 'success' });
+							jQuery.glowModal.close();
+						}
+					});
+				}
+			})
+			.evolutionValidation('addField',
+		            '#$core_v2_widget.UniqueId('blogSubscribeEmail')',
+		            {
+		                required: true,
+		                email: true
+		            },
+		            j('#$core_v2_widget.UniqueId('blogSubscribeEmail')').closest('.field-item').find('.field-item-validation'));
+		});
+	</script>
+
+</div>
+</form>
+</body>
+</html>

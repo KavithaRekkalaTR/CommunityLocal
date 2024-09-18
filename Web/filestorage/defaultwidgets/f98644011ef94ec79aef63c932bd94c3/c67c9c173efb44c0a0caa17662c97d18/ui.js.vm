@@ -1,0 +1,31 @@
+## Minimal wrapper to inject the shared private studio shell modules with the studio-specific main.js
+## Don't add much code here as it's executed by Velocity and can be problematic with $/jQuery
+
+$core_v2_page.SetContentType('application/javascript')
+
+(function(){
+
+	$reporting.RenderShellScriptModules()
+
+    $core_v2_widget.RenderFile('reporting-model.js')
+    $core_v2_widget.RenderFile('reporting-router.js')
+    $core_v2_widget.RenderFile('reporting-tabsettings.js')
+    $core_v2_widget.RenderFile('reporting-viewprovider.js')
+    $core_v2_widget.RenderFile('reporting-utility.js')
+    $core_v2_widget.RenderFile('reporting-reportutility.js')
+    $core_v2_widget.RenderFile('messagePager.js')
+
+	$core_v2_widget.RenderFile('main.js')
+
+	require(['main','ReportingUtility', 'ReportingReportUtility', 'messagePager'], function(main, ReportingUtility, ReportingReportUtility, messagePager, j, global, undef) {
+
+        j.telligent = j.telligent || {};
+        j.telligent.evolution = j.telligent.evolution || {};
+        j.telligent.evolution.widgets = j.telligent.evolution.widgets || {};
+        j.telligent.evolution.widgets.reporting = main;
+        j.telligent.evolution.widgets.reporting.util = ReportingUtility;
+        j.telligent.evolution.widgets.reporting.reportutil = ReportingReportUtility;
+
+	}, jQuery, window);
+
+})();

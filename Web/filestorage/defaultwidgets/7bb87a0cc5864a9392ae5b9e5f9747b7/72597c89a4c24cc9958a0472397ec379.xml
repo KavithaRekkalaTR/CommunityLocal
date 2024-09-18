@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MediaGalleries_MediaGalleryDragAndDrop_Name}" version="12.0.0.0" description="${resource:MediaGalleries_MediaGalleryDragAndDrop_Description}" instanceIdentifier="72597c89a4c24cc9958a0472397ec379" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="media-gallery-dragdrop" lastModified="2021-11-15 20:46:55Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($gallery = false)
+#set ($gallery = $core_v2_gallery.Current)
+#if (!$gallery || $core_v2_widget.IsInWidgetPreviewMode)
+    $core_v2_widget.Hide()
+#end
+
+#if(!$core_v3_permission.CheckPermission($core_v2_mediaPermissions.CreatePost, $core_v2_user.Accessing.Id, "%{ ApplicationId = $gallery.ApplicationId, ApplicationTypeId = $core_v2_gallery.ApplicationTypeId }").IsAllowed || !$core_v3_permission.CheckPermission($core_v2_mediaPermissions.AttachFileLocal, $core_v2_user.Accessing.Id, "%{ ApplicationId = $gallery.ApplicationId, ApplicationTypeId = $core_v2_gallery.ApplicationTypeId }").IsAllowed)
+    $core_v2_widget.Hide()
+#end
+
+#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+#registerEndOfPageHtml('telligent.evolution.widgets.MediaGalleryDragAndDrop')
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+jQuery(function(j) {
+    j.telligent.evolution.widgets.mediaGalleryDragAndDrop.register({
+			uploadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))',
+			uploadContextId: '$uploadContextId.ToString()',
+			mediaGalleryId: $gallery.Id,
+			contentTypeId: '$core_v2_media.ContentTypeId',
+			applicationTypeId: '$core_v2_gallery.ApplicationTypeId',
+			applicationId: '$gallery.ApplicationId',
+			finalizeUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('finalize.vm'))',
+			text: {
+				upload: '$core_v2_encoding.JavascriptEncode($core_v2_language.FormatString($core_v2_language.GetResource('upload'), $gallery.Name))',
+				uploadProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('upload-progress'))',
+				uploadComplete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('upload-complete'))',
+				uploadError: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('upload-error'))'
+			}
+    });
+});
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="MediaGalleries_MediaGalleryDragAndDrop_Description">Enables drag and drop uploading into the current media gallery.</resource>
+  <resource name="MediaGalleries_MediaGalleryDragAndDrop_Name">Media Gallery - Drag and Drop </resource>
+  <resource name="upload">Drop files to upload to '{0}'</resource>
+  <resource name="upload-complete">Uploaded '{0}'</resource>
+  <resource name="upload-error">An error occurred while uploading a file.</resource>
+  <resource name="upload-progress">Uploading '{0}' ({1}%)...</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="a51614fd19f7416ca89453788ac15794" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

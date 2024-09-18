@@ -1,0 +1,12 @@
+##
+## Evaluate Script Callback
+##
+#if ($core_v2_page.IsPost)
+	#set ($options = "%{}")
+
+	#set ($input = $core_v2_page.GetFormValue("_w_input"))
+	#set ($mode = $core_v2_page.GetFormValue("_w_mode"))
+
+	$core_v2_page.SetContentType('application/json')
+	$core_v2_widget.ExecuteFile('callback-data-eval-content.vm')
+#end

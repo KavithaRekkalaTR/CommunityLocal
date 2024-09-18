@@ -1,0 +1,30 @@
+#set ($languages = $context.ListLanguages())
+#set ($accessingUserLanguage = $core_v2_language.Lowercase($core_v2_user.Accessing.Language))
+
+<div class="select-language">
+	<form>
+		<p>$core_v2_language.GetResource('SampleLanguageSelect')</p>
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item" id="">
+					<label for="" class="field-item-name">$core_v2_language.GetResource('Language')</label>
+					<span class="field-item-input select-language">
+						<select>
+							#foreach ($language in $languages)
+								<option value="$core_v2_encoding.HtmlAttributeEncode($language.Key)" #if ($accessingUserLanguage == $language.Key) selected #end>$core_v2_encoding.HtmlEncode($language.Name)</option>
+							#end
+						</select>
+					</span>
+				</li>
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a href="#" class="button cancel">$core_v2_language.GetResource('Cancel')</a>
+					</span>
+					<span class="field-item-input">
+						<a href="#" class="button continue">$core_v2_language.GetResource('SendSample')</a>
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+</div>

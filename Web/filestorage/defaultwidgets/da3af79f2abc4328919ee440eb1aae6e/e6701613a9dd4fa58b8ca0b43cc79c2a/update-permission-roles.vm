@@ -1,0 +1,20 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($applicationId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ApplicationId')))
+	#set ($applicationTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('ApplicationTypeId')))
+	#set ($allowedRoleIds = $core_v2_page.GetFormValue('AllowedRoleIds'))
+	#set ($deniedRoleIds = $core_v2_page.GetFormValue('DeniedRoleIds'))
+	#set ($permissionId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('PermissionId')))
+
+	#set($options = "%{}")
+	$options.Add('Permissions', $permissions)
+
+	#set($response = $context.UpdatePermissionRoles($permissionId, $applicationId, $applicationTypeId, $allowedRoleIds, $deniedRoleIds))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+#end

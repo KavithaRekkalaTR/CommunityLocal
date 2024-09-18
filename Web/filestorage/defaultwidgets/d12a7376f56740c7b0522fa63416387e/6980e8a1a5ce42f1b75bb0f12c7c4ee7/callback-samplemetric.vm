@@ -1,0 +1,20 @@
+#set($metricId = false)
+#set($metricId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_metricid')))
+
+#set($contentId = false)
+#set($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contentId')))
+
+#set($contentTypeId = false)
+#set($contentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_contenttypeid')))
+
+#if ($metricId && $contentId && $contentTypeId)
+    #set($sampleMetric = false)
+    #set($sampleMetric = $context.GetSampleMetricValue($metricId, $contentId, $contentTypeId))
+    #if($sampleMetric)
+        <ul class="content-list content simple sample-metrics">
+        $core_v2_widget.ExecuteFile('render-samplemetric.vm')
+        </ul>
+    #else
+        <div class="message norecords">$core_v2_language.GetResource('no-metric-sample-for-content')</div>
+    #end
+#end

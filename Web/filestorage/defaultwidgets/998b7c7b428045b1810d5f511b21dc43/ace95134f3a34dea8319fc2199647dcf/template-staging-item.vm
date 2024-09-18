@@ -1,0 +1,62 @@
+##
+## Expects in scope:
+## staged item, whatever properties that model haas
+##
+<% if (Type && Type == 'EmailConfiguration') { %>
+	<li style="position: relative" class="staged-item" data-id="<%: (Id || '') %>" data-model="configuration">
+		<a class="ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('EmailConfiguration'))"
+			href="#" data-messagename="me.view.staging.configured" data-configuredname="<%: Name %>">
+			<%: Name %>
+			<span class="state ui-tip">$core_v2_language.GetResource('Configured')</span>
+		</a>
+		<div class="navigation-list editor-actions ui-links" data-maxlinks="0">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="studio.view.staging.publish" data-id="<%: Id %>" data-model="configuration">$core_v2_language.GetResource('Publish')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="studio.view.staging.revert" data-id="<%: Id %>" data-model="configuration">$core_v2_language.GetResource('Revert')</a>
+				</li>
+				<li class="navigation-list-item" data-more>
+					<a href="#" data-more class="staging-actions ui-tip" data-tip="Actions">$core_v2_language.GetResource('Actions')</a>
+				</li>
+				<li class="navigation-list-item" data-cancel>
+					<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</li>
+<% } else { %>
+	<li style="position: relative" class="staged-item" data-id="<%: (Id || '') %>">
+		<a class="ui-tip" data-tip="<%: ProcessedDescription %>" href="$core_v2_encoding.HtmlAttributeEncode($context.PanelUrl)&_eid=<%: Id %>&_et=overview">
+			<%: ProcessedName %>
+			<% if(IsTranslated) { %>
+				<span class="state">$core_v2_language.GetResource('Translated')</span>
+			<% } %>
+			<% if(typeof IsReverted !== 'undefined' && IsReverted) { %>
+				## Deletion is a specific case of reversion
+				<% if(typeof IsDeleted !== 'undefined' && IsDeleted) { %>
+					<span class="state ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('deleted_desc'))">$core_v2_language.GetResource('deleted')</span>
+				<% } else  { %>
+					<span class="state ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('reverted_desc'))">$core_v2_language.GetResource('reverted')</span>
+				<% } %>
+			<% } %>
+		</a>
+		<div class="navigation-list editor-actions ui-links" data-maxlinks="0">
+			<ul>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="studio.view.staging.publish" data-id="<%: Id %>" data-model="email">$core_v2_language.GetResource('Publish')</a>
+				</li>
+				<li class="navigation-list-item">
+					<a href="#" data-messagename="studio.view.staging.revert" data-id="<%: Id %>" data-model="email">$core_v2_language.GetResource('Revert')</a>
+				</li>
+				<li class="navigation-list-item" data-more>
+					<a href="#" data-more class="staging-actions ui-tip" data-tip="Actions">$core_v2_language.GetResource('Actions')</a>
+				</li>
+				<li class="navigation-list-item" data-cancel>
+					<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+				</li>
+			</ul>
+		</div>
+	</li>
+<% } %>

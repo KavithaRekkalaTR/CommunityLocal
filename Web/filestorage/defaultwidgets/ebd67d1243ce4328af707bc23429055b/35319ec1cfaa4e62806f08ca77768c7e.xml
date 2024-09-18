@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="Plugin Exceptions" version="11.0.0.0" description="" instanceIdentifier="35319ec1cfaa4e62806f08ca77768c7e" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-08-17 21:16:31Z" provider="ebd67d1243ce4328af707bc23429055b">
+    <contentScript language="Velocity"><![CDATA[<div id="$core_v2_widget.UniqueId('tab')" class="exceptions">
+	#set ($exceptionsListId = $core_v2_widget.UniqueId('exceptionsList'))
+	#set ($filterId = $core_v2_widget.UniqueId('filter'))
+	#set ($exceptionCountId = $core_v2_widget.UniqueId('exceptionCount'))
+	#set ($deleteSelectedId = $core_v2_widget.UniqueId('deleteSelected'))
+	#set ($deleteAllId = $core_v2_widget.UniqueId('deleteAll'))
+	#set ($exportId = $core_v2_widget.UniqueId('export'))
+	#set ($deselectAllId = $core_v2_widget.UniqueId('deselectAll'))
+	#set ($searchInputId = $core_v2_widget.UniqueId('searchInput'))
+	#set ($machineNamesId = $core_v2_widget.UniqueId('machineNames'))
+	#set ($exceptionTypeId = $core_v2_widget.UniqueId('ExceptionTypeId'))
+
+	#set ($initialStartDate = $core_v2_utility.CurrentUserDate.AddDays(-1))
+	#set ($categoryIds = $context_exceptions.GetExceptionTypes("%{ AffectedType = $context.PluginType, StartDate = $initialStartDate }"))
+
+	<p>$core_v2_language.GetResource('Instructions')</p>
+
+	<form><fieldset id="$core_v2_encoding.HtmlAttributeEncode($filterId)" class="exceptions-filter">
+		<div class="filter-selector">
+			<div class="search-filters">
+				<input type="text" id="$exceptionTypeId" style="width: 40%" />
+
+				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)" style="width: 25%"
+					placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('containing'))">
+
+				#set ($machineNames = $context.ListMachineNames())
+				#if($machineNames.Count >= 2)
+					$core_v2_language.GetResource('on')
+					<select id="$core_v2_encoding.HtmlAttributeEncode($machineNamesId)">
+						<option value="">$core_v2_language.GetResource('Node_Any')</option>
+						#foreach ($machineName in $machineNames)
+							<option value="$machineName">$machineName</option>
+						#end
+					</select>
+				#end
+
+				<select class="minFrequency">
+					<option value="0">$core_v2_language.GetResource('MinFrequency_All')</option>
+					#set ($occurrences = 10)
+					<option value="$occurrences">$core_v2_language.FormatString($core_v2_language.GetResource('MinFrequency_Occurrences'), $occurrences.ToString())</option>
+					#set ($occurrences = 25)
+					<option value="$occurrences">$core_v2_language.FormatString($core_v2_language.GetResource('MinFrequency_Occurrences'), $occurrences.ToString())</option>
+					#set ($occurrences = 100)
+					<option value="$occurrences">$core_v2_language.FormatString($core_v2_language.GetResource('MinFrequency_Occurrences'), $occurrences.ToString())</option>
+					#set ($occurrences = 1000)
+					<option value="$occurrences">$core_v2_language.FormatString($core_v2_language.GetResource('MinFrequency_Occurrences'), $occurrences.ToString())</option>
+				</select>
+
+				$core_v2_language.GetResource('between')
+				<input type="text" class="startDate" id="$core_v2_widget.UniqueId('startDate')" name="startDate" style="width: 20%"  />
+				$core_v2_language.GetResource('and')
+				<input type="text" class="endDate" id="$core_v2_widget.UniqueId('endDate')" name="endDate" style="width: 20%"  />
+
+				<select class="sortBy">
+					<option value="Frequency">$core_v2_language.GetResource('SortBy_Frequency')</option>
+					<option value="LastOccurred" selected>$core_v2_language.GetResource('SortBy_LastOccurred')</option>
+				</select>
+			</div>
+		</div>
+
+	</fieldset></form>
+
+	<fieldset id="$core_v2_encoding.HtmlAttributeEncode($filterId)">
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input">
+					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($exportId)">$core_v2_language.GetResource('ExportAll')</a>
+					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($deleteSelectedId)">$core_v2_language.GetResource('DeleteSelected')</a>
+					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($deleteAllId)">$core_v2_language.GetResource('DeleteAll')</a>
+					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($deselectAllId)">$core_v2_language.GetResource('DeselectAll')</a>
+					<a href="#" class="inline-button" data-messagename="exceptions-refresh">$core_v2_language.GetResource('Refresh')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+
+	<h2 id="$core_v2_encoding.HtmlAttributeEncode($exceptionCountId)"></h2>
+	<form>
+	<ul id="$core_v2_encoding.HtmlAttributeEncode($exceptionsListId)" class="content-list expandable" style="margin-top: 0px">
+		#set ($options = "%{}")
+		$options.Add('IncludeUnknown', 'True')
+		$options.Add('StartDate', $initialStartDate)
+		$options.Add('MinFrequency', 0)
+		$options.Add('PageIndex', 0)
+		$options.Add('PageSize', 20)
+		$options.Add('SortBy', 'Frequency')
+		$options.Add('AffectedType', $context.PluginType)
+
+		#set ($inProcess = true)
+    	#set ($exceptions = $context_exceptions.GetExceptions($options))
+		$core_v2_widget.ExecuteFile('render-list.vm')
+	</ul>
+	</form>
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.pluginExceptions')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+<script type="text/javascript">
+	(function(){
+		var context = {
+			list: '#$core_v2_encoding.JavascriptEncode($exceptionsListId)',
+			filter: '#$core_v2_encoding.JavascriptEncode($filterId)',
+			pluginType: '$core_v2_encoding.JavascriptEncode($context.PluginType)',
+			totalExceptions: '$exceptions.TotalCount',
+			exceptionCountId: '#$core_v2_encoding.JavascriptEncode($exceptionCountId)',
+			exceptionTypeId: '#$core_v2_encoding.JavascriptEncode($exceptionTypeId)',
+			deleteSelectedButton: '#$core_v2_encoding.JavascriptEncode($deleteSelectedId)',
+			deleteAllButton: '#$core_v2_encoding.JavascriptEncode($deleteAllId)',
+			exportButton: '#$core_v2_encoding.JavascriptEncode($exportId)',
+			deSelectAllButton: '#$core_v2_encoding.JavascriptEncode($deselectAllId)',
+			allExceptionsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Type_All'))',
+			deleteSelectedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteSelected'))',
+			exportText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Export'))',
+			exportAllText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportAll'))',
+			exportSelectedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportSelected'))',
+			deleteAllConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteAllConfirm'))',
+			deleteSelectedConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteSelectedConfirm'))',
+			deleteConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteConfirm'))',
+			noExceptionsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoExceptions'))',
+			getTypesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-gettypes.vm'))',
+			getExceptionsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-exceptions.jsm'))',
+			deleteExceptionsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete.vm'))',
+			exportUrl: '$core_v2_encoding.JavascriptEncode($context.ExportUrl)',
+			exceptionsSingularText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Exceptions_Singular'))',
+			exceptionsPluralText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Exceptions_Plural'))',
+			machineNamesId: '#$core_v2_encoding.JavascriptEncode($machineNamesId)',
+			searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+    	   	startDateId: "#$core_v2_widget.UniqueId('startDate')",
+    	    endDateId: "#$core_v2_widget.UniqueId('endDate')",
+	        startDate: '$core_v2_encoding.JavascriptEncode($initialStartDate)',
+			urls: {
+				lookupTypes: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-exceptionTypes.vm'))'
+			},
+			resources: {
+				noTypesMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingTypes'))',
+			}
+		};
+
+		var api = $context.JsonApi;
+		api.registerContent({
+			name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Exceptions'))',
+			orderNumber: 1000100,
+			selected: function() {
+				jQuery('#$core_v2_widget.UniqueId('tab')').css({
+					visibility: 'visible',
+					height: 'auto',
+					width: 'auto',
+					left: '0',
+					position: 'static',
+					overflow: 'visible',
+					top: '0'
+				});
+				context.startScrollable();
+			},
+			unselected: function() {
+				jQuery('#$core_v2_widget.UniqueId('tab')').css({
+					visibility: 'hidden',
+					height: '100px',
+					width: '800px',
+					left: '-1000px',
+					position: 'absolute',
+					overflow: 'hidden',
+					top: '-1000px'
+				});
+			}
+		});
+
+		jQuery.telligent.evolution.widgets.pluginExceptions.register(context);
+	})();
+</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="cancel">Cancel</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteAll">Delete All</resource>
+  <resource name="DeleteAllConfirm">Are you sure you want to delete all logged exceptions related to this functionality?</resource>
+  <resource name="DeleteConfirm">Are you sure you want to delete this exception?</resource>
+  <resource name="DeleteSelected">Delete Selected</resource>
+  <resource name="DeleteSelectedConfirm">Are you sure you want to delete the selected exceptions?</resource>
+  <resource name="DeselectAll">Deselect All</resource>
+  <resource name="Exceptions">Exceptions</resource>
+  <resource name="Exceptions_Plural">{0} Exceptions</resource>
+  <resource name="Exceptions_Singular">{0} Exception</resource>
+  <resource name="Export">Export</resource>
+  <resource name="ExportAll">Export All</resource>
+  <resource name="ExportSelected">Export Selected</resource>
+  <resource name="FirstOccurred">First Occurred</resource>
+  <resource name="Instructions">Below is a listing of exceptions originating from this functionality.</resource>
+  <resource name="IPAddress">IP Address</resource>
+  <resource name="LastDays_Last_Days">That occurred within {0} days</resource>
+  <resource name="LastDays_Today">That occurred today</resource>
+  <resource name="LastOccurred">Last Occurred</resource>
+  <resource name="MinFrequency_All">Regardless of occurrence count</resource>
+  <resource name="MinFrequency_Occurrences">With {0} or more occurrences</resource>
+  <resource name="more">More</resource>
+  <resource name="Node_Any">Any node</resource>
+  <resource name="NoExceptions">No exceptions match the filter.</resource>
+  <resource name="NoResults">No Results</resource>
+  <resource name="Occurrences">{0} Times</resource>
+  <resource name="on">on</resource>
+  <resource name="Referrer">Referrer</resource>
+  <resource name="Refresh">Refresh</resource>
+  <resource name="Request">Request</resource>
+  <resource name="Server">Server</resource>
+  <resource name="SortBy_Frequency">By total occurrences</resource>
+  <resource name="SortBy_LastOccurred">By last occurred date</resource>
+  <resource name="TotalOccurrences">Total Occurrences</resource>
+  <resource name="Type_All">All exceptions</resource>
+  <resource name="UserAgent">User Agent</resource>
+  <resource name="containing">containing</resource>
+  <resource name="between">that occurred between</resource>
+  <resource name="and">and</resource>
+  <resource name="NoMatchingTypes">No matches found.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

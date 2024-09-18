@@ -1,0 +1,23 @@
+#foreach($applicationType in $context.CreatableApplicationTypes)
+#beforeall
+	<fieldset>
+		<ul class="field-list">
+#each
+	<li class="field-item">
+		<span class="field-item-name">
+			<a href="#" class="inline-button"  data-messagename="groupapplications.create" data-applicationtypeid="$core_v2_encoding.HtmlAttributeEncode($applicationType.Id.ToString())" data-name="$applicationType.Name">
+				$core_v2_language.FormatString($core_v2_language.GetResource('add-application-withname'), $applicationType.Name)
+			</a>
+		</span>
+		<span class="field-item-description">
+			$core_v2_language.FormatString($core_v2_language.GetResource('add-application-description'), $applicationType.Name.ToLower())
+		</span>
+	</li>
+#afterall
+		</ul>
+	</fieldset>
+#nodata
+	<div class="message information">
+		$noItemsMessage
+	</div>
+#end

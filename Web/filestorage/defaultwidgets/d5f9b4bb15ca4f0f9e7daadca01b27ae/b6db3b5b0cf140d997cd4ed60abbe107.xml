@@ -1,0 +1,132 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:BlogTrackBacksApplicationPanel_Name}" cssClass="blog-trackbacks" description="${resource:BlogTrackBacksApplicationPanel_Description}" instanceIdentifier="b6db3b5b0cf140d997cd4ed60abbe107" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+	<![CDATA[
+
+
+#set ($content = false)
+#set ($content = $core_v2_content.Current)
+
+#set ($application = false)
+#set ($application = $core_v2_application.Current)
+#if (!$application)
+	$core_v2_widget.Hide();
+#end
+
+#set ($applicationName = $application.HtmlName('Web'))
+#set ($applicationId = $application.ApplicationId)
+#set ($contentTypeId = false)
+#set ($contentName = false)
+#set ($ContentId = false)
+#if ($content)
+	#set ($contentTypeId = $content.ContentTypeId)
+	#set ($contentName = $content.HtmlName('Web'))
+	#set ($contentId = $content.ContentId)
+#end
+#set ($pageIndex = 0)
+
+#if ($contentId && ($contentId == $contentTypeId || $contentId == $applicationId))
+	#set ($contentTypeId = false)
+	#set ($contentId = false)
+	#set ($contentName = false)
+#end
+
+#set ($contentTypeName = false)
+#if ($contentTypeId)
+	#set ($contentType = false)
+	#set ($contentType = $core_v2_contentType.Get($contentTypeId))
+	#if ($contentType)
+		#set ($contentTypeName = $contentType.Name)
+	#end
+#end
+
+## Build up a list of content types to filter by when searching that are
+## not also app or container types, and are commentable
+#set($searchFilters = '')
+#foreach($contentType in $core_v2_contentType.List())
+	#set($applicationType = false)
+	#set($applicationType = $core_v2_applicationType.Get($contentType.Id))
+	#set($containerType = false)
+	#set($containerType = $core_v2_containerType.Get($contentType.Id))
+	#set ($supportsComments = false)
+	#set ($supportsComments = $core_v2_comments.SupportsComments($contentType.Id))
+	#if ($supportsComments && (!$applicationType || $applicationType.HasErrors()) && (!$containerType || $containerType.HasErrors()))
+		#if ($searchFilters.Length == 0)
+			#set($searchFilters = "contenttypeid::(${contentType.Id}")
+		#else
+			#set($searchFilters = "${searchFilters} OR ${contentType.Id}")
+		#end
+	#end
+#end
+#set ($searchFilters = "${searchFilters})")
+
+#set ($commentListId = $core_v2_widget.UniqueId('commentList'))
+#set ($searchInputId = $core_v2_widget.UniqueId('searhInput'))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item body">
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_encoding.HtmlAttributeEncode($searchInputId)" />
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+<div class="content-list-name"></div>
+<div class="content-list-description"></div>
+<ul class="content-list content simple margin-bottom expandable" id="$core_v2_encoding.HtmlAttributeEncode($commentListId)">
+#set ($inProcess = true)
+$core_v2_widget.ExecuteFile('list.vm')
+</ul>
+
+#set ($placeHolderText = $core_v2_language.GetResource('PlaceHolder'))
+#if ($contentTypeName)
+	#set ($placeHolderText = $core_v2_language.FormatString($core_v2_language.GetResource('PlaceHolderGeneric'), $contentTypeName))
+#end
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogTrackBacksApplicationPanel.register({
+		listCallback: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-callback.vm'))',
+		commentsListId: '#$core_v2_encoding.JavascriptEncode($commentListId)',
+		searchInputId: '#$core_v2_encoding.JavascriptEncode($searchInputId)',
+		deleteVerificationText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("Comment_DeleteVerify"))',
+		contentId: #if ($contentId) '$contentId' #else null #end,
+		contentTypeId: #if ($contentTypeId) '$contentTypeId' #else null #end,
+		contentName: #if ($contentName) '$core_v2_encoding.JavascriptEncode($contentName)' #else null #end,
+		applicationName: '$applicationName',
+		applicationId: #if ($applicationId) '$applicationId' #else null #end,
+		searchFilters: '$core_v2_encoding.JavascriptEncode($searchFilters)',
+		searchErrorMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SearchErrorMessage'))',
+		noCommentsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+		placeHolderText: '$core_v2_encoding.JavascriptEncode($placeHolderText)'
+	});
+});
+</script>
+
+	]]>
+	</contentScript>
+		<languageResources>
+<language key="en-us">
+	<resource name="BlogTrackBacksApplicationPanel_Name">Trackbacks</resource>
+	<resource name="BlogTrackBacksApplicationPanel_Description">View and delete trackbacks.</resource>
+	<resource name="delete">Delete</resource>
+	<resource name="more">More</resource>
+	<resource name="cancel">Cancel</resource>
+	<resource name="Comment_DeleteVerify">Are you sure you want to delete this trackback?</resource>
+	<resource name="SearchErrorMessage">No Results</resource>
+	<resource name="NoResults">There are no trackbacks.</resource>
+	<resource name="PlaceHolder">Filter by post</resource>
+	<resource name="PlaceHolderGeneric">Filter by {0}</resource>
+    <resource name="RequiredField">This field is required.</resource>
+</language>
+		</languageResources>
+		<restScopes>
+			<scope id="comments.comments.modify" />
+			<scope id="search.results.readonly" />
+		</restScopes>
+	</scriptedContentFragment>
+</scriptedContentFragments>
+

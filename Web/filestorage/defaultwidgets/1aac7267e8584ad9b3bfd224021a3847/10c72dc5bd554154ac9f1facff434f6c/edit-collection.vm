@@ -1,0 +1,140 @@
+#set($collectionIdString = $core_v2_page.GetQueryStringValue('w_collectionid'))
+#set($collectionId = $core_v2_utility.ParseGuid($collectionIdString))
+
+#set($collection = false)
+#set($hasEmoticons = 'True')
+
+#if($collectionId != '00000000-0000-0000-0000-000000000000')
+	#set($collection = $context.GetCollection($collectionId))
+	#set($hasEmoticons = $context.HasEmoticons($collection.Id))
+#end
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+#set($attachmentUrl = $collection.Url)
+#set($attachmentFileName = $context.GetFileNameFromImageUrl($attachmentUrl))
+
+<form><fieldset data-collectionId="$collectionId">
+    <ul class="field-list">
+        <li class="field-item collection-name">
+            <label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+            <span class="field-item-input">
+            	<input type="text" id="$core_v2_widget.UniqueId('Name')" name="CollectionName" maxlength="256" value="$!collection.Name" />
+            </span>
+            <span class="field-item-validation" style="display:none;"></span>
+        </li>
+
+        <li class="field-item post-attachment collection-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false">
+            <label class="field-item-name">$core_v2_language.GetResource('CollectionImage')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('CollectionImage_Detail')</span>
+            <span class="field-item-input preview">
+            </span>
+            <span class="field-item-input upload">
+                <a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+            </span>
+            <span class="field-item-validation" style="display: none;"></span>
+        </li>
+
+		<li class="field-item collection-enabled">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('CollectionEnabled')" #if(!$collection|| $collection.Enabled)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('CollectionEnabled')" class="field-item-name">$core_v2_language.GetResource('EnabledCollection_Field')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('EnabledCollection_Detail')</span>
+		</li>
+    </ul>
+</fieldset></form>
+
+#if ($collection)
+<fieldset data-collectionId="$collectionId">
+    <ul class="field-list">
+        <li class="field-item">
+		<label class="field-item-name">$core_v2_language.GetResource('Emoticons')</label>
+		<span class="field-item-description">$core_v2_language.GetResource('EmoticonInstructions')</span>
+		</li>
+    </ul>
+	$core_v2_widget.ExecuteFile('paged-emoticons.vm')
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('emoticoncollection_headerTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input collection-options">
+					<a href="#" class="button save-collection">$core_v2_language.GetResource('Save')</a>
+					<div style="float: left; width: 50%">
+						<div class="navigation-list navigation ui-links" data-minlinks="0" data-maxlinks="3" data-direction="horizontal">
+							<ul class="navigation-list">
+								<% if (hasEmoticons != 'True') { %>
+									<li class="navigation-list-item">
+										<a href="#" data-messagename="administration.emoticoncollection.delete" data-collectionid="<%= id %>" data-collectionname="<%= name %>">$core_v2_language.GetResource('Delete')</a>
+									</li>
+								<% } %>
+								<% if (id != '00000000-0000-0000-0000-000000000000') { %>
+								<li class="navigation-list-item">
+									<a href="#" data-messagename="administration.emoticon.add" data-collectionid="<%= id %>" data-collectionname="<%= name %>">$core_v2_language.GetResource('AddEmoticon')</a>
+								</li>
+								<% } %>
+							</ul>
+						</div>
+					</div>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.administrationEmoticonCollectionEdit.register({
+		collectionId: '$collectionId',
+		collectionName: '$core_v2_encoding.JavascriptEncode($collection.Name)',
+		hasEmoticons: '$hasEmoticons',
+		headerTemplateId: '$headerTemplateId',
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			enabledId: "#$core_v2_widget.UniqueId('CollectionEnabled')"
+		},
+		text: {
+			save: '$core_v2_language.GetResource('Save')',
+			collectionCreated: '$core_v2_language.GetResource('CollectionCreated')',
+			collectionUpdated: '$core_v2_language.GetResource('CollectionUpdated')',
+			collectionDeleted: '$core_v2_language.GetResource('CollectionDeleted')',
+			deleteError: '$core_v2_language.GetResource('CollectionDeleteError')',
+			deleteConfirmation: '$core_v2_language.GetResource('CollectionDeleteConfirmation')',
+			editEmoticon: '$core_v2_language.GetResource('Edit')',
+			addEmoticon: '$core_v2_language.GetResource('AddEmoticonToCollection')',
+			fileRequired: '$core_v2_language.GetResource('FileRequired')',
+		},
+		urls: {
+			save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save-collection.vm'))',
+			delete: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete-collection.vm'))',
+			collectionslistitem: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('collection-listitem.vm'))',
+			pagedEmoticons: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-emoticons.vm'))',
+			editEmoticon: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('edit-emoticon.vm'))',
+			emoticonlistitem: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('emoticon-listitem.vm'))',
+		},
+		file: {
+			fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+			url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+			isRemote:#if($attachmentIsRemote) true#else false#end,
+			isNew:#if($attachmentIsNew) true#else false#end
+		},
+		attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+		attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+		previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+		uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))'
+	});
+});
+</script>

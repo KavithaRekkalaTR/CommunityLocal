@@ -1,0 +1,20 @@
+﻿## Load and Render the list of Category Panels
+
+#set ($query = false)
+#set ($query = $core_v2_page.GetQueryStringValue("query"))
+
+#set ($adminReturnUrl = $core_v2_contextualPanelsAdministrationContext.AdministrationReturnUrl)
+#set ($systemNotificationsUrl = $core_v2_contextualPanelsAdministrationContext.SystemNotificationsUrl)
+#set ($panelCategories = $core_v2_contextualPanels.FilterPanels($query, $adminReturnUrl, $systemNotificationsUrl))
+
+$core_v2_page.SetContentType('application/json')
+#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+{
+	"type": "search",
+	"name": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SearchResults'))",
+	"cssClass": "",
+	"backUrl": null,
+	"backLabel": null,
+	"content": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('search-content.vm'))",
+	"contentClass": "root"
+}

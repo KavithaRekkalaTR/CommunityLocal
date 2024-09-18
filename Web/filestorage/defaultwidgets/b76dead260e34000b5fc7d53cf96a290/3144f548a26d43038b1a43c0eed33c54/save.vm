@@ -1,0 +1,30 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Enable = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Enable')))
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#set($EmailAddress = $core_v2_page.GetFormValue('EmailAddress'))
+	#set($FooterMessage = $core_v2_page.GetFormValue('FooterMessage'))
+	#set($EnablePassiveMode = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnablePassiveMode')))
+	#set($PassiveModeAddress = $core_v2_page.GetFormValue('PassiveModeAddress'))
+	#set($MappedMediaGalleryId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('MappedMediaGalleryId')))
+
+	$options.Add('IsEnabled', $Enable)
+	$options.Add('Name', $Name)
+	$options.Add('EmailAddress', $EmailAddress)
+	$options.Add('FooterMessage', $FooterMessage)
+	$options.Add('PassiveMode', $EnablePassiveMode)
+	$options.Add('PassiveModeAddress', $PassiveModeAddress)
+	$options.Add('MappedMediaGalleryId', $MappedMediaGalleryId)
+
+	#set($response = $context.Save($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

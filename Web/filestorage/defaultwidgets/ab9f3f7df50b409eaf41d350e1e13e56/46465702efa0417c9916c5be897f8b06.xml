@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MediaActivityStory_Name}" version="10.0.0.0" description="${resource:MediaActivityStory_Description}" instanceIdentifier="46465702efa0417c9916c5be897f8b06" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="" provider="ab9f3f7df50b409eaf41d350e1e13e56">
+	<contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+	#set($media = $core_v2_media.Get($context.Story.ContentId))
+	#if(!$media)
+		$core_v2_widget.Hide()
+	#else
+		#set($actor = $context.Story.PrimaryUser)
+		#if ($actor.Url)
+			#set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $actor.DisplayName, $actor.Url))
+		#else
+			#set($profile0Html = $actor.DisplayName)
+		#end
+
+		#if($isPreview)
+			#if ($story.PrimaryUser.Verb == 'Add')
+				#format($core_v2_language.GetResource('NewMedia_Preview'))
+					#token('user')
+						$profile0Html
+					#token('file')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">$media.Title</a>
+					#token('gallery')
+						#if ($content.Application.Container.ParentContainer)
+							<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+								href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+							<span class="group-application-separator">&gt;</span>
+						#end
+						<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+							href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+				#end
+			#else
+				#format($core_v2_language.GetResource('UpdatedMedia_Preview'))
+					#token('user')
+						$profile0Html
+					#token('file')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">$media.Title</a>
+					#token('gallery')
+						#if ($content.Application.Container.ParentContainer)
+							<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+								href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+							<span class="group-application-separator">&gt;</span>
+						#end
+						<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+							href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+				#end
+			#end
+		#else
+
+			<div class="activity-summary media">
+				#format($core_v2_language.GetResource('in'))
+					#token('user')
+						$profile0Html
+					#token('gallery')
+						#if ($content.Application.Container.ParentContainer)
+							<a $core_v2_ui.ContentPeek($content.Application.Container.ContainerId, $content.Application.Container.ContainerTypeId)
+								href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+							<span class="group-application-separator">&gt;</span>
+						#end
+						<a $core_v2_ui.ContentPeek($content.Application.ApplicationId, $content.Application.ApplicationTypeId)
+							href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+				#end
+			</div>
+
+			#set ($hasFile = $media.File && $media.File.FileUrl != '')
+			#set ($mediaType = 'Empty')
+			#if($hasFile)
+				#set ($mediaType = $core_v2_ui.GetMediaType($media.File.FileUrl, "%{ ViewType = 'View', OutputIsPersisted='False' }"))
+			#end
+
+			<div class="activity-file-detail">
+				#if($hasFile && $mediaType != 'Audio' && $mediaType != 'Video' && $mediaType != 'Image')
+					#if ($mediaType != "Empty")
+						<div class="post-attachment-viewer">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)" class="internal-link view-post ui-theater" data-theaterurl="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('theater-view.vm'))">
+								$!core_v2_ui.GetPreviewHtml($media.File.FileUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+							</a>
+						</div>
+					#else
+						<div class="post-attachment-viewer">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)" class="internal-link view-post">
+								$!core_v2_ui.GetPreviewHtml($media.File.FileUrl, "%{Width=56, Height=56, OutputIsPersisted='False'}")
+							</a>
+						</div>
+					#end
+				#end
+
+				<span class="activity-title">
+					#if($media.Url && $media.Url != '')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)" class="internal-link view-post" title="$core_v2_encoding.HtmlAttributeEncode($media.Title)">
+							<span>$media.Title</span>
+						</a>
+					#else
+						$media.Title
+					#end
+				</span>
+
+				<div class="activity-description user-defined-markup">
+					#set($rawBody = $media.Body('Web'))
+					#set($body = $core_v2_language.Truncate($rawBody, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+					$body
+					#if ($body.Length < $rawBody.Length)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">$core_v2_language.GetResource('read-more')</a>
+					#end
+				</div>
+
+				#if($hasFile && ($mediaType == 'Audio' || $mediaType == 'Video' || $mediaType == 'Image'))
+					#if($mediaType == 'Audio' || $mediaType == 'Video')
+						<div class="post-attachment-viewer">
+							$core_v2_ui.GetViewHtml($media.File.FileUrl, "%{ Width=320, Height=240, OutputIsPersisted = 'false' }")
+						</div>
+					#elseif ($mediaType == 'Image')
+						<div class="post-attachment-viewer">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)" class="internal-link" data-imagepreviewurl="$core_v2_encoding.HtmlAttributeEncode($media.File.FileUrl)">
+								$!core_v2_ui.GetPreviewHtml($media.File.FileUrl, "%{Width=320, Height=240, OutputIsPersisted='False'}")
+							</a>
+						</div>
+					#end
+				#end
+
+			</div>
+		#end
+	#end
+#end
+]]></contentScript>
+	<languageResources><language key="en-us"><resource name="in">{user} in {gallery}:</resource><resource name="MediaActivityStory_Description">Story for media.</resource><resource name="MediaActivityStory_Name">Media Activity Story</resource><resource name="NewMedia_Preview">{user} uploaded {file} to {gallery}</resource><resource name="read-more">Read more.</resource><resource name="UpdatedMedia_Preview">{user} updated {file} in {gallery}</resource><resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,12 @@
+﻿#if ($core_v2_page.IsPost)
+	#set($type = $core_v2_page.GetFormValue('type'))
+	#set($read = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('read')))
+	$core_v2_page.SetContentType('application/json')
+
+	#if ($type == 'forum')
+		$!core_v2_forum.MarkAllRead($core_v2_utility.ParseInt($core_v2_page.GetFormValue('forumId')), $read)
+		{"read":#if($read) true#else false#end}
+	#else
+		$core_v2_page.SendJsonError('Unrecognized read type')
+	#end
+#end

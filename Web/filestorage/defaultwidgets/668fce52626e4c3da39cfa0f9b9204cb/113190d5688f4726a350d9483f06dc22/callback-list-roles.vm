@@ -1,0 +1,16 @@
+#set($groupType = $core_v2_page.GetQueryStringValue('w_grouptype'))
+
+#set($groupRoles = $context.GetGroupRoles($groupType))
+
+$core_v2_page.SetContentType('application/json')
+
+{"roles":[
+	#if($groupRoles)
+        #foreach($role in $groupRoles)
+            {
+                "id":"$role.id",
+                "name":"$core_v2_encoding.JavascriptEncode($role.Name)"
+            },
+        #end
+	#end
+null]}

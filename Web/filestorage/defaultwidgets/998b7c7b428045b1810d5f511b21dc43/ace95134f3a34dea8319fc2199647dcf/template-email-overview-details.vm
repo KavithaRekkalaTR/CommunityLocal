@@ -1,0 +1,36 @@
+<% if(Id || FilePath || AttachmentFilePath) { %>
+	<ul class="attribute-list">
+		<li class="attribute-item">
+			<span class="attribute-name">Enablement</span>
+			<span class="attribute-value">
+				<% if (IsEnabled) { %>
+					Enabled
+				<% } else { %>
+					Not Enabled
+				<% } %>
+				<em><a href="<%: ConfigureUrl %>">Configure</a></em>
+			</span>
+		</li>
+
+		<% if(Id) { %>
+		<li class="attribute-item">
+			<span class="attribute-name">$core_v2_language.GetResource('Id')</span>
+			<span class="attribute-value"><%: Id %></span>
+		</li>
+		<% } %>
+
+		<% if(FilePath) { %>
+			<li class="attribute-item path source-path">
+				<span class="attribute-name">$core_v2_language.GetResource('FilePath')</span>
+				<span class="attribute-value"><%: (FilePath || '') %></span>
+			</li>
+		<% } %>
+
+		<% if(AttachmentFilePath) { %>
+			<li class="attribute-item path attachment-source-path">
+				<span class="attribute-name">$core_v2_language.GetResource('AttachmentFilePath')</span>
+				<span class="attribute-value"><%: (AttachmentFilePath || '') %></span>
+			</li>
+		<% } %>
+	</ul>
+<% } %>

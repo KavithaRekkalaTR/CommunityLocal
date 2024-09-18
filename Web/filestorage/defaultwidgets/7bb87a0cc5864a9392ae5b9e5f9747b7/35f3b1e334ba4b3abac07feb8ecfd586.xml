@@ -1,0 +1,362 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Forums_ThreadDetails}" version="11.0.0.0" description="${resource:Forums_ThreadDetails_Description}" instanceIdentifier="35f3b1e334ba4b3abac07feb8ecfd586" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="thread-details" lastModified="2020-01-14 16:07:15Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($thread = $core_v2_forumThread.Current)
+#if (!$thread)
+	$core_v2_widget.Hide()
+#end
+
+#set ($forum = $core_v2_forum.Current)
+
+## permission
+#set ($isRegistered = $core_v2_user.IsRegistered($accessingUser.Id))
+#set ($hasModifyThreadPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ModifyPost, $accessingUser.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+#set ($hasReadForumPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReadForum, $accessingUser.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+#if (!$hasReadForumPermission)
+	$core_v2_widget.Hide()
+#end
+#set ($hasModerateUsersPermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+#set ($hasReplyPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $accessingUser.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+
+#set ($accessingUserIsAuthor = false)
+#if ($accessingUser.Id == $thread.Author.Id)
+	#set ($accessingUserIsAuthor = true)
+#end
+
+#set ($isQA = false)
+#if ($thread.ThreadType == 'QuestionAndAnswer')
+	#set ($isQA = true)
+#end
+
+#set ($answersUrl = $core_v2_page.AdjustQueryString($thread.Url, "ReplyFilter=Answers&ReplySortBy=Answers&ReplySortOrder=Descending"))
+
+#set ($presentUsers = 1)
+#set ($presenceSummary = $core_v2_contentPresence.GetSummary($thread.ContentId, $thread.ContentTypeId, "%{ CacheOnly = 'true' }"))
+#if ($presenceSummary)
+	#set ($presentUsers = $presenceSummary.PresentUsers)
+#end
+
+#set ($wrapperId = $core_v2_widget.UniqueId('wrapper'))
+#set ($statisticsContainer = $core_v2_widget.UniqueId('statisticsContainer'))
+
+#set ($repliesTemplate = $core_v2_widget.UniqueId('repliesTemplate'))
+#registerClientTemplate($repliesTemplate)
+	<li class="attribute-item replies">
+		<span class="attribute-name">$core_v2_language.GetResource('Replies')</span>
+		<span class="attribute-value">
+			<% if(replyCount == 1) { %>
+				<%= replyCount %> $core_v2_language.GetResource('ReplySingular')
+			<% } else { %>
+				<%= replyCount %> $core_v2_language.GetResource('ReplyPlural')
+			<% } %>
+		</span>
+	</li>
+#end
+
+#set ($answersTemplate = $core_v2_widget.UniqueId('answersTemplate'))
+#registerClientTemplate($answersTemplate)
+	<li class="attribute-item answers">
+		<span class="attribute-name">$core_v2_language.GetResource('Answers')</span>
+		<span class="attribute-value">
+			<% if(answerCount == 1) { %>
+				<%= answerCount %> $core_v2_language.GetResource('AnswerSingular')
+			<% } else { %>
+				<%= answerCount %> $core_v2_language.GetResource('AnswerPlural')
+			<% } %>
+		</span>
+	</li>
+#end
+
+#set ($usersTemplate = $core_v2_widget.UniqueId('usersTemplate'))
+#registerClientTemplate($usersTemplate)
+	<li class="attribute-item users">
+		<span class="attribute-name">$core_v2_language.GetResource('Users')</span>
+		<span class="attribute-value">
+			<% if(presentUsers == 1) { %>
+				<%= presentUsers %> $core_v2_language.GetResource('UsersSingular')
+			<% } else { %>
+				<%= presentUsers %> $core_v2_language.GetResource('UsersPlural')
+			<% } %>
+		</span>
+	</li>
+#end
+
+#set ($statusTemplate = $core_v2_widget.UniqueId('statusTemplate'))
+#registerClientTemplate($statusTemplate)
+	<li class="attribute-item state <% if (status == 'Answered') { %> verified <% } else if (status == 'AnsweredNotVerified') { %> suggested <% } %>">
+		<span class="attribute-name">$core_v2_language.GetResource('State')</span>
+		<span class="attribute-value">
+			<% if (status == 'Answered') { %>
+				<a href="$core_v2_encoding.HtmlAttributeEncode($answersUrl)" class="append-icon check">
+					$core_v2_language.GetResource('VerifiedAnswer')
+				</a>
+			<% } else if (status == 'NotAnswered') { %>
+				$core_v2_language.GetResource('NotAnswered')
+			<% } else if (status == 'AnsweredNotVerified') { %>
+				<a href="$core_v2_encoding.HtmlAttributeEncode($answersUrl)" class="append-icon check">
+					$core_v2_language.GetResource('SuggestedAnswer')
+				</a>
+			<% } %>
+		</span>
+	</li>
+#end
+
+#set ($statisticsTemplate = $core_v2_widget.UniqueId('statisticsTemplate'))
+#registerClientTemplate($statisticsTemplate)
+	<% if(userCount == 1) { %>
+		<%= userCount %> $core_v2_language.GetResource('UsersSingular')
+	<% } else { %>
+		<%= userCount %> $core_v2_language.GetResource('UsersPlural')
+	<% } %>
+#end
+
+<div class="content-details minimal" id="$core_v2_encoding.HtmlAttributeEncode($wrapperId)">
+
+	<ul class="attribute-list">
+
+		#if ($isQA)
+			<li class="attribute-item state #if ($thread.ThreadStatus == 'Answered') verified #elseif ($thread.ThreadStatus == 'AnsweredNotVerified') suggested #end">
+				<span class="attribute-name">$core_v2_language.GetResource('State')</span>
+				<span class="attribute-value">
+					#if ($thread.ThreadStatus == 'Answered')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($answersUrl)" class="append-icon check">
+							$core_v2_language.GetResource('VerifiedAnswer')
+						</a>
+					#elseif ($thread.ThreadStatus == 'NotAnswered')
+						$core_v2_language.GetResource('NotAnswered')
+					#elseif ($thread.ThreadStatus == 'AnsweredNotVerified')
+						<a href="$core_v2_encoding.HtmlAttributeEncode($answersUrl)" class="append-icon check">
+							$core_v2_language.GetResource('SuggestedAnswer')
+						</a>
+					#end
+				</span>
+			</li>
+		#end
+
+		#if ($forum.EnableQualityVoting)
+		<li class="attribute-item quality-vote">
+			$core_v2_ui.ForumVotes("threadquality", $thread.Id)
+		</li>
+		#end
+
+		#set ($voteId = $core_v2_widget.UniqueId("vote${thread.ContentId}"))
+		#set ($unvoteId = $core_v2_widget.UniqueId("unvote${thread.ContentId}"))
+
+		#if ($isQA)
+			#set ($threadVotes = $core_v2_forumThreadVote.List($thread.Id, "%{ PageIndex = 0, PageSize = 1 }"))
+			#if (($hasReplyPermission && $isRegistered) || $threadVotes.TotalCount > 0)
+				<li class="attribute-item vote" data-count="$threadVotes.TotalCount" data-isAuthor="$accessingUserIsAuthor">
+					<span class="attribute-value">
+						$core_v2_ui.ForumVotes('thread', $thread.Id)
+						#if($hasReplyPermission && !$accessingUserIsAuthor && $isRegistered)
+							#set ($threadVote = false)
+							#set ($threadVote = $core_v2_forumThreadVote.Get($thread.Id))
+
+							<a id="$core_v2_encoding.HtmlAttributeEncode($voteId)"
+								data-threadid="$thread.Id"
+								data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('VoteThreadTip'))"
+								data-messagename="telligent.evolution.widgets.threadDetails.votethread"
+								data-unvotelink="$core_v2_encoding.HtmlAttributeEncode($unvoteId)"
+								#if ($threadVote) style="display:none" #end
+								## data-links="$core_v2_encoding.HtmlAttributeEncode($threadActionsId)"
+								href="#"
+								$core_v2_tourTip.Render($core_v2_language.GetResource('VoteThreadTourTip'), "%{ CssClass = 'add ui-tip prepend-icon up-circled', Index = 100 }")
+								>
+								$core_v2_language.GetResource('VoteThread')
+							</a>
+							<a id="$core_v2_encoding.HtmlAttributeEncode($unvoteId)"
+								data-threadid="$thread.Id"
+								data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('UnvoteThreadTip'))"
+								data-messagename="telligent.evolution.widgets.threadDetails.unvotethread"
+								data-votelink="$core_v2_encoding.HtmlAttributeEncode($voteId)"
+								#if (!$threadVote) style="display:none" #end
+								## data-links="$core_v2_encoding.HtmlAttributeEncode($threadActionsId)"
+								href="#"
+								class="remove ui-tip">
+								$core_v2_language.GetResource('UnvoteThread')
+							</a>
+						#else
+							<span class="attribute-description singular">$core_v2_language.GetResource('VotedThreadSingular')</span>
+							<span class="attribute-description plural">$core_v2_language.GetResource('VotedThreadPlural')</span>
+						#end
+					</span>
+				</li>
+			#end
+
+		#end
+
+		#if ($thread.IsLocked)
+		<li class="attribute-item date">
+			<span class="attribute-name">$core_v2_language.GetResource('locked')</span>
+			<span class="attribute-value">
+				$core_v2_language.GetResource('locked')
+			</span>
+		</li>
+		#end
+
+		<li class="attribute-item replies">
+			<span class="attribute-name">$core_v2_language.GetResource('Replies')</span>
+			<span class="attribute-value">
+				#set ($replies = $core_v2_forumReply.List($thread.Id, "%{ PageSize = 1, PageIndex = 0 }"))
+				#set ($totalReplyCount = $replies.TotalCount)
+				#if ($totalReplyCount == 1)
+					#set ($countResource = 'ReplySingular')
+				#else
+					#set ($countResource = "ReplyPlural")
+				#end
+				$totalReplyCount.ToString() $core_v2_language.GetResource($countResource)
+			</span>
+		</li>
+		#if ($isQA)
+			#set ($suggestedAnswerCount = $core_v2_forumReply.List($thread.Id, "%{ ForumReplyQueryType = 'non-verified-answers', PageSize = 1, PageIndex = 0 }").TotalCount)
+
+			#if ($suggestedAnswerCount > 0)
+				<li class="attribute-item answers">
+					<span class="attribute-name">$core_v2_language.GetResource('Answers')</span>
+					<span class="attribute-value">
+						#if ($suggestedAnswerCount == 1)
+							#set ($countResource = 'AnswerSingular')
+						#else
+							#set ($countResource = "AnswerPlural")
+						#end
+						$suggestedAnswerCount.ToString() $core_v2_language.GetResource($countResource)
+					</span>
+				</li>
+			#end
+		#end
+		<li class="attribute-item subscribers">
+			<span class="attribute-name">$core_v2_language.GetResource('Subscribers')</span>
+			<span class="attribute-value">
+				#if ($thread.SubscriberCount == 1)
+					#set ($subscriberResource = 'SubscriberSingular')
+				#else
+					#set ($subscriberResource = "SubscriberPlural")
+				#end
+				$thread.SubscriberCount.ToString() $core_v2_language.GetResource($subscriberResource)
+			</span>
+		</li>
+		<li class="attribute-item views">
+			<span class="attribute-name">$core_v2_language.GetResource('Views')</span>
+			<span class="attribute-value">
+				#if ($thread.ViewCount == 1)
+					#set ($countResource = 'ViewSingular')
+				#else
+					#set ($countResource = "ViewPlural")
+				#end
+				$thread.ViewCount.ToString() $core_v2_language.GetResource($countResource)
+			</span>
+		</li>
+		<li class="attribute-item users">
+			<span class="attribute-name">$core_v2_language.GetResource('Users')</span>
+			<span class="attribute-value" id="$core_v2_encoding.HtmlAttributeEncode($statisticsContainer)">
+				#if ($presentUsers == 1)
+					#set ($countResource = 'UsersSingular')
+				#else
+					#set ($countResource = "UsersPlural")
+				#end
+				$presentUsers $core_v2_language.GetResource($countResource)
+			</span>
+		</li>
+	</ul>
+
+	#foreach ($tag in $thread.Tags)
+	#beforeall
+		<div class="content-tags">
+			<ul class="tag-list">
+	#each
+		#set ($tagUrl = false)
+		#set ($tagUrl = $core_v2_forumUrls.Tags($thread.ForumId, $core_v2_utility.MakeList($tag)))
+		#if ($tagUrl)
+			<li class="tag-item">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($tagUrl)" rel="tag">$tag</a>
+			</li>
+		#end
+	#afterall
+			</ul>
+		</div>
+	#end
+
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.threadDetails')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.threadDetails.register({
+			contentTypeId: '$thread.ContentTypeId',
+			contentId: '$thread.ContentId',
+			status: '$thread.ThreadStatus',
+			replyCount: #if ($thread.ReplyCount) $thread.ReplyCount #else 0 #end,
+			answerCount: #if ($thread.AnswerCount) $thread.AnswerCount #else 0 #end,
+			presentUsers: $presentUsers,
+			wrapper: '#$wrapperId',
+			voteId: #if ($isQA) '#$voteId' #else '' #end,
+			unvoteId: #if ($isQA) '#$unvoteId' #else '' #end,
+			statisticsContainer: '$statisticsContainer',
+			threadId: $thread.Id,
+			templates: {
+				status: '$statusTemplate',
+				users: '$usersTemplate',
+				answers: '$answersTemplate',
+				replies: '$repliesTemplate',
+				statistics: '$statisticsTemplate'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Forums_ThreadDetails}'))
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Forums_ThreadDetails}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AnswerPlural">answers</resource>
+  <resource name="Answers">Answers</resource>
+  <resource name="AnswerSingular">answer</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Forums_ThreadDetails">Forums - Thread Details</resource>
+  <resource name="Forums_ThreadDetails_Description">Displays details about a forum thread</resource>
+  <resource name="locked">Locked</resource>
+  <resource name="NotAnswered">Not Answered</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Replies">Replies</resource>
+  <resource name="ReplyPlural">replies</resource>
+  <resource name="ReplySingular">reply</resource>
+  <resource name="State">State</resource>
+  <resource name="SubscriberPlural">subscribers</resource>
+  <resource name="Subscribers">Subscribers</resource>
+  <resource name="SubscriberSingular">subscriber</resource>
+  <resource name="SuggestedAnswer">Suggested Answer</resource>
+  <resource name="UnvoteThread">I do not have this question.</resource>
+  <resource name="UnvoteThreadTip">Remove this from your questions list.</resource>
+  <resource name="Users">Users</resource>
+  <resource name="UsersPlural">members are here</resource>
+  <resource name="UsersSingular">member is here</resource>
+  <resource name="VerifiedAnswer">Verified Answer</resource>
+  <resource name="ViewPlural">views</resource>
+  <resource name="Views">Views</resource>
+  <resource name="ViewSingular">view</resource>
+  <resource name="VotedThreadPlural">people also asked this</resource>
+  <resource name="VotedThreadSingular">person also asked this</resource>
+  <resource name="VoteThread">I have this question too.</resource>
+  <resource name="VoteThreadTip">Vote on replies to this question, receive notifications of answers, and add this to your questions list.</resource>
+  <resource name="VoteThreadTourTip">Vote on replies to this question, receive notifications of answers, and add this to your questions list by selecting that you have this question.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="3e42a61fe20447f78ea9b0bb99a5c6a5" />
+    </requiredContext>
+		<restScopes>
+			<scope id="forums.threadvotes.readonly" />
+			<scope id="forums.threadvotes.modify" />
+			<scope id="content.presence.readonly" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

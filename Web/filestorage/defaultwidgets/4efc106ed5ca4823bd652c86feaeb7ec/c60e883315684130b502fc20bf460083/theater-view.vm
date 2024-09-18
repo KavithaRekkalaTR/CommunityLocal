@@ -1,0 +1,6 @@
+#set($thread = $core_v2_forumThread.Get($context.Story.ContentId))
+#if(!$thread)
+	$core_v2_widget.Hide()
+#elseif ($thread.File && $thread.File.FileUrl != '')
+    $core_v2_ui.GetViewHtml($thread.File.FileUrl, "%{ AdjustToContainer = 'true', OutputIsPersisted = 'false' }")
+#end

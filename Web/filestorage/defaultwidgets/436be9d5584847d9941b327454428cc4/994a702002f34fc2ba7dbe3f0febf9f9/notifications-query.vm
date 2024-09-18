@@ -1,0 +1,18 @@
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('_w_pageIndex')))
+#set ($unresolved = $core_v2_utility.ParseBool($core_v2_page.GetQueryStringValue('_w_unresolved')))
+
+#set ($pageSize = 20)
+
+#set ($options = "%{}")
+
+#if ($unresolved)
+	$options.Add('IsResolved', 'false')
+#else
+	$options.Add('IsResolved', 'true')
+#end
+$options.Add('PageIndex', $pageIndex)
+$options.Add('PageSize', $pageSize)
+
+#set ($notifications = $context.List($options))
+
+$core_v2_widget.ExecuteFile('notifications-render.vm')

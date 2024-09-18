@@ -1,0 +1,40 @@
+﻿## Load and Render the list of Category Panels
+
+#set ($panelCategories = $core_v2_contextualPanels.GetPanelCategories())
+
+#if ($panelCategories && $panelCategories.Count == 0 && !$core_v2_contextualPanelsAdministrationContext.AdministrationReturnUrl)
+
+	## do nothing
+
+#elseif($panelCategories && $panelCategories.Count == 1 && !$core_v2_contextualPanelsAdministrationContext.AdministrationReturnUrl)
+
+	## redirect directly to the category
+
+	## Get the context type and id of the category
+	#set ($category = false)
+	#foreach ($c in $panelCategories)
+		#set ($category = $c)
+	#end
+
+	#set ($contextType = $category.PanelType.ToString())
+	#set ($contextId = $category.Id)
+
+	## Load the category view instead of continuing with showing a category list
+	$core_v2_widget.ExecuteFile("category.vm")
+
+#elseif (($panelCategories && $panelCategories.Count > 1) || $core_v2_contextualPanelsAdministrationContext.AdministrationReturnUrl)
+
+	$core_v2_page.SetContentType('application/json')
+	#set ($dq = $core_v2_encoding.JavascriptEncode('"'))
+
+	{
+		"type": "root",
+		"name": "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AllCategories'))",
+		"cssClass": "",
+		"backUrl": null,
+		"backLabel": null,
+		"content": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('root-content.vm'))",
+		"contentClass": "root"
+	}
+
+#end

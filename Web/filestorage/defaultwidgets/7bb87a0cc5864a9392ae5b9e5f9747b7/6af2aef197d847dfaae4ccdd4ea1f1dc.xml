@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_EditUser_Name}" version="11.0.0.0" description="${resource:Core_EditUser_Description}" instanceIdentifier="6af2aef197d847dfaae4ccdd4ea1f1dc" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="edit-user" lastModified="2021-05-21 20:51:06Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($user = $core_v2_user.Accessing)
+
+#set($searchText = '')
+#set($selectedTab = $core_v2_page.GetQueryStringValue('tab'))
+
+#set($selectedTabId='')
+#if($selectedTab.ToLower() == 'subscriptions')
+		#set($selectedTabId = $core_v2_widget.UniqueId('SubscriptionsPane'))
+#end
+
+<fieldset>
+	<h2>$core_v2_language.GetResource('Core_EditUser_Name')</h2>
+</fieldset>
+
+<div id="$core_v2_widget.UniqueId('Tabs')">
+		<div id="$core_v2_widget.UniqueId('BasicOptionsPane')">
+				$core_v2_widget.ExecuteFile('basicoptions.vm')
+		</div>
+	#if ($core_v2_configuration.EnableEmailDigest)
+		<div id="$core_v2_widget.UniqueId('EmailPane')">
+				$core_v2_widget.ExecuteFile('emailoptions.vm')
+		</div>
+	#end
+		<div id="$core_v2_widget.UniqueId('SubscriptionsPane')">
+				$core_v2_widget.ExecuteFile('subscriptions.vm')
+		</div>
+
+		<div id="$core_v2_widget.UniqueId('NotificationsPane')">
+				$core_v2_widget.ExecuteFile('notificationoptions.vm')
+		</div>
+</div>
+
+<fieldset>
+		<ul class="field-list">
+				<li class="field-item submit-button">
+						<span class="field-item-input">
+								<a href="javascript:void(0)" onclick="jQuery.telligent.evolution.navigationConfirmation.ignoreClick();" class="internal-link update-user button">
+										<span></span>$core_v2_language.GetResource('Save')
+								</a>
+								<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+						</span>
+				</li>
+		</ul>
+</fieldset>
+
+				#registerEndOfPageHtml('telligent.evolution.widgets.editUser')
+						<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+				#end
+				#registerEndOfPageHtml('telligent.evolution.widgets.editUser.emailDigest')
+						<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("emaildigestui.js"))"></script>
+				#end
+				#registerEndOfPageHtml()
+						<script type="text/javascript">
+						//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+						jQuery(function()
+						{
+								jQuery.telligent.evolution.widgets.editUser.register({
+										userId: $user.Id,
+										wrapperId : '$core_v2_widget.WrapperElementId',
+										tabId : '$core_v2_widget.UniqueId('Tabs')',
+										basicTabId : '$core_v2_widget.UniqueId('BasicOptionsPane')',
+										basicTabText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditProfile_Tab_About'))',
+					emailTabEnabled : #if ($core_v2_configuration.EnableEmailDigest) true #else false #end,
+										emailTabId : '$core_v2_widget.UniqueId('EmailPane')',
+										emailTabText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditProfile_Tab_Email'))',
+										sharedFavoritesSelector : '#$core_v2_widget.UniqueId('ShareFavorites')',
+										#if ($core_v2_configuration.EnableSignatures)
+												getSignature: function() { return $core_v2_editor.GetContentScript('Signature'); },
+												attachSignatureChangeScript: function(f) { $core_v2_editor.GetAttachOnChangeScript('Signature', 'f'); },
+												signatureMaxLengthText: '$core_v2_language.FormatString($core_v2_language.GetResource('EditProfile_SigMaxLength'), $core_v2_language.FormatNumber($core_v2_configuration.SignatureMaxLength))',
+												signatureMaxLength: $core_v2_configuration.SignatureMaxLength,
+												signatureValidationSelector: '#$core_v2_widget.UniqueId('SignatureValidation')',
+										#end
+										allowSiteContactSelector : '#$core_v2_widget.UniqueId('AllowSiteToContact')',
+										allowSitePartnersContactSelector : '#$core_v2_widget.UniqueId('AllowSitePartnersToContact')',
+										privateEmailSelector : '#$core_v2_widget.UniqueId('PrivateEmail')',
+										receiveEmailsSelector : '#$core_v2_widget.UniqueId('ReceiveEmails')',
+										enableHtmlEmailSelector : '#$core_v2_widget.UniqueId('EnableHtmlEmail')',
+										conversationContactType : '#$core_v2_widget.UniqueId('ConversationContactType')',
+										enablePresenceTracking: '#$core_v2_widget.UniqueId('EnablePresenceTracking')',
+										editorListSelector : '#$core_v2_widget.UniqueId('EditorList')',
+										enableDisplayInMembersSelector : '#$core_v2_widget.UniqueId('EnableDisplayInMemberList')',
+										enableUserSignaturesSelector : '#$core_v2_widget.UniqueId('EnableUserSignatures')',
+										timezoneSelector : '#$core_v2_widget.UniqueId('Timezone')',
+										dateFormatSelector : '#$core_v2_widget.UniqueId('DateFormat')',
+										getDateFormatsUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('getdateformats.vm'))',
+										saveSucessText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditProfile_UpdateSuccess'))',
+										saveErrorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditProfile_SaveError'))',
+										hasPassword: #if($user.HasPassword) true#else false#end,
+										resetPasswordSelector: '#$core_v2_widget.UniqueId('ResetPassword')',
+										resetPasswordUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('resetpassword.vm'))',
+										resetPasswordError: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditProfile_ResetPasswordError'))',
+										notificationTabId : '$core_v2_widget.UniqueId('NotificationsPane')',
+										notificationTabText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditProfile_Tab_Notification'))',
+										activityVisibilityId: '$core_v2_widget.UniqueId('ActivityVisibilityOptions')',
+										subscriptionsTabId : '$core_v2_widget.UniqueId('SubscriptionsPane')',
+										subscriptionsTabText : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('EditProfile_Tab_Subscriptions'))',
+										subscriptionRemoved: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('subscriptionRemoved'))',
+										selectedTabId: '$selectedTabId',
+										requestDataExportUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('requestexport.vm'))',
+										dataExportRequested: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ExportRequested'))',
+										deleteConfirmationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('confirmdelete.vm'))',
+										resendVerificationUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('resendverification.vm'))',
+										resendVerificationSelector: '#$core_v2_widget.UniqueId('ResendVerification')',
+										resendVerificationMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Verification_ResendSuccess'))'
+								});
+						});
+						//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+						</script>
+				#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_EditUser_Name}'))
+				]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_EditUser_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="showExport" labelResourceName="ShowExport" descriptionResourceName="ShowExport_Description" defaultValue="True" dataType="Bool" />
+	<property id="showDelete" labelResourceName="ShowDelete" descriptionResourceName="ShowDelete_Description" defaultValue="True" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="ConfirmDelete_ConfirmationText">DELETE</resource>
+  <resource name="ConfirmDelete_ConfirmationTextRequired">Confirmation does not match.</resource>
+  <resource name="ConfirmDelete_Instructions">To delete your account and remove the attribution on your content, confirm your intention and click 'Delete my account' below. This action is not reversible.</resource>
+  <resource name="ConfirmDelete_Label">Type DELETE to confirm</resource>
+  <resource name="ConfirmDelete_Title">Delete Account</resource>
+  <resource name="Core_EditUser_Description">Displays the form for a user to edit their settings.</resource>
+  <resource name="Core_EditUser_Name">Settings</resource>
+  <resource name="Daily">Daily</resource>
+  <resource name="DeleteAccount">Delete my account</resource>
+  <resource name="DeleteAccount_Successful">Your account has been deleted and your content has been unattributed. You will now be logged out.</resource>
+  <resource name="DeSelectAll">Select none</resource>
+  <resource name="EditLoginPreferences_Account">Account</resource>
+  <resource name="EditLoginPreferences_LastSignIn">Last sign-in</resource>
+  <resource name="EditLoginPreferences_LastSignInDesc">Date that you last signed into this site</resource>
+  <resource name="EditLoginPreferences_PasswordDesc">Click the change password link to change your sign-in password</resource>
+  <resource name="EditLoginPreferences_PasswordDesc_SSO">Set a password that you will use to post from an offline blogging tool such as Microsoft Word or Windows Live Writer.</resource>
+  <resource name="EditLoginPreferences_SignInName">Sign-in name</resource>
+  <resource name="EditLoginPreferences_SignInNameDesc">The sign-in name is used along with your password to access this site.</resource>
+  <resource name="EditProfile_AboutSignature">Signature</resource>
+  <resource name="EditProfile_AboutSignature_Description">This signature will be shown within your user information popup.</resource>
+  <resource name="EditProfile_AboutTimeZone">Time zone</resource>
+  <resource name="EditProfile_AboutTimeZone_Description">Identify your timezone to ensure that dates are shown relative to your location.</resource>
+  <resource name="EditProfile_AllowConversationsFromAllUsers">Everyone</resource>
+  <resource name="EditProfile_AllowConversationsFromDescription">Allow private messages from</resource>
+  <resource name="EditProfile_AllowConversationsFromFriendsOnly">${friends_propercase} Only</resource>
+  <resource name="EditProfile_AllowConversationsFromNone">No one</resource>
+  <resource name="EditProfile_AllowSitePartnersToContact">Allow this site's partners to contact you</resource>
+  <resource name="EditProfile_AllowSitePartnersToContact_Desc">Enable partners of this site to contact you via email.</resource>
+  <resource name="EditProfile_AllowSiteToContact">Allow this site to contact you</resource>
+  <resource name="EditProfile_AllowSiteToContact_Desc">Enable this site administrators to contact you via email.</resource>
+  <resource name="EditProfile_ContactPrivateEmail">Email address</resource>
+  <resource name="EditProfile_ContactPrivateEmailDesc">This is the email address we'll use to contact you. It is not shared publicly.</resource>
+  <resource name="EditProfile_DefinePassword">Password</resource>
+  <resource name="EditProfile_DefinePassword_Description">To add a password to your account, click the reset password link.</resource>
+  <resource name="EditProfile_DeleteAccount">Delete account</resource>
+  <resource name="EditProfile_DeleteAccount_Desc">To delete your account and remove the attribution on your content, click 'Delete my account' below. This action is not reversible.</resource>
+  <resource name="EditProfile_DisplayInMemberList">Include in search</resource>
+  <resource name="EditProfile_DisplayInMemberList_Description">When enabled, you will be able to be found via search.</resource>
+  <resource name="EditProfile_Editor">Content editor</resource>
+  <resource name="EditProfile_Editor_Description">Select the editor you'd like to use when publishing content.</resource>
+  <resource name="EditProfile_EmailDigestTabs_FrequencyHeader">Frequency</resource>
+  <resource name="EditProfile_EmailDigestTabs_GroupHeader">Group</resource>
+  <resource name="EditProfile_EmailDigestTabs_MyGroupsDescription">All of the groups for which you are a member.</resource>
+  <resource name="EditProfile_EmailDigestTabs_MyGroupsTitle">Your Groups</resource>
+  <resource name="EditProfile_EmailDigestTabs_NoData">No subscriptions</resource>
+  <resource name="EditProfile_EmailDigestTabs_OtherGroupHeader">Group</resource>
+  <resource name="EditProfile_EmailDigestTabs_OtherGroupsDescription">Groups where you have subscribed to receive an email digest, but you are not a member.</resource>
+  <resource name="EditProfile_EmailDigestTabs_OtherGroupsTitle">Other Group Subscriptions</resource>
+  <resource name="EditProfile_EnablePresenceTracking">Enable presence tracking</resource>
+  <resource name="EditProfile_EnablePresenceTracking_Description">When enabled, other members will be able to see when you're online.</resource>
+  <resource name="EditProfile_EnableUserSignatures">Display user signatures</resource>
+  <resource name="EditProfile_EnableUserSignatures_Description">When enabled, user signatures will be shown within the user information popup.</resource>
+  <resource name="EditProfile_ExportData">Export</resource>
+  <resource name="EditProfile_ExportData_Desc">To export all data from your account, click the 'Request Export' link below. This will start the export process. When the export is ready for you to download, you will be notified with a link.</resource>
+  <resource name="EditProfile_Favorites_Share">Share bookmarks</resource>
+  <resource name="EditProfile_Favorites_Share_Description">When enabled, other users can see your bookmarks on your profile</resource>
+  <resource name="EditProfile_OptionsDateFormat">Date format</resource>
+  <resource name="EditProfile_OptionsDateFormat_Description">Select your preferred format for representing dates.</resource>
+  <resource name="EditProfile_OptionsHtmlEmail">Enable HTML emails</resource>
+  <resource name="EditProfile_OptionsHtmlEmailDesc">For email clients that support rich (HTML) email.</resource>
+  <resource name="EditProfile_OptionsReceiveEmails">Enable email contact</resource>
+  <resource name="EditProfile_OptionsReceiveEmailsDesc">When disabled you will turn off all site emails (including emailed notifications).</resource>
+  <resource name="EditProfile_Password">Password</resource>
+  <resource name="EditProfile_PasswordChange">Change password</resource>
+  <resource name="EditProfile_ResetPassword">Reset password</resource>
+  <resource name="EditProfile_ResetPasswordError">An error occurred while resetting your password.  Please try again.</resource>
+  <resource name="EditProfile_SaveError">An error occurred while saving.  Please review your changes and try again.</resource>
+  <resource name="EditProfile_SigMaxLength">Maximum signature length is {0} characters.</resource>
+  <resource name="EditProfile_Subscriptions_NoData">You are not currently subscribed to any applications.</resource>
+  <resource name="EditProfile_Subscriptions_NoDataFormatted">No subscriptions found.</resource>
+  <resource name="EditProfile_SubsriptionsTab_Description">All of the applications to which you are currently subscribed.</resource>
+  <resource name="EditProfile_SubsriptionsTab_Title">Your Subscriptions</resource>
+  <resource name="EditProfile_Tab_About">Options</resource>
+  <resource name="EditProfile_Tab_Email">Email Digests</resource>
+  <resource name="EditProfile_Tab_Notification">Notifications</resource>
+  <resource name="EditProfile_Tab_Subscriptions">Subscriptions</resource>
+  <resource name="EditProfile_UpdateSuccess">Your settings have been updated.</resource>
+  <resource name="EmailDigest_Rollup_Daily">Subscribed to daily digest</resource>
+  <resource name="EmailDigest_Rollup_GroupUnsubscribed">Subscribe to group activities</resource>
+  <resource name="EmailDigest_Rollup_Weekly">Subscribed to weekly digest</resource>
+  <resource name="ExportData">Request Export</resource>
+  <resource name="ExportRequested">Your data export has been requested. You will receive a notification when the export is ready to download.</resource>
+  <resource name="ForgottenPassword_PasswordLinkSentMessage">You have requested a link be sent to your email address (&lt;font color="red"&gt;&lt;b&gt;{0}&lt;/b&gt;&lt;/font&gt;) which will enable you to reset your password. The email will arrive shortly.</resource>
+  <resource name="ForgottenPassword_PasswordLinkSentTitle">User password link sent</resource>
+  <resource name="Group">Group</resource>
+  <resource name="LinkFormat">&lt;a href="{0}"&gt;{1}&lt;/a&gt;</resource>
+  <resource name="More">More...</resource>
+  <resource name="Name">Name</resource>
+  <resource name="Notifications_NotifyWhen">Notify me when:</resource>
+  <resource name="NotSubscribed">Not Subscribed</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Profile_ActivityVisibility">Activity visibility</resource>
+  <resource name="Profile_ActivityVisibility_Description">Only checked activity story types will be created/updated based on actions you make.</resource>
+  <resource name="Profile_EditApiKeys">API Keys</resource>
+  <resource name="Profile_EditApiKeys_Description">API keys are used by external applications to interact with this site.</resource>
+  <resource name="Profile_EditApiKeysDescription">Manage application API keys.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="SelectAll">Select all</resource>
+  <resource name="Set">Set</resource>
+  <resource name="ShowDelete">Show delete option</resource>
+  <resource name="ShowDelete_Description">When enabled, members can delete their own account. When disabled, the option is hidden.</resource>
+  <resource name="ShowExport">Show export option</resource>
+  <resource name="ShowExport_Description">When enabled, members can request an export. When disabled, the option is hidden.</resource>
+  <resource name="subscriptionRemoved">Subscription removed.</resource>
+  <resource name="Unsubscribe">Unsubscribe</resource>
+  <resource name="Verification_Resend">Resend verification email</resource>
+  <resource name="Verification_ResendSuccess">Email sent.</resource>
+  <resource name="Verification_UnverifiedEmail">Your recent email address change ({0}) is pending verification.</resource>
+  <resource name="Weekly">Weekly</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="subscriptions.applications.modify" />
+      <scope id="users.users.modify" />
+      <scope id="notifications.preferences.modify" />
+      <scope id="activitystories.userpreferences.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

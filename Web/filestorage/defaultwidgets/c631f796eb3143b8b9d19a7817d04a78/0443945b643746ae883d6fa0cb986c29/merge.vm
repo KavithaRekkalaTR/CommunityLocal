@@ -1,0 +1,70 @@
+#if ($context.UserId < 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($user = false)
+#set($user = $core_v2_user.Get("%{Id=$context.UserId}"))
+#if (!$user || $user.HasErrors())
+    $core_v2_widget.Hide()
+#end
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('mergeMembersHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button merge disabled">$core_v2_language.GetResource('Merge')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+#if ($user)
+    #set($userTitle = $user.DisplayName)
+    #if ($user.Username != $user.DisplayName)
+        #set($userTitle = "$userTitle ($user.Username)")
+    #end
+#end
+
+<p>$core_v2_language.FormatString($core_v2_language.GetResource('MergeInstructions'), $userTitle)</p>
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item" id="$core_v2_widget.UniqueId('Merge')">
+			<span class="field-item-description">$core_v2_language.GetResource('MergeInstructions_Desc')</span>
+			<span class="field-item-input" style="margin-top: .5em;">
+				<label for="$core_v2_widget.UniqueId('MergeToUser')">$core_v2_language.GetResource("Field_MergeToUser_Placeholder")</label>
+				<span style="position: relative; top: .5em;">
+					<input type="text" id="$core_v2_widget.UniqueId('MergeToUserId')" style="width: 200px;" />
+				</span>
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.usersAdministrationMerge')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('merge.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.membersMerge.register({
+		    userId: $context.UserId,
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    fields: {
+		        mergeToUser: jQuery('#$core_v2_widget.UniqueId('MergeToUserId')')
+		    },
+		    urls: {
+		      lookupUsersUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('find-user.vm'))'  
+		    },
+		    text: {
+		        userLookupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Field_MergeToUser_Placeholder'))',
+		        noUsersMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoMatchingUsers'))',
+		        mergeSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MergeSuccessful'))',
+		        verifyMerge: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MergeConfirm'))'
+		    }
+    	});
+	});
+	</script>
+#end

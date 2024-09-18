@@ -1,0 +1,14 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+    $core_v2_widget.ExecuteFile('update-templates.vm')
+
+	#set($response = $context.SaveTemplates())
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{
+		"success": true
+	}
+#end

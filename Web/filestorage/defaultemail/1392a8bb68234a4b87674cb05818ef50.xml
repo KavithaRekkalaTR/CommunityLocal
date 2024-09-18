@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Changed Email Address Email" version="13.0.0.0" description="Sends an email to the old email address of a member whose email address has changed." id="1392a8bb68234a4b87674cb05818ef50" lastModified="2023-04-17 14:17:18Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+$core_v2_language.GetResource('Body_Introduction')
+</p>
+<p>
+<ul>
+#if ($context_v1_email.Context.EmailAddressChange.NewPrivateEmailAddress != $context_v1_email.Context.EmailAddressChange.OldPrivateEmailAddress)
+    <li>
+    #format($core_v2_language.GetResource('Body_PrivateEmailAddressChanged'))
+	#token('old_email_address')
+	    $context_v1_email.Context.EmailAddressChange.OldPrivateEmailAddress
+	#token('new_email_address')
+	    $context_v1_email.Context.EmailAddressChange.NewPrivateEmailAddress
+	#end
+	</li>
+#end
+
+#if ($context_v1_email.Context.EmailAddressChange.NewPublicEmailAddress != $context_v1_email.Context.EmailAddressChange.OldPublicEmailAddress)
+	<li>
+    #format($core_v2_language.GetResource('Body_PublicEmailAddressChanged'))
+	#token('old_email_address')
+	    $context_v1_email.Context.EmailAddressChange.OldPublicEmailAddress
+	#token('new_email_address')
+	    $context_v1_email.Context.EmailAddressChange.NewPublicEmailAddress
+	#end
+	</li>
+#end
+</ul>
+</p>
+<p>
+$core_v2_language.GetResource('Body_Disclaimer')
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Disclaimer">If you didn't make this change, please contact the site administrator as soon as possible.</resource>
+  <resource name="Body_Introduction">A request was made to change an email address associated to your account:</resource>
+  <resource name="Body_PrivateEmailAddressChanged">Account email address changed from {old_email_address} to {new_email_address}</resource>
+  <resource name="Body_PublicEmailAddressChanged">Public email address changed from {old_email_address} to {new_email_address}</resource>
+  <resource name="Subject">Your email address was changed on {site_name}</resource>
+  <resource name="Header">Your email address was changed on {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

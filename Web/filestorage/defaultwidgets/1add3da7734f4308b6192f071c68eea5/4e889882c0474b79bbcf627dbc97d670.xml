@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Framing_Title}" version="11.0.0.0" description="${resource:Framing_Description}" instanceIdentifier="4e889882c0474b79bbcf627dbc97d670" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="framing" lastModified="2020-08-06 15:18:18Z" provider="1add3da7734f4308b6192f071c68eea5">
+    <contentScript language="Velocity"><![CDATA[#set($headerTemplate = $core_v2_widget.UniqueId('header'))
+
+#set($config = $context.GetConfiguration())
+
+<div id="cookie-notice-sso" class="message information">
+    $core_v2_language.GetResource('SSO_Notice')
+</div>
+<div id="cookie-notice-xframe" class="message information">
+    $core_v2_language.GetResource('Xframe_Notice')
+</div>
+
+<form><fieldset>
+<ul class="field-list">
+    <li class="field-item" id="$core_v2_widget.UniqueId('xframeOptionsWrapper')">
+        <span class="field-item-name">$core_v2_language.GetResource('XFrameOptions_Heading')</span>
+        <span class="field-item-description">$core_v2_language.GetResource('Instructions')</span>
+         <span class="field-item-input">
+                <input type="radio" id="$core_v2_widget.UniqueId('optionSameOrigin')" name="$core_v2_widget.UniqueId('XFrameOption')" #if ($context.XFrameOptions == 'SAMEORIGIN') checked #end value="SAMEORIGIN">
+                <label for="$core_v2_widget.UniqueId('optionSameOrigin')">$core_v2_language.GetResource('XFrameOption_SameOrigin')</label>
+        </span>
+        <span class="field-item-description">$core_v2_language.GetResource('XFrameOption_SameOrigin_Desc')</span>
+         <span class="field-item-input">
+                <input type="radio" id="$core_v2_widget.UniqueId('optionAllowFrom')" name="$core_v2_widget.UniqueId('XFrameOption')" #if ($context.XFrameOptions == 'ALLOW-FROM')checked #end value="ALLOW-FROM">
+                <label for="$core_v2_widget.UniqueId('optionAllowFrom')">$core_v2_language.GetResource('XFrameOption_AllowFrom')</label>
+        </span>
+        <span class="field-item-description">$core_v2_language.GetResource('XFrameOption_AllowFrom_Desc')</span>
+       <span class="field-item-input">
+                <input type="radio" id="$core_v2_widget.UniqueId('optionOff')" name="$core_v2_widget.UniqueId('XFrameOption')" #if ($context.XFrameOptions == '') checked #end value="" >
+                <label for="$core_v2_widget.UniqueId('optionOff')">$core_v2_language.GetResource('XFrameOption_Off')</label>
+        </span>
+        <span class="field-item-description">$core_v2_language.GetResource('XFrameOption_Off_Desc')</span>
+    </li>
+
+	<li class="field-item">
+        <label for="$core_v2_widget.UniqueId('Urls')" class="field-item-name">$core_v2_language.GetResource('Field_Urls')</label>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_Urls_Desc')</span>
+        <span class="field-item-input">
+            <textarea id="$core_v2_widget.UniqueId('Urls')" rows="10">$core_v2_utility.Join($core_v2_utility.NewLine, $context.AllowFrom)</textarea>
+        </span>
+    </li>
+
+</ul>
+</fieldset>
+<fieldset>
+    <ul class="field-list">
+    	<li class="field-item" id="$core_v2_widget.UniqueId('SameSiteOptionsWrapper')">
+        <span class="field-item-name">$core_v2_language.GetResource('Field_SameSiteOptions')</span>
+        <span class="field-item-description">$core_v2_language.GetResource('Field_SameSiteOptions_Desc')</span>
+
+        <span class="field-item-input">
+                <input type="radio" id="$core_v2_widget.UniqueId('OptionNone')" name="$core_v2_widget.UniqueId('SameSiteOptions')"  #if($context.CookieSameSiteSetting == 'None')checked #end value="none">
+                <label for="$core_v2_widget.UniqueId('OptionNone')">$core_v2_language.GetResource('None')</label>
+        </span>
+        <span class="field-item-description">$core_v2_language.GetResource('None_Desc')</span>
+        <span class="field-item-input">
+                <input type="radio" id="$core_v2_widget.UniqueId('OptionLax')" name="$core_v2_widget.UniqueId('SameSiteOptions')" #if($context.CookieSameSiteSetting == 'Lax')checked #end value="lax">
+                <label for="$core_v2_widget.UniqueId('OptionLax')">$core_v2_language.GetResource('Lax')</label>
+        </span>
+         <span class="field-item-description">$core_v2_language.GetResource('Lax_Desc')</span>
+        <span class="field-item-input">
+                <input type="radio" id="$core_v2_widget.UniqueId('OptionStrict')" name="$core_v2_widget.UniqueId('SameSiteOptions')" #if($context.CookieSameSiteSetting == 'Strict')checked #end value="strict">
+               <label for="$core_v2_widget.UniqueId('OptionStrict')" >$core_v2_language.GetResource('Strict')</label>
+        </span>
+          <span class="field-item-description">$core_v2_language.GetResource('Strict_Desc')</span>
+    </li>
+</ul>
+</fieldset>
+
+
+</form>
+
+
+<script type="text/html" id="$headerTemplate">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.contentFiltering')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.framing.register({
+			headerTemplateId: '$headerTemplate',
+			text: {
+			    saveSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save_Successful'))'
+			},
+			fields: {
+			    xFrameOption: jQuery('#$core_v2_widget.UniqueId('xframeOptionsWrapper') input[type="radio"]'),
+			    urls: jQuery('#$core_v2_widget.UniqueId('Urls')'),
+			    sameSiteOption: jQuery('#$core_v2_widget.UniqueId('SameSiteOptionsWrapper') input[type="radio"]'),
+			    ssoNotice: jQuery("#cookie-notice-sso"),
+			    xframeNotice: jQuery("#cookie-notice-xframe")
+			},
+			urls: {
+			    save: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save.vm'))'
+			},
+			ssoEnabled:#if ($context.IsSSOEnabled) true #else false	#end
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Field_SameSiteOptions">Cookie Same Site Setting</resource>
+  <resource name="Field_SameSiteOptions_Desc">This setting determines the SameSite value used on all cookies generated by this community.</resource>
+  <resource name="Field_Urls">Allowed Host URLs</resource>
+  <resource name="Field_Urls_Desc">Identify the full host URL with protocol (one per line). For example, https://telligent.com/.</resource>
+  <resource name="Field_XFrameOption">Allow Framing By</resource>
+  <resource name="Field_XFrameOption_Desc">Select the default framing policy for this site.</resource>
+  <resource name="Framing_Description">Manage this community's ability to be hosted within IFRAMEs and third-party cookie options.</resource>
+  <resource name="Framing_Title">Framing and Cookie Security</resource>
+  <resource name="Instructions">This community can be hosted within IFRAME tags for global, client-side based integrations.  To enable hosting individual pages within IFRAMEs, use the IFRAME integration widget.</resource>
+  <resource name="Lax">Lax</resource>
+  <resource name="Lax_Desc">First party cookies only will be sent on requests to the site and top level navigation.</resource>
+  <resource name="None">None</resource>
+  <resource name="None_Desc">All first and third party cookies will be sent on every request.  To work properly your site must be running under SSL(https).</resource>
+  <resource name="Save">Save</resource>
+  <resource name="Save_Successful">Framing options have been saved successfully.</resource>
+  <resource name="SSO_Notice">Your community appears to be using an alternate method to authenticate users through a third party.  If that method relies on cookies from the third party to be recognized in this community, be sure that the appropriate 'SameSite' cookie attribute is being set by the third party system and the appropriate option is set in community if necessary. </resource>
+  <resource name="Strict">Strict</resource>
+  <resource name="Strict_Desc">First party cookies only will be sent when the request originates from the first party.</resource>
+  <resource name="Xframe_Notice">The Same Site option you have chosen my impact your selected framing option.  Please review your selection and ensure this value is appropriate for your implementation.</resource>
+  <resource name="XFrameOption_AllowFrom">Specific hosts</resource>
+  <resource name="XFrameOption_AllowFrom_Desc">This community can only be used in a frame on one of the hosts specified below.</resource>
+  <resource name="XFrameOption_Off">All hosts</resource>
+  <resource name="XFrameOption_Off_Desc">This community can used in a frame on any host.</resource>
+  <resource name="XFrameOption_SameOrigin">This community's host only</resource>
+  <resource name="XFrameOption_SameOrigin_Desc">This community can only be used in a frame on the same host as the community.</resource>
+  <resource name="XFrameOptions_Heading">Framing Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

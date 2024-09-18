@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:BlogPostsApplicationPanel_Name}" version="11.0.0.0" description="${resource:BlogPostsApplicationPanel_Description}" instanceIdentifier="194c3f4ec8204223bdb62df5fa37ab6c" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="blog-posts with-header-filter" lastModified="2019-11-15 20:42:50Z" provider="cf9dc0d902ad44a98acb5e0f752d4c6a">
+    <contentScript language="Velocity"><![CDATA[#set ($blog = $context.Blog)
+#if (!$blog)
+	$core_v2_widget.Hide()
+#end
+#set ($blogId = $blog.SectionId)
+
+#set ($currentPost = false)
+#set ($currentPost = $core_v2_blogPost.Current)
+
+#set ($pageIndex = 0)
+#set ($blogPostsListId = $core_v2_widget.UniqueId('blogPostsList'))
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplateId'))
+
+#set ($newPostUrl = false)
+#set ($newPostUrl = $core_v2_blogUrls.AddBlogPost($blogId))
+
+<form><fieldset>
+	<ul class="field-list">
+		<li class="field-item">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+
+<ul class="content-list content simple margin-bottom expandable" id="$core_v2_encoding.HtmlAttributeEncode($blogPostsListId)">
+	$core_v2_widget.ExecuteFile('list.vm')
+</ul>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($newPostUrl)" class="button save">$core_v2_language.GetResource('Add')</a>
+				</span>
+			</li>
+		</ul>
+
+		<ul class="filter">
+			<li class="filter-option all selected">
+				<a href="#" data-messagename="contextualblogposts.filter" data-filter="">$core_v2_language.GetResource('All')</a>
+			</li>
+			<li class="filter-option unpublished">
+				<a href="#" data-messagename="contextualblogposts.filter" data-filter="notpublished">
+					$core_v2_language.GetResource('NotPublished')
+
+					#set ($unpublishedPosts = $context.ListPosts("%{ UnpublishedOnly = 'true', PageSize = 1, PageIndex = 0 }"))
+					#if ($unpublishedPosts && $unpublishedPosts.TotalCount > 0)
+						<span class="count">($unpublishedPosts.TotalCount)</span>
+					#end
+				</a>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.blogPostsApplicationPanel.register({
+		headerTemplateId: #if ($newPostUrl) '$core_v2_encoding.JavascriptEncode($headerTemplateId)' #else false #end,
+		listCallback: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('list-callback.vm'))',
+		blogId: $blogId,
+		blogPostId: #if ($currentPost) $currentPost.Id #else null #end,
+		blogUrl: '$core_v2_encoding.JavascriptEncode($core_v2_blogUrls.ManagePosts($blogId))',
+		blogPostsListId: '#$core_v2_encoding.JavascriptEncode($blogPostsListId)',
+		deleteVerificationText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource("Comment_DeleteVerify"))',
+		noPostsText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NoResults'))',
+		publishText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Publish'))',
+		unpublishText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Unpublish'))',
+		publishedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Published'))',
+		notPublishedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('NotPublished'))',
+		postDeletedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PostDeleted'))',
+		publishedEditPendingReviewText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishedEditPendingReview'))',
+		createPendingReviewText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CreatePendingReview'))',
+		filter: ''
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add">New Post</resource>
+  <resource name="All">All</resource>
+  <resource name="BlogPostsApplicationPanel_Description">View, edit, and publish blog posts.</resource>
+  <resource name="BlogPostsApplicationPanel_Name">Posts</resource>
+  <resource name="Comment_DeleteVerify">Are you sure you want to delete this post?</resource>
+  <resource name="Comments_Plural">{0} comments</resource>
+  <resource name="Comments_Singular">{0} comment</resource>
+  <resource name="CreatePendingReview">Pending Review</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Draft">Draft</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="find">Find a post...</resource>
+  <resource name="NoResults">No results.</resource>
+  <resource name="NotPublished">Unpublished</resource>
+  <resource name="OnBehalfOf">{creator} on behalf of {author}</resource>
+  <resource name="PostDeleted">Post has been deleted.</resource>
+  <resource name="Publish">Publish</resource>
+  <resource name="Published">Published</resource>
+  <resource name="PublishedEditPendingReview">Published, Edit Pending Review</resource>
+  <resource name="Scheduled">Scheduled</resource>
+  <resource name="SetToPublish">Future dated</resource>
+  <resource name="Unpublish">Unpublish</resource>
+  <resource name="View">View</resource>
+  <resource name="Views_Plural">{0} views</resource>
+  <resource name="Views_Singular">{0} view</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+  		<scope id="blogs.posts.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

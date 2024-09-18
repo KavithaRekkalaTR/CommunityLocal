@@ -1,0 +1,44 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($parentReplyId = false)
+	#set($parentReplyIdQuery = $core_v2_page.GetFormValue('parentReplyId'))
+	#if ($parentReplyIdQuery && $parentReplyIdQuery.length > 0)
+		#set($parentReplyId = $core_v2_utility.ParseInt($parentReplyIdQuery))
+	#end
+
+	#set($replyId = false)
+	#set($replyIdQuery = $core_v2_page.GetFormValue('replyId'))
+	#if ($replyIdQuery && $replyIdQuery.length > 0)
+		#set($replyId = $core_v2_utility.ParseInt($replyIdQuery))
+	#end
+
+	#set($threadId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('threadId')))
+	#set($isThread = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('isThread')))
+
+	#set($replyBody = false)
+	#set($replyBody = $core_v2_ui.FormatTextAsHtml($core_v2_page.GetFormValue('replyBody'), "%{ DetectMediaUrls = 'True' }"))
+
+	#set($isSuggestion = false)
+	#set($isSuggestion = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('isSuggestion')))
+
+	#set($data = $core_v2_page.MakeQueryString("%{}"))
+
+	#if($replyBody)
+		$data.Add('body', $replyBody)
+	#end
+
+	#if($isSuggestion)
+		$data.Add('issuggestion', 'True')
+	#end
+
+	#set($storeId = $core_v2_utility.StoreTemporaryData($data.ToString()))
+
+	#if (!$isThread && $parentReplyId)
+		{"replyUrl":"$core_v2_encoding.JavaScriptEncode($core_v2_forumUrls.ReplyToForumReply($parentReplyId, $storeId))"}
+	#elseif (!$isThread && $replyId)
+		{"replyUrl":"$core_v2_encoding.JavaScriptEncode($core_v2_forumUrls.EditForumReply($replyId))"}
+	#else
+		{"replyUrl":"$core_v2_encoding.JavaScriptEncode($core_v2_forumUrls.ReplyToForumThread($threadId, $storeId))"}
+	#end
+#end

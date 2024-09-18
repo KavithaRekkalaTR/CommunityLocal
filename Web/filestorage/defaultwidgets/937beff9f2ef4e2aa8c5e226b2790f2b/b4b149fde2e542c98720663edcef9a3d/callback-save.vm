@@ -1,0 +1,123 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+    #set($options = "%{}")
+    
+    #set($o = $core_v2_page.GetFormValue('AllowedFileExtensions'))
+	$options.Add('AllowedFileExtensions', $o)
+    
+    #set($o = $core_v2_page.GetFormValue('AllowedHosts'))
+	$options.Add('AllowedHosts', $o)
+    
+    #set($o = $core_v2_page.GetFormValue('AllowedProtocols'))
+	$options.Add('AllowedProtocols', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('HostlessProtocols'))
+	$options.Add('HostlessProtocols', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('DisallowedEmbeddableContentTypeIds'))
+	$options.Add('DisallowedEmbeddableContentTypeIds', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('DisallowedFileExtensions'))
+	$options.Add('DisallowedFileExtensions', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('DisallowedHosts'))
+	$options.Add('DisallowedHosts', $o)
+	
+	#set($o = false)
+	#set($o = $core_v2_page.GetFormValue('Mentions'))
+	#if ($o)
+	    #set($o = $core_v2_utility.ParseBool($o))
+	    $options.Add('Mentions', $o)
+	#end
+	
+	#set($o = false)
+	#set($o = $core_v2_page.GetFormValue('Hashtags'))
+	#if ($o)
+	    #set($o = $core_v2_utility.ParseBool($o))
+	    $options.Add('Hashtags', $o)
+	#end
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('AllowIpHosts')))
+	$options.Add('AllowIpHosts', $o)
+
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('AllowLocalNetworkHosts')))
+	$options.Add('AllowLocalNetworkHosts', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('UrlEmbedding')))
+	$options.Add('UrlEmbedding', $o)
+
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('FileEmbedding')))
+	$options.Add('FileEmbedding', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Emoticons')))
+	$options.Add('Emoticons', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Font')))
+	$options.Add('Font', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('FontDecoration')))
+	$options.Add('FontDecoration', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('FontSize')))
+	$options.Add('FontSize', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('ForegroundColor')))
+	$options.Add('ForegroundColor', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Background')))
+	$options.Add('Background', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('BordersAndLines')))
+	$options.Add('BordersAndLines', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Lists')))
+	$options.Add('Lists', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Paragraphs')))
+	$options.Add('Paragraphs', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Tables')))
+	$options.Add('Tables', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Links')))
+	$options.Add('Links', $o)
+	
+	#set($o = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('MaxFileSizeMegaBytes')))
+	$options.Add('MaxFileSizeMegaBytes', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Microformats')))
+	$options.Add('Microformats', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('SemanticMarkup')))
+	$options.Add('SemanticMarkup', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('CustomStyles')))
+	$options.Add('CustomStyles', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Frames')))
+	$options.Add('Frames', $o)
+	
+	#set($o = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Data')))
+	$options.Add('Data', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('AllowedClassNames'))
+	$options.Add('AllowedClassNames', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('AllowedClassNamesSelection'))
+	$options.Add('AllowedClassNamesSelection', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('AllowedIdPrefixes'))
+	$options.Add('AllowedIdPrefixes', $o)
+	
+	#set($o = $core_v2_page.GetFormValue('AllowedIdPrefixesSelection'))
+	$options.Add('AllowedIdPrefixesSelection', $o)
+	
+	#set($result = false)
+    #set($result = $context.SaveConfiguration($options))
+    #if ($result.Errors.Count > 0)
+        $core_v2_page.SendJsonError($result.Errors)
+    #end
+    
+    {"success":true}
+#end

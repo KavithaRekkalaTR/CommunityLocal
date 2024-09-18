@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="341e1800c57a40a59733fd5498fb2f41" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="system-indicator-caching" lastModified="2021-11-08 20:43:25Z" provider="3319bb0f28d842e1b7779b6dfa008640">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.CacheStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('affectednodes')
+	    #foreach($node in $context.Status.AffectedNodes)
+	    #each
+			#if ($context.Target == 'Web' || $context.Target == 'Email')
+				<strong>${node}</strong>
+			#else
+				${node}
+			#end
+		#between
+		    ,
+		#end
+#end
+
+#if ($context.Target == 'Web')
+    #foreach($nodeStatus in $context.Status.Nodes)
+    #beforeall
+    	<table style="display:inline-block">
+    	<thead>
+    		<tr>
+    			<th>
+    				$core_v2_language.GetResource('Node')
+    			</th>
+    			<th>
+    			    $core_v2_language.GetResource('Pressure')
+    			</th>
+    		</tr>
+    	</thead>
+    #each
+    	<tr>
+    		<td>
+    			$nodeStatus.Name
+    		</td>
+    		<td>
+    			#set($pressure = false)
+        	    #set($pressure = $nodeStatus.Pressure)
+        	    #if ($pressure)
+        	        #set($pressure = $pressure * 100)
+        	        #set($pressure = $core_v2_utility.Round($pressure))
+        	        $core_v2_language.FormatNumber($pressure)%
+        	    #else
+        	        $core_v2_language.GetResource('Pressure_Unknown')
+        	    #end
+    		</td>
+    	</tr>
+    #afterall
+        </table>
+    #end
+#end
+]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Connected">The cache is healthy.</resource>
+  <resource name="DistributedCacheAvailable">A distributed cache implementation is available in this community but it is not currently enabled. Enabling a distributed cache will improve community performance.</resource>
+  <resource name="HighPressure">The cache is experiencing high pressure on the following servers: {affectednodes}. If possible, please increase the amount of memory available to the cache to improve performance.</resource>
+  <resource name="Node">Server</resource>
+  <resource name="Pressure">Cache Pressure</resource>
+  <resource name="Pressure_Unknown">Unknown</resource>
+  <resource name="UnequalPressure">The cache on web servers is experiencing uneven pressure. This can indicate a misconfigured load balancer. Review the load balancer configuration to ensure that load is equally applied to all web servers.</resource>
+  <resource name="Unknown">The status of the cache is not currently known.</resource>
+  <resource name="Widget-Description">Cache System Indicator</resource>
+  <resource name="Widget-Title">Cache</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

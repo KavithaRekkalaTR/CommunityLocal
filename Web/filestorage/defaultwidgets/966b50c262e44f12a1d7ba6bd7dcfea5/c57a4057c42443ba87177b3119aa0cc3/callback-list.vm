@@ -1,0 +1,94 @@
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageIndex')))
+#set($pageSize = 20)
+#set($query = "%{SortBy='Title',SortOrder='Ascending',PageSize=$pageSize,PageIndex=$pageIndex}")
+
+#set($achievements = $core_v2_achievement.List($query))
+#if ($achievements && $achievements.HasErrors())
+    $core_v2_page.SendJsonError($achievements.Errors)
+#end
+
+#set ($hasMore = 'false')
+#set ($currentPagedQuantity = ($achievements.PageIndex + 1) * $achievements.PageSize)
+#if ($achievements.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = 'true')
+#end
+
+<ul class="content-list content expandable simple" data-hasmore="$hasMore" data-totalitems="$achievements.TotalCount">
+#foreach($achievement in $achievements)
+    <li class="content-item achivement" data-userid="$achievement.Id.ToString()">
+    	<div class="avatar">
+    		#if ($achievement.BadgeIconUrl != '')
+    			$core_v2_ui.GetResizedImageHtml($achievement.BadgeIconUrl, 64, 64, "%{border='0px', alt=$achievement.Title, ResizeMethod = 'ZoomAndCrop' }")
+    		#end
+    	</div>
+    	<div class="content-container">
+        	<h4 class="name">
+        	    $achievement.Title
+        	</h4> 
+            <div class="attributes">
+        		<ul class="attribute-list">
+        			<li class="attribute-item">
+        				<span class="attribute-value">
+        				    #if ($achievement.Enabled)
+        				        $core_v2_language.GetResource('Status_Enabled')
+        				    #else
+        				        $core_v2_language.GetResource('Status_Disabled')
+        				    #end
+        				</span>
+        			</li>
+        			<li class="attribute-item">
+        				<span class="attribute-value">$core_v2_language.FormatAgoDate($achievement.CreatedDate)</span>
+        			</li>
+        		</ul>
+        	</div>
+        
+        	<div class="content expandable">
+        	    #set($criteria = false)
+        		#set($criteria = $!core_v2_language.Truncate($achievement.Criteria, 200, '...'))
+        		#if ($criteria && $criteria.Length > 0)
+        		    $criteria
+        		#end
+        	</div>
+        	<div class="actions expandable">
+        		<div class="navigation-list ui-links" data-direction="horizontal">
+        			<ul>
+        			    #if ($achievement.Url)
+            				<li class="navigation-list-item">
+            					<a href="$core_v2_encoding.HtmlAttributeEncode($achievement.Url)" target="_blank">
+            						$core_v2_language.GetResource('Action_View')
+            					</a>
+            				</li>
+            			#end
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="achievement.edit" data-id="$achievement.Id.ToString()" data-title="$achievement.Title">
+        						$core_v2_language.GetResource('Action_Edit')
+        					</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="achievement.delete" data-id="$achievement.Id.ToString()" data-title="$achievement.Title">
+        						$core_v2_language.GetResource('Action_Delete')
+        					</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="achievement.award" data-id="$achievement.Id.ToString()" data-title="$achievement.Title">
+        						$core_v2_language.GetResource('Action_Award')
+        					</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" data-messagename="achievement.revoke" data-id="$achievement.Id.ToString()" data-title="$achievement.Title">
+        						$core_v2_language.GetResource('Action_Revoke')
+        					</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+        				</li>
+        				<li class="navigation-list-item">
+        					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+        				</li>
+        			</ul>
+        		</div>
+        	</div>
+        </div>
+    </li>
+#end
+</ul>

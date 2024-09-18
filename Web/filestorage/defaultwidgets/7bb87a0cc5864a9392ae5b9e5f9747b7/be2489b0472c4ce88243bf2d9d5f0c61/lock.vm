@@ -1,0 +1,11 @@
+﻿#if ($core_v2_page.IsPost)
+	#set($type = $core_v2_page.GetFormValue('type'))
+	#set($lock = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('lock')))
+	$core_v2_page.SetContentType('application/json')
+
+	#if ($type == 'wikiPage')
+		{"lock":#if($core_v2_wikiPage.Update($core_v2_utility.ParseInt($core_v2_page.GetFormValue('wikiPageId')), "%{ IsLocked = $lock, SaveRevision = $core_v2_utility.ParseBool('False') }").IsLocked) true#else false#end}
+	#else
+		$core_v2_page.SendJsonError('Unrecognized lock type.')
+	#end
+#end

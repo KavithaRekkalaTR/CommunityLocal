@@ -1,0 +1,130 @@
+#set ($formId = 'telligent_evolution_widgets_peopleSearch_filterForm')
+#set ($profileFieldNames = $core_v2_utility.Split(";", $core_v2_page.GetFormValue('profileFieldNames')))
+
+#set ($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('pageIndex')))
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 10))
+#set ($query = '')
+#set ($query = $core_v2_page.GetFormValue('query'))
+#set ($searchInputId = 'telligent_evolution_widgets_peopleSearch_search')
+
+## build query
+
+#set ($queryParts = $core_v2_utility.Split('',''))
+
+#set ($queryWords = $core_v2_utility.Split(" ", $query))
+#foreach ($word in $queryWords)
+	#set ($addIndex = $queryParts.Add("titlelookup:${word}*"))
+#end
+
+## build filter form
+
+#set($propertyHeaderFormat = '<li class="field-item {PropertyDataType}-type"><label class="field-item-name">{PropertyName}</label><span class="field-item-input">')
+#set($propertyFooterFormat = '</span></li>')
+
+#set ($profileFields = $core_v2_userProfileField.List("%{ IsSearchable = 'true' }"))
+#set ($formXml = '<propertyGroup id="profileData" resourceName="" resourceFile="" text="" descriptionResourceName="" descriptionResourceFile="" descriptionText="" orderNumber="1" visible="true">')
+#set ($currentFormData = $core_v2_page.ParseQueryString(''))
+#set($filters='')
+#foreach ($searchedProfileFieldName in $profileFieldNames)
+	#set ($searchedProfileFieldValue = '')
+	#set ($searchedProfileFieldValue = $core_v2_page.GetFormValue($searchedProfileFieldName))
+	#if ($searchedProfileFieldValue && $searchedProfileFieldValue.length > 0 && $searchedProfileFieldValue != 'null')
+		#set ($internalProfileFieldName = false)
+		#set ($internalProfileFieldName = $core_v2_page.GetFormValue("${searchedProfileFieldName}_name"))
+		$currentFormData.Add($internalProfileFieldName, $searchedProfileFieldValue)
+			#set($filters = "${filters}||${searchedProfileFieldName}::${searchedProfileFieldValue}")
+	#end
+#end
+#foreach ($profileField in $profileFields)
+	#set ($formXml = "${formXml}${core_v2_userProfileField.DynamicFormXml($profileField.Name)}")
+#end
+#set ($formXml = "${formXml}</propertyGroup>")
+#set ($renderedForm = $core_v2_dynamicForm.RenderForm($formId, $formXml, $currentFormData, "%{GroupFooterHtmlFormat='',GroupHeaderHtmlFormat='',PropertyFooterHtmlFormat=$propertyFooterFormat,PropertyHeaderHtmlFormat=$propertyHeaderFormat}"))
+
+## serialize search query
+
+#set ($searchQuery = $core_v2_utility.Join(' AND ', $queryParts))
+
+<!-- query: $core_v2_encoding.HtmlEncode($searchQuery) -->
+
+## perform search
+
+#set ($searchListOptions = "%{ Query = $searchQuery, Sort = 'titlesort', PageIndex = $pageIndex, PageSize = $pageSize }")
+$searchListOptions.Add("Filters", "type::user${filters}")
+#set ($searchResults = $core_v2_searchResult.List($searchListOptions))
+
+
+## Render Search Results
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($searchResults.PageIndex + 1) * $searchResults.PageSize)
+#if ($searchResults.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = true)
+#end
+
+#foreach ($result in $searchResults)
+#beforeall
+	<div class="content-list thumbnail ui-masonry margin-top" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('thumbnails'))" data-columnclass="thumbnail-column">
+#each
+	#set ($user = false)
+	#foreach ($resultUser in $result.Users)
+		#set ($user = $resultUser)
+	#end
+
+	<div class="content-item content thumbnail" data-hasmore="$hasMore" data-userid="$user.Id" data-url="$!core_v2_encoding.HtmlAttributeEncode($user.ProfileUrl)">
+		<div class="avatar">
+			$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 140, 140, "%{alt=$user.DisplayName,border='0',ResizeMethod = 'ZoomAndCrop'}")
+		</div>
+		<h2 class="name">
+			$user.DisplayName
+		</h2>
+		<div class="actions">
+			#set($links = $core_v2_user.ListActionLinks($user.Id))
+			#foreach($link in $links)
+			#beforeall
+				<div class="navigation-list ui-links" data-minlinks="0" data-maxlinks="0" data-direction="horizontal">
+					<ul class="navigation-list">
+			#each
+						<li class="navigation-item">
+							$!link.Html
+						</li>
+			#afterall
+						<li class="navigation-item">
+							<a href="#" class="internal-link more" data-more>$core_v2_language.GetResource('user_action')</a>
+						</li>
+						<li class="navigation-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			#end
+		</div>
+	</div>
+#afterall
+	</div>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('norecords')</div>
+#end
+
+<!--${formId}-->
+<fieldset class="field-list">
+	<h3>
+		#if ($searchResults.TotalCount == 1)
+			$core_v2_language.FormatString($core_v2_language.GetResource('Core_SearchResults_Result'), $core_v2_language.FormatNumber($searchResults.TotalCount))
+		#else
+			$core_v2_language.FormatString($core_v2_language.GetResource('Core_SearchResults_Results'), $core_v2_language.FormatNumber($searchResults.TotalCount))
+		#end
+	</h3>
+	<ul class="field-list">
+		$renderedForm
+	</ul>
+</fieldset>
+<fieldset class="field-list">
+	<ul class="field-list">
+		<li class="field-item submit-button">
+			<span class="field-item-input">
+				<a class="button $core_v2_encoding.HtmlAttributeEncode($searchInputId)" href="#">$core_v2_language.GetResource('search')</a>
+			</span>
+		</li>
+	</ul>
+</fieldset>

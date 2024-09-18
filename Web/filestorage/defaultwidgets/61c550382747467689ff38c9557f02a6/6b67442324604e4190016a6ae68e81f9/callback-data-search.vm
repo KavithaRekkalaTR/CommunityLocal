@@ -1,0 +1,68 @@
+##
+## Search Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#set ($options = "%{}")
+
+#set ($queryQuery = $core_v2_page.GetQueryStringValue("_w_query"))
+#if ($queryQuery)
+	$options.Add('Query', $queryQuery)
+#end
+
+#set ($caseSensitiveQuery = $core_v2_page.GetQueryStringValue("_w_caseSensitive"))
+#if ($caseSensitiveQuery)
+	$options.Add('CaseSensitive', $core_v2_utility.ParseBool($caseSensitiveQuery))
+#end
+
+#set ($regExQuery = $core_v2_page.GetQueryStringValue("_w_regEx"))
+#if ($regExQuery)
+	$options.Add('RegEx', $core_v2_utility.ParseBool($regExQuery))
+#end
+
+#set ($componentScopesQuery = $core_v2_page.GetQueryStringValue("_w_componentScopes"))
+#if ($componentScopesQuery)
+	$options.Add('ComponentScopes', $componentScopesQuery)
+#end
+
+#set ($typeIdQuery = $core_v2_page.GetQueryStringValue("_w_typeId"))
+#if ($typeIdQuery)
+	$options.Add('TypeId', $typeIdQuery)
+#end
+
+#set ($stateQuery = $core_v2_page.GetQueryStringValue("_w_state"))
+#if ($stateQuery)
+	$options.Add('State', $stateQuery)
+#end
+
+#set ($isStagedQuery = $core_v2_page.GetQueryStringValue("_w_isStaged"))
+#if ($isStagedQuery)
+	$options.Add('IsStaged', $core_v2_utility.ParseBool($isStagedQuery))
+#end
+
+#set ($idQuery = $core_v2_page.GetQueryStringValue("_w_id"))
+#if ($idQuery)
+	$options.Add('Id', $idQuery)
+#end
+
+#set ($pageSizeQuery = $core_v2_page.GetQueryStringValue("_w_pageSize"))
+#if ($pageSizeQuery)
+	$options.Add('PageSize', $core_v2_utility.ParseInt($pageSizeQuery))
+#end
+
+#set ($pageIndexQuery = $core_v2_page.GetQueryStringValue("_w_pageIndex"))
+#if ($pageIndexQuery)
+	$options.Add('PageIndex', $core_v2_utility.ParseInt($pageIndexQuery))
+#end
+
+#set ($searchResults = $context.SearchThemes($options))
+#if ($searchResults && $searchResults.HasErrors())
+	$core_v2_page.SendJsonError($searchResults.Errors)
+#end
+
+{
+	"PageSize": $searchResults.PageSize,
+	"PageIndex": $searchResults.PageIndex,
+	"TotalCount": $searchResults.TotalCount,
+	"results": $core_v2_widget.ExecuteFile('callback-sub-serialize-search-results.vm')
+}

@@ -1,0 +1,91 @@
+##
+## Loads the ancestors of a comment, including its topmost ancestors up to the flatten depth
+## and a page of its immediate parents up to the page size.
+## If these do not meet, then they are spliced together
+##
+## Expects in scope: $parents (array), $child (comment)
+##
+
+#if ($child)
+
+	## If thread is not fully flattened, load topmost threaded ancestors
+	#set ($topMostAncestors = false)
+	#if ($flattenedDepth > 0)
+		## Get topmost threaded ancestors
+		#set ($listTopMostThreadedForCommentsOptions = "%{}")
+		$listTopMostThreadedForCommentsOptions.add('ContentId', $child.ContentId)
+		$listTopMostThreadedForCommentsOptions.add('ContentTypeId', $child.ContentTypeId)
+		$listTopMostThreadedForCommentsOptions.add('CommentId', $child.CommentId)
+		$listTopMostThreadedForCommentsOptions.add('PageSize', $flattenedDepth)
+		$listTopMostThreadedForCommentsOptions.add('Direction', 'FromRootComment')
+		$listTopMostThreadedForCommentsOptions.add('FlattenedDepth', $flattenedDepth)
+		#if ($sortBy)
+			$listTopMostThreadedForCommentsOptions.add('ThreadedSortBy', $sortBy)
+		#end
+		#if ($sortOrder)
+			$listTopMostThreadedForCommentsOptions.add('ThreadedSortOrder', $sortOrder)
+		#end
+		#if ($flattenedSortBy)
+			$listTopMostThreadedForCommentsOptions.add('FlattenedSortBy', $flattenedSortBy)
+		#end
+		#if ($flattenedSortOrder)
+			$listTopMostThreadedForCommentsOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+		#end
+		#set ($topMostThreadedForComments = $core_v2_comments.ListThreadedForComment($listTopMostThreadedForCommentsOptions))
+
+		## Flatten
+		#set ($iterationCount = 0)
+		#set ($maxIterations = $flattenedDepth + 1)
+		#set ($flattenedReplies = [])
+		#set ($threadedReplies = $topMostThreadedForComments)
+		$core_v2_widget.ExecuteFile('common-recurse-threaded.vm')
+		#set ($topMostAncestors = $flattenedReplies)
+	#end
+
+	## Load nearest threaded ancestors
+	#set ($listNearestThreadedForCommentsOptions = "%{}")
+	$listNearestThreadedForCommentsOptions.add('ContentId', $child.ContentId)
+	$listNearestThreadedForCommentsOptions.add('ContentTypeId', $child.ContentTypeId)
+	$listNearestThreadedForCommentsOptions.add('CommentId', $child.CommentId)
+	$listNearestThreadedForCommentsOptions.add('PageSize', $pageSize)
+	$listNearestThreadedForCommentsOptions.add('Direction', 'FromComment')
+	$listNearestThreadedForCommentsOptions.add('FlattenedDepth', $flattenedDepth)
+	#if ($sortBy)
+		$listNearestThreadedForCommentsOptions.add('ThreadedSortBy', $sortBy)
+	#end
+	#if ($sortOrder)
+		$listNearestThreadedForCommentsOptions.add('ThreadedSortOrder', $sortOrder)
+	#end
+	#if ($flattenedSortBy)
+		$listNearestThreadedForCommentsOptions.add('FlattenedSortBy', $flattenedSortBy)
+	#end
+	#if ($flattenedSortOrder)
+		$listNearestThreadedForCommentsOptions.add('FlattenedSortOrder', $flattenedSortOrder)
+	#end
+	#set ($nearestThreadedForComments = $core_v2_comments.ListThreadedForComment($listNearestThreadedForCommentsOptions))
+
+	## Flatten
+	#set ($iterationCount = 0)
+	#set ($maxIterations = $flattenedDepth + 1)
+	#set ($flattenedReplies = [])
+	#set ($threadedReplies = $nearestThreadedForComments)
+	$core_v2_widget.ExecuteFile('common-recurse-threaded.vm')
+	#set ($nearestAncestors = $flattenedReplies)
+
+	## Merge the top down and bottom-up lists into the single ancestor list
+	#set ($topMostAncestorHash = "%{}")
+	#if ($topMostAncestors)
+		#foreach ($topMostAncestor in $topMostAncestors)
+			#set ($addedAt = $parents.Add($topMostAncestor))
+			## track that this ancestor was added in case it's also included in the bottom-up recursed list
+			$topMostAncestorHash.Add($topMostAncestor.CommentId.ToString(), $topMostAncestor)
+		#end
+	#end
+
+	#foreach ($nearestParent in $nearestAncestors)
+		#if (!$topMostAncestorHash.Contains($nearestParent.CommentId.ToString()))
+			#set ($addedAt = $parents.Add($nearestParent))
+		#end
+	#end
+
+#end

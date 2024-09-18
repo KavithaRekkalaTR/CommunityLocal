@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Licensing_Title}" version="10.0.0.0" description="${resource:Licensing_Description}" instanceIdentifier="2e0649e38f47476e9f7ece259b906794" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="licensing" provider="144ae15e9c65457884636d42c2915a85">
+    <contentScript><![CDATA[#set($uploadContextId = $core_v2_uploadedFile.CreateContextId())
+
+<div class="tab usage">
+    $core_v2_widget.ExecuteFile('tab-usage.vm')
+</div>
+
+<div class="tab licenses">
+    $core_v2_widget.ExecuteFile('tab-licenses.vm')
+</div>
+
+<div class="tab servers">
+    $core_v2_widget.ExecuteFile('tab-servers.vm')
+</div>
+
+#set ($headerTemplateId = $core_v2_widget.UniqueId('headerTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button install">$core_v2_language.GetResource('Install')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+
+	<ul class="filter">
+	    <li class="filter-option selected"><a href="#" data-tab="usage">$core_v2_language.GetResource('Tab_Usage')</a></li>
+	    <li class="filter-option"><a href="#" data-tab="licenses">$core_v2_language.GetResource('Tab_Licenses')</a></li>
+	    <li class="filter-option"><a href="#" data-tab="servers">$core_v2_language.GetResource('Tab_Servers')</a></li>
+	</ul>
+</script>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.licensing')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.licensing.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    uploadContextId: '$core_v2_encoding.JavascriptEncode($uploadContextId)',
+		    urls: {
+		        unregisterServer:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-unregisterserver.vm'))',
+		        uninstallLicense:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-uninstalllicense.vm'))',
+		        refresh:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-refresh.vm'))',
+		        installLicense:'$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-installlicense.vm'))',
+		        uploadFile: '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($uploadContextId))'
+		    },
+            text: {
+                confirmServerUnregistration: 'Are you sure you want to unregister \'{0}\'?',
+                serverUnregisteredSuccess: '\'{0}\' was unregistered successfully.',
+                confirmLicenseUninstallation: 'Are you sure you want to uninstall the license \'{0}\'?',
+                licenseUninstallationSuccess: '\'{0}\' was uninstalled successfully.',
+                licenseInstallSuccess: 'The license was installed successfully.',
+                install: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Install'))',
+				installing: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Installing'))',
+				installProgress: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('InstallProgress'))',
+            }
+    	});
+	});
+	</script>
+#end]]></contentScript>
+    <languageResources><language key="en-us">
+  <resource name="Licensing_Title">Licenses</resource>
+  <resource name="Licensing_Description">Install and manage licenses.</resource>
+  <resource name="Tab_Usage">Usage and Restrictions</resource>
+  <resource name="Tab_Licenses">Licenses</resource>
+  <resource name="Tab_Servers">Registered Servers</resource>
+  <resource name="Install">Install License</resource>
+  <resource name="InstallProgress">Uploading ({0}%)...</resource>
+  <resource name="Installing">Installing...</resource>
+  <resource name="Licenses-Instructions">Licenses enable functionality within Telligent Community and increase usage allowances. Installed licenses are listed below.</resource>
+  <resource name="Servers-Instructions">Some licenses limit the number of registered servers that can host Telligent Community. A list of currently registered servers is below.</resource>
+  <resource name="Usage-Instructions">Licenses enable functionality within Telligent Community and increase usage allowances. Below is a cumulative summary of usage statistics, enabled capabilities, and any restrictions based on the currently active set of licenses.</resource>
+  <resource name="UnregisterServer">Unregister</resource>
+  <resource name="NoServersRegistered">No servers are currently registered with this site. This registration occurs automatically.</resource>
+  <resource name="Expires">Expires {0}</resource>
+  <resource name="Expired">Expired {0}</resource>
+  <resource name="OverUsageAllowances">This site is currently over its allowed usage limits based on currently installed licenses. See below for details.</resource>
+  <resource name="Installed">Installed {0}</resource>
+  <resource name="LicenseDetails">License &lt;code&gt;{0}&lt;/code&gt; was granted to &lt;strong&gt;{1}&lt;/strong&gt; (&lt;a href="mailto:{2}"&gt;{2}&lt;/a&gt;) with the following allowances and capabilities:</resource>
+  <resource name="ProductName">{0} {1}</resource>
+  <resource name="ProductName_Inactive">{0} {1} (Inactive)</resource>
+  <resource name="Uninstall">Uninstall</resource>
+  <resource name="NoLicenses">No licenses are installed on this site.</resource>
+  <resource name="Usage">Usage</resource>
+  <resource name="Capabilities">Capabilities</resource>
+  <resource name="Restrictions">Restrictions</resource>
+  <resource name="more">More</resource>
+  <resource name="cancel">Cancel</resource>
+</language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,16 @@
+#set($reportid = $core_v2_page.GetQueryStringValue('w_reportid'))
+#set($parentid = $core_v2_page.GetQueryStringValue('w_parentid'))
+#set($tabKey = $core_v2_page.GetQueryStringValue('w_tabkey'))
+#set($drillReportIds = $core_v2_page.GetQueryStringValue('w_drillReportIds'))
+#set($tabNamespace = $core_v2_page.GetQueryStringValue('w_tabnamespace'))
+
+#set($id = $core_v2_utility.ParseGuid($reportid))
+#set($parsedParentId = $core_v2_utility.ParseGuid($parentid))
+
+#set($options = "%{}")
+$options.Add('parentId', $parsedParentId)
+$options.Add('tabKey', $tabKey)
+$options.Add('tabNamespace', $tabNamespace)
+$options.Add('drillReportIds', $drillReportIds)
+
+$reporting.RenderReport($id, $options)

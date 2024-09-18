@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PointTransactionTotal_WidgetName}" version="11.0.0.0" description="${resource:PointTransactionTotal_WidgetDescription}" instanceIdentifier="5275347a07e14842816d82f8cadc04a5" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="user-points-total" lastModified="2020-01-14 16:07:32Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($canViewDetails = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+#set ($userSelection = $core_v2_widget.GetStringValue('userSelection', 'accessing'))
+
+#if($userSelection == 'contextual')
+	#set ($user = $core_v2_user.Current)
+	#if(!$core_v2_user.IsRegistered($user.Id) || $user.IsSystemAccount)
+		$core_v2_widget.Hide()
+	#end
+#else
+	#set ($user = $core_v2_user.Accessing)
+#end
+
+#if($core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && !$user.IsSystemAccount)
+	#set($linkToDetails = false)
+	#set($linkToDetails = $core_v2_urls.UserPoints($user.Id))
+	<div class="content full">
+	<h3 class="name">
+			#if ($linkToDetails)
+				<a href="$linkToDetails">
+			#end
+			#if ($user.Points == 1)
+				$core_v2_language.GetResource('Point')
+			#else
+				$core_v2_language.FormatString($core_v2_language.GetResource('Points'), $core_v2_language.FormatNumber($user.Points))
+			#end
+			#if ($linkToDetails)
+				</a>
+			#end
+		</h3>
+		<div class="content"></div>
+	</div>
+#else
+	## don't show anonymous users their own (non-existent) points
+	$core_v2_widget.Hide()
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+
+#if($header == '' || $header == '${resource:PointTransactionTotal_WidgetName}')
+    #set ($userSelection = $core_v2_widget.GetStringValue('userSelection', 'accessing'))
+	#if($userSelection == 'contextual')
+		#set ($header = $core_v2_language.FormatString($core_v2_widget.ApplyTokens('${resource:PointTransactionTotal_Title_Someone}'), $core_v2_user.Current.DisplayName))
+	#else
+		#set ($header = $core_v2_widget.ApplyTokens('${resource:PointTransactionTotal_Title_You}'))
+	#end
+#end
+	
+$core_v2_widget.ApplyTokens($header)]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="fragmentHeader" labelResourceName="Configuration_Title" defaultValue="${resource:PointTransactionTotal_WidgetName}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="userSelection" labelResourceName="Configuration_UserSelection" defaultValue="accessing" dataType="String">
+		<propertyValue value="accessing" labelResourceName="Configuration_UserSelection_Accessing" orderNumber="1000000" />
+		<propertyValue value="contextual" labelResourceName="Configuration_UserSelection_Contextual" orderNumber="1000001" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Configuration_Title">Widget Name</resource>
+  <resource name="Configuration_UserSelection">Display points earned by...</resource>
+  <resource name="Configuration_UserSelection_Accessing">the user viewing the page</resource>
+  <resource name="Configuration_UserSelection_Contextual">the contextual user (for use on a profile page)</resource>
+  <resource name="Point">1 Point</resource>
+  <resource name="Points">{0} Points</resource>
+  <resource name="PointTransactionTotal_Title_Someone">{0}'s Points</resource>
+  <resource name="PointTransactionTotal_Title_You">My Points</resource>
+  <resource name="PointTransactionTotal_WidgetDescription">Displays a points total for a single user.</resource>
+  <resource name="PointTransactionTotal_WidgetName">User - Points Total</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

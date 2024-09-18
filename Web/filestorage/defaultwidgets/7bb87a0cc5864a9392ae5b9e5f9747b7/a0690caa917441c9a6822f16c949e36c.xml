@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Achievements_UserList_Name}" version="11.0.0.0" description="${resource:Achievements_UserList_Description}" instanceIdentifier="a0690caa917441c9a6822f16c949e36c" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="achievement-user-list" lastModified="2020-01-14 16:08:23Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+$core_v2_ui.PagedContent('pagedContent.vm')
+
+#registerEndOfPageHtml('telligent.evolution.widgets.achievementUserList')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+		jQuery(function()
+		{
+			jQuery.telligent.evolution.widgets.achievementUserList.register({
+				wrapper: jQuery('#$core_v2_widget.WrapperElementId'),
+				loadUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('pagedContent.vm'))',
+				pageIndexKey: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)',
+				thumbnailsContainer: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))'),
+				hasMore: '$hasMore',
+			});
+		});
+	</script>
+#end
+        ]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Achievements_UserList_Title}'))
+        ]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="Title" defaultValue="${resource:Achievements_UserList_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="sortBy" labelResourceName="SortBy" defaultValue="DateCreated" dataType="String">
+		<propertyValue value="DateCreated" labelResourceName="SortBy_DateCreated" />
+		<propertyValue value="Title" labelResourceName="SortBy_Title" />
+	</property>
+	<property id="sortOrder" labelResourceName="SortOrder" defaultValue="Descending" dataType="String">
+		<propertyValue value="Ascending" labelResourceName="SortOrder_Ascending" />
+		<propertyValue value="Descending" labelResourceName="SortOrder_Descending" />
+	</property>
+	<property id="pageSize" labelResourceName="PageSize" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="enablePaging" labelResourceName="EnablePaging" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Achievements_UserList_Description">Displays a list of users who have received an achievement</resource>
+  <resource name="Achievements_UserList_Name">Achievement - User List</resource>
+  <resource name="Achievements_UserList_Title">Recently achieved by</resource>
+  <resource name="EnablePaging">Enable Paging</resource>
+  <resource name="NoMembers">No members have attained this achievement.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="PageSize">Number of items to display</resource>
+  <resource name="SortBy">Sort By</resource>
+  <resource name="SortBy_DateCreated">Date Received</resource>
+  <resource name="SortBy_Title">Achievement Title</resource>
+  <resource name="SortOrder">Sort Order</resource>
+  <resource name="SortOrder_Ascending">Ascending</resource>
+  <resource name="SortOrder_Descending">Descending</resource>
+  <resource name="Title">Widget Title</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

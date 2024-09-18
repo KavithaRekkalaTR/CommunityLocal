@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Thread Join" version="12.0.0.0" description="Sends an email to a thread author when their thread is merged into a reply on a separate thread." id="8a4183986ee547c2b025c685d1f4ae64" lastModified="2022-06-28 15:00:03Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[
+$core_v2_language.GetResource('Subject')]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Header')
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('old_thread')
+  #set($oldThreadUrl = $context_v1_email.Context.ThreadJoin.OldThread.Url)
+  #if ($oldThreadUrl)
+    <a href="$core_v2_encoding.HtmlAttributeEncode($oldThreadUrl)">
+      $context_v1_email.Context.ThreadJoin.OldThread.Subject
+    </a>
+  #else
+    $context_v1_email.Context.ThreadJoin.OldThread.Subject
+  #end
+#token('new_thread')
+  #set($newThreadUrl = $context_v1_email.Context.ThreadJoin.NewThread.Url)
+  #if ($newThreadUrl)
+    <a href="$core_v2_encoding.HtmlAttributeEncode($newThreadUrl)">
+      $context_v1_email.Context.ThreadJoin.NewThread.Subject
+    </a>
+  #else
+    $context_v1_email.Context.ThreadJoin.NewThread.Subject
+  #end
+#end
+</p>
+]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Subject">Your thread was joined to another thread</resource>
+  <resource name="Header">Your thread was joined to another thread</resource>
+  <resource name="Body">Your thread {old_thread} was joined with {new_thread}.</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

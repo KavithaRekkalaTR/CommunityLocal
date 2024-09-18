@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" instanceIdentifier="de194550b3f04b388c79a1dc17f0d9d1" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="article-helpfulness-management" lastModified="2022-01-31 19:43:40Z" provider="fe444e9649144f6e98c7ac40404b7d94">
+    <contentScript language="Velocity"><![CDATA[#if (!$context.ArticleCollection.EnableHelpfulness)
+		<div class="message warning">
+		#format($core_v2_language.GetResource('FeedbackDisabled'))
+				#token()
+						<a href="$core_v2_encoding.HtmlAttributeEncode($context.ArticleOptionsUrl)">$core_v2_language.GetResource('FeedbackDisabled_ArticleOptions')</a>
+		#end
+		</div>
+#end
+
+<form><fieldset class="filter-form">
+	<ul class="field-list">
+				<li class="field-item filters">
+						<span class="field-item-input">
+								<span class="field-item-component">
+										<select class="sort-field helpfulness-filter">
+												<option value="All">$core_v2_language.GetResource('Filter_All')</option>
+												<option value="Resolved">$core_v2_language.GetResource('Filter_Resolved')</option>
+												<option value="Unresolved" selected="selected">$core_v2_language.GetResource('Filter_Unresolved')</option>
+										</select>
+								</span>
+								<span class="field-item-component">
+										<input type="text" id="$core_v2_widget.UniqueId('article')" />
+								</span>
+								<span class="field-item-component">
+										<select class="sort-field helpfulness-responsetype">
+												<option value="">$core_v2_language.GetResource('ResponseType_All')</option>
+												#foreach($responseType in $articles_v1_helpfulnessResponseTypes.List($context.ApplicationId))
+														<option value="$responseType.Id">$core_v2_language.FormatString($core_v2_language.GetResource('ResponseType'), $core_v2_language.Truncate($responseType.Name, 35, '…'))</option>
+												#end
+										</select>
+								</span>
+								<span class="field-item-component">
+										<select class="sort-field sortorder">
+												<option value="Ascending">$core_v2_language.GetResource('SortOrder_Ascending')</option>
+												<option value="Descending" selected="selected">$core_v2_language.GetResource('SortOrder_Descending')</option>
+										</select>
+								</span>
+						</span>
+				</li>
+	</ul>
+</fieldset></form>
+$core_v2_widget.ExecuteFile('callback-gethelpfulness.vm')
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.articleHelpfulnessManagement.register({
+		collectionId: '$context.ArticleCollection.Id.ToString()',
+        articleId: jQuery.telligent.evolution.url.hashData().articleId ?  jQuery.telligent.evolution.url.hashData().articleId : #if($articles_v1_articles.Current) '$articles_v1_articles.Current.Id' #else undefined #end,
+        articleName: jQuery.telligent.evolution.url.hashData().articleName ?  jQuery.telligent.evolution.url.hashData().articleName : #if($articles_v1_articles.Current)  '$core_v2_encoding.JavaScriptEncode($core_v2_language.Truncate($articles_v1_articles.Current.HtmlName('web'), 50, "..."))' #else undefined #end,
+		fields: {
+			list: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('helpfulnesses'))'),
+			article: jQuery('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('article'))')
+		},
+		urls: {
+			getArticles: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getarticles.jsm'))',
+			getHelpfulness: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('callback-gethelpfulness.vm'))',
+			articleOptions: '$core_v2_encoding.JavaScriptEncode($context.ArticleOptionsUrl)'
+		},
+		text: {
+			noHelpfulness: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('NoResults'))',
+			articlePlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Article_Placeholder'))',
+			noArticleMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Article_NoMatches'))',
+			unignore: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Unignore'))',
+			ignore: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Action_Ignore'))',
+			statusIgnored: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Status_Ignored'))',
+			statusUnresolved: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Status_Unresolved'))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Action_EditArticle">Edit Article</resource>
+  <resource name="Action_Ignore">Ignore</resource>
+  <resource name="Action_Unignore">Unignore</resource>
+  <resource name="Action_ViewArticle">View Article</resource>
+  <resource name="anonymous">Anonymous</resource>
+  <resource name="Article_NoMatches">No articles were found.</resource>
+  <resource name="Article_Placeholder">For article...</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="containing">Containing...</resource>
+  <resource name="Date_Resolved">Resolved {0}</resource>
+  <resource name="Description">Review feedback on articles.</resource>
+  <resource name="FeedbackDisabled">Feedback is currently disabled. Feedback can be enabled in {0}.</resource>
+  <resource name="FeedbackDisabled_ArticleOptions">Article Options</resource>
+  <resource name="Filter_All">All feedback</resource>
+  <resource name="Filter_Resolved">Resolved feedback</resource>
+  <resource name="Filter_Unresolved">Unresolved feedback</resource>
+  <resource name="for_article">For {0}</resource>
+  <resource name="Helpfulness_ByLine">Created {0} by {1}</resource>
+  <resource name="More">More</resource>
+  <resource name="Name">Feedback</resource>
+  <resource name="NoResults">No feedback was found matching the filter.</resource>
+  <resource name="ResponseType">{0}</resource>
+  <resource name="ResponseType_All">Of any type</resource>
+  <resource name="SortOrder_Ascending">Oldest first</resource>
+  <resource name="SortOrder_Descending">Newest first</resource>
+  <resource name="Status_Ignored">Ignored</resource>
+  <resource name="Status_Resolved">Resolved</resource>
+  <resource name="Status_ResolvedInDraft">Resolved by Draft</resource>
+  <resource name="Status_Unresolved">Unresolved</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+    <restScopes>
+      <scope id="articlecollections.helpfulness.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,81 @@
+	<li class="content-item group with-avatar" data-groupId="$member.Group.Id" data-membershipType="$member.MembershipType">
+		<div class="avatar">
+			$!core_v2_ui.GetResizedImageHtml($$member.Group.AvatarUrl, 32, 32, "%{border='0px', ResizeMethod = 'ZoomAndCrop', alt='$$member.Group.Name' }")
+		</div>
+		<div class="content-container">
+			<h4 class="name">$member.Group.Name</h4>
+            <div class="post-attributes">
+                <ul class="attribute-list">
+                    <li class="attribute-item membership-type">
+                        <span class="value">
+                            #set($membershipType = $core_v2_language.GetResource('membershiptype-unknown'))
+                            #if ($member.MembershipType == 'Member')
+                                #set($membershipType = $core_v2_language.GetResource('membershiptype-member'))
+                            #elseif ($member.MembershipType == 'Manager')
+                                #set($membershipType = $core_v2_language.GetResource('membershiptype-manager'))
+                            #elseif ($member.MembershipType == 'Owner')
+                                #set($membershipType = $core_v2_language.GetResource('membershiptype-owner'))
+                            #elseif ($member.MembershipType == 'PendingMember')
+                                #set($membershipType = $core_v2_language.GetResource('membershiptype-pending'))
+                            #end
+                            #if ($member.IsRoleMember && $member.IsDirectMember)
+                                $core_v2_language.FormatString($core_v2_language.GetResource('roleanddirectmember'), $membershipType)
+                            #elseif ($member.IsRoleMember)
+                                $core_v2_language.FormatString($core_v2_language.GetResource('role-member'), $membershipType)
+                            #else
+                                $membershipType
+                            #end
+                        </span>
+                    </li>
+        		</ul>
+			</div>
+            <div class="actions expandable">
+                <div class="navigation-list ui-links" data-direction="horizontal">
+                    <ul>
+                        #set($viewUrl = false)
+                        #set($viewUrl = $core_v2_groupUrls.Group($member.Group.Id))
+                        #if ($viewUrl)
+                            <li class="navigation-list-item view">
+                                <a href="$core_v2_encoding.HtmlAttributeEncode($viewUrl)">$core_v2_language.GetResource('ViewGroup')</a>
+                            </li>
+                        #end
+                        #if($member.MembershipType == 'PendingMember')
+                            <li class="navigation-list-item edit">
+                                <a href="#" data-messagename="administeruser.editGroupUser" data-to="Member" data-groupId="$member.Group.Id">$core_v2_language.GetResource('accept-user')</a>
+                            </li>
+                            <li class="navigation-list-item delete">
+                                <a href="#" data-messagename="administeruser.deleteGroupUser" data-groupId="$member.Group.Id" data-isdirectmember="true">$core_v2_language.GetResource('reject-user')</a>
+                            </li>
+                        #else
+                            #if ($member.Group.GroupType != 'Joinless')
+                                #if ($member.MembershipType != 'Member')
+                                    <li class="navigation-list-item edit">
+                                        <a href="#" data-messagename="administeruser.editGroupUser" data-to="Member" data-groupId="$member.Group.Id">$core_v2_language.GetResource('edit-to-member')</a>
+                                    </li>
+                                #end
+                                #if ($member.MembershipType != 'Manager')
+                                    <li class="navigation-list-item edit">
+                                        <a href="#" data-messagename="administeruser.editGroupUser" data-to="Manager" data-groupId="$member.Group.Id">$core_v2_language.GetResource('edit-to-manager')</a>
+                                    </li>
+                                #end
+                            #end
+                            #if ($member.MembershipType != 'Owner')
+                                <li class="navigation-list-item edit">
+                                    <a href="#" data-messagename="administeruser.editGroupUser" data-to="Owner" data-groupId="$member.Group.Id">$core_v2_language.GetResource('edit-to-owner')</a>
+                                </li>
+                            #end
+                            <li class="navigation-list-item delete">
+                                <a href="#" data-messagename="administeruser.deleteGroupUser" data-groupId="$member.Group.Id" data-isrolemember="$member.IsRoleMember.ToString().ToLowerInvariant()" data-isdirectmember="$member.IsDirect.ToString().ToLowerInvariant()">$core_v2_language.GetResource('delete-user')</a>
+                            </li>
+                        #end
+                        <li class="navigation-list-item">
+                            <a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+                        </li>
+                        <li class="navigation-list-item">
+                            <a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+		</div>
+	</li>

@@ -1,0 +1,57 @@
+#set($roleIdString = $core_v2_page.GetQueryStringValue('v_roleid'))
+#set($roleId = $core_v2_utility.ParseInt($roleIdString))
+
+<p>$core_v2_language.GetResource("RevertChanges")</p>
+<br />
+#set($perms = $context.GetOverrides($roleId, $context.ApplicationId))
+
+#set($allowedCount = 0)
+
+#foreach($perm in $perms)
+#beforeall
+    <fieldset style="margin-bottom: 20px;">
+    <h4>$core_v2_language.GetResource("AllowedPermissions")</h4>
+    <ul>
+#each
+    #if (!$perm.IsAllowed)
+        #set($allowedCount = $allowedCount + 1)
+        <li>$core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name - $perm.Permission.Name</li>
+    #end
+#afterall
+    #if ($allowedCount == 0) <li>$core_v2_language.GetResource("None")</li>#end
+    </ul>
+    </fieldset>
+#end
+
+#set($deniedCount = 0)
+#foreach($perm in $perms)
+#beforeall
+    <fieldset>
+    <h4>$core_v2_language.GetResource("DeniedPermissions")</h4>
+    <ul>
+#each
+    #if ($perm.IsAllowed)
+        #set($deniedCount = $deniedCount + 1)
+        <li>$core_v2_applicationType.Get($perm.Permission.ApplicationTypeId).Name - $perm.Permission.Name</li>
+    #end
+#afterall
+    #if ($deniedCount == 0) <li>$core_v2_language.GetResource("None")</li>#end
+    </ul>
+    </fieldset>
+#end
+
+<script type="text/javascript">
+jQuery(function(j){
+	j.telligent.evolution.widgets.contextualPermissionsRevert.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		roleId: $roleId,
+		urls: {
+			revert: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('revert.vm'))',
+		},
+		text: {
+			permissionsReverted: '$core_v2_language.GetResource('PermissionsReverted')',
+		}
+	});
+});
+</script>

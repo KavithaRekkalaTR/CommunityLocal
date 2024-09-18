@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:GroupMembers_Title}" version="13.0.0.0" description="${resource:GroupMembers_Description}" instanceIdentifier="7be466f6260248b8b8ef3a7b7dba487b" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="contextual-groupmembers with-header-filter" lastModified="2023-05-31 18:34:45Z" provider="c5877bca78514cdd9fb1cee4e3145366">
+    <contentScript language="Velocity"><![CDATA[#set ($pagesListId = $core_v2_widget.UniqueId('pagesListId'))
+
+<form><fieldset>
+	<ul class="field-list">
+		#if ($context.Group.GroupType != 'Joinless')
+			<li class="field-item" data-showfor="members roles">
+				<span class="field-item-input">
+					<select data-filtername="membershiptype">
+						<option value="">$core_v2_language.GetResource('filter-allmembertypes')</option>
+						<option value="Owner">$core_v2_language.GetResource('filter-onlyowners')</option>
+						<option value="Manager">$core_v2_language.GetResource('filter-onlymanagers')</option>
+						<option value="Member">$core_v2_language.GetResource('filter-onlymembers')</option>
+					</select>
+				</span>
+			</li>
+		#end
+		<li class="field-item" data-showfor="invitations">
+			<span class="field-item-input">
+				<select data-filtername="invitationstate">
+					<option value="">$core_v2_language.GetResource('filter-allinvitations')</option>
+					<option value="Pending">$core_v2_language.GetResource('filter-pendinginvitations')</option>
+					<option value="Accepted">$core_v2_language.GetResource('filter-acceptedinvitations')</option>
+					<option value="Expired">$core_v2_language.GetResource('filter-expiredinvitations')</option>
+				</select>
+			</span>
+		</li>
+		<li class="field-item" data-showfor="members">
+			<span class="field-item-input">
+				<input type="text" placeholder="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('find'))">
+			</span>
+		</li>
+	</ul>
+</fieldset></form>
+
+$core_v2_widget.ExecuteFile('paged-members.vm')
+
+#registerEndOfPageHtml('telligent.evolution.widgets.groupMemberManagement')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.groupMemberManagement.register({
+			groupId: $context.Group.Id,
+			urls: {
+				pagedMembers: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-members.vm'))',
+				pagedRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-roles.vm'))',
+				pagedRequests: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-requests.vm'))',
+				pagedInvitations: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('paged-invitations.vm'))',
+				inviteMember: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('invite.vm'))',
+				addMember: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('add.vm'))',
+				resendInvitation: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('resend-invitation.vm'))',
+				deleteInvitation:'$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete-invitation.vm'))',
+				refreshUserMember: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('refresh-usermember.vm'))',
+				refreshRoleMember:'$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('refresh-rolemember.vm'))',
+				csvExport:'$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('export-members.vm'))'
+			},
+			text: {
+				members: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('filter-members'))',
+				roles: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('filter-roles'))',
+				invitations: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('filter-invitations'))',
+				requests: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('filter-requests'))',
+				noMembers: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-members'))',
+				noMembersWithQuery: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-members-withquery'))',
+				noRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-roles'))',
+				noRolesWithQuery: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-roles-withquery'))',
+				noRequests: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-requests'))',
+				noInvitations: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-invitations'))',
+				noInvitationsWithQuery: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('no-invitations-withquery'))',
+				addMember: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('add-member'))',
+				inviteMember: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('invite-member'))',
+				addMembersTitle: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('AddMembers_Title'))',
+				inviteMembersTitle: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('InviteMembers_Title'))',
+				confirmInvitationCancellation:'$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('invitation-cancel-confirm'))',
+				invitationCancelled: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('invitation-cancelled'))',
+				invitationResent: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('invitation-resent'))',
+				roleMembersCannotBeDeletedAsUsers: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('role-members-cannot-be-deleted-as-users'))',
+				confirmDeleteRole: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('confirm-deleterole'))',
+				confirmDeleteUser: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('confirm-deleteuser'))',
+				userMembershipTypeAffectedByRoles: '$core_v2_encoding.JavaScriptEncode($core_v2_language.GetResource('user-membership-type-affected-by-roles'))'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="accepted">Accepted {0} by {1}</resource>
+  <resource name="accepted-nouser">Accepted {0}</resource>
+  <resource name="accept-user">Accept</resource>
+  <resource name="AddDirectoryGroup_Warning">It may take up to 24 hours for large group permissions to be assigned.</resource>
+  <resource name="add-member">Add</resource>
+  <resource name="AddMembers">Add</resource>
+  <resource name="AddMembers_Instructions">Find or more site members or roles to add to this group and identify their membership type within this group.</resource>
+  <resource name="AddMembers_Title">Add Members</resource>
+  <resource name="AddUserRole">Members/roles to add</resource>
+  <resource name="AlreadyAMember">Already a member</resource>
+  <resource name="AlreadyInvited">Already invited</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="cancel-invitation">Cancel</resource>
+  <resource name="change_success">The member's status in this group has been updated.</resource>
+  <resource name="confirm-deleterole">Are you sure you want to remove this role? (this action cannot be undone)</resource>
+  <resource name="confirm-deleteuser">Are you sure you want to remove this member? (this action cannot be undone)</resource>
+  <resource name="delete-role">Remove</resource>
+  <resource name="delete-user">Remove</resource>
+  <resource name="edit-to-manager">Change to manager</resource>
+  <resource name="edit-to-member">Change to member</resource>
+  <resource name="edit-to-owner">Change to owner</resource>
+  <resource name="expired">Expired {0}</resource>
+  <resource name="export-as-csv">Export as CSV</resource>
+  <resource name="filter-acceptedinvitations">Accepted invitations</resource>
+  <resource name="filter-allinvitations">All invitations</resource>
+  <resource name="filter-allmembertypes">All member types</resource>
+  <resource name="filter-expiredinvitations">Expired invitations</resource>
+  <resource name="filter-invitations">Invitations</resource>
+  <resource name="filter-members">Members</resource>
+  <resource name="filter-onlymanagers">Managers</resource>
+  <resource name="filter-onlymembers">Members</resource>
+  <resource name="filter-onlyowners">Owners</resource>
+  <resource name="filter-pendinginvitations">Pending invitations</resource>
+  <resource name="filter-requests">Requests</resource>
+  <resource name="filter-roles">Roles</resource>
+  <resource name="find">Find a member...</resource>
+  <resource name="GroupMembers_Description">Manage members and invitations.</resource>
+  <resource name="GroupMembers_Title">Members</resource>
+  <resource name="invitation">Invited as {0} on {1}</resource>
+  <resource name="invitation-cancel-confirm">Are you sure you want to cancel this invitation? (this action cannot be undone)</resource>
+  <resource name="invitation-cancelled">The invitation has been cancelled.</resource>
+  <resource name="invitation-resent">The invitation has been resent.</resource>
+  <resource name="InvitationSent">Your invitations have been sent successfully.</resource>
+  <resource name="invite-count">{0} Invitations</resource>
+  <resource name="invite-count-singular">{0} Invitation</resource>
+  <resource name="invite-member">Invite</resource>
+  <resource name="InviteMembers_Instructions">Identify one or more site members or email addresses to whom to send invitations to join this group. Identify the membership type these invited members will be granted when they accept their invitation.</resource>
+  <resource name="InviteMembers_Title">Invite Members</resource>
+  <resource name="member-count">{0} Members</resource>
+  <resource name="member-count-singular">{0} Member</resource>
+  <resource name="MembersAdded">The members were added successfully.</resource>
+  <resource name="MembershipType">Membership type</resource>
+  <resource name="membershiptype-manager">Manager</resource>
+  <resource name="membershiptype-member">Member</resource>
+  <resource name="membershiptype-owner">Owner</resource>
+  <resource name="membershiptype-unknown">Unknown</resource>
+  <resource name="Message">Message (optional)</resource>
+  <resource name="MissingInviteUserNames">Please enter one or more usernames or email addresses to invite.</resource>
+  <resource name="MissingUserNames">Please enter one or more usernames or roles to add as members.</resource>
+  <resource name="more">More</resource>
+  <resource name="no-invitations">This group has no outstanding invitations.</resource>
+  <resource name="no-invitations-withquery">No invitations met your filter criteria.</resource>
+  <resource name="NoMatches_AllUsers">No matches were found.</resource>
+  <resource name="no-members">This group has no members.</resource>
+  <resource name="no-members-withquery">No members matched your filter criteria.</resource>
+  <resource name="no-requests">This group has no outstanding membership requests.</resource>
+  <resource name="no-roles">This group has no member roles.</resource>
+  <resource name="no-roles-withquery">No member roles matched your filter criteria.</resource>
+  <resource name="reject-user">Reject</resource>
+  <resource name="remove_confirm">Are you sure you want to remove this member? (this action cannot be undone)</resource>
+  <resource name="request-count">{0} Requests</resource>
+  <resource name="request-count-singular">{0} Request</resource>
+  <resource name="resend-invitation">Resend</resource>
+  <resource name="roleanddirectmember">{0} by role and direct membership</resource>
+  <resource name="role-count">{0} Roles</resource>
+  <resource name="role-count-singular">{0} Role</resource>
+  <resource name="role-member">{0} by role membership</resource>
+  <resource name="role-members-cannot-be-deleted-as-users">This site member is a member of this group due to their inclusion in a role which itself is a member of this group. This group member cannot be individually removed from this group. Instead, the role's inclusion in this group or the site members inclusion in the role should be changed.</resource>
+  <resource name="SendInvitation">Send</resource>
+  <resource name="user-membership-type-affected-by-roles">The member's effective membership type was not updated because the member is also included by a role with higher privileges within this group. The highest privilege from all role and direct memberships is the effective membership type.</resource>
+  <resource name="UserNamesOrEmailAddresses">User names or email addresses</resource>
+  <resource name="UserOrRoleLookUp_RoleType">Role</resource>
+  <resource name="view-user">View</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="groups.users.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

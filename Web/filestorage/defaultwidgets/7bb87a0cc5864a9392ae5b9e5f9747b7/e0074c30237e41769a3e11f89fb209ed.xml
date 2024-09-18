@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_OAuthClientAuthorize_Name}" version="12.0.0.0" description="${resource:Core_OAuthClientAuthorize_Description}" instanceIdentifier="e0074c30237e41769a3e11f89fb209ed" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="oauth-client-authorize" lastModified="2022-03-14 18:39:51Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($accessingUser = $core_v2_user.Accessing)
+#if (!$core_v2_user.IsRegistered($accessingUser.Id))
+	$core_v2_page.Redirect($core_v2_urls.LogIn("%{ReturnToCurrentUrl='true'}"))
+#end
+
+#set ($submitId = $core_v2_widget.UniqueId('submit'))
+#set ($denyId = $core_v2_widget.UniqueId('deny'))
+#set ($client = false)
+#set ($client = $core_v2_oauthClient.Current)
+#set ($scope = '')
+#set ($scope = $core_v2_page.GetQueryStringValue('scope'))
+#set ($state = '')
+#set ($state = $core_v2_page.GetQueryStringValue('state'))
+#set ($responseType = '')
+#set ($responseType = $core_v2_page.GetQueryStringValue('response_type'))
+#set ($redirectUrl = '')
+#set ($redirectUrl = $core_v2_page.GetQueryStringValue('redirect_uri'))
+#set ($codeChallenge = '')
+#set ($codeChallenge = $core_v2_page.GetQueryStringValue('code_challenge'))
+#set ($codeChallengeMethod = '')
+#set ($codeChallengeMethod = $core_v2_page.GetQueryStringValue('code_challenge_method'))
+#set($logoutUrl = $core_v2_urls.LogOut("%{ ReturnToCurrentUrl = 'True' }"))
+
+#set($validateUrl = false)
+#if ($client)
+	#set($validateUrl = $core_v2_oauthClient.Validate($client.Id, $redirectUrl, $responseType, "%{ State = $state,Scope=$scope,PKCECodeChallenge=$codeChallenge,PKCECodeChallengeMethod=$codeChallengeMethod }"))
+#else
+	#set($validateUrl = $core_v2_oauthClient.Validate($redirectUrl, $responseType, $scope, $state))
+#end
+#if ($validateUrl && $validateUrl != '')
+	$core_v2_page.Redirect($validateUrl)
+#end
+
+#if (!$client)
+	<div class="message error">$core_v2_language.GetResource('ClientNotFound')</div>
+#else
+	<div class="field-list-header"></div>
+	<fieldset class="field-list">
+		<h2>$core_v2_language.FormatString($core_v2_language.GetResource('Authorize'), $core_v2_encoding.HtmlEncode($client.Name))</h2>
+		<p>$core_v2_language.FormatString($core_v2_language.GetResource('AppAuthorizePrompt'), $core_v2_encoding.HtmlEncode($client.Name), $core_v2_infoResult.Get().SiteName)</p>
+		<ul class="field-list">
+		    <li class="field-item">
+		        <span class="field-item-label">$core_v2_language.GetResource('Account')</span>
+		        <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Account_Description'), $core_v2_encoding.HtmlEncode($client.Name))</span>
+		        <span class="field-item-input">
+		            <div class="input-wrapper">
+		                <div class="user">
+		                    <div>
+    		                    <div class="avatar">
+    		                        $core_v2_ui.GetResizedImageHtml($accessingUser.AvatarUrl, 32, 32, "%{border='0', alt=$accessingUser.DisplayName, ResizeMethod='ZoomAndCrop'}")
+    		                    </div>
+		                        <span class="user-name">$accessingUser.DisplayName</span>
+		                    </div>
+                        </div>
+		            </div>
+		            <a href="$core_v2_encoding.HtmlAttributeEncode($logoutUrl)">$core_v2_language.GetResource('ChangeUser')</a>
+		        </span>
+		    </li>
+		    #if ($client.AllowedScopes && $client.AllowedScopes.Count > 0)
+    		    <li class="field-item">
+    		        <span class="label field-item-header">$core_v2_language.GetResource('Permissions')</span>
+    		        <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('Permissions_Description'), $core_v2_encoding.HtmlEncode($client.Name))</span>
+    		        <span class="field-item-input">
+    		            <div class="input-wrapper">
+        		            <ul>
+        		            #foreach($scope in $client.AllowedScopes)
+            			        <li>$scope.Name</li>
+            			    #end
+            			    </ul>
+            			</div>
+    		        </span>
+    		    </li>
+    		#end
+			<li class="field-item">
+				<span class="field-item-input">
+					<a id="$core_v2_encoding.HtmlAttributeEncode($submitId)" class="internal-link authorize-app button" href="#"><span></span>$core_v2_language.GetResource('Allow')</a>
+					<a id="$core_v2_encoding.HtmlAttributeEncode($denyId)" class="internal-link deny-app button delete" href="#"><span></span>$core_v2_language.GetResource('Deny')</a>
+				</span>
+				<span class="field-item-validation" style="display: none;"></span>
+				<span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+			</li>
+		</ul>
+	</fieldset>
+	<div class="field-list-footer"></div>
+
+	#registerEndOfPageHtml('telligent.evolution.widgets.oauthClientAuthorize')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+	#end
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+		jQuery(function(j){
+			jQuery.telligent.evolution.widgets.oauthClientAuthorize.register({
+				wrapperSelector: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.WrapperElementId)",
+				submitButtonSelector: "#$core_v2_encoding.JavascriptEncode($submitId)",
+				denyButtonSelector: "#$core_v2_encoding.JavascriptEncode($denyId)",
+				authorizeUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('authorize.vm'))",
+				denyUrl: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('deny.vm'))",
+				clientId: "$core_v2_encoding.JavascriptEncode($client.Id.ToString())",
+				callbackUrl: "$core_v2_encoding.JavascriptEncode($redirectUrl)",
+				responseType: "$core_v2_encoding.JavascriptEncode($responseType)",
+				scope: "$core_v2_encoding.JavascriptEncode($scope)",
+				codeChallenge: "$core_v2_encoding.JavascriptEncode($codeChallenge)",
+				codeChallengeMethod: "$core_v2_encoding.JavascriptEncode($codeChallengeMethod)",
+				state: "$core_v2_encoding.JavascriptEncode($state)"
+			});
+		});
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_OAuthClientAuthorize_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_OAuthClientAuthorize_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Account">Account</resource>
+  <resource name="Account_Description">{0} will use this account.</resource>
+  <resource name="Allow">Allow</resource>
+  <resource name="AppAuthorizePrompt">{0} would like to act on your behalf on {1}.</resource>
+  <resource name="Authorize">Authorize {0}</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="ChangeUser">Sign in as someone else</resource>
+  <resource name="ClientNotFound">Client not found for this ID</resource>
+  <resource name="Core_OAuthClientAuthorize_Description">Allows you to authorize an OAuth client application.</resource>
+  <resource name="Core_OAuthClientAuthorize_Name">OAuth App Authorization</resource>
+  <resource name="Deny">Deny</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Permissions">Requested permissions</resource>
+  <resource name="Permissions_Description">{0} is requesting permission to perform the following actions on your behalf.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

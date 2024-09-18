@@ -1,0 +1,95 @@
+#set($hasStagedItems = false)
+<div class="staged-items">
+	#foreach($category in $context.StagedItemCategories)
+		#beforeall
+			#set($hasStagedItems = true)
+			<p class="instructions">
+				$core_v2_language.GetResource('instructions')
+			</p>
+			#if ($context.IsPreviewing)
+				<fieldset class="open-preview-form">
+					<ul class="field-list">
+						<li class="field-item">
+							<span class="field-item-input">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($context.PreviewUrl)" target="_blank" class="inline-button">$core_v2_language.GetResource('open-window')</a>
+							</span>
+						</li>
+					</ul>
+				</fieldset>
+			#end
+		#each
+			<div class="list-header-wrapper" data-category="$category.Id">
+				<h5 class="list-header">
+					$category.Name
+					<a href="#" class="indicator" data-messagename="stageditem.show-all" data-category="$category.Id">
+						#if ($category.StagedItems.Count > 1)
+							$core_v2_language.FormatString($core_v2_language.GetResource('change-plural'), $core_v2_language.FormatNumber($category.StagedItems.Count))
+						#else
+							$core_v2_language.FormatString($core_v2_language.GetResource('change'), $core_v2_language.FormatNumber($category.StagedItems.Count))
+						#end
+					</a>
+				</h5>
+				<div class="list-attributes">
+					<ul class="attribute-list">
+						<li class="attribute-item review-state" data-category="$category.Id">
+							<span class="value not-reviewed" data-state="NotReviewed">$core_v2_language.GetResource('not-reviewed')</span>
+							<span class="value approved" data-state="Approve">$core_v2_language.GetResource('approved')</span>
+							<span class="value denied" data-state="Deny">$core_v2_language.GetResource('denied')</span>
+							<span class="value mixed" data-state="Mixed">$core_v2_language.GetResource('mixed')</span>
+						</li>
+					</ul>
+				</div>
+				<p class="list-description">
+					$!category.Description
+				</p>
+				<div class="list-actions">
+					<div class="navigation-list ui-links expanded" data-direction="horizontal" data-category="$category.Id">
+						<ul>
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="stageditem.set-all-review-state" data-category="$category.Id" data-state="Approve">$core_v2_language.GetResource('approve-all')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="stageditem.set-all-review-state" data-category="$category.Id" data-state="Deny">$core_v2_language.GetResource('deny-all')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="stageditem.set-all-review-state" data-category="$category.Id" data-state="NotReviewed">$core_v2_language.GetResource('set-not-reviewed-all')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+							</li>
+						</ul>
+					</div>
+					<div class="navigation-list ui-links collapsed" data-direction="horizontal" data-category="$category.Id">
+						<ul>
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="stageditem.set-all-review-state" data-category="$category.Id" data-state="Approve">$core_v2_language.GetResource('approve')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="stageditem.set-all-review-state" data-category="$category.Id" data-state="Deny">$core_v2_language.GetResource('deny')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-messagename="stageditem.set-all-review-state" data-category="$category.Id" data-state="NotReviewed">$core_v2_language.GetResource('set-not-reviewed')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+				</div>
+				<ul class="content-list content expandable simple" data-category="$category.Id">
+
+			#foreach($item in $category.StagedItems)
+				$core_v2_widget.ExecuteFile('item.vm')
+			#end
+				</ul>
+		#nodata
+			<div class="message information">$core_v2_language.GetResource('no-staged-items')</div>
+	#end
+</div>

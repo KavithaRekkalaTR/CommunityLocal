@@ -1,0 +1,8 @@
+$core_v2_widget.ExecuteFile('parse-query.vm')
+#set($fieldIds = false)
+#set($fieldIds = $core_v2_utility.GetTemporaryData($core_v2_page.GetQueryStringValue('w_ExportSelectionKey')))
+#if (!$fieldIds)
+    #set($fieldIds = "Core.Id,Core.Username")
+#end
+$query.Add('ExportFieldIds', $fieldIds)
+$context.HandleCsvExport($query)

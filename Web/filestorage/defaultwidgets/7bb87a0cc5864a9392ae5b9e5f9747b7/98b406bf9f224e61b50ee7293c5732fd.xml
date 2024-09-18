@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Groups_GroupTitle_Name}" version="11.0.0.0" description="${resource:Groups_GroupTitle_Description}" instanceIdentifier="98b406bf9f224e61b50ee7293c5732fd" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="false" cssClass="group-title" lastModified="2020-01-14 16:08:18Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set($page = $core_v2_groupUrls.Current)
+#if ($page == 'Contact')
+	#set($title = $core_v2_language.GetResource('Contact'))
+#elseif ($page == 'AccessDenied')
+	#set($title = $core_v2_language.GetResource('Hubs_AccessDenied_Title'))
+#elseif ($page == 'RequestMembership')
+	#set($title = $core_v2_language.GetResource('Hubs_RequestMembership'))
+#elseif ($page == 'MemberList')
+	#if ($core_v2_page.GetQueryStringValue('UserID'))
+		#set($title = $core_v2_language.GetResource('Hubs_EditMember'))
+	#else
+		#set($title = $core_v2_language.GetResource('Role_Members'))
+	#end
+#elseif ($page == 'ContactRequests')
+	#set($title = $core_v2_language.GetResource('Hubs_ContactRequest'))
+#elseif ($page == 'MentionList')
+	#set($title = $core_v2_language.GetResource('Hubs_MentionList'))
+#elseif ($page == 'Tags')
+	#set($title = $core_langauge.GetResource('TagBrowser_Title'))
+#elseif ($page == 'Custom' && $core_v2_customPage.Current)
+	#set($title = $core_v2_widget.ApplyTokens($core_v2_customPage.Current.Title))
+#elseif ($page == 'leaders.grouplist')
+	#set($title = $core_v2_language.GetResource('Leaderboards'))
+#end
+#if ($page == 'Group')
+	$core_v2_page.SetTitle('', true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$core_v2_group.Current.Name</h1>
+	#end
+#elseif ($title)
+	$core_v2_page.SetTitle($title, true, true)
+	#if ($core_v2_widget.GetBoolValue('visible', false))
+		<h1 class="title">$title</h1>
+	#end
+#else
+	$core_v2_widget.Hide()
+#end
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Groups_GroupTitle_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Groups_GroupTitle_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="visible" labelResourceName="Title_Visible" defaultValue="False" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Contact">Contact</resource>
+  <resource name="Groups_GroupTitle_Description">Displays the title for group pages.</resource>
+  <resource name="Groups_GroupTitle_Name">Group - Title</resource>
+  <resource name="Hubs_AccessDenied_Title">Access Denied</resource>
+  <resource name="Hubs_ContactRequest">Contact Requests</resource>
+  <resource name="Hubs_EditMember">Edit Member</resource>
+  <resource name="Hubs_MentionList">Mentions</resource>
+  <resource name="Hubs_RequestMembership">Request Membership</resource>
+  <resource name="Leaderboards">Leaderboards</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Role_Members">Members</resource>
+  <resource name="Title_Visible">Show the title in the page</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="c75db121ca2f49458517ef31436d98a0" />
+    </requiredContext>
+  </scriptedContentFragment>
+</scriptedContentFragments>

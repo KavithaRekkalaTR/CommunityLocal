@@ -1,0 +1,14 @@
+#if ($reviewWorkflowId)
+    #set($fieldHeader = '<li class="field-item" id="{PropertyWrapperId}"><label for="{PropertyUniqueId}" class="field-item-name">{PropertyName}</label><span class="field-item-description">{PropertyDescription}</span><span class="field-item-input">')
+    #set($fieldFooter = '</span></li>')
+    
+    #set($options = "%{ GroupFooterHtmlFormat = '', GroupHeaderHtmlFormat = '', PropertyFooterHtmlFormat = $fieldFooter, PropertyHeaderHtmlFormat = $fieldHeader, SubGroupFooterHtmlFormat = '', SubGroupHeaderHtmlFormat = '' }")
+    #if ($reviewWorkflowConfigurationData)
+        $options.Add('Data', $reviewWorkflowConfigurationData)
+    #end
+    #if (!$context.CanEditReviewWorkflow)
+        $options.Add('ReadOnly', 'True')
+    #end
+
+    $context.RenderReviewWorkflowConfiguration($core_v2_widget.UniqueId('ReviewWorkflowConfiguration'), $reviewWorkflowId, $options)
+#end

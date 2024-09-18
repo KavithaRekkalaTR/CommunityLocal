@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget-Title}" version="12.0.0.0" description="${resource:Widget-Description}" instanceIdentifier="5d5b9681396643af9bfa75898c5c498e" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-11-10 18:44:27Z" provider="4bf3d479456b4b95ae7cfe4fde5be9d9">
+    <contentScript language="Velocity"><![CDATA[#set($status = $context.Status.DatabaseStatus)
+#set($format = 'Unknown')
+#if($status)
+  #set($format = $status.ToString())
+#end
+#format($core_v2_language.GetResource($format))
+	#token('affectednodes')
+	    #foreach($node in $context.Status.AffectedNodes)
+	    #each
+		    #if ($context.Target == 'Web' || $context.Target == 'Email')
+          <strong>${node}</strong>
+        #else
+          ${node}
+        #end
+		#between
+		    ,
+		#end
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Connected">The database is connected and healthy.</resource>
+  <resource name="ConnectionMisconfiguration">Servers serving this community are not consistently configured.  Please review every server's configuration to ensure that the value of &lt;code&gt;SiteSqlServer&lt;/code&gt; in &lt;code&gt;connectionStrings.config&lt;/code&gt; is the same. Often this issue will appear because multiple community installations are configured to connect to the same message bus.</resource>
+  <resource name="FrequentExceptions">Multiple errors have occurred related to accessing the database. The specific exceptions should be reviewed to ensure the database is functioning correctly.</resource>
+  <resource name="Unknown">The status of the database is not yet known.</resource>
+  <resource name="Widget-Description">Database System Indicator</resource>
+  <resource name="Widget-Title">Database</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

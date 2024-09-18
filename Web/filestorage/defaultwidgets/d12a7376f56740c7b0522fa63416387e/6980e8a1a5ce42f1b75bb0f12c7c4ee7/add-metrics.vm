@@ -1,0 +1,81 @@
+#set ($headerTemplateId = $core_v2_widget.UniqueId('addMetricHeaderTemplateId'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($headerTemplateId)">
+	<fieldset>
+	    <ul class="field-list">
+	        <li class="field-item">
+                <span class="field-item-input">
+	                <a href="#" class="button save">$core_v2_language.GetResource('add-metrics')</a>
+                </span>
+	        </li>
+        </ul>
+    </fieldset>
+</script>
+
+<p>
+    $core_v2_language.GetResource('addmetrics_instructions')
+</p>
+
+#set ($metrics = $context.GetUnweightedMetrics())
+#foreach($metric in $metrics)
+    #beforeall
+        <form>
+        <ul class="content-list content simple expandable add-metrics" id="$core_v2_widget.UniqueId('unweighted-metrics')">
+    #each
+        <li class="content-item metric" data-metricid="$!metric.Id.ToString()" style="position:relative;">
+            <div class="checkbox">
+        	    <input type="checkbox" value="$metric.Id" />
+        	</div>
+        	<div class="content-container">
+            	<h4 class="name">
+            	    $metric.MetricName
+            	</h4> 
+            	<div class="content expandable" style="padding-right: 210px;">
+            	    $!metric.MetricDescription
+            	</div>
+            	<div class="actions expandable">
+            		<div class="navigation-list ui-links" data-direction="horizontal">
+            			<ul>
+            				<li class="navigation-list-item">
+            					<a href="#" data-messagename="scoreplugin.metricsample" data-metricid="$metric.Id.ToString()" data-metricname="$core_v2_encoding.HtmlAttributeEncode($metric.MetricName)">
+            						$core_v2_language.GetResource('view-metric-sample')
+            					</a>
+            				</li>
+            				<li class="navigation-list-item">
+            					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+            				</li>
+            				<li class="navigation-list-item">
+            					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+            				</li>
+            			</ul>
+            		</div>
+            	</div>
+            </div>
+        </li>
+    #afterall
+        </ul>
+        </form>
+    #nodata
+        <div class="message norecords">
+            $core_v2_language.GetResource('no-unweighted-metrics')
+        </div>
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.scorePluginAddMetrics')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('add-metrics.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.widgets.scorePluginAddMetrics.register({
+		    headerTemplateId: '$core_v2_encoding.JavascriptEncode($headerTemplateId)',
+		    metricsList: jQuery('#$core_v2_widget.UniqueId('unweighted-metrics')'),
+		    urls: {
+		        addmetrics: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-addmetrics.vm'))'
+		    },
+		    text: {
+		        addSuccessful: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('addmetrics-succesful'))'
+		    }
+    	});
+	});
+	</script>
+#end

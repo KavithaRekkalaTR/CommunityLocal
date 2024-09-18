@@ -1,0 +1,25 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Name = $core_v2_page.GetFormValue('Name'))
+	#set($Description = $core_v2_page.GetFormValue('Description'))
+	#set($GroupId = $core_v2_page.GetFormValue('GroupId'))
+
+	#if ($Name && $Name != '')
+		$options.Add('Name', $Name)
+	#end
+
+	$options.Add('Description', $Description)
+	$options.Add('GroupId', $GroupId)
+
+	#set($response = $calendar_v1_calendars.Update($context.Calendar.Id, $options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "redirectUrl":"$response.Url"}
+
+#end

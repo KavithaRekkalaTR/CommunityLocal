@@ -1,0 +1,21 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($inviteKey = false)
+	#set($inviteKey = $core_v2_page.GetFormValue('InvitationKey'))
+	#if ($inviteKey)
+	    #set($inviteKey = $core_v2_utility.ParseGuid($inviteKey))
+
+    	#set($response = false)
+        #set($response = $context.ResendInvitation($inviteKey))
+    	#if (!$response || ($response.Errors && $response.HasErrors()))
+    		$core_v2_page.SendJsonError($response.Errors)
+    	#else
+    	    #set($invitation = $core_v2_userInvitation.Get($inviteKey))
+    		{
+    		    "success": "True",
+    		    "html": "$core_v2_encoding.JavascriptEncode($core_v2_widget.ExecuteFile('format-invitation.vm'))"
+    		}
+    	#end
+    #end
+#end

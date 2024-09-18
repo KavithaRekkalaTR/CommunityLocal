@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="f50722f2232d4d4c8fafacc6b0185c86" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-06-03 16:16:07Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="idea.aftercreate" />
+      <event key="idea.afterdelete" />
+      <event key="vote.aftercreate" />
+      <event key="vote.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[
+var userId = null;
+
+if (context_v2_automationTrigger.Entity == 'Idea') {
+    userId = context_v2_automationTrigger.Arguments.AuthorUserId;
+} else if (context_v2_automationTrigger.Entity == 'Vote') {
+    var idea = telligentIdeas_v1_ideas.Get(context_v2_automationTrigger.Arguments.IdeaId);
+    if (idea && !idea.HasErrors()) {
+        userId = idea.Author.Id;
+    }
+}
+
+if (!userId) {
+    return;
+}
+
+var ranges = core_v2_widget.GetStringValue('ranges', '');
+if (ranges === '') {
+    var minVoteCount = core_v2_widget.GetIntValue('minVoteCount', 0);
+    var maxVoteCount = 0;
+    var minIdeaCount = core_v2_widget.GetIntValue('minIdeaCount', 1);
+    var maxIdeaCount = 0;
+} else if (ranges == 'votes') {
+    var voteCountRange = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('voteCountRange', ''));
+    var minVoteCount = core_v2_utility.ParseInt(voteCountRange.Value('Minimum'));
+    var maxVoteCount = core_v2_utility.ParseInt(voteCountRange.Value('Maximum'));
+    var minIdeaCount = core_v2_widget.GetIntValue('minIdeaCount', 1);
+    var maxIdeaCount = 0;
+} else if (ranges == 'ideas') {
+    var minVoteCount = core_v2_widget.GetIntValue('minVoteCount', 0);
+    var maxVoteCount = 0;
+    var contentRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('ideaCountRange', ''));
+    var minIdeaCount = core_v2_utility.ParseInt(contentRangeQuery.Value('Minimum'));
+    var maxIdeaCount = core_v2_utility.ParseInt(contentRangeQuery.Value('Maximum'));
+}
+
+var result = null;
+
+//remove achievement if range has been selected and exceeded
+if (ranges == 'comments' && maxCommentCount > 0) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId,
+        MinimumVoteCount: maxVoteCount + 1
+    };
+
+    var totalCount = telligentIdeas_v1_ideas.List(query).TotalCount;
+    if (totalCount >= minVoteCount) {
+        result = 'revoke';
+    }
+}
+
+if (result === null) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        UserId: userId
+    };
+    if (minVoteCount > 0) {
+        query.MinimumVoteCount = minVoteCount;
+    }
+    if (maxVoteCount > 0) {
+        query.MaximumVoteCount = maxVoteCount;
+    }
+
+    var totalCount = telligentIdeas_v1_ideas.List(query).TotalCount;
+    if (totalCount >= minIdeaCount && (maxIdeaCount === 0 || totalCount <= maxIdeaCount)) {
+        result = 'award';
+    } else {
+        result = 'revoke';
+    }
+}
+
+if (result !== null) {
+    var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+
+    if (result == 'award') {
+        if (!hasAchievement) {
+            context_v1_achievementAutomation.Award(userId);
+        }
+    } else if (result == 'revoke') {
+        if (hasAchievement) {
+            context_v1_achievementAutomation.Revoke(userId);
+        }
+    }
+}
+]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="ranges" resourceName="Ranges" descriptionResourceName="Ranges_Description" dataType="string" defaultValue="" controlType="Telligent.Evolution.Controls.PropertyVisibilityValueSelectionControl, Telligent.Evolution.Platform">
+            <propertyValue value="" resourceName="Ranges_None" propertiesToShow="minVoteCount,minIdeaCount" propertiesToHide="voteCountRange,ideaCountRange" />
+            <propertyValue value="votes" resourceName="Ranges_Votes" propertiesToShow="minIdeaCount,voteCountRange" propertiesToHide="minVoteCount,ideaCountRange" />
+            <propertyValue value="ideas" resourceName="Ranges_Ideas" propertiesToShow="minVoteCount,ideaCountRange" propertiesToHide="minIdeaCount,voteCountRange" />
+    </property>
+    <property id="minIdeaCount" labelResourceName="IdeaCount" descriptionResourceName="IdeaCount_Description" dataType="Int" defaultValue="5" >
+        <propertyRule name="minmax" min="1" />
+    </property>
+    <property id="ideaCountRange" labelResourceName="IdeaCountRange" descriptionResourceName="IdeaCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+    <property id="minVoteCount" labelResourceName="VoteCount" descriptionResourceName="VoteCount_Description" dataType="Int" defaultValue="0" >
+        <propertyRule name="minmax" min="0" />
+    </property>
+    <property id="voteCountRange" labelResourceName="VoteCountRange" descriptionResourceName="VoteCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="0" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Grants or revokes an achievement based on the number of ideas an author has created and their level of interaction.</resource>
+  <resource name="IdeaCount">Required total idea count</resource>
+  <resource name="IdeaCount_Description">The required minimum number of ideas submitted by a member to award the achievement.</resource>
+  <resource name="IdeaCountRange">Idea count range</resource>
+  <resource name="IdeaCountRange_Description">The minimum and maximum count of ideas by the author that must have the required vote count to award the achievement.</resource>
+  <resource name="Ranges">Range</resource>
+  <resource name="Ranges_Description">A range allows a minimum and maximum value to be set for the selected item.  If the maximum or minimum value is no longer met, the achievement will be removed.  If 'No range' is selected, the achievement will only be removed if the minimum values are no longer met.</resource>
+  <resource name="Ranges_Ideas">On idea count</resource>
+  <resource name="Ranges_None">No range</resource>
+  <resource name="Ranges_Votes">On vote count</resource>
+  <resource name="Title">Award to authors of ideas by their total idea count and vote total</resource>
+  <resource name="VoteCount">Required vote total per idea</resource>
+  <resource name="VoteCount_Description">The required minimum vote total, per idea, to include the idea in the total count.</resource>
+  <resource name="VoteCountRange">Vote count range</resource>
+  <resource name="VoteCountRange_Description">The minimum and maximum number of votes required on ideas by the author to award the achievement.</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

@@ -1,0 +1,52 @@
+﻿#set($webhooks = $core_v2_webhook.List())
+
+#foreach($webhook in $webhooks)
+#beforeall
+<ul class="content-list expandable">
+#each
+	<li class="content-item webhook" data-id="$webhook.Id">
+        <h4 class="name">$webhook.CallBackUrl</h4>
+		<div class="attribute-item status">
+			#if($webhook.IsEnabled)
+				<span class="value">$core_v2_language.GetResource('Enabled')</span>
+			#else
+				<span class="value highlight">$core_v2_language.GetResource('Disabled')</span>
+			#end
+		</div>
+		<div class="attribute-item connectivity">
+			#if($webhook.Status == "Valid")
+				<span class="value"></span>
+			#elseif($webhook.Status == "UnreachableRetrying")
+				<span class="value highlight">$core_v2_language.FormatString($core_v2_language.GetResource('UrlRetrying'), $core_v2_language.FormatDateAndTime($webhook.NextSendDate))</span>
+			#elseif($webhook.Status == "UnreachableNoRetry")
+				<span class="value highlight">$core_v2_language.GetResource('UrlInvalid')</span>
+			#end
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+				
+					<li class="navigation-list-item edit">
+                        <a href="#" data-messagename="contextual-edit-webhook" data-id="$webhook.Id" data-url="$core_v2_encoding.HtmlAttributeEncode($webhook.CallBackUrl)">$core_v2_language.GetResource('Edit')</a>
+					</li>
+					#if ($webhook.IsEnabled)
+						<li class="navigation-list-item enable">
+							<a href="#" data-messagename="contextual-enable-webhook" data-enable="False" data-id="$webhook.Id">$core_v2_language.GetResource('Disable')</a>
+						</li>
+					#else
+						<li class="navigation-list-item enable">
+							<a href="#" data-messagename="contextual-enable-webhook" data-enable="True" data-id="$webhook.Id">$core_v2_language.GetResource('Enable')</a>
+						</li>
+					#end
+					<li class="navigation-list-item delete">
+                        <a href="#" data-messagename="contextual-delete-webhook" data-id="$webhook.Id">$core_v2_language.GetResource('Delete')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#nodata
+	<div class="message warning">$core_v2_language.GetResource('List_NoWebHooks')</div>
+#afterall
+</ul>
+#end

@@ -1,0 +1,54 @@
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = 10)
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize', 10))
+#set($viewType = $core_v2_widget.GetStringValue('viewType', 'full'))
+#set($showValue = $core_v2_widget.GetBoolValue('showValue', true))
+#set($showCurrentUser = $core_v2_widget.GetBoolValue('showCurrentUser', true))
+
+#set($selectedLeaderboard = $core_v2_widget.GetStringValue("selectedLeaderboard", ""))
+#set($leaderboardId = $core_v2_utility.ParseInt($selectedLeaderboard))
+
+#if($leaderboardId > 0)
+	#set($leaderboard = $core_v2_leaderboard.Get($leaderboardId))
+	#set($isCurrent = false)
+#else
+	#set($leaderboard = $core_v2_leaderboard.Current)
+	#set($isCurrent = true)
+#end
+
+#if($leaderboard && $leaderboard.Errors.Count == 0 && $leaderboard.IsEnabled)
+	#set($leaders = $core_v2_leader.List($leaderboard.Id, "%{PageSize = $pageSize, PageIndex = $pageIndex}"))
+
+	#if(!$core_v2_user.Accessing.IsSystemAccount && $core_v2_user.Accessing.EnableDisplayInMemberList && $showCurrentUser && $leaderboard.LastCalculatedDate && $pageIndex == 0 && $leaders.TotalCount > 0 && $core_v2_leaderboard.UserIsEligible($leaderboard.Id))
+		#set($currentUserInList = false)
+		#foreach ($leader in $leaders)
+			#if($leader.user.Id == $core_v2_user.Accessing.Id)
+				#set($currentUserInList = true)
+			#end
+		#end
+
+		#if(!$currentUserInList)
+			#set($currentLeader = $core_v2_leader.Get($leaderboard.Id))
+			#if ($currentLeader && $currentLeader.LeaderboardId > 0)
+				$leaders.Add($currentLeader)
+			#end
+		#end
+	#end
+
+	<ul class="content-list $viewType leaderboards">
+		<li class="content-item $viewType leaderboard">
+			#if($viewType == 'simple')
+				$core_v2_widget.ExecuteFile('simple.vm')
+			#else
+				$core_v2_widget.ExecuteFile('full.vm')
+
+				#if($leaders && $viewType == 'full')
+					$core_v2_ui.Pager($leaders.PageIndex, $leaders.PageSize, $leaders.TotalCount, "%{PagedContentFile='leaderboard.vm'}")
+				#end
+			#end
+		</li>
+	</ul>
+#else
+	$core_v2_widget.Hide()
+#end

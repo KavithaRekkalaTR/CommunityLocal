@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_UserProfile_Name}" version="11.0.0.0" description="${resource:Core_UserProfile_Description}" instanceIdentifier="796a5296bbb74d24b4113eee9352d431" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="user-profile" lastModified="2019-05-30 15:51:08Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($user = false)
+#set($user = $core_v2_user.Current)
+#if (!$user)
+	$core_v2_widget.Hide()
+#end
+
+#set($readOnly = false)
+#if (!$core_v2_editableGroup.IsEditable('User') || $user.Id != $core_v2_user.Accessing.Id || !$core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#set($readOnly = true)
+#end
+
+#if ($readOnly)
+	#set($bio = false)
+	#set($bio = $user.Bio())
+	<div class="content full">
+		<h2 class="name">$core_v2_language.FormatString($core_v2_language.GetResource('Core_UserProfile_Header'), $user.DisplayName)</h2>
+		<div class="content">
+			<div>
+			#if ($bio && $core_v2_utility.Trim($bio) != "")
+				$bio
+			#else
+				$core_v2_language.FormatString($core_v2_language.GetResource('ViewUserProfile_MyBio_NotEntered'), $user.DisplayName)
+			#end
+			</div>
+		</div>
+	</div>
+#else
+	#set($editorId = $core_v2_widget.UniqueId('editor').Replace("-", "_"))
+
+	<fieldset>
+		<h3>$core_v2_language.FormatString($core_v2_language.GetResource('Core_UserProfile_Header'), $user.DisplayName)</h3>
+		<ul class="field-list">
+			<li class="field-item">
+				<label for="$editorId" class="field-item-name">$core_v2_language.GetResource('Biography')</label>
+				<span class="field-item-input">
+					$core_v2_editor.Render($editorId, "%{Value=$user.Bio('raw'),Width='100%',ContentTypeId=$core_v2_user.ContentTypeId}")
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+		jQuery(function() {
+		    var originalValue = '$core_v2_encoding.JavascriptEncode($user.Bio('raw'))';
+			var save = function(success, failure)
+			{
+			    var currentValue = $core_v2_editor.GetContentScript($editorId);
+			    if (originalValue != currentValue) {
+    				jQuery.telligent.evolution.put({
+    					url: jQuery.telligent.evolution.site.getBaseUrl() + 'api.ashx/v2/users/{UserId}.json?IncludeFields=Id',
+    					data: {
+    						UserId: $user.Id,
+    						Bio: currentValue
+    					},
+    					success: function(response) {
+    					    originalValue = currentValue;
+    					    success();
+    					},
+    					error: function(xhr, desc, ex) { jQuery.telligent.evolution.notifications.show(desc,{type:'error'}); failure(); }
+    				});
+			    } else {
+			        success();
+			    }
+			};
+			$core_v2_editableGroup.GetRegistrationScript('User', 'save')
+		});
+		//<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($user = false)
+#set($user = $core_v2_user.Current)
+#if ($user)
+	$core_v2_language.FormatString($core_v2_language.GetResource('Core_UserProfile_Header'), $user.DisplayName)
+#end
+		]]></headerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Biography">Biography</resource>
+  <resource name="Core_UserProfile_Description">Displays a users profile information.</resource>
+  <resource name="Core_UserProfile_Header">About {0}</resource>
+  <resource name="Core_UserProfile_Name">User Profile</resource>
+  <resource name="ViewUserProfile_MyBio_NotEntered">{0} has not entered a biography.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[
+#if ($core_v2_editableGroup.IsEditable('User') && $core_v2_user.Current.Id == $core_v2_user.Accessing.Id && $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	editable
+#end
+		]]></additionalCssScript>
+    <requiredContext>
+      <context id="0233cbb383784e11a1e5e541f3b0a795" />
+    </requiredContext>
+		<restScopes>
+			<scope id="users.users.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

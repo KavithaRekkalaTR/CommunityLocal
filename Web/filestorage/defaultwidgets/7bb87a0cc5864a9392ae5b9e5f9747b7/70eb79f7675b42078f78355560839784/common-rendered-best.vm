@@ -1,0 +1,110 @@
+##
+## Loads and renders Best (most voted) reply excerpts
+## Expects in scope:
+##   $threadId
+##   $bestSize
+##   $thread
+##
+
+#set ($listBestOptions = "%{}")
+$listBestOptions.add('FlattenedDepth', 0)
+$listBestOptions.add('RootPageSize', $bestSize)
+$listBestOptions.add('ChildPageSize', $bestSize)
+$listBestOptions.add('FlattenedSortBy', 'Votes')
+$listBestOptions.add('FlattenedSortOrder', 'Descending')
+
+#set ($bestReplies = $core_v2_forumReply.ListThreaded($threadId, $listBestOptions))
+#set ($hasBestRepliesOverThreshold = false)
+#foreach ($bestReply in $bestReplies)
+	#set ($netVotes = $bestReply.QualityYesVotes)
+	#set ($netVotes = $netVotes - $bestReply.QualityNoVotes)
+	#if ($netVotes > 0)
+		#set ($hasBestRepliesOverThreshold = true)
+	#end
+#end
+
+#if ($hasBestRepliesOverThreshold)
+	#foreach ($bestReply in $bestReplies)
+	#beforeall
+		<div class="threaded-summary">
+			<h2>$core_v2_language.GetResource('TopReplies')</h2>
+		</div>
+
+		<div class="threaded-summary">
+			<ul class="content-list">
+	#each
+		#set ($threadStatusClass = false)
+		#if ($thread.ThreadType == 'QuestionAndAnswer')
+			#if ($bestReply.IsAnswer)
+				#set ($threadStatusClass = "verified")
+			#elseif ($bestReply.IsSuggestedAnswer)
+				#set ($threadStatusClass = "suggested")
+			#end
+		#end
+
+		#set ($netVotes = $bestReply.QualityYesVotes)
+		#set ($netVotes = $netVotes - $bestReply.QualityNoVotes)
+		#if ($netVotes > 0)
+			<li class="content-item">
+				<div class="author" #if ($bestReply.Author.ProfileUrl) data-authorprofileurl="$core_v2_encoding.HtmlAttributeEncode($bestReply.Author.ProfileUrl)" #else data-authorprofileurl="" #end>
+					<div class="avatar">
+						#if ($bestReply.Author.ProfileUrl)
+							<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.Author.ProfileUrl)" class="internal-link view-user-profile">
+								$core_v2_ui.GetResizedImageHtml($bestReply.Author.AvatarUrl, 44, 44, "%{border='0px', alt=$bestReply.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+							</a>
+						#else
+							$core_v2_ui.GetResizedImageHtml($bestReply.Author.AvatarUrl, 44, 44, "%{border='0px', alt=$bestReply.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+						#end
+					</div>
+					<div class="meta">
+						<span class="user-name">
+							$core_v2_ui.UserPresence($bestReply.Author.Id)
+							#if ($bestReply.Author.ProfileUrl)
+								<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.Author.ProfileUrl)" class="internal-link view-user-profile">
+									$bestReply.Author.DisplayName
+								</a>
+							#else
+								$bestReply.Author.DisplayName
+							#end
+						</span>
+						<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.Url)" class="internal-link view-post navigable">
+							$core_v2_ui.AgoDate($bestReply.Date)
+						</a>
+						#if ($bestReply.ParentId)
+							#set ($bestReplyParent = false)
+							#set ($bestReplyParent = $core_v2_forumReply.Get($bestReply.ParentId))
+							#if ($bestReplyParent)
+								<span class="parent">
+									$core_v2_language.GetResource('in_reply_to') <a class="internal-link view-post navigable ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_parent'))" href="$core_v2_encoding.HtmlAttributeEncode($bestReplyParent.Url)">$bestReplyParent.Author.DisplayName</a>
+								</span>
+							#end
+						#end
+						<span class="votes ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('votes'))">+$netVotes</span>
+						#if ($threadStatusClass)
+							<span class="status $core_v2_encoding.HtmlAttributeEncode($threadStatusClass) ui-tip"
+								data-tip="
+								#if ($threadStatusClass == 'verified')
+									$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Status_Verified'))
+								#elseif ($threadStatusClass == 'suggested')
+									$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Status_Suggested'))
+								#end">
+									$threadStatusClass
+							</span>
+						#end
+					</div>
+				</div>
+				<a href="$core_v2_encoding.HtmlAttributeEncode($bestReply.Url)" class="internal-link view-full-post navigable ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ViewReply'))">
+					<div class="content user-defined-markup">$core_v2_language.Truncate($bestReply.Body('WebQuote'), 200, "%{ Ellipsis = '…', MaintainHtmlFormatting = 'false' }")</div>
+				</a>
+			</li>
+		#end
+	#afterall
+			</ul>
+		</div>
+		<div class="threaded-summary">
+			#if ($isFlat)
+				<h2>$core_v2_language.GetResource('AllReplies')</h2>
+			#end
+		</div>
+	#end
+#end

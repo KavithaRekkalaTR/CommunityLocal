@@ -1,0 +1,14 @@
+﻿#set($query = $core_v2_page.GetQueryStringValue('w_query'))
+#set($collectionId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_collectionId')))
+$core_v2_page.SetContentType('application/json')
+
+{
+	"matches": [
+		#foreach($article in $articles_v1_articles.Lookup($query, "%{ ArticleCollectionId = $collectionId }"))
+			#each
+				{ "label": "$core_v2_encoding.JavascriptEncode($article.Title)#if($article.Collection.Name) ($core_v2_encoding.JavascriptEncode($article.Collection.Name))#end", "id": "$article.Id" }
+			#between
+			,
+		#end
+	]
+}

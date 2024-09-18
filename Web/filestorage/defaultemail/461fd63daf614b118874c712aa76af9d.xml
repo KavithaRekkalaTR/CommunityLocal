@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="User Forgotten Password" version="13.0.0.0" description="Sends an email when a user has forgotten their password" id="461fd63daf614b118874c712aa76af9d" lastModified="2023-04-18 17:39:37Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body_PasswordReset'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#end
+</p>
+<blockquote>
+    <p>
+    #format($core_v2_language.GetResource('Body_Username'))
+    #token('username')
+        $context_v1_email.Context.User.Username
+    #end
+    </p>
+    <p>
+    #format($core_v2_language.GetResource('Body_TemporaryPassword'))
+    #token('password')
+        $context_v1_email.Context.User.Password
+    #end
+    </p>
+</blockquote>
+<p>
+#format($core_v2_language.GetResource('Body_SecurityDisclaimer'))
+#token('login_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.LogIn(false))">$core_v2_language.GetResource('LogIn')</a>
+#token('change_password_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.ChangePassword(false))">$core_v2_language.GetResource('ChangeYourPassword')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_PasswordReset">Your password for {site_name} has been reset.</resource>
+  <resource name="Body_SecurityDisclaimer">For the best security, please {login_link} and then {change_password_link} via Settings &amp;gt; Sign-In Information.</resource>
+  <resource name="Body_TemporaryPassword">Temporary password: {password}</resource>
+  <resource name="Body_Username">Username: {username}</resource>
+  <resource name="ChangeYourPassword">change your password</resource>
+  <resource name="LogIn">log in</resource>
+  <resource name="Subject">Password reset on {site_name}</resource>
+  <resource name="Header">Password reset on {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

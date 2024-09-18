@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_ContactBlog_Name}" version="11.0.0.0" description="${resource:Blogs_ContactBlog_Description}" instanceIdentifier="843230ce227f4d8ba28b5b01312f180d" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="contact-blog" lastModified="2020-01-14 16:07:59Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[
+#set ($blog = false)
+#set ($blog = $core_v2_blog.Current)
+#if (!$blog)
+	$core_v2_widget.Hide()
+#end
+#if (!$blog.ShowContact)
+	#if ($core_v2_widget.IsInWidgetPreviewMode)
+		<div class="message warning">$core_v2_language.GetResource('Blogs_ContactBlog_Disabled_Message')</div>
+	#else
+		$core_v2_widget.Hide()
+	#end
+#else
+	#set ($nameId = $core_v2_widget.UniqueId('name'))
+	#set ($emailId = $core_v2_widget.UniqueId('email'))
+	#set ($subjectId = $core_v2_widget.UniqueId('subject'))
+	#set ($bodyId = $core_v2_widget.UniqueId('body'))
+	#set ($submitId = $core_v2_widget.UniqueId('submit'))
+
+	<form><fieldset>
+		<h1>$core_v2_language.GetResource('Contact')</h1>
+		<ul class="field-list">
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($nameId)" class="field-item-name">$core_v2_language.GetResource('Weblog_ContactForm_Name')</label>
+				<span class="field-item-input"><input name="$core_v2_encoding.HtmlAttributeEncode($nameId)" type="text" size="50" id="$core_v2_encoding.HtmlAttributeEncode($nameId)" /></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($emailId)" class="field-item-name">$core_v2_language.GetResource('Weblog_ContactForm_Email')</label>
+				<span class="field-item-input"><input name="$core_v2_encoding.HtmlAttributeEncode($emailId)" type="text" size="50" id="$core_v2_encoding.HtmlAttributeEncode($emailId)" /></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($subjectId)" class="field-item-name">$core_v2_language.GetResource('Weblog_ContactForm_Subject')</label>
+				<span class="field-item-input"><input name="$core_v2_encoding.HtmlAttributeEncode($subjectId)" type="text" size="50" id="$core_v2_encoding.HtmlAttributeEncode($subjectId)" /></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<label for="$core_v2_encoding.HtmlAttributeEncode($bodyId)" class="field-item-name">$core_v2_language.GetResource('Weblog_ContactForm_Body')</label>
+				<span class="field-item-input"><textarea name="$core_v2_encoding.HtmlAttributeEncode($bodyId)" rows="8" cols="50" id="$core_v2_encoding.HtmlAttributeEncode($bodyId)"></textarea></span>
+				<span class="field-item-validation" style="display:none;"></span>
+			</li>
+			<li class="field-item">
+				<span class="field-item-description"></span>
+				<span class="field-item-input">
+					<a id="$core_v2_encoding.HtmlAttributeEncode($submitId)" class="button internal-link send-email" href="#"><span></span>$core_v2_language.GetResource('Send')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset></form>
+	#registerEndOfPageHtml('telligent.evolution.widgets.contactBlog')
+		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+	#end
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+			jQuery(function(){
+				jQuery.telligent.evolution.widgets.contactBlog.register({
+					wrapper: '#$core_v2_encoding.JavascriptEncode($core_v2_widget.WrapperElementId)',
+					subject: '#$core_v2_encoding.JavascriptEncode($subjectId)',
+					name: '#$core_v2_encoding.JavascriptEncode($nameId)',
+					email: '#$core_v2_encoding.JavascriptEncode($emailId)',
+					body: '#$core_v2_encoding.JavascriptEncode($bodyId)',
+					submit: '#$core_v2_encoding.JavascriptEncode($submitId)',
+					successMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Weblog_ContactForm_Sent'))',
+					blogUrl: '$core_v2_encoding.JavascriptEncode($blog.Url)',
+					ipAddress: '$core_v2_encoding.JavascriptEncode($core_v2_page.IpAddress)',
+					blogId: $blog.Id
+				});
+			});
+		</script>
+	#end
+#end
+	]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Blogs_ContactBlog_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Blogs_ContactBlog_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Blogs_ContactBlog_Description">Displays the form used to email blog owners.</resource>
+  <resource name="Blogs_ContactBlog_Disabled_Message">To enable this widget, you must edit this blog's settings, enable the "Email Blog Author" form, and enter an e-mail address.</resource>
+  <resource name="Blogs_ContactBlog_Name">Blog - Email Author</resource>
+  <resource name="Blogs_ContactBlog_Title_Contact">Contact</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Contact">Contact</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Send">Send</resource>
+  <resource name="Weblog_ContactForm_Body">Message</resource>
+  <resource name="Weblog_ContactForm_Email">Email</resource>
+  <resource name="Weblog_ContactForm_Name">Name</resource>
+  <resource name="Weblog_ContactForm_Sent">Your contact request has been sent successfully.</resource>
+  <resource name="Weblog_ContactForm_Subject">Subject</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="94b4a7db70934b0abcce06169b6f2272" />
+    </requiredContext>
+		<restScopes>
+			<scope id="blogs.contactrequests.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

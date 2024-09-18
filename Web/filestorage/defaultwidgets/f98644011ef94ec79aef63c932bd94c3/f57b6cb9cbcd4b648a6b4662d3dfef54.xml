@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ViewsReport_Name}"
+                           version="10.0.0.0"
+                           description="${resource:ViewsReport_Description}"
+                           instanceIdentifier="f57b6cb9cbcd4b648a6b4662d3dfef54"
+                           theme="" isCacheable="false"
+                           varyCacheByUser="true"
+                           showHeaderByDefault="false"
+                           cssClass=""
+                           provider="f98644011ef94ec79aef63c934bd94c3">
+		<contentScript><![CDATA[
+#set ($query = $core_v2_page.ParseQueryString($context.TabKey))
+#set ($report = $reporting.GetReport($context.Id))
+#set($parentId = $context.GetDrillUpReportId())
+#set ($parent = $reporting.GetReport($parentId))
+
+#set ($reportContainerId = $core_v2_widget.UniqueId($query.Value("tab")))
+
+#if($reporting.HasSiteReportingPermission($core_v2_user.Accessing.Id) || $reporting.HasGroupReportingPermission($core_v2_user.Accessing.Id))
+	<div id="$reportContainerId" class="views-report summary-report">
+
+    <div class="view-header dashboard">
+        #if($parent)
+            <a href="#" data-messagename="reporting.drill.up" data-targetid="$parent.Id" class="hierarchy name">$parent.Name</a> <span class="divider">/</span>
+        #end
+        <span class="view-title">
+            <span class="hierarchy name">$report.Name</span>
+        </span>
+				<span class="actions-container">
+					<ul class="ui-links export-actions" data-maxlinks="0">
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="reporting.export.list.csv" data-filters="store">$core_v2_language.GetResource('ExportListasCSV')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a class="export-actions-more" href="#" data-more>$core_v2_language.GetResource('Export')</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('Cancel')</a>
+						</li>
+					</ul>
+				</span>
+        <div class="description">$report.Description</div>
+    </div>
+
+    <div class="errors" style="display: none;"></div>
+    <div class="view-body report">
+        <div class="report-summary-container">
+            <div class="report-summary"></div>
+        </div>
+
+        <div class="paged-content"></div>
+        <div class="pager-control"></div>
+    </div>
+  </div>
+
+  #registerEndOfPageHtml('telligent.reporting.widgets.viewsReport')
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+  #end
+
+  #registerEndOfPageHtml()
+  <script type="text/javascript">
+        jQuery.telligent.reporting.widgets.viewsReport.register({
+            tabKey: '$context.TabKey',
+            fields: {
+                reportContainerId: '#$reportContainerId',
+            },
+            resources: {
+                title: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ViewsReport_Name'))',
+            },
+            urls: {
+                pagedData: '$core_v2_widget.GetExecutedFileUrl('full-paged-content.vm')',
+                export: '$core_v2_widget.GetExecutedFileUrl('full-export.vm')',
+                summary: '$core_v2_widget.GetExecutedFileUrl('full-report-summary.vm')'
+            }
+        });
+  </script>
+  #end
+#else
+    <div id="$containerId" #if ($context.Target.Contains('tile'))class="tile new-content" #end>
+        <div class="message error access-denied">$core_v2_language.GetResource('PermissionDenied')</div>
+    </div>
+#end
+
+]]></contentScript>
+		<languageResources>
+      <language key="en-us">
+        <resource name="ViewsReport_Name">Views Report</resource>
+        <resource name="ViewsReport_Description">Views for content</resource>
+        <resource name="Dashboard_Description">Views for content</resource>
+        <resource name="PermissionDenied">You do not have permission to view this report.</resource>
+        <resource name="NoData">No views match the current filters.</resource>
+        <resource name="DateRange">from {0} to {1}</resource>
+        <resource name="ViewsForMember">Views by</resource>
+        <resource name="ViewsForGroup">Views in</resource>
+        <resource name="ViewsForContent">Views on</resource>
+        <resource name="Content">Content</resource>
+        <resource name="Group">Group</resource>
+        <resource name="Application">Application</resource>
+        <resource name="Member">Member</resource>
+        <resource name="View">Viewed Content</resource>
+        <resource name="ViewDate">View Date</resource>
+        <resource name="Cancel">Cancel</resource>
+        <resource name="Export">Export</resource>
+        <resource name="ExportListasCSV">Export List as CSV</resource>
+        <resource name="Error">Unable to display views.</resource>
+        <resource name="Unknown">Unknown</resource>
+      </language>
+    </languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,68 @@
+##
+## API Extensions Type Link Renderer
+##
+## Requires in scope:
+##   $type or $typeName
+##
+## Optional: $forCompletionSuggestion
+##   When set and true, renders the link as a span with embedded script to work around ACE.
+##
+##
+
+## If not given an explicit type, look it up
+#if (!$type && $typeName)
+	#set ($type = $shellApi.GetType($typeName))
+#end
+
+#if ($type)
+	<span class="type-link">
+		#if ($type.IsArray)
+			<span>$core_v2_language.GetResource('ArrayOf')</span>
+		#end
+
+		#set($nameArray = $core_v2_utility.Split("`", $type.Name).ToArray())
+		#set($shortName = $nameArray.get(0))
+
+		#if ($type.IsSystemType)
+			<span>${shortName}</span>
+		#elseif ($forCompletionSuggestion)
+			<span class="doc_link" onclick="jQuery.telligent.evolution.messaging.publish('studio.view.documentation.show', { target: this, elm: this });"
+				data-name="$core_v2_encoding.HtmlAttributeEncode($type.FullName)"
+				data-type="type"
+				data-displayname="$core_v2_encoding.HtmlAttributeEncode($shortName)">${shortName}</span>
+		#else
+			<a href="#"
+				data-name="$core_v2_encoding.HtmlAttributeEncode($type.FullName)"
+				data-type="type"
+				class="documentation-link">${shortName}</a>
+		#end
+
+		#if ($type.IsGenericType && $type.GenericArguments && $type.GenericArguments.Count > 0)
+			#set ($firstGenericArgument = false)
+			#foreach ($genericArg in $type.GenericArguments)
+				#if (!$firstGenericArgument)
+					#set ($firstGenericArgument = $genericArg)
+				#end
+			#end
+			#if ($firstGenericArgument)
+				<span>$core_v2_language.GetResource('of')</span>
+				#set($genericNameArray = $core_v2_utility.Split("`", $firstGenericArgument.Name).ToArray())
+				#set($genericArgShortName = $genericNameArray.get(0))
+
+				#if ($firstGenericArgument.IsSystemType)
+					<span>${genericArgShortName}</span>
+				#elseif ($forCompletionSuggestion)
+					<span class="doc_link" onclick="jQuery.telligent.evolution.messaging.publish('studio.view.documentation.show', { target: this, elm: this });"
+						data-name="$core_v2_encoding.HtmlAttributeEncode($firstGenericArgument.FullName)"
+						data-type="type"
+						data-displayname="$core_v2_encoding.HtmlAttributeEncode($genericArgShortName)">${genericArgShortName}</span>
+				#else
+					<a href="#"
+						data-name="$core_v2_encoding.HtmlAttributeEncode($firstGenericArgument.FullName)"
+						data-type="type"
+						class="documentation-link">${genericArgShortName}</a>
+				#end
+			#end
+		#end
+	</span>
+#end

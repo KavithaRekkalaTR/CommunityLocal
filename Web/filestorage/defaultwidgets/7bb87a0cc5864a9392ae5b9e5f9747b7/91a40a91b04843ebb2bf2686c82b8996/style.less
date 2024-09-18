@@ -1,0 +1,37 @@
+@small-sidebars: ~'.left-sidebar, .split-sidebar-right, .split-sidebar-left, .content-left-sidebar-right .right-sidebar, .sidebar-left-content-center-sidebar-right .right-sidebar, .header-top-sidebar-left-content-center-sidebar-right .right-sidebar, .header-top-content-left-sidebar-right .right-sidebar, .header-top-content-left-sidebar-right-footer .right-sidebar, .header-top-sidebar-left-content-center-sidebar-right-footer .right-sidebar, .header-top-content-left-split-sidebar-right-top-single-sidebar-right-bottom-footer .right-sidebar';
+
+.content-fragment.group-members-list  {
+	.filter {
+		.membershiptype {
+			float: right;
+			display: block;
+			width: auto;
+		}
+
+		&:after {
+			content: ' ';
+			display: block;
+			clear: right;
+		}
+	}
+
+	.content-item.thumbnail {
+		cursor: pointer;
+		.status {
+			position: absolute;
+			top: (10px / 2);
+			width: 100%;
+			text-align: center;
+			color: -evo-themeconfig-color('backgroundColor', #ffffff);
+			text-shadow: -1px -1px 1px -evo-themeconfig-color('foregroundColor', #11171A), 1px 1px 1px -evo-themeconfig-color('foregroundColor', #11171A), 1px -1px 1px -evo-themeconfig-color('foregroundColor', #11171A), -1px 1px 1px -evo-themeconfig-color('foregroundColor', #11171A);
+		}
+	}
+}
+
+@{small-sidebars} {
+	.content-fragment.group-members-list  {
+		.content-list.thumbnail.small {
+			text-align: left;
+		}
+	}
+}

@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:AbuseAppeal_Name}" version="12.0.0.0" description="${resource:AbuseAppeal_Description}" instanceIdentifier="0f1b24cc8d3e4cd1b14ec9821260b5c5" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="abuse-appeal" lastModified="2021-11-30 21:02:07Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($appeal = false)
+#set ($content = false)
+#set ($group = false)
+#set ($appeal = $core_v2_abuseAppeal.Current)
+#set ($user = $core_v2_user.Accessing)
+
+#if ((!$appeal) || (!$appeal.Content))
+	<div class="message">$core_v2_language.GetResource('message_NoAppealFound')</div>
+#else
+	#set ($container = $appeal.Container)
+	#set($content = $appeal.Content)
+
+	#if ($appeal.AppealState == 'Initiated')
+		<form><fieldset>
+		#if ($content.ContentTypeId == $core_v2_user.ContentTypeId)
+		  <p>$core_v2_language.FormatString($core_v2_language.GetResource('appeal_description_user'), $core_v2_language.FormatDate($content.CreatedDate), $appeal.IdentificationExplanation)</p>
+		  <p>$core_v2_language.FormatString($core_v2_language.GetResource('appeal_description_explanation_user'), $core_v2_language.FormatDate($appeal.AppealExpires))</p>
+		#elseif ($container)
+			<p>$core_v2_language.FormatString($core_v2_language.GetResource('appeal_description_group'), $core_v2_encoding.HtmlAttributeEncode($container.Url), $container.HtmlName('Web'), $!content.HtmlName('Web'), $core_v2_language.FormatDate($content.CreatedDate), $appeal.IdentificationExplanation))</p>
+			<p>$core_v2_language.FormatString($core_v2_language.GetResource('appeal_description_explanation'), $core_v2_language.FormatDate($appeal.AppealExpires))</p>
+		#else
+			<p>$core_v2_language.FormatString($core_v2_language.GetResource('appeal_description'), $!content.HtmlName('Web'), $core_v2_language.FormatDate($content.CreatedDate), $appeal.IdentificationExplanation)</p>
+			<p>$core_v2_language.FormatString($core_v2_language.GetResource('appeal_description_explanation'), $core_v2_language.FormatDate($appeal.AppealExpires))</p>
+		#end
+
+			<ul class="field-list">
+				<li class="field-item body">
+					<label for="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('body'))" class="field-item-name" style="display:none;">$core_v2_language.GetResource('appeal_body')</label>
+					<span class="field-item-input"><textarea id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('body'))" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('body'))" rows="4"></textarea></span>
+					<span class="field-item-validation" style="display:none;"></span>
+				</li>
+				<li class="field-item submit">
+					<span class="field-item-input">
+						<a class="internal-link button save-post" href="#" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('submit'))">
+							<span></span>$core_v2_language.GetResource('submit')
+						</a>
+						<span style="visibility: hidden;" class="processing"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+					</span>
+				</li>
+			</ul>
+		</fieldset></form>
+
+		#registerEndOfPageHtml('telligent.evolution.widgets.abuseAppeal')
+			<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+		#end
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			jQuery(function(){
+				jQuery.telligent.evolution.widgets.abuseAppeal.register({
+					wrapper: "#$core_v2_widget.WrapperElementId",
+					appealId: '$appeal.AppealId',
+					bodyInput: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('body'))",
+					submitLink: "#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('submit'))",
+					bodyRequiredText: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('body_required'))",
+					successMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('success_message'))",
+					successUrl: '$core_v2_encoding.JavascriptEncode($core_v2_urls.Home())'
+				});
+			});
+			</script>
+		#end
+	#else
+		#set ($message = '')
+		#set ($class = '')
+		#if ($appeal.AppealState == 'AuthorResponded')
+			#set ($author = $core_v2_user.Get("%{Id = $content.CreatedByUserId }"))
+			#set ($message = $core_v2_language.FormatString($core_v2_language.GetResource('message_AuthorResponse'), $author.PrivateEmail))
+			#set ($class = 'success')
+		#elseif ($appeal.AppealState == 'Accepted')
+			#set ($message = $core_v2_language.GetResource('message_Accepted'))
+			#set ($class = 'warning')
+		#elseif ($appeal.AppealState == 'Rejected')
+			#set ($message = $core_v2_language.GetResource('message_Rejected'))
+			#set ($class = 'warning')
+		#elseif ($appeal.AppealState == 'Expired')
+			#set ($message = $core_v2_language.GetResource('message_Expired'))
+			#set ($class = 'warning')
+		#else
+			#set ($message = $core_v2_language.GetResource('message_CannotBeAppealed'))
+			#set ($class = 'warning')
+		#end
+		<div class="message $class">$message</div>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:AbuseAppeal_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:AbuseAppeal_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AbuseAppeal_Description">Displays a form for a user to appeal an abuse report</resource>
+  <resource name="AbuseAppeal_Name">Abuse Appeal</resource>
+  <resource name="appeal_body">Appeal</resource>
+  <resource name="appeal_description">An issue was identified on your content, {0}, created on {1}: {2}</resource>
+  <resource name="appeal_description_explanation">Please address this issue below. If we don't hear from you, your content will be removed from the site on {0}.</resource>
+  <resource name="appeal_description_explanation_user">Please address this issue below. If we don't hear from you, your account will be removed from the site on {0}.</resource>
+  <resource name="appeal_description_group">An issue was identified on your content, {2}, created on {3} in {1}: {4}</resource>
+  <resource name="appeal_description_user">An issue was identified on your user account: {1}</resource>
+  <resource name="body_required">Please provide a reason</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="message_Accepted">This appeal has been accepted.</resource>
+  <resource name="message_AuthorResponse">Thank you, your response has been submitted. Your appeal will be reviewed promptly. A decision will be sent to {0}.</resource>
+  <resource name="message_CannotBeAppealed">An appeal cannot be provided for this content.</resource>
+  <resource name="message_Expired">This appeal has expired.</resource>
+  <resource name="message_NoAppealFound">No appeal found.</resource>
+  <resource name="message_Rejected">This appeal has been rejected.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="submit">Submit</resource>
+  <resource name="success_message">Thank you, your response has been submitted. Your appeal will be reviewed promptly.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="c49730083d9844328a9496213e763b5e" />
+    </requiredContext>
+    <restScopes>
+      <scope id="abuse.appeals.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

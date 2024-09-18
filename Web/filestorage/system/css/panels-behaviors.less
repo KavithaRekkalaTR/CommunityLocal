@@ -1,0 +1,210 @@
+// platform UI
+
+/* push notifications */
+.push-notification {
+	background-color: @ap-header-color-foreground;
+	padding: @ap-spacing;
+	color: @ap-header-color-background;
+	font-size: @ap-font-size;
+	line-height: @ap-line-height;
+	width: 200px;
+	.box-shadow(0px 1px 9px rgba(0, 0, 0, 0.15));
+	.round(2px);
+	.transition(background-color .2s);
+	.close {
+		float: right;
+		color: @ap-header-color-background;
+		opacity: 0.2;
+		margin: 0 0 (@ap-spacing / 2) (@ap-spacing / 2);
+		width: 16px;
+		height: 16px;
+		position: relative;
+		text-indent: 100%;
+		white-space: nowrap;
+		overflow: hidden;
+		&:before {
+			text-indent: 0;
+			font-size: @ap-font-size * 1.5;
+			content: "\000D7";
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 16px;
+			height: 16px;
+		}
+	}
+	&.active {
+		cursor: pointer;
+		&:hover {
+			background-color: @ap-header-color-accent;
+			color: @ap-header-color-background;
+		}
+	}
+	&:hover .close {
+		opacity: 1.0;
+		color: #fff;
+	}
+	&.warning, &.error {
+		background-color: @ap-header-color-attention;
+		&.active {
+			&:hover {
+				background-color: @ap-header-color-attention;
+			}
+		}
+	}
+}
+
+/* tips */
+.tip {
+	background-color: rgba(0,0,0,.9);
+	color: #fff;
+	max-width: 200px;
+	padding: 2px 6px 2px 6px;
+	font-size: 11px;
+	margin-bottom: 8px;
+	z-index: 20001 !important;
+	text-overflow: ellipsis;
+	word-wrap: break-word;
+	a {
+		color: #fff;
+	}
+	&.above {
+		&:after {
+			top: 100%;
+			border: solid transparent;
+			content: " ";
+			height: 0;
+			width: 0;
+			position: absolute;
+			pointer-events: none;
+			border-top-color: rgba(0,0,0,.9);
+			border-width: 6px;
+			margin-left: -6px;
+		}
+		&.left:after { left: 12px; }
+		&.center:after { left: 50%; }
+		&.right:after { right: 6px; }
+	}
+	&.below {
+		margin-top: 8px;
+		&:after {
+			bottom: 100%;
+			border: solid transparent;
+			content: " ";
+			height: 0;
+			width: 0;
+			position: absolute;
+			pointer-events: none;
+			border-bottom-color: rgba(0, 0, 0, .9);
+			border-width: 6px;
+			margin-left: -6px;
+		}
+		&.left:after { left: 12px; }
+		&.center:after { left: 50%; }
+		&.right:after { right: 6px; }
+	}
+}
+
+// Tour Tip
+.tourtip {
+	margin-top: @ap-spacing;
+	background-color: @ap-content-color-background;
+	color: @ap-content-color-foreground;
+	padding: (@ap-spacing * 2);
+	box-shadow: 0px 0px (@ap-spacing * 4) rgba(0,0,0,0.6);
+	width: 400px;
+	overflow: hidden;
+	.round(3px);
+	&:after {
+		content: ' ';
+		height: 0;
+		position: absolute;
+		width: 0;
+		border: @ap-spacing solid transparent;
+	}
+	&.belowleft:after {
+		border-bottom-color: @ap-content-color-background;
+		top: -@ap-spacing;
+		left: @ap-spacing;
+	}
+	&.belowright:after {
+		border-bottom-color: @ap-content-color-background;
+		top: -@ap-spacing;
+		right: @ap-spacing;
+	}
+	&.aboveleft:after {
+		border-top-color: @ap-content-color-background;
+		top: 100%;
+		left: @ap-spacing;
+		padding-bottom: 10px;
+	}
+	&.aboveright:after {
+		border-top-color: @ap-content-color-background;
+		top: 100%;
+		right: @ap-spacing;
+		padding-bottom: 10px;
+		margin-bottom: 10px;
+	}
+	.tourtip-actions {
+		list-style: none;
+		padding: 0px;
+		width: 100%;
+		margin: (@ap-spacing * 2) 0 0 0;
+		a {
+			.round(3px);
+			font-size: @ap-font-size * .9;
+			float: left;
+			color: @ap-content-color-accent;
+			border: 1px solid @ap-content-color-accent;
+			padding: (@ap-spacing / 2) @ap-spacing (@ap-spacing / 2) @ap-spacing;
+			text-decoration: none;
+			margin: 0 (@ap-spacing / 1.5) 0 0;
+			&.tourtip-skip {
+				color: lighten(@ap-content-color-background, 50%);
+				border: 1px solid lighten(@ap-content-color-background, 50%);
+				float: right;
+				margin-right: 0;
+			}
+			&:hover {
+				border: 1px solid @ap-content-color-accent;
+				background-color: @ap-content-color-accent;
+				color: @ap-content-color-background;
+			}
+			&:active {
+				border: 1px solid @ap-content-color-accent;
+				background-color: darken(@ap-content-color-accent, 10%);
+				color: @ap-content-color-background;
+			}
+		}
+	}
+}
+
+
+// scrollable
+.scrollable-load-more {
+	padding: 5px;
+	display: block;
+	cursor: pointer;
+	background-color: @ap-content-color-accent;
+	color: @ap-content-color-background;
+	font-size: @ap-font-size * .9;
+	text-align: center;
+	border-radius: 3px;
+	clear: both;
+	display: block;
+	transition: all .1s;
+	margin-bottom: @ap-spacing;
+	&:hover {
+		background-color: lighten(@ap-content-color-accent, 5%);
+	}
+	&:active {
+		background-color: darken(@ap-content-color-accent, 5%);
+	}
+}
+.scrollable-loading {
+	clear: both;
+	display: block;
+	height: 26px;
+	margin-top: @ap-spacing !important;
+	margin-bottom: @ap-spacing !important;
+}

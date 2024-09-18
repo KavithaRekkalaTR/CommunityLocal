@@ -1,0 +1,87 @@
+#foreach($application in $applications)
+#beforeall
+	<ul class="content-list content expandable simple">
+#each
+	<li class="content-item application" data-applicationtypeid="$core_v2_encoding.HtmlAttributeEncode($application.ApplicationTypeId.ToString())" data-applicationid="$application.ApplicationId.ToString()" data-enabled="$application.IsEnabled" data-name="$application.HtmlName('Web')">
+		<div class="content application">
+		<h4 class="name">
+			$application.HtmlName('Web')
+		</h4>
+		<div class="post-attributes">
+			<ul class="attribute-list">
+				<li class="attribute-item">
+					$core_v2_applicationType.Get($application.ApplicationTypeId).Name
+				</li>
+				#if (!$isDeleted)
+				<li class="attribute-item">
+					<span class="value highlight disabled" #if($application.IsEnabled) style="display:none;"#end>$core_v2_language.GetResource('disabled')</span>
+					<span class="value enabled" #if(!$application.IsEnabled) style="display:none;"#end>$core_v2_language.GetResource('enabled')</span>
+				</li>
+				#else
+				<li class="attribute-item">
+					<span class="value highlight deleted">$core_v2_language.GetResource('deleted')</span>
+				</li>
+				#end
+			</ul>
+		</div>
+		<div class="content expandable">
+			$!application.HtmlDescription('Web')
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+				    #if (!$isDeleted)
+    					#if ($application.Url)
+    						<li class="navigation-list-item">
+    							<a href="$core_v2_encoding.HtmlAttributeEncode($application.Url)">$core_v2_language.GetResource('view')</a>
+    						</li>
+    					#end
+    					#set ($editUrl = false)
+    					#set ($editUrl = $context.GetEditUrl($application.ApplicationTypeId, $application.ApplicationId))
+    					#if ($editUrl)
+    						<li class="navigation-list-item">
+    							<a href="$core_v2_encoding.HtmlAttributeEncode($editUrl)">$core_v2_language.GetResource('edit')</a>
+    						</li>
+    					#end
+    				#end
+					#if (!$isDeleted && $context.CanSetEnabled($application.ApplicationTypeId, $application.ApplicationId))
+						<li class="navigation-list-item">
+							<a href="#" data-messagename="groupapplications.toggleenabled" data-applicationtypeid="$core_v2_encoding.HtmlAttributeEncode($application.ApplicationTypeId.ToString())" data-applicationid="$core_v2_encoding.HtmlAttributeEncode($application.ApplicationId.ToString())">
+								#if ($application.IsEnabled)
+									$core_v2_language.GetResource('disable')
+								#else
+									$core_v2_language.GetResource('enable')
+								#end
+							</a>
+						</li>
+					#end
+					#if (!$isDeleted)
+    					#if ($context.CanDelete($application.ApplicationTypeId, $application.ApplicationId))
+    						<li class="navigation-list-item">
+    							<a href="#" data-messagename="groupapplications.delete" #if ($context.CanRestore($application.ApplicationTypeId, $application.ApplicationId)) data-canrestore="1" #else data-canrestore="0" #end data-applicationtypeid="$core_v2_encoding.HtmlAttributeEncode($application.ApplicationTypeId.ToString())" data-applicationid="$core_v2_encoding.HtmlAttributeEncode($application.ApplicationId.ToString())">$core_v2_language.GetResource('delete')</a>
+    						</li>
+    					#end
+    				#else
+    				    #if ($context.CanRestore($application.ApplicationTypeId, $application.ApplicationId))
+    						<li class="navigation-list-item">
+    							<a href="#" data-messagename="groupapplications.restore" data-applicationtypeid="$core_v2_encoding.HtmlAttributeEncode($application.ApplicationTypeId.ToString())" data-applicationid="$core_v2_encoding.HtmlAttributeEncode($application.ApplicationId.ToString())">$core_v2_language.GetResource('undelete')</a>
+    						</li>
+    					#end
+    				#end
+					<li class="navigation-list-item">
+						<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+					</li>
+					<li class="navigation-list-item">
+						<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+#afterall
+	</ul>
+#nodata
+	<div class="message information">
+		$noItemsMessage
+	</div>
+#end

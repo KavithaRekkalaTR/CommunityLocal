@@ -1,0 +1,8 @@
+$core_v2_widget.ExecuteFile('load.vm')
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($medias.PageIndex + 1) * $medias.PageSize)
+#if ($medias.TotalCount > $currentPagedQuantity)
+	#set ($hasMore = true)
+#end
+$core_v2_widget.ExecuteFile('list-thumbnail.vm')

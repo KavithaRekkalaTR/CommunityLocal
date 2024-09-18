@@ -1,0 +1,47 @@
+﻿#set ($roleId = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('RoleId')))
+#set($role = $context.GetRole($roleId))
+
+#set($isADMapped = false)
+#if ($role)
+	#set($isADMapped = $context.HasAssociatedGroupForADRole($roleId))
+#end
+
+<li class="content-item" data-roleid="$role.Id">
+	<div class="avatar">
+        #if($role.AvatarUrl)
+    		$!core_v2_ui.GetResizedImageHtml($role.AvatarUrl, 50, 50, "%{border='0px', ResizeMethod = 'ZoomAndCrop', alt='$role.Name' }")
+        #end
+	</div>
+	<div class="content-container">
+		<h4 class="name">$role.Name HELLO</h4>
+		<div class="attributes">
+			<div class="content">$!role.Description</div>
+		</div>
+		<div class="actions expandable">
+			<div class="navigation-list ui-links" data-direction="horizontal">
+				<ul>
+					<li class="navigation-list-item edit">
+						<a href="#" data-messagename="administration.role.edit" data-roleid="$role.Id" data-title="$core_v2_encoding.HtmlAttributeEncode($role.Name)">
+                            $core_v2_language.GetResource('Edit')
+                        </a>
+					</li>
+					<li class="navigation-list-item clone">
+						<a href="#" data-messagename="administration.role.clone" data-roleid="$role.Id" data-title="$core_v2_encoding.HtmlAttributeEncode($role.Name)">$core_v2_language.GetResource('Clone')</a>
+					</li>
+					#set($membersUrl = false)
+					#set($membersUrl = $context.ViewMembers($role.Id))
+					#if ($membersUrl)
+						<li class="navigation-list-item edit">
+							<a href="$membersUrl">$core_v2_language.GetResource('ViewMembers')</a>
+						</li>
+					#end
+					#if(!$role.IsSystemRole)
+						<li class="navigation-list-item delete">
+							<a href="#" data-messagename="administration.role.delete" data-roleid="$role.Id" data-ismapped="$isADMapped">$core_v2_language.GetResource('Delete')</a>
+						</li>
+					#end
+				</ul>
+			</div>
+		</div>
+	</div>
+</li>

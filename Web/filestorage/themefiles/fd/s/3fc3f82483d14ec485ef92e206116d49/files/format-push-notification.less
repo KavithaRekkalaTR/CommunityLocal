@@ -1,0 +1,45 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+/* push notifications */
+.push-notification {
+	background-color: @color-foreground;
+	padding: @spacing;
+	color: @color-background;
+	font-family: @font-family;
+	font-size: @font-size * .85;
+	line-height: @line-height;
+	width: 200px;
+	.box-shadow(0px 1px 9px fade(@color-foreground, 20%));
+	.round(2px);
+	.transition(background-color .2s);
+	.close {
+		float: right;
+		color: @color-background;
+		opacity: 0.2;
+		margin: 0 0 (@spacing / 2) (@spacing / 2);
+		.replace_with_icon(@cancel-circled);
+	}
+	&.active {
+		cursor: pointer;
+		&:hover {
+			background-color: @color-accent;
+		}
+		&:hover .close {
+			opacity: 0.99;
+		}
+	}
+	&.warning, &.error {
+		background-color: @color-attention;
+		&.active {
+			&:hover {
+				background-color: @color-attention;
+			}
+		}
+	}
+}

@@ -1,0 +1,92 @@
+#set($viewType = $core_v2_widget.GetStringValue('viewType', 'default'))
+#if (!$viewType || $viewType == 'default')
+	#set($viewType = $core_v2_media.CurrentViewType)
+#end
+
+#set($sortBy = $core_v2_page.GetQueryStringValue('GalleryPostSort'))
+#if (!$sortBy || $sortBy == '')
+	#set($sortBy = $core_v2_widget.GetStringValue('sortBy', 'PostDate'))
+#end
+#set($pageSize = $core_v2_widget.GetIntValue('pageSize',5))
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($sortOrder = $core_v2_page.GetQueryStringValue('SortOrder'))
+#if (!$sortOrder || $sortOrder == '')
+	#if ($sortBy == 'Subject')
+		#set($sortOrder = 'Ascending')
+	#else
+		#set($sortOrder = 'Descending')
+	#end
+#end
+#if ($viewType == 'Thumbnail' && $sortBy == 'Subject')
+	#set($sortOrder = 'Ascending')
+#end
+#set($medias = false)
+#set($showSortByRating = false)
+#set($config = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('selectedMediaGalleryOrGroup','')))
+#set($currentGallery = false)
+
+#if ($config.Values('MediaGallery').Count > 0)
+	#set($galleryList = false)
+	#foreach($galleryId in $config.Values('MediaGallery'))
+		#if($galleryId == '-1')
+			#set($galleryId = $core_v2_gallery.Current.Id)
+		#end
+		#if($galleryId > 0)
+			#if (!$showSortByRating)
+				#set($tmpGallery = $core_v2_gallery.Get("%{Id=$galleryId}"))
+				#if ($tmpGallery)
+					#set($showSortByRating = $tmpGallery.EnableRatings)
+					#set($currentGallery = $tmpGallery)
+				#end
+			#end
+			#if(!$galleryList)
+				#set($galleryList = "$galleryId")
+			#else
+				#set($galleryList = "$galleryList,$galleryId")
+				#set($currentGallery = false)
+			#end
+		#end
+	#end
+
+	#if ($galleryList)
+		#set($medias = $core_v2_media.List("%{GalleryIds=$galleryList,PageSize=$pageSize,PageIndex=$pageIndex,SortOrder=$sortOrder,SortBy=$sortBy}"))
+	#end
+#elseif ($config.Value('Group'))
+	#set($group = $core_v2_utility.ParseInt($config.Value('Group')))
+	#if ($group <= 0)
+		#set($group = $core_v2_group.Current.Id)
+	#end
+	#if($group > 0)
+		#foreach($tmpGallery in $core_v2_gallery.List("%{GroupId=$group}"))
+			#if (!$showSortByRating)
+				#set($showSortByRating = $tmpGallery.EnableRatings)
+			#end
+		#end
+		#set($medias = $core_v2_media.List("%{GroupId=$group,PageSize=$pageSize,PageIndex=$pageIndex,IncludeSubGroups=$core_v2_utility.ParseBool($config.Value('IncludeSubGroups')),SortOrder=$sortOrder,SortBy=$sortBy}"))
+	#end
+#end
+
+#if(!$medias)	
+	#if ($core_v2_gallery.Current)
+		#set($currentGallery = $core_v2_gallery.Current)
+		#set($showSortByRating = $currentGallery.EnableRatings)
+		#set($medias = $core_v2_media.List("%{GalleryId=$core_v2_gallery.Current.Id,PageSize=$pageSize,PageIndex=$pageIndex,SortOrder=$sortOrder,SortBy=$sortBy}"))
+	#else
+		#foreach($tmpGallery in $core_v2_gallery.List("%{GroupId=$core_v2_group.Current.Id}"))
+			#if (!$showSortByRating)
+				#set($showSortByRating = $tmpGallery.EnableRatings)
+			#end
+		#end
+		#set($medias = $core_v2_media.List("%{GroupId=$core_v2_group.Current.Id,PageSize=$pageSize,PageIndex=$pageIndex,SortOrder=$sortOrder,SortBy=$sortBy}"))
+	#end
+#end
+
+#set ($hasMore = false)
+#set ($currentPagedQuantity = ($medias.PageIndex + 1) * $medias.PageSize)
+#if ($medias.TotalCount > $currentPagedQuantity)
+    #set ($hasMore = true)
+#end
+
+#if ($pageIndex != $medias.PageIndex)
+    #set ($medias = false)
+#end

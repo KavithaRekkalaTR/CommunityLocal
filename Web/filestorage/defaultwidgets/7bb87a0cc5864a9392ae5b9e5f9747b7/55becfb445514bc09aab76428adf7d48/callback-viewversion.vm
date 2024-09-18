@@ -1,0 +1,46 @@
+#set($articleId = false)
+#set($articleId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('articleId')))
+
+#set($version = false)
+#set($version = $articles_v1_articleVersions.Get($articleId, $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('version'))))
+
+#set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+
+#if ($version && !$version.HasErrors())
+    <div class="message information">
+        $core_v2_language.FormatString($core_v2_language.GetResource('Showing_Version'), $version.Title, $core_v2_language.FormatDateAndTime($version.LastUpdateDate))
+        <a href="#" class="history-view inline-button" data-view="raw">$core_v2_language.GetResource('ShowRawContent')</a>
+        <a href="#" class="history-view inline-button" data-view="web" style="display: none">$core_v2_language.GetResource('ShowRenderedContent')</a>
+    </div>
+    <div class="content full">
+        <h2 class="name">$version.Title</h2>
+        <div class="content">
+            <div class="history-content" data-view="web">
+                $version.Body('Web')
+            </div>
+            <div class="history-content" data-view="raw" style="display: none;">
+                $version.Body('Raw')
+            </div>
+            #set($categories = '')
+            #foreach($category in $version.Categories)
+                #if ($categories.Length > 0)
+                    #set($categories = "$categories, ")
+                #end
+                #set($categoryLocation = $api.getCategoryLocation($category.Category))
+                #set($categories = "${categories}${category.Category.Name}${categoryLocation}")
+            #end
+            #if ($categories.Length > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Categories')</strong> $categories
+                </p>
+            #end
+            #if ($version.Tags.Count > 0)
+                <p>
+                    <strong>$core_v2_language.GetResource('View_Tags')</strong> $core_v2_utility.Join(', ', $version.Tags)
+                </p>
+            #end
+        </div>
+    </div>
+#else
+    <div class="message error">$core_v2_language.GetResource('VersionCouldNotBeLoaded')</div>
+#end

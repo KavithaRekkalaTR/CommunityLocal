@@ -1,0 +1,129 @@
+<li class="content-item user#if($isExact) exact#end" data-userid="$user.Id">
+	<div class="avatar">
+		#if ($user.AvatarUrl != '')
+			$core_v2_ui.GetResizedImageHtml($user.AvatarUrl, 64, 64, "%{border='0px', alt=$user.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+		#end
+	</div>
+	<div class="checkbox">
+	    <form>
+	        <input type="checkbox" value="$user.Id" />
+	    </form>
+	</div>
+	#if($isExact)<span class="exact-match">$core_v2_language.GetResource('ExactMatch')</span>#end
+	<div class="content-container">
+    	<h4 class="name">
+    	    $user.DisplayName #if($user.DisplayName != $user.Username)($user.Username)#end
+    	</h4>
+        <div class="attributes">
+    		<ul class="attribute-list">
+    			<li class="attribute-item">
+    				<span class="attribute-value">
+    				    #if ($user.AccountStatus == 'ApprovalPending')
+    				        $core_v2_language.GetResource('UserAccountStatus_PendingApproval')
+    				    #elseif ($user.AccountStatus == 'Approved')
+    				        $core_v2_language.GetResource('UserAccountStatus_Approved')
+    				    #elseif ($user.AccountStatus == 'Banned')
+    				        $core_v2_language.FormatString($core_v2_language.GetResource('UserAccountStatus_Banned'), $core_v2_language.FormatDate($user.BannedUntil))
+    				    #elseif ($user.AccountStatus == 'Disapproved')
+    				        $core_v2_language.GetResource('UserAccountStatus_Disapproved')
+    				    #elseif ($user.AccountStatus == 'PendingDeletion')
+    				        $core_v2_language.GetResource('UserAccountStatus_PendingDeletion')
+    				    #else
+    				        $core_v2_language.GetResource('UserAccountStatus_Unknown')
+    				    #end
+    				</span>
+    			</li>
+    			<li class="attribute-item">
+    				<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('Joined'), $core_v2_language.FormatDate($user.JoinDate))</span>
+    			</li>
+    			<li class="attribute-item">
+    				<span class="attribute-value">
+    				    #set($lastVisited = false)
+        			    #set($lastVisited = $user.LastVisitedDate)
+        			    #if ($lastVisited)
+        				    $core_v2_language.FormatString($core_v2_language.GetResource('LastVisited'), $core_v2_language.FormatDate($lastVisited))
+        				#else
+        				    $core_v2_language.GetResource('NeverVisited')
+        				#end
+    				</span>
+    			</li>
+    			<li class="attribute-item">
+    				<span class="attribute-value">
+                        #set ($postUrl = false)
+                        #set ($postUrl = $core_v1_reportingUrls.Content("%{userIds = '$user.Id.ToString()', startDate = '$core_v2_utility.CurrentDate.AddYears(-1)', endDate = '$core_v2_utility.CurrentDate', datePeriod = 'month'}"))
+
+                        #if (!$postUrl)
+                            #set ($postUrl = $core_v2_urls.Search("%{QueryString = 'q=user:$user.Id'}"))
+                        #end
+
+    				    <a href="$core_v2_encoding.HtmlAttributeEncode($postUrl)" target="_blank">
+        			        #if ($user.TotalPosts == 1)
+        			            $core_v2_language.FormatString($core_v2_language.GetResource('PostCount'), $core_v2_language.FormatNumber($user.TotalPosts))
+        			        #else
+        			            $core_v2_language.FormatString($core_v2_language.GetResource('PostsCount'), $core_v2_language.FormatNumber($user.TotalPosts))
+        			        #end
+            			</a>
+    				</span>
+    			</li>
+    			<li class="attribute-item">
+    				<span class="attribute-value">
+    				    <a href="mailto:$core_v2_encoding.HtmlAttributeEncode($user.PrivateEmail)">
+    				        $core_v2_encoding.HtmlAttributeEncode($user.PrivateEmail)
+    				    </a>
+    				</span>
+    			</li>
+    		</ul>
+    	</div>
+
+    	<div class="content expandable">
+    	    #set($bio = false)
+    		#set($bio = $!core_v2_language.Truncate($!user.Bio(), 200, '...'))
+    		#if ($bio && $bio.Length > 0)
+    		    $bio
+    		#else
+    		    $core_v2_language.GetResource('NoBio')
+    		#end
+    	</div>
+    	<div class="actions expandable">
+    		<div class="navigation-list ui-links" data-direction="horizontal">
+    			<ul>
+    			    #if ($user.Url)
+        				<li class="navigation-list-item">
+        					<a href="$core_v2_encoding.HtmlAttributeEncode($user.Url)" target="_blank">
+        						$core_v2_language.GetResource('View')
+        					</a>
+        				</li>
+        			#end
+    				<li class="navigation-list-item">
+    					<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.EditUser($user.Id))">
+    						$core_v2_language.GetResource('Edit')
+    					</a>
+    				</li>
+					#if (!$user.IsSystemAccount)
+    				<li class="navigation-list-item">
+    					<a href="#" data-messagename="membersearch.delete"
+    						data-userid="$user.Id">
+    						$core_v2_language.GetResource('Delete')
+    					</a>
+    				</li>
+					#end
+					#if (!$user.IsSystemAccount)
+					#set($displayName = "$user.DisplayName #if($user.DisplayName != $user.UserName)($user.UserName)#end")
+    				<li class="navigation-list-item">
+    					<a href="#" data-messagename="membersearch.merge"
+    						data-userid="$user.Id" data-displayName="$core_v2_encoding.HtmlAttributeEncode($displayName)">
+    						$core_v2_language.GetResource('MergeInto')
+    					</a>
+    				</li>
+					#end
+    				<li class="navigation-list-item">
+    					<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+    				</li>
+    				<li class="navigation-list-item">
+    					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+    				</li>
+    			</ul>
+    		</div>
+    	</div>
+    </div>
+</li>

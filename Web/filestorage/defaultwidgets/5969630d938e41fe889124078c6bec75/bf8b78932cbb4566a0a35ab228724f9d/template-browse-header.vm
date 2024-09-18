@@ -1,0 +1,41 @@
+﻿## Provider Filter
+
+#set ($providers = $context.ListProviders())
+#set ($themes = $context.ListThemes())
+<span class="label">Viewing</span>
+<select class="provider-select">
+	#set ($category = '')
+	#foreach ($provider in $providers)
+	#beforeall
+		<option value="all-global" selected>$core_v2_language.GetResource('AllWidgets')</option>
+		<option value="Custom">$core_v2_language.GetResource('UserInstalledWidgets')</option>
+		<option value="FactoryDefault">$core_v2_language.GetResource('DefaultWidgets')</option>
+		<option value="CustomizedDefault">$core_v2_language.GetResource('EditedDefaultWidgets')</option>
+
+		#set ($category = $core_v2_language.GetResource('ThemePageWidgets'))
+		<optgroup label="$core_v2_encoding.HtmlAttributeEncode($category)">
+		<option value="all-themepage">$core_v2_language.GetResource('All')</option>
+	#each
+		#if ($provider.CategoryName != $category)
+			#if ($category != '')
+				</optgroup>
+			#end
+			<optgroup label="$core_v2_encoding.HtmlAttributeEncode($provider.CategoryName)">
+		#end
+		<option value="Provider:$provider.Id">$core_v2_encoding.HtmlEncode($provider.Name)</option>
+		#set ($category = $provider.CategoryName)
+	#afterall
+		</optgroup>
+	#end
+</select>
+<span class="label">$core_v2_language.GetResource('widgetswith')</span>
+
+## Theme Filter
+
+<select class="theme-select">
+	<option value="all">$core_v2_language.GetResource('Any')</option>
+	#foreach ($theme in $themes)
+		<option value="$theme.Id">$core_v2_encoding.HtmlEncode($theme.Title)</option>
+	#end
+</select>
+<span class="label">$core_v2_language.GetResource('themeversionand')</span>

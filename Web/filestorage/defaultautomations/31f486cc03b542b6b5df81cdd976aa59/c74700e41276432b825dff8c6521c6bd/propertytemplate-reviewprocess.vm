@@ -1,0 +1,101 @@
+<link type="text/css" rel="stylesheet" href="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('propertytemplate-reviewprocess-ui.less'))" />
+
+<div id="${context_v2_propertyTemplate.UniqueId}_process" class="content-list simple phase-list">
+    <span class="ui-loading" width="48" height="48"></span>
+</div>
+<a href="#" id="${context_v2_propertyTemplate.UniqueId}_addphase" class="inline-button" style="display: none;">$core_v2_language.GetResource('AddPhase')</a>
+
+#*
+
+JSON configuration:
+{
+    phases: [
+        {
+            id: 1,
+            name: 'Text',
+            reviewers: {
+                users: [{
+                    id: 1,
+                    name: 'Last known name of user'
+                    }, ...],
+                roles: [{
+                    id: 1,
+                    name: 'Last known name of role'
+                    }, ...]
+            }
+        },
+        ...
+    ]
+}
+
+*#
+
+<script type="text/html" id="${context_v2_propertyTemplate.UniqueId}_ViewPhaseTemplate">
+    <div class="phase content-item">
+        <h3 class="phase-name">
+            <%: name %>
+        </h3>
+        <div class="phase-reviewers">
+            <% var reviewerCount = 0; %>
+            #format($core_v2_language.GetResource('View_ReviewedBy'))
+                #token('reviewers')
+                    <% foreach(reviewers.users, function(user){ reviewerCount++; if (reviewerCount > 1) { %>, <% } %><%= user.name %><% }); %><% foreach(reviewers.roles, function(role){ reviewerCount++; if (reviewerCount > 1) { %>, <% } %><%= role.name %><% }); %>
+                    <% if (reviewers.users.length == 0 && reviewers.roles.length == 0) { %>$core_v2_language.GetResource('View_ReviewedBy_NoOne')<% } %>
+            #end
+        </div>
+        #if ($context_v2_propertyTemplate.Property.Editable)
+            <div class="phase-actions">
+                <a href="#" class="phase-moveup">$core_v2_language.GetResource('MoveUp')</a>
+                <a href="#" class="phase-movedown">$core_v2_language.GetResource('MoveDown')</a>
+                <a href="#" class="phase-edit">$core_v2_language.GetResource('Edit')</a>
+                <a href="#" class="phase-remove">$core_v2_language.GetResource('Remove')</a>
+            </div>
+        #end
+    </div>
+</script>
+
+<script type="text/html" id="${context_v2_propertyTemplate.UniqueId}_EditPhaseTemplate">
+    <div class="phase content-item editable">
+        <div class="phase-nameoptions">
+            <label for="${context_v2_propertyTemplate.UniqueId}_phasename_<%= id %>" class="field-item-name">$core_v2_language.GetResource('Edit_PhaseName')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Edit_PhaseName_Description')</span>
+            <span class="field-item-input">
+                <input type="text"  class="phase-name" id="${context_v2_propertyTemplate.UniqueId}_phasename_<%= id %>" value="<%: name %>" />
+            </span>
+        </div>
+        <div class="phase-revieweroptions">
+            <label for="${context_v2_propertyTemplate.UniqueId}_phasereviewers_<%= id %>" class="field-item-name">$core_v2_language.GetResource('Edit_Reviewers')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Edit_Reviewers_Description')</span>
+            <span class="field-item-input">
+                <% var reviewerCount = 0; %>
+                <input type="text" class="phase-reviewers" id="${context_v2_propertyTemplate.UniqueId}_phasereviewers_<%= id %>" value="<% foreach(reviewers.users, function(user){ reviewerCount++; if (reviewerCount > 1) { %>,<% } %>user:<%= user.id %><% }); %><% foreach(reviewers.roles, function(role){ reviewerCount++; if (reviewerCount > 1) { %>,<% } %>role:<%= role.id %><% }); %>" />
+            </span>
+        </div>
+        #if ($context_v2_propertyTemplate.Property.Editable)
+            <div class="phase-actions">
+                <a href="#" class="phase-moveup">$core_v2_language.GetResource('MoveUp')</a>
+                <a href="#" class="phase-movedown">$core_v2_language.GetResource('MoveDown')</a>
+                <a href="#" class="phase-apply">$core_v2_language.GetResource('Apply')</a>
+                <a href="#" class="phase-remove">$core_v2_language.GetResource('Remove')</a>
+            </div>
+        #end
+    </div>
+</script>
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('propertytemplate-reviewprocess-ui.js'))"></script>
+<script type="text/javascript">
+jQuery(function() {
+    jQuery.telligent.evolution.propertyTemplates.reviewProcess.register({
+       jsonApi: $context_v2_propertyTemplate.JsonApi,
+       formId: '$context_v2_propertyTemplate.FormId',
+       uniqueId: '$context_v2_propertyTemplate.UniqueId',
+       noUserOrRoleMatchesText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Edit_Reviewers_NoUsersOrRolesFound'))',
+       defaultPhaseNameText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DefaultPhaseName'))',
+       confirmPhaseRemoveText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete_Confirm'))',
+       findUsersOrRolesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-find-usersorroles.vm'))', 
+       loadUsersAndRolesUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-load-usersandroles.vm'))',
+       initialValue: '$!core_v2_encoding.JavascriptEncode($!context_v2_propertyTemplate.Value)',
+       editable: #if($context_v2_propertyTemplate.Property.Editable) true #else false #end
+    });
+});
+</script>

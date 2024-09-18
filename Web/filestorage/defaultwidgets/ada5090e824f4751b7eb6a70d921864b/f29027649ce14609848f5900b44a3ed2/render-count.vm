@@ -1,0 +1,11 @@
+##
+## Expects in scope: $users, $inProcess
+##
+
+#if ($users.TotalCount == 1)
+    $core_v2_language.FormatString($core_v2_language.GetResource('Members_Singular'), $users.TotalCount.ToString())
+#elseif($users.TotalCount == 0)
+    <div style="display:hidden"></div>
+#else
+    $core_v2_language.FormatString($core_v2_language.GetResource('Members_Plural'), $users.TotalCount.ToString("N0"))
+#end

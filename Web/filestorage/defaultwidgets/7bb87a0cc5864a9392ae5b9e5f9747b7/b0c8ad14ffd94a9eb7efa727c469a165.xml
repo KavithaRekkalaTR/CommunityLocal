@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:LikesWidget_Title}" version="11.0.0.0" description="${resource:LikesWidget_Description}" instanceIdentifier="b0c8ad14ffd94a9eb7efa727c469a165" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="liked-content" lastModified="2020-01-14 16:08:37Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($filterType = false)
+#set($filterType = $core_v2_widget.GetStringValue('filterType', ''))
+#if(!$filterType)
+	#set($user = false)
+	#set($user = $core_v2_user.Current)
+	#if($user)
+		#set($filterType = 'Current')
+		$core_v2_widget.SetStringValue('filterType', $filterType)
+	#else
+		#set($filterType = 'Accessing')
+		$core_v2_widget.SetStringValue('filterType', $filterType)
+	#end
+#end
+
+#set($user = false)
+#if ($filterType == 'Current')
+	#set($user = $core_v2_user.Current)
+#else
+	#set($user = $core_v2_user.Accessing)
+#end
+
+#if (!$user)
+	$core_v2_widget.Hide()
+#end
+
+$core_v2_ui.PagedContent('likes.vm')
+$core_v2_ui.Pager($likes.PageIndex, $likes.PageSize, $likes.TotalCount, "%{PagedContentFile='likes.vm'}")
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+	$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Title}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="fragmentHeader" labelResourceName="Configuration_Title" defaultValue="${resource:Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageSize" labelResourceName="Configuration_PageSize" defaultValue="15" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="filterType" labelResourceName="Configuration_Filter" dataType="String">
+		<propertyValue value="Accessing" labelResourceName="Configuration_Filter_AccessingUser" />
+		<propertyValue value="Current" labelResourceName="Configuration_Filter_CurrentUser" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_Filter">Show likes for</resource>
+  <resource name="Configuration_Filter_AccessingUser">Accessing user</resource>
+  <resource name="Configuration_Filter_CurrentUser">Contextual user</resource>
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Configuration_PageSize">Page Size</resource>
+  <resource name="Configuration_Title">Widget Title</resource>
+  <resource name="LikesWidget_Description">Shows content liked by a user.</resource>
+  <resource name="LikesWidget_Title">Liked Content</resource>
+  <resource name="No_Likes_Message">{0} has not yet liked anything.</resource>
+  <resource name="Title">Likes</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

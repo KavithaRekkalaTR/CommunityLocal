@@ -1,0 +1,373 @@
+## configuration
+#set ($showLikes = $core_v2_widget.GetBoolValue('showLikes', 'false'))
+#set ($showRatings = $core_v2_widget.GetBoolValue('showRatings', 'false'))
+
+## context
+#set ($forum = $core_v2_forum.Current)
+#set ($thread = $core_v2_forumThread.Current)
+#set ($currentReply = $core_v2_forumReply.Current)
+#set ($wikiPage = $core_v2_wikiPage.Current)
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($pageSize = $core_v2_widget.GetIntValue('pageSize', 15))
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($explicitPageIndex = false)
+#set ($explicitPageIndex = $core_v2_page.GetQueryStringValue($core_v2_ui.PageIndexQueryStringKey))
+#if(!$explicitPageIndex && $currentReply && $currentReply.Id != $thread.Id)
+	#set($pageIndex = $core_v2_forumReply.GetForumReplyPageIndex($thread.Id, $currentReply.Id, "%{PageSize = $pageSize, IncludeThreadStarter = 'False'}"))
+	#set($canonicalPageIndex = $pageIndex + 1)
+	$core_v2_page.SetCanonicalLink($core_v2_page.AdjustQueryString($core_v2_forumUrls.Thread($thread.Id), "$core_v2_ui.PageIndexQueryStringKey=$canonicalPageIndex"))
+#end
+
+## permission
+#set ($isRegistered = $core_v2_user.IsRegistered($accessingUser.Id))
+#set ($hasModeratePermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReviewAbuse, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+#set ($hasModifyThreadPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+#set ($hasReadForumPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReadForum, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+#if (!$hasReadForumPermission)
+	$core_v2_widget.Hide()
+#end
+#set ($hasModerateUsersPermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+#set ($hasReplyPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.CreateReply, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+
+## filtering
+#set ($query = "%{PageIndex = $pageIndex, PageSize = $pageSize, IncludeThreadStarter = 'False'}")
+#set ($currentFilter = 'all')
+#set ($currentFilter = $core_v2_page.GetQueryStringValue('filter'))
+#set($hasAnswers = $thread.ThreadStatus == 'AnsweredNotVerified' || $thread.ThreadStatus =='Answered')
+#if($hasAnswers)
+	#if($thread.ThreadStatus == 'Answered' && $currentFilter != 'all' && (!$core_v2_forumReply.Current || $currentFilter == 'answers'))
+		#set($query.ForumReplyQueryType = 'verified-answers')
+		#set($query.SortBy = 'TotalVotes')
+		#set($query.SortOrder = 'Descending')
+		#set($currentFilter = 'answers')
+	#elseif($thread.ThreadStatus == 'AnsweredNotVerified' && $currentFilter == 'answers')
+		#set($query.ForumReplyQueryType = 'non-verified-answers')
+	#else
+		#set($currentFilter = 'all')
+	#end
+#end
+
+#if($wikiPage)
+	#set($wikiPageUrl = $core_v2_wikiUrls.Page($wikiPage.Id))
+	#set($wikiEditPageUrl = $core_v2_wikiUrls.EditPage($wikiPage.Id, $thread.Id))
+	<div class="message margin-bottom">
+		$core_v2_language.FormatString($core_v2_language.GetResource("Wiki_CapturedThread"), "<a href='$wikiPageUrl' class='internal-link view-post'>$wikiPage.Title</a>")
+		#if($wikiEditPageUrl)
+			<div>
+				<a href='$wikiEditPageUrl'>$core_v2_language.GetResource("Wiki_Recapture")</a>
+			</div>
+		#end
+		#if($hasModifyThreadPermission)
+			<div>
+				<a href="#" data-messagename="telligent.evolution.widgets.threadStart.unlinkwiki" data-threadid="$thread.Id">$core_v2_language.GetResource("Wiki_Capture_Delete")</a>
+			</div>
+		#end
+	</div>
+#end
+
+## render
+
+##
+## Renders a Thread Starter or Reply
+##
+
+#set ($hasMarkAnswerPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.MarkAsAnswer, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumReply.ContentTypeId }").IsAllowed)
+
+#set ($isQA = false)
+#if ($thread.ThreadType == 'QuestionAndAnswer')
+	#set ($isQA = true)
+#end
+
+#set ($hasAttachment = false)
+#set ($hasAttachment = $thread.File && $thread.File.FileUrl)
+#set ($mediaType = false)
+#set ($mediaRendered = false)
+#if ($hasAttachment)
+	#set ($mediaType = $core_v2_ui.GetMediaType($thread.File.FileUrl, "%{ ViewType = 'View' }"))
+#end
+
+#set ($statusClass = '')
+
+#set ($replyFormId = $core_v2_widget.UniqueId("replyFormId${thread.ContentId}"))
+#set ($composeReplyId = $core_v2_widget.UniqueId("composeReply${thread.ContentId}"))
+#set ($cancelReplyId = $core_v2_widget.UniqueId("cancelReply${thread.ContentId}"))
+#set ($enableFullEditor = $core_v2_widget.GetBoolValue('enableFullEditor', false))
+
+<div class="content full" #if (!$isThread)id="$thread.Id"#end>
+
+	<h1 class="name">$thread.Subject</h1>
+
+	<div class="author header thread-starter">
+		<span class="user-name">
+			#if ($thread.Author.ProfileUrl)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Author.ProfileUrl)" class="internal-link view-user-profile">
+					$thread.Author.DisplayName
+				</a>
+			#else
+				$thread.Author.DisplayName
+			#end
+			#if($thread.UserHostAddress && $thread.UserHostAddress != "")
+				<span class="host-address">
+					$thread.UserHostAddress
+				</span>
+			#end
+		</span>
+		<div class="avatar">
+			#if ($thread.Author.ProfileUrl)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Author.ProfileUrl)">
+					$core_v2_ui.GetResizedImageHtml($thread.Author.AvatarUrl, 32, 32, "%{border='0', alt=$thread.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+				</a>
+			#else
+				$core_v2_ui.GetResizedImageHtml($thread.Author.AvatarUrl, 32, 32, "%{border='0', alt=$thread.Author.DisplayName, ResizeMethod='ZoomAndCrop'}")
+			#end
+		</div>
+	</div>
+
+
+	<div class="actions header thread-starter">
+		<div class="ui-links navigation-list"
+			data-minlinks="2"
+			data-direction="horizontal"
+			data-maxlinks="2">
+			<ul class="navigation-list">
+				## Post Date
+				<li class="navigation-list-item date">
+					<span class="attribute-value">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($thread.Url)">$core_v2_language.FormatDateAndTime($thread.Date)</a>
+					</span>
+				</li>
+
+			</ul>
+		</div>
+	</div>
+
+	## audio/video
+	#if ($hasAttachment && ($mediaType == 'Video' || $mediaType == 'Audio'))
+		<div class="attachment">
+			$core_v2_ui.GetViewHtml($thread.File.FileUrl, "%{ AdjustToContainer = 'true' }")
+			<a href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)">$thread.File.FileName</a>
+		</div>
+		#set ($mediaRendered = true)
+	#end
+
+	<div class="content">
+		#if ($thread.ParentId && $thread.ParentId > 0)
+			#set ($parent = false)
+			#set ($parent = $core_v2_forumReply.Get($thread.ParentId))
+			#if ($parent)
+				#if ($thread.Id == $thread.ParentId)
+					<p class="in-reply-to">$core_v2_language.FormatString($core_v2_language.GetResource('InReplyTo'), $core_v2_encoding.HtmlAttributeEncode($thread.Url), $thread.Author.DisplayName)</p>
+				#else
+					<p class="in-reply-to">$core_v2_language.FormatString($core_v2_language.GetResource('InReplyTo'), $core_v2_encoding.HtmlAttributeEncode($parent.Url), $parent.Author.DisplayName)</p>
+				#end
+			#end
+		#end
+		$thread.Body("Web")
+		#if($thread.EmailFiles && $thread.EmailFiles.Count() > 0)
+			#foreach($emailFile in $thread.EmailFiles)
+			#beforeall
+				<div class="content-list thumbnail ui-masonry margin-top" data-columnclass="thumbnail-column">
+			#each
+				<div class="content-item content thumbnail" data-hasmore="false" data-url="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)">
+					<div class="avatar">
+						$core_v2_ui.GetPreviewHtml($emailFile.DirectDownloadUrl, "%{ Width = 140 }")
+						</div>
+						<h3 class="name">
+							<a href="$core_v2_encoding.HtmlAttributeEncode($emailFile.ViewUrl)">$core_v2_encoding.HtmlEncode($emailFile.FileName)</a>
+						</h3>
+				</div>
+			#afterall
+				</div>
+			#end
+		#end
+		#if($thread.EditNotes && $thread.EditNotes != "" && $core_v2_forumConfiguration.DisplayEditNotes)
+			<br /><br />
+			$thread.EditNotes
+			<br />
+		#end
+	</div>
+
+	## viewable non audio/video
+	#if (!$mediaRendered && $hasAttachment && $mediaType && $mediaType != 'Empty')
+		<div class="attachment margin-bottom">
+			<ul class="navigation-list">
+				<li class="navigation-list-item">
+					<a class="file-name" href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)">$thread.File.FileName</a>
+				</li>
+				<li class="navigation-list-item view-attachment">
+					<a href="#" data-messagename="telligent.evolution.widgets.threadStart.viewattachment">$core_v2_language.GetResource('view')</a>
+				</li>
+				<li class="navigation-list-item hide-attachment">
+					<a href="#" data-messagename="telligent.evolution.widgets.threadStart.hideattachment" class="hidden">$core_v2_language.GetResource('hide')</a>
+				</li>
+			</ul>
+			<div class="viewer hidden margin-bottom">
+				$core_v2_ui.GetViewHtml($thread.File.FileUrl, "%{ AdjustToContainer = 'true' }")
+			</div>
+		</div>
+		#set ($mediaRendered = true)
+	#end
+
+	## non-viewable
+	#if (!$mediaRendered && $hasAttachment && !$mediaType || $mediaType == 'Empty')
+		<a class="file-name" href="$core_v2_encoding.HtmlAttributeEncode($thread.File.FileUrl)">$thread.File.FileName</a>
+		#set ($mediaRendered = true)
+	#end
+
+	<div class="actions footer">
+		#set($maxLinks = 1)
+
+		#set ($hasRatings = false)
+		#if ($showRatings && $core_v2_forumThread.AreRatingsEnabled($thread.Id))
+			#set ($hasRatings = true)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		#set ($hasLikes = false)
+		#if ($showLikes && $core_v2_like.SupportsLikes($thread.GlobalContentTypeId))
+			#set ($hasLikes = true)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		##check if replies are allowed
+		#set ($allowsReplies = false)
+		#if ($core_v2_forumThread.AllowsReplies($thread.ContentId) && !$thread.IsLocked)
+			#set ($allowsReplies = true)
+		#end
+
+		#set ($hasReply = false)
+		#if (($hasModeratePermission || $allowsReplies) && $hasReplyPermission)
+			#set ($hasReply = true)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		## check if user is anonymous
+		#set($isAnonymous = true)
+		#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+			#set($isAnonymous = false)
+		#end
+
+		#set ($userMustLogin = false)
+		#set ($userMustLogin = $allowsReplies && $isAnonymous)
+
+		#if ($isRegistered)
+			#set ($maxLinks = $maxLinks + 1)
+		#end
+
+		#set ($postActionsId = $core_v2_widget.UniqueId("postActions-${thread.ContentId}"))
+
+		<div class="ui-links navigation-list"
+			data-minlinks="$maxLinks"
+			data-direction="horizontal"
+			data-maxlinks="$maxLinks"
+			id="$core_v2_encoding.HtmlAttributeEncode($postActionsId)">
+			<ul class="navigation-list">
+
+				## Reply to Post
+				#if ($hasReply || $userMustLogin)
+					<li class="navigation-list-item compose primary">
+						<a data-messagename="telligent.evolution.widgets.threadStart.composereply"
+							href="#"
+							data-cancelid="$core_v2_encoding.HtmlAttributeEncode($cancelReplyId)"
+							data-replyformid="$core_v2_encoding.HtmlAttributeEncode($replyFormId)"
+							id="$core_v2_encoding.HtmlAttributeEncode($composeReplyId)"
+							#if ($thread.ReplyCount == 0) class="hidden"#end>
+							$core_v2_language.GetResource('Reply')
+						</a>
+					</li>
+					<li class="navigation-list-item cancel">
+						<a data-messagename="telligent.evolution.widgets.threadStart.cancelreply"
+							href="#"
+							data-composeid="$core_v2_encoding.HtmlAttributeEncode($composeReplyId)"
+							data-replyformid="$core_v2_encoding.HtmlAttributeEncode($replyFormId)"
+							id="$core_v2_encoding.HtmlAttributeEncode($cancelReplyId)"
+							#if ($thread.ReplyCount > 0) class="hidden"#end>
+							$core_v2_language.GetResource('cancel')
+						</a>
+					</li>
+				#end
+
+				## Like Post
+				#if ($hasLikes)
+					#set ($likeFormat = "{count}")
+					#if ($core_v2_like.CanLike($thread.ContentId, $thread.GlobalContentTypeId))
+						#set ($likeFormat = "{toggle} {count}")
+					#end
+					<li class="navigation-list-item like">
+						$core_v2_ui.Like($thread.ContentId, $thread.GlobalContentTypeId, "%{ Format = $likeFormat, IncludeTip = 'true' }")
+					</li>
+				#end
+
+				## Rate Post
+				#if ($hasRatings)
+					<li class="navigation-list-item rating">
+						$core_v2_ui.Rate($thread.ContentId, $core_v2_forumThread.ContentTypeId)
+					</li>
+				#end
+
+				## custom more link which we handle explicitly to first load more links
+				#if ($isRegistered)
+					<li class="navigation-list-item">
+						<a href="#"
+							data-messagename="widget.${core_v2_widget.WrapperElementId}.more"
+							data-forumapplicationid="$forum.ApplicationId"
+							data-threadcontentid="$thread.ContentId"
+							data-postactionsid="$core_v2_encoding.HtmlAttributeEncode($postActionsId)">$core_v2_language.GetResource('more')</a>
+					</li>
+				#end
+
+				## Report abuse
+				#if ($isRegistered)
+					<li class="navigation-list-item">
+						$core_v2_ui.Moderate($thread.ContentId, $thread.GlobalContentTypeId)
+					</li>
+				  #end
+
+				<li class="navigation-list-item">
+					<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+				</li>
+
+			</ul>
+		</div>
+	</div>
+
+	#if ($hasReply || $userMustLogin)
+		<form><fieldset #if ($thread.ReplyCount > 0) class="hidden"#end id="$core_v2_encoding.HtmlAttributeEncode($replyFormId)">
+			<ul class="field-list">
+				<li class="field-item post-body">
+					<span class="field-item-input">
+						#set ($submittableEditorOptions = "%{}")
+						$submittableEditorOptions.Add('ContentTypeId', $core_v2_forumReply.ContentTypeId.ToString())
+						$submittableEditorOptions.Add('Width','100%')
+						$submittableEditorOptions.Add('Height','60px')
+						$submittableEditorOptions.Add('Placeholder', $core_v2_language.GetResource('placeholder'))
+						$submittableEditorOptions.Add('AutoResize', true)
+						#if ($userMustLogin)
+							$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('Reply_EnterToLogin'))
+							$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('Reply_Login'))
+						#else
+							$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('Reply_EnterToReply'))
+							$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('Reply_Reply'))
+						#end
+
+						#set ($dq = '"')
+						#set ($fullEditorLink = '')
+						#if ($enableFullEditor)
+							#set ($fullEditorLink = "<a href=${dq}#${dq} data-threadid=${dq}${thread.Id}${dq} data-messagename=${dq}telligent.evolution.widgets.threadStart.fullEditor${dq} class=${dq}inline-button${dq}>${core_v2_language.GetResource('full_editor')}</a>")
+						#end
+						#if ($thread.ThreadType == 'QuestionAndAnswer')
+							#set ($suggestAnswer = "<span class=${dq}suggest-field${dq}><input type=${dq}checkbox${dq} id=${dq}${suggestId}${dq} class=${dq}suggest${dq} /><label for=${dq}${suggestId}${dq}>${core_v2_language.GetResource('suggest_as_answer')}</label></span>")
+							$submittableEditorOptions.Add('BeforeHtml', "${fullEditorLink}${suggestAnswer}")
+						#else
+							$submittableEditorOptions.Add('BeforeHtml', "${fullEditorLink}")
+						#end
+
+						$core_v2_submittableEditor.Render($editorId, "function() { jQuery.telligent.evolution.messaging.publish('telligent.evolution.widgets.threadStart.submit', { from: '$core_v2_widget.WrapperElementId', #if ($userMustLogin) login: true #else login: false #end, forumId: $forum.Id , threadId: $thread.Id }); }", $submittableEditorOptions)
+					</span>
+					<span class="field-item-validation" style="display: none;"></span>
+					<span class="processing hidden"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+				</li>
+			</ul>
+		</fieldset></form>
+	#end
+</div>

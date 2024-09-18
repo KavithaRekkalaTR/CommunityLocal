@@ -1,0 +1,396 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.shadow-on-hover {
+	.transition(all .2s);
+	&:hover {
+		box-shadow: 0 0px 2px fade(@color-foreground, 25%), 0 3px 15px fade(@color-foreground, 25%);
+	}
+	&:active {
+		box-shadow: 0 0px 1px fade(@color-foreground, 25%), 0 2px 5px fade(@color-foreground, 25%);
+	}
+	&.disabled {
+		&:hover {
+			box-shadow: none;
+		}
+	}
+}
+.button-style(@padding-horizontal: (@spacing * 3);
+	@padding-vertical: (@spacing * 1.5);
+	@radius: 3px;
+	@background-color: @color-accent;
+	@foreground-color: @color-background;
+	@margin-right: @spacing;
+	@display: inline-block;
+	@hover-background-color: @color-accent;
+	@hover-foreground-color: @color-background;
+	@focus-background-color: @color-accent;
+	@focus-foreground-color: @color-background;)
+{
+	padding: @padding-vertical @padding-horizontal @padding-vertical @padding-horizontal;
+	border: 0px;
+	border-radius: @radius;
+	text-align: center;
+	display: @display;
+	background-color: @background-color;
+	color: @foreground-color;
+	font-size: @font-size;
+	margin-right: @margin-right;
+	&:active {
+		background-color: -evo-decrease-contrast(@hover-background-color, 10%, @hover-foreground-color, @color-contrast);
+		color: @hover-foreground-color;
+	}
+	&:focus {
+		background-color: -evo-decrease-contrast(@focus-background-color, 10%, @focus-foreground-color, @color-contrast);
+		color: @focus-foreground-color;
+	}
+	&:hover {
+		background-color: -evo-increase-contrast(@hover-background-color, 10%, @hover-foreground-color, @color-contrast);
+		color: @hover-foreground-color;
+	}
+	&.disabled {
+		background-color: -evo-decrease-contrast(@hover-background-color, 25%, @hover-foreground-color, @color-contrast);
+		cursor: default;
+		&:hover {
+			color: @foreground-color;
+		}
+	}
+}
+.button-style(@shadow: true) when (@shadow = true) {
+	.shadow-on-hover;
+	&.disabled {
+		&:hover {
+			box-shadow: none;
+		}
+	}
+}
+a.button-style-big,
+.button-style-big {
+	.button-style;
+}
+
+// forms
+fieldset {
+	border: 0px;
+	margin: 0px;
+	padding: 0px;
+	font-size: (1 * @font-size);
+	h1,h2,h3 {
+		font-family: @font-family;
+		font-weight: @font-weight;
+		font-size: @font-size * 2.2;
+		color: @color-foreground;
+		margin: 1em 0 1em 0;
+	}
+	.field-list {
+		.field-item {
+			// nested .field-list
+			.field-list {
+				margin-top: @spacing * 2;
+			}
+			// nested .field-item
+			.field-item {
+				padding: 0 0 0 (@spacing * 2.75);
+			}
+			margin: @spacing 0 (@spacing * 3) 0;
+			&:last-child {
+				margin-bottom: @spacing;
+			}
+			.field-item-header, .field-item-name, .field-item-description, .field-item-input, .field-item-validation {
+				display: block;
+				margin: (@spacing / 2) 0 (@spacing / 1.5) 0;
+				font-family: @font-family;
+				font-weight: @font-weight;
+			}
+			.field-item-name, .field-item-header {
+				font-size: @font-size * 1.1;
+			}
+			.field-item-description {
+				color: -evo-decrease-contrast(@color-foreground, 44%, @color-background, @color-contrast);
+				margin: 0;
+
+			}
+			&.message.error {
+				.field-item-description {
+					color: @color-attention;
+					margin: 0;
+				}
+			}
+			.field-item-input {
+				margin-bottom: @spacing / 3;
+				label {
+					position: relative;
+					top: 1px;
+
+					&.hidden { display: none; }
+				}
+
+				/*
+				.glowDropDownList > span {
+					min-width: 480px;
+				}
+				*/
+
+				table.form {
+					width: 100%;
+
+					td, th {
+						padding: (@spacing / 2);
+						text-align: left;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						word-wrap: break-word;
+					}
+					thead > tr > th {
+						font-weight: normal;
+						vertical-align: bottom;
+						white-space: nowrap;
+						border-bottom: solid 1px @color-foreground;
+						.multiselect {
+							display: block;
+							font-size: @font-size * .75;
+							white-space: nowrap;
+						}
+					}
+					tbody > tr > th {
+						font-weight: normal;
+						white-space: nowrap;
+						border-bottom: solid 1px @color-foreground;
+					}
+					tr > td {
+						border-bottom: solid 1px -evo-decrease-contrast(@color-background, 6%, @color-foreground, @color-contrast);
+					}
+				}
+
+				.processing {
+					color: -evo-decrease-contrast(@color-background, 31%, @color-foreground, @color-contrast);
+					display: inline-block;
+					height: 44px;
+					padding: 14px;
+				}
+			}
+			.field-item-validation {
+				color: @color-attention;
+				margin-top: 0;
+				font-size: @font-size * .9;
+			}
+
+			&.upload-with-preview {
+				> .field-item-input.file {
+					border: 1px solid -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+					box-sizing: border-box;
+					border-radius: 3px 3px 0 0;
+					padding: 0;
+					margin: 0;
+					border-bottom-width: 0;
+
+					input {
+						border-width: 0;
+						padding: 4px;
+						margin: 0;
+						width: 100%;
+					}
+				}
+
+				> .field-item-input.preview {
+					border: 1px solid -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+					box-sizing: border-box;
+					border-radius: 0 0 3px 3px;
+					padding: 0 0 3px 0;
+					margin: 0;
+					background-color: -evo-decrease-contrast(@color-background, 9%, @color-foreground, @color-contrast);
+					border-top: solid 1px -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+
+					&:not(:empty) { padding: 4px; }
+					&:empty {
+						border-top-width: 0;
+						background-color: inherit;
+					}
+
+					> img {
+						margin: 0 auto;
+						display: inherit;
+					}
+				}
+
+				> .field-item-input > a.upload {
+					.prepend_icon(@upload);
+				}
+			}
+		}
+	}
+	input:focus,
+	select:focus,
+	textarea:focus,
+	button:focus {
+		outline: 0;
+	}
+	select {
+		background-color: @color-background;
+		color: @color-foreground;
+		border: 1px solid -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+		font-family: @font-family;
+		font-size: (1 * @font-size);
+		border-radius: 3px;
+		padding: 6px;
+	}
+	.range-label {
+		display: block;
+		text-align: center;
+		padding: 6px;
+		width: 50%;
+	}
+	input[type="range"] {
+		width: 50%;
+	}
+	input[type="search"],
+	input[type="password"],
+	input[type="text"],
+	input[type="number"],
+	input[type="input"],
+	textarea {
+		background-color: @color-background;
+		color: @color-foreground;
+		-webkit-appearance: none;
+		border: 1px solid -evo-decrease-contrast(@color-background, 19%, @color-foreground, @color-contrast);
+		padding: 6px;
+		font-size: (1 * @font-size);
+		font-family: @font-family;
+		box-sizing: border-box;
+		width: 50%;
+		resize: none;
+		border-radius: 3px;
+		.transition(border-left .1s);
+		&:hover, &:focus {
+			border-color: -evo-decrease-contrast(@color-link, 23%, @color-background, @color-contrast);
+		}
+		&.full {
+			width: 100%;
+		}
+		&::placeholder { color: -evo-decrease-contrast(@color-background, 45%, @color-foreground, @color-contrast); }
+		&::-webkit-input-placeholder { color: -evo-decrease-contrast(@color-background, 45%, @color-foreground, @color-contrast); }
+		&::-moz-placeholder { color: -evo-decrease-contrast(@color-background, 45%, @color-foreground, @color-contrast); }
+		&:-moz-placeholder { color: -evo-decrease-contrast(@color-background, 45%, @color-foreground, @color-contrast); }
+		&:-ms-input-placeholder { color: -evo-decrease-contrast(@color-background, 45%, @color-foreground, @color-contrast); }
+	}
+	input[type="search"] {
+		.round;
+		padding: 5px @spacing 5px @spacing;
+		font-size: .9 * @font-size;
+	}
+	input[type="checkbox"],input[type="radio"] {
+		margin: 0 @spacing 0 1px;
+	}
+	input[type="checkbox"] + label {
+		position: relative;
+		line-height: @font-size * 1.1;
+		margin: 0 @spacing 0 1px;
+	}
+	input[type="checkbox"] + label.hidden {
+		display: none !important;
+	}
+	select {
+		margin: 0 0 0 1px;
+		max-width: 100%;
+		&:focus, &:hover {
+			border-color: -evo-decrease-contrast(@color-link, 23%, @color-background, @color-contrast);
+		}
+	}
+	input[type="checkbox"], input[type="radio"] {
+		&:focus {
+			outline: 1px dotted -evo-increase-contrast(@color-accent, 40%, @color-background, @color-contrast);
+			outline: 1px dotted invert;
+			outline-offset: 0px;
+		}
+	}
+	textarea {
+		width: 100%;
+		overflow: auto;
+	}
+	.invalid {
+		input[type="text"],
+		textarea {
+			border-color: @color-attention;
+		}
+	}
+	a.submit-form,
+	input[type="button"],
+	a.save-form,
+	.button {
+		.button-style;
+		&.delete {
+			background-color: @color-negative;
+		}
+	}
+	input[type="button"] {
+		line-height: 30px;
+		height: 30px;
+		font-size: @font-size * .85;
+		padding: 0 (@spacing) 0 (@spacing);
+		background-color: -evo-decrease-contrast(@color-background, 42%, @color-foreground, @color-contrast);
+	}
+	&.inline {
+		margin: 0px;
+		padding: 0px;
+		.field-list {
+			.field-item {
+				margin: 0px;
+				padding: 0px;
+				.field-item-input {
+					margin: 0px;
+					padding: 0px;
+				}
+			}
+		}
+	}
+}
+
+
+
+.layout-region.right-sidebar fieldset {
+	h2, h3 {
+		font-size: @font-size * 1.5;
+	}
+
+	.field-list {
+		.field-item {
+			margin: (@spacing / 2) 0;
+		}
+	}
+
+	.uiselect > span {
+		width: 200px !important;
+	}
+
+	input[type="search"],
+	input[type="password"],
+	input[type="text"],
+	input[type="number"],
+	input[type="input"],
+	textarea {
+		width: 100%;
+	}
+}
+
+.cover-layout {
+	display: block;
+	padding-left: 210px;
+	padding-top: 10px;
+	background-repeat: no-repeat;
+	background-size: 200px 99px;
+	min-height: 100px;
+	&.cover {
+		background-image: url(-evo-themefile-url('covercover.png'));
+	}
+	&.contain {
+		background-image: url(-evo-themefile-url('covercontain.png'));
+	}
+	&.dynamic {
+		background-image: url(-evo-themefile-url('coverdynamic.png'));
+	}
+}

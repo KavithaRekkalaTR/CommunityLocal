@@ -1,0 +1,124 @@
+#set($profileFieldGroupIds = false)
+#set($profileFieldGroupIds = $core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('profileFieldGroupIds', '')).Values('profileFieldGroupId'))
+#if (!$profileFieldGroupIds || $profileFieldGroupIds.Count == 0)
+    $core_v2_widget.Hide()
+#end
+
+#set($groupListHtml = '')
+#set($groupContentHtml = '')
+#set($groupsShown = 0)
+#set($singleGroupTitle = '')
+#foreach($profileFieldGroupId in $profileFieldGroupIds)
+    #set ($profileFieldGroup = false)
+    #set ($profileFieldGroup = $core_v2_userProfileFieldGroup.Get($core_v2_utility.ParseInt($profileFieldGroupId)))
+    #set($groupXml = false)
+    #set($groupXml = $core_v2_userProfileFieldGroup.DynamicFormXml($core_v2_utility.ParseInt($profileFieldGroupId), "%{ReadOnly = $readOnly}"))
+    #if ($groupXml && $profileFieldGroup)
+        #set($formId = $core_v2_widget.UniqueId($profileFieldGroupId))
+        #if ($readOnly)
+			#set($form = false)
+			#set($form = $core_v2_dynamicForm.RenderForm($formId, $groupXml, $data, "%{GroupFooterHtmlFormat='',GroupHeaderHtmlFormat='',PropertyFooterHtmlFormat=$readonlyPropertyFooterFormat,PropertyHeaderHtmlFormat=$readonlyPropertyHeaderFormat,HidePropertiesWithoutValues='true'}"))
+			#if ($form && $form.Length > 0)
+			    #set($groupsShown = $groupsShown + 1)
+			    #store($html)
+    			    <div class="content full" data-content="$profileFieldGroup.Id">
+    	                <div class="attributes">
+    		                <ul class="attribute-list">
+    				            $form
+    			            </ul>
+                		</div>
+                    </div>
+                #end
+                #set($singleGroupTitle = $profileFieldGroup.Title)
+                #set($groupContentHtml = "$groupContentHtml$html")
+                #store($html)
+                    <li class="tab"><a href="#" data-content="$profileFieldGroup.Id">$profileFieldGroup.Title</a></li>
+                #end
+                #set($groupListHtml = "$groupListHtml$html")
+			#end
+        #else
+			#set($form = false)
+			#set($form = $core_v2_dynamicForm.RenderForm($formId, $groupXml, $data, "%{GroupFooterHtmlFormat='',GroupHeaderHtmlFormat='',PropertyFooterHtmlFormat=$editablePropertyFooterFormat,PropertyHeaderHtmlFormat=$editablePropertyHeaderFormat}"))
+			#if ($form && $form.Length > 0)
+			    #set($groupsShown = $groupsShown + 1)
+			    #store($html)
+    			    <fieldset class="field-list" data-content="$profileFieldGroup.Id">
+    		            <ul class="field-list">
+    				        $form
+    				    </ul>
+    	            </fieldset>
+
+                    #set($originalValues = '')
+                    #set($first = true)
+                    #foreach($field in $core_v2_userProfileField.List("%{UserProfileFieldGroupId = $profileFieldGroup.Id}"))
+                        #if ($field)
+                            #set($value = false)
+                            #set($value = $data.Value($field.Name))
+                            #if ($value)
+                                #store($originalValues)
+                                    $originalValues
+                                    #if (!$first)
+                                        ,
+                                    #end
+                                    "$core_v2_encoding.JavascriptEncode($field.Name)": jQuery.telligent.evolution.html.decode("$core_v2_encoding.JavascriptEncode($value)")
+                                #end
+                                #set($first = false)
+                            #end
+                        #end
+                    #end
+
+                	$core_v2_widget.ExecuteFile('ui.vm')
+                #end
+                #set($singleGroupTitle = $profileFieldGroup.Title)
+                #set($groupContentHtml = "$groupContentHtml$html")
+                #store($html)
+                    <li class="tab"><a href="#" data-content="$profileFieldGroup.Id">$profileFieldGroup.Title</a></li>
+                #end
+                #set($groupListHtml = "$groupListHtml$html")
+            #end
+        #end
+    #end
+#end
+
+#if ($groupsShown == 0)
+    $core_v2_widget.Hide()
+#elseif ($groupsShown == 1)
+    <h2 class="name">$singleGroupTitle</h2>
+    $groupContentHtml
+#else
+    <div class="tabbed-contents">
+        <ul class="tabs">
+            $groupListHtml
+        </ul>
+        <div class="contents">
+            $groupContentHtml
+        </div>
+    </div>
+    #registerEndOfPageHtml ()
+        <script type="text/javascript">
+        	jQuery(function() {
+        		var tabs = jQuery('#$core_v2_widget.WrapperElementId .tabs .tab');
+        		var contents = jQuery('#$core_v2_widget.WrapperElementId .contents .content, #$core_v2_widget.WrapperElementId .contents fieldset');
+
+        		function selectTab(name) {
+        			contents.filter('[data-content!="' + name + '"]').hide();
+        			tabs.find('a[data-content!="' + name + '"]').parent().removeClass('selected');
+
+        			contents.filter('[data-content="' + name + '"]').show();
+        			tabs.find('a[data-content="' + name + '"]').parent().addClass('selected');
+        		}
+
+        		tabs.on('click', 'a', function(e) {
+        			var name = jQuery(this).data('content');
+        			selectTab(name);
+        			return false;
+        		});
+
+        		var first = tabs.find('a').first();
+        		if (first) {
+        			selectTab(first.data('content'));
+        		}
+        	});
+        </script>
+    #end
+#end

@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Core_Logout_Name}" version="12.0.0.0" description="${resource:Core_Logout_Description}" instanceIdentifier="df3486cdf75244e6b4f4bc4b269832da" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="logout" lastModified="2022-02-15 16:43:57Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+	#set ($waitForOAuthSignOut = false)
+	#set ($loggedInOAuthClientType = $core_v2_authentication.GetLastLoginType())
+	#if ($loggedInOAuthClientType && $loggedInOAuthClientType.length > 0)
+		#set ($oAuthProvider = false)
+		#set ($oAuthProvider = $core_v2_authentication.GetOAuthProvider($loggedInOAuthClientType))
+		#if ($oAuthProvider && $oAuthProvider.ClientLogoutScript && $oAuthProvider.ClientLogoutScript.length > 0)
+			$oAuthProvider.ClientLogoutScript
+			#set ($waitForOAuthSignOut = true)
+		#end
+	#end
+
+	## log out via ajax post to avoid CSRF-based logouts
+	#if (!$core_v2_widget.IsInWidgetPreviewMode)
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			var shouldWaitForOAuthSignOut = #if ($waitForOAuthSignOut) true #else false #end;
+			jQuery(function(j){
+				var signOut = function() {
+					// raise a clientside logout event for any helpful client cleanup
+					// wait for it to potentially be raised after sockets have connected
+					var logoutEventRaised = false;
+					j.telligent.evolution.messaging.subscribe('socket.connected', function() {
+						j.telligent.evolution.messaging.publish('user.logout', null, { crossWindow: true });
+						logoutEventRaised = true;
+					});
+					setTimeout(function(){
+						// otherwise raise it immediately before logout
+						if(!logoutEventRaised) {
+							j.telligent.evolution.messaging.publish('user.logout', null, { crossWindow: true });
+						}
+						j.telligent.evolution.post({
+							url: "$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('logout.vm'))",
+							success: function(response) {
+								j.telligent.evolution.messaging.publish('user.loggedout', null, { crossWindow: true });
+								if(response.redirectUrl.length > 0) {
+									window.location.href = response.redirectUrl;
+								} else {
+									window.location.reload(true);
+								}
+							}
+						});
+					}, 1500);
+				};
+				if (shouldWaitForOAuthSignOut) {
+					var oAuthLogoutTimeout = setTimeout(function(){
+						signOut();
+					}, 15000);
+					j(document).on('oauthsignout',function(){
+						clearTimeout(oAuthLogoutTimeout);
+						signOut();
+					});
+				} else {
+					signOut();
+				}
+
+			});
+			</script>
+		#end
+	#end
+
+	## show being-logged-out message during ajax post logout
+	<h1>$core_v2_language.GetResource('Logout_Title')</h1>
+	<p>$core_v2_language.FormatString($core_v2_language.GetResource('LoggingOut_Status'), $core_v2_infoResult.Get().SiteName)</p>
+
+#else
+	#set ($deauthenticateCause = false)
+	#set ($deauthenticateCause = $core_v2_page.GetQueryStringValue('deauth'))
+
+    #set($returnUrl = false)
+    #set($returnUrl = $core_v2_page.ReturnUrl)
+
+    #if(!$deauthenticateCause && $returnUrl)
+        $core_v2_page.Redirect($returnUrl)
+    #end
+
+	## show logged out message when logged out
+	<h1>$core_v2_language.GetResource('Logout_Title')</h1>
+
+	#set ($loginUrl = false)
+
+	#if ($deauthenticateCause)
+		<div class="message warning">
+			#if ($deauthenticateCause == 'auto')
+				$core_v2_language.GetResource('LogoutAutoMessage')
+			#elseif ($deauthenticateCause == 'force')
+				$core_v2_language.GetResource('LogoutForceMessage')
+			#elseif ($deauthenticateCause == 'manual')
+				$core_v2_language.GetResource('LogoutManualMessage')
+			#elseif ($deauthenticateCause == 'admin')
+				$core_v2_language.GetResource('LogoutDeauthenticatedMessage')
+			#elseif ($deauthenticateCause == 'password')
+				$core_v2_language.GetResource('LogoutPasswordMessage')
+			#end
+		</div>
+		#set ($loginUrl = $core_v2_urls.LogIn("%{ ReturnToCurrentUrl = 'True' }"))
+	#else
+		<div class="message">$core_v2_language.FormatString($core_v2_language.GetResource('Logout_Status'), $core_v2_infoResult.Get().SiteName)</div>
+		#set ($loginUrl = $core_v2_urls.LogIn("%{ ReturnToCurrentUrl = 'False' }"))
+	#end
+
+	<p>
+		<ul class="navigation-list">
+			#if ($loginUrl)
+				<li class="navigation-list-item submit button submit-button">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($loginUrl)" class="submit button submit-button">$core_v2_language.GetResource('login')</a>
+				</li>
+			#end
+		</ul>
+	</p>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Core_Logout_Name}'))
+	]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Core_Logout_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="Core_Logout_Description">Displays message that user has been logged out.</resource>
+  <resource name="Core_Logout_Name">User - Logged Out</resource>
+  <resource name="LoggingOut_Status">Signing out of {0}...</resource>
+  <resource name="login">Sign in</resource>
+  <resource name="Logout_Status">You have signed out of {0}.</resource>
+  <resource name="Logout_Title">Sign out</resource>
+  <resource name="LogoutAutoMessage">For your safety, you were signed out after a period of inactivity. You may sign back in to resume.</resource>
+  <resource name="LogoutDeauthenticatedMessage">For your safety, you were signed out. You may sign back in to resume.</resource>
+  <resource name="LogoutForceMessage">For your safety, you were signed out. You may sign back in to resume.</resource>
+  <resource name="LogoutManualMessage">You signed out in another tab or window. You may sign back in to resume.</resource>
+  <resource name="LogoutPasswordMessage">For your safety, you were signed out after changing your password. You may sign back in to resume.</resource>
+  <resource name="Options">Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

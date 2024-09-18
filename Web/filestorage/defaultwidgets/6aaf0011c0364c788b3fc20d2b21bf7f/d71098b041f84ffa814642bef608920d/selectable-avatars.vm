@@ -1,0 +1,44 @@
+﻿#set($avatars = $context.GetAvatars())
+#set ($config = $context.Settings)
+
+#set($attachmentFileName = false)
+#set($attachmentContextId = false)
+#set($attachmentUrl = false)
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+<fieldset>
+	<ul class="content-list selectable-avatars">
+#foreach($avatar in $avatars)
+	<li class="content-item selectable-avatar" data-path="$core_v2_encoding.HtmlAttributeEncode($avatar.Path)">
+		<a href="#" data-messagename="select-group-selectable-avatar" data-path="$core_v2_encoding.HtmlAttributeEncode($avatar.Path)">
+	        $core_v2_ui.GetResizedImageHtml($avatar.GetDownloadUrl(), $config.GroupAvatarHeight, $config.GroupAvatarWidth, "%{border='0px', alt=$avatar.FileName, ResizeMethod = 'ZoomAndCrop' }")
+		</a>
+	</li>
+#end
+	</ul>
+</fieldset>
+
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.groupAvatarOptionsSelectableAvatars.register({
+		  avatarHeight: $config.GroupAvatarHeight,
+		  avatarWidth: $config.GroupAvatarWidth,
+		  attachmentId: '$core_v2_widget.UniqueId('attachment')',
+		  attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+		  attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadAvatar'))',
+		  uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+		  uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+		resources: {
+			avatarUploaded: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AvatarUploaded'))',
+			deleteSelectedAvatar: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteSelectedAvatar'))"
+		},
+		urls: {
+			deleteSelectableAvatar: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('delete-selectable-avatar.vm'))',
+			addSelectableAvatar: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('add-selectable-avatar.vm'))'
+		}
+	});
+});
+</script>

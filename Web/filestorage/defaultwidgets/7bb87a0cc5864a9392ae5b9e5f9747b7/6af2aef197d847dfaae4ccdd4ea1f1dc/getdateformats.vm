@@ -1,0 +1,4 @@
+﻿#set($language = $core_v2_page.GetQueryStringValue('w_language'))
+#foreach($format in $core_v2_configuration.GetDateFormats($language))
+	<option value="$core_v2_encoding.HtmlAttributeEncode($format.Format)"#if ($format.Format == $user.DateFormat) selected="selected"#end>$format.Name</option>
+#end

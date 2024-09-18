@@ -1,0 +1,97 @@
+##
+## Delete Theme Callback
+##
+$core_v2_page.SetContentType('application/json')
+
+#if ($core_v2_page.IsPost)
+	#set ($options = "%{}")
+
+	#set ($idQuery = $core_v2_page.GetFormValue("_w_id"))
+	#if ($idQuery)
+		$options.Add('Id', $idQuery)
+	#end
+
+	#set ($typeIdQuery = $core_v2_page.GetFormValue("_w_typeId"))
+	#if ($typeIdQuery)
+		$options.Add('TypeId', $typeIdQuery)
+	#end
+
+	#set ($revertStagedPagesQuery = $core_v2_page.GetFormValue("_w_revertStagedPages"))
+	#if ($revertStagedPagesQuery)
+		$options.Add('RevertStagedPages', $core_v2_utility.ParseBool($revertStagedPagesQuery))
+	#end
+
+	#set ($revertStagedHeadersQuery = $core_v2_page.GetFormValue("_w_revertStagedHeaders"))
+	#if ($revertStagedHeadersQuery)
+		$options.Add('RevertStagedHeaders', $core_v2_utility.ParseBool($revertStagedHeadersQuery))
+	#end
+
+	#set ($revertStagedFootersQuery = $core_v2_page.GetFormValue("_w_revertStagedFooters"))
+	#if ($revertStagedFootersQuery)
+		$options.Add('RevertStagedFooters', $core_v2_utility.ParseBool($revertStagedFootersQuery))
+	#end
+
+	#set ($revertStagedFragmentsQuery = $core_v2_page.GetFormValue("_w_revertStagedFragments"))
+	#if ($revertStagedFragmentsQuery)
+		$options.Add('RevertStagedFragments', $core_v2_utility.ParseBool($revertStagedFragmentsQuery))
+	#end
+
+	## First make sure this does not attempt to delete the last of a type
+	#set ($wouldDeleteLastOfType = false)
+	#set ($targetTheme = false)
+	#set ($targetTheme = $context.GetTheme($options))
+	#if ($targetTheme && $targetTheme.HasErrors())
+		$core_v2_page.SendJsonError($targetTheme.Errors)
+	#end
+
+	#if ($targetTheme)
+		## Only care if target is custom or an editable factory default
+		## Since a customized default deletion would only ever revert to its default
+		#if ($targetTheme.State == 'Custom' || ($targetTheme.State == 'FactoryDefault' && $targetTheme.IsEditable))
+			#set ($themesOfThisType = false)
+			#set ($themesOfThisType = $context.ListThemes("%{ TypeId = $typeIdQuery }"))
+			#if ($themesOfThisType.Count <= 1)
+				#set ($wouldDeleteLastOfType = true)
+			#end
+		#end
+	#end
+
+	#if ($wouldDeleteLastOfType)
+		$core_v2_page.SendJsonError($core_v2_language.GetResource('LastOfThemeTypeError'))
+	#else
+		## If revertible children returned, then nothing was performed and more input is required
+		#set ($revertibleChildren = false)
+		#set ($revertibleChildren = $context.DeleteTheme($options))
+		#if ($revertibleChildren && $revertibleChildren.HasErrors())
+			$core_v2_page.SendJsonError($revertibleChildren.Errors)
+		#end
+
+		## return list of staged fragments
+		#set ($themes = $context.ListThemes("%{ Staged = 'true' }"))
+		#if ($themes && $themes.HasErrors())
+			$core_v2_page.SendJsonError($themes.Errors)
+		#end
+
+		## get theme. It may be null if it was a delete
+		## of a custom theme, or may be a factory default if the
+		## delete was effectively a revert to default
+		#set ($theme = false)
+		#set ($theme = $context.GetTheme($options))
+		#if ($theme && $theme.HasErrors())
+			$core_v2_page.SendJsonError($theme.Errors)
+		#end
+
+		{
+			#if ($revertibleChildren)
+				"revertibleChildren": $core_v2_utility.ToJson($revertibleChildren),
+				"reverted": false,
+				"deleted": false,
+			#else
+				"reverted": true,
+				"deleted": true,
+			#end
+			"stagedThemes": $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-summaries.vm'),
+			"theme": #if ($theme) $core_v2_widget.ExecuteFile('callback-sub-serialize-theme-full.vm') #else null #end
+		}
+	#end
+#end

@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Friendship Request" version="13.0.0.0" description="Raises notifications on friendship requests." id="136a95a591ff4ebb9d1d132018f34507" lastModified="2023-05-08 17:28:18Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $context_v1_email.Context.Friendship.Requestor.DisplayName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $context_v1_email.Context.Friendship.Requestor.DisplayName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div style="height: 32px; width: 32px; border-radius: 16px; -moz-border-radius: 16px; overflow: hidden;">
+$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Friendship.Requestor.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+</div>
+</td>
+<td style="padding-left: 10px;">
+<p>
+#format($core_v2_language.GetResource('Body_Request'))
+#token('user_name_link')
+    #set($profileUrl = $context_v1_email.Context.Friendship.Requestor.Url)
+    #if ($profileUrl)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$context_v1_email.Context.Friendship.Requestor.DisplayName</a>
+    #else
+        $context_v1_email.Context.Friendship.Requestor.DisplayName
+    #end
+#end
+</p>
+#if ($context_v1_email.Context.Friendship.RequestMessage && $context_v1_email.Context.Friendship.RequestMessage.Length > 0)
+<p><em>
+    $context_v1_email.Context.Friendship.RequestMessage
+</em></p>
+#end
+</td>
+</tr>
+</tbody>
+</table>
+<p>
+#format($core_v2_language.GetResource('Body_AcceptReject'))
+#token('accept_link')
+    #set($exeecuteOptions = "%{ UserId = $context_v1_email.Context.Friendship.Requestor.Id }")
+    #set($acceptFriendshipUrl = $core_v2_widget.ExecuteFile('getAcceptFriendshipUrl.jsm', "%{ RunAsUserName=$context_v1_email.Context.Friendship.Recipient.Username, Parameters=$exeecuteOptions}"))
+    #set($url_1 = $acceptFriendshipUrl)
+    #if ($url_1)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($url_1)">
+    	$core_v2_language.GetResource('Accept')
+    	</a>
+    #end
+#token('reject_link')
+    #set($exeecuteOptions_1 = "%{ UserId = $context_v1_email.Context.Friendship.Requestor.Id }")
+    #set($rejectFriendshipUrl = $core_v2_widget.ExecuteFile('getRejectFriendshipUrl.jsm', "%{ RunAsUserName=$context_v1_email.Context.Friendship.Recipient.Username, Parameters=$exeecuteOptions_1}"))
+    #set($url_2 = $rejectFriendshipUrl)
+    #if ($url_2)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($url_2)">
+    	$core_v2_language.GetResource('Decline')
+    	</a>
+    #end
+#end
+</p>
+]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Accept">Accept</resource>
+  <resource name="Body_AcceptReject">{accept_link} or {reject_link} this request.</resource>
+  <resource name="Body_Request">{user_name_link} requested your friendship.</resource>
+  <resource name="Decline">decline</resource>
+  <resource name="Subject">{site_name}: Friendship request from {user_name}</resource>
+  <resource name="Header">Friendship request from {user_name}</resource>
+</language>]]></languageResources>
+    <files>
+      <file name="getAcceptFriendshipUrl.jsm" />
+      <file name="getRejectFriendshipUrl.jsm" />
+    </files>
+  </scriptedEmail>
+</scriptedEmails>

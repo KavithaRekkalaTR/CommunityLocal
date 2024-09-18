@@ -1,0 +1,28 @@
+#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+    #set ($options = "%{}")
+
+	#set ($globalFormElementQuery = $core_v2_page.GetFormValue("globalFormElement"))
+	#if ($globalFormElementQuery)
+		$options.Add('EnableGlobalFormElement', $globalFormElementQuery)
+	#end
+
+	#set ($legacyJQueryQuery = $core_v2_page.GetFormValue("legacyJQuery"))
+	#if ($legacyJQueryQuery)
+		$options.Add('EnableLegacyJQuery', $legacyJQueryQuery)
+	#end
+	
+	#set($allRestScopesInUserInterface = $core_v2_page.GetFormValue('allRestScopesInUserInterface'))
+	#if ($allRestScopesInUserInterface)
+	    $options.Add('EnableAllRestScopesInUserInterface', $allRestScopesInUserInterface)
+	#end
+
+	#set($result = false)
+    #set($result = $context.Save($options))
+    #if ($result.Errors.Count > 0)
+        $core_v2_page.SendJsonError($result.Errors)
+    #end
+    
+    {"success":true}
+#end

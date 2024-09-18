@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Friendship" version="13.0.0.0" description="Raises notifications when friendship requests are accepted." id="091476d5b4534a4692175f6cca583193" lastModified="2023-05-08 17:39:46Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('user_name')
+    $context_v1_email.Context.Friendship.Recipient.DisplayName
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('user_name')
+    $context_v1_email.Context.Friendship.Recipient.DisplayName
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div style="height: 32px; width: 32px; border-radius: 16px; -moz-border-radius: 16px; overflow: hidden;">
+$core_v2_ui.GetResizedImageHtml($context_v1_email.Context.Friendship.Recipient.AvatarUrl, 32, 32, "%{ ResizeMethod='ScaleDown', ScaleFactor=2, OutputIsPersisted='True', width='32', height='32' }")
+</div>
+</td>
+<td style="padding-left: 10px;">
+<p>
+#format($core_v2_language.GetResource('Body_Confirmation'))
+#token('user_name_link')
+    #set($profileUrl = $context_v1_email.Context.Friendship.Recipient.Url)
+    #if ($profileUrl)
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($profileUrl)">$context_v1_email.Context.Friendship.Recipient.DisplayName</a>
+    #else
+        $context_v1_email.Context.Friendship.Recipient.DisplayName
+    #end
+#end
+</td>
+</tr>
+</tbody>
+</table>
+<p>
+#format($core_v2_language.GetResource('Body_Friends'))
+#token('friends_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Friends($core_v2_user.Accessing.Id, false))">$core_v2_language.GetResource('Friends')</a>
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body_Confirmation">{user_name_link} accepted your friendship request.</resource>
+  <resource name="Body_Friends">{friends_link}.</resource>
+  <resource name="Friends">See all of your friends</resource>
+  <resource name="Subject">{site_name}: {user_name} accepted your friendship request</resource>
+  <resource name="Header">{user_name} accepted your friendship request</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

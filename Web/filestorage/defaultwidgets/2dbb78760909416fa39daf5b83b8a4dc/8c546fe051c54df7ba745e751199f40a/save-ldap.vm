@@ -1,0 +1,13 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set ($ldapGroupName = $core_v2_page.GetFormValue('LdapGroupName'))
+	
+	#set($response = $context.AddLdapRole($ldapGroupName))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true, "roleId": "$response.Id"}
+#end

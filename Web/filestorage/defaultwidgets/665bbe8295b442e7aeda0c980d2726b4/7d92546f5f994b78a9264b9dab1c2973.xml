@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PreviewIndicator_Name}" version="9.0.0.0" description="${resource:PreviewIndicator_Description}" instanceIdentifier="7d92546f5f994b78a9264b9dab1c2973" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="preview-indicator" provider="665bbe8295b442e7aeda0c980d2726b4">
+	<contentScript><![CDATA[
+#set ($iconUrl = $core_v2_widget.GetFileUrl('cone.svg'))
+#set ($hasCategories = false)
+<style>
+.preview-indicator::after {
+	width: 90%;
+	height: 90%;
+	top: 5%;
+	left: 5%;
+	background-image: url('$core_v2_encoding.UriEscape($iconUrl)');
+}
+</style>
+#set ($previewLink = $core_v2_widget.UniqueId('previewLink'))
+#set ($indicatorTemplate = $core_v2_widget.UniqueId('indicatorTemplate'))
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($indicatorTemplate)">
+	<span class="preview-indicator-wrapper do-not-print" id="$core_v2_encoding.HtmlAttributeEncode($previewLink)">
+		<a class="preview-indicator ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Previewing'))" href="$core_v2_encoding.HtmlAttributeEncode($context.PreviewUrl)">$core_v2_language.GetResource('Previewing')</a>
+	</span>
+</script>
+<script>
+jQuery.telligent.evolution.themePreview.configure({
+	callbackUrl: '$core_v2_encoding.JavascriptEncode($context.CallbackUrl)',
+	isPreviewing: #if ($context.IsPreviewing) true #else false #end,
+	previewUrl: '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)',
+	stopPreviewingConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Stop_Previewing_Confirm'))'
+});
+jQuery(function(){
+	var indicatorTemplate = jQuery.telligent.evolution.template.compile('$core_v2_encoding.JavascriptEncode($indicatorTemplate)');
+	jQuery('body').append(indicatorTemplate({}));
+
+	var isPreviewing = #if ($context.IsPreviewing) true #else false #end,
+		previewLink = jQuery('#$previewLink'),
+		previewUrl = '$core_v2_encoding.JavascriptEncode($context.PreviewUrl)',
+		inited = false;
+
+	function open() {
+		window.location = previewUrl;
+		jQuery.fn.evolutionTip.hide();
+		return false;
+	}
+
+	function init() {
+		if(inited) { return; }
+		inited = true;
+		previewLink.show()
+			.on('mouseenter', function() { $(this).addClass('with-loader'); })
+			.on('mouseleave', function(){ $(this).removeClass('with-loader'); })
+			.on('glowDelayedMouseEnter', 500, open)
+			.on('click', open);
+		jQuery.telligent.evolution.messaging.subscribe('themepreview.disabled', function(){
+			previewLink.hide();
+		}, { excludeAutoNameSpaces: true });
+	}
+
+	if (isPreviewing) { init(); }
+	jQuery.telligent.evolution.messaging.subscribe('themepreview.enabled', function(){
+		init();
+		previewLink.show();
+	}, { excludeAutoNameSpaces: true });
+});
+</script>]]></contentScript>
+	<languageResources><language key="en-us">
+  <resource name="PreviewIndicator_Name">Preview Indicator</resource>
+  <resource name="PreviewIndicator_Description">Indicates the current theme preview state.</resource>
+  <resource name="Stop_Previewing_Confirm">You currently are previewing changes on this site. Would you like to disable previewing?</resource>
+  <resource name="Previewing">Previewing Staged Changes</resource>
+  </language>
+</languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

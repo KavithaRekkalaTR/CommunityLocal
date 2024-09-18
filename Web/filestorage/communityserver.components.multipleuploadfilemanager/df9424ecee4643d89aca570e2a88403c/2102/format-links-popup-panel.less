@@ -1,0 +1,168 @@
+/*
+When customizing this theme, it is recommended to use existing theme configuration or add override CSS/LESS
+files instead of editing platform-defined CSS/LESS. This will make future upgrades simpler.
+
+Direct edits to platform-defined CSS/LESS is not prevented, but will require manual diff/merging when upgrading
+to new versions of this theme.
+*/
+
+.links-popup-panel {
+	width: 230px;
+	font-family: @font-family;
+	font-weight: @font-weight;
+	.popup-border;
+	background-color: @color-background;
+	border-radius: 3px;
+	&[data-position="downright"] {
+		border-top-left-radius: 0;
+	}
+	&[data-position="upright"] {
+		border-bottom-left-radius: 0;
+	}
+	&[data-position="downleft"] {
+		border-top-right-radius: 0;
+	}
+	&[data-position="upleft"] {
+		border-bottom-right-radius: 0;
+	}
+	ul {
+		max-height: 500px;
+		overflow: auto !important;
+		-webkit-overflow-scrolling: touch;
+		list-style: none;
+		padding: 0px;
+		margin: 0px;
+		overflow: hidden;
+		> li > span {
+			display: block;
+			width: 100%;
+			overflow: hidden;
+			a {
+				&.selected {
+					background-color: -evo-decrease-contrast(@color-background, 4%, @color-foreground, @color-contrast);
+					color: @color-foreground;
+				}
+			}
+		}
+		> li > span > a,
+		.ui-like .like-toggle a,
+		a {
+			color: @color-accent;
+			font-size: .9em;
+			display: block;
+			padding: 6px 4px 6px 4px !important;
+			text-align: center;
+			.transition(background-color .1s);
+			white-space: normal !important;
+			&:hover {
+				background-color: @color-accent;
+				color: @color-background;
+			}
+			&.selected {
+				background-color: -evo-decrease-contrast(@color-background, 4%, @color-foreground, @color-contrast);
+				font-weight: 600;
+				color: @color-foreground;
+			}
+			&.add-application, &.add-group {
+				background-color: -evo-decrease-contrast(@color-background, 4%, @color-foreground, @color-contrast);
+				&:hover {
+					background-color: @color-accent;
+					color: @color-background;
+				}
+			}
+		}
+	}
+	ul > li > span > a,
+	ul a {
+		&.crumb {
+			text-align: left;
+			padding-left: 10px;
+			.prepend_icon(@level-down);
+			&.depth-1 { padding-left: 10px }
+			&.depth-2 { padding-left: 20px }
+			&.depth-3 { padding-left: 30px }
+			&.depth-4 { padding-left: 40px }
+			&.depth-5 { padding-left: 50px }
+			&.depth-6 { padding-left: 60px }
+			&.depth-7 { padding-left: 70px }
+			&.depth-8 { padding-left: 80px }
+			&.depth-9 { padding-left: 90px }
+			&.depth-10 { padding-left: 100px }
+			&.depth-11 { padding-left: 110px }
+			&.depth-12 { padding-left: 120px }
+			&.depth-13 { padding-left: 130px }
+			&.depth-14 { padding-left: 140px }
+			&.depth-15 { padding-left: 150px }
+		}
+	}
+}
+
+.sheet {
+	background-color: @color-background - 20;
+	padding: 10px;
+	overflow: scroll;
+	-webkit-overflow-scrolling: touch;
+	ul {
+		list-style: none;
+		padding: 0px;
+		margin: 0px;
+		li:last-child {
+			margin-bottom: 70px;
+		}
+		li {
+			> span {
+				display: block;
+				float: none !important;
+				border-bottom: 1px solid -evo-decrease-contrast(@color-background, 8%, @color-foreground, @color-contrast);
+				padding: @spacing 0 @spacing 0;
+				text-align: center;
+				font-family: @font-family;
+				> a {
+					.unselectable;
+					float: none !important;
+					font-family: @font-family;
+					font-weight: normal;
+					display: block;
+					text-align: center;
+					margin-bottom: 0px;
+					color: @color-foreground;
+					&:active {
+						background-color: @color-accent;
+						color: @color-background;
+					}
+					&[data-cancel] {
+						background-color: -evo-decrease-contrast(@color-background, 17%, @color-foreground, @color-contrast);
+						&:active {
+							background-color: @color-accent;
+							color: @color-background;
+						}
+					}
+
+				}
+			}
+			> a {
+				.unselectable;
+				float: none !important;
+				font-family: @font-family;
+				font-weight: normal;
+				display: block;
+				padding: @spacing 0 @spacing 0;
+				text-align: center;
+				margin-bottom: 0px;
+				border-bottom: 1px solid -evo-decrease-contrast(@color-background, 17%, @color-foreground, @color-contrast);
+				color: @color-foreground;
+				&:active {
+					background-color: @color-accent;
+					color: @color-background;
+				}
+				&[data-cancel] {
+					background-color: -evo-decrease-contrast(@color-background, 17%, @color-foreground, @color-contrast);
+					&:active {
+						background-color: @color-accent;
+						color: @color-background;
+					}
+				}
+			}
+		}
+	}
+}

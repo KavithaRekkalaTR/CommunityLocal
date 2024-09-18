@@ -1,0 +1,16 @@
+﻿#if ($core_v2_page.IsPost)
+    $core_v2_page.SetContentType('application/json')
+
+    #set ($Id = false)
+    #set ($Id = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('w_id')))
+
+    #set($options = "%{}")
+    
+    #set($webHookResponse = $core_v2_webhook.Delete($Id))
+    
+	#if($webHookResponse.HasErrors())
+		$core_v2_page.SendJsonError($webHookResponse.Errors)
+	#end    
+
+	{"success": true }
+#end

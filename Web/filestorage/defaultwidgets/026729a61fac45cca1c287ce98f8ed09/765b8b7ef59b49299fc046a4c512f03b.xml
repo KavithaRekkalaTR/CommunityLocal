@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:PollOptions}" version="11.0.0.0" description="${resource:PollOptions_Description}" instanceIdentifier="765b8b7ef59b49299fc046a4c512f03b" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2020-01-17 20:11:33Z" provider="026729a61fac45cca1c287ce98f8ed09">
+    <contentScript language="Velocity"><![CDATA[<script type="text/html" id="${context.UniqueId}_item_template">
+    <li class="poll-option-item" data-optionid="<%: OptionId %>">
+        <input type="text" value="<%: Option %>" class="poll-option-name" />  
+        <a href="#" class="poll-option-up ui-tip" title="$core_v2_language.GetResource('Polls_ConfigureOption_MoveUp')">&nbsp;</a>
+        <a href="#" class="poll-option-down ui-tip" title="$core_v2_language.GetResource('Polls_ConfigureOption_MoveDown')">&nbsp;</a>
+        <a href="#" class="poll-option-delete ui-tip" title="$core_v2_language.GetResource('Polls_ConfigureOption_Delete')">&nbsp;</a> 
+    </li>
+</script>
+
+<ul class="poll-options" id="$context.UniqueId">
+</ul>
+<a href="#" class="CommonTextButton" id="${context.UniqueId}_add">$core_v2_language.GetResource('Polls_Configure_AddOption')</a>
+
+<style>
+    #${context.UniqueId} .poll-option-item { list-style-type: none; width: 100%; padding: 0px 0px 10px 0px; }
+    #${context.UniqueId} .poll-options { padding: 0; width: 100%; }
+    #${context.UniqueId} .poll-option-delete:before { width: 16px; height: 16px; content: "\e814"; font-family: Entypo; font-size: 16px; line-height: 16px; margin-right: 2px; color: #11b6ff; cursor: pointer; }
+    #${context.UniqueId} .poll-option-up:before { width: 16px; height: 16px; content: "\e882"; font-family: Entypo; font-size: 16px; line-height: 16px; margin-right: 2px; margin-left: 2px; color: #11b6ff; cursor: pointer; }
+    #${context.UniqueId} .poll-option-down:before { width: 16px; height: 16px; content: "\e87f"; font-family: Entypo; font-size: 16px; line-height: 16px; margin-right: 2px; color: #11b6ff; cursor: pointer; }
+</style>
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery(function(){
+    var jsonApi = $context.JsonApi;
+    jQuery.telligent.evolution.templates.pollOptions.register({
+        api: jsonApi,
+        itemTemplateId: '${context.UniqueId}_item_template',
+        list: jQuery('#${context.UniqueId}'),
+        add: jQuery('#${context.UniqueId}_add'),
+        deleteConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Polls_Configure_DeleteConfirmation'))',
+        deleteErrorText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Polls_Configure_DeleteError'))',
+        placeholderText:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Polls_Configure_OptionPlaceholder'))',
+        initialValue: '$!core_v2_encoding.JavascriptEncode($!context.Value)'
+    });
+}); 
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="PollOptions">Poll Options</resource>
+  <resource name="PollOptions_Description">Enables editing the list of poll options.</resource>
+  <resource name="Polls_Configure_AddOption">Add Option</resource>
+  <resource name="Polls_Configure_DeleteConfirmation">Are you sure you want to remove this option?</resource>
+  <resource name="Polls_Configure_DeleteError">You cannot have less than two options.</resource>
+  <resource name="Polls_Configure_OptionPlaceholder">Enter an option here.</resource>
+  <resource name="Polls_ConfigureOption_Delete">Delete</resource>
+  <resource name="Polls_ConfigureOption_MoveDown">Move Down</resource>
+  <resource name="Polls_ConfigureOption_MoveUp">Move Up</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

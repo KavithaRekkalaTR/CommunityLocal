@@ -1,0 +1,11 @@
+#set($options = "%{}")
+
+#set ($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#if($sortBy)
+    $options.Add('SortBy', $sortBy)
+#end
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('sortOrder'))
+#if($sortOrder)
+    $options.Add('SortOrder', $sortOrder)
+#end

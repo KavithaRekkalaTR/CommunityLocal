@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:calendar_CalendarListWidget_Name}" version="13.0.0.0" description="${resource:calendar_CalendarListWidget_Description}" instanceIdentifier="b6a41a942283418b98ceec1055d26a13" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="calendar-list-fragment" lastModified="2022-09-02 20:26:57Z" provider="ca187a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+$core_v2_widget.ExecuteFile('inSidebar.vm')
+$core_v2_ui.PagedContent('list.vm')
+
+			]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:calendar_CalendarListWidget_Title}'))]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:calendar_CalendarListWidget_Title}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="pageSize" labelResourceName="Calendar_PageSize" defaultValue="20" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="showAll" labelResourceName="Calendar_ShowAllCalendars" defaultValue="false" dataType="Bool" />
+	<property id="showTitleColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowTitle" defaultValue="true" dataType="Bool" />
+	<property id="showGroupColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowGroup" defaultValue="false" dataType="Bool" />
+	<property id="showPostsColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowPosts" defaultValue="true" dataType="Bool" />
+	<property id="showLastPostColumn" labelResourceName="UIFragment_Core_BrowseApplication_ShowLatest" defaultValue="true" dataType="Bool" />
+	<property id="defaultSortOrder" labelResourceName="UIFragment_Core_BrowseApplication_DefaultSortOrder" defaultValue="ApplicationName" dataType="String">
+		<propertyValue value="ApplicationName" labelResourceName="UIFragment_Core_BrowseApplication_ApplicationName" />
+		<propertyValue value="ApplicationIdsOrder" labelResourceName="UIFragment_Core_BrowseApplication_Custom" />
+	</property>
+	<property id="calendarSelection" labelResourceName="UIFragment_Core_BrowseApplication_CalendarInclusion" dataType="Custom" template="calendar_v1_calendarOrder" key="calendar" visibilityPropertyId="defaultSortOrder" visibilityPropertyValue="ApplicationIdsOrder" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="calendar_CalendarListWidget_Description">Displays a list of Calendars</resource>
+  <resource name="calendar_CalendarListWidget_Name">Event Calendar - Calendar List</resource>
+  <resource name="calendar_CalendarListWidget_Title">Calendars</resource>
+  <resource name="Calendar_CreateDate">Create Date</resource>
+  <resource name="Calendar_Name">Name</resource>
+  <resource name="Calendar_NoResults">No results could be found.</resource>
+  <resource name="Calendar_PageSize">Calendars Per Page</resource>
+  <resource name="Calendar_ShowAllCalendars">Show All Calendars</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="next_event">Next event: {0}</resource>
+  <resource name="Options">Options</resource>
+  <resource name="post_plural">upcoming events</resource>
+  <resource name="post_singular">upcoming event</resource>
+  <resource name="Sort_Ascending">Ascending</resource>
+  <resource name="Sort_Descending">Descending</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ApplicationName">By name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_CalendarInclusion">Include Calendars</resource>
+  <resource name="UIFragment_Core_BrowseApplication_Custom">Custom order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_DefaultSortOrder">Sort Order</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowGroup">Show Group Name</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowLatest">Show Upcoming Event Date</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowPosts">Show Upcoming Event Count</resource>
+  <resource name="UIFragment_Core_BrowseApplication_ShowTitle">Show Calendar Name</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

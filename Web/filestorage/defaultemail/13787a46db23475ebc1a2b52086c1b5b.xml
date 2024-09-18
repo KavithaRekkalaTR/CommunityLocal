@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Forum Thread Moved" version="13.0.0.0" description="Sends an email when a thread is moved." id="13787a46db23475ebc1a2b52086c1b5b" lastModified="2023-05-08 19:20:51Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('thread_subject')
+    $context_v1_email.Context.ForumThread.Subject
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('thread_subject')
+    $context_v1_email.Context.ForumThread.Subject
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('thread_subject_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ForumThread.Url)">$context_v1_email.Context.ForumThread.Subject</a>
+#token('forum_name_link')
+    #set($forum = $core_v2_forum.Get($context_v1_email.Context.ForumThread.ForumId))
+    #if ($forum && !$forum.HasErrors())
+    	<a href="$core_v2_encoding.HtmlAttributeEncode($forum.Url)">$forum.Name</a>
+    #else
+        $context_v1_email.Context.ForumThread.ForumId
+    #end
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('mute_thread_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_forumUrls.MuteThread($context_v1_email.Context.ForumThread.Id, false))">$core_v2_language.GetResource('Mute')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">The thread, {thread_subject_link}, was moved to {forum_name_link}.</resource>
+  <resource name="Footer">You received this email because you subscribed to email notifications for this forum or thread. To unsubscribe only from this thread, {mute_thread_link}.</resource>
+  <resource name="Mute">go here</resource>
+  <resource name="Subject">{site_name}: {thread_subject} moved</resource>
+  <resource name="Header">{thread_subject} moved</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

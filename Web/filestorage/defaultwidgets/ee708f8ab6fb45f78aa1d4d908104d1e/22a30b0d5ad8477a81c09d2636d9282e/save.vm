@@ -1,0 +1,36 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($options = "%{}")
+
+	#set($Moderate = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('Moderate')))
+	#set($EnableFileNotifications = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableFileNotifications')))
+	#set($EnableRatings = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableRatings')))
+	#set($EnableComments = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableComments')))
+	#set($ModerateComments = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('ModerateComments')))
+	#set($EnableCommentNotifications = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableCommentNotifications')))
+	#set($EnableExternalLinks = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableExternalLinks')))
+	#set($EnableDisclaimer = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('EnableDisclaimer')))
+	#set($AllowedFileExtensions = $core_v2_page.GetFormValue('AllowedFileExtensions'))
+	#set($RestrictedFileExtensions = $core_v2_page.GetFormValue('RestrictedFileExtensions'))
+
+	$options.Add('Moderate', $Moderate)
+	$options.Add('EnableFileNotifications', $EnableFileNotifications)
+	$options.Add('EnableRatings', $EnableRatings)
+	$options.Add('EnableComments', $EnableComments)
+	$options.Add('ModerateComments', $ModerateComments)
+	$options.Add('EnableCommentNotifications', $EnableCommentNotifications)
+	$options.Add('EnableExternalLinks', $EnableExternalLinks)
+	$options.Add('EnableDisclaimer', $EnableDisclaimer)
+	$options.Add('AllowedFileExtensions', $AllowedFileExtensions)
+	$options.Add('RestrictedFileExtensions', $RestrictedFileExtensions)
+
+	#set($response = $context.Update($options))
+
+	#if($response.HasErrors())
+		$core_v2_page.SendJsonError($response.Errors)
+	#end
+
+	{"success":true}
+
+#end

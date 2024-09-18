@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:MediaGalleries_UploadEditMediaGalleryPost_Name}" version="12.0.0.0" description="${resource:MediaGalleries_UploadEditMediaGalleryPost_Description}" instanceIdentifier="75edf77994c94b259ea6378148f9c14d" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="upload-edit-media-gallery-post" lastModified="2021-09-07 18:41:18Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set($media = false)
+#set($media = $core_v2_media.Current)
+#set($gallery = false)
+#set($gallery = $core_v2_gallery.Current)
+
+#set ($tabsContainerId = $core_v2_widget.UniqueId('tabsContainer'))
+#set ($writeTabId = $core_v2_widget.UniqueId('writeTab'))
+#set ($optionsTabId = $core_v2_widget.UniqueId('optionsTab'))
+#set($ogContextId = $core_v2_uploadedFile.CreateContextId())
+
+#if($media)
+    #set($canEdit = $core_v3_permission.CheckPermission($core_v2_mediaPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $media.ContentId, ContentTypeId = $core_v2_media.ContentTypeId }").IsAllowed)
+    #if (!$canEdit && !$canUpload && !$canLink))
+        $core_v2_widget.Hide()
+    #end
+#elseif(!$core_v3_permission.CheckPermission($core_v2_mediaPermissions.CreatePost, $core_v2_user.Accessing.Id, "%{ ApplicationId = $gallery.ApplicationId, ApplicationTypeId = $core_v2_gallery.ApplicationTypeId }").IsAllowed)
+    $core_v2_widget.Hide()
+#end
+
+#set($canUpload = $core_v3_permission.CheckPermission($core_v2_mediaPermissions.AttachFileLocal, $core_v2_user.Accessing.Id, "%{ ApplicationId = $gallery.ApplicationId, ApplicationTypeId = $core_v2_gallery.ApplicationTypeId }").IsAllowed)
+#set($canLink = $core_v3_permission.CheckPermission($core_v2_mediaPermissions.AttachFileRemote, $core_v2_user.Accessing.Id, "%{ ApplicationId = $gallery.ApplicationId, ApplicationTypeId = $core_v2_gallery.ApplicationTypeId }").IsAllowed)
+#if (!$canUpload && !$canLink)
+	$core_v2_widget.Hide()
+#end
+
+#set($attachmentFileName = false)
+#set($attachmentUrl = false)
+#set($attachmentIsRemote = false)
+#set($attachmentContextId = false)
+#set($attachmentIsNew = false)
+
+#set($ogImageFilename = false)
+#set($ogImageFileUrl = false)
+#set($ogImageIsNew = false)
+
+#if ($media)
+	#set($attachmentFileName = $media.File.FileName)
+	#set($attachmentUrl = $media.File.FileUrl)
+	#set($attachmentIsRemote = $media.File.IsRemoteAttachment)
+
+	#set($ogImageFilename = $media.OpenGraphImage.FileName)
+    #set($ogImageFileUrl = $media.OpenGraphImage.FileUrl)
+#end
+
+#set($tempData = false)
+#if ($core_v2_page.GetQueryStringValue('tsid'))
+    #set($tempDataString = false)
+    #set($tempDataString = $core_v2_utility.GetTemporaryData($core_v2_page.GetQueryStringValue('tsid')))
+    #if($tempDataString)
+        #set($tempData = $core_v2_page.ParseQueryString($tempDataString))
+        #set($attachmentFileName = $!tempData.Value('filename'))
+        #set($attachmentUrl = $!tempData.Value('fileurl'))
+        #set($attachmentIsNew = true)
+        #if ($tempData.Value('fileurl'))
+        	#set($attachmentIsRemote = true)
+        #else
+        	#set($attachmentIsRemote = false)
+        #end
+        #set($attachmentContextId = $!tempData.Value('filecontextid'))
+    #end
+#end
+
+#if (!$attachmentContextId)
+	#set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+#end
+
+#if($media)
+    #set($uploadUrl="${uploadUrl}&MediaGalleryPostID=$media.Id")
+#end
+<div class="message error" id="$core_v2_widget.UniqueId('ErrorMessageId')" style="display:none;"></div>
+<form><fieldset>
+	#if ($media)
+		<h1>$media.Title</h1>
+	#else
+		<h1>$core_v2_language.FormatString($core_v2_language.GetResource('NewPost'), $gallery.Name)</h1>
+	#end
+
+	<div id="$core_v2_encoding.HtmlAttributeEncode($tabsContainerId)">
+		<div id="$core_v2_encoding.HtmlAttributeEncode($writeTabId)">
+
+            <ul class="field-list">
+                <li class="field-item required post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="$canUpload" data-link="$canLink">
+                    #set($descriptionId = false)
+                	#if ($canUpload && $canLink)
+                		<label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('MediaGalleryPostAdmin_FileOrUrl')</label>
+                		#set($descriptionId = $core_v2_widget.UniqueId('attachment_input_description'))
+                		<span class="field-item-description" id="$descriptionId">$core_v2_language.GetResource('MediaGalleryPostAdmin_FileOrUrl_Upload')</span>
+                	#elseif ($canUpload)
+                		<label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('Attachment_File')</label>
+                	#elseif ($canLink)
+                		<label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('Attachment_Url')</label>
+                    #end
+                    <span class="field-item-input file">
+                   		<input type="text" columns="90" id="$core_v2_widget.UniqueId('attachment_input')" #if($descriptionId) aria-describedby="$descriptionId" #end #if($attachmentUrl && $attachmentIsRemote)value="$core_v2_encoding.HtmlAttributeEncode($attachmentUrl)"#elseif($attachmentFileName)value="$core_v2_encoding.HtmlAttributeEncode($attachmentFileName)"#end />
+                    </span>
+                    <span class="field-item-input preview">
+                    </span>
+                    #if ($canUpload)
+                    	<span class="field-item-input upload">
+        					<a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+        					<a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+        				</span>
+        			#end
+                	<span class="field-item-validation" style="display: none;"></span>
+                </li>
+
+                <li class="field-item required post-name">
+                    <label for="$core_v2_widget.UniqueId('MediaPostName')" class="field-item-name">$core_v2_language.GetResource('MediaGalleryPostAdmin_Name')</label>
+                    <span class="field-item-input">
+						<textarea maxlength="256" rows="1" size="90" class="scaled" id="$core_v2_widget.UniqueId('MediaPostName')">#if($media)$!core_v2_encoding.HtmlEncode($media.Title)#elseif($tempData)$!core_v2_encoding.HtmlEncode($tempData.Value('subject'))#end</textarea>
+                    </span>
+                    <span class="field-item-validation" style="display: none;"></span>
+                </li>
+
+                <li class="field-item post-body">
+                    <label for="$core_v2_widget.UniqueId('body')" class="field-item-name">$core_v2_language.GetResource('MediaGalleryPostAdmin_Desc')</label>
+                    <span class="field-item-input">
+                        #set($body = '')
+                        #if($media)
+                            #set($body = $media.Body('raw'))
+                        #elseif ($tempData)
+                            #set($body = $tempData.Value('body'))
+                        #end
+                        $core_v2_editor.Render("body", "%{Width='100%', Value=$!body, ContentTypeId=$core_v2_media.ContentTypeId, ApplicationId=$gallery.ApplicationId, ApplicationTypeId=$core_v2_gallery.ApplicationTypeId}")
+                    </span>
+                </li>
+
+                <li class="field-item post-tags">
+                    <label for="$core_v2_widget.UniqueId('TagBox')" class="field-item-name">$core_v2_language.GetResource('MediaGalleryPostAdmin_Categories')</label>
+                    <span class="field-item-input">
+                    	<input id="$core_v2_widget.UniqueId('TagBox')" type="text" value="$core_v2_utility.Join(', ', $media.Tags)" size="60" />
+                    </span>
+                </li>
+                #if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+                    <li class="field-item post-feature">
+                        <span class="field-item-input">
+                            <input type="checkbox" id="$core_v2_widget.UniqueId('SubscribeToPost')"#if(!$media || $core_v2_media.IsSubscribed($media.Id)) checked="checked"#end />
+                            <label for="$core_v2_widget.UniqueId('SubscribeToPost')">$core_v2_language.GetResource('Post_SubscribeComments')</label>
+                        </span>
+                  </li>
+                #end
+
+            </ul>
+        </div>
+        	<div id="$core_v2_encoding.HtmlAttributeEncode($optionsTabId)">
+        		<h3>$core_v2_language.GetResource('Meta_Heading')</h3>
+                        <ul class="field-list">
+                            <li class="field-item meta-title">
+            					<label for="$core_v2_widget.UniqueId('metaTitle')" class="field-item-name">$core_v2_language.GetResource('Meta_Title')</label>
+            					<span class="field-item-description" id="$core_v2_widget.UniqueId('metaTitle_desc')">$core_v2_language.GetResource('Meta_TitleDescription')</span>
+            					<span class="field-item-input">
+            						<textarea maxlength="128" rows="1" id="$core_v2_widget.UniqueId('metaTitle')" aria-describedby="$core_v2_widget.UniqueId('metaTitle_desc')" class="scaled" name="$core_v2_widget.UniqueId('metaTitle')" size="90">$!media.MetaTitle</textarea>
+            					</span>
+            					<span class="field-item-description character-count"></span>
+            				</li>
+            			    <li class="field-item meta-keywords">
+            			   		<label for="$core_v2_widget.UniqueId('metaKeywords')" class="field-item-name">$core_v2_language.GetResource('Meta_Keywords')</label>
+            					<span class="field-item-description" id="$core_v2_widget.UniqueId('metaKeywords_desc')">$core_v2_language.GetResource('Meta_KeywordsDescription')</span>
+            					<span class="field-item-input">
+            						<textarea maxlength="512" rows="1" id="$core_v2_widget.UniqueId('metaKeywords')"  aria-describedby="$core_v2_widget.UniqueId('metaKeywords_desc')"class="scaled" name="$core_v2_widget.UniqueId('metaKeywords')" size="90">$!media.MetaKeywords</textarea>
+            					</span>
+            				</li>
+            			    <li class="field-item">
+            					<label class="field-item-name" for="$core_v2_widget.UniqueId('metaDescription')">$core_v2_language.GetResource('Meta_Description')</label>
+            					<span class="field-item-description" id="$core_v2_widget.UniqueId('metaDescription_desc')">$core_v2_language.GetResource('Meta_DescriptionDescription')</span>
+            					<span class="field-item-input">
+            						<textarea maxlength="512" type="text" id="$core_v2_widget.UniqueId('metaDescription')" aria-describedby="$core_v2_widget.UniqueId('metaDescription_desc')">$!media.MetaDescription</textarea>
+            					</span>
+                      <span class="field-item-description character-count"></span>
+            				</li>
+            				 <li class="field-item required post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('ogImageFile')">
+						        <label for="$core_v2_widget.UniqueId('ogImageUpload_input')" class="field-item-name">$core_v2_language.GetResource('OpenGraph_Image')</label>
+					        <span class="field-item-description" id="$core_v2_widget.UniqueId('ogImageUpload_desc')">$core_v2_language.GetResource('OpenGraph_ImageDescription')</span>
+						        <span class="field-item-input file">
+							        <input type="text" columns="90" id="$core_v2_widget.UniqueId('ogImageUpload_input')" aria-describedby="$core_v2_widget.UniqueId('ogImageUpload_desc')" #if($ogImageFilename)value="$core_v2_encoding.HtmlAttributeEncode($ogImageFilename)"#end />
+						        </span>
+						        <span class="field-item-input preview">
+						        </span>
+						        <span class="field-item-input upload">
+							        <a href="#" class="upload add" id="$core_v2_widget.UniqueId('ogImageUpload')">$core_v2_language.GetResource('UploadFile')</a>
+							        <a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+						        </span>
+					        <span class="field-item-validation" style="display: none;"></span>
+				        </li>
+                        </ul>
+        	</div>
+    </div>
+
+    <ul class="field-list">
+     <li class="field-item submit-button">
+            <span class="field-item-input">
+                <a href="#" class="internal-link save-post disabled button">$core_v2_language.GetResource('Post')</a>
+                #if ($media && $core_v3_permission.CheckPermission($core_v2_mediaPermissions.DeletePost, $core_v2_user.Accessing.Id, "%{ ContentId = $media.ContentId, ContentTypeId = $core_v2_media.ContentTypeId }").IsAllowed)
+                	<a href="#" class="internal-link delete delete-post button" data-successurl="$core_v2_encoding.HtmlAttributeEncode($core_v2_mediaUrls.Gallery($media.MediaGalleryId))">$core_v2_language.GetResource('Delete')</a>
+                #end
+				<a id="$core_v2_widget.UniqueId('cancel')" href="javascript:void(0);" class="internal-link inline-button cancel-post">$core_v2_language.GetResource('Cancel')</a>
+                <span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+            </span>
+        </li>
+    </ul>
+
+</fieldset></form>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.UploadEditMediaGalleryPost')
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+#end
+#registerEndOfPageHtml()
+    <script type="text/javascript">
+        jQuery(function(j){
+            j.telligent.evolution.widgets.uploadEditMediaGalleryPost.register({
+                wrapperId: '$core_v2_widget.WrapperElementId',
+                mediaId: #if($media) $media.Id#else -1#end,
+                galleryId: $gallery.Id,
+                applicationId: '$gallery.ApplicationId',
+                applicationTypeId: '$core_v2_gallery.ApplicationTypeId',
+                file: {
+	                fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+	                url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+	                isRemote:#if($attachmentIsRemote) true#else false#end,
+	                isNew:#if($attachmentIsNew) true#else false#end
+                },
+                ogImage:{
+			    	fileName:'#if($ogImageFilename)$core_v2_encoding.JavascriptEncode($ogImageFilename)#end',
+			    	url: '#if($ogImageFileUrl)$core_v2_encoding.JavascriptEncode($ogImageFileUrl)#end',
+			    	isNew:#if($ogImageIsNew) true#else false#end
+		     	},
+		     	openGraphImageId:'$core_v2_widget.UniqueId('ogImageFile')',
+                attachmentId: '$core_v2_widget.UniqueId('attachment')',
+				attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+				attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+				attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+				attachmentErrorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadError'))',
+                previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+                uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+                uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+                postNameId: '$core_v2_widget.UniqueId('MediaPostName')',
+                subscribeId: '$core_v2_widget.UniqueId('SubscribeToPost')',
+                removeResource: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Remove'))',
+                tagBoxId: '$core_v2_widget.UniqueId('TagBox')',
+                errorMessageId: '$core_v2_widget.UniqueId('ErrorMessageId')',
+                requiredFieldText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RequiredField'))',
+                getBody: function() { return $core_v2_editor.GetContentScript('body'); },
+                saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('uploadedit.vm'))',
+                saveErrorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MediaGalleryPostAdmin_SaveError'))',
+                deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete_Confirmation'))',
+                writeTabId: '$core_v2_encoding.JavascriptEncode($writeTabId)',
+			    writeTabLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Write'))',
+			    optionsTabId: '$core_v2_encoding.JavascriptEncode($optionsTabId)',
+			    optionsTabLabel: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SEO_Options'))',
+			    tabsSelector: '#$core_v2_encoding.JavascriptEncode($tabsContainerId)',
+			    metaTitle:jQuery('#$core_v2_widget.UniqueId('metaTitle')'),
+		        metaKeywords:jQuery('#$core_v2_widget.UniqueId('metaKeywords')'),
+		        metaDescription:jQuery('#$core_v2_widget.UniqueId('metaDescription')'),
+                charactersRemain: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Characters_Remain'))',
+		        charactersOver: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Characters_Over'))',
+		       	ogUploadContextId:'$core_v2_encoding.JavascriptEncode($ogContextId)',
+		     	ogUploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($ogContextId))',
+		     	mediaContentTypeId: '$core_v2_media.ContentTypeId.ToString()',
+	    		cancelLink: jQuery('#$core_v2_widget.UniqueId('cancel')'),
+    			cancelConfirmationText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CancelConfirmation'))',
+            });
+        });
+    </script>
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:MediaGalleries_UploadEditMediaGalleryPost_Name}'))
+        ]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:MediaGalleries_UploadEditMediaGalleryPost_Name}" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Attachment_File">File</resource>
+  <resource name="Attachment_Url">URL</resource>
+  <resource name="Cancel">Cancel</resource>
+  <resource name="CancelConfirmation">Are you sure you want to cancel? All unsaved changes will be lost.</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="ChangeFile">Change file</resource>
+  <resource name="Characters_Over">character(s) over the recomended length.  For best results this should be shortened.</resource>
+  <resource name="Characters_Remain">character(s)</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="Delete_Confirmation">Are you sure you want to delete this file?</resource>
+  <resource name="MediaGalleries_UploadEditMediaGalleryPost_Description">Form for uploading or editing a media gallery file.</resource>
+  <resource name="MediaGalleries_UploadEditMediaGalleryPost_Name">Media Gallery - Upload/Edit File Form</resource>
+  <resource name="MediaGalleries_UploadEditMediaGalleryPost_Title_UploadEditFile">Upload/Edit File</resource>
+  <resource name="MediaGalleryPostAdmin_Categories">Tags</resource>
+  <resource name="MediaGalleryPostAdmin_Desc">Description</resource>
+  <resource name="MediaGalleryPostAdmin_FileOrUrl">File or Website</resource>
+  <resource name="MediaGalleryPostAdmin_FileOrUrl_Upload">Upload a file or enter a website address.</resource>
+  <resource name="MediaGalleryPostAdmin_Name">Name</resource>
+  <resource name="MediaGalleryPostAdmin_SaveError">An error occurred while saving this file.</resource>
+  <resource name="Meta_Description">Description</resource>
+  <resource name="Meta_DescriptionDescription">If specified, search engines and facebook will use this description to provide an excerpt of this post.  For best results this should be 150 characters or less.</resource>
+  <resource name="Meta_Heading">Search Engine Optimization</resource>
+  <resource name="Meta_Keywords">Keywords</resource>
+  <resource name="Meta_KeywordsDescription">Comma-separated list of words that uniquely relate to this content. These can be used by search engines to improve search results.</resource>
+  <resource name="Meta_Title">Title</resource>
+  <resource name="Meta_TitleDescription">Adjust the title exposed to search engines and facebook. If not set, the post’s title will be used.  Custom titles should be 55 characters or less for bst results.</resource>
+  <resource name="NewPost">Upload to {0}</resource>
+  <resource name="OpenGraph_Image">Image</resource>
+  <resource name="OpenGraph_ImageDescription">An image to respresent this post which will be used by sites that can read Open Graph tags such as facebook.</resource>
+  <resource name="Post">Post</resource>
+  <resource name="Post_SubscribeComments">Notify me when someone comments on this file</resource>
+  <resource name="PostIsModerated">You have posted to a gallery that requires a moderator to approve posts before they are available.  You will now be taken to the list of existing files in this gallery.</resource>
+  <resource name="Remove">Remove</resource>
+  <resource name="RemoveFile">Remove file</resource>
+  <resource name="RequiredField">This field is required.</resource>
+  <resource name="SEO_Options">SEO</resource>
+  <resource name="UploadError">The file could not be uploaded. The file type may not be allowed.</resource>
+  <resource name="UploadFile">Upload file</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="Write">Upload</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <requiredContext>
+      <context id="a51614fd19f7416ca89453788ac15794" />
+    </requiredContext>
+    <restScopes>
+        <scope id="galleries.media.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

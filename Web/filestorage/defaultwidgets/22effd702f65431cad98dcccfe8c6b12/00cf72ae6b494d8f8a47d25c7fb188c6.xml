@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Widget_Name}" version="11.0.0.0" description="${resource:Widget_Description}" instanceIdentifier="00cf72ae6b494d8f8a47d25c7fb188c6" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2021-06-17 16:04:38Z" provider="22effd702f65431cad98dcccfe8c6b12">
+    <contentScript language="Velocity"><![CDATA[#set ($collection = false)
+#set ($collection = $context.ArticleCollection)
+#if (!$collection)
+	$core_v2_widget.Hide()
+#end
+
+#set ($saveButtonTemplateId = $core_v2_widget.UniqueId('saveButtonTemplate'))
+
+<form><fieldset>
+	<ul class="field-list">
+	    <li class="field-item prefix">
+			<label for="$core_v2_widget.UniqueId('prefix')" class="field-item-name">$core_v2_language.GetResource('Prefix')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Prefix_Description')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('prefix')" name="$core_v2_widget.UniqueId('prefix')" value="$!collection.Prefix" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+	    <li class="field-item post-type">
+			<label for="$core_v2_widget.UniqueId('type')" class="field-item-name">$core_v2_language.GetResource('DefaultType')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('DefaultType_Description')</span>
+			<span class="field-item-input">
+			    #set($typeHtml = '')
+			    <select id="$core_v2_widget.UniqueId('type')" name="$core_v2_widget.UniqueId('type')">
+			        <option value=""></option>
+			        #foreach ($type in $articles_v1_articleTypes.List())
+			            <option value="$type.Id" #if ($collection.DefaultType && $collection.DefaultType.Id == $type.Id) selected="selected" #end>$type.Name</option>
+			            #if ($typeHtml.Length > 0)
+			                #set($typeHtml = "${typeHtml},")
+			            #end
+			            #set($imageHtml = '')
+			            #if ($type.ImageUrl && $type.ImageUrl.Length > 0)
+                            #set($imageHtml = $core_v2_ui.GetResizedImageHtml($type.ImageUrl, 32, 32, "%{ OutputIsPersisted = 'False', ResizeMethod = 'ZoomAndCrop', alt = '' }"))
+                        #end
+                        #store($typeHtml)
+                            $typeHtml
+                            '<div style=\"padding-left: 40px;min-height: 32px;position: relative;padding-top: 6px;font-size: 14px;\"><div style=\"position: absolute;top: 0;left: 0;width: 32px;height: 32px;\">${core_v2_encoding.JavascriptEncode($imageHtml)}</div>${core_v2_encoding.JavascriptEncode($type.Name)}</div>'
+                        #end
+			        #end
+			    </select>
+			</span>
+			<span class="field-item-validation" style="display: none;"></span>
+		</li>
+		<li class="field-item enable-helpfulness">
+		    <span class="field-item-input">
+		        <input type="checkbox" id="$core_v2_widget.UniqueId('enablehelpfulness')" name="$core_v2_widget.UniqueId('enablehelpfulness')" #if($!collection.EnableHelpfulness) checked="checked" #end />
+		        <label for="$core_v2_widget.UniqueId('enablehelpfulness')">$core_v2_language.GetResource('EnableHelpfulness')</label>
+		    </span>
+		    <span class="field-item-description">
+		        $core_v2_language.GetResource('EnableHelpfulness_Description')
+		    </span>
+		</li>
+		<li class="field-item helpfulness-response-types" id="$core_v2_widget.UniqueId('responsetypes-wrapper')">
+		    <label for="$core_v2_widget.UniqueId('responsetypes')" class="field-item-name">$core_v2_language.GetResource('ResponseTypes')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('ResponseTypes_Description')</span>
+			<span class="field-item-input">
+			    <table id="$core_v2_widget.UniqueId('responsetypes')" style="width: 100%">
+			        <thead>
+			            <tr>
+			                <th style="width:50%;">$core_v2_language.GetResource('ResponseTypesList_Headers_Name')</th>
+			                <th style="width: 25%">$core_v2_language.GetResource('ResponseTypesList_Headers_IsMessageRequired')</th>
+			                <th style="width: 25%">$core_v2_language.GetResource('ResponseTypesList_Headers_Actions')</th>
+			            </tr>
+			        </thead>
+			        <tbody>
+			            #foreach($responseType in $articles_v1_helpfulnessResponseTypes.List($collection.Id))
+			                <tr data-id="$responseType.Id">
+			                    <td><input type="text" value="$responseType.Name" /></td>
+			                    <td><input type="checkbox" #if($responseType.RequireMessage) checked="checked" #end /></td>
+			                    <td><a href="#" class="inline-button delete">$core_v2_language.GetResource('ResponseTypesList_Actions_Delete')</a></td>
+			                </tr>
+			            #end
+			        </tbody>
+			    </table>
+			    <a href="#" class="inline-button add">$core_v2_language.GetResource('ResponseTypesList_Actions_Add')</a>
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+	    
+        #set($revieWorkflowId = false)
+    	#set($reviewWorkflowId = $context.ReviewWorkflowId)
+    	#set($reviewWorkflowIsEditable = $context.CanEditReviewWorkflow)
+    	
+    	#if ($reviewWorkflowIsEditable || $reviewWorkflowId)
+            #set($reviewWorkflows = false)
+    		#set($reviewWorkflows = $context.ListReviewWorkflows())
+    		#if ($reviewWorkflows.Count > 0)
+        		<li class="field-item reviewworkflow">
+        		    <label for="$core_v2_widget.UniqueId('ReviewWorkflow')" class="field-item-name">$core_v2_language.GetResource('ReviewWorkflow')</label>
+        			<span class="field-item-description">$core_v2_language.GetResource('ReviewWorkflow_Desc')</span>
+        			<span class="field-item-input">
+        			    #if ($reviewWorkflowIsEditable)
+            			    <select id="$core_v2_widget.UniqueId('ReviewWorkflow')" name="$core_v2_widget.UniqueId('ReviewWorkflow')"> 
+            			        <option value="">$core_v2_language.GetResource('Value_ReviewWorkflow_NotSelected')</option>
+            			        #foreach ($reviewWorkflow in $reviewWorkflows)
+            			            <option value="$reviewWorkflow.Id.ToString()" #if($reviewWorkflowId == $reviewWorkflow.Id) selected #end>$reviewWorkflow.Name</option>
+            			        #end
+            			    </select>
+            			#else
+            			    #foreach ($reviewWorkflow in $reviewWorkflows)
+            			      #if($reviewWorkflowId == $reviewWorkflow.Id)
+            			        <span id="$core_v2_widget.UniqueId('ReviewWorkflow')">$reviewWorkflow.Name</span>
+            			      #end
+            			    #end
+            			#end
+        			</span>
+        			<span class="field-item-validation" style="display:none;"></span>
+        		</li>
+        		
+        		$core_v2_widget.ExecuteFile('render-reviewworkflowconfigurationform.vm')
+    		#end
+    	#end
+	</ul>
+</fieldset></form>
+
+<script type="text/html" id="$core_v2_encoding.HtmlAttributeEncode($saveButtonTemplateId)">
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					<a href="#" class="button save" data-messagename="contextual-save">$core_v2_language.GetResource('Save')</a>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</script>
+
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.articleOptionsPanel.register({
+	    collectionId: '$context.ArticleCollection.Id.ToString()',
+		saveTemplateId: '$core_v2_encoding.JavascriptEncode($saveButtonTemplateId)',
+		updateUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-update.jsm'))',
+		updateReviewWorkflowConfigurationFormUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-reviewworkflowconfigurationform.vm'))',
+		typeHtml: ['<div style="padding-left: 40px;min-height: 32px;position: relative;padding-top: 6px;font-size: 14px;"><div style="position: absolute;top: 0;left: 0;width: 32px;height: 32px;"></div></div>',$typeHtml],
+		inputs: {
+			reviewWorkflow: '#$core_v2_widget.UniqueId('ReviewWorkflow')',
+			defaultType: jQuery('#$core_v2_widget.UniqueId('type')'),
+			prefix: jQuery('#$core_v2_widget.UniqueId('prefix')'),
+			enableHelpfulness: jQuery('#$core_v2_widget.UniqueId('enablehelpfulness')'),
+			responseTypeWrapper: jQuery('#$core_v2_widget.UniqueId('responsetypes-wrapper')'),
+			responseTypes: jQuery('#$core_v2_widget.UniqueId('responsetypes')')
+		},
+		inputIds: {
+		    responseTypeWrapper: '#$core_v2_widget.UniqueId('responsetypes-wrapper')'
+		},
+		reviewWorkflowConfiguration: {
+		    getValues: function() { 
+		        try {
+		            return ($core_v2_dynamicForm.GetValuesScript($core_v2_widget.UniqueId('ReviewWorkflowConfiguration')));
+		        } catch (e) {
+		            return null;
+		        }
+		    }
+		},
+		reviewWorkflowIsEditable: #if($reviewWorkflowIsEditable) true#else false#end,
+		text: {
+			updateSuccess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UpdateSuccess'))',
+			responseTypeRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ResponseTypeRequired'))',
+			responseTypeDeleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ResponseType_DeleteConfirmation'))',
+			del: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="DefaultType">Default Article Type</resource>
+  <resource name="DefaultType_Description">The default article type for new articles.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="EnableHelpfulness">Enable feedback</resource>
+  <resource name="EnableHelpfulness_Description">When enabled, visitors can identify helpfulness on articles and provide feedback.</resource>
+  <resource name="Prefix">Article Identifier Prefix</resource>
+  <resource name="Prefix_Description">A textual prefix used to prefix the unique identifier of articles in this collection.</resource>
+  <resource name="ResponseType_DeleteConfirmation">Are you sure you want to delete this feedback response type?</resource>
+  <resource name="ResponseTypeRequired">At least one response type is required when feedback is enabled.</resource>
+  <resource name="ResponseTypes">Feedback response types</resource>
+  <resource name="ResponseTypes_Description">When providing unhelpful feedback, visitors must select a feedback type. A type can require that a custom message be provided as well.</resource>
+  <resource name="ResponseTypesList_Actions_Add">Add</resource>
+  <resource name="ResponseTypesList_Actions_Delete">Delete</resource>
+  <resource name="ResponseTypesList_Headers_Actions">Actions</resource>
+  <resource name="ResponseTypesList_Headers_IsMessageRequired">Message Required</resource>
+  <resource name="ResponseTypesList_Headers_Name">Name</resource>
+  <resource name="ReviewWorkflow">Review Workflow</resource>
+  <resource name="ReviewWorkflow_Desc">When a review workflow is selected, new and edited posts enter the workflow to approval before being published.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="UpdateSuccess">Article options have been updated successfully.</resource>
+  <resource name="Value_ReviewWorkflow_NotSelected">(Articles are not subject to a review workflow)</resource>
+  <resource name="Widget_Description">Manage article options.</resource>
+  <resource name="Widget_Name">Article Options</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+		<restScopes>
+			<scope id="articlecollections.helpfulnessresponsetypes.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

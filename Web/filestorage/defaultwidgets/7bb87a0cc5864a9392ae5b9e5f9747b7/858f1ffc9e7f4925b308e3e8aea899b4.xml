@@ -1,0 +1,37 @@
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Blogs_BlogPostTitle_Name}" cssClass="blog-post-title" description="${resource:Blogs_BlogPostTitle_Description}" instanceIdentifier="858f1ffc9e7f4925b308e3e8aea899b4" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false">
+	<contentScript>
+		<![CDATA[
+#set($post = false)
+#set($post = $core_v2_blogPost.Current)
+#if(!$post)
+	$core_v2_widget.Hide()
+#end
+
+<div class="content full text">
+	<h1 class="name">$post.Title</h1>
+</div>
+		]]>
+	</contentScript>
+	<headerScript>
+		<![CDATA[
+#set($blog = false)
+#set($blog = $core_v2_blog.Current)
+#if ($blog)
+	<a class="internal-link view-application weblog" href="$core_v2_encoding.HtmlAttributeEncode($blog.Url)"><span></span>$blog.Name</a>
+#else
+	$core_v2_language.GetResource('Blogs_BlogPostTitle_Name')
+#end
+		]]>
+	</headerScript>
+	<requiredContext>
+		<context id="24fa6951ab1244f5be3df20cc46b361b" />
+	</requiredContext>
+		<languageResources>
+<language key="en-us">
+	<resource name="Blogs_BlogPostTitle_Name">Blog - Post Heading</resource>
+	<resource name="Blogs_BlogPostTitle_Description">Displays a blog post's title.</resource>
+</language>
+		</languageResources>
+	</scriptedContentFragment>
+</scriptedContentFragments>

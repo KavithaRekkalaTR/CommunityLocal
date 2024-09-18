@@ -1,0 +1,543 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Groups_GroupBanner_Name}" version="12.0.0.0" description="${resource:Groups_GroupBanner_Description}" instanceIdentifier="ab92f9a89af24721bba1c464c1334be6" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="group-banner" lastModified="2021-09-01 18:23:34Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[#set ($isGroupTheme = false)
+#if ($core_v2_page.ThemeTypeId == $core_v2_group.ThemeTypeId)
+	#set ($isGroupTheme = true)
+#end
+
+#set ($parentNavigationId = $core_v2_widget.UniqueId('parentNavigation'))
+#set ($applicationNavigationId = $core_v2_widget.UniqueId('applicationNavigation'))
+#set ($userId = $core_v2_user.Accessing.Id)
+#set ($group = $core_v2_group.Current)
+#set ($groupType = $core_v2_group.Current.GroupType)
+#set ($isRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+#set ($membershipType = "None")
+#set ($groupUser = $core_v2_groupUserMember.Get($group.Id, "%{UserId = $userId}"))
+#set ($membershipType = $groupUser.MembershipType)
+#set ($canLeaveGroup = ($groupUser.IsDirectMember && !$groupUser.IsRoleMember) && ($membershipType != "Owner" || $core_v2_groupUserMember.List($group.Id, "%{MembershipType = 'Owner', PageSize = 1}").TotalCount > 1))
+#set ($canJoinGroup = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroup, $userId, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+#set ($canJoinGroupByRequest = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroupByRequest, $userId, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+#set ($application = false)
+#set ($application = $core_v2_application.Current)
+#set ($includeParent = $core_v2_widget.GetBoolValue('includeParent', true))
+#set ($includeNewLogin = $core_v2_widget.GetBoolValue('includeNewLogin', true))
+#set ($inheritNarrow = $core_v2_widget.GetBoolValue('inheritNarrow', true))
+#set ($inheritNarrowAppTitle = $core_v2_widget.GetBoolValue('inheritNarrowAppTitle', true))
+#set ($rootGroup = $core_v2_group.Root)
+## get current non container/app content
+#set ($content = false)
+#set ($content = $core_v2_content.Current)
+#set ($contentName = false)
+#if ($content && ($application && $content.ContentId == $application.ApplicationId) || ($group && $content.ContentId == $group.ContainerId) || $content.Errors.Count > 0)
+	#set ($content = false)
+	#set ($contentName = false)
+#elseif ($content)
+	#set ($contentName = $content.HtmlName('Web'))
+#end
+
+#set ($withAlert = false)
+#if (!$isRegistered && ($groupType == "PublicOpen" || $groupType == "PublicClosed"))
+	#set ($withAlert = true)
+#elseif ($groupType != "Joinless" && $membershipType == "None" && ($canJoinGroup || $canJoinGroupByRequest))
+	#set ($withAlert = true)
+#end
+
+#set ($isHome = false)
+#if ($core_v2_groupUrls.Current == 'Group')
+	#set($isHome = true)
+#end
+
+#set ($applications = $core_v2_customNavigation.Deserialize($group.Id, $core_v2_widget.GetCustomValue('navigation', '')))
+
+#set ($name = $group.Name)
+#set ($description = "")
+#if ($application)
+	#set ($description = $application.HtmlName(''))
+#elseif (!$isHome)
+	#foreach($app in $applications)
+		#if ($app.IsSelected)
+			#set ($description = $!app.Label)
+		#end
+	#end
+#end
+
+#set ($forceNarrow = false)
+#if (!$isGroupTheme && $inheritNarrow)
+	#set ($forceNarrow = true)
+#end
+
+$core_v2_widget.ExecuteFile('style.vm')
+
+#set ($currentGroupPath = false)
+#if ($includeParent && $group.Id != $rootGroup.Id)
+	#set ($currentGroupPath = $core_v2_group.CurrentGroupPath)
+#end
+
+<div class="banner context #if ($forceNarrow) slim inherited #end #if ($inheritNarrowAppTitle) with-application #end #if ($isHome && $applications.count > 0) home #end #if ($withAlert) with-alert #end #if ($includeParent && $group.Id != $rootGroup.Id && $currentGroupPath.Count >= 2) with-ancestors #end">
+	<div class="avatar">
+		<a href="$core_v2_encoding.HtmlAttributeEncode($group.Url)" #if ($isRegistered) $core_v2_tourTip.Render($core_v2_language.GetResource('TourTipTitle')) #end >
+			$core_v2_ui.GetResizedImageHtml($core_v2_group.Current.AvatarUrl, 68, 68, "%{ alt = $group.Name, ResizeMethod='ZoomAndCrop' }")
+		</a>
+	</div>
+
+	<div class="hierarchy">
+
+		#if ($includeParent && $group.Id != $rootGroup.Id)
+			#set ($pathIndex = $currentGroupPath.Count)
+			#set ($parentGroupName = false)
+			#set ($parentGroup = false)
+			#set ($depth = 0)
+			#if ($pathIndex > 2)
+				#foreach ($pathGroup in $currentGroupPath)
+				#beforeall
+					<div class="parent-navigation">
+						<div class="ui-links" data-direction="horizontal" id="$core_v2_encoding.HtmlAttributeEncode($parentNavigationId)" #if ($forceNarrow) data-maxlinks="0" #end>
+							<ul>
+				#each
+								#set ($depth = $depth + 1)
+								#if ($group.Id != $pathGroup.Id)
+									#set ($parentGroup = $pathGroup)
+								#end
+								<li class="navigation-list-item #if ($group.Id == $pathGroup.Id) selected #end">
+									<a class="crumb depth-$depth #if ($group.Id == $pathGroup.Id) selected #end" href="$core_v2_encoding.HtmlAttributeEncode($pathGroup.Url)">$pathGroup.Name</a>
+								</li>
+				#afterall
+								<li class="navigation-list-item">
+									<a href="#" class="more ui-tip" data-more title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('ParentGroups'))"></a>
+								</li>
+								<li class="navigation-list-item">
+									<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				#end
+			#elseif ($pathIndex == 2)
+				#foreach ($pathGroup in $currentGroupPath)
+					#if (!$parentGroup)
+						#set ($parentGroup = $pathGroup)
+					#end
+				#end
+				<div class="parent-navigation">
+					<div class="ui-links" data-direction="horizontal" id="$core_v2_encoding.HtmlAttributeEncode($parentNavigationId)" #if ($forceNarrow) data-maxlinks="0" #end>
+						<ul>
+							<li class="navigation-list-item #if ($group.Id == $parentGroup.Id) selected #end">
+								<a class="crumb depth-$depth #if ($group.Id == $parentGroup.Id) selected #end" href="$core_v2_encoding.HtmlAttributeEncode($parentGroup.Url)">$parentGroup.Name</a>
+							</li>
+							<li class="navigation-list-item #if ($group.Id == $pathGroup.Id) selected #end">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($parentGroup.Url)" class="crumb more ui-tip #if ($group.Id == $pathGroup.Id) selected #end" data-more title="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.FormatString($core_v2_language.GetResource('ParentGroup'), $parentGroup.Name))"></a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			#end
+
+		#end
+
+		<div class="current-hierarchy">
+
+			#if ($isHome)
+				<h1 class="container hierarchy-component">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($group.Url)"><span  #if ($name != $name) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($name)" #end>$name</span></a>
+				</h1>
+			#else
+				<div class="container hierarchy-component">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($group.Url)"><span  #if ($name != $name) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($name)" #end>$name</span></a>
+				</div>
+			#end
+
+			#if ($application)
+				#if (!$content && $core_v2_urls.FullPath($core_v2_page.Url) == $core_v2_urls.FullPath($application.Url))
+					<h1 class="application hierarchy-component">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($application.Url)"><span #if ($description != $description) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($description)" #end>$description</span></a>
+					</h1>
+				#else
+					<span class="application hierarchy-component">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($application.Url)"><span #if ($description != $description) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($description)" #end>$description</span></a>
+					</span>
+				#end
+				#if ($content)
+					<span class="content hierarchy-component">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)"><span #if ($contentName != $contentName) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($contentName)" #end>$contentName</span></a>
+					</span>
+				#end
+			#elseif (!$isHome)
+				#foreach($app in $applications)
+					#if ($app.IsSelected)
+						#if (!$content && $core_v2_urls.FullPath($core_v2_page.Url) == $core_v2_urls.FullPath($app.Url))
+							<h1 class="application hierarchy-component">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($app.Url)"><span #if ($description != $description) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($description)" #end>$description</span></a>
+							</h1>
+						#else
+							<span class="application hierarchy-component">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($app.Url)"><span #if ($description != $description) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($description)" #end>$description</span></a>
+							</span>
+						#end
+						#if ($content)
+							<span class="content hierarchy-component">
+								<a href="$core_v2_encoding.HtmlAttributeEncode($content.Url)"><span #if ($contentName != $contentName) class="ui-tip" title="$core_v2_encoding.HtmlAttributeEncode($contentName)" #end>$contentName</span></a>
+							</span>
+						#end
+					#end
+				#end
+			#end
+
+			#foreach($app in $applications)
+			#beforeall
+				<div #if ($isRegistered) $core_v2_tourTip.Render($core_v2_language.GetResource('TourTipApps'), "%{ CssClass = 'navigation-list applications' }") #else class="navigation-list applications" #end >
+					<div class="ui-links" data-minlinks="0" #if ($isHome && !$forceNarrow) data-maxlinks="50" data-direction="horizontal" #else data-maxlinks="0" data-direction="vertical" #end id="$core_v2_encoding.HtmlAttributeEncode($applicationNavigationId)">
+						<ul>
+			#each
+							## don't render 'home' links
+							#if ($group.Url != $core_v2_page.AbsoluteUrl($app.Url))
+								<li class="navigation-list-application #if($app.IsSelected) selected#end">
+									<a href="$core_v2_encoding.HtmlAttributeEncode($app.Url)" class="$!app.CssClass #if($app.IsSelected) selected#end">$!app.Label</a>
+								</li>
+							#end
+			#afterall
+							<li class="navigation-list-item">
+								<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+							</li>
+							<li class="navigation-list-item">
+								<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			#nodata
+				<div class="navigation-list applications">
+					<div class="ui-links" data-minlinks="0" data-maxlinks="50" data-direction="horizontal" id="$core_v2_encoding.HtmlAttributeEncode($applicationNavigationId)" #if ($forceNarrow) data-maxlinks="0" #end>
+						<ul></ul>
+					</div>
+				</div>
+			#end
+
+		</div>
+
+	</div>
+
+	## New Post Links
+
+	#set($links = false)
+	#set($links = $core_v2_group.ListNewPostLinks($group.Id))
+
+	#if ($links.Count == 1)
+		#foreach($link in $links)
+			<div class="navigation-list new">
+				<div class="ui-links" data-direction="vertical" data-maxlinks="1" data-minlinks="1">
+					<ul class="navigation-list">
+						<li class="navigation-list-item">
+							<a
+								#if ($isRegistered)
+									$core_v2_tourTip.Render($core_v2_language.GetResource('TourTipNew'), "%{ CssClass = $link.CssClass, Index = 100 }")
+								#else
+									class="$link.CssClass"
+								#end
+								href="$core_v2_encoding.HtmlAttributeEncode($link.Url)">$core_v2_language.GetResource('new_post')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		#end
+	#elseif ($links.Count > 1)
+		#foreach($link in $links)
+		#beforeall
+			<div class="navigation-list new">
+				<div class="ui-links" data-direction="vertical" data-maxlinks="0">
+					<ul class="navigation-list">
+		#each
+						<li class="navigation-list-item">
+							<a class="$link.CssClass" href="$core_v2_encoding.HtmlAttributeEncode($link.Url)">$link.Label</a>
+						</li>
+		#afterall
+						<li class="navigation-list-item">
+							<a
+								#if ($isRegistered)
+									$core_v2_tourTip.Render($core_v2_language.GetResource('TourTipNew'), "%{ CssClass = 'more', Index = 100 }")
+								#else
+									class="more"
+								#end
+								href="#" data-more>
+								$core_v2_language.GetResource('new_post')
+							</a>
+						</li>
+						<li class="navigation-list-item">
+							<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		#end
+	#elseif (!$isRegistered && $includeNewLogin)
+		#set($returnToCurrentUrl = true)
+		#set($loginLink = $core_v2_urls.LogIn("%{ReturnToCurrentUrl = $returnToCurrentUrl}"))
+		<div class="navigation-list new">
+			<div class="ui-links" data-direction="vertical">
+				<ul class="navigation-list">
+					<li class="navigation-list-item">
+						<a href="$core_v2_encoding.HtmlAttributeEncode($loginLink)">$core_v2_language.GetResource('new_post')</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	#end
+	#if (!$isRegistered && ($groupType == "PublicOpen" || $groupType == "PublicClosed"))
+		<div class="join-alert"><a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_groupUrls.RequestMembership($group.Id))" class="internal-link join-group">$core_v2_language.FormatString($core_v2_language.GetResource('Hubs_JoinGroup'), $group.Name)</a></div>
+		## Render extra vertical padding to allow for membership message
+		#registerEndOfPageHtml()
+			<div style="height:100px"></div>
+		#end
+	#elseif ($groupType != "Joinless" && $membershipType == "None" && ($canJoinGroup || $canJoinGroupByRequest))
+		<div class="join-alert"><a href="javascript:void(0)" id="$core_v2_widget.UniqueId('groupMembershipButton')" class="internal-link join-group">$core_v2_language.FormatString($core_v2_language.GetResource('Hubs_JoinGroup'), $group.Name)</a></div>
+		## Render extra vertical padding to allow for membership message
+		#registerEndOfPageHtml()
+			<div style="height:100px"></div>
+		#end
+		#registerEndOfPageHtml('telligent.evolution.widgets.groupBanner')
+			<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+		#end
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+				jQuery(function() {
+					jQuery.telligent.evolution.widgets.groupBanner.register({
+						groupMembershipButton:jQuery("#$core_v2_widget.UniqueId('groupMembershipButton')"),
+						requestJoinUrl: #if(!$canJoinGroup) "$core_v2_groupUrls.RequestMembership($group.Id)",#else null,#end
+						canJoinGroup: #if($canJoinGroup) true,#else false,#end
+						canJoinGroupByRequest: #if($canJoinGroupByRequest) true,#else false,#end
+						membershipType:"$membershipType",
+						groupId:$group.Id,
+						userId:$userId,
+						errorText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Groups_GroupBanner_Error'))",
+						joinedText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Groups_GroupBanner_Joined'))",
+						leftText:"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Groups_GroupBanner_Left'))",
+						#if ($core_v2_page.GetQueryStringValue("requestmembership") == "true" && $membershipType == "None")
+							forceRequestMembership:true
+						#else
+							forceRequestMembership:false
+						#end
+					});
+				});
+			</script>
+		#end
+	#end
+</div>
+
+#if (!$forceNarrow)
+	#registerEndOfPageHtml()
+		<script>
+		jQuery(function(j){
+			var isHome = #if ($isHome) true #else false #end;
+			var parents = j('#${parentNavigationId}');
+			var applications = j('#${applicationNavigationId}');
+			function expand(links) {
+				links.uilinks('reconfigure', { maxLinks: 100 });
+			}
+			function collapse(links) {
+				links.uilinks('reconfigure', { maxLinks: 0 });
+			}
+			j.telligent.evolution.messaging.subscribe('theme.social.scrolled', function(){
+				collapse(parents);
+				collapse(applications);
+			});
+			j.telligent.evolution.messaging.subscribe('theme.social.unscrolled', function(){
+				if(isHome) {
+					expand(parents);
+					expand(applications);
+				} else {
+					expand(parents);
+					collapse(applications);
+				}
+			});
+		});
+		</script>
+	#end
+#end]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+$core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Groups_GroupBanner_Name}'))
+			]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Groups_GroupBanner_Name}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="navigation" labelResourceName="Groups_GroupApplicationNavigation_Navigation" descriptionResourceName="Groups_GroupApplicationNavigation_Navigation_Description" dataType="Custom" template="core_v2_groupCustomNavigation" navigationType="group" scope="group" maxDepth="1" />
+	<property id="includeParent" labelResourceName="Groups_GroupApplicationNavigation_IncludeParent" descriptionResourceName="Groups_GroupApplicationNavigation_IncludeParent_Description" defaultValue="True" dataType="Bool" scope="group" />
+	<property id="includeAvatar" labelResourceName="Groups_GroupApplicationNavigation_IncludeAvatar" descriptionResourceName="Groups_GroupApplicationNavigation_IncludeAvatar_Description" defaultValue="True" dataType="Bool" scope="group" />
+	<property id="includeNewLogin" labelResourceName="new_login" descriptionResourceName="new_login_desc" defaultValue="True" dataType="Bool" scope="group" />
+	<property id="inheritNarrow" labelResourceName="inheritNarrow" descriptionResourceName="inheritNarrow_desc" defaultValue="True" dataType="Bool" scope="group" />
+	<property id="inheritNarrowAppTitle" labelResourceName="inheritNarrowAppTitle" descriptionResourceName="inheritNarrowAppTitle_desc" defaultValue="True" dataType="Bool" scope="group" />
+</propertyGroup>
+<propertyGroup id="design" labelResourceName="design">
+	<property id="designMode" labelResourceName="designMode" descriptionResourceName="designMode_desc" defaultValue="color" dataType="String" scope="group">
+		<propertyValue value="color" labelResourceName="color" propertiesToShow="paletteId" propertiesToHide="coverPhotoUrl,coverPhotoLayout,blurCoverPhoto,shadowCoverPhoto,coverPhotoAlignment,coverPhotoFixedHeightHome,coverPhotoFixedHeightOther,coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId" />
+		<propertyValue value="photo" labelResourceName="photo" propertiesToShow="coverPhotoUrl,coverPhotoLayout,blurCoverPhoto,shadowCoverPhoto,coverPhotoAlignment,coverPhotoFixedHeightHome,coverPhotoFixedHeightOther,coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId" propertiesToHide="paletteId" />
+	</property>
+	<property id="paletteId" labelResourceName="palette" descriptionResourceName="palette_desc" dataType="String" template="themepalette" paletteTypeId="contextBanner" scope="group" />
+	<property id="coverPhotoUrl" labelResourceName="coverphoto" descriptionResourceName="coverPhotoUrl_desc" dataType="Url" enablePreview="true" allowLocal="true" allowRemote="false" scope="group">
+		<propertyRule name="extensionvalidation" validExtensions="gif,jpg,jpeg,png" invalidExtensions="" />
+	</property>
+	<property id="coverPhotoLayout" labelResourceName="coverPhotoLayout" descriptionResourceName="coverPhotoLayoutDesc" defaultValue="cover" dataType="String" scope="group" renderValueLabelAsHtml="true" showHtmlWhenSelected="true" labelWidth="520">
+		<propertyValue value="dynamic" labelResourceName="coverPhotoLayoutDynamic" propertiesToShow="coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" propertiesToHide="coverPhotoFixedHeightHome,coverPhotoFixedHeightOther,blurCoverPhoto,coverPhotoBackgroundPaletteId" />
+		<propertyValue value="cover" labelResourceName="coverPhotoLayoutCover" propertiesToShow="coverPhotoFixedHeightHome,coverPhotoFixedHeightOther,blurCoverPhoto" propertiesToHide="coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight,coverPhotoBackgroundPaletteId" />
+		<propertyValue value="contain" labelResourceName="coverPhotoLayoutContain" propertiesToShow="coverPhotoFixedHeightHome,coverPhotoFixedHeightOther,coverPhotoBackgroundPaletteId" propertiesToHide="blurCoverPhoto,coverPhotoLayoutDynamicHeightMode,coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" />
+	</property>
+	<property id="coverPhotoFixedHeightHome" labelResourceName="coverPhotoFixedHeightHome" descriptionResourceName="coverPhotoFixedHeightHomeDesc" defaultValue="176" dataType="Int" scope="group" />
+	<property id="coverPhotoFixedHeightOther" labelResourceName="coverPhotoFixedHeightOther" descriptionResourceName="coverPhotoFixedHeightOtherDesc" defaultValue="88" dataType="Int" scope="group" />
+	<property id="coverPhotoLayoutDynamicHeightMode" labelResourceName="coverPhotoLayoutDynamicHeightMode" descriptionResourceName="coverPhotoLayoutDynamicHeightModeDesc" defaultValue="defined" dataType="String" scope="group">
+		<propertyValue value="defined" labelResourceName="coverPhotoLayoutDynamicHeightModeDefined" propertiesToShow="coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" propertiesToHide="" />
+		<propertyValue value="measured" labelResourceName="coverPhotoLayoutDynamicHeightModeMeasured" propertiesToShow="" propertiesToHide="coverPhotoLayoutDynamicDefinedWidth,coverPhotoLayoutDynamicDefinedHeight" />
+	</property>
+	<property id="coverPhotoLayoutDynamicDefinedWidth" labelResourceName="coverPhotoLayoutDynamicDefinedWidth" descriptionResourceName="coverPhotoLayoutDynamicDefinedWidthDesc" defaultValue="1500" dataType="Int" scope="group" />
+	<property id="coverPhotoLayoutDynamicDefinedHeight" labelResourceName="coverPhotoLayoutDynamicDefinedHeight" descriptionResourceName="coverPhotoLayoutDynamicDefinedHeightDesc" defaultValue="375" dataType="Int" scope="group" />
+	<property id="coverPhotoAlignment" labelResourceName="coverPhotoAlignment" descriptionResourceName="coverPhotoAlignmentDesc" defaultValue="center center" dataType="String" scope="group">
+		<propertyValue value="left top" labelResourceName="lefttop" />
+		<propertyValue value="center top" labelResourceName="centertop" />
+		<propertyValue value="right top" labelResourceName="righttop" />
+		<propertyValue value="left center" labelResourceName="leftcenter" />
+		<propertyValue value="center center" labelResourceName="centercenter" />
+		<propertyValue value="right center" labelResourceName="rightcenter" />
+		<propertyValue value="left bottom" labelResourceName="leftbottom" />
+		<propertyValue value="center bottom" labelResourceName="centerbottom" />
+		<propertyValue value="right bottom" labelResourceName="rightbottom" />
+	</property>
+	<property id="coverPhotoBackgroundPaletteId" labelResourceName="coverPhotoBackgroundPalette" descriptionResourceName="coverPhotoBackgroundPaletteDesc" dataType="String" template="themepalette" paletteTypeId="contextBanner" scope="group" />
+	<property id="blurCoverPhoto" labelResourceName="coverPhotoBlur" descriptionResourceName="coverPhotoBlur_desc" defaultValue="False" dataType="Bool" scope="group" />
+	<property id="shadowCoverPhoto" labelResourceName="shadowCoverPhoto" descriptionResourceName="shadowCoverPhoto_desc" defaultValue="True" dataType="Bool" scope="group" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="amber">Amber</resource>
+  <resource name="backgroundColor">Background Color</resource>
+  <resource name="backgroundColor2">Secondary Gradient Background Color</resource>
+  <resource name="black">Black</resource>
+  <resource name="blue">Blue</resource>
+  <resource name="bluegray">Blue Gray</resource>
+  <resource name="border">Bottom Border</resource>
+  <resource name="border_desc">Render a bottom border beneath the banner. When the bottom shadow is enabled, only renders when not scrolled.</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="centerbottom">Bottom, Center</resource>
+  <resource name="centercenter">Center, Center</resource>
+  <resource name="centertop">Top, Center</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="city">City</resource>
+  <resource name="color">Use Color</resource>
+  <resource name="colorMode">Color Type</resource>
+  <resource name="coverForeground">Cover Foreground</resource>
+  <resource name="coverphoto">Cover Photo</resource>
+  <resource name="coverPhotoAlignment">Cover Photo Alignment</resource>
+  <resource name="coverPhotoAlignmentDesc">When the cover photo exceeds its boundaries, it can be aligned.</resource>
+  <resource name="coverPhotoBackgroundPalette">Background</resource>
+  <resource name="coverPhotoBackgroundPaletteDesc">When using fixed banner height with the entire photo visible, this color will be used to fill any area not covered by the photo.</resource>
+  <resource name="coverPhotoBlur">Blur Cover Photo</resource>
+  <resource name="coverPhotoBlur_desc">When selected, the cover photo is blurred. This is useful for legibility of overlaid text when using a complex image.</resource>
+  <resource name="coverPhotoFixedHeightHome">Banner height on group home page</resource>
+  <resource name="coverPhotoFixedHeightHomeDesc">The group banner will be fixed to this height in pixels on its group home page.</resource>
+  <resource name="coverPhotoFixedHeightOther">Banner height on other group pages</resource>
+  <resource name="coverPhotoFixedHeightOtherDesc">The group banner will be fixed to this height in pixels on all other group pages.</resource>
+  <resource name="coverPhotoLayout">Cover Photo Layout</resource>
+  <resource name="coverPhotoLayoutContain">&lt;span class="cover-layout contain"&gt;&lt;strong&gt;Fixed&lt;/strong&gt; banner height with entire photo &lt;strong&gt;scaled&lt;/strong&gt; to be visible within the banner space&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutCover">&lt;span class="cover-layout cover"&gt;&lt;strong&gt;Fixed&lt;/strong&gt; banner height with photo &lt;strong&gt;scaled and cropped&lt;/strong&gt; to fill the available banner space&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDesc">Select the way in which the cover photo and banner are positioned.</resource>
+  <resource name="coverPhotoLayoutDynamic">&lt;span class="cover-layout dynamic"&gt;&lt;strong&gt;Dynamic&lt;/strong&gt; banner height proportional to the browser width to show a consistent photo at all sizes&lt;/span&gt;</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeight">Dynamic banner crop height</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedHeightDesc">The height, in pixels, to which the cover photo will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidth">Dynamic banner crop width</resource>
+  <resource name="coverPhotoLayoutDynamicDefinedWidthDesc">The width, in pixels, to which the cover photo will be resized and cropped. The entire cropped photo will be visible at all browser sizes.</resource>
+  <resource name="coverPhotoLayoutDynamicHeightMode">Dynamic banner height proportions</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeDefined">Using specific dimensions</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeDesc">With dynamic banner height, the banner will resize in proportion to the width of the browser to keep the cover photo fully visible at all browser sizes. The proportion used can be measured based either on the photo's own dimensions or specified with an explicit crop width and height.</resource>
+  <resource name="coverPhotoLayoutDynamicHeightModeMeasured">Measured from photo</resource>
+  <resource name="coverPhotoUrl_desc">When provided, a cover photo is rendered as the banner's background.</resource>
+  <resource name="custom">Custom</resource>
+  <resource name="cyan">Cyan</resource>
+  <resource name="design">Design</resource>
+  <resource name="designMode">Design</resource>
+  <resource name="designMode_desc">Customize your group's banner with a cover photo or color palette.</resource>
+  <resource name="foregroundColor">Foreground Color</resource>
+  <resource name="gradient">Gradient</resource>
+  <resource name="green">Green</resource>
+  <resource name="Groups_GroupApplicationNavigation_IncludeAvatar">Include Group Avatar</resource>
+  <resource name="Groups_GroupApplicationNavigation_IncludeAvatar_Description">When enabled, render group avatar.</resource>
+  <resource name="Groups_GroupApplicationNavigation_IncludeParent">Include Parent Navigation</resource>
+  <resource name="Groups_GroupApplicationNavigation_IncludeParent_Description">When enabled, parent groups can be navigated to from the current group</resource>
+  <resource name="Groups_GroupApplicationNavigation_Navigation">Navigation Items</resource>
+  <resource name="Groups_GroupApplicationNavigation_Navigation_Description">Add, edit, delete, and reorder navigation items for this group.</resource>
+  <resource name="Groups_GroupBanner_Description">Displays a banner of common group information and links.</resource>
+  <resource name="Groups_GroupBanner_Error">There was an error joining or leaving the group.</resource>
+  <resource name="Groups_GroupBanner_Joined">You have joined this group.</resource>
+  <resource name="Groups_GroupBanner_Left">You have left this group.</resource>
+  <resource name="Groups_GroupBanner_Name">Group - Banner</resource>
+  <resource name="Hubs_EditAndAddDescription">Edit this group and add a description</resource>
+  <resource name="Hubs_JoinGroup">{0} requires membership for participation - click to join</resource>
+  <resource name="inheritNarrow">Narrow on Inheriting Themes</resource>
+  <resource name="inheritNarrow_desc">Render the narrow view on inherited themable applications that provide their own banner, such as blogs.</resource>
+  <resource name="inheritNarrowAppTitle">Application Title on Inheriting Themes</resource>
+  <resource name="inheritNarrowAppTitle_desc">Always render the application title in narrow view on inherited themable applications that provide their own banner, such as blogs.</resource>
+  <resource name="leftbottom">Bottom, Left</resource>
+  <resource name="leftcenter">Center, Left</resource>
+  <resource name="lefttop">Top, Left</resource>
+  <resource name="lightblue">Light Blue</resource>
+  <resource name="lightbluegray">Light Blue Gray</resource>
+  <resource name="lime">Lime</resource>
+  <resource name="limeade">Limeade</resource>
+  <resource name="moonrise">Moonrise</resource>
+  <resource name="more">More</resource>
+  <resource name="new_login">Render 'New' button to non-logged-in users</resource>
+  <resource name="new_login_desc">When enabled, renders a 'New' button to non-logged-in users which redirects to login.</resource>
+  <resource name="new_post">New</resource>
+  <resource name="no">No</resource>
+  <resource name="Options">Options</resource>
+  <resource name="palette">Color Palette</resource>
+  <resource name="palette_desc">Select a color palette for your group's banner. These are defined by the theme and can be adjusted.</resource>
+  <resource name="ParentGroup">Up to {0}</resource>
+  <resource name="ParentGroups">View Parent Groups</resource>
+  <resource name="peach">Peach</resource>
+  <resource name="photo">Use Cover Photo</resource>
+  <resource name="pink">Pink</resource>
+  <resource name="purple">Purple</resource>
+  <resource name="red">Red</resource>
+  <resource name="rightbottom">Bottom, Right</resource>
+  <resource name="rightcenter">Center, Right</resource>
+  <resource name="righttop">Top, Right</resource>
+  <resource name="river">River</resource>
+  <resource name="scooter">Scooter</resource>
+  <resource name="shadow">Bottom Shadow</resource>
+  <resource name="shadow_desc">Render a shadow beneath the banner. When the bottom border is enabled, only renders when scrolled.</resource>
+  <resource name="shadowCoverPhoto">Shadow Cover Photo</resource>
+  <resource name="shadowCoverPhoto_desc">When selected, the cover photo is shadowed to increase legibility of text on a light photo.</resource>
+  <resource name="solid">Solid</resource>
+  <resource name="stellar">Stellar</resource>
+  <resource name="sunny">Sunny</resource>
+  <resource name="sunset">Sunset</resource>
+  <resource name="teal">Teal</resource>
+  <resource name="TourTipApps">Navigate the group's applications.</resource>
+  <resource name="TourTipNew">Share content with the group.</resource>
+  <resource name="TourTipTitle">Groups are areas of interest within your community where people can share and collaborate together. Some groups are public while others are private.</resource>
+  <resource name="tropic">Tropic</resource>
+  <resource name="white">White</resource>
+  <resource name="yellow">Yellow</resource>
+  <resource name="yes">Yes</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity"><![CDATA[
+#set ($designMode = $core_v2_widget.GetStringValue('designMode', 'color'))
+#if ($designMode == 'photo')
+	#set ($coverPhotoLayout = $core_v2_widget.GetStringValue('coverPhotoLayout', 'cover'))
+	#set ($coverPhotoUrl = false)
+	#set ($coverPhotoUrl = $core_v2_widget.GetUrlValue('coverPhotoUrl', ''))
+	#if ($coverPhotoUrl && $coverPhotoUrl.Length > 0)
+		with-cover-photo
+	#end
+	#if ($coverPhotoLayout == 'cover')
+		#set ($blurCoverPhoto = $core_v2_widget.GetBoolValue('blurCoverPhoto', true))
+		#if ($blurCoverPhoto)
+			with-blur
+		#end
+	#end
+	#set ($shadowCoverPhoto = $core_v2_widget.GetBoolValue('shadowCoverPhoto', false))
+	#if ($shadowCoverPhoto)
+		with-shadow
+	#end
+#end
+			]]></additionalCssScript>
+		<restScopes>
+			<scope id="groups.users.modify" />
+		</restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

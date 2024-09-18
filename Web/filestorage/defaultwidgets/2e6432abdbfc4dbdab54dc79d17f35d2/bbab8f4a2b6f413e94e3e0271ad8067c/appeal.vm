@@ -1,0 +1,318 @@
+#set($title = false)
+#set($title = $appeal.Content.HtmlName('Web'))
+#if (!$title)
+	#set($title = $core_v2_language.GetResource('ContentTitleNotAvailable'))
+#end
+
+#set($contentTypeName = '')
+#set($contentType = false)
+#set($contentType = $core_v2_contentType.Get($appeal.Content.ContentTypeId))
+#if ($appeal.Content.ContentTypeId != $core_v2_utility.ParseGuid('') && $contentType && $contentType.Name)
+	#set($contentTypeName = $contentType.Name.ToLowerInvariant())
+#else
+	#set($contentTypeName = $core_v2_language.GetResource('missing-content-type-name').ToLowerInvariant())
+#end
+
+#set($abusiveContent = false)
+#set($abusiveContent = $core_v2_abusiveContent.Get($appeal.Content.ContentId, $appeal.Content.ContentTypeId))
+
+<li data-appealid="$appeal.AppealId" data-contentid="$appeal.Content.ContentId" data-contenttypeid="$appeal.Content.ContentTypeId" class="content-item appeal">
+	<div class="moderated-content-header">
+		<fieldset>
+			<ul class="field-list">
+				<li class="field-item">
+					<span class="field-item-input">
+						#if ($appeal.AuthorUser && $hasModerateUsersPermission)
+							<div class="ui-links navigation-list" data-minlinks="0" data-direction="vertical" data-maxlinks="0">
+								<ul class="navigation-list">
+									#if($appeal.Content.ContentTypeId != $core_v2_user.ContentTypeId)
+										<li class="navigation-list-item abuse">
+											$core_v2_ui.Moderate($appeal.AuthorUser.ContentId, $core_v2_user.ContentTypeId, "%{ CssClass='appeals-moderate'}")
+										</li>
+									#end
+									<li class="navigation-list-item moderate">
+										#if($appeal.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+											#set ($moderateText = $core_v2_language.GetResource('moderate_user'))
+											#set ($unmoderateText = $core_v2_language.GetResource('unmoderate_user'))
+											#set ($type = 'user')
+										#else
+											#set ($moderateText = $core_v2_language.GetResource('moderate_author'))
+											#set ($unmoderateText = $core_v2_language.GetResource('unmoderate_author'))
+											#set ($type = 'author')
+										#end
+
+										#if ($appeal.AuthorUser.ModerationLevel == 'Moderated')
+											<a href="#" class="moderate-toggle" data-messagename="user-moderate-toggle" data-userid="$appeal.AuthorUser.Id" data-moderated="true"  data-type="$type">
+												$unmoderateText
+											</a>
+										#else
+											<a href="#" class="moderate-toggle" data-messagename="user-moderate-toggle" data-userid="$appeal.AuthorUser.Id" data-moderated="false" data-type="$type">
+												$moderateText
+											</a>
+										#end
+									</li>
+									<li class="navigation-list-item delete">
+										#if($appeal.Content.ContentTypeId == $core_v2_user.ContentTypeId)
+											#set($isAuthor = true)
+											#set($deleteText = $core_v2_language.GetResource('delete_user'))
+										#else
+											#set($isAuthor = false)
+											#set($deleteText = $core_v2_language.GetResource('delete_author'))
+										#end
+										<a href="#" class="delete-user" data-messagename="user-delete" data-userid="$appeal.AuthorUser.Id" data-username="$core_v2_encoding.HtmlAttributeEncode($appeal.AuthorUser.DisplayName)">$deleteText</a>
+									</li>
+									<li class="navigation-list-item">
+										<a href="#" class="button" data-more>$core_v2_language.GetResource('more')</a>
+									</li>
+									<li class="navigation-list-item">
+										<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+									</li>
+								</ul>
+							</div>
+						#end
+
+						#if (!$appeal.RequiresManualActionToCorrectContent)
+							#if ($appeal.AppealState == 'Initiated' || $appeal.AppealState == 'AuthorResponded' || $appeal.AppealState == 'Rejected' || $appeal.AppealState == 'Expired' || $appeal.AppealState == 'ModerationRequired')
+								<a href="#" class="accept button">$core_v2_language.GetResource('Accept')</a>
+							#else
+								<span class="accept button disabled">$core_v2_language.GetResource('Accept')</span>
+							#end
+							#if ($appeal.AppealState == 'AuthorResponded' || $appeal.AppealState == 'Accepted' || $appeal.AppealState == 'ModerationRequired')
+								<a href="#" class="reject delete button">$core_v2_language.GetResource('Reject')</a>
+							#else
+								<span class="reject delete button disabled">$core_v2_language.GetResource('Reject')</span>
+							#end
+							
+							<a href="#" class="respond inline-button">$core_v2_language.GetResource('RespondToAuthor')</a>
+							
+							#if ($context.CanPreview($appeal.Content.ContentId, $appeal.Content.ContentTypeId))
+                                <a href="#" class="preview inline-button">$core_v2_language.GetResource('Preview')</a>
+                            #end
+						#else
+							<a class="review button" href="$core_v2_encoding.HtmlAttributeEncode($appeal.Content.Url)">$core_v2_language.GetResource('ManualReview')</a>
+						#end
+					</span>
+				</li>
+			</ul>
+		</fieldset>
+	</div>
+	<div class="moderated-content-attributes">
+		<div class="author">
+			#if ($appeal.AuthorUser)
+				#set($userUrl = false)
+				#set($userUrl = $context.ViewMember($appeal.AuthorUser.Id))
+				<div class="avatar">
+          #if ($userUrl)
+            <a href="$core_v2_encoding.HtmlAttributeEncode($userUrl)" #if(!$userUrl.StartsWith('#')) target="_blank"#end>
+              $core_v2_ui.GetResizedImageHtml($appeal.AuthorUser.AvatarUrl, 32, 32, "%{border='0px', alt=$appeal.AuthorUser.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+            </a>
+          #else
+            $core_v2_ui.GetResizedImageHtml($appeal.AuthorUser.AvatarUrl, 32, 32, "%{border='0px', alt=$appeal.AuthorUser.DisplayName, ResizeMethod = 'ZoomAndCrop' }")
+          #end
+        </div>
+        <span class="user-name">
+            #if ($userUrl)
+              <a href="$core_v2_encoding.HtmlAttributeEncode($userUrl)" class="internal-link view-profile" #if(!$userUrl.StartsWith('#')) target="_blank"#end>
+                $appeal.AuthorUser.DisplayName
+              </a>
+            #else
+              $appeal.AuthorUser.DisplayName
+            #end
+        </span>
+			#end
+		</div>
+		<ul class="attribute-list">
+			<li class="attribute-item">
+				<span class="attribute-value">$core_v2_language.FormatDateAndTime($appeal.Content.CreatedDate)</span>
+			</li>
+			#if($appeal.Content.ContentTypeId != $core_v2_user.ContentTypeId)
+				#if ($appeal.Content.IsEnabled && $appeal.Content.Url)
+					<li class="attribute-item">
+						<span class="attribute-value"><a href="$core_v2_encoding.HtmlAttributeEncode($appeal.Content.Url)">$title</a></span>
+					</li>
+				#end
+				#if ($appeal.Content.Application && $appeal.Content.Application.HtmlName('Web').Trim().Length > 0 && $appeal.Content.Application.ApplicationId != $appeal.Content.Application.Container.ContainerId)
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('InApplication'), $core_v2_encoding.HtmlAttributeEncode($appeal.Content.Application.Url), $appeal.Content.Application.HtmlName('Web'))</span>
+					</li>
+				#end
+				#if ($appeal.Content.Application.Container && $appeal.Content.Application.Container.HtmlName('Web').Trim().Length > 0)
+					<li class="attribute-item">
+						<span class="attribute-value">$core_v2_language.FormatString($core_v2_language.GetResource('InContainer'), $core_v2_encoding.HtmlAttributeEncode($appeal.Content.Application.Container.Url), $appeal.Content.Application.Container.HtmlName('Web'))</span>
+					</li>
+				#end
+			#end
+			#if ($appeal.AppealState == 'Accepted')
+				<li class="attribute-item approved">
+					<span class="attribute-value">$core_v2_language.GetResource('Accepted')</span>
+				</li>
+			#else
+				<li class="attribute-item denied">
+					<span class="attribute-value">$core_v2_language.GetResource('Denied')</span>
+				</li>
+			#end
+		</ul>
+	</div>
+	<div class="moderated-content-approvedeny-wrapper" style="display:none;">
+	    <p class="moderated-content-approvedeny-instructions"></p>
+	    <div class="moderated-content-approvedeny-form">
+	        <fieldset>
+	            <ul class="field-list">
+	                <li class="field-item">
+	                    <label class="field-item-name" for="response_${appeal.AppealId}">$core_v2_language.GetResource('BoardResponse')</label>
+	                    <span class="field-item-description">$core_v2_language.FormatString($core_v2_language.GetResource('BoardResponse_Description'), $contentTypeName)</span>
+	                    <span class="field-item-input">
+	                        <textarea id="response_${appeal.AppealId}" rows="5"></textarea>
+                        </span>
+                    </li>
+                </ul>
+            </fieldset>
+	    </div>
+	    <fieldset>
+	        <ul class="field-list">
+	            <li class="field-item">
+	                <span class="field-item-input">
+	                    #if ($appeal.AppealState == 'Initiated' || $appeal.AppealState == 'AuthorResponded' || $appeal.AppealState == 'Rejected' || $appeal.AppealState == 'Expired' || $appeal.AppealState == 'ModerationRequired')
+							<a href="#" class="accept button">$core_v2_language.GetResource('Accept')</a>
+						#end
+						#if ($appeal.AppealState == 'AuthorResponded' || $appeal.AppealState == 'Accepted' || $appeal.AppealState == 'ModerationRequired')
+							<a href="#" class="reject delete button">$core_v2_language.GetResource('Reject')</a>
+						#end
+                        <a href="#" class="cancel inline-button">$core_v2_language.GetResource('cancel')</a>	                    
+	                </span>
+	            </li>
+	        </ul>
+	    </fieldset>
+	</div>
+	<div class="moderated-content-information">
+		<div class="message information">
+			<p>
+				#set($explanation = $appeal.IdentificationExplanation)
+				#if ($explanation && $explanation.Length > 1)
+					#set($length = $explanation.Length - 1)
+					#set($lastChar = $explanation.Substring($length, 1))
+					#if ($lastChar != '.')
+						#set($explanation = "${explanation}.")
+					#end
+				#end
+
+				$explanation
+
+				#if ($appeal.AppealState == 'Expired')
+					$core_v2_language.FormatString($core_v2_language.GetResource('ExpiredMessage'), $core_v2_language.FormatDateAndTime($appeal.AppealInitiatedDate), $contentTypeName)
+					#if ($abusiveContent)
+						$core_v2_language.FormatString($core_v2_language.GetResource('ExpungeMessage'), $core_v2_language.FormatDateAndTime($abusiveContent.ExpungeDate), $contentTypeName)
+					#end
+				#elseif($appeal.AppealState == 'Accepted')
+					$core_v2_language.FormatString($core_v2_language.GetResource('AcceptedMessage'), $contentTypeName)
+				#elseif($appeal.AppealState == 'Rejected')
+					$core_v2_language.FormatString($core_v2_language.GetResource('RejectedMessage'), $core_v2_language.FormatDateAndTime($appeal.AppealInitiatedDate), $contentTypeName)
+					#if ($abusiveContent)
+						$core_v2_language.FormatString($core_v2_language.GetResource('ExpungeMessage'), $core_v2_language.FormatDateAndTime($abusiveContent.ExpungeDate), $contentTypeName)
+					#end
+				#elseif($appeal.AppealState == 'AuthorResponded')
+					$core_v2_language.FormatString($core_v2_language.GetResource('AuthorRespondedMessage'), $core_v2_language.FormatDateAndTime($appeal.AppealInitiatedDate), $contentTypeName)
+				#elseif($appeal.AppealState == 'Initiated')
+					$core_v2_language.FormatString($core_v2_language.GetResource('InitiatedMessage'), $core_v2_language.FormatDateAndTime($appeal.AppealInitiatedDate), $core_v2_language.FormatDateAndTime($appeal.AppealExpires), $contentTypeName)
+				#end
+			</p>
+
+			#if ($appeal.AuthorResponse.Length > 0)
+				<p><strong>$core_v2_language.GetResource('AuthorsResponse')</strong></p>
+				$appeal.AuthorResponse
+			#end
+
+			#if ($appeal.AppealState == 'Accepted' || $appeal.AppealState == 'Rejected')
+				#set($modifiedByUser = '?')
+				#if ($appeal.ModifiedByUser)
+					#if ($appeal.ModifiedByUser.ProfileUrl)
+						#set($modifiedByUser = "<a href='$core_v2_encoding.HtmlAttributeEncode($appeal.ModifiedByUser.ProfileUrl)' class='internal-link view-profile'>$appeal.ModifiedByUser.DisplayName</a>")
+					#else
+						#set($modifiedByUser = $appeal.ModifiedByUser.DisplayName)
+					#end
+				#end
+
+				#set($resolvedDate = '?')
+				#if($appeal.ResolutionDate)
+					#set($resolvedDate = $core_v2_language.FormatDateAndTime($appeal.ResolutionDate))
+				#end
+			#end
+			
+			#if ($appeal.AppealState == 'Accepted')
+				<p><strong>$core_v2_language.FormatString($core_v2_language.GetResource('BoardAcceptedMessage'), $modifiedByUser, $resolvedDate, $contentTypeName)</strong></p>
+				$!appeal.BoardResponse
+			#elseif ($appeal.AppealState == 'Rejected')
+				<p><strong>$core_v2_language.FormatString($core_v2_language.GetResource('BoardRejectedMessage'), $modifiedByUser, $resolvedDate, $contentTypeName)</strong></p>
+				$!appeal.BoardResponse
+			#elseif ($appeal.BoardResponse.Length > 0)
+			    <p><strong>$core_v2_language.GetResource('BoardResponse')</strong></p>
+				$!appeal.BoardResponse
+			#end
+		</div>
+	</div>
+	<div class="moderated-content"><div class="moderated-content-inner">
+		<ul class="filter">
+			<li class="filter-option content selected"><a href="#">
+				#set($contentType = 'Content')
+				#if ($appeal.Content.ContentTypeId)
+					#set($contentType = $core_v2_contentType.Get($appeal.Content.ContentTypeId).Name)
+				#end
+				$contentType
+			</a></li>
+			#set ($reports = $core_v2_abuseReport.List("%{ AbusiveContentId = $appeal.ContentId, AppealId = $appeal.AppealId, PageIndex = 0, PageSize = 1 }"))
+			<li class="filter-option reports">
+				<a href="#" data-appealid="$core_v2_encoding.HtmlAttributeEncode($appeal.AppealId.ToString())" data-contentid="$core_v2_encoding.HtmlAttributeEncode($appeal.Content.ContentId.ToString())">
+					#if ($reports.TotalCount == 1)
+						$core_v2_language.FormatString($core_v2_language.GetResource('ReportCount_Singular'), '1')
+					#else
+						$core_v2_language.FormatString($core_v2_language.GetResource('ReportCount_Plural'), $core_v2_language.FormatNumber($reports.TotalCount))
+					#end
+				</a>
+			</li>
+			<li class="filter-option author">
+				<a href="#" data-contentid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentId.ToString())" data-contenttypeid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentTypeId.ToString())">
+				#if($appeal.Content.ContentTypeId != $core_v2_user.ContentTypeId)
+					$core_v2_language.GetResource('AuthorDetails')
+				#else
+					$core_v2_language.GetResource('UserDetails')
+				#end
+				</a>
+			</li>
+			<li class="filter-option textcontent">
+				<a href="#" data-contentid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentId.ToString())" data-contenttypeid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentTypeId.ToString())">
+					$core_v2_language.GetResource('TextContent')
+				</a>
+			</li>
+			<li class="filter-option filecontent">
+				<a href="#" data-contentid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentId.ToString())" data-contenttypeid="$core_v2_encoding.HtmlAttributeEncode($abusiveContent.Content.ContentTypeId.ToString())">
+					#set ($fileCount = $context.GetFileContent($abusiveContent.Content.ContentId, $abusiveContent.Content.ContentTypeId).Count)
+					#if ($fileCount == 1)
+						$core_v2_language.FormatString($core_v2_language.GetResource('FileContent_Singular'), '1')
+					#else
+						$core_v2_language.FormatString($core_v2_language.GetResource('FileContent_Plural'), $core_v2_language.FormatNumber($fileCount))
+					#end
+				</a>
+			</li>
+		</ul>
+		<div class="content-tab content full">
+    	    <h3 class="name">
+    				$title
+    	    </h3>
+    	    <div class="content">
+    				$!appeal.Content.HtmlDescription('Web')
+    	    </div>
+    	  </div>
+		<div class="content-tab reports" style="display: none;">
+		</div>
+		<div class="content-tab author" style="display: none;">
+		</div>
+		<div class="content-tab textcontent" style="display: none;">
+		</div>
+		<div class="content-tab filecontent" style="display: none;">
+		</div>
+		<div class="moderated-content-viewall">
+            <a href="#" class="inline-button view-all">$core_v2_language.GetResource('ViewAll')</a>
+        </div>
+	</div></div>
+	<div style="clear: both;"></div>
+</li>

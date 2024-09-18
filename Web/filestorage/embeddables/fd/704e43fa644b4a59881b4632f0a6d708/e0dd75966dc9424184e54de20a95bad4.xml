@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<embeddables>
+  <embeddable name="${resource:Name}" version="11.0.0.0" description="${resource:Description}" id="e0dd75966dc9424184e54de20a95bad4" lastModified="2021-08-10 15:55:32Z" provider="704e43fa-644b-4a59-881b-4632f0a6d708" isCacheable="false" varyCacheByUser="false" category="External Content">
+    <contentScript language="Velocity"><![CDATA[#set ($sanitizedEmbedCode = false)
+#set ($sanitizedEmbedCode = $core_v2_widget.GetHtmlValue('sanitizedEmbedCode', ''))
+#set ($autoResize = $core_v2_widget.GetBoolValue('autoResize'))
+
+#if ($sanitizedEmbedCode && $sanitizedEmbedCode != '')
+  <div #if($autoResize)class="resizable-embeddablescript"#end>$sanitizedEmbedCode</div>
+#else
+  #set ($content = false)
+  #set ($content = $core_v2_widget.GetHtmlValue('embedCode', ''))
+
+  #set($api = $core_v2_widget.ExecuteFile('api.jsm'))
+  #set($result = $api.validate($content))
+  #set($sanitizedContent = $api.sanitize($content))
+
+  #if ($result && $sanitizedContent)
+    <div #if($autoResize)class="resizable-embeddablescript"#end>$sanitizedContent</div>
+  #end
+#end]]></contentScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="embedCode" labelResourceName="EmbedCode" dataType="html" rows="5" enableRichEditing="false" sanitize="false">
+        <propertyRule name="rule.jsm" />
+    </property>
+    <property id="sanitizedEmbedCode" dataType="html" rows="5" enableRichEditing="false" sanitize="false" visible="false" />
+	<property id="autoResize" labelResourceName="AutomaticResize" descriptionResourceName="AutomaticResize_Description" dataType="bool" defaultValue="true" />
+</propertyGroup>/]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AutomaticResize">Enable Auto Resize</resource>
+  <resource name="AutomaticResize_Description">If enabled, document will be resized to fit width while maintaining aspect ratio.  Default is true.</resource>
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Description">Displays an embed from Google Docs</resource>
+  <resource name="EmbedCode">Embed Code</resource>
+  <resource name="Name">Google Docs</resource>
+</language>]]></languageResources>
+    <previewImage name="google.svg" />
+    <iconImage name="google.svg" />
+    <files>
+      <file name="api.jsm" />
+      <file name="rule.jsm" />
+    </files>
+  </embeddable>
+</embeddables>

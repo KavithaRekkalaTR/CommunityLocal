@@ -1,0 +1,151 @@
+##
+## Server-rendered reply body content
+##
+## Expected in scope: $comment, $allowsComments, $userCanComment, $userMustLogin
+##
+
+#set ($accessingUserIsRegistered = $core_v2_user.IsRegistered($core_v2_user.Accessing.Id))
+
+<div class="author" #if ($comment.User.ProfileUrl) data-authorprofileurl="$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)" #else data-authorprofileurl="" #end>
+	<div class="avatar">
+		#if ($comment.User.ProfileUrl)
+			<a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)" class="internal-link view-user-profile">
+				$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 44, 44, "%{border='0px', alt=$comment.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+			</a>
+		#else
+			$core_v2_ui.GetResizedImageHtml($comment.User.AvatarUrl, 44, 44, "%{border='0px', alt=$comment.User.DisplayName, ResizeMethod='ZoomAndCrop'}")
+		#end
+	</div>
+	<div class="meta">
+		<span class="user-name">
+			$core_v2_ui.UserPresence($comment.User.Id)
+			#if ($comment.User.ProfileUrl)
+				##<a href="#">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($comment.User.ProfileUrl)" class="internal-link view-user-profile">
+					$comment.User.DisplayName
+				</a>
+			#else
+				$comment.User.DisplayName
+			#end
+		</span>
+		<a href="$core_v2_encoding.HtmlAttributeEncode($comment.Url)" class="internal-link view-post navigable reply-permalink">
+			$core_v2_ui.AgoDate($comment.CreatedDate)
+		</a>
+		#if ($comment.ParentCommentId)
+			#set ($parentComment = false)
+			#set ($parentComment = $core_v2_comments.Get($comment.ParentCommentId))
+			#if ($parentComment)
+				<span class="parent">
+					$core_v2_language.GetResource('in_reply_to') <a class="internal-link view-post navigable ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_parent'))" href="$core_v2_encoding.HtmlAttributeEncode($parentComment.Url)">$parentComment.User.DisplayName</a>
+				</span>
+			#end
+		#end
+	</div>
+</div>
+<div class="content full threaded-reply-content user-defined-markup">
+	#if ($comment.IsDeleted)
+		$core_v2_language.GetResource('comment_deleted')
+	#elseif (!$comment.IsApproved)
+		$core_v2_language.GetResource('comment_underreview')
+	#else
+		<div class="content">$comment.Body('Web')</div>
+	#end
+</div>
+<div class="edit-form"></div>
+<div class="actions meta edit">
+	<div class="navigation-list ui-links" data-maxlinks="1" data-direction="horizontal">
+		<ul>
+			<li class="navigation-list-item">
+				<a href="#" class="primary" data-messagename="ui.replies.edit.cancel">$core_v2_language.GetResource('cancel')</a>
+			</li>
+		</ul>
+	</div>
+</div>
+<div class="actions meta default">
+	## Determine number of visible links
+	#set ($visibleLinksCount = 0)
+	#if (!$comment.IsDeleted) ## Vote, Like
+		#set ($visibleLinksCount = $visibleLinksCount + 2)
+	#end
+	#if (!$comment.IsDeleted && ($userCanComment || $userMustLogin)) ## Reply
+		#set ($visibleLinksCount = $visibleLinksCount + 1)
+	#end
+	<div class="navigation-list ui-links" data-maxlinks="$visibleLinksCount" data-direction="horizontal">
+		<ul>
+			#if (!$comment.IsDeleted)
+				<li class="navigation-list-item">
+					<span class="votes">
+						#set ($currentVotes = $comment.YesVotes)
+						#set ($currentVotes = $currentVotes - $comment.NoVotes)
+						#set ($commentVote = false)
+
+						#if ($accessingUserIsRegistered)
+							#set ($commentVote = $core_v2_commentVotes.Get($comment.CommentId, $core_v2_user.Accessing.Id))
+						#end
+
+						#if ($accessingUserIsRegistered)
+							<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_up'))"class="ui-tip vote up #if ($commentVote && $commentVote.Value) selected #end" data-messagename="ui.replies.vote.message" data-replyid="$comment.CommentId" data-value="true">$core_v2_language.GetResource('vote_up')</a>
+						#else
+							<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_up'))" class="ui-tip vote up" data-messagename="ui.comments.login" data-replyurl="$core_v2_encoding.HtmlAttributeEncode($comment.Url)">$core_v2_language.GetResource('vote_up')</a>
+						#end
+
+						<span class="vote current ui-tip" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('view_voters'))" data-replyid="$comment.CommentId">$currentVotes.ToString("+0;-0;0")</span>
+
+						#if ($accessingUserIsRegistered)
+							<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_down'))" class="ui-tip vote down #if ($commentVote && !$commentVote.Value) selected #end" data-messagename="ui.replies.vote.message" data-replyid="$comment.CommentId" data-value="false">$core_v2_language.GetResource('vote_down')</a>
+						#else
+							<a href="#" data-tip="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('vote_down'))" class="ui-tip vote down" data-messagename="ui.comments.login" data-replyurl="$core_v2_encoding.HtmlAttributeEncode($comment.Url)">$core_v2_language.GetResource('vote_down')</a>
+						#end
+					</span>
+				</li>
+				<li class="navigation-list-item">
+					#if ($accessingUserIsRegistered)
+						#set ($likeFormat = '{toggle} {count}')
+					#else
+						#set ($likeFormat = '{count}')
+					#end
+					$core_v2_ui.Like($comment.CommentId, $comment.CommentContentTypeId, "%{ Format = $likeFormat, IncludeTip = 'true' }")
+				</li>
+			#end
+			#if (!$comment.IsDeleted && ($userCanComment || $userMustLogin))
+				<li class="navigation-list-item">
+					#if ($userCanComment)
+						<a href="#" class="internal-link new-reply"
+							data-label-reply="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('reply'))"
+							data-label-cancel="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('cancel'))"
+							>$core_v2_language.GetResource('reply')</a>
+					#elseif ($userMustLogin)
+						<a href="#" class="primary internal-link login" data-messagename="ui.comments.login" data-replyurl="$core_v2_encoding.HtmlAttributeEncode($comment.Url)">$core_v2_language.GetResource('login_to_reply')</a>
+					#end
+				</li>
+			#end
+			#if (!$comment.IsDeleted && $core_v2_comments.CanModifyComment($comment.CommentId))
+				<li class="navigation-list-item">
+					<a href="#" class="internal-link edit-reply" data-messagename="ui.replies.edit" data-id="$comment.CommentId">$core_v2_language.GetResource('edit')</a>
+				</li>
+			#end
+			#if ($core_v2_comments.CanDeleteComment($comment.CommentId))
+				<li class="navigation-list-item">
+					<a href="#" class="internal-link delete-reply" data-messagename="ui.replies.delete" data-id="$comment.CommentId">$core_v2_language.GetResource('delete')</a>
+				</li>
+			#end
+			#set($convert = $core_v2_ui.ConvertContent($comment.CommentId, $comment.CommentContentTypeId))
+			#if ($convert)
+				<li class="navigation-list-item">
+					$convert
+				</li>
+			#end
+			#if (!$comment.IsDeleted && $accessingUserIsRegistered)
+				<li class="navigation-list-item">
+					$core_v2_ui.Moderate($comment.CommentId, $comment.CommentContentTypeId)
+				</li>
+			#end
+			<li class="navigation-list-item">
+				<a href="#" class="more" data-more>$core_v2_language.GetResource('more')</a>
+			</li>
+			<li class="navigation-list-item">
+				<a href="#" data-cancel>$core_v2_language.GetResource('cancel')</a>
+			</li>
+		</ul>
+	</div>
+</div>

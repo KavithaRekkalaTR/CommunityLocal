@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:KnowledgeDocumentStory}" version="10.0.0.0" description="${resource:KnowledgeDocumentStory-Description}" instanceIdentifier="624933a8fe4b4577b549b55d5c7954cd" theme="" isCacheable="true" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" provider="b6edfa5333ab4260b13d756c0352ac50">
+    <contentScript><![CDATA[#set($content = $core_v2_content.Get($context.Story.ContentId, $context.Story.ContentTypeId))
+
+#if(!$content || !$context.Story.PrimaryUser)
+	$core_v2_widget.Hide()
+#else
+	#set($isPreview = $context.IsPreview)
+	#set($document = $km_v1_documents.Get($context.Story.ContentId))
+	#if(!$document)
+		$core_v2_widget.Hide()
+	#else
+		#set($user = $context.Story.PrimaryUser)
+		#if ($user.Url)
+            #set($profile0Html = $core_v2_language.FormatString($core_v2_language.GetResource('UserProfile_Html'), $user.DisplayName, $user.Url))
+		#else
+			#set($profile0Html = $user.DisplayName)
+		#end
+
+		#if($isPreview)
+            #format($core_v2_language.GetResource('preview'))
+            #token('user')
+            	$profile0Html
+            #token('document')
+            	<a href="$core_v2_encoding.HtmlAttributeEncode($document.Url)">$document.Title</a>
+            #token('knowledgecollection')
+            	#if ($content.Application.Container.ParentContainer)
+                    <a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+            		<span class="group-application-separator">&gt;</span>
+            	#end
+            	<a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+            #end
+		#else
+			<div class="activity-summary knowledge-document">
+				#format($core_v2_language.GetResource('in'))
+                #token('user')
+                    $profile0Html
+                #token('knowledgecollection')
+                    #if ($content.Application.Container.ParentContainer)
+                    		<a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Container.Url)">$content.Application.Container.HtmlName('Web')</a>
+                    		<span class="group-application-separator">&gt;</span>
+                    #end
+                    <a href="$core_v2_encoding.HtmlAttributeEncode($content.Application.Url)">$content.Application.HtmlName('Web')</a>
+		        #end
+			</div>
+			<span class="activity-title">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($document.Url)" class="internal-link view-post"><span>$document.Title</span></a>
+			</span>
+			<div class="activity-description user-defined-markup">
+				#set($rawBody = $document.Body('Web'))
+				#set($body = $core_v2_language.Truncate($rawBody, 250, "%{ Ellipsis='...', MaintainHtmlFormatting='True' }"))
+				$body
+				#if ($body.Length < $rawBody.Length)
+						<a href="$core_v2_encoding.HtmlAttributeEncode($document.Url)">$core_v2_language.GetResource('read-more')</a>
+				#end
+			</div>
+		#end
+	#end
+#end]]></contentScript>
+    <languageResources><language key="en-us"><resource name="in">{user} in {knowledgecollection}:</resource><resource name="KnowledgeDocumentStory">Knowledge Document Activity Story</resource><resource name="KnowledgeDocumentStory-Description">Renders stories related to knowledge documents.</resource><resource name="preview">{user} added {document} to {knowledgecollection}.</resource><resource name="read-more">Read more.</resource><resource name="UserProfile_Html">&lt;span class="user-name"&gt;&lt;a href="{1}" class="internal-link view-user-profile activity-summary-user"&gt;{0}&lt;/a&gt;&lt;/span&gt;</resource></language></languageResources>
+  </scriptedContentFragment>
+</scriptedContentFragments>

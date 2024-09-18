@@ -1,0 +1,18 @@
+#if ($medias != false)
+    #if ($showSidebarList == true)
+        #set($width = 115)
+    #else
+        #set($width = 140)
+    #end
+    
+    #foreach($media in $medias)
+    	<div class="content-item content thumbnail" data-hasmore="$hasMore" data-url="$core_v2_encoding.HtmlAttributeEncode($media.Url)">
+    		<div class="avatar">
+    			$core_v2_ui.GetPreviewHtml($media.File.FileUrl, "%{ Width = $width }")
+    		</div>
+    		<h2 class="name">
+    			<a href="$core_v2_encoding.HtmlAttributeEncode($media.Url)">$media.Title</a>
+    		</h2>
+    	</div>
+    #end
+#end

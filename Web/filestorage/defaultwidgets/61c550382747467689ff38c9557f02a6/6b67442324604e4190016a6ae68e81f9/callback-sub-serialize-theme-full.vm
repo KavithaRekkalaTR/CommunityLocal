@@ -1,0 +1,118 @@
+##
+## Renders a theme summary with attachments as JSON
+##
+## Requires in scope:
+##   $theme
+## 	 $includeFileDigests - if included and true, includes file digests
+##
+
+#if ($theme)
+	{
+		"Id": #if ($theme.Id) "$theme.Id" #else "" #end,
+		"TypeId": #if ($theme.TypeId) "$theme.TypeId" #else "" #end,
+		"TypeName": #if ($theme.TypeName) "$core_v2_encoding.JavascriptEncode($theme.TypeName)" #else "" #end,
+		"Name": #if ($theme.Name) "$core_v2_encoding.JavascriptEncode($theme.Name)" #else "" #end,
+		"Description": #if ($theme.Description) "$core_v2_encoding.JavascriptEncode($theme.Description)" #else "" #end,
+
+		"IsFactoryDefault": #if ($theme.IsFactoryDefault) true #else false #end,
+		"IsStaged": #if ($theme.IsStaged) true #else false #end,
+		"IsReverted": #if ($theme.IsReverted) true #else false #end,
+		"IsDeleted": #if ($theme.IsDeleted) true #else false #end,
+		"IsTranslated": #if ($theme.IsTranslated) true #else false #end,
+		"IsEditable": #if ($theme.IsEditable) true #else false #end,
+
+		"State": "$core_v2_encoding.JavascriptEncode($theme.State.ToString())",
+
+		"HeadScript": #if ($theme.HeadScript) "$core_v2_encoding.JavascriptEncode($theme.HeadScript)" #else "" #end,
+		"HeadScriptLanguage": #if ($theme.HeadScriptLanguage) "$theme.HeadScriptLanguage" #else "" #end,
+		"BodyScript": #if ($theme.BodyScript) "$core_v2_encoding.JavascriptEncode($theme.BodyScript)" #else "" #end,
+		"BodyScriptLanguage": #if ($theme.BodyScriptLanguage) "$theme.BodyScriptLanguage" #else "" #end,
+		"ConfigurationXml": #if ($theme.ConfigurationXml) "$core_v2_encoding.JavascriptEncode($theme.ConfigurationXml)" #else "" #end,
+		"ConfigurationScript": #if ($theme.ConfigurationScript) "$core_v2_encoding.JavascriptEncode($theme.ConfigurationScript)" #else "" #end,
+		"PaletteTypesXml": #if ($theme.PaletteTypesXml) "$core_v2_encoding.JavascriptEncode($theme.PaletteTypesXml)" #else "" #end,
+
+		"MediaMaxWidthPixels": #if ($theme.MediaMaxWidthPixels) $theme.MediaMaxWidthPixels #else null #end,
+		"MediaMaxHeightPixels": #if ($theme.MediaMaxHeightPixels) $theme.MediaMaxHeightPixels #else null #end,
+
+		"Files": [
+			#foreach ($file in $theme.Files)
+			#between
+				,
+			#each
+				{
+					"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+					#if ($includeFileDigests)
+						,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+					#end
+				}
+			#end
+		],
+		"ScriptFiles": [
+			#foreach ($file in $theme.ScriptFiles)
+			#between
+				,
+			#each
+				{
+					"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+					#if ($includeFileDigests)
+						,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+					#end
+				}
+			#end
+		],
+		"StyleFiles": [
+			#foreach ($file in $theme.StyleFiles)
+			#between
+				,
+			#each
+				{
+					"Name": "$core_v2_encoding.JavascriptEncode($file.Name)"
+					#if ($includeFileDigests)
+						,"Digest": "$!core_v2_encoding.JavascriptEncode($!file.ContentHash)"
+					#end
+				}
+			#end
+		],
+		"Resources": [
+			#foreach ($resource in $theme.LanguageResources)
+			#between
+				,
+			#each
+				{
+					"Language": "$core_v2_encoding.JavascriptEncode($resource.Language)",
+					"Name": "$core_v2_encoding.JavascriptEncode($resource.Name)",
+					"Value": "$core_v2_encoding.JavascriptEncode($resource.Value)"
+				}
+			#end
+		],
+
+		"RestScopes": [
+			#foreach ($restScopeId in $theme.RestScopeIds)
+			#between
+				,
+			#each
+				#set ($restScope = false)
+				#set ($restScope = $context.GetRestScope($restScopeId))
+				#if ($restScope)
+					{
+						"Id": "$core_v2_encoding.JavascriptEncode($restScope.Id)",
+						"Name": "$core_v2_encoding.JavascriptEncode($restScope.Name())"
+					}
+				#else
+					null
+				#end
+			#end
+		],
+
+		#if ($theme.PreviewImage && $theme.PreviewImage.Url)
+			"PreviewImageUrl": "$core_v2_encoding.JavascriptEncode($theme.PreviewImage.Url)"
+			#if ($includeFileDigests)
+				,"PreviewImageDigest": "$!core_v2_encoding.JavascriptEncode($!theme.PreviewImage.ContentHash)"
+			#end
+		#else
+			"PreviewImageUrl": null
+		#end
+	}
+#else
+	null
+#end

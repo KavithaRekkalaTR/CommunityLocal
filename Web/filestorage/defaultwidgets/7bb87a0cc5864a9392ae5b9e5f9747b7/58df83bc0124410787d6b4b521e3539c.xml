@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Conversations_Title}" version="12.0.0.0" description="${resource:Conversations_Description}" instanceIdentifier="58df83bc0124410787d6b4b521e3539c" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="false" cssClass="conversations" lastModified="2024-02-09 16:41:56Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set($accessingUser = $core_v2_user.Accessing)
+#if(!$core_v2_user.IsRegistered($accessingUser.Id))
+	$core_v2_widget.Hide()
+#end
+
+$!core_v2_page.RedirectToHashedQuery()
+
+<div id="$core_v2_widget.UniqueId('layout')" style="visibility: hidden;">
+	<div id="$core_v2_widget.UniqueId('conversation-list-header-region')" class="conversation-list-header region">
+		<div class="region-inner">
+			<fieldset class="actions">
+				<ul class="field-list">
+					<li class="field-item">
+						<span class="field-item-input">
+							<a href="#" id="$core_v2_widget.UniqueId('new-conversation')" class="button">
+								$core_v2_language.GetResource('new-conversation')
+							</a>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+			<form><fieldset>
+				<ul class="field-list">
+					<li class="field-item">
+						<span class="field-item-input">
+							<select id="$core_v2_widget.UniqueId('conversation-filter')" aria-label="$core_v2_language.GetResource('conversation-filter')">
+								<option value="all">$core_v2_language.GetResource('conversation-filter-all')</option>
+								<option value="unread">$core_v2_language.GetResource('conversation-filter-unread')</option>
+							</select>
+						</span>
+					</li>
+				</ul>
+			</fieldset></form>
+		</div>
+	</div>
+	<div id="$core_v2_widget.UniqueId('conversation-header-region')" class="conversation-header region">
+		<div class="region-inner">
+			<fieldset class="actions">
+				<ul class="field-list">
+					<li class="field-item">
+						<span class="field-item-input">
+							<a href="#" id="$core_v2_widget.UniqueId('delete-conversation')" class="button delete">
+								$core_v2_language.GetResource('delete-conversation')
+							</a>
+							<a href="#" id="$core_v2_widget.UniqueId('leave-conversation')" class="button delete">
+							    $core_v2_language.GetResource('leave-conversation')
+							</a>
+							<a href="#" id="$core_v2_widget.UniqueId('view-all-conversations')" class="button">
+								$core_v2_language.GetResource('view-all-conversations')
+							</a>
+						</span>
+					</li>
+				</ul>
+			</fieldset>
+			<form><fieldset class="participants">
+				<ul class="field-list">
+					<li class="field-item">
+						<label for="$core_v2_widget.UniqueId('new-recipients')" class="field-item-name">$core_v2_language.GetResource('new-recipients')</label>
+						<span class="field-item-input">
+							<input name="$core_v2_widget.UniqueId('new-recipients')" id="$core_v2_widget.UniqueId('new-recipients')" type="text" style="width:250px" />
+						</span>
+					</li>
+				</ul>
+			</fieldset></form>
+			<ul id="$core_v2_widget.UniqueId('participants')" class="participant-list">
+
+			</ul>
+		</div>
+	</div>
+	<div id="$core_v2_widget.UniqueId('conversation-list-region')" class="conversation-list region">
+		<div class="region-inner">
+			<ul class="content-list conversations" id="$core_v2_widget.UniqueId('conversation-list')">
+			</ul>
+			<span id="$core_v2_widget.UniqueId('conversation-list-loading')" class="ui-loading" width="48" height="48"></span>
+			<div id="$core_v2_widget.UniqueId('conversation-list-none')" class="message norecords">
+				$core_v2_language.GetResource('conversation-list-none')
+			</div>
+		</div>
+	</div>
+	<div id="$core_v2_widget.UniqueId('conversation-region')" class="conversation region">
+		<div class="region-inner">
+			<div id="$core_v2_widget.UniqueId('conversation-none')" class="message norecords">
+				$core_v2_language.GetResource('conversation-none')
+			</div>
+			<div id="$core_v2_widget.UniqueId('conversation-new')" class="message information">
+				$core_v2_language.GetResource('conversation-new')
+			</div>
+			<span id="$core_v2_widget.UniqueId('conversation-previous-loading')" class="ui-loading" width="48" height="48"></span>
+			<ul class="content-list conversation-messages" id="$core_v2_widget.UniqueId('message-list')">
+			</ul>
+			<span id="$core_v2_widget.UniqueId('conversation-next-loading')" class="ui-loading" width="48" height="48"></span>
+			<div id="$core_v2_widget.UniqueId('dateheader-placeholder')" class="conversation-messageheader fixed"></div>
+			<div id="$core_v2_widget.UniqueId('statusheader-placeholder')" class="conversation-statusheader fixed"></div>
+		</div>
+	</div>
+	<div id="$core_v2_widget.UniqueId('reply-region')" class="editor region">
+		<div class="region-inner">
+		    <textarea id="$core_v2_widget.UniqueId('editor')"></textarea>
+		</div>
+	</div>
+</div>
+
+#registerClientTemplate($core_v2_widget.UniqueId('templateConversation'))
+	$core_v2_widget.ExecuteFile('template-conversation.vm')
+#end
+
+#registerClientTemplate($core_v2_widget.UniqueId('templateParticpant'))
+	$core_v2_widget.ExecuteFile('template-participant.vm')
+#end
+
+#registerClientTemplate($core_v2_widget.UniqueId('templateConversationMessage'))
+	$core_v2_widget.ExecuteFile('template-conversation-message.vm')
+#end
+
+#registerClientTemplate($core_v2_widget.UniqueId('templateConversationMessageHeader'))
+	$core_v2_widget.ExecuteFile('template-messageheader.vm')
+#end
+
+#registerClientTemplate($core_v2_widget.UniqueId('templateConversationStatusHeader'))
+	$core_v2_widget.ExecuteFile('template-statusheader.vm')
+#end
+
+#registerEndOfPageHtml('telligent.evolution.widgets.conversations')
+	<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetExecutedFileUrl('ui.js.vm'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script>
+	jQuery(function() {
+		jQuery.telligent.evolution.widgets.conversations.register({
+			conversationNotificationTypeId: '$core_v2_conversationMessage.NotificationTypeId',
+			conversationMessageContentTypeId: '$core_v2_conversationMessage.ContentTypeId',
+			userId: $accessingUser.Id,
+			layoutRegions: {
+				wrapper: jQuery('#$core_v2_widget.UniqueId('layout')'),
+				conversationListHeader: jQuery('#$core_v2_widget.UniqueId('conversation-list-header-region')'),
+				conversationList: jQuery('#$core_v2_widget.UniqueId('conversation-list-region')'),
+				conversationHeader: jQuery('#$core_v2_widget.UniqueId('conversation-header-region')'),
+				conversation: jQuery('#$core_v2_widget.UniqueId('conversation-region')'),
+				editor: jQuery('#$core_v2_widget.UniqueId('reply-region')')
+			},
+			fields: {
+				conversationFilter: jQuery('#$core_v2_widget.UniqueId('conversation-filter')'),
+				newConversation: jQuery('#$core_v2_widget.UniqueId('new-conversation')'),
+				conversationList: jQuery('#$core_v2_widget.UniqueId('conversation-list')'),
+				newRecipients: jQuery('#$core_v2_widget.UniqueId('new-recipients')'),
+				deleteConversation: jQuery('#$core_v2_widget.UniqueId('delete-conversation')'),
+				leaveConversation: jQuery('#$core_v2_widget.UniqueId('leave-conversation')'),
+				viewAllConversations: jQuery('#$core_v2_widget.UniqueId('view-all-conversations')'),
+				participants : jQuery('#$core_v2_widget.UniqueId('participants')'),
+				messageList: jQuery('#$core_v2_widget.UniqueId('message-list')'),
+				conversationListLoading: jQuery('#$core_v2_widget.UniqueId('conversation-list-loading')'),
+				conversationPreviousLoading: jQuery('#$core_v2_widget.UniqueId('conversation-previous-loading')'),
+				conversationNextLoading: jQuery('#$core_v2_widget.UniqueId('conversation-next-loading')'),
+				conversationListNone: jQuery('#$core_v2_widget.UniqueId('conversation-list-none')'),
+				conversationNone: jQuery('#$core_v2_widget.UniqueId('conversation-none')'),
+				conversationNew: jQuery('#$core_v2_widget.UniqueId('conversation-new')'),
+				dateHeaderPlaceholder: jQuery('#$core_v2_widget.UniqueId('dateheader-placeholder')'),
+				statusHeaderPlaceholder: jQuery('#$core_v2_widget.UniqueId('statusheader-placeholder')'),
+				editor: jQuery('#$core_v2_widget.UniqueId('editor')')
+			},
+			text: {
+				addRecipientPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('recipients-placeholder'))',
+				noRecipientsMatch: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('recipients-nomatch'))',
+				cannotStartConversationWith: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('recipients-cannotstartconversationwith'))',
+				confirmDeleteConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirm-delete-conversation'))',
+				confirmLeaveConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirm-leave-conversation'))',
+				conversationDeleted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('conversation-deleted'))',
+				conversationLeft: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('conversation-left'))',
+				messageRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('message-required'))',
+				recipientsRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('recipients-required'))',
+				deletedMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('deleted-message'))',
+				confirmDeleteMessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('confirm-delete-message'))',
+				messageDeleted: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('message-deleted'))',
+				cannotStartConversationWithUser: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('recipient-cannotstartconversationwith'))',
+				sending: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('status-sending'))',
+				searchFilter: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('search-filter-label'))',
+				alreadyInConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('already-in-conversation'))',
+				previousConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('shortcut-previous-conversation'))',
+				nextConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('shortcut-next-conversation'))',
+				scrollUp: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('shortcut-scroll-up'))',
+				scrollDown: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('shortcut-scroll-down'))',
+				newConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('shortcut-new-conversation'))',
+				deleteConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('shortcut-hide-conversation'))',
+				leaveConversation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('shortcut-leave-conversation'))',
+				enterToSubmit: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('editor_entertosubmit'))',
+				submit: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('editor_submit'))',
+				participantRestored: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('participant-restored'))'
+			},
+			urls: {
+				lookupUsers: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-finduser.vm'))',
+				getUser: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getuser.vm'))',
+				getConversation: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getconversation.vm'))',
+				listConversations: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-listconversations.vm'))',
+				listMessages: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-listmessages.vm'))',
+				getMessage: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-getmessage.vm'))',
+				search: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-search.vm'))',
+				mp3sound: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('message.mp3'))',
+				wavsound: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetFileUrl('message.wav'))'
+			},
+			templateIds: {
+				conversation: '$core_v2_widget.UniqueId('templateConversation')',
+				participant: '$core_v2_widget.UniqueId('templateParticpant')',
+				conversationMessage: '$core_v2_widget.UniqueId('templateConversationMessage')',
+				conversationMessageHeader: '$core_v2_widget.UniqueId('templateConversationMessageHeader')',
+				conversationStatusHeader: '$core_v2_widget.UniqueId('templateConversationStatusHeader')'
+			}
+		});
+	});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="already-in-conversation">Already Included</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="confirm-delete-conversation">Are you sure you want to hide this conversation? It will reappear if anyone sends a new message.</resource>
+  <resource name="confirm-delete-message">Are you sure you want to delete this message?</resource>
+  <resource name="confirm-leave-conversation">Are you sure you want to leave this conversation? You will not be notified of new messages unless another participant requests to restore you to this conversation.</resource>
+  <resource name="conversation-deleted">You have hidden the conversation.</resource>
+  <resource name="conversation-filter">Show messages</resource>
+  <resource name="conversation-filter-all">All messages</resource>
+  <resource name="conversation-filter-unread">Unread messages</resource>
+  <resource name="conversation-left">You have left the conversation.</resource>
+  <resource name="conversation-list-none">No messages were found.</resource>
+  <resource name="conversation-new">Start your conversation by sending the first message below.</resource>
+  <resource name="conversation-none">Select a message or start a new one.</resource>
+  <resource name="Conversations_Description">Lists, view, and start conversations.</resource>
+  <resource name="Conversations_Title">Conversations</resource>
+  <resource name="delete-conversation">Hide</resource>
+  <resource name="deleted-message">This message has been deleted.</resource>
+  <resource name="delete-message">Delete</resource>
+  <resource name="editor_entertosubmit">Enter to send</resource>
+  <resource name="editor_submit">Send</resource>
+  <resource name="leave-conversation">Leave</resource>
+  <resource name="message-deleted">The message has been deleted.</resource>
+  <resource name="message-required">Please add a message. Blank messages are not allowed.</resource>
+  <resource name="more">More</resource>
+  <resource name="new-conversation">New</resource>
+  <resource name="new-message-below">New message below.</resource>
+  <resource name="new-recipients">To</resource>
+  <resource name="participant-restored">The participant has been added back to the conversation.</resource>
+  <resource name="participants-more">and {0} more</resource>
+  <resource name="recipient-cannotstartconversationwith">You are not allowed to send a message to '{0}'.</resource>
+  <resource name="recipients-cannotstartconversationwith">Cannot Message</resource>
+  <resource name="recipients-nomatch">No matching members were found.</resource>
+  <resource name="recipients-placeholder">Find recipients...</resource>
+  <resource name="recipients-required">Please add one or more recipients for your message.</resource>
+  <resource name="restore-participant">Add back to conversation</resource>
+  <resource name="search-conversationtitle">{0} to {1}</resource>
+  <resource name="search-filter-label">Messages</resource>
+  <resource name="search-no-matches">No matching messages were found.</resource>
+  <resource name="shortcut-hide-conversation">Hide conversation</resource>
+  <resource name="shortcut-leave-conversation">Leave conversation</resource>
+  <resource name="shortcut-new-conversation">New conversation</resource>
+  <resource name="shortcut-next-conversation">Next conversation</resource>
+  <resource name="shortcut-previous-conversation">Previous conversation</resource>
+  <resource name="shortcut-scroll-down">Scroll conversation down</resource>
+  <resource name="shortcut-scroll-up">Scroll conversation up</resource>
+  <resource name="shortcut-search">Search</resource>
+  <resource name="status-sending">Sending...</resource>
+  <resource name="typing-nameseparator">, </resource>
+  <resource name="typing-plural">are typing...</resource>
+  <resource name="typing-singluar">is typing...</resource>
+  <resource name="view-all-conversations">View all</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="content.content.readonly" />
+      <scope id="notifications.notifications.readonly" />
+      <scope id="conversations.conversations.modify" />
+      <scope id="conversations.messages.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

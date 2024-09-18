@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Articles_ArticlesListName}" version="12.0.0.0" description="${resource:Articles_ArticlesListDescription}" instanceIdentifier="d1085d188cb34433aa9a46b96a7e8807" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="articles-list" lastModified="2022-10-18 19:23:37Z" provider="7bb87a0cc5864a9392ae5b9e5f9747b7">
+    <contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($showSidebarList = false)
+#set ($region = $core_v2_widget.RegionName.ToLower())
+#set ($layout = $core_v2_page.Layout.ToLower())
+
+#if ($region == 'split-sidebar-left' || $region == 'split-sidebar-right' || $region == 'left-sidebar')
+	#set ($showSidebarList = true)
+#elseif ($region == 'right-sidebar' && !$layout.Contains('split-content') && !$layout.Contains('split-sidebar'))
+	#set ($showSidebarList = true)
+#end
+
+#set ($viewType = $core_v2_widget.GetStringValue('viewType', ''))
+
+#if ($viewType == 'standard')
+	$core_v2_ui.PagedContent('list.vm')
+#elseif ($viewType == 'simple' || $showSidebarList)
+	$core_v2_widget.ExecuteFile('simplelist.vm')
+#else
+	$core_v2_ui.PagedContent('list.vm')
+#end
+
+		]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+#set($collectionPostNameResource = $core_v2_language.GetResource('Articles_ArticlesListName'))
+#set($header = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '${resource:Articles_ArticlesListName}')))
+#set($currentCollection = $articles_v1_articleCollections.Current)
+#set($DQ = '"')
+#if($currentCollection && $header == $collectionPostNameResource)
+	#set($header = "<a class=${DQ}internal-link view-application collection${DQ} href=${DQ}${core_v2_encoding.HtmlAttributeEncode($currentCollection.Url)}${DQ}><span></span>${core_v2_encoding.HtmlEncode($currentCollection.Name)}</a>")
+#end
+$header
+		]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" defaultValue="${resource:Articles_ArticlesListName}" dataType="String" template="core_v2_tokenizedString" />
+	<property id="selectedCollection" labelResourceName="CF_Articles_SelectGroupAndCollection" dataType="Custom" template="articles_v1_articleCollectionLookup" maxCollectionSelections="1" enableGroupSelection="false" defaultValue="ArticleCollection=00000000-0000-0000-0000-000000000000" />
+	<property id="selectedCategory" labelResourceName="CF_Articles_SelectCategory" dataType="Custom" template="articles_v1_categoryLookup" collectionPropertyId="selectedCollection" />
+	<property id="selectedTypes" labelResourceName="CF_Articles_SelectType" dataType="Custom" template="articles_v1_articleTypesList" />
+	<property id="articleSortBy" labelResourceName="CF_ArticlesListSortBy" defaultValue="PublishDate" categoryPropertyId="selectedCategory" template="sortByTemplate.vm" dataType="String" />
+	<property id="articleSortOrder" labelResourceName="CF_ArticlesListSortOrder" defaultValue="Descending" dataType="String">
+		<propertyValue value="Ascending" labelResourceName="CF_ArticlesListSortOrder_Ascending" />
+		<propertyValue value="Descending" labelResourceName="CF_ArticlesListSortOrder_Descending" />
+	</property>
+    <property id="articleOrder" labelResourceName="CF_Articles_SelectOrder" descriptionResourceName="CF_Articles_SelectOrder_Description" dataType="Custom" template="articles_v1_articleOrder" categoryPropertyId="selectedCategory" typePropertyId="selectedTypes" visibilityPropertyId="articleSortBy" visibilityPropertyValue="ArticleIds" visibilityHideOtherIds="tagsToFilter,articleSortOrder" />
+	<property id="tagsToFilter" labelResourceName="CF_ArticlesListTagsToFilter" dataType="String" />
+	<property id="viewType" labelResourceName="CF_ArticlesListViewType" descriptionResourceName="CF_ArticlesListViewType_Description" dataType="String">
+		<propertyValue value="" labelResourceName="CF_ArticlesListViewType_Auto" />
+		<propertyValue value="full" labelResourceName="CF_ArticlesListViewType_Full" />
+		<propertyValue value="simple" labelResourceName="CF_ArticlesListViewType_Simple" />
+	</property>
+	<property id="excerptSize" labelResourceName="CF_ArticlesListExcerptSize" descriptionResourceName="CF_ArticlesListExcerptSize_Description" defaultValue="250" dataType="Int">
+		<propertyRule name="minmax" min="1" max="10000" />
+	</property>
+	<property id="pageSize" labelResourceName="CF_ArticlesListPageSize" defaultValue="25" dataType="Int">
+		<propertyRule name="minmax" min="1" max="100" />
+	</property>
+	<property id="enablePaging" labelResourceName="enablePaging" defaultValue="true" dataType="Bool" />
+ 	<property id="noArticlesHide" labelResourceName="CF_ArticleList_NoArticlesBehavior" defaultValue="false" dataType="Bool" />
+ 	<property id="displayTypeImage" labelResourceName="CF_ArticleList_DisplayTypeImage" defaultValue="true" dataType="Bool" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Article_NoPosts_Created">There are no articles to show.  This could be because there are no articles in this collection or due to a filter.</resource>
+  <resource name="Article_NoPosts_Created_Link">There are no articles to show.  &lt;a href="{0}"&gt;Add an article&lt;/a&gt; now.</resource>
+  <resource name="Articles_ArticlesListDescription">Displays a list of articles.</resource>
+  <resource name="Articles_ArticlesListName">Articles - Article List</resource>
+  <resource name="Articles_ArticlesListTitle_Activity">Activity</resource>
+  <resource name="by">by</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CF_ArticleList_DisplayTypeImage">Show type icon</resource>
+  <resource name="CF_ArticleList_NoArticlesBehavior">Hide when no articles are found</resource>
+  <resource name="CF_Articles_SelectCategory">Select category to pull article from</resource>
+  <resource name="CF_Articles_SelectGroupAndCollection">Select collection to pull article from</resource>
+  <resource name="CF_Articles_SelectOrder">Define Custom Sort</resource>
+  <resource name="CF_Articles_SelectOrder_Description">Include or exclude articles and define the order of display.  A category must be selected before this sort will display articles.  This sort is limited to the first 100 articles for the selected collection and article types.</resource>
+  <resource name="CF_Articles_SelectType">Included articles</resource>
+  <resource name="CF_ArticlesListExcerptSize">Excerpt size</resource>
+  <resource name="CF_ArticlesListExcerptSize_Description">Enter the maximum number of characters to display for article excerpts.</resource>
+  <resource name="CF_ArticlesListNoArticlesMessage">No Articles Message</resource>
+  <resource name="CF_ArticlesListNoArticlesMessage_Description"></resource>
+  <resource name="CF_ArticlesListPageSize">Number of articles to display</resource>
+  <resource name="CF_ArticlesListSortBy">Sort posts by</resource>
+  <resource name="CF_ArticlesListSortBy_CustomSort">Custom Sort</resource>
+  <resource name="CF_ArticlesListSortBy_LastUpdateDate">Last Updated</resource>
+  <resource name="CF_ArticlesListSortBy_PublishDate">Publish Date</resource>
+  <resource name="CF_ArticlesListSortBy_SortOrder">Sort Order</resource>
+  <resource name="CF_ArticlesListSortBy_Title">Title</resource>
+  <resource name="CF_ArticlesListSortBy_TotalHelpfulRatings">Most Helpful</resource>
+  <resource name="CF_ArticlesListSortOrder">Sort order</resource>
+  <resource name="CF_ArticlesListSortOrder_Ascending">Ascending</resource>
+  <resource name="CF_ArticlesListSortOrder_Descending">Descending</resource>
+  <resource name="CF_ArticlesListTagsToFilter">Tag to filter articles by</resource>
+  <resource name="CF_ArticlesListUserQueryType">User query type</resource>
+  <resource name="CF_ArticlesListUserQueryType_Accessing">The logged in user</resource>
+  <resource name="CF_ArticlesListUserQueryType_All">All</resource>
+  <resource name="CF_ArticlesListUserQueryType_Current">The current user</resource>
+  <resource name="CF_ArticlesListViewType">View type</resource>
+  <resource name="CF_ArticlesListViewType_Auto">Auto detect</resource>
+  <resource name="CF_ArticlesListViewType_Description">'Auto detect' displays full view in large columns and simple view in sidebar columns.  'Full' and 'Simple' force the view type regardless of location.</resource>
+  <resource name="CF_ArticlesListViewType_Full">Full</resource>
+  <resource name="CF_ArticlesListViewType_Simple">Simple</resource>
+  <resource name="CF_Title">Widget title</resource>
+  <resource name="enablePaging">Enable paging</resource>
+  <resource name="more">More</resource>
+  <resource name="MostComments">By comment count</resource>
+  <resource name="MostRecent">By date</resource>
+  <resource name="MostViews">By view count</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Sort_Ascending">Ascending</resource>
+  <resource name="Sort_Descending">Descending</resource>
+  <resource name="UI_MostHelpfulArticles">Most Helpful Articles</resource>
+  <resource name="UI_RecentlyUpdatedArticles">Recently Updated Articles</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

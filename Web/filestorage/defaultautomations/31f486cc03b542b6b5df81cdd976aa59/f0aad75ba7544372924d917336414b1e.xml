@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="11.0.0.0" description="${resource:Description}" id="f0aad75ba7544372924d917336414b1e" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-05-16 17:08:55Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="comment.aftercreate" />
+      <event key="comment.afterdelete" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[
+var contentTypeIds = core_v2_widget.GetCustomValue('contentTypeIds', 'all');
+var valid = false;
+
+if (contentTypeIds == 'all') {
+    contentTypeIds = null;
+    valid = true;
+} else {
+    var contentTypeIdList = core_v2_page.ParseQueryString(contentTypeIds).Values('ContentTypeId');
+    if (contentTypeIdList !== null && contentTypeIdList.Count > 0) {
+        var i;
+        for (i = 0; i < contentTypeIdList.Count; i++) {
+            var contentTypeId = core_v2_utility.ParseGuid(contentTypeIdList[i]);
+            if (contentTypeId && contentTypeId == context_v2_automationTrigger.Arguments.Content.ContentTypeId) {
+                valid = true;
+                break;
+            }
+        }
+    }
+}
+
+if (!valid) {
+    // not a valid content type
+    return;
+}
+
+var content = context_v2_automationTrigger.Arguments.Content;
+if (!content || !content.CreatedByUserId) {
+    // invalid content or no author
+    return;
+}
+
+var userId = content.CreatedByUserId;
+
+//read min/max configuration values
+var ranges = core_v2_widget.GetStringValue('ranges', '');
+if (ranges === '') {
+    var minCommentCount = core_v2_widget.GetIntValue('minCommentCount', 0);
+    var maxCommentCount = 0;
+    var minContentCount = core_v2_widget.GetIntValue('minContentCount', 1);
+    var maxContentCount = 0;
+} else if (ranges == 'comments') {
+    var commentRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('commentCountRange', ''));
+    var minCommentCount = core_v2_utility.ParseInt(commentRangeQuery.Value('Minimum'));
+    var maxCommentCount = core_v2_utility.ParseInt(commentRangeQuery.Value('Maximum'));
+    var minContentCount = core_v2_widget.GetIntValue('minContentCount', 1);
+    var maxContentCount = 0;
+} else if (ranges == 'content') {
+    var minCommentCount = core_v2_widget.GetIntValue('minCommentCount', 0);
+    var maxCommentCount = 0;
+    var contentRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('contentCountRange', ''));
+    var minContentCount = core_v2_utility.ParseInt(contentRangeQuery.Value('Minimum'));
+    var maxContentCount = core_v2_utility.ParseInt(contentRangeQuery.Value('Maximum'));
+}
+
+var result = '';
+
+//remove achievement if range has been selected and exceeded
+if (ranges == 'comments' && maxCommentCount > 0) {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId,
+        MinimumCommentCount: maxCommentCount + 1
+    };
+    if (contentTypeIds) {
+        query.ContentTypeIds = contentTypeIds;
+    }
+
+    var totalCount = core_v2_commentSummary.List(query).TotalCount;
+    if (totalCount >= minContentCount) {
+        result = 'revoke';
+    }
+}
+
+if (result === '') {
+    var query = {
+        PageSize: 1,
+        PageIndex: 0,
+        AuthorId: userId
+    };
+    if (contentTypeIds) {
+        query.ContentTypeIds = contentTypeIds;
+    }
+    if (minCommentCount > 0) {
+        query.MinimumCommentCount = minCommentCount;
+    }
+    if (maxCommentCount > 0) {
+        query.MaximumCommentCount = maxCommentCount;
+    }
+
+    var totalCount = core_v2_commentSummary.List(query).TotalCount;
+    if (totalCount >= minContentCount && (maxContentCount === 0 || totalCount <= maxContentCount)) {
+        result = 'award';
+    } else {
+        result = 'revoke';
+    }
+}
+
+if (result !== '') {
+    var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+
+    if (result == 'award') {
+        if (!hasAchievement) {
+            context_v1_achievementAutomation.Award(userId);
+        }
+    } else if (result == 'revoke') {
+        if (hasAchievement) {
+            context_v1_achievementAutomation.Revoke(userId);
+        }
+    }
+}
+]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="contentTypeIds" labelResourceName="ContentToReview" descriptionResourceName="ContentToReview_Description" dataType="Custom" template="core_v2_contentTypeList" strictContentTypes="true" isCommentable="true" />
+    <property id="ranges" resourceName="Ranges" descriptionResourceName="Ranges_Description" dataType="string" defaultValue="" controlType="Telligent.Evolution.Controls.PropertyVisibilityValueSelectionControl, Telligent.Evolution.Platform">
+            <propertyValue value="" resourceName="Ranges_None" propertiesToShow="minCommentCount,minContentCount" propertiesToHide="commentCountRange,contentCountRange" />
+            <propertyValue value="comments" resourceName="Ranges_Comments" propertiesToShow="minContentCount,commentCountRange" propertiesToHide="minCommentCount,contentCountRange" />
+            <propertyValue value="content" resourceName="Ranges_Content" propertiesToShow="minCommentCount,contentCountRange" propertiesToHide="minContentCount,commentCountRange" />
+    </property>
+    <property id="minContentCount" labelResourceName="ContentCount" descriptionResourceName="ContentCount_Description" dataType="Int" defaultValue="1">
+        <propertyRule name="minmax" min="1" />
+    </property>
+    <property id="contentCountRange" labelResourceName="ContentCountRange" descriptionResourceName="ContentCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+    <property id="minCommentCount" labelResourceName="CommentCount" descriptionResourceName="CommentCount_Description" dataType="Int" defaultValue="5" >
+        <propertyRule name="minmax" min="0" />
+    </property>
+    <property id="commentCountRange" labelResourceName="CommentCountRange" descriptionResourceName="CommentCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="0" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Title">Award to authors of content by the comment count on their content</resource>
+  <resource name="Description">Grants or revokes an achievement based on the number of comments on an author's content.</resource>
+  <resource name="CommentCount">Minimum comment count</resource>
+  <resource name="CommentCount_Description">The minimum number of comments required on content by the author to award the achievement.</resource>
+  <resource name="CommentCountRange">Comment count range</resource>
+  <resource name="CommentCountRange_Description">The minimum and maximum number of comments required on content by the author to award the achievement.</resource>
+  <resource name="ContentCount">Minimum count of content</resource>
+  <resource name="ContentCount_Description">The minimum count of content by the author that must have the required comment count to award the achievement.</resource>
+  <resource name="ContentCountRange">Content count range</resource>
+  <resource name="ContentCountRange_Description">The minimum and maximum count of content by the author that must have the required comment count to award the achievement.</resource>
+  <resource name="ContentToReview">Types of content to count</resource>
+  <resource name="ContentToReview_Description">Optionally select the types of contents to review when evaluating comment counts.</resource>
+  <resource name="Ranges">Range</resource>
+  <resource name="Ranges_Comments">On comment count</resource>
+  <resource name="Ranges_Content">On content count</resource>
+  <resource name="Ranges_Description">A range allows a minimum and maximum value to be set for the selected item.  If the maximum or minimum value is no longer met, the achievement will be removed.  If 'No range' is selected, the achievement will only be removed if the minimum values are no longer met.</resource>
+  <resource name="Ranges_None">No range</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

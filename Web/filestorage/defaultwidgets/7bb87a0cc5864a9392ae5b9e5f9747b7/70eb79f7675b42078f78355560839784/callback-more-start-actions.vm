@@ -1,0 +1,230 @@
+## Parse Parameters
+#set ($forumApplicationId = false)
+#set ($forumApplicationId = $core_v2_page.GetQueryStringValue('forumApplicationId'))
+#if ($forumApplicationId && $forumApplicationId.length > 0)
+	#set ($forumApplicationId = $core_v2_utility.ParseGuid($forumApplicationId))
+#end
+#set ($threadContentId = false)
+#set ($threadContentId = $core_v2_page.GetQueryStringValue('threadContentId'))
+#if ($threadContentId && $threadContentId.length > 0)
+	#set ($threadContentId = $core_v2_utility.ParseGuid($threadContentId))
+#end
+#set ($replyContentId = false)
+#set ($replyContentId = $core_v2_page.GetQueryStringValue('replyContentId'))
+#if ($replyContentId && $replyContentId.length > 0)
+	#set ($replyContentId = $core_v2_utility.ParseGuid($replyContentId))
+#end
+#set ($forumApplicationId = false)
+#set ($forumApplicationId = $core_v2_page.GetQueryStringValue('forumApplicationId'))
+#if ($forumApplicationId && $forumApplicationId.length > 0)
+	#set ($forumApplicationId = $core_v2_utility.ParseGuid($forumApplicationId))
+#end
+#set ($postActionsId = $core_v2_page.GetQueryStringValue('postActionsId'))
+#set ($replyCount = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('replyCount')))
+#set ($replyPageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('replyPageIndex')))
+
+
+## Load Entities
+#set ($forum = false)
+#if ($forumApplicationId)
+	#set ($forum = $core_v2_forum.Get($forumApplicationId))
+#end
+#set ($thread = false)
+#if ($threadContentId)
+	#set ($thread = $core_v2_forumThread.Get($threadContentId))
+#end
+#set ($reply = false)
+#if ($replyContentId)
+	#set ($reply = $core_v2_forumReply.Get($replyContentId))
+#end
+
+
+## Load Permissions
+#set ($hasModeratePermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReviewAbuse, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed)
+#set ($hasModerateUsersPermission = $core_v3_permission.CheckPermission($core_v2_sitePermissions.ManageMembership, $core_v2_user.Accessing.Id).IsAllowed)
+
+#set ($hasModifyPostPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.ModifyPost, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+#set ($hasDeletePostPermission = $core_v3_permission.CheckPermission($core_v2_forumPermissions.DeletePost, $core_v2_user.Accessing.Id, "%{ ContentId = $thread.ContentId, ContentTypeId = $core_v2_forumThread.ContentTypeId }").IsAllowed)
+
+#set ($editUrl = $core_v2_encoding.JavascriptEncode($core_v2_forumUrls.EditThread($thread.Id)))
+#set ($deleteUrl = $core_v2_forumUrls.Deletethread($thread.Id))
+
+<ul>
+
+## Edit Post
+#if ($hasModifyPostPermission)
+	<li class="navigation-list-item edit">
+		<a href="$core_v2_encoding.HtmlAttributeEncode($editUrl)">$core_v2_language.GetResource('edit')</a>
+	</li>
+#end
+
+## Delete Thread
+#if ($hasDeletePostPermission)
+	<li class="navigation-list-item edit">
+		<a data-messagename="telligent.evolution.widgets.thread.deletethread"
+			data-forumid="$thread.ForumId"
+			data-threadid="$thread.Id"
+			data-forumurl="$core_v2_forumUrls.Forum($thread.ForumId)"
+			data-links="$core_v2_encoding.HtmlAttributeEncode($postActionsId)"
+			href="#">
+			$core_v2_language.GetResource('delete')
+		</a>
+	</li>
+#end
+
+## Thread Muting
+#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && $core_v3_permission.CheckPermission($core_v2_forumPermissions.ReadForum, $core_v2_user.Accessing.Id, "%{ ApplicationId = $forum.ApplicationId, ApplicationTypeId = $core_v2_forum.ApplicationTypeId }").IsAllowed && $core_v2_forum.SubscriptionType($forum.Id) == 'Post')
+	<li class="navigation-list-item">
+		<a data-messagename="telligent.evolution.widgets.thread.mute"
+			data-threadid="$thread.Id"
+			#if ($core_v2_forumThread.IsMuted($thread.Id))
+				data-mute="true"
+			#else
+				data-mute="false"
+			#end
+			data-links="$core_v2_encoding.HtmlAttributeEncode($postActionsId)"
+			data-offtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CF_ForumLinks_ThreadMute'))"
+			data-ontext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CF_ForumLinks_ThreadUnMute'))"
+			href="#">
+				#if ($core_v2_forumThread.IsMuted($thread.Id))
+					$core_v2_language.GetResource('CF_ForumLinks_ThreadUnMute')
+				#else
+					$core_v2_language.GetResource('CF_ForumLinks_ThreadMute')
+				#end
+		</a>
+	</li>
+#end
+
+## Forum Thread Subscribing
+#if ($core_v2_user.IsRegistered($core_v2_user.Accessing.Id) && ($core_v2_forumThread.SubscriptionType($thread.Id) == 'Thread' || $core_v2_forumThread.SubscriptionType($thread.Id) == 'None'))
+	<li class="navigation-list-item">
+		<a data-messagename="telligent.evolution.widgets.thread.subscribe"
+			data-threadid="$thread.Id"
+			#if ($core_v2_forumThread.IsSubscribed($thread.Id))
+				data-subscribed="true"
+			#else
+				data-subscribed="false"
+			#end
+			data-links="$core_v2_encoding.HtmlAttributeEncode($postActionsId)"
+			data-offtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CF_ForumLinks_ThreadSubscribe'))"
+			data-ontext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('CF_ForumLinks_ThreadUnsubscribe'))"
+			href="#">
+				#if ($core_v2_forumThread.IsSubscribed($thread.Id))
+					$core_v2_language.GetResource('CF_ForumLinks_ThreadUnsubscribe')
+				#else
+					$core_v2_language.GetResource('CF_ForumLinks_ThreadSubscribe')
+				#end
+		</a>
+	</li>
+#end
+
+## Thread Capturing
+#set($url = false)
+#set($url = $core_v2_forumUrls.CaptureForumThread($thread.Id))
+#if($url)
+	<li class="navigation-list-item">
+		<a data-messagename="telligent.evolution.widgets.thread.capture"
+			href="#"
+			data-captureurl="$core_v2_encoding.HtmlAttributeEncode($url)"
+			class="internal-link capture-post forum">
+			$core_v2_language.GetResource('Wiki_CopyToWiki')
+		</a>
+	</li>
+#end
+
+#set($url = false)
+#set($url = $core_v2_captureThreadToArticle.CaptureUrl($thread.Id))
+#if($url)
+	<li class="navigation-list-item">
+		<a href="$url"
+			class="internal-link capture-post forum">
+			$core_v2_language.GetResource('CaptureToArticle')
+		</a>
+	</li>
+#end
+
+## Featuring
+#if ($core_v3_feature.CanFeature($thread.ContentId, $thread.ContentTypeId))
+	<li class="navigation-list-item">
+		$core_v2_ui.Feature($thread.ContentId, $thread.ContentTypeId)
+	</li>
+#end
+
+#set($convert = false)
+#set($convert = $core_v2_ui.ConvertContent($thread.ContentId, $thread.GlobalContentTypeId))
+#if ($convert)
+	<li class="navigation-list-item">
+		$convert
+	</li>
+#end
+
+
+#if ($hasModeratePermission)
+
+	## Join Thread
+	#set ($mergeUrl = false)
+	#set ($mergeUrl = $core_v2_forumUrls.MergeThread($thread.Id))
+	#if ($mergeUrl)
+		<li class="navigation-list-item edit">
+			<a href="$core_v2_encoding.HtmlAttributeEncode($mergeUrl)">$core_v2_language.GetResource('Join')</a>
+		</li>
+	#end
+#end
+
+#if ($hasModifyPostPermission && $hasModeratePermission)
+	## Lock/Unlock Thread
+	<li class="navigation-list-item">
+		<a data-messagename="telligent.evolution.widgets.thread.lock"
+			data-forumid="$thread.ForumId"
+			data-threadid="$thread.Id"
+			#if ($thread.IsLocked)
+				data-locked="true"
+			#else
+				data-locked="false"
+			#end
+			data-links="$core_v2_encoding.HtmlAttributeEncode($postActionsId)"
+			data-offtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Lock'))"
+			data-ontext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Unlock'))"
+			href="#">
+				#if ($thread.IsLocked)
+					$core_v2_language.GetResource('Unlock')
+				#else
+					$core_v2_language.GetResource('Lock')
+				#end
+		</a>
+	</li>
+
+	#if ($hasModerateUsersPermission)
+		## Moderate/Unmoderate User
+		<li class="navigation-list-item">
+			<a data-messagename="telligent.evolution.widgets.thread.moderateuser"
+				data-userid="$thread.Author.Id"
+				#if ($thread.Author.ModerationLevel == "Moderated")
+					data-moderated="true"
+				#else
+					data-moderated="false"
+				#end
+				data-links="$core_v2_encoding.HtmlAttributeEncode($postActionsId)"
+				data-offtext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Moderate_User'))"
+				data-ontext="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('UnModerate_User'))"
+				href="#">
+					#if ($thread.Author.ModerationLevel == "Moderated")
+						$core_v2_language.GetResource('UnModerate_User')
+					#else
+						$core_v2_language.GetResource('Moderate_User')
+					#end
+			</a>
+		</li>
+
+	## Edit User
+		#set ($editUserUrl = false)
+		#set ($editUserUrl = $core_v2_urls.EditUser($thread.Author.Id))
+		#if ($editUserUrl)
+			<li class="navigation-list-item edit">
+				<a href="$core_v2_encoding.HtmlAttributeEncode($editUserUrl)">$core_v2_language.GetResource('EditUser')</a>
+			</li>
+		#end
+	#end
+#end
+
+</ul>

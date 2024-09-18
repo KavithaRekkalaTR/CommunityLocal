@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:Ideas_AddEditChallenge_Name}" version="11.0.0.0" description="${resource:Ideas_AddEditChallenge_Description}" instanceIdentifier="75540e8339c3498185fb0e5bc9320b57" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="add-edit-challenge" lastModified="2020-01-14 16:06:27Z" provider="57a8b45cd35e42169c9fd8812250f188">
+    <contentScript language="Velocity"><![CDATA[
+#set ($userId = $core_v2_user.Accessing.Id)
+#set($group = false)
+#set($group = $core_v2_group.Current)
+
+#if(!$group)
+  $core_v2_widget.Hide()
+#end
+
+#set($challenge = false)
+#set($challenge = $telligentIdeas_v1_challenges.Current)
+
+#if (!$telligentIdeas_v1_ideaPermissions.CanManageChallenges($group.Id))
+    <div id="$core_v2_widget.UniqueId('errorMessage')" class="message error">$core_v2_language.GetResource("ManageChallengePermissionDenied")</div>
+#else
+
+  <div id="$core_v2_widget.UniqueId('successMessage')" class="message success" style="display:none">$core_v2_language.GetResource("challenge_Saved")</div>
+  <div id="$core_v2_widget.UniqueId('errorMessage')" class="message error" style="display:none">$core_v2_language.GetResource("challenge_GenericError")</div>
+
+  <div id="$core_v2_widget.UniqueId('form')">
+    <div class="field-list-header"></div>
+    <form><fieldset class="field-list">
+        #if($challenge)
+          <h1>$challenge.Name</h1>
+        #else
+          <h1>$core_v2_language.GetResource('CreateChallengeTitle')</h1>
+        #end
+
+      <ul class="field-list">
+        <li class="field-item challenge-name">
+          <label class="field-item-header" for="$core_v2_widget.UniqueId('name')">$core_v2_language.GetResource("Name")</label>
+          <span class="field-item-input">
+            <textarea rows="1" class="scaled" maxlength="256" id="$core_v2_widget.UniqueId('name')" name="$core_v2_widget.UniqueId('name')">$!challenge.Name</textarea>
+          </span>
+          <span class="field-item-validation" style="display: none;"></span>
+        </li>
+
+        <li class="field-item challenge-body">
+          <label for="$core_v2_widget.UniqueId('body')" class="field-item-header">$core_v2_language.GetResource('Description')</label>
+          <span class="field-item-input">
+            <textarea rows="4" maxlength="1024" id="$core_v2_widget.UniqueId('body')" name="$core_v2_widget.UniqueId('body')">$!challenge.Description('raw')</textarea>
+          </span>
+
+          <span class="field-item-validation" style="display:none;"></span>
+        </li>
+
+        <li class="field-item post-submit">
+          <span class="field-item-input">
+              <a href="javascript:void(0);" class="internal-link save-post disabled submit-button button" id="$core_v2_widget.UniqueId('save')">
+                <span></span>$core_v2_language.GetResource('Submit')
+              </a>
+              <span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+          </span>
+        </li>
+      </ul>
+    </fieldset></form>
+    <div class="field-list-footer"></div>
+  </div>
+
+  #registerEndOfPageHtml('telligent.evolution.Ideation.widgets.addEditChallenge')
+    <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+  #end
+
+  #registerEndOfPageHtml()
+    <script type="text/javascript">
+    //<!--31154f2f1a944c64b0e644f1022f506c-cdata-start-->
+    jQuery(function(j)
+    {
+      j.telligent.evolution.Ideation.widgets.addEditChallenge.register({
+        wrapperId:'$core_v2_widget.WrapperElementId',
+        save:j('#$core_v2_widget.UniqueId('save')'),
+        nameId:'$core_v2_widget.UniqueId('name')',
+        bodyId:'$core_v2_widget.UniqueId('body')',
+        appId:#if($challenge)'$challenge.Id'#else'00000000-0000-0000-0000-000000000000'#end,
+        groupId:$group.Id,
+        creator:$userId,
+        nameRequiredMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('challenge_validator_nameRequired'))',
+        duplicateNameMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('challenge_validator_DuplicateName'))',
+        descLengthMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('challenge_validator_descriptionLength'))',
+        processingMessage:'$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('challengeSaving'))',
+        successMessage:j('#$core_v2_widget.UniqueId('successMessage')'),
+        errorMessage:j('#$core_v2_widget.UniqueId('errorMessage')'),
+        saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))'
+      });
+    });
+    //<!--31154f2f1a944c64b0e644f1022f506c-cdata-end-->
+    </script>
+  #end
+#end
+]]></contentScript>
+    <headerScript language="Velocity"><![CDATA[
+      #set($header = $core_v2_widget.ApplyTokens($core_v2_widget.GetStringValue('fragmentHeader', '')))
+
+      #if($header != '')
+        $header
+      #else
+        #set($challenge = false)
+        #set($challenge = $telligentIdeas_v1_challenges.Current)
+        #if($challenge)
+          $core_v2_language.GetResource('EditChallengeTitle')
+        #else
+          $core_v2_language.GetResource('CreateChallengeTitle')
+        #end
+      #end
+    ]]></headerScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+	<property id="fragmentHeader" labelResourceName="CF_Title" dataType="String" template="core_v2_tokenizedString" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="challenge_GenericError">There was an error with the last request.</resource>
+  <resource name="challenge_Saved">Ideation was saved successfully</resource>
+  <resource name="challenge_validator_descriptionLength">Please shorten the description</resource>
+  <resource name="challenge_validator_DuplicateName">An ideation with this name already exists.</resource>
+  <resource name="challenge_validator_nameRequired">Name is required</resource>
+  <resource name="challengeSaving">Saving...</resource>
+  <resource name="CreateChallengeTitle">Create a new ideation to capture ideas</resource>
+  <resource name="Description">Description:</resource>
+  <resource name="EditChallengeTitle">Edit ideation</resource>
+  <resource name="Ideas_AddEditChallenge_Description">Displays a form for creating a new Ideation or editing an existing Ideation</resource>
+  <resource name="Ideas_AddEditChallenge_Name">Ideas - Create Ideation</resource>
+  <resource name="ManageChallengePermissionDenied">You do not have permission to manage ideations in this group.</resource>
+  <resource name="Name">Name:</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Submit">Save</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="ideas.ideations.readonly" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

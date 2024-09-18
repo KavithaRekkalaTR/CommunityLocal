@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Thread Split" version="13.0.0.0" description="Sends an email to a reply author when their reply is split into a separate thread." id="0834b98ff4e4483b9c2e5bb5f47c39f4" lastModified="2023-04-18 18:46:56Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Subject')]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[$core_v2_language.GetResource('Header')]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('from_thread_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ThreadSplit.OldThread.Url)">$context_v1_email.Context.ThreadSplit.OldThread.Subject</a>
+#token('to_thread_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ThreadSplit.NewThread.Url)">$context_v1_email.Context.ThreadSplit.NewThread.Subject</a>
+#end
+</p>
+]]></bodyScript>
+    <footerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">Your reply to {from_thread_link} has been moved to its own thread: {to_thread_link}</resource>
+  <resource name="Subject">Your reply was moved to a separate thread</resource>
+  <resource name="Header">Your reply was moved to a separate thread</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

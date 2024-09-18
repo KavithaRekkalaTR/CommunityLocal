@@ -1,0 +1,15 @@
+﻿#if ($core_v2_page.IsPost)
+	#set ($subscribe = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('subscribe')))
+	#set ($contentId = $core_v2_utility.ParseGuid($core_v2_page.GetFormValue('contentId')))
+	$core_v2_page.SetContentType('application/json')
+	#set($response = false)
+	#set($response = $core_v2_wikiPageCommentSubscriptions.SetSubscribed($contentId, $subscribe))
+	{"subscribe":#if($subscribe) true#else false#end,"warnings":[
+		#foreach ($warning in $response.Warnings)
+			#each
+				"$core_v2_encoding.JavascriptEncode($warning.Message)"
+			#between
+				,
+		#end
+	]}
+#end

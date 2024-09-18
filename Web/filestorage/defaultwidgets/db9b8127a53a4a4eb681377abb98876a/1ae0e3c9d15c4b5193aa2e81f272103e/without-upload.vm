@@ -1,0 +1,44 @@
+<textarea cols="50" rows="5" id="$context.UniqueId">#foreach($v in $value)
+$core_v2_encoding.HtmlEncode($v)
+#end</textarea>
+
+<script type="text/javascript">
+    jQuery(function() {
+        var api = $context.JsonApi;
+        var i = jQuery('#$context.UniqueId');
+        var p = new RegExp('$core_v2_encoding.JavascriptEncode($context.ValidUrlPattern)');
+        var gv = function(v) {
+            v = !v ? [] : v.split('\n');
+            var pv = [];
+            jQuery.each(v, function(i, url) {
+                if (url.toLowerCase() == '$defaultProtocol://'.toLowerCase()) {
+                    url = null;
+                } else if(!(p.test(url))) {
+                    url = '$defaultProtocol://' + url;
+                    if(!(p.test(url)) || url.toLowerCase() == '$defaultProtocol://'.toLowerCase()) {
+                        url = null;
+                    }
+                }
+                if (url) {
+                    pv.push(url);
+                }
+            });
+            pv.toString = function() {
+                var out = [];
+                jQuery.each(this, function(i,url) {
+                    if (out.length > 0) { out.push('&'); }
+                    out.push('Uri=');
+                    out.push(encodeURIComponent(url));
+                });
+                return out.join('');
+            };
+            i.val(pv.join('\n'));
+            return pv;
+        };
+        api.register({
+            val: function(val) { return (typeof val == 'undefined') ? gv(i.val()) : i.val(gv(val.join('\n')).join('\n')); },
+            hasValue: function() { return gv(i.val()).length > 0 }
+        });
+        i.on('change', function() { api.changed(gv(i.val())); });
+    });
+</script>

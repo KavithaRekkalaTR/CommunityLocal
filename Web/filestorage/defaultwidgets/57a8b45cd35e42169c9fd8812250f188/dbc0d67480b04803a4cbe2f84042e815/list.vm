@@ -1,0 +1,139 @@
+#set($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 5))
+#set($showSubGroups = $core_v2_widget.GetBoolValue('groupAndSubGroups', false))
+#set($showSortOptions = true)
+#set($sortOrder = 'Descending')
+#set($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'ApplicationName'))
+#set ($queryStringSortOrder = $core_v2_page.GetQueryStringValue("sortOrder"))
+#set ($queryStringSortBy = $core_v2_page.GetQueryStringValue("sortBy"))
+#if ($queryStringSortBy)
+	#set ($sortBy = $queryStringSortBy)
+#end
+#if ($sortBy == 'ApplicationIdsOrder')
+	#set($sortOrder = 'Ascending')
+#end
+#if ($queryStringSortOrder)
+	#set ($sortOrder = $queryStringSortOrder)
+#end
+
+#set($query = "%{IncludeSubGroups=$showSubGroups,PageIndex=$pageIndex,PageSize=$pageSize,SortBy=$sortBy,SortOrder=$sortOrder}")
+
+#if($sortBy == 'ApplicationIdsOrder')
+	#set($challengeSelection = false)
+	#set ($challengeSelection = $core_v2_widget.GetCustomValue('challengeSelection', ''))
+	#if ($challengeSelection && $challengeSelection.Length > 0)
+		#set($challengeSelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($challengeSelection).Values('challenge')))
+		$query.Add('ApplicationIds', $challengeSelection)
+	#end
+#end
+
+#set($challenges = false)
+#set($challenges = $telligentIdeas_v1_challenges.List($core_v2_group.Current.Id, $query))
+
+#if ($challenges.TotalCount > $pageSize)
+	<form>
+	<div class="sort" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sort'))">
+		<span class="by">
+			<select class="ui-select" data-querykey="sortBy">
+				<option value="Name" #if($sortBy == 'Name') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_ApplicationName')</option>
+				<option value="TotalPosts" #if($sortBy == 'TotalPosts') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_Posts')</option>
+				<option value="LastPost" #if($sortBy == 'LastPost') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_LastPost')</option>
+			</select>
+		</span>
+		<span class="order">
+			<select class="ui-select" data-querykey="sortOrder">
+				<option value="Descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+				<option value="Ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+			</select>
+		</span>
+	</div>
+	</form>
+
+	#registerEndOfPageHtml()
+		<script type="text/javascript">
+		jQuery(function(j){
+			var sort = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort'))');
+			sort.on('change', 'select', function(e) {
+				var select = j(this), hashAdjustment = {};
+				hashAdjustment[select.data('querykey')] = select.val();
+				j.telligent.evolution.url.hashData(hashAdjustment, {
+					prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+				});
+			});
+		});
+		</script>
+	#end
+#end
+#set($showTitle = $core_v2_widget.GetBoolValue('showTitleColumn', true))
+#set($showGroup = $core_v2_widget.GetBoolValue('showGroupColumn', false))
+#set($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set($showLastPost = $core_v2_widget.GetBoolValue('showLastPostColumn', true))
+
+#foreach($challenge in $challenges)
+#beforeall
+	<ul class="content-list content simple margin-bottom tabular">
+#each
+	<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($challenge.Url)">
+		<div class="name cell">
+			<h2>
+				#if($showGroup)
+					<a $core_v2_ui.ContentPeek($challenge.Group.ContainerId, $core_v2_group.ContentTypeId, 'internal-link view-application view-container')
+					    href="$core_v2_encoding.HtmlAttributeEncode($challenge.Group.Url)">$challenge.Group.Name: </a>
+				#end
+				#if($showTitle)
+					<a
+					#if ($inSidebar)
+						$core_v2_ui.ContentPeek($ideation.ApplicationId, $telligentIdeas_v1_challenges.ContentTypeId, "internal-link view-application")
+					#else
+						class="internal-link view-application"
+					#end
+					href="$core_v2_encoding.HtmlAttributeEncode($challenge.Url)">$challenge.Name</a>
+				#end
+			</h2>
+			#if(!$inSidebar && $challenge.Description)
+				<div class="content">$challenge.HtmlDescription('web')</div>
+			#end
+		</div>
+
+		#if(!$inSidebar)
+			#set($ideas = false)
+			#if($showPosts || $showLastPost)
+				#set($ideas = $telligentIdeas_v1_ideas.List("%{ ChallengeId=$challenge.Id, QueryType='active', PageIndex=0, PageSize=1, SortBy='date', SortOrder='descending' }"))
+			#end
+
+			#if($showPosts)
+				<div class="minimal cell nowrap metadata">
+					<span class="value">$core_v2_language.FormatNumber($ideas.TotalCount)</span>
+					<span class="description">
+						#if ($ideas.TotalCount == 1)
+							$core_v2_language.GetResource('post_singular')
+						#else
+							$core_v2_language.GetResource('post_plural')
+						#end
+					</span>
+				</div>
+			#end
+
+			#if ($showLastPost)
+				<div class="minimal cell nowrap latest metadata">
+					#if($ideas.TotalCount > 0 && $challenge.LastPostDate)
+						#set ($lastPost = $ideas.get_Item(0))
+						<span class="value">
+							<a
+								$core_v2_ui.ContentPeek($lastPost.ContentId, $telligentIdeas_v1_ideas.ContentTypeId, "internal-link")
+								href="$core_v2_encoding.HtmlAttributeEncode($lastPost.Url)">$lastPost.Name</a>
+						</span>
+						<span class="description">$core_v2_language.FormatAgoDate($lastPost.CreatedDate)</span>
+					#end
+				</div>
+			#end
+		#end
+	</li>
+
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_NoResults')</div>
+#end
+
+$core_v2_ui.Pager($challenges.PageIndex, $challenges.PageSize, $challenges.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

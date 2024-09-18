@@ -1,0 +1,126 @@
+#set ($showTitle = $core_v2_widget.GetBoolValue('showTitleColumn', true))
+#set ($showGroup = $core_v2_widget.GetBoolValue('showGroupColumn', false))
+#set ($showPosts = $core_v2_widget.GetBoolValue('showPostsColumn', true))
+#set ($showSubGroups = $core_v2_widget.GetBoolValue('groupAndSubGroups', false))
+
+#set ($pageIndex = $core_v2_ui.GetCurrentPageIndex())
+#set ($pageSize = $core_v2_widget.GetIntValue('itemsBeforeScroll', 5))
+
+#set ($sortOrder = 'Descending')
+#set ($sortBy = $core_v2_widget.GetStringValue('defaultSortOrder', 'Name'))
+#set ($sortBy = $core_v2_page.GetQueryStringValue('sortBy'))
+#if ($sortBy == 'Name')
+    #set ($sortBy = 'Name')
+    #set ($sortOrder = 'Ascending')
+#elseif ($sortBy == 'Posts')
+    #set ($sortBy = 'Thread')
+#elseif ($sortBy == 'CollectionIdsOrder')
+    #set($sortOrder = 'Ascending')
+#end
+
+#set ($sortOrder = $core_v2_page.GetQueryStringValue('sortOrder'))
+
+#set($query = "%{IncludeSubGroups = $showSubGroups, PageIndex = $pageIndex, PageSize = $pageSize, SortBy = $sortBy, SortOrder = $sortOrder}")
+#set($group = false)
+#set($group = $core_v2_utility.ParseInt($core_v2_page.ParseQueryString($core_v2_widget.GetCustomValue('group', '')).Value('Group')))
+#if ($group > 0)
+	$query.Add('GroupId', $group)
+#else
+	$query.Add('GroupId', $core_v2_group.Current.Id.ToString())
+#end
+
+#if($sortBy == 'CollectionIdsOrder')
+    #set($collectionSelection = false)
+    #set ($collectionSelection = $core_v2_widget.GetCustomValue('collectionSelection', ''))
+    #if ($collectionSelection && $collectionSelection.Length > 0)
+    	#set($collectionSelection = $core_v2_utility.Join(',', $core_v2_page.ParseQueryString($collectionSelection).Values('collection')))
+    	$query.Add('ArticleCollectionIds', $collectionSelection)
+    #end
+#end
+
+#set ($collections = $articles_v1_articleCollections.List($query))
+
+#if ($collections.TotalCount > $pageSize)
+	<div class="sort" id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('sort'))">
+		<form>
+	    <span class="by">
+	        <select class="ui-select" data-querykey="sortBy">
+	            <option value="Name" #if($sortBy == 'Name') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_ApplicationName')</option>
+				#if($sortBy == 'CollectionIdsOrder')
+		            <option value="CollectionIdsOrder" #if($sortBy == 'CollectionIdsOrder') selected #end>$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_Custom')</option>
+				#end
+			</select>
+	    </span>
+	    <span class="order">
+	        <select class="ui-select" data-querykey="sortOrder">
+	            <option value="Descending" #if ($sortOrder.ToLower() == 'descending') selected #end>$core_v2_language.GetResource('Sort_Descending')</option>
+	            <option value="Ascending" #if ($sortOrder.ToLower() == 'ascending') selected #end>$core_v2_language.GetResource('Sort_Ascending')</option>
+	        </select>
+	    </span>
+	    </form>
+	</div>
+
+	#registerEndOfPageHtml()
+	    <script type="text/javascript">
+	    jQuery(function(j){
+	        var sort = j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('sort'))');
+	        sort.on('change', 'select', function(e) {
+	            var select = j(this), hashAdjustment = {};
+	            hashAdjustment[select.data('querykey')] = select.val();
+	            j.telligent.evolution.url.hashData(hashAdjustment, {
+	                prefix: '$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'
+	            });
+	        });
+	    });
+	    </script>
+	#end
+#end
+
+#foreach($collection in $collections)
+#beforeall
+    <ul class="content-list content simple margin-bottom tabular">
+#each
+	<li class="content-item with-href" data-href="$core_v2_encoding.HtmlAttributeEncode($collection.Url)">
+
+		<div class="name cell">
+			<h2>
+				#if($showGroup)
+               		<a $core_v2_ui.ContentPeek($collection.Group.ContainerId, $core_v2_group.ContentTypeId, 'internal-link view-application')
+               		    href="$core_v2_encoding.HtmlAttributeEncode($collection.Group.Url)">$collection.Group.Name: </a>
+				#end
+				#if($showTitle)
+                	<a class="internal-link view-application" 
+                	    href="$core_v2_encoding.HtmlAttributeEncode($collection.Url)">$collection.Name</a>
+				#end
+			</h2>
+			#if(!$inSidebar && $collection.Description)
+				<div class="content">$!collection.HtmlDescription('web')</div>
+			#end
+		</div>
+
+		#if(!$inSidebar)
+			#set($posts = false)
+			#set($posts = $articles_v1_articles.List("%{ArticleCollectionIds='$collection.Id',PageIndex=0,PageSize=1,SortBy='CreateDate',SortOrder='Descending'}"))
+
+			#if($showPosts)
+				<div class="minimal cell nowrap metadata">
+					<span class="value">$core_v2_language.FormatNumber($posts.TotalCount)</span>
+					<span class="description">
+						#if ($posts.TotalCount == 1)
+							$core_v2_language.GetResource('post_singular')
+						#else
+							$core_v2_language.GetResource('post_plural')
+						#end
+					</span>
+				</div>
+			#end
+		#end
+	</li>
+
+#afterall
+    </ul>
+#nodata
+    <div class="message norecords">$core_v2_language.GetResource('UIFragment_Core_BrowseApplication_NoResults')</div>
+#end
+
+$core_v2_ui.Pager($collections.PageIndex, $collections.PageSize, $collections.TotalCount, "%{ PagedContentFile = 'list.vm', LoadingIndicator = 'true', LoadOnAnyHashChange = 'true' }")

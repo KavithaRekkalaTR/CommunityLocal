@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Mention" version="13.0.0.0" description="Raises notifications on content mentions." id="213c779735ce4f50a87c87c6c750da2f" lastModified="2023-04-20 18:35:10Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Subject'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('content_name')
+    $context_v1_email.Context.Content.HtmlName('Web')
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#format($core_v2_language.GetResource('Header'))
+#token('site_name')
+    $core_v2_infoResult.Get().SiteName
+#token('content_name')
+    $context_v1_email.Context.Content.HtmlName('Web')
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Body'))
+#token('content_name_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.Content.Url)">$context_v1_email.Context.Content.HtmlName('Web')</a>
+#token('author_name_link')
+    #set($author = false)
+    #set($author = $core_v2_user.Get("%{ Id=$context_v1_email.Context.Content.CreatedByUserId }"))
+    #if ($author && !$author.HasErrors())
+        #if ($author.Url && $author.Url.Length > 0)
+	        <a href="$core_v2_encoding.HtmlAttributeEncode($author.Url)">$author.DisplayName</a>
+	    #else
+	        $author.DisplayName
+        #end
+    #else
+        $context_v1_email.Context.Content.CreatedByUserId
+    #end
+#end
+</p>]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[<p>
+#format($core_v2_language.GetResource('Footer'))
+#token('settings_link')
+	<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Settings(false))">$core_v2_language.GetResource('Settings')</a>
+#end
+</p>]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Body">You were&amp;nbsp;mentioned in {content_name_link} by {author_name_link}</resource>
+  <resource name="Footer">You received this email because you were mentioned by another user. You can disable these notifications {settings_link}.</resource>
+  <resource name="Settings">here</resource>
+  <resource name="Subject">You were mentioned in {content_name} on {site_name}</resource>
+  <resource name="Header">You were mentioned in {content_name} on {site_name}</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

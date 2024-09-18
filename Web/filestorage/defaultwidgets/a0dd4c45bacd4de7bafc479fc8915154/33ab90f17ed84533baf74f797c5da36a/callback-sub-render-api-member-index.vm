@@ -1,0 +1,55 @@
+##
+## Extension Member Index Renderer
+##
+## Requires in scope:
+##   $extension
+##
+#if ($extension)
+
+	<div>
+
+	<h3>$extension.Name</h3>
+
+	## Properties
+
+	#if ($extension.Properties)
+		#foreach ($prop in $extension.Properties)
+		#beforeall
+			<h3>$core_v2_language.GetResource('Properties')</h3>
+			<ul>
+		#each
+			<li>
+				<a href="#"
+					data-name="$core_v2_encoding.HtmlAttributeEncode($extension.Name)"
+					data-type="extension"
+					data-target="$core_v2_encoding.HtmlAttributeEncode($prop.Name)"
+					class="documentation-link">$prop.Name</a>
+			</li>
+		#afterall
+			</ul>
+		#end
+	#end
+
+	## Methods
+
+	#if ($extension.Methods)
+		#foreach ($method in $extension.Methods)
+		#beforeall
+			<h3>$core_v2_language.GetResource('Methods')</h3>
+			<ul>
+		#each
+			<li>
+				<a href="#"
+					data-name="$core_v2_encoding.HtmlAttributeEncode($extension.Name)"
+					data-type="extension"
+					data-target="$core_v2_encoding.HtmlAttributeEncode($method.Name)"
+					class="documentation-link">$method.Name</a>
+			</li>
+		#afterall
+			</ul>
+		#end
+	#end
+
+	</div>
+
+#end

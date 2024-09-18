@@ -1,0 +1,29 @@
+## State Filter
+<div $core_v2_servicePresence.RenderAttributes($context.ServicePresenceId, "%{}")>
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item">
+				<span class="field-item-input">
+					#set ($providers = $context.ListProviders("%{}"))
+					<select class="state-select">
+						<option value="all">$core_v2_language.GetResource('InAnyState')</option>
+						<option value="Custom">$core_v2_language.GetResource('UserInstalled')</option>
+						<option value="FactoryDefault">$core_v2_language.GetResource('DefaultEmbeddables')</option>
+						<option value="CustomizedDefault">$core_v2_language.GetResource('EditedDefault')</option>
+
+						#if ($providers && $providers.count > 1)
+							#foreach ($provider in $providers)
+							#beforeall
+								<optgroup label="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.GetResource('Providers'))">
+							#each
+									<option value="factoryDefaultProviderId:$provider.Id">$core_v2_encoding.HtmlEncode($provider.Name)</option>
+							#afterall
+								</optgroup>
+							#end
+						#end
+					</select>
+				</span>
+			</li>
+		</ul>
+	</fieldset>
+</div>

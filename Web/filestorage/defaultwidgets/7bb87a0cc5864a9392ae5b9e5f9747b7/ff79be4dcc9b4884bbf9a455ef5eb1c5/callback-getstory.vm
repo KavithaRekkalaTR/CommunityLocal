@@ -1,0 +1,20 @@
+#set ($excerptSize = 500)
+#set ($postCommentPageSize = 20)
+
+#set ($accessingUser = $core_v2_user.Accessing)
+#set ($accessingUserIsRegistered = false)
+#if ($core_v2_user.IsRegistered($accessingUser.Id))
+	#set ($accessingUserIsRegistered = true)
+#end
+
+## stories
+#set($query = false)
+$core_v2_widget.ExecuteFile('parse-query.vm')
+#set ($storyId = $core_v2_page.GetQueryStringValue('w_messageId'))
+$query.Add('StoryIds', $storyId)
+#set ($stories = $core_v2_activityStory.List($query))
+#if ($stories && !$stories.HasErrors())
+    #foreach($story in $stories)
+    	$core_v2_widget.ExecuteFile("story.vm")
+    #end
+#end

@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<automations>
+  <automation name="${resource:Title}" version="10.2.0.0" description="${resource:Description}" id="9f9c253c4b304692a6c4192d373f213c" executeAsServiceUser="true" hostId="c8de946520dd40b8ae331e9f9fe7250f" trigger="Event" lastModified="2019-02-22 22:41:31Z" provider="31f486cc-03b5-42b6-b5df-81cdd976aa59">
+    <events>
+      <event key="friendship.aftercreate" />
+      <event key="friendship.afterdelete" />
+      <event key="friendship.afterupdate" />
+    </events>
+    <executionScript language="JavaScript"><![CDATA[
+var friendshipRangeQuery = core_v2_page.ParseQueryString(core_v2_widget.GetCustomValue('friendshipCountRange', ''));
+var minFriendshipCount= core_v2_utility.ParseInt(friendshipRangeQuery.Value('Minimum'));
+var maxFriendshipCount = core_v2_utility.ParseInt(friendshipRangeQuery.Value('Maximum'));
+
+function reviewUser(userId) {
+    var hasAchievement = context_v1_achievementAutomation.IsAwarded(userId);
+    var totalCount = core_v2_friendship.List({
+        FriendshipState: 'Approved',
+        PageIndex: 0,
+        PageSize: 1,
+        RequestorId: userId
+    }).TotalCount;
+
+    if (totalCount >= minFriendshipCount && (maxFriendshipCount === 0 || totalCount <= maxFriendshipCount)) {
+        if (!hasAchievement) {
+            context_v1_achievementAutomation.Award(userId);
+        }
+    } else {
+        if (hasAchievement) {
+            context_v1_achievementAutomation.Revoke(userId);
+        }
+    }
+}
+
+// Review both sides of the friendship regardless of the event
+reviewUser(context_v2_automationTrigger.Arguments.Requestor.Id);
+reviewUser(context_v2_automationTrigger.Arguments.Recipient.Id);]]></executionScript>
+    <configuration><![CDATA[<propertyGroup id="options" labelResourceName="Options">
+    <property id="friendshipCountRange" labelResourceName="FriendshipCountRange" descriptionResourceName="FriendshipCountRange_Description" dataType="Custom" template="core_v2_intRange" minimum="1" maximum="" defaultValue="Minimum=5&amp;Maximum=" />
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Description">Grants or revokes an achievement based on the number of a friendships a member has.</resource>
+  <resource name="FriendshipCountRange">Friendship count range</resource>
+  <resource name="FriendshipCountRange_Description">The minimum and maximum number of friendships required to award the achievement.  Maximum value is optional, if set the achievement will be removed once the maximum value is exceeded.</resource>
+  <resource name="Title">Award to members by their total count of friendships</resource>
+</language>]]></languageResources>
+  </automation>
+</automations>

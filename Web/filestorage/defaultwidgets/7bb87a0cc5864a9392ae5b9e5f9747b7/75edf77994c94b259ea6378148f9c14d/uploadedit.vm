@@ -1,0 +1,99 @@
+﻿#if ($core_v2_page.IsPost)
+	$core_v2_page.SetContentType('application/json')
+
+	#set($title = $core_v2_page.GetFormValue('Title'))
+	#set($body = $core_v2_page.GetFormValue('Body'))
+	#set($galleryId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('GalleryId')))
+	#set($tags = $core_v2_page.GetFormValue('Tags'))
+	#set($fileChanged = $core_v2_page.GetFormValue('FileChanged')) ## 1/0
+	#set($subscribe = -1)
+	#set($subscribe = $core_v2_page.GetFormValue('Subscribe')) ## 1/0/-1
+	#set($fileName = false)
+	#set($fileName = $core_v2_page.GetFormValue('FileName')) ## set if file is updated
+	#set($fileUrl = false)
+	#set($fileUrl = $core_v2_page.GetFormValue('FileUrl')) ## set if file is updated and remote
+	#set($fileIsRemote = false)
+	#set($fileIsRemote = $core_v2_page.GetFormValue('FileIsRemote')) ## set if file is updated
+	#set($fileContextId = false)
+	#set($fileContextId = $core_v2_page.GetFormValue('FileContextId')) ## set if file is updated and not remote
+	#set($mediaId = false)
+	#set($mediaId = $core_v2_utility.ParseInt($core_v2_page.GetFormValue('Id'))) ## set if media is being updated
+	
+	#set($metaTitle = false)
+	#set($metaTitle = $core_v2_page.GetFormValue('MetaTitle'))
+	#set($metaKeywords = false)
+	#set($metaKeywords = $core_v2_page.GetFormValue('MetaKeywords'))
+	#set($metaDescription = false)
+	#set($metaDescription = $core_v2_page.GetFormValue('MetaDescription'))
+	
+	#set($ogFilename = false)
+	#set($ogFilename = $core_v2_page.GetFormValue('OpenGraphImageFileName'))
+	#set($ogImageContext = false)
+	#set($ogImageContext = $core_v2_page.GetFormValue('OpenGraphImageContext'))
+	#set($ogRemoveImage = false)
+	#set($ogRemoveImage = $core_v2_utility.ParseBool($core_v2_page.GetFormValue('RemoveOpenGraphImage')))
+
+	#set($options = "%{Name=$title,Description=$body,Tags=$tags}")
+	#set($contentType = false)
+	#if ($fileChanged == '1')
+		#if ($fileIsRemote == '1')
+			#set($contentType = $core_v2_ui.GetMimeType($fileUrl))
+			$options.Add('FileUrl', $fileUrl)
+			$options.Add('FileName', $fileName)
+			$options.Add('ContentType', $contentType)
+		#else
+			#set($file = false)
+			#set($file = $core_v2_uploadedFile.Get($fileContextId, $fileName))
+			#if ($file)
+				#set($contentType = $core_v2_ui.GetMimeType($fileName))
+				$options.Add('FileUploadContext',$fileContextId)
+				$options.Add('FileName',$file.Name)
+				$options.Add('ContentType', $contentType)
+			#end
+		#end
+	#end
+	
+	#if($ogFilename && $ogImageContext)
+	   	$options.Add('OpenGraphImageFileName', $ogFilename)
+	   	$options.Add('OpenGraphImageContext', $ogImageContext)
+	#end
+	
+	#if($ogRemoveImage)
+       $options.Add('RemoveOpenGraphImage', $ogRemoveImage)
+    #end
+	
+	#if($metaTitle)
+	   	$options.Add('MetaTitle', $metaTitle)
+	#end
+	#if($metaKeywords)
+	   	$options.Add('MetaKeywords', $metaKeywords)
+	#end
+	#if($metaDescription)
+	   	$options.Add('MetaDescription', $metaDescription)
+	#end
+
+	#set($media = false)
+	#if ($mediaId && $mediaId > 0)
+		#set($media = $core_v2_media.Update($galleryId, $mediaId, $options))
+	#else
+		#set($media = $core_v2_media.Create($galleryId, $title, $contentType, $fileName, $options))
+	#end
+
+	#if($media.HasErrors())
+		$core_v2_page.SendJsonError($media.Errors)
+	#end
+
+	#if ($media.IsApproved)
+		#if ($subscribe == '0')
+			$core_v2_media.SetSubscribed($media.Id, false)
+		#elseif ($subscribe == '1')
+			$core_v2_media.SetSubscribed($media.Id, true)
+		#end
+	#end
+
+	#if (!$media.IsApproved)
+		{"redirectUrl":"$core_v2_encoding.JavascriptEncode($core_v2_mediaUrls.Gallery($galleryId))","message":"$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PostIsModerated'))"}
+	#else		
+		{"redirectUrl":"$core_v2_encoding.JavascriptEncode($media.Url)"}
+	#end
+#end

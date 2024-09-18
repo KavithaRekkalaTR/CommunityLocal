@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<embeddables>
+  <embeddable name="${resource:Name}" version="12.0.0.0" description="${resource:Description}" id="6b06e1a70ec14e4394218caaf95469b6" lastModified="2021-09-02 18:31:04Z" provider="704e43fa-644b-4a59-881b-4632f0a6d708" isCacheable="false" varyCacheByUser="false" category="Formatting">
+    <contentScript language="Velocity"><![CDATA[#set ($content = false)
+#set ($content = $core_v2_widget.GetStringValue('message', ''))
+#set ($type = $core_v2_widget.GetStringValue('type', 'information'))
+#if ($content)
+    #if ($context_v2_embeddable.RenderTarget == 'Web')
+	    <div class="message $core_v2_encoding.HtmlAttributeEncode($type)">$core_v2_encoding.HtmlEncode($content)</div>
+	#else
+	    #if ($type == 'warning')
+	        <div style="padding: 1em; margin: 1em 0; color: #111; background-color: #fff; border: solid 1px #ffb300;">
+	    #elseif ($type == 'error')
+	        <div style="padding: 1em; margin: 1em 0; color: #ff5722; background-color: #fff; border: solid 1px #ff5722;">
+	    #else
+	        <div style="padding: 1em; margin: 1em 0; color: #444; background-color: #fff; border: solid 1px #ddd;">
+	    #end
+	        $core_v2_encoding.HtmlEncode($content)
+	    </div>
+	#end
+#end]]></contentScript>
+    <configuration><![CDATA[
+<propertyGroup id="options" labelResourceName="Configuration_Options">
+	<property id="message"	labelResourceName="Content" dataType="string" rows="3" />
+	<property id="type"	labelResourceName="Type" dataType="string">
+		<propertyValue value="information" labelResourceName="information" />
+		<propertyValue value="warning" labelResourceName="warning" />
+		<propertyValue value="error" labelResourceName="error" />
+	</property>
+</propertyGroup>]]></configuration>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Configuration_Options">Options</resource>
+  <resource name="Content">Tip Content</resource>
+  <resource name="Description">Displays a stylable tip</resource>
+  <resource name="error">Error</resource>
+  <resource name="information">Information</resource>
+  <resource name="Name">Tip</resource>
+  <resource name="Type">Tip Type</resource>
+  <resource name="warning">Warning</resource>
+</language>]]></languageResources>
+    <previewImage name="info.svg" />
+    <iconImage name="info.svg" />
+  </embeddable>
+</embeddables>

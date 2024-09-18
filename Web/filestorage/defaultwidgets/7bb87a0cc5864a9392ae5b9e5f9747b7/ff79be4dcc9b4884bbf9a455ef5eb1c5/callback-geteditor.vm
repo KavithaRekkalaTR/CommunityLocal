@@ -1,0 +1,113 @@
+#set($storyId = false)
+#set($storyId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('w_storyId')))
+
+#set ($statusMessage = false)
+#set ($statusMessageIdQuery = $core_v2_page.GetQueryStringValue('w_statusMessageId'))
+#if ($statusMessageIdQuery)
+	#set ($statusMessage = $core_v2_statusMessage.Get($core_v2_utility.ParseGuid($statusMessageIdQuery)))
+#end
+
+#set($suggestId = false)
+#set($story = $core_v2_activityStory.Get($storyId))
+
+#set($contentTypeId = $core_v2_comments.ContentTypeId)
+#if ($statusMessage)
+	#set ($contentTypeId = $core_v2_statusMessage.ContentTypeId)
+#elseif ($story.ContentTypeId == $core_v2_forumThread.ContentTypeId)
+	#set($contentTypeId = $core_v2_forumReply.ContentTypeId)
+	#if ($core_v2_forumThread.Get($story.ContentId).ThreadType == 'QuestionAndAnswer')
+		#set($suggestId = "editor_$storyId.ToString('N')_suggested")
+	#end
+#end
+
+#set ($submittableEditorOptions = "%{}")
+$submittableEditorOptions.Add('ContentTypeId', $contentTypeId.ToString())
+$submittableEditorOptions.Add('Width','100%')
+$submittableEditorOptions.Add('Height','60px')
+$submittableEditorOptions.Add('Placeholder', $core_v2_language.GetResource('writeReply'))
+$submittableEditorOptions.Add('AutoResize', true)
+
+#if ($statusMessage)
+	#set($editorId = "editor_status_${statusMessage.Id}")
+	$submittableEditorOptions.Add('EnableEnterToSubmitToggle', false)
+	$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('save'))
+	$submittableEditorOptions.Add('Value', $statusMessage.Body)
+	#store($editorPrefix)
+		<a href="#" data-messagename="status.upload" class="upload-attachment status-edit-action prepend-icon camera">$core_v2_language.GetResource('add-file')</a>
+		<a href="#" data-messagename="status.upload" class="change-attachment status-edit-action prepend-icon camera">$core_v2_language.GetResource('change-file')</a>
+		<a href="#" data-messagename="status.remove" class="remove-attachment status-edit-action prepend-icon trash">$core_v2_language.GetResource('remove-file')</a>
+		<a href="#" data-messagename="status.cancel" class="cancel status-edit-action">$core_v2_language.GetResource('cancel')</a>
+	#end
+	$submittableEditorOptions.Add('BeforeHtml', $editorPrefix)
+	$core_v2_submittableEditor.Render($editorId, "function() { jQuery.telligent.evolution.messaging.publish('status.update', { from: '$core_v2_widget.WrapperElementId', storyId: '$!storyId', statusMessageId: '$statusMessage.Id' }); }", $submittableEditorOptions)
+
+	#if ($statusMessage.AttachedUrl && $statusMessage.AttachedUrl != '')
+		<div class="post-attachment-viewer edit">
+			#set ($mediaType = $core_v2_ui.GetMediaType($statusMessage.AttachedUrl, "%{ ViewType = 'View', OutputIsPersisted='False' }"))
+			#if ($mediaType == 'Audio' || $mediaType == 'Video')
+				$core_v2_ui.GetViewHtml($statusMessage.AttachedUrl, "%{ Width = 320, Height = 240, OutputIsPersisted = 'False' }")
+			#elseif ($mediaType == 'Image')
+				$!core_v2_ui.GetPreviewHtml($statusMessage.AttachedUrl, "%{ Width = 320, Height = 240, OutputIsPersisted = 'False' }")
+			#else
+				$!core_v2_ui.GetPreviewHtml($statusMessage.AttachedUrl, "%{ Width = 56, Height = 56, OutputIsPersisted = 'False' }")
+			#end
+		</div>
+	#else
+		<div class="post-attachment-viewer edit"></div>
+	#end
+#else
+	#set($editorId = "editor_$storyId.ToString('N')")
+	$submittableEditorOptions.Add('EnableEnterToSubmitToggle', true)
+	$submittableEditorOptions.Add('EnterToSubmitPrompt', $core_v2_language.GetResource('enter_to_reply'))
+	$submittableEditorOptions.Add('SubmitLabel', $core_v2_language.GetResource('PostReply'))
+	#if ($suggestId)
+		#store($suggestAnswer)
+			<span class="suggest-field">
+				<input type="checkbox" id="$suggestId" class="suggest" />
+				<label for="$suggestId">$core_v2_language.GetResource('suggest_as_answer')</label>
+			</span>
+		#end
+		$submittableEditorOptions.Add('BeforeHtml', $suggestAnswer)
+	#end
+	$core_v2_submittableEditor.Render($editorId, "function() { jQuery.telligent.evolution.messaging.publish('activitystorystream.submitcomment', { from: '$core_v2_widget.WrapperElementId', storyId: '$!storyId' }); }", $submittableEditorOptions)
+#end
+
+<script type="text/javascript">
+	jQuery.telligent.evolution.messaging.publish('activitystorystream.registereditor', {
+		from: '$core_v2_widget.WrapperElementId',
+		storyId: '$!storyId',
+		#if ($statusMessage)
+			statusMessageId: '$statusMessage.Id',
+		#end
+		moveTo: function(container) {
+			$core_v2_submittableEditor.GetMoveScript($editorId, 'container');
+		},
+		onReady: function(f) {
+		  $core_v2_submittableEditor.GetAttachOnReadyScript($editorId, "f");
+    	},
+		#if ($suggestId)
+			isSuggested: function(val) {
+				if(typeof(val) !== 'undefined') {
+					if(val) {
+						jQuery('#${suggestId}').prop('checked', true);
+					} else {
+						jQuery('#${suggestId}').prop('checked', false);
+					}
+				}
+				return jQuery('#${suggestId}').is(':checked');
+			},
+		#end
+		val: function(val) {
+			if (typeof(val) !== 'undefined') {
+				$core_v2_submittableEditor.GetUpdateContentScript($editorId, 'val')
+			}
+			return $core_v2_submittableEditor.GetContentScript($editorId)
+		},
+		focus: function() {
+			$core_v2_submittableEditor.GetFocusScript($editorId)
+		},
+		remove: function() {
+		    $core_v2_submittableEditor.GetRemoveScript($editorId)
+		}
+	});
+</script>

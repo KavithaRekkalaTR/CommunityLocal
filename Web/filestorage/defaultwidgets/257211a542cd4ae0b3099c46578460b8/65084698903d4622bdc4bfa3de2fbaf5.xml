@@ -1,0 +1,123 @@
+﻿<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:ExportTheme_Name}" cssClass="contextual-export-theme" description="${resource:ExportTheme_Description}" instanceIdentifier="65084698903d4622bdc4bfa3de2fbaf5" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false">
+		<contentScript>
+				<![CDATA[
+#set($currentPage = false)
+#set($currentPage = $context.CurrentPage)
+
+<fieldset>
+	<ul class="field-list">
+		#if ($context.ForceDefault)
+			#if ($currentPage)
+				<li class="field-item">
+					<span class="field-item-name"><a href="#" class="inline-button" data-currentpage="true">$core_v2_language.FormatString($core_v2_language.GetResource('export-default-page'), $context.CurrentPage.Title, $context.ThemeTypeName.ToLower())</a></span>
+					<span class="field-item-description">
+						$core_v2_language.FormatString($core_v2_language.GetResource('export-default-page-description'), $context.CurrentPage.Title, $context.ThemeTypeName.ToLower())
+						#if ($context.CurrentPageIsStaged)
+							<span class="staged-note">$core_v2_language.GetResource('export-page-fromstaging')</span>
+						#end
+					</span>
+				</li>
+			#end
+			#if ($context.CanExportAllPages)
+				<li class="field-item">
+					<span class="field-item-name"><a href="#" class="inline-button" data-currentpage="false">$core_v2_language.FormatString($core_v2_language.GetResource('export-default-pages'), $context.ThemeTypeName.ToLower())</a></span>
+					<span class="field-item-description">
+						$core_v2_language.FormatString($core_v2_language.GetResource('export-default-pages-description'), $context.ThemeTypeName.ToLower())
+						#if ($context.CurrentThemeIsStaged)
+							<span class="staged-note">$core_v2_language.GetResource('export-pages-fromstaging')</span>
+						#end
+					</span>
+				</li>
+			#end
+		#elseif ($context.SupportsDefault)
+			#if ($currentPage)
+				<li class="field-item">
+					<span class="field-item-name"><a href="#" class="inline-button" data-currentpage="true">$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-page'), $context.CurrentPage.Title, $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)</a></span>
+					<span class="field-item-description">
+						$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-page-description'), $context.CurrentPage.Title, $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)
+						#if ($context.CurrentPageIsStaged)
+							<span class="staged-note">$core_v2_language.GetResource('export-page-fromstaging')</span>
+						#end
+					</span>
+				</li>
+			#end
+			#if ($context.CanExportAllPages)
+				<li class="field-item">
+					<span class="field-item-name"><a href="#" class="inline-button" data-currentpage="false">$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-pages'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)</a></span>
+					<span class="field-item-description">
+						$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-pages-description'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)
+						#if ($context.CurrentThemeIsStaged)
+							<span class="staged-note">$core_v2_language.GetResource('export-pages-fromstaging')</span>
+						#end
+					</span>
+				</li>
+			#end
+		#else
+			#if ($currentPage)
+				<li class="field-item">
+					<span class="field-item-name"><a href="#" class="inline-button" data-currentpage="true">$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-page-nodefault'), $context.CurrentPage.Title, $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)</a></span>
+					<span class="field-item-description">
+						$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-page-description-nodefault'), $context.CurrentPage.Title, $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)
+						#if ($context.CurrentPageIsStaged)
+							<span class="staged-note">$core_v2_language.GetResource('export-page-fromstaging')</span>
+						#end
+					</span>
+				</li>
+			#end
+			#if ($context.CanExportAllPages)
+				<li class="field-item">
+					<span class="field-item-name"><a href="#" class="inline-button" data-currentpage="false">$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-pages-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)</a></span>
+					<span class="field-item-description">
+						$core_v2_language.FormatString($core_v2_language.GetResource('export-contextual-pages-description-nodefault'), $context.ThemeTypeName.ToLower(), $context.ThemeApplicationName)
+						#if ($context.CurrentThemeIsStaged)
+							<span class="staged-note">$core_v2_language.GetResource('export-pages-fromstaging')</span>
+						#end
+					</span>
+				</li>
+			#end
+		#end
+	</ul>
+</fieldset>
+
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+	jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+		jQuery.telligent.evolution.administration.panelWrapper().on('click', 'a', function() {
+			var el = jQuery(this);
+			window.open(jQuery.telligent.evolution.url.modify({
+					url: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('export.vm'))',
+					query: {
+						_w_currentpage: el.data('currentpage'),
+						_w_default: el.data('default')
+					}
+				}), '_blank');
+			return false;
+		});
+	});
+	</script>
+#end
+				]]>
+		</contentScript>
+				<languageResources>
+<language key="en-us">
+		<resource name="ExportTheme_Name">Export Theme</resource>
+		<resource name="ExportTheme_Description">Export the current theme for backup or sharing.</resource>
+		<resource name="export-contextual-page">This page only</resource>
+		<resource name="export-contextual-page-description">Export the '{0}' page as currently defined for '{2}'. This includes the header, footer, and page definition.</resource>
+		<resource name="export-contextual-page-nodefault">This page only</resource>
+		<resource name="export-contextual-page-description-nodefault">Export the '{0}' page as currently defined. This includes the header, footer, and page definition.</resource>
+		<resource name="export-default-page">Default version of this page</resource>
+		<resource name="export-default-page-description">Export the default version of the '{0}' page. This includes the default header, footer, and page definition.</resource>
+		<resource name="export-contextual-pages">Entire theme for '{1}'</resource>
+		<resource name="export-contextual-pages-description">Export the entire {0} theme for '{1}'. This includes the theme options, header, footer, and all pages.</resource>
+		<resource name="export-contextual-pages-nodefault">Entire theme</resource>
+		<resource name="export-contextual-pages-description-nodefault">Export the entire {0} theme. This includes the theme options, header, footer, and all pages.</resource>
+		<resource name="export-default-pages">Entire default {0} theme </resource>
+		<resource name="export-default-pages-description">Export the entire default of the {0} theme. This includes the theme options, header, footer, and all pages.</resource>
+		<resource name="export-page-fromstaging">Note that this export will include currently staged changes.</resource>
+		<resource name="export-pages-fromstaging">Note that this export will include currently staged changes.</resource>
+</language>
+				</languageResources>
+		</scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,329 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:AppealQueue_Name}" version="13.0.0.0" description="${resource:AppealQueue_Description}" instanceIdentifier="bbab8f4a2b6f413e94e3e0271ad8067c" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="moderation" lastModified="2024-02-22 20:50:56Z" provider="2e6432abdbfc4dbdab54dc79d17f35d2">
+    <contentScript language="Velocity"><![CDATA[<p class="instructions">
+    <span class="to-review">
+        $core_v2_language.GetResource('awaiting_review_instructions')
+    </span>
+    <span class="possible">
+        $core_v2_language.GetResource('possibly_abusive_instructions')
+    </span>
+    <span class="in-process">
+        $core_v2_language.GetResource('in_abuse_queue_instructions')
+    </span>
+</p>
+
+<div class="filter-selector">
+    <span class="to-review in-process">
+        <select data-parameter="contenttype">
+            <option value="">$core_v2_language.GetResource('FilterContentType_All')</option>
+            #foreach ($contentType in $context.AbusiveContentTypes)
+                <option value="$contentType.Id.ToString()">$core_v2_language.FormatString($core_v2_language.GetResource('FilterContentType_ContentType'), $contentType.Name)</option>
+            #end
+		</select>
+    </span>
+    
+	<span class="to-review">
+		<select data-parameter="state">
+			<option value="AllActionRequired">$core_v2_language.GetResource('FilterAppealState_AllReviewable')</option>
+			<option value="ModerationRequired">$core_v2_language.GetResource('FilterAppealState_ModerationRequired')</option>
+			<option value="ReviewRequired">$core_v2_language.GetResource('FilterAppealState_ReviewRequired')</option>
+			<option value="AuthorResponded">$core_v2_language.GetResource('FilterAppealState_AuthorResponded')</option>
+		</select>
+	</span>
+	<span class="possible" style="display: none;">
+		<select data-parameter="state">
+			<option value="Reported">$core_v2_language.GetResource('FilterAppealState_Reported')</option>
+		</select>
+	</span>
+	<span class="in-process" style="display: none;">
+		<select data-parameter="state">
+				<option value="Initiated">$core_v2_language.GetResource('FilterAppealState_Initiated')</option>
+				<option value="PendingReview">$core_v2_language.GetResource('FilterAppealState_PendingReview')</option>
+				<option value="Accepted">$core_v2_language.GetResource('FilterAppealState_Accepted')</option>
+				<option value="Rejected">$core_v2_language.GetResource('FilterAppealState_Rejected')</option>
+				<option value="Expired">$core_v2_language.GetResource('FilterAppealState_Expired')</option>
+		</select>
+	</span>
+
+	<span class="possible" style="display: none;">
+		<select data-parameter="age">
+				<option value="0">$core_v2_language.GetResource('FilterBy_AllTime')</option>
+				<option value="-1">$core_v2_language.GetResource('FilterBy_LastDay')</option>
+				<option value="-7">$core_v2_language.GetResource('FilterBy_LastWeek')</option>
+				<option value="-30">$core_v2_language.GetResource('FilterBy_LastMonth')</option>
+		</select>
+	</span>
+
+	<span class="to-review in-process">
+		<select data-parameter="sort">
+			<option value="AppealDate">$core_v2_language.GetResource('SortBy_AppealDate')</option>
+            <option value="LastUpdatedDate">$core_v2_language.GetResource('SortBy_LastUpdatedDate')</option>
+			<option value="ContentDate">$core_v2_language.GetResource('SortBy_ContentDate')</option>
+			<option value="AuthorDisplayName">$core_v2_language.GetResource('SortBy_ContentAuthor')</option>
+		</select>
+	</span>
+
+	<span class="possible" style="display: none;">
+		<select data-parameter="sort">
+			<option value="Certainty">$core_v2_language.GetResource('SortBy_AbuseCertainty')</option>
+			<option value="Reports">$core_v2_language.GetResource('SortBy_Reports')</option>
+		</select>
+	</span>
+
+	<span class="to-review in-process possible">
+		<select data-parameter="sortorder">
+			<option value="Ascending">$core_v2_language.GetResource('SortOrder_Ascending')</option>
+			<option value="Descending">$core_v2_language.GetResource('SortOrder_Descending')</option>
+		</select>
+	</span>
+
+  <div class="to-review in-process possible">
+    <form><fieldset>
+		    <input id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('appOrGroupSelectorId'))" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('appOrGroupSelectorId'))" type="text" style="width:200px" value="" />
+        <input id="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('authorSelectorId'))" name="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.UniqueId('authorSelectorId'))" type="text" style="width:200px" value="" />
+    </fieldset></form>
+  </div>
+</div>
+
+<div id="$core_v2_widget.UniqueId('contentlist')" class="moderation-list">
+</div>
+
+#registerEndOfPageHtml('telligent.evolution.widgets.appealQueue')
+	<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+#end
+#registerEndOfPageHtml()
+	<script type="text/javascript">
+    jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+			jQuery.telligent.evolution.widgets.appealQueue.register({
+        contentList: jQuery('#$core_v2_widget.UniqueId('contentlist')'),
+        appOrGroupSelector: jQuery('#$core_v2_widget.UniqueId('appOrGroupSelectorId')'),
+        authorSelector: jQuery('#$core_v2_widget.UniqueId('authorSelectorId')'),
+        urls: {
+          listAppeals: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-appeals.jsm'))', 
+          listReviewables: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-reviewablecontent.jsm'))', 
+          get: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-appeal.vm'))',
+          confirmReport: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-hide-content.vm'))',
+          ignoreReport: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-ignore-content.vm'))',
+          listReports: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-reports.vm'))',
+          deleteAuthor: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('delete-author.vm'))',
+          getAuthorDetails: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-authordetails.vm'))',
+          getContextDetails: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-contextdetails.vm'))',
+          getText: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-text.vm'))',
+          getFiles: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-files.vm'))',
+          getReviewableContent: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-get-reviewablecontent-content.vm'))',
+          saveReviewableContent: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-save-reviewablecontent-content.vm'))',
+          approveDenyReviewableContent: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-approvedeny-reviewablecontent.vm'))',
+          preview: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview.vm'))',
+          listHistory: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list-reviewablecontent-history.vm'))',
+          publishReviewableContent: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-publish-reviewablecontent.vm'))',
+          deleteReviewableContent: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-delete-reviewablecontent.vm'))'
+        },
+        text: {
+          awaitingReview: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('awaiting_review'))',
+          possiblyAbusive: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('possibly_abusive'))',
+          inAbuseProcess: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('in_abuse_queue'))',
+          selectedContainer: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectedContainer'))',
+          container: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Container'))',
+          selectedApplication: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SelectedApplication'))',
+          application: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Application'))',
+          noAppOrGroupMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ContextLookUp_NoMatches'))',
+          appOrGroupPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ContextLookUp_Placeholder'))',
+          reports: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('abuse_reports'))',
+          moderateUser: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('moderate_user'))',
+          unmoderateUser: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('unmoderate_user'))',
+          moderateAuthor: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('moderate_author'))',
+          unmoderateAuthor: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('unmoderate_author'))',
+          previous: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('previous'))',
+          next: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('next'))',
+          reviewAppeal: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('manual_appeal_action'))',
+          selectedAuthorWithUsername: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('selected_author_with_username'))',
+          selectedAuthor: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('selected_author'))',
+          author: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('author'))',
+          authorWithUsername: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('author_with_username'))',
+          noAuthorMatches: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('no_author_matches'))',
+          authorPlaceholder: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('author_placeholder'))',
+          deleteUser: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete_user'))',
+          deleteAuthor: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete_author'))',
+          userdeletedmessage: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('userdeletedmessage'))',
+          delete: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('delete'))',
+          noListItems: '<div class="message norecords">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('No_Appeals'))</div>',
+          edit: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Edit'))',
+          cancelEditing: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('CancelEditing'))',
+          approveFormInstructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ApproveFormInstructions'))',
+          denyFormInstructions: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DenyFormInstructions'))',
+          previewTitle: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Preview'))',
+          deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteConfirmation'))',
+          publishConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('PublishConfirmation'))'
+        }
+			});
+		});
+	</script>
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="abuse_reports">Abuse Reports for {0}</resource>
+  <resource name="Accept">Approve</resource>
+  <resource name="Accepted">Approved</resource>
+  <resource name="AcceptedMessage">This appeal was approved.</resource>
+  <resource name="action">Action</resource>
+  <resource name="action_approve">Approved</resource>
+  <resource name="action_create">Created</resource>
+  <resource name="action_delete">Deleted</resource>
+  <resource name="action_deny">Denied</resource>
+  <resource name="action_publish">Published</resource>
+  <resource name="action_update">Edited</resource>
+  <resource name="AppealQueue_Description">Enables actions to be taken on moderated and abusive content.</resource>
+  <resource name="AppealQueue_Name">Moderation Queue</resource>
+  <resource name="Appeals">Number of appeals</resource>
+  <resource name="AppealsAccepted">Number of approvals after appeals</resource>
+  <resource name="AppealsOpen">Number of open appeals</resource>
+  <resource name="Application">{0} (in {1})</resource>
+  <resource name="ApproveFormInstructions">To approve, please complete the following approval form.</resource>
+  <resource name="author">{0}</resource>
+  <resource name="author_placeholder">By author...</resource>
+  <resource name="author_with_username">{0} ({1})</resource>
+  <resource name="AuthorDetails">Author Details</resource>
+  <resource name="AuthorNotFound">The author could not be found.</resource>
+  <resource name="AuthorRespondedMessage">The author responded on {0}.</resource>
+  <resource name="AuthorsResponse">Author's Response</resource>
+  <resource name="awaiting_review">Requires Review</resource>
+  <resource name="awaiting_review_instructions">Content in this list requires your review and is currently not visible in the community. Approve or deny each item. Note that users flagged as abusive can still login and participate in the community but all of their content will be flagged as abusive and will not be visible.</resource>
+  <resource name="BoardAcceptedMessage">Approved by {0} on {1}</resource>
+  <resource name="BoardRejectedMessage">Denied by {0} on {1}</resource>
+  <resource name="BoardResponse">Moderator Message</resource>
+  <resource name="BoardResponse_Description">This message will be included with the approval/denial message to the author regarding this {0}.</resource>
+  <resource name="BoardResponseLabel">Explain your decision...</resource>
+  <resource name="cancel">Cancel</resource>
+  <resource name="CancelEditing">Cancel Editing</resource>
+  <resource name="ConfirmUserDeletion">Are you sure you want to delete {0}?</resource>
+  <resource name="ConfirmUserDeletionDetail">Deleting this user will remove all the content authored by the user.  The content is provided below for review.</resource>
+  <resource name="Container">{0}</resource>
+  <resource name="ContentFlaggedBy">Reported By</resource>
+  <resource name="ContentTitleNotAvailable">(Title Not Available)</resource>
+  <resource name="ContextLookUp_NoMatches">No matching applications or groups were found.</resource>
+  <resource name="ContextLookUp_Placeholder">In group or application...</resource>
+  <resource name="CurrentRoles">Current roles</resource>
+  <resource name="date">Date</resource>
+  <resource name="DefinitelyAbusiveMessage">The community is certain that this {0} is abusive, however the minimum number of abuse reports required to automatically deny on this {0} have not been received.</resource>
+  <resource name="delete">Delete</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="delete_author">Delete Author</resource>
+  <resource name="delete_user">Delete User</resource>
+  <resource name="DeleteConfirmation">Are you sure you want to bypass the review workflow and delete this immediately?</resource>
+  <resource name="Deleted">Deleted</resource>
+  <resource name="Denied">Denied</resource>
+  <resource name="DenyFormInstructions">To deny, please complete the following denial form.</resource>
+  <resource name="Edit">Edit</resource>
+  <resource name="EditedContent">{0}</resource>
+  <resource name="EmptyContent">This content has no additional information available</resource>
+  <resource name="ExpiredMessage">This appeal has expired. The {1} has been denied since {0}.</resource>
+  <resource name="ExpungeMessage">The {1} will be expunged {0}.</resource>
+  <resource name="FileContent_Instructions">The following files are referenced by this {0} for review.</resource>
+  <resource name="FileContent_Plural">{0} Files</resource>
+  <resource name="FileContent_Singular">{0} File</resource>
+  <resource name="FilterAppealState_Accepted">Approved</resource>
+  <resource name="FilterAppealState_AllReviewable">Moderated, Review Required, or Appealed</resource>
+  <resource name="FilterAppealState_AuthorResponded">Appealed</resource>
+  <resource name="FilterAppealState_Expired">Expired</resource>
+  <resource name="FilterAppealState_Initiated">Awaiting Appeal</resource>
+  <resource name="FilterAppealState_ModerationRequired">Moderated</resource>
+  <resource name="FilterAppealState_PendingReview">Pending Review</resource>
+  <resource name="FilterAppealState_Rejected">Denied</resource>
+  <resource name="FilterAppealState_Reported">Reported</resource>
+  <resource name="FilterAppealState_ReviewRequired">Review Required</resource>
+  <resource name="FilterBy_AllTime">For Any Date</resource>
+  <resource name="FilterBy_LastDay">In Last Day</resource>
+  <resource name="FilterBy_LastMonth">In Last 30 Days</resource>
+  <resource name="FilterBy_LastWeek">In Last 7 Days</resource>
+  <resource name="FilterContentType_All">Any Content</resource>
+  <resource name="FilterContentType_ContentType">Any {0}</resource>
+  <resource name="HideContent">Deny</resource>
+  <resource name="History">Review History</resource>
+  <resource name="IgnoreContent">Ignore</resource>
+  <resource name="in_abuse_queue">In Process</resource>
+  <resource name="in_abuse_queue_instructions">Content in this list is currently in an abuse, moderation, or review workflow but does not currently require your review. This list can be used to change approval selections on content you have previously reviewed.</resource>
+  <resource name="InApplication">In &lt;a href="{0}"&gt;{1}&lt;/a&gt;</resource>
+  <resource name="InContainer">In &lt;a href="{0}"&gt;{1}&lt;/a&gt;</resource>
+  <resource name="InitiatedMessage">This {2} was denied on {0} but has not yet been appealed. The window for appealing will close on {1}.</resource>
+  <resource name="manual_appeal_action">Review Content</resource>
+  <resource name="ManualReview">View to Approve/Deny</resource>
+  <resource name="member">Member</resource>
+  <resource name="MemberSince">Member since</resource>
+  <resource name="missing-content-type-name">Content</resource>
+  <resource name="moderate_author">Moderate Author</resource>
+  <resource name="moderate_user">Moderate User</resource>
+  <resource name="more">More</resource>
+  <resource name="NewContent">New {0}</resource>
+  <resource name="next">Next</resource>
+  <resource name="no_abuse_reports">There are no abuse reports.</resource>
+  <resource name="No_AbusiveContent">No content matches the filter criteria.</resource>
+  <resource name="No_Appeals">No content matches the filter criteria.</resource>
+  <resource name="no_author_matches">No matching members were found.</resource>
+  <resource name="no_history">There is no history related to this content.</resource>
+  <resource name="No_Permission">You do not have permission to review content within the selected context.</resource>
+  <resource name="NoContent">No content has been found for this user.</resource>
+  <resource name="NoFileContent">No additional files are referenced by this {0}.</resource>
+  <resource name="NoPreviewAvailable">No preview is available for this content.</resource>
+  <resource name="NoTextContent">No additional text data is available for review.</resource>
+  <resource name="PendingReview">Pending Review</resource>
+  <resource name="possibly_abusive">Possibly Abusive</resource>
+  <resource name="possibly_abusive_instructions">Content in this list is still visible in the community and has been flagged as abusive but does not have enough reports to enter the abuse workflow. You can choose to deny individual items to force them into the abuse workflow.</resource>
+  <resource name="PossiblyAbusiveMessage">The community is {0}% certain that this {1} is abusive.</resource>
+  <resource name="Posts">Number of posts</resource>
+  <resource name="PostsHidden">Number of denied posts</resource>
+  <resource name="PostsWithFlags">Number of posts with flags</resource>
+  <resource name="Preview">Preview</resource>
+  <resource name="previous">Previous</resource>
+  <resource name="Profile">Profile</resource>
+  <resource name="Publish">Publish</resource>
+  <resource name="PublishConfirmation">Are you sure you want to bypass the review workflow and publish this immediately?</resource>
+  <resource name="Published">Published</resource>
+  <resource name="Reject">Deny</resource>
+  <resource name="RejectedMessage">This appeal was denied. The {1} has been denied since {0}.</resource>
+  <resource name="ReportCount_Plural">{0} Abuse Reports</resource>
+  <resource name="ReportCount_Singular">{0} Abuse Report</resource>
+  <resource name="reported">Reported</resource>
+  <resource name="ReportedContent">Reported Content</resource>
+  <resource name="reporter">Reporter</resource>
+  <resource name="reputation">Reputation</resource>
+  <resource name="reputation_value">Top {0}%</resource>
+  <resource name="Responder">Responder</resource>
+  <resource name="RespondToAuthor">Respond to author</resource>
+  <resource name="Save">Save</resource>
+  <resource name="selected_author">By {0}</resource>
+  <resource name="selected_author_with_username">By {0} ({1})</resource>
+  <resource name="SelectedApplication">In {0}</resource>
+  <resource name="SelectedContainer">In {0}</resource>
+  <resource name="SortBy_AbuseCertainty">By Certainty</resource>
+  <resource name="SortBy_AppealDate">By Moderated/Abusive Date</resource>
+  <resource name="SortBy_ContentAuthor">By Author</resource>
+  <resource name="SortBy_ContentDate">By Published Date</resource>
+  <resource name="SortBy_LastUpdatedDate">By Last Action Date</resource>
+  <resource name="SortBy_Reports">By Report Count</resource>
+  <resource name="SortOrder_Ascending">Ascending</resource>
+  <resource name="SortOrder_Descending">Descending</resource>
+  <resource name="TextContent">Text Content</resource>
+  <resource name="TextContent_Instructions">The following is all available raw text extracted from this {0} for review.</resource>
+  <resource name="UndeterminedAbusiveMessage">The community is still determining the abusiveness of this {0}.</resource>
+  <resource name="unmoderate_author">Unmoderate Author</resource>
+  <resource name="unmoderate_user">Unmoderate User</resource>
+  <resource name="UserContent">User Content</resource>
+  <resource name="userdeletedmessage">A job has been queued to delete the user and all related content.</resource>
+  <resource name="UserDetails">User Details</resource>
+  <resource name="UserName">Member Name</resource>
+  <resource name="view_type">View</resource>
+  <resource name="view_type_filter">Abuse Management Filter</resource>
+  <resource name="view_type_results">Abuse Management</resource>
+  <resource name="ViewAll">View all</resource>
+  <resource name="ViewPost">View Content</resource>
+  <resource name="ViewProfile">Click to view profile</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="abuse.appeals.modify" />
+      <scope id="search.results.readonly" />
+      <scope id="users.users.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,27 @@
+<div data-hasmore="false">
+#set($invitationState = '')
+#set($invitationState = $core_v2_page.GetQueryStringValue('w_state'))
+
+#set($pageIndex = 0)
+#set($pageIndex = $core_v2_utility.ParseInt($core_v2_page.GetQueryStringValue('w_pageindex')))
+#if ($pageIndex == 0)
+    #set($invitations = $context.ListInvitations($invitationState))
+    
+    #if ($invitations.Count > 0)
+        <div class="result-overview">
+            #if ($invitations.Count == 1)
+                $core_v2_language.FormatString($core_v2_language.GetResource('invite-count-singular'), $core_v2_language.FormatNumber($invitations.Count))
+            #else
+                $core_v2_language.FormatString($core_v2_language.GetResource('invite-count'), $core_v2_language.FormatNumber($invitations.Count))
+            #end
+        </div>
+    #end
+
+    <ul class="content-list content expandable simple">
+    #foreach($invitation in $invitations)
+    #each
+      $core_v2_widget.ExecuteFile('format-invitation.vm')
+    #end
+    </ul>
+#end
+</div>

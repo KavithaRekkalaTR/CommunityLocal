@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:RequestGroupMembership-Name}" version="12.0.0.0" description="${resource:RequestGroupMembership-Description}" instanceIdentifier="0a3a1a8054ea4d13a0701e3467f354a6" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="" lastModified="2022-02-25 16:32:55Z" provider="d81ccc3f0a6541e8a51614d028fc5d04">
+    <contentScript language="Velocity"><![CDATA[#set ($group = $core_v2_group.Current)
+#set ($groupType = $core_v2_group.Current.GroupType)
+#set ($user = $core_v2_user.Accessing)
+#set ($isRegistered = $core_v2_user.IsRegistered($user.Id))
+#set ($groupUser = false)
+#set ($groupUser = $core_v2_groupUserMember.Get($group.Id, "%{UserId = $user.Id}"))
+#set ($canJoinGroup = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroup, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+#set ($canJoinGroupByRequest = $core_v3_permission.CheckPermission($core_v2_groupPermissions.JoinGroupByRequest, $user.Id, "%{ ApplicationId = $group.ApplicationId, ApplicationTypeId = $core_v2_group.ApplicationTypeId }").IsAllowed)
+
+<!DOCTYPE html>
+<html lang="$core_v2_encoding.HtmlAttributeEncode($core_v2_language.Code)" #if($core_v2_language.IsRightToLeft) class="direction-rtl" style="direction: rtl;" #else class="direction-ltr" style="direction: ltr;" #end>
+	<head>
+		<title>$core_v2_language.GetResource("RequestMembership")</title>
+		$core_v2_page.RenderThemeHeaders("%{ IsModal = 'True'}")
+	</head>
+	<body>
+	   <form>
+            #if (!$isRegistered)
+                <div class="message error">$core_v2_language.GetResource('MustLogin')</div>
+            #elseif ($group.GroupType == 'Joinless')
+                <div class="message error">$core_v2_language.GetResource('CannotJoinJoinlessGroup')</div>
+            #elseif ($groupUser && $groupUser.MembershipType == 'PendingMember')
+                <div class="message information">$core_v2_language.GetResource('RequestPending')</div>
+            #elseif ($groupUser && !$groupUser.HasErrors())
+                <div class="message information">$core_v2_language.GetResource('AlreadyMember')</div>
+            #else
+        		<div class="field-list-header"></div>
+        		<fieldset class="field-list">
+        		    <legend class="field-list-description"><span>$core_v2_language.GetResource('Instructions')</span></legend>
+        			<ul class="field-list">
+        				#if ($group.GroupType != 'PublicOpen')
+            				<li class="field-item request-message">
+            					<label for="$core_v2_widget.UniqueId('message')" class="field-item-header">$core_v2_language.GetResource('Message')</label>
+            					<span class="field-item-input"><textarea id="$core_v2_widget.UniqueId('message')" name="$core_v2_widget.UniqueId('message')"></textarea></span>
+            					<span class="field-item-validation" style="display: none;"></span>
+            				</li>
+        				#end
+        				<li class="field-item invite-member">
+        					<span class="field-item-input">
+        					    <a href="#" id="$core_v2_widget.UniqueId('submit')" class="internal-link button disabled"><span></span>$core_v2_language.GetResource('Submit')</a>
+        					    <span class="processing" style="visibility: hidden;"><span class="ui-loading" data-width="45" data-height="15"></span></span>
+        					</span>
+        				</li>
+        			</ul>
+        		</fieldset>
+        		<div class="field-list-footer"></div>
+        
+        		<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+        		<script type="text/javascript">
+        			jQuery(function(j){
+        				j.telligent.evolution.widgets.requestGroupMembership.register({
+        				    groupId: $group.Id,
+        				    userId: $user.Id,
+        				    messageSelector: '#$core_v2_widget.UniqueId('message')',
+        				    submit: j('#$core_v2_widget.UniqueId('submit')'),
+        				    canJoinDirectly: #if($canJoinGroup) true #else false #end,
+        				    messageRequired: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MessageRequired'))',
+        				    joined: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Joined'))',
+        				    requestSent: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('RequestSent'))'
+                        });
+        			});
+        		</script>
+        	#end
+		</form>
+	</body>
+</html>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AlreadyMember">You are already a member of this ${group_lowercase}.</resource>
+  <resource name="CannotJoinJoinlessGroup">You cannot request membership to join a joinless ${group_lowercase}.</resource>
+  <resource name="Instructions">To participate in this ${group_lowercase}, you can request to be a member by clicking the 'Request Membership' button below.</resource>
+  <resource name="Joined">You are now a member of this ${group_lowercase}.</resource>
+  <resource name="Message">Message</resource>
+  <resource name="MessageRequired">Please provide a message.</resource>
+  <resource name="MustLogin">Please login to request access to this ${group_lowercase}.</resource>
+  <resource name="RequestGroupMembership-Description">Provides the modal used to request membership to a group.</resource>
+  <resource name="RequestGroupMembership-Name">Request Group Membership</resource>
+  <resource name="RequestMembership">Request Membership</resource>
+  <resource name="RequestPending">You already have a pending request to this ${group_lowercase}. Please wait for the request to be accepted or contact an administrator.</resource>
+  <resource name="RequestSent">Your request has been sent.</resource>
+  <resource name="Submit">Request Membership</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+      <scope id="groups.users.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

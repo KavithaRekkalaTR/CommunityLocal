@@ -1,0 +1,186 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:FeaturedContentModal_Name}" version="10.2.0.0" description="${resource:FeaturedContentModal_Description}" instanceIdentifier="15f25dc7db5d42dbaf6428d8c3b99ba1" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="false" cssClass="featured-content-panel" lastModified="2019-05-10 19:28:41Z" provider="137a63f40a614ce39321129f4677e412">
+    <contentScript language="Velocity"><![CDATA[#set($content = $core_v2_content.Get($context.ContentId, $context.ContentTypeId))
+#set($contentType = $core_v2_contentType.Get($context.ContentTypeId))
+
+#set($supportsFeature = $core_v3_feature.SupportsFeatures($content.ContentTypeId))
+#set($hasFeaturePermission = $core_v3_feature.CanFeature($content.ContentId,$content.ContentTypeId))
+
+#if(!$supportsFeature)
+    $core_v2_language.GetResource('ContentTypeNotFeaturable')
+#elseif (!$hasFeaturePermission)
+    $core_v2_language.GetResource('FeaturePermissionDenied')
+#else
+    #set ($feature = false)
+    #set ($feature = $core_v3_feature.Get($content.ContentId, $content.ContentTypeId, "%{}"))
+
+    #set($attachmentFileName = false)
+    #set($attachmentContextId = false)
+    #set($attachmentUrl = false)
+
+    #if (!$attachmentContextId)
+        #set($attachmentContextId = $core_v2_uploadedFile.CreateContextId())
+    #end
+
+    #if ($feature)
+        #set($attachmentUrl = $feature.Image)
+        #set($attachmentFileName = $feature.ImageFileName)
+    #end
+
+    <form><fieldset class="field-list">
+    <ul class="field-list">
+        <li class="field-item required event-startdate">
+            <label for="$core_v2_widget.UniqueId('StartDate')" class="field-item-header">$core_v2_language.GetResource('StartDate')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('StartDate_Detail')</span>
+            <span class="field-item-input">
+                #if ($feature)
+                    #set($startDateValue = $core_v2_encoding.JavascriptEncode($feature.StartDate))
+                #else
+                    #set($startDateValue = $core_v2_encoding.JavascriptEncode($core_v2_utility.CurrentDate))
+                #end
+                <input type="text" id="$core_v2_widget.UniqueId('StartDate')" name="$core_v2_widget.UniqueId('startDate')" value="$core_v2_encoding.HtmlAttributeEncode($startDateValue)" style="width: 90%" />
+            </span>
+            <span class="field-item-validation" style="display:none;"></span>
+        </li>
+        <li class="field-item event-enddate">
+            <label for="$core_v2_widget.UniqueId('EndDate')" class="field-item-header">$core_v2_language.GetResource('EndDate')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('EndDate_Detail')</span>
+            <span class="field-item-input">
+                #if ($feature)
+                #set($endDateValue = $core_v2_encoding.JavascriptEncode($feature.EndDate))
+                #else
+                #set($endDateValue = $core_v2_encoding.JavascriptEncode($core_v2_utility.CurrentDate.AddDays(30)))
+                #end
+                <input type="text" id="$core_v2_widget.UniqueId('EndDate')" name="$core_v2_widget.UniqueId('endDate')" value="$core_v2_encoding.HtmlAttributeEncode($endDateValue)" style="width: 90%" />
+            </span>
+            <span class="field-item-validation" style="display:none;"></span>
+        </li>
+
+        #set($targetSite = false)
+        #set($targetGroup = false)
+        #foreach($container in $feature.TargetContainers)
+            #if ($container.ContainerId == $core_v2_group.Root.ContainerId)
+                #set($targetSite = true)
+            #elseif ($container.ContainerId == $content.Application.Container.ContainerId)
+                #set($targetGroup = true)
+            #end
+        #end
+        <li class="field-item targets">
+            <label class="field-item-header">$core_v2_language.GetResource("Feature_Target")</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Feature_Target_Detail')</span>                        
+            <select id="$core_v2_widget.UniqueId('FeatureTargets')">
+                <option value="site" #if($targetSite && !$targetGroup) selected="selected"#end>$core_v2_language.GetResource('Feature_Site')</option>
+                <option value="group" #if(!$targetSite && $targetGroup) selected="selected"#end>$core_v2_language.GetResource('Feature_Group')</option>
+                <option value="both" #if($targetSite && $targetGroup) selected="selected"#end>$core_v2_language.GetResource('Feature_Both')</option>
+            </select>
+        </li>
+
+        <li class="field-item required post-attachment upload-with-preview" id="$core_v2_widget.UniqueId('attachment')" data-upload="true" data-link="false">
+            <label for="$core_v2_widget.UniqueId('attachment_input')" class="field-item-name">$core_v2_language.GetResource('Attachment_File')</label>
+            <span class="field-item-description">$core_v2_language.GetResource('Attachment_File_Detail')</span>
+            <span class="field-item-input preview">
+            </span>
+            <span class="field-item-input upload">
+                <a href="#" class="upload add" id="$core_v2_widget.UniqueId('upload')">$core_v2_language.GetResource('UploadFile')</a>
+                <a href="#" class="remove" style="margin-left: 1em;">$core_v2_language.GetResource('RemoveFile')</a>
+            </span>
+            <span class="field-item-validation" style="display: none;"></span>
+        </li>
+
+        #if($feature)
+        <li class="field-item submit">
+            <span class="field-item-input">
+    			<a href="#" class="button delete" data-messagename="contextual-delete-feature" data-contentid="$feature.Content.ContentId" data-contenttypeid="$feature.Content.ContentTypeId">$core_v2_language.GetResource('RemoveFeature')</a>
+            </span>
+        </li>
+        #end
+    </ul>
+    </fieldset></form>
+
+    #registerEndOfPageHtml('telligent.evolution.widgets.featuredContentPanel')
+        <script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl("ui.js"))"></script>
+    #end
+    #registerEndOfPageHtml()
+        <script type="text/javascript">
+            jQuery(function(j){
+                j.telligent.evolution.widgets.featuredContentPanel.register({
+                    wrapperId: '$core_v2_widget.WrapperElementId',
+                    contentId: '$content.ContentId',
+                    contentTypeId: '$content.ContentTypeId',
+                    typeId: '$context.TypeId',
+                    featuredImageId: '$core_v2_widget.UniqueId('FeaturedImage')',
+                    featuredImageUrl: '$core_v2_widget.UniqueId('FeaturedImageUrl')',
+                    featuredImagePreview: '#if($media)$!core_v2_encoding.JavascriptEncode($core_v2_ui.GetViewHtml($core_v2_page.AbsoluteUrl($feature.FeaturedImage)))#end',
+                    startDate: jQuery('#$core_v2_widget.UniqueId('StartDate')'),
+                    endDate: jQuery('#$core_v2_widget.UniqueId('EndDate')'),
+                    featureTargets: '$core_v2_widget.UniqueId('FeatureTargets')',
+                    saveUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('saveedit.vm'))',
+                    saveErrorText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('FeatureSaveError'))',
+                    deleteConfirmation: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete_Confirmation'))',
+                    rootGroupId: '$core_v2_group.Root.ContainerId',
+                    currentGroupId: '$content.Application.Container.ContainerId',
+                    groupContainerTypeId: '$core_v2_group.ContainerTypeId',
+                    file: {
+                        fileName: '#if($attachmentFileName)$core_v2_encoding.JavascriptEncode($attachmentFileName)#end',
+                        url: '#if($attachmentUrl)$core_v2_encoding.JavascriptEncode($attachmentUrl)#end',
+                        isRemote:#if($attachmentIsRemote) true#else false#end,
+                        isNew:#if($attachmentIsNew) true#else false#end
+                    },
+                    attachmentId: '$core_v2_widget.UniqueId('attachment')',
+                    attachmentProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadProgress'))',
+                    attachmentChangeText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChangeFile'))',
+                    attachmentAddText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('UploadFile'))',
+                    previewAttachmentUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('preview-attachment.vm'))',
+                    uploadContextId: '$core_v2_encoding.JavascriptEncode($attachmentContextId)',
+                    uploadFileUrl : '$core_v2_encoding.JavascriptEncode($core_v2_uploadedFile.GetUploadUrl($attachmentContextId))',
+                    featuredeleted : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Feature_Deleted'))',
+                    featuresaved : '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Feature_Saved'))',
+                    text: {
+                        save: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('SaveFeature'))'
+                    },
+					invalidDateRange: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Validator_InvalidDateRange'))'
+                });
+            });
+        </script>
+    #end
+#end]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="Add_Feature">Feature this {0}</resource>
+  <resource name="Attachment_File">Poster Image</resource>
+  <resource name="Attachment_File_Detail">Optionally select an image to use for this featured post.</resource>
+  <resource name="ChangeFile">Change File</resource>
+  <resource name="ContentTypeNotFeaturable">Content Type does not support featuring</resource>
+  <resource name="Delete_Confirmation">Are you sure you want to remove this feature?</resource>
+  <resource name="Edit_Feature">Edit {0} feature</resource>
+  <resource name="EndDate">End Featuring</resource>
+  <resource name="EndDate_Detail">The date the content will no longer be featured</resource>
+  <resource name="Feature_Both">the site group and current group</resource>
+  <resource name="Feature_Deleted">Feature removed.</resource>
+  <resource name="Feature_Group">the current group</resource>
+  <resource name="Feature_Saved">Feature saved.</resource>
+  <resource name="Feature_Site">the site group</resource>
+  <resource name="Feature_Target">Feature In</resource>
+  <resource name="Feature_Target_Detail">The groups where this item will be displayed as featured</resource>
+  <resource name="FeaturedContentModal_Description">Modal form for adding and removing featured content</resource>
+  <resource name="FeaturedContentModal_Name">Featured Content</resource>
+  <resource name="FeaturedImageUrl">Poster Image</resource>
+  <resource name="FeaturePermissionDenied">You do not have permission to feature this content</resource>
+  <resource name="FeatureSaveError">An error occurred while saving this feature.</resource>
+  <resource name="Options">Options</resource>
+  <resource name="RemoveFeature">Unfeature</resource>
+  <resource name="RemoveFile">Remove File</resource>
+  <resource name="SaveFeature">Save</resource>
+  <resource name="StartDate">Start Featuring</resource>
+  <resource name="StartDate_Detail">The date when the content should begin being featured</resource>
+  <resource name="UploadFile">Upload File</resource>
+  <resource name="UploadProgress">Uploading ({0}%)...</resource>
+  <resource name="Validator_InvalidDateRange">The date range entered is not valid.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+    <restScopes>
+        <scope id="features.featureditems.modify" />
+    </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

@@ -1,0 +1,28 @@
+#set($query = '')
+#set($query = $core_v2_page.GetQueryStringValue('_w_query'))
+#set($targetContentTypeId = false)
+#set($targetContentTypeId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_targetContentTypeId')))
+#set($targetContainerId = false)
+#set($targetContainerId = $core_v2_utility.ParseGuid($core_v2_page.GetQueryStringValue('_w_targetContainerId')))
+
+$core_v2_page.SetContentType('application/json')
+
+{"Applications":[
+	#foreach($application in $context.FindApplications($context.ApplicationTypeId, $targetContainerId, $query, $context.ApplicationId))
+		#each
+		    { 
+		        "ApplicationId": "$application.ApplicationId.ToString()", 
+		        "ApplicationTypeId": "$application.ApplicationTypeId.ToString()",
+		        "Name": "$core_v2_encoding.JavascriptEncode($application.HtmlName('Web'))",
+		        "Container": {
+		            #if ($application.Container)
+		                "ContainerId": "$application.Container.ContainerId.ToString()",
+		                "ContainerTypeId": "$application.Container.ContainerTypeId.ToString()",
+		                "Name": "$core_v2_encoding.JavascriptEncode($application.Container.HtmlName('Web'))"
+		            #end
+		        }
+		    }
+		#between
+		    ,
+	#end
+]}

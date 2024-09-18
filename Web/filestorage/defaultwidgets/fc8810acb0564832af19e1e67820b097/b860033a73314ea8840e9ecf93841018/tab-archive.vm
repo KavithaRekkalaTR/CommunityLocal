@@ -1,0 +1,15 @@
+#set ($files = $context.GetArchives())
+
+<p>$core_v2_language.GetResource('Archive_Instructions')</p>
+
+#foreach($file in $files)
+
+#beforeall
+    <ul class="file-list">
+#each
+    <li class="file-item">
+        <a href="$file.GetDownloadUrl()">$file.FileName</a>
+    </li>
+#afterall
+    </ul>
+#end

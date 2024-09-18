@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:ChallengeOptionsManagement_Name}" version="11.0.0.0" description="${resource:ChallengeOptionsManagement_Description}" instanceIdentifier="23a51f522eb64309ac6954d79b2e0c9b" theme="" isCacheable="false" varyCacheByUser="true" showHeaderByDefault="false" cssClass="contextual-challengeoptions" lastModified="2020-07-16 18:30:22Z" provider="135e0d0c016b40078790090415778667">
+    <contentScript language="Velocity"><![CDATA[#set($challenge = $context.Challenge)
+#set($canDelete = $telligentIdeas_v1_ideaPermissions.CanManageChallenges($context.Challenge.Group.Id))
+
+<form><fieldset>
+	<ul class="field-list">
+
+		<li class="field-item name">
+			<label for="$core_v2_widget.UniqueId('Name')" class="field-item-name">$core_v2_language.GetResource('Name')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Name_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Name')" name="challenge-name" maxlength="256" value="$core_v2_encoding.HtmlDecode($!challenge.Name)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item web-address">
+			<label for="$core_v2_widget.UniqueId('WebAddress')" class="field-item-name">$core_v2_language.GetResource('WebAddress')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('WebAddress_Detail')</span>
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('WebAddress')" name="webAddress" maxlength="256" value="$core_v2_encoding.HtmlDecode($!challenge.ApplicationKey)" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item description">
+			<label class="field-item-name">$core_v2_language.GetResource('Description')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Description_Detail')</span>
+			<span class="field-item-input">
+				#set($description = $challenge.HtmlDescription('raw'))
+				$core_v2_editor.Render('Description',"%{Width='100%', Height='25%', Value='$description', ContentTypeId=$telligentIdeas_v1_challenges.ContentTypeId }")
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>		
+
+		<li class="field-item group">
+			<label for="$core_v2_widget.UniqueId('Group')" class="field-item-name">$core_v2_language.GetResource('Group')</label>
+			<span class="field-item-description">$core_v2_language.GetResource('Group_Detail')</span>
+
+			<span class="field-item-input">
+				<input type="text" id="$core_v2_widget.UniqueId('Group')" />
+			</span>
+			<span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+		<li class="field-item enabled">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('Enabled')" #if($challenge.IsEnabled)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('Enabled')" class="field-item-name">$core_v2_language.GetResource('Enabled')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('Enabled_Detail')</span>
+		</li>
+
+		<li class="field-item moderated">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('Moderated')" #if($challenge.IsModerated)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('Moderated')" class="field-item-name">$core_v2_language.GetResource('IsModerated')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('IsModerated_Detail')</span>
+		</li>
+		
+		<li class="field-item requires-category">
+			<span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('RequiresCategory')" #if($challenge.RequiresCategory)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('RequiresCategory')" class="field-item-name">$core_v2_language.GetResource('RequiresCategory')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('RequiresCategory_Detail')</span>
+		</li>
+		
+		<li class="field-item max-votes-per-user">
+	        <label for="$core_v2_widget.UniqueId('MaximumVotesPerUser')" class="field-item-name">
+	            $core_v2_language.GetResource('MaxVotesPerUser')
+	        </label>
+		    <span class="field-item-description">
+		        #set($releasedStatuses = '')
+		        #foreach ($status in $telligentIdeas_v1_statuses.List())
+		            #if ($status.ReleasesVotes)
+		                #if ($releasedStatuses != '')
+		                    #set($releasedStatuses = "$releasedStatuses, ")
+		                #end
+		                #set($releasedStatuses = "${releasedStatuses}${status.Name}")
+		            #end
+		        #end
+		        #if ($releasedStatuses != '')
+		            #set($releasedStatuses = " (${releasedStatuses.ToLower()})")
+		        #end
+		        $core_v2_language.FormatString($core_v2_language.GetResource('MaxVotesPerUser_Detail'), $releasedStatuses)
+		    </span>
+		    <span class="field-item-input">
+		        <input type="text" id="$core_v2_widget.UniqueId('MaximumVotesPerUser')" value="$!challenge.MaximumVotesPerUser" />
+		    </span>
+		    <span class="field-item-validation" style="display:none;"></span>
+		</li>
+		
+		<li class="field-item allow-multiple-votes">
+		    <span class="field-item-input">
+				<input type="checkbox" id="$core_v2_widget.UniqueId('AllowMultipleVotes')" #if($challenge.AllowMultipleVotes)checked="checked"#end />
+				<label for="$core_v2_widget.UniqueId('AllowMultipleVotes')" class="field-item-name">$core_v2_language.GetResource('AllowMultipleVotes')</label>
+			</span>
+			<span class="field-item-description">$core_v2_language.GetResource('AllowMultipleVotes_Detail')</span>
+		</li>
+
+		<li class="field-item max-votes-per-idea">
+	        <label for="$core_v2_widget.UniqueId('MaximumVotesPerIdea')" class="field-item-name">
+	            $core_v2_language.GetResource('MaxVotesPerIdea')
+	        </label>
+		    <span class="field-item-description">
+		        $core_v2_language.GetResource('MaxVotesPerIdea_Detail')
+		    </span>
+		    <span class="field-item-input">
+		        <input type="text" id="$core_v2_widget.UniqueId('MaximumVotesPerIdea')" value="$!challenge.MaximumVotesPerIdea" />
+		    </span>
+		    <span class="field-item-validation" style="display:none;"></span>
+		</li>
+
+
+		#if ($challenge)
+			<li class="field-item identifiers">
+				<a href="#" class="viewidentifiers inline-button">$core_v2_language.GetResource('ViewIdentifiers')</a>
+			</li>
+			<li class="field-item identifiers contentid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationId')</label>
+				<span class="field-item-input">$!challenge.ApplicationId</span>
+			</li>
+			<li class="field-item identifiers contenttypeid" style="display: none;">
+				<label class="field-item-name">$core_v2_language.GetResource('ApplicationTypeId')</label>
+				<span class="field-item-input">$!challenge.ApplicationTypeId</span>
+			</li>
+		#end
+
+	</ul>
+</fieldset></form>
+
+#if($canDelete)
+	<fieldset>
+		<ul class="field-list">
+			<li class="field-item submit">
+				<span class="field-item-input"><a href="#" class="button delete">$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))</a></span>
+			</li>
+		</ul>
+	</fieldset>
+#end
+
+#set($redirect = false)
+#if($telligentIdeas_v1_challenges.Current && $telligentIdeas_v1_challenges.Current.Id == $context.Challenge.Id)
+	#set($redirect = true)
+#end
+
+<script src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+jQuery.telligent.evolution.administration.on('panel.loaded', function(){
+	jQuery.telligent.evolution.widgets.challengeOptionsManagement.register({
+		applicationId: '$context.ApplicationId',
+		applicationTypeId: '$context.ApplicationTypeId',
+		groupId: '$context.Challenge.Group.Id',
+		groupName: '$context.Challenge.Group.Name',
+		applicationKey: '$context.Challenge.ApplicationKey',
+		hasPermissionOverrides: '$context.HasCustomPermissions()',
+		challengeId: '$context.Challenge.Id',
+		redirect: '$redirect',
+		canDelete: '$canDelete',
+		getDescription: function() { return $core_v2_editor.GetContentScript('Description'); },
+		inputs: {
+			nameId: "#$core_v2_widget.UniqueId('Name')",
+			webAddressId: "#$core_v2_widget.UniqueId('WebAddress')",
+			groupId: "#$core_v2_widget.UniqueId('Group')",
+			requiresCategoryId: "#$core_v2_widget.UniqueId('RequiresCategory')",
+			enabledId: "#$core_v2_widget.UniqueId('Enabled')",
+			moderatedId: "#$core_v2_widget.UniqueId('Moderated')",
+			maximumVotesPerUserId: '#$core_v2_widget.UniqueId('MaximumVotesPerUser')',
+			maximumVotesPerIdeaId: '#$core_v2_widget.UniqueId('MaximumVotesPerIdea')',
+			allowMultipleVotesId: '#$core_v2_widget.UniqueId('AllowMultipleVotes')'
+		},
+		resources: {
+			noGroupsMatch: "$core_v2_language.GetResource('GroupLookUp_NoMatches')",
+			save: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Save'))",
+			delete: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('Delete'))",
+			addressPatternMessage: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('AddressPatternMessage'))",
+			moveWarning: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ValidateMove'))",
+			challengeUpdated: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('ChallengeUpdated'))",
+			deleteConfirmation: "$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('DeleteChallengeWarning'))",
+			requiredText: "$core_v2_language.GetResource('RequiredText')"
+		},
+		urls: {
+			lookupGroups:  "$core_v2_page.AbsoluteUrl('~/api.ashx/v2/groups.json')",
+			save: '$core_v2_encoding.JavaScriptEncode($core_v2_widget.GetExecutedFileUrl('save.vm'))',
+			groupRedirect: '$core_v2_encoding.JavaScriptEncode($core_v2_page.AbsoluteUrl($core_v2_groupUrls.Group($context.Challenge.Group.Id)))'
+		}
+	});
+});
+</script>]]></contentScript>
+    <headerScript language="Unknown" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AddressPatternMessage">Web address is limited to only numbers, letters, "-", and "_".</resource>
+  <resource name="AllowMultipleVotes">Allow Multiple Votes</resource>
+  <resource name="AllowMultipleVotes_Detail">When enabled, members can vote multiple times on each idea. If disabled, members can only vote once per idea.</resource>
+  <resource name="ApplicationId">Application Identifier</resource>
+  <resource name="ApplicationTypeId">Application Type Identifier</resource>
+  <resource name="ChallengeOptionsManagement_Description">Manage ideation options.</resource>
+  <resource name="ChallengeOptionsManagement_Name">Ideation Options</resource>
+  <resource name="ChallengeUpdated">Ideation options have been updated.</resource>
+  <resource name="Delete">Delete</resource>
+  <resource name="DeleteChallengeWarning">Are you sure you want to delete this ideation?</resource>
+  <resource name="Description">Description</resource>
+  <resource name="Description_Detail">A brief description of the ideation.</resource>
+  <resource name="Enabled">Enable this Ideation</resource>
+  <resource name="Enabled_Detail">When disabled the ideation is not accessible.</resource>
+  <resource name="Group">${group_propercase}</resource>
+  <resource name="Group_Detail">The ${group_lowercase} that contains this ideation.</resource>
+  <resource name="GroupLookUp_NoMatches">A matching ${group_lowercase} could not be found.</resource>
+  <resource name="IsModerated">Moderate Ideas</resource>
+  <resource name="IsModerated_Detail">When enabled, ideas require approval before being published.</resource>
+  <resource name="MaxVotesPerIdea">Maximum Votes per Idea</resource>
+  <resource name="MaxVotesPerIdea_Detail">When set, this is the maximum number of votes that can be applied by a single member to a single idea. </resource>
+  <resource name="MaxVotesPerUser">Maximum Votes Allowed</resource>
+  <resource name="MaxVotesPerUser_Detail">When set, this is the maximum number of votes allowed per member across all ideas in this ideation. When an idea has a status that releases votes{0}, the votes members used on the idea can be reused.</resource>
+  <resource name="Name">Ideation Name</resource>
+  <resource name="Name_Detail">Enter a title for the ideation</resource>
+  <resource name="RequiredText">This field is required</resource>
+  <resource name="RequiresCategory">Require Categories</resource>
+  <resource name="RequiresCategory_Detail">If enabled, new and edited ideas will require that a category be selected.</resource>
+  <resource name="Save">Save</resource>
+  <resource name="ValidateMove">You have selected to move the ideation to another ${group_lowercase}. There are permission overrides on this ideation that will be removed if you choose to continue.</resource>
+  <resource name="ViewIdentifiers">View Identifiers</resource>
+  <resource name="WebAddress">Web Address</resource>
+  <resource name="WebAddress_Detail">Unique value used to identify this ideation. This value should not be changed. White spaces are not available. Only numbers, letters, "-", and "_" are valid characters.</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Unknown" />
+		<restScopes>
+    <scope id="groups.groups.readonly" />
+		<scope id="ideas.ideations.modify" />
+  </restScopes>
+  </scriptedContentFragment>
+</scriptedContentFragments>

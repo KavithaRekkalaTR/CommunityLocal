@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedContentFragments>
+  <scriptedContentFragment name="${resource:WikiMigrationName}" version="12.0.0.0" description="${resource:WikiMigrationDescription}" instanceIdentifier="96e84bdff3704510a91930136dd804f4" theme="" isCacheable="false" varyCacheByUser="false" showHeaderByDefault="true" cssClass="" lastModified="2022-08-23 15:00:53Z" provider="6c324ec437a24778a3f37b0374e37efc">
+    <contentScript language="Velocity"><![CDATA[<div id="$core_v2_widget.UniqueId('tab')">
+    
+    #set ($wikisListId = $core_v2_widget.UniqueId('wikisList'))
+    #set ($nameQueryId = $core_v2_widget.UniqueId('nameQuery'))
+	#set ($filterId = $core_v2_widget.UniqueId('filter'))
+	#set ($migrationWrapperId = $core_v2_widget.UniqueId('migrationWrapper'))
+	#set ($wikisWrapperId = $core_v2_widget.UniqueId('wikisWrapper'))
+	#set ($getProgressWrapperId = $core_v2_widget.UniqueId('getProgressWrapper'))
+	#set ($showProgressWrapperId = $core_v2_widget.UniqueId('showProgressWrapper'))
+	#set ($noResultsWrapperId = $core_v2_widget.UniqueId('noresultsWrapper'))
+	#set ($migrateSelectedId = $core_v2_widget.UniqueId('migrateSelected'))
+	#set ($migrateAllId = $core_v2_widget.UniqueId('migrateAll'))
+	#set ($deselectAllId = $core_v2_widget.UniqueId('deselectAll'))
+	#set ($refreshId = $core_v2_widget.UniqueId('refresh'))
+	#set ($wikiCountId = $core_v2_widget.UniqueId('wikiCount'))
+    #set ($progressKey = 'wikis-massmigrate')
+	#set ($status = $core_v2_widget.GetScheduledFileStatus($progressKey, "%{ RunAsServiceUser = 'true' }"))
+	
+    <div class="migration-progress" id="$core_v2_encoding.HtmlAttributeEncode($getProgressWrapperId)">
+    	#if ($status && ($status.State == 'Scheduled' || $status.State == 'Running'))
+    	    <p>$core_v2_language.GetResource('MigrationInProgress')</p>
+    	    $core_v2_ui.ScheduledFile($progressKey, "%{ IncludeProgress = 'true', IncludeAllMessages = 'false', IncludeLatestMessage = 'true', RunAsServiceUser = 'true' }")
+        #end 
+    </div>
+	<div class="migration-form" id="$core_v2_encoding.HtmlAttributeEncode($wikisWrapperId)"
+	    #if ($status && ($status.State == 'Scheduled' || $status.State == 'Running'))
+            style = "display:none"
+        #end>
+
+	    #set ($options = "%{}")
+    	$options.Add('NameFilter', '')
+    	$options.Add('PageIndex', 0)
+    	$options.Add('PageSize', 20)
+    
+    	#set ($wikis = $context.ListWikis($options))   
+    	<p>$core_v2_language.GetResource('MigrationInstructions')</p>
+    	
+    	<form><fieldset>
+    		<div class="filter-selector">
+    		    <div class="search-filters">
+    		        <input type = "text" id="$core_v2_encoding.HtmlAttributeEncode($nameQueryId)" style="width:25%" placeholder="$core_v2_language.GetResource('SearchFor')" />
+    		    </div>
+    		</div>
+        </fieldset></form>
+        
+        <fieldset id="$core_v2_encoding.HtmlAttributeEncode($filterId)">
+    		<ul class="field-list">
+    			<li class="field-item submit">
+    				<span class="field-item-input">
+    					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($migrateSelectedId)">$core_v2_language.GetResource('MigrateSelected')</a>
+    					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($migrateAllId)">$core_v2_language.GetResource('MigrateAll')</a>
+    					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($deselectAllId)">$core_v2_language.GetResource('DeselectAll')</a>
+    					<a href="#" class="inline-button" id="$core_v2_encoding.HtmlAttributeEncode($refreshId)">$core_v2_language.GetResource('Refresh')</a>
+    				</span>
+    			</li>
+    		</ul>
+    	</fieldset>
+    	
+        <h2 id="$core_v2_encoding.HtmlAttributeEncode($wikiCountId)" ></h2>
+        <form><fieldset>
+            	<ul class="field-list" id="$core_v2_encoding.HtmlAttributeEncode($wikisListId)">
+            		$core_v2_widget.ExecuteFile('render-wikis.vm')
+            	</ul>
+        	</fieldset>
+    	</form>
+    
+        <div class="message information" id="$core_v2_encoding.HtmlAttributeEncode($noResultsWrapperId)" style="display:none;">
+            $core_v2_language.GetResource('NoMatchingWikis')
+        </div>
+    </div>
+    <div class="migration-progress" id="$core_v2_encoding.HtmlAttributeEncode($showProgressWrapperId)" style="display:none;">
+    </div>
+</div>
+#registerEndOfPageHtml('telligent.evolution.widgets.pluginWikiMigrations')
+<script type="text/javascript" src="$core_v2_encoding.HtmlAttributeEncode($core_v2_widget.GetFileUrl('ui.js'))"></script>
+<script type="text/javascript">
+	(function(){
+	    var context = {
+	        progressKey: '$core_v2_encoding.JavascriptEncode($progressKey)',
+	        nameQueryId: '#$core_v2_encoding.JavascriptEncode($nameQueryId)',
+		    wikiCountId: '#$core_v2_encoding.JavascriptEncode($wikiCountId)',
+			wikisListId: '#$core_v2_encoding.JavascriptEncode($wikisListId)',
+			filter: '#$core_v2_encoding.JavascriptEncode($filterId)',
+			wikisWrapper: '#$core_v2_encoding.JavascriptEncode($wikisWrapperId)',
+			getProgressWrapper: '#$core_v2_encoding.JavascriptEncode($getProgressWrapperId)',
+			showProgressWrapper: '#$core_v2_encoding.JavascriptEncode($showProgressWrapperId)',
+		    noResultWrapper: '#$core_v2_encoding.JavascriptEncode($noResultsWrapperId)',
+			migrateSelectedButton: '#$core_v2_encoding.JavascriptEncode($migrateSelectedId)',
+			migrateAllButton: '#$core_v2_encoding.JavascriptEncode($migrateAllId)',
+			deSelectAllButton: '#$core_v2_encoding.JavascriptEncode($deselectAllId)',
+			refreshButton: '#$core_v2_encoding.JavascriptEncode($refreshId)',
+			migrationInProgressText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MigrationInProgress'))',
+			migrationSuccessfulText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('WikiMigrationSuccessful'))',
+			migrateSelectedText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MigrateSelected'))',
+			migrateAllText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MigrateAll'))',
+			migrateAllConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MigrateAllConfirm'))',
+			migrateSelectedConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MigrateSelectedConfirm'))',
+			migrateConfirmText: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('MigrateConfirm'))',
+		    listCallbackUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-list.jsm'))',
+			migrateWikisUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-migrate.jsm'))',
+			migrateAllWikisUrl: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('callback-migrateall.jsm'))'
+	    }
+	    
+	    var api = $context.JsonApi;
+		var wrapper = jQuery('#$core_v2_widget.UniqueId('tab')');
+		api.registerContent({
+			name: '$core_v2_encoding.JavascriptEncode($core_v2_language.GetResource('WikiMigration'))',
+			orderNumber: 700000,
+			selected: function() {
+				wrapper.css({
+					visibility: 'visible',
+					height: 'auto',
+					width: 'auto',
+					left: '0',
+					position: 'static',
+					overflow: 'visible',
+					top: '0'
+				});
+				context.startScrollable();
+			},
+			unselected: function() {
+				wrapper.css({
+					visibility: 'hidden',
+					height: '100px',
+					width: '800px',
+					left: '-1000px',
+					position: 'absolute',
+					overflow: 'hidden',
+					top: '-1000px'
+				});
+			}
+		});
+		
+		
+	    jQuery.telligent.evolution.widgets.pluginWikiMigrations.register(context);
+		
+	})();
+</script>
+#end]]></contentScript>
+    <headerScript language="Velocity" />
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="DeselectAll">Deselect all</resource>
+  <resource name="Migrate">Migrate</resource>
+  <resource name="MigrateAll">Migrate all wikis</resource>
+  <resource name="MigrateAllConfirm">Are you sure you would like to migrate all wikis?</resource>
+  <resource name="MigrateConfirm">Are you sure you want to migrate the selected wiki(s)?</resource>
+  <resource name="MigrateSelected">Migrate the selected wikis</resource>
+  <resource name="MigrateSelectedConfirm">Are you sure you would like to migrate the selected wikis?</resource>
+  <resource name="MigrationAlreadyRunning">The wiki '{0}' in '{1}' is already being migrated, please wait until the existing migration is complete or try again without selecting the wiki '{0}' in '{1}'.</resource>
+  <resource name="MigrationInProgress">Wiki migration is currently in progress.  The migration may take a considerable amount of time and may appear to hang at times.  You do not need to remain on this page while the migration is running.</resource>
+  <resource name="MigrationInstructions">Choose which wikis to migrate as articles. </resource>
+  <resource name="NoMatchingWikis">No matching wikis were found.</resource>
+  <resource name="NoWikis">No wikis</resource>
+  <resource name="Refresh">Refresh</resource>
+  <resource name="SearchFor">Search for...</resource>
+  <resource name="SelectAll">Select all</resource>
+  <resource name="WikiInGroup">in</resource>
+  <resource name="WikiMigration">Migration</resource>
+  <resource name="WikiMigrationDescription">Allows migrating one or more wikis to article collections</resource>
+  <resource name="WikiMigrationName">Migrate Wikis</resource>
+  <resource name="WikiMigrationSuccessful">The migration completed successfully</resource>
+  <resource name="Wikis">Wikis</resource>
+  <resource name="WikisPlural">{0} Wikis</resource>
+  <resource name="WikisSingular">{0} Wiki</resource>
+</language>]]></languageResources>
+    <additionalCssScript language="Velocity" />
+  </scriptedContentFragment>
+</scriptedContentFragments>

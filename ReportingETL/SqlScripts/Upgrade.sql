@@ -1,0 +1,24776 @@
+﻿/***********************************************
+* Item: DatabaseCompatibiliyCheck.sql
+***********************************************/
+Print 'Executing DatabaseCompatibiliyCheck.sql'
+DECLARE @MinDatabaseCompatibilityLevel	INT
+DECLARE @DatabaseCompatibilityLevel		INT
+DECLARE @DatabaseName					NVARCHAR(256)
+DECLARE @ErrMsg							NVARCHAR(512)
+
+SET		@MinDatabaseCompatibilityLevel	=	110  -- SQL Server 2012
+
+SELECT   @DatabaseCompatibilityLevel	=	compatibility_level 
+		,@DatabaseName					=	name
+FROM	sys.databases 
+WHERE	database_id = DB_ID()
+
+IF		@DatabaseCompatibilityLevel		<	@MinDatabaseCompatibilityLevel
+BEGIN
+	SET	@ErrMsg = 'The current database [%s] has a compatibility level (' + CONVERT(NVARCHAR(10),@DatabaseCompatibilityLevel)+ 
+	') that is too low.  The database compatibility level must be at least (' + CONVERT(NVARCHAR(10),@MinDatabaseCompatibilityLevel)+ ')'
+
+	RAISERROR(@ErrMsg, 16, 1, @DatabaseName)
+	SET NOEXEC ON;
+END
+
+SET ANSI_WARNINGS ON;
+
+
+GO
+
+
+
+/***********************************************
+* Patch:    [5.0-NewIndexes]
+* Previous: [0.0-Initial]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'NewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '0.0' and [Patch] = 'Initial');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-NewIndexes] as previous patch [0.0-Initial] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-NewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactContentView
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactContentView_ViewDateKey_ContentKey_Inc_ViewUserKey_ViewTimeOfDayKey_ViewCount', 'FactContentView', 'NONCLUSTERED', 'FactContentView', 'ViewDateKey,ContentKey', 'ViewUserKey,ViewTimeOfDayKey,ViewCount'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactContentView_ViewDateKey_ContentKey_Inc_ViewUserKey_ViewTimeOfDayKey_ViewCount')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactContentView_ViewDateKey_ContentKey_Inc_ViewUserKey_ViewTimeOfDayKey_ViewCount'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactContentView_ViewDateKey_ContentKey_Inc_ViewUserKey_ViewTimeOfDayKey_ViewCount'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactUserActivity
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK', 'FactUserActivity', 'NONCLUSTERED', 'FactUserActivity', 'ActivityDateKey,PrimaryContentKey', 'SecondaryContentKey,ActivityUserKey,ActivityTimeOfDayKey,ActivityTypeKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'NewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-NewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-NewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-NewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FilterByActivityTypeNames]
+* Previous: [5.0-NewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FilterByActivityTypeNames');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'NewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FilterByActivityTypeNames] as previous patch [5.0-NewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FilterByActivityTypeNames] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF TYPE_ID('dbo.ActivityTypeNames') IS NOT NULL
+	EXECUTE sp_executesql N'DROP TYPE ActivityTypeNames'
+
+EXECUTE sp_executesql N'
+	CREATE TYPE dbo.ActivityTypeNames As Table
+	(
+		ActivityTypeName NVARCHAR(256) NOT NULL
+	)'
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FilterByActivityTypeNames', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FilterByActivityTypeNames] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FilterByActivityTypeNames], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FilterByActivityTypeNames] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactGroup]
+* Previous: [5.0-FilterByActivityTypeNames]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactGroup');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FilterByActivityTypeNames');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactGroup] as previous patch [5.0-FilterByActivityTypeNames] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactGroup] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+		INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+		SELECT ''GroupSummaryIndexPlan'' AS ControlName, ''0'' AS ControlValue
+	'	
+END
+IF OBJECT_ID(N'dbo.FactGroupA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactGroupA
+	(
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		NewMemberCountLast1Day INT NOT NULL,
+		NewMemberCountPrevious1Day INT NOT NULL,
+		NewMemberCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast3Days INT NOT NULL,
+		NewMemberCountPrevious3Days INT NOT NULL,
+		NewMemberCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast7Days INT NOT NULL,
+		NewMemberCountPrevious7Days INT NOT NULL,
+		NewMemberCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast30Days INT NOT NULL,
+		NewMemberCountPrevious30Days INT NOT NULL,
+		NewMemberCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast90Days INT NOT NULL,
+		NewMemberCountPrevious90Days INT NOT NULL,
+		NewMemberCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast180Days INT NOT NULL,
+		NewMemberCountPrevious180Days INT NOT NULL,
+		NewMemberCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast1Day INT NOT NULL,
+		ActiveUserCountPrevious1Day INT NOT NULL,
+		ActiveUserCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast3Days INT NOT NULL,
+		ActiveUserCountPrevious3Days INT NOT NULL,
+		ActiveUserCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast7Days INT NOT NULL,
+		ActiveUserCountPrevious7Days INT NOT NULL,
+		ActiveUserCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast30Days INT NOT NULL,
+		ActiveUserCountPrevious30Days INT NOT NULL,
+		ActiveUserCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast90Days INT NOT NULL,
+		ActiveUserCountPrevious90Days INT NOT NULL,
+		ActiveUserCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast180Days INT NOT NULL,
+		ActiveUserCountPrevious180Days INT NOT NULL,
+		ActiveUserCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		EngagerCountLast1Day INT NOT NULL,
+		EngagerCountPrevious1Day INT NOT NULL,
+		EngagerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast3Days INT NOT NULL,
+		EngagerCountPrevious3Days INT NOT NULL,
+		EngagerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast7Days INT NOT NULL,
+		EngagerCountPrevious7Days INT NOT NULL,
+		EngagerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast30Days INT NOT NULL,
+		EngagerCountPrevious30Days INT NOT NULL,
+		EngagerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast90Days INT NOT NULL,
+		EngagerCountPrevious90Days INT NOT NULL,
+		EngagerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast180Days INT NOT NULL,
+		EngagerCountPrevious180Days INT NOT NULL,
+		EngagerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast1Day INT NOT NULL,
+		ContributorCountPrevious1Day INT NOT NULL,
+		ContributorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast3Days INT NOT NULL,
+		ContributorCountPrevious3Days INT NOT NULL,
+		ContributorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast7Days INT NOT NULL,
+		ContributorCountPrevious7Days INT NOT NULL,
+		ContributorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast30Days INT NOT NULL,
+		ContributorCountPrevious30Days INT NOT NULL,
+		ContributorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast90Days INT NOT NULL,
+		ContributorCountPrevious90Days INT NOT NULL,
+		ContributorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast180Days INT NOT NULL,
+		ContributorCountPrevious180Days INT NOT NULL,
+		ContributorCount180DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast1Day INT NOT NULL,
+		OriginatorCountPrevious1Day INT NOT NULL,
+		OriginatorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast3Days INT NOT NULL,
+		OriginatorCountPrevious3Days INT NOT NULL,
+		OriginatorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast7Days INT NOT NULL,
+		OriginatorCountPrevious7Days INT NOT NULL,
+		OriginatorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast30Days INT NOT NULL,
+		OriginatorCountPrevious30Days INT NOT NULL,
+		OriginatorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast90Days INT NOT NULL,
+		OriginatorCountPrevious90Days INT NOT NULL,
+		OriginatorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast180Days INT NOT NULL,
+		OriginatorCountPrevious180Days INT NOT NULL,
+		OriginatorCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		ViewerCountLast1Day INT NOT NULL,
+		ViewerCountPrevious1Day INT NOT NULL,
+		ViewerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast3Days INT NOT NULL,
+		ViewerCountPrevious3Days INT NOT NULL,
+		ViewerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast7Days INT NOT NULL,
+		ViewerCountPrevious7Days INT NOT NULL,
+		ViewerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast30Days INT NOT NULL,
+		ViewerCountPrevious30Days INT NOT NULL,
+		ViewerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast90Days INT NOT NULL,
+		ViewerCountPrevious90Days INT NOT NULL,
+		ViewerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast180Days INT NOT NULL,
+		ViewerCountPrevious180Days INT NOT NULL,
+		ViewerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast1Day INT NOT NULL,
+		NewContentCountPrevious1Day INT NOT NULL,
+		NewContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast3Days INT NOT NULL,
+		NewContentCountPrevious3Days INT NOT NULL,
+		NewContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast7Days INT NOT NULL,
+		NewContentCountPrevious7Days INT NOT NULL,
+		NewContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast30Days INT NOT NULL,
+		NewContentCountPrevious30Days INT NOT NULL,
+		NewContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast90Days INT NOT NULL,
+		NewContentCountPrevious90Days INT NOT NULL,
+		NewContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast180Days INT NOT NULL,
+		NewContentCountPrevious180Days INT NOT NULL,
+		NewContentCount180DayTrend NUMERIC(9,4) NOT NULL,	
+		ActiveContentCountLast1Day INT NOT NULL,
+		ActiveContentCountPrevious1Day INT NOT NULL,
+		ActiveContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast3Days INT NOT NULL,
+		ActiveContentCountPrevious3Days INT NOT NULL,
+		ActiveContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast7Days INT NOT NULL,
+		ActiveContentCountPrevious7Days INT NOT NULL,
+		ActiveContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast30Days INT NOT NULL,
+		ActiveContentCountPrevious30Days INT NOT NULL,
+		ActiveContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast90Days INT NOT NULL,
+		ActiveContentCountPrevious90Days INT NOT NULL,
+		ActiveContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast180Days INT NOT NULL,
+		ActiveContentCountPrevious180Days INT NOT NULL,
+		ActiveContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast1Day INT NOT NULL,
+		EngagedContentCountPrevious1Day INT NOT NULL,
+		EngagedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast3Days INT NOT NULL,
+		EngagedContentCountPrevious3Days INT NOT NULL,
+		EngagedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast7Days INT NOT NULL,
+		EngagedContentCountPrevious7Days INT NOT NULL,
+		EngagedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast30Days INT NOT NULL,
+		EngagedContentCountPrevious30Days INT NOT NULL,
+		EngagedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast90Days INT NOT NULL,
+		EngagedContentCountPrevious90Days INT NOT NULL,
+		EngagedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast180Days INT NOT NULL,
+		EngagedContentCountPrevious180Days INT NOT NULL,
+		EngagedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast1Day INT NOT NULL,
+		ContributedContentCountPrevious1Day INT NOT NULL,
+		ContributedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast3Days INT NOT NULL,
+		ContributedContentCountPrevious3Days INT NOT NULL,
+		ContributedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast7Days INT NOT NULL,
+		ContributedContentCountPrevious7Days INT NOT NULL,
+		ContributedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast30Days INT NOT NULL,
+		ContributedContentCountPrevious30Days INT NOT NULL,
+		ContributedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast90Days INT NOT NULL,
+		ContributedContentCountPrevious90Days INT NOT NULL,
+		ContributedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast180Days INT NOT NULL,
+		ContributedContentCountPrevious180Days INT NOT NULL,
+		ContributedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast1Day INT NOT NULL,
+		OriginatedContentCountPrevious1Day INT NOT NULL,
+		OriginatedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast3Days INT NOT NULL,
+		OriginatedContentCountPrevious3Days INT NOT NULL,
+		OriginatedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast7Days INT NOT NULL,
+		OriginatedContentCountPrevious7Days INT NOT NULL,
+		OriginatedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast30Days INT NOT NULL,
+		OriginatedContentCountPrevious30Days INT NOT NULL,
+		OriginatedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast90Days INT NOT NULL,
+		OriginatedContentCountPrevious90Days INT NOT NULL,
+		OriginatedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast180Days INT NOT NULL,
+		OriginatedContentCountPrevious180Days INT NOT NULL,
+		OriginatedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast1Day INT NOT NULL,
+		ViewedContentCountPrevious1Day INT NOT NULL,
+		ViewedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast3Days INT NOT NULL,
+		ViewedContentCountPrevious3Days INT NOT NULL,
+		ViewedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast7Days INT NOT NULL,
+		ViewedContentCountPrevious7Days INT NOT NULL,
+		ViewedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast30Days INT NOT NULL,
+		ViewedContentCountPrevious30Days INT NOT NULL,
+		ViewedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast90Days INT NOT NULL,
+		ViewedContentCountPrevious90Days INT NOT NULL,
+		ViewedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast180Days INT NOT NULL,
+		ViewedContentCountPrevious180Days INT NOT NULL,
+		ViewedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast1Day INT NOT NULL,
+		ActiveActivityCountPrevious1Day INT NOT NULL,
+		ActiveActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast3Days INT NOT NULL,
+		ActiveActivityCountPrevious3Days INT NOT NULL,
+		ActiveActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast7Days INT NOT NULL,
+		ActiveActivityCountPrevious7Days INT NOT NULL,
+		ActiveActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast30Days INT NOT NULL,
+		ActiveActivityCountPrevious30Days INT NOT NULL,
+		ActiveActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast90Days INT NOT NULL,
+		ActiveActivityCountPrevious90Days INT NOT NULL,
+		ActiveActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast180Days INT NOT NULL,
+		ActiveActivityCountPrevious180Days INT NOT NULL,
+		ActiveActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast1Day INT NOT NULL,
+		EngagementActivityCountPrevious1Day INT NOT NULL,
+		EngagementActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast3Days INT NOT NULL,
+		EngagementActivityCountPrevious3Days INT NOT NULL,
+		EngagementActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast7Days INT NOT NULL,
+		EngagementActivityCountPrevious7Days INT NOT NULL,
+		EngagementActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast30Days INT NOT NULL,
+		EngagementActivityCountPrevious30Days INT NOT NULL,
+		EngagementActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast90Days INT NOT NULL,
+		EngagementActivityCountPrevious90Days INT NOT NULL,
+		EngagementActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast180Days INT NOT NULL,
+		EngagementActivityCountPrevious180Days INT NOT NULL,
+		EngagementActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast1Day INT NOT NULL,
+		ContributionActivityCountPrevious1Day INT NOT NULL,
+		ContributionActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast3Days INT NOT NULL,
+		ContributionActivityCountPrevious3Days INT NOT NULL,
+		ContributionActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast7Days INT NOT NULL,
+		ContributionActivityCountPrevious7Days INT NOT NULL,
+		ContributionActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast30Days INT NOT NULL,
+		ContributionActivityCountPrevious30Days INT NOT NULL,
+		ContributionActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast90Days INT NOT NULL,
+		ContributionActivityCountPrevious90Days INT NOT NULL,
+		ContributionActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast180Days INT NOT NULL,
+		ContributionActivityCountPrevious180Days INT NOT NULL,
+		ContributionActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast1Day INT NOT NULL,
+		OriginationActivityCountPrevious1Day INT NOT NULL,
+		OriginationActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast3Days INT NOT NULL,
+		OriginationActivityCountPrevious3Days INT NOT NULL,
+		OriginationActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast7Days INT NOT NULL,
+		OriginationActivityCountPrevious7Days INT NOT NULL,
+		OriginationActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast30Days INT NOT NULL,
+		OriginationActivityCountPrevious30Days INT NOT NULL,
+		OriginationActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast90Days INT NOT NULL,
+		OriginationActivityCountPrevious90Days INT NOT NULL,
+		OriginationActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast180Days INT NOT NULL,
+		OriginationActivityCountPrevious180Days INT NOT NULL,
+		OriginationActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast1Day INT NOT NULL,
+		ViewCountPrevious1Day INT NOT NULL,
+		ViewCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast3Days INT NOT NULL,
+		ViewCountPrevious3Days INT NOT NULL,
+		ViewCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast7Days INT NOT NULL,
+		ViewCountPrevious7Days INT NOT NULL,
+		ViewCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast30Days INT NOT NULL,
+		ViewCountPrevious30Days INT NOT NULL,
+		ViewCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast90Days INT NOT NULL,
+		ViewCountPrevious90Days INT NOT NULL,
+		ViewCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast180Days INT NOT NULL,
+		ViewCountPrevious180Days INT NOT NULL,
+		ViewCount180DayTrend NUMERIC(9,4) NOT NULL,
+		Owners INT NOT NULL,
+		Managers INT NOT NULL,
+		Members INT NOT NULL,
+		MembersTotal INT NOT NULL,
+		CONSTRAINT PK_FactGroupA PRIMARY KEY CLUSTERED
+		(
+			ContainerKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA ADD  CONSTRAINT FK_FactGroupA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA ADD  CONSTRAINT FK_FactGroupA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA ADD  CONSTRAINT FK_FactGroupA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA ADD  CONSTRAINT FK_FactGroupA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+
+IF OBJECT_ID(N'dbo.FactGroupB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactGroupB
+	(
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		NewMemberCountLast1Day INT NOT NULL,
+		NewMemberCountPrevious1Day INT NOT NULL,
+		NewMemberCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast3Days INT NOT NULL,
+		NewMemberCountPrevious3Days INT NOT NULL,
+		NewMemberCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast7Days INT NOT NULL,
+		NewMemberCountPrevious7Days INT NOT NULL,
+		NewMemberCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast30Days INT NOT NULL,
+		NewMemberCountPrevious30Days INT NOT NULL,
+		NewMemberCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast90Days INT NOT NULL,
+		NewMemberCountPrevious90Days INT NOT NULL,
+		NewMemberCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewMemberCountLast180Days INT NOT NULL,
+		NewMemberCountPrevious180Days INT NOT NULL,
+		NewMemberCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast1Day INT NOT NULL,
+		ActiveUserCountPrevious1Day INT NOT NULL,
+		ActiveUserCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast3Days INT NOT NULL,
+		ActiveUserCountPrevious3Days INT NOT NULL,
+		ActiveUserCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast7Days INT NOT NULL,
+		ActiveUserCountPrevious7Days INT NOT NULL,
+		ActiveUserCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast30Days INT NOT NULL,
+		ActiveUserCountPrevious30Days INT NOT NULL,
+		ActiveUserCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast90Days INT NOT NULL,
+		ActiveUserCountPrevious90Days INT NOT NULL,
+		ActiveUserCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveUserCountLast180Days INT NOT NULL,
+		ActiveUserCountPrevious180Days INT NOT NULL,
+		ActiveUserCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		EngagerCountLast1Day INT NOT NULL,
+		EngagerCountPrevious1Day INT NOT NULL,
+		EngagerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast3Days INT NOT NULL,
+		EngagerCountPrevious3Days INT NOT NULL,
+		EngagerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast7Days INT NOT NULL,
+		EngagerCountPrevious7Days INT NOT NULL,
+		EngagerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast30Days INT NOT NULL,
+		EngagerCountPrevious30Days INT NOT NULL,
+		EngagerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast90Days INT NOT NULL,
+		EngagerCountPrevious90Days INT NOT NULL,
+		EngagerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		EngagerCountLast180Days INT NOT NULL,
+		EngagerCountPrevious180Days INT NOT NULL,
+		EngagerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast1Day INT NOT NULL,
+		ContributorCountPrevious1Day INT NOT NULL,
+		ContributorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast3Days INT NOT NULL,
+		ContributorCountPrevious3Days INT NOT NULL,
+		ContributorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast7Days INT NOT NULL,
+		ContributorCountPrevious7Days INT NOT NULL,
+		ContributorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast30Days INT NOT NULL,
+		ContributorCountPrevious30Days INT NOT NULL,
+		ContributorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast90Days INT NOT NULL,
+		ContributorCountPrevious90Days INT NOT NULL,
+		ContributorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ContributorCountLast180Days INT NOT NULL,
+		ContributorCountPrevious180Days INT NOT NULL,
+		ContributorCount180DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast1Day INT NOT NULL,
+		OriginatorCountPrevious1Day INT NOT NULL,
+		OriginatorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast3Days INT NOT NULL,
+		OriginatorCountPrevious3Days INT NOT NULL,
+		OriginatorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast7Days INT NOT NULL,
+		OriginatorCountPrevious7Days INT NOT NULL,
+		OriginatorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast30Days INT NOT NULL,
+		OriginatorCountPrevious30Days INT NOT NULL,
+		OriginatorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast90Days INT NOT NULL,
+		OriginatorCountPrevious90Days INT NOT NULL,
+		OriginatorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatorCountLast180Days INT NOT NULL,
+		OriginatorCountPrevious180Days INT NOT NULL,
+		OriginatorCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		ViewerCountLast1Day INT NOT NULL,
+		ViewerCountPrevious1Day INT NOT NULL,
+		ViewerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast3Days INT NOT NULL,
+		ViewerCountPrevious3Days INT NOT NULL,
+		ViewerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast7Days INT NOT NULL,
+		ViewerCountPrevious7Days INT NOT NULL,
+		ViewerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast30Days INT NOT NULL,
+		ViewerCountPrevious30Days INT NOT NULL,
+		ViewerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast90Days INT NOT NULL,
+		ViewerCountPrevious90Days INT NOT NULL,
+		ViewerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ViewerCountLast180Days INT NOT NULL,
+		ViewerCountPrevious180Days INT NOT NULL,
+		ViewerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast1Day INT NOT NULL,
+		NewContentCountPrevious1Day INT NOT NULL,
+		NewContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast3Days INT NOT NULL,
+		NewContentCountPrevious3Days INT NOT NULL,
+		NewContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast7Days INT NOT NULL,
+		NewContentCountPrevious7Days INT NOT NULL,
+		NewContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast30Days INT NOT NULL,
+		NewContentCountPrevious30Days INT NOT NULL,
+		NewContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast90Days INT NOT NULL,
+		NewContentCountPrevious90Days INT NOT NULL,
+		NewContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewContentCountLast180Days INT NOT NULL,
+		NewContentCountPrevious180Days INT NOT NULL,
+		NewContentCount180DayTrend NUMERIC(9,4) NOT NULL,	
+		ActiveContentCountLast1Day INT NOT NULL,
+		ActiveContentCountPrevious1Day INT NOT NULL,
+		ActiveContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast3Days INT NOT NULL,
+		ActiveContentCountPrevious3Days INT NOT NULL,
+		ActiveContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast7Days INT NOT NULL,
+		ActiveContentCountPrevious7Days INT NOT NULL,
+		ActiveContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast30Days INT NOT NULL,
+		ActiveContentCountPrevious30Days INT NOT NULL,
+		ActiveContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast90Days INT NOT NULL,
+		ActiveContentCountPrevious90Days INT NOT NULL,
+		ActiveContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveContentCountLast180Days INT NOT NULL,
+		ActiveContentCountPrevious180Days INT NOT NULL,
+		ActiveContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast1Day INT NOT NULL,
+		EngagedContentCountPrevious1Day INT NOT NULL,
+		EngagedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast3Days INT NOT NULL,
+		EngagedContentCountPrevious3Days INT NOT NULL,
+		EngagedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast7Days INT NOT NULL,
+		EngagedContentCountPrevious7Days INT NOT NULL,
+		EngagedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast30Days INT NOT NULL,
+		EngagedContentCountPrevious30Days INT NOT NULL,
+		EngagedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast90Days INT NOT NULL,
+		EngagedContentCountPrevious90Days INT NOT NULL,
+		EngagedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		EngagedContentCountLast180Days INT NOT NULL,
+		EngagedContentCountPrevious180Days INT NOT NULL,
+		EngagedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast1Day INT NOT NULL,
+		ContributedContentCountPrevious1Day INT NOT NULL,
+		ContributedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast3Days INT NOT NULL,
+		ContributedContentCountPrevious3Days INT NOT NULL,
+		ContributedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast7Days INT NOT NULL,
+		ContributedContentCountPrevious7Days INT NOT NULL,
+		ContributedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast30Days INT NOT NULL,
+		ContributedContentCountPrevious30Days INT NOT NULL,
+		ContributedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast90Days INT NOT NULL,
+		ContributedContentCountPrevious90Days INT NOT NULL,
+		ContributedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ContributedContentCountLast180Days INT NOT NULL,
+		ContributedContentCountPrevious180Days INT NOT NULL,
+		ContributedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast1Day INT NOT NULL,
+		OriginatedContentCountPrevious1Day INT NOT NULL,
+		OriginatedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast3Days INT NOT NULL,
+		OriginatedContentCountPrevious3Days INT NOT NULL,
+		OriginatedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast7Days INT NOT NULL,
+		OriginatedContentCountPrevious7Days INT NOT NULL,
+		OriginatedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast30Days INT NOT NULL,
+		OriginatedContentCountPrevious30Days INT NOT NULL,
+		OriginatedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast90Days INT NOT NULL,
+		OriginatedContentCountPrevious90Days INT NOT NULL,
+		OriginatedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		OriginatedContentCountLast180Days INT NOT NULL,
+		OriginatedContentCountPrevious180Days INT NOT NULL,
+		OriginatedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast1Day INT NOT NULL,
+		ViewedContentCountPrevious1Day INT NOT NULL,
+		ViewedContentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast3Days INT NOT NULL,
+		ViewedContentCountPrevious3Days INT NOT NULL,
+		ViewedContentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast7Days INT NOT NULL,
+		ViewedContentCountPrevious7Days INT NOT NULL,
+		ViewedContentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast30Days INT NOT NULL,
+		ViewedContentCountPrevious30Days INT NOT NULL,
+		ViewedContentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast90Days INT NOT NULL,
+		ViewedContentCountPrevious90Days INT NOT NULL,
+		ViewedContentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ViewedContentCountLast180Days INT NOT NULL,
+		ViewedContentCountPrevious180Days INT NOT NULL,
+		ViewedContentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast1Day INT NOT NULL,
+		ActiveActivityCountPrevious1Day INT NOT NULL,
+		ActiveActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast3Days INT NOT NULL,
+		ActiveActivityCountPrevious3Days INT NOT NULL,
+		ActiveActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast7Days INT NOT NULL,
+		ActiveActivityCountPrevious7Days INT NOT NULL,
+		ActiveActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast30Days INT NOT NULL,
+		ActiveActivityCountPrevious30Days INT NOT NULL,
+		ActiveActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast90Days INT NOT NULL,
+		ActiveActivityCountPrevious90Days INT NOT NULL,
+		ActiveActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ActiveActivityCountLast180Days INT NOT NULL,
+		ActiveActivityCountPrevious180Days INT NOT NULL,
+		ActiveActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast1Day INT NOT NULL,
+		EngagementActivityCountPrevious1Day INT NOT NULL,
+		EngagementActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast3Days INT NOT NULL,
+		EngagementActivityCountPrevious3Days INT NOT NULL,
+		EngagementActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast7Days INT NOT NULL,
+		EngagementActivityCountPrevious7Days INT NOT NULL,
+		EngagementActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast30Days INT NOT NULL,
+		EngagementActivityCountPrevious30Days INT NOT NULL,
+		EngagementActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast90Days INT NOT NULL,
+		EngagementActivityCountPrevious90Days INT NOT NULL,
+		EngagementActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		EngagementActivityCountLast180Days INT NOT NULL,
+		EngagementActivityCountPrevious180Days INT NOT NULL,
+		EngagementActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast1Day INT NOT NULL,
+		ContributionActivityCountPrevious1Day INT NOT NULL,
+		ContributionActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast3Days INT NOT NULL,
+		ContributionActivityCountPrevious3Days INT NOT NULL,
+		ContributionActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast7Days INT NOT NULL,
+		ContributionActivityCountPrevious7Days INT NOT NULL,
+		ContributionActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast30Days INT NOT NULL,
+		ContributionActivityCountPrevious30Days INT NOT NULL,
+		ContributionActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast90Days INT NOT NULL,
+		ContributionActivityCountPrevious90Days INT NOT NULL,
+		ContributionActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ContributionActivityCountLast180Days INT NOT NULL,
+		ContributionActivityCountPrevious180Days INT NOT NULL,
+		ContributionActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast1Day INT NOT NULL,
+		OriginationActivityCountPrevious1Day INT NOT NULL,
+		OriginationActivityCount1DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast3Days INT NOT NULL,
+		OriginationActivityCountPrevious3Days INT NOT NULL,
+		OriginationActivityCount3DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast7Days INT NOT NULL,
+		OriginationActivityCountPrevious7Days INT NOT NULL,
+		OriginationActivityCount7DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast30Days INT NOT NULL,
+		OriginationActivityCountPrevious30Days INT NOT NULL,
+		OriginationActivityCount30DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast90Days INT NOT NULL,
+		OriginationActivityCountPrevious90Days INT NOT NULL,
+		OriginationActivityCount90DayTrend NUMERIC(9,4) NOT NULL,
+		OriginationActivityCountLast180Days INT NOT NULL,
+		OriginationActivityCountPrevious180Days INT NOT NULL,
+		OriginationActivityCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast1Day INT NOT NULL,
+		ViewCountPrevious1Day INT NOT NULL,
+		ViewCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast3Days INT NOT NULL,
+		ViewCountPrevious3Days INT NOT NULL,
+		ViewCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast7Days INT NOT NULL,
+		ViewCountPrevious7Days INT NOT NULL,
+		ViewCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast30Days INT NOT NULL,
+		ViewCountPrevious30Days INT NOT NULL,
+		ViewCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast90Days INT NOT NULL,
+		ViewCountPrevious90Days INT NOT NULL,
+		ViewCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ViewCountLast180Days INT NOT NULL,
+		ViewCountPrevious180Days INT NOT NULL,
+		ViewCount180DayTrend NUMERIC(9,4) NOT NULL,
+		Owners INT NOT NULL,
+		Managers INT NOT NULL,
+		Members INT NOT NULL,
+		MembersTotal INT NOT NULL,
+		CONSTRAINT PK_FactGroupB PRIMARY KEY CLUSTERED
+		(
+			ContainerKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB ADD  CONSTRAINT FK_FactGroupB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB ADD  CONSTRAINT FK_FactGroupB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB ADD  CONSTRAINT FK_FactGroupB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB ADD  CONSTRAINT FK_FactGroupB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactGroup', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactGroup FOR dbo.FactGroupA'
+END
+
+IF OBJECT_ID(N'dbo.FactGroupOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactGroupOld FOR dbo.FactGroupB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactGroup', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactGroup] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactGroup], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactGroup] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactGroupNewIndexes]
+* Previous: [5.0-FactGroup]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactGroupNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactGroup');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactGroupNewIndexes] as previous patch [5.0-FactGroup] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactGroupNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactGroupA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactGroupA', 'FactGroupA', 'PRIMARY KEY CLUSTERED', 'FactGroupA', 'ContainerKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactGroupA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactGroupA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactGroupA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 2, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactGroupA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 2)
+
+--FactGroupB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactGroupB', 'FactGroupB', 'PRIMARY KEY CLUSTERED', 'FactGroupB', 'ContainerKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactGroupB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactGroupB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactGroupB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactGroupNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactGroupNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactGroupNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactGroupNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactForum3]
+* Previous: [5.0-FactGroupNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForum3');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactGroupNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactForum3] as previous patch [5.0-FactGroupNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactForum3] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactForum', N'SN') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DROP SYNONYM dbo.FactForum'
+END
+
+IF OBJECT_ID(N'dbo.FactForumA', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.FactForumA'
+END
+
+IF OBJECT_ID(N'dbo.FactForumB', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.FactForumB'
+END
+
+IF OBJECT_ID(N'dbo.FactForumA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactForumA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalThreadCount INT NOT NULL,
+		TotalReplyCount INT NOT NULL,
+		NewThreadCountLast1Day INT NOT NULL,
+		NewThreadCountPrevious1Day INT NOT NULL,
+		NewThreadCount1DayTrend NUMERIC(9,4),
+		NewThreadCountLast3Days INT NOT NULL,
+		NewThreadCountPrevious3Days INT NOT NULL,
+		NewThreadCount3DayTrend NUMERIC(9,4),
+		NewThreadCountLast7Days INT NOT NULL,
+		NewThreadCountPrevious7Days INT NOT NULL,
+		NewThreadCount7DayTrend NUMERIC(9,4),
+		NewThreadCountLast30Days INT NOT NULL,
+		NewThreadCountPrevious30Days INT NOT NULL,
+		NewThreadCount30DayTrend NUMERIC(9,4),
+		NewThreadCountLast90Days INT NOT NULL,
+		NewThreadCountPrevious90Days INT NOT NULL,
+		NewThreadCount90DayTrend NUMERIC(9,4),
+		NewThreadCountLast180Days INT NOT NULL,
+		NewThreadCountPrevious180Days INT NOT NULL,
+		NewThreadCount180DayTrend NUMERIC(9,4),
+		NewReplyCountLast1Day INT NOT NULL,
+		NewReplyCountPrevious1Day INT NOT NULL,
+		NewReplyCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast3Days INT NOT NULL,
+		NewReplyCountPrevious3Days INT NOT NULL,
+		NewReplyCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast7Days INT NOT NULL,
+		NewReplyCountPrevious7Days INT NOT NULL,
+		NewReplyCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast30Days INT NOT NULL,
+		NewReplyCountPrevious30Days INT NOT NULL,
+		NewReplyCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast90Days INT NOT NULL,
+		NewReplyCountPrevious90Days INT NOT NULL,
+		NewReplyCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast180Days INT NOT NULL,
+		NewReplyCountPrevious180Days INT NOT NULL,
+		NewReplyCount180DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast1Day INT NOT NULL,
+		NewSuggestedAnswerCountPrevious1Day INT NOT NULL,
+		NewSuggestedAnswerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast3Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious3Days INT NOT NULL,
+		NewSuggestedAnswerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast7Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious7Days INT NOT NULL,
+		NewSuggestedAnswerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast30Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious30Days INT NOT NULL,
+		NewSuggestedAnswerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast90Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious90Days INT NOT NULL,
+		NewSuggestedAnswerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast180Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious180Days INT NOT NULL,
+		NewSuggestedAnswerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast1Day INT NOT NULL,
+		NewAnswerCountPrevious1Day INT NOT NULL,
+		NewAnswerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast3Days INT NOT NULL,
+		NewAnswerCountPrevious3Days INT NOT NULL,
+		NewAnswerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast7Days INT NOT NULL,
+		NewAnswerCountPrevious7Days INT NOT NULL,
+		NewAnswerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast30Days INT NOT NULL,
+		NewAnswerCountPrevious30Days INT NOT NULL,
+		NewAnswerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast90Days INT NOT NULL,
+		NewAnswerCountPrevious90Days INT NOT NULL,
+		NewAnswerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast180Days INT NOT NULL,
+		NewAnswerCountPrevious180Days INT NOT NULL,
+		NewAnswerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ResponseRateLast1Day NUMERIC(5,4) NULL,
+		ResponseRatePrevious1Day NUMERIC(5,4) NULL,
+		ResponseRate1DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast3Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious3Days NUMERIC(5,4) NULL,
+		ResponseRate3DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast7Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious7Days NUMERIC(5,4) NULL,
+		ResponseRate7DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast30Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate30DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast90Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate90DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast180Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate180DayTrend NUMERIC(5,4) NULL,
+		ResponseRate1DayLast30Days NUMERIC(5,4) NULL,
+		ResponseRate1DayPrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate1Day30DayTrend NUMERIC(5,4) NULL,
+		ResponseRate3DayLast30Days NUMERIC(5,4) NULL,
+		ResponseRate3DayPrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate3Day30DayTrend NUMERIC(5,4) NULL,
+		ResponseRate7DayLast30Days NUMERIC(5,4) NULL,
+		ResponseRate7DayPrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate7Day30DayTrend NUMERIC(5,4) NULL,
+		ResponseRate1DayLast90Days NUMERIC(5,4) NULL,
+		ResponseRate1DayPrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate1Day90DayTrend NUMERIC(5,4) NULL,
+		ResponseRate3DayLast90Days NUMERIC(5,4) NULL,
+		ResponseRate3DayPrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate3Day90DayTrend NUMERIC(5,4) NULL,
+		ResponseRate7DayLast90Days NUMERIC(5,4) NULL,
+		ResponseRate7DayPrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate7Day90DayTrend NUMERIC(5,4) NULL,
+		ResponseRate1DayLast180Days NUMERIC(5,4) NULL,
+		ResponseRate1DayPrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate1Day180DayTrend NUMERIC(5,4) NULL,
+		ResponseRate3DayLast180Days NUMERIC(5,4) NULL,
+		ResponseRate3DayPrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate3Day180DayTrend NUMERIC(5,4) NULL,
+		ResponseRate7DayLast180Days NUMERIC(5,4) NULL,
+		ResponseRate7DayPrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate7Day180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast1Day NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious1Day NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast3Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious3Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast7Days NUMERIC(5,4)  NULL,
+		SuggestedAnswerRatePrevious7Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayPrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1Day30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayPrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3Day30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayPrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7Day30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayPrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1Day90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayPrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3Day90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayPrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7Day90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayPrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1Day180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayPrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3Day180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayPrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7Day180DayTrend NUMERIC(5,4) NULL,		
+		AnswerRateLast1Day NUMERIC(5,4) NULL,
+		AnswerRatePrevious1Day NUMERIC(5,4) NULL,
+		AnswerRate1DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast3Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious3Days NUMERIC(5,4) NULL,
+		AnswerRate3DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast7Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious7Days NUMERIC(5,4) NULL,
+		AnswerRate7DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast30Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate30DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast90Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate90DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast180Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate180DayTrend NUMERIC(5,4) NULL,
+		AnswerRate1DayLast30Days NUMERIC(5,4) NULL,
+		AnswerRate1DayPrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate1Day30DayTrend NUMERIC(5,4) NULL,
+		AnswerRate3DayLast30Days NUMERIC(5,4) NULL,
+		AnswerRate3DayPrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate3Day30DayTrend NUMERIC(5,4) NULL,
+		AnswerRate7DayLast30Days NUMERIC(5,4) NULL,
+		AnswerRate7DayPrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate7Day30DayTrend NUMERIC(5,4) NULL,
+		AnswerRate1DayLast90Days NUMERIC(5,4) NULL,
+		AnswerRate1DayPrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate1Day90DayTrend NUMERIC(5,4) NULL,
+		AnswerRate3DayLast90Days NUMERIC(5,4) NULL,
+		AnswerRate3DayPrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate3Day90DayTrend NUMERIC(5,4) NULL,
+		AnswerRate7DayLast90Days NUMERIC(5,4) NULL,
+		AnswerRate7DayPrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate7Day90DayTrend NUMERIC(5,4) NULL,
+		AnswerRate1DayLast180Days NUMERIC(5,4) NULL,
+		AnswerRate1DayPrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate1Day180DayTrend NUMERIC(5,4) NULL,
+		AnswerRate3DayLast180Days NUMERIC(5,4) NULL,
+		AnswerRate3DayPrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate3Day180DayTrend NUMERIC(5,4) NULL,
+		AnswerRate7DayLast180Days NUMERIC(5,4) NULL,
+		AnswerRate7DayPrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate7Day180DayTrend NUMERIC(5,4) NULL,
+		AverageResponseTimeLast1Day INT NULL,
+		AverageResponseTimePrevious1Day INT NULL,
+		AverageResponseTime1DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast3Days INT NULL,
+		AverageResponseTimePrevious3Days INT NULL,
+		AverageResponseTime3DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast7Days INT NULL,
+		AverageResponseTimePrevious7Days INT NULL,
+		AverageResponseTime7DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast30Days INT NULL,
+		AverageResponseTimePrevious30Days INT NULL,
+		AverageResponseTime30DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast90Days INT NULL,
+		AverageResponseTimePrevious90Days INT NULL,
+		AverageResponseTime90DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast180Days INT NULL,
+		AverageResponseTimePrevious180Days INT NULL,
+		AverageResponseTime180DayTrend NUMERIC(9,4) NULL,			
+		AverageSuggestedAnswerTimeLast1Day INT NULL,
+		AverageSuggestedAnswerTimePrevious1Day INT NULL,
+		AverageSuggestedAnswerTime1DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast3Days INT NULL,
+		AverageSuggestedAnswerTimePrevious3Days INT NULL,
+		AverageSuggestedAnswerTime3DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast7Days INT NULL,
+		AverageSuggestedAnswerTimePrevious7Days INT NULL,
+		AverageSuggestedAnswerTime7DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast30Days INT NULL,
+		AverageSuggestedAnswerTimePrevious30Days INT NULL,
+		AverageSuggestedAnswerTime30DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast90Days INT NULL,
+		AverageSuggestedAnswerTimePrevious90Days INT NULL,
+		AverageSuggestedAnswerTime90DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast180Days INT NULL,
+		AverageSuggestedAnswerTimePrevious180Days INT NULL,
+		AverageSuggestedAnswerTime180DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast1Day INT NULL,
+		AverageAnswerTimePrevious1Day INT NULL,
+		AverageAnswerTime1DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast3Days INT NULL,
+		AverageAnswerTimePrevious3Days INT NULL,
+		AverageAnswerTime3DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast7Days INT NULL,
+		AverageAnswerTimePrevious7Days INT NULL,
+		AverageAnswerTime7DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast30Days INT NULL,
+		AverageAnswerTimePrevious30Days INT NULL,
+		AverageAnswerTime30DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast90Days INT NULL,
+		AverageAnswerTimePrevious90Days INT NULL,
+		AverageAnswerTime90DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast180Days INT NULL,
+		AverageAnswerTimePrevious180Days INT NULL,
+		AverageAnswerTime180DayTrend NUMERIC(9,4) NULL,		
+		ThreadAuthorCountLast1Day INT NOT NULL,
+		ThreadAuthorCountPrevious1Day INT NOT NULL,
+		ThreadAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast3Days INT NOT NULL,
+		ThreadAuthorCountPrevious3Days INT NOT NULL,
+		ThreadAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast7Days INT NOT NULL,
+		ThreadAuthorCountPrevious7Days INT NOT NULL,
+		ThreadAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast30Days INT NOT NULL,
+		ThreadAuthorCountPrevious30Days INT NOT NULL,
+		ThreadAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast90Days INT NOT NULL,
+		ThreadAuthorCountPrevious90Days INT NOT NULL,
+		ThreadAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast180Days INT NOT NULL,
+		ThreadAuthorCountPrevious180Days INT NOT NULL,
+		ThreadAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,	
+		ReplyAuthorCountLast1Day INT NOT NULL,
+		ReplyAuthorCountPrevious1Day INT NOT NULL,
+		ReplyAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast3Days INT NOT NULL,
+		ReplyAuthorCountPrevious3Days INT NOT NULL,
+		ReplyAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast7Days INT NOT NULL,
+		ReplyAuthorCountPrevious7Days INT NOT NULL,
+		ReplyAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast30Days INT NOT NULL,
+		ReplyAuthorCountPrevious30Days INT NOT NULL,
+		ReplyAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast90Days INT NOT NULL,
+		ReplyAuthorCountPrevious90Days INT NOT NULL,
+		ReplyAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast180Days INT NOT NULL,
+		ReplyAuthorCountPrevious180Days INT NOT NULL,
+		ReplyAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,			
+		SuggestedAnswerAuthorCountLast1Day INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious1Day INT NOT NULL,
+		SuggestedAnswerAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast3Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious3Days INT NOT NULL,
+		SuggestedAnswerAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast7Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious7Days INT NOT NULL,
+		SuggestedAnswerAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast30Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious30Days INT NOT NULL,
+		SuggestedAnswerAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast90Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious90Days INT NOT NULL,
+		SuggestedAnswerAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast180Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious180Days INT NOT NULL,
+		SuggestedAnswerAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,	
+		AnswerAuthorCountLast1Day INT NOT NULL,
+		AnswerAuthorCountPrevious1Day INT NOT NULL,
+		AnswerAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast3Days INT NOT NULL,
+		AnswerAuthorCountPrevious3Days INT NOT NULL,
+		AnswerAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast7Days INT NOT NULL,
+		AnswerAuthorCountPrevious7Days INT NOT NULL,
+		AnswerAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast30Days INT NOT NULL,
+		AnswerAuthorCountPrevious30Days INT NOT NULL,
+		AnswerAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast90Days INT NOT NULL,
+		AnswerAuthorCountPrevious90Days INT NOT NULL,
+		AnswerAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast180Days INT NOT NULL,
+		AnswerAuthorCountPrevious180Days INT NOT NULL,
+		AnswerAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,
+		CONSTRAINT PK_FactForumA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumA ADD  CONSTRAINT FK_FactForumA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumA ADD  CONSTRAINT FK_FactForumA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumA ADD  CONSTRAINT FK_FactForumA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumA ADD  CONSTRAINT FK_FactForumA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumA ADD  CONSTRAINT FK_FactForumA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactForumB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactForumB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalThreadCount INT NOT NULL,
+		TotalReplyCount INT NOT NULL,
+		NewThreadCountLast1Day INT NOT NULL,
+		NewThreadCountPrevious1Day INT NOT NULL,
+		NewThreadCount1DayTrend NUMERIC(9,4),
+		NewThreadCountLast3Days INT NOT NULL,
+		NewThreadCountPrevious3Days INT NOT NULL,
+		NewThreadCount3DayTrend NUMERIC(9,4),
+		NewThreadCountLast7Days INT NOT NULL,
+		NewThreadCountPrevious7Days INT NOT NULL,
+		NewThreadCount7DayTrend NUMERIC(9,4),
+		NewThreadCountLast30Days INT NOT NULL,
+		NewThreadCountPrevious30Days INT NOT NULL,
+		NewThreadCount30DayTrend NUMERIC(9,4),
+		NewThreadCountLast90Days INT NOT NULL,
+		NewThreadCountPrevious90Days INT NOT NULL,
+		NewThreadCount90DayTrend NUMERIC(9,4),
+		NewThreadCountLast180Days INT NOT NULL,
+		NewThreadCountPrevious180Days INT NOT NULL,
+		NewThreadCount180DayTrend NUMERIC(9,4),
+		NewReplyCountLast1Day INT NOT NULL,
+		NewReplyCountPrevious1Day INT NOT NULL,
+		NewReplyCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast3Days INT NOT NULL,
+		NewReplyCountPrevious3Days INT NOT NULL,
+		NewReplyCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast7Days INT NOT NULL,
+		NewReplyCountPrevious7Days INT NOT NULL,
+		NewReplyCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast30Days INT NOT NULL,
+		NewReplyCountPrevious30Days INT NOT NULL,
+		NewReplyCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast90Days INT NOT NULL,
+		NewReplyCountPrevious90Days INT NOT NULL,
+		NewReplyCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewReplyCountLast180Days INT NOT NULL,
+		NewReplyCountPrevious180Days INT NOT NULL,
+		NewReplyCount180DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast1Day INT NOT NULL,
+		NewSuggestedAnswerCountPrevious1Day INT NOT NULL,
+		NewSuggestedAnswerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast3Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious3Days INT NOT NULL,
+		NewSuggestedAnswerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast7Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious7Days INT NOT NULL,
+		NewSuggestedAnswerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast30Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious30Days INT NOT NULL,
+		NewSuggestedAnswerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast90Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious90Days INT NOT NULL,
+		NewSuggestedAnswerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewSuggestedAnswerCountLast180Days INT NOT NULL,
+		NewSuggestedAnswerCountPrevious180Days INT NOT NULL,
+		NewSuggestedAnswerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast1Day INT NOT NULL,
+		NewAnswerCountPrevious1Day INT NOT NULL,
+		NewAnswerCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast3Days INT NOT NULL,
+		NewAnswerCountPrevious3Days INT NOT NULL,
+		NewAnswerCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast7Days INT NOT NULL,
+		NewAnswerCountPrevious7Days INT NOT NULL,
+		NewAnswerCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast30Days INT NOT NULL,
+		NewAnswerCountPrevious30Days INT NOT NULL,
+		NewAnswerCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast90Days INT NOT NULL,
+		NewAnswerCountPrevious90Days INT NOT NULL,
+		NewAnswerCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewAnswerCountLast180Days INT NOT NULL,
+		NewAnswerCountPrevious180Days INT NOT NULL,
+		NewAnswerCount180DayTrend NUMERIC(9,4) NOT NULL,
+		ResponseRateLast1Day NUMERIC(5,4) NULL,
+		ResponseRatePrevious1Day NUMERIC(5,4) NULL,
+		ResponseRate1DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast3Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious3Days NUMERIC(5,4) NULL,
+		ResponseRate3DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast7Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious7Days NUMERIC(5,4) NULL,
+		ResponseRate7DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast30Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate30DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast90Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate90DayTrend NUMERIC(5,4) NULL,
+		ResponseRateLast180Days NUMERIC(5,4) NULL,
+		ResponseRatePrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate180DayTrend NUMERIC(5,4) NULL,
+		ResponseRate1DayLast30Days NUMERIC(5,4) NULL,
+		ResponseRate1DayPrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate1Day30DayTrend NUMERIC(5,4) NULL,
+		ResponseRate3DayLast30Days NUMERIC(5,4) NULL,
+		ResponseRate3DayPrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate3Day30DayTrend NUMERIC(5,4) NULL,
+		ResponseRate7DayLast30Days NUMERIC(5,4) NULL,
+		ResponseRate7DayPrevious30Days NUMERIC(5,4) NULL,
+		ResponseRate7Day30DayTrend NUMERIC(5,4) NULL,
+		ResponseRate1DayLast90Days NUMERIC(5,4) NULL,
+		ResponseRate1DayPrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate1Day90DayTrend NUMERIC(5,4) NULL,
+		ResponseRate3DayLast90Days NUMERIC(5,4) NULL,
+		ResponseRate3DayPrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate3Day90DayTrend NUMERIC(5,4) NULL,
+		ResponseRate7DayLast90Days NUMERIC(5,4) NULL,
+		ResponseRate7DayPrevious90Days NUMERIC(5,4) NULL,
+		ResponseRate7Day90DayTrend NUMERIC(5,4) NULL,
+		ResponseRate1DayLast180Days NUMERIC(5,4) NULL,
+		ResponseRate1DayPrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate1Day180DayTrend NUMERIC(5,4) NULL,
+		ResponseRate3DayLast180Days NUMERIC(5,4) NULL,
+		ResponseRate3DayPrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate3Day180DayTrend NUMERIC(5,4) NULL,
+		ResponseRate7DayLast180Days NUMERIC(5,4) NULL,
+		ResponseRate7DayPrevious180Days NUMERIC(5,4) NULL,
+		ResponseRate7Day180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast1Day NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious1Day NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast3Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious3Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast7Days NUMERIC(5,4)  NULL,
+		SuggestedAnswerRatePrevious7Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRateLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRatePrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayPrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1Day30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayPrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3Day30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayLast30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayPrevious30Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7Day30DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayPrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1Day90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayPrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3Day90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayLast90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayPrevious90Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7Day90DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1DayPrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate1Day180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3DayPrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate3Day180DayTrend NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayLast180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7DayPrevious180Days NUMERIC(5,4) NULL,
+		SuggestedAnswerRate7Day180DayTrend NUMERIC(5,4) NULL,		
+		AnswerRateLast1Day NUMERIC(5,4) NULL,
+		AnswerRatePrevious1Day NUMERIC(5,4) NULL,
+		AnswerRate1DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast3Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious3Days NUMERIC(5,4) NULL,
+		AnswerRate3DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast7Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious7Days NUMERIC(5,4) NULL,
+		AnswerRate7DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast30Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate30DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast90Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate90DayTrend NUMERIC(5,4) NULL,
+		AnswerRateLast180Days NUMERIC(5,4) NULL,
+		AnswerRatePrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate180DayTrend NUMERIC(5,4) NULL,
+		AnswerRate1DayLast30Days NUMERIC(5,4) NULL,
+		AnswerRate1DayPrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate1Day30DayTrend NUMERIC(5,4) NULL,
+		AnswerRate3DayLast30Days NUMERIC(5,4) NULL,
+		AnswerRate3DayPrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate3Day30DayTrend NUMERIC(5,4) NULL,
+		AnswerRate7DayLast30Days NUMERIC(5,4) NULL,
+		AnswerRate7DayPrevious30Days NUMERIC(5,4) NULL,
+		AnswerRate7Day30DayTrend NUMERIC(5,4) NULL,
+		AnswerRate1DayLast90Days NUMERIC(5,4) NULL,
+		AnswerRate1DayPrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate1Day90DayTrend NUMERIC(5,4) NULL,
+		AnswerRate3DayLast90Days NUMERIC(5,4) NULL,
+		AnswerRate3DayPrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate3Day90DayTrend NUMERIC(5,4) NULL,
+		AnswerRate7DayLast90Days NUMERIC(5,4) NULL,
+		AnswerRate7DayPrevious90Days NUMERIC(5,4) NULL,
+		AnswerRate7Day90DayTrend NUMERIC(5,4) NULL,
+		AnswerRate1DayLast180Days NUMERIC(5,4) NULL,
+		AnswerRate1DayPrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate1Day180DayTrend NUMERIC(5,4) NULL,
+		AnswerRate3DayLast180Days NUMERIC(5,4) NULL,
+		AnswerRate3DayPrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate3Day180DayTrend NUMERIC(5,4) NULL,
+		AnswerRate7DayLast180Days NUMERIC(5,4) NULL,
+		AnswerRate7DayPrevious180Days NUMERIC(5,4) NULL,
+		AnswerRate7Day180DayTrend NUMERIC(5,4) NULL,
+		AverageResponseTimeLast1Day INT NULL,
+		AverageResponseTimePrevious1Day INT NULL,
+		AverageResponseTime1DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast3Days INT NULL,
+		AverageResponseTimePrevious3Days INT NULL,
+		AverageResponseTime3DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast7Days INT NULL,
+		AverageResponseTimePrevious7Days INT NULL,
+		AverageResponseTime7DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast30Days INT NULL,
+		AverageResponseTimePrevious30Days INT NULL,
+		AverageResponseTime30DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast90Days INT NULL,
+		AverageResponseTimePrevious90Days INT NULL,
+		AverageResponseTime90DayTrend NUMERIC(9,4) NULL,
+		AverageResponseTimeLast180Days INT NULL,
+		AverageResponseTimePrevious180Days INT NULL,
+		AverageResponseTime180DayTrend NUMERIC(9,4) NULL,			
+		AverageSuggestedAnswerTimeLast1Day INT NULL,
+		AverageSuggestedAnswerTimePrevious1Day INT NULL,
+		AverageSuggestedAnswerTime1DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast3Days INT NULL,
+		AverageSuggestedAnswerTimePrevious3Days INT NULL,
+		AverageSuggestedAnswerTime3DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast7Days INT NULL,
+		AverageSuggestedAnswerTimePrevious7Days INT NULL,
+		AverageSuggestedAnswerTime7DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast30Days INT NULL,
+		AverageSuggestedAnswerTimePrevious30Days INT NULL,
+		AverageSuggestedAnswerTime30DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast90Days INT NULL,
+		AverageSuggestedAnswerTimePrevious90Days INT NULL,
+		AverageSuggestedAnswerTime90DayTrend NUMERIC(9,4) NULL,
+		AverageSuggestedAnswerTimeLast180Days INT NULL,
+		AverageSuggestedAnswerTimePrevious180Days INT NULL,
+		AverageSuggestedAnswerTime180DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast1Day INT NULL,
+		AverageAnswerTimePrevious1Day INT NULL,
+		AverageAnswerTime1DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast3Days INT NULL,
+		AverageAnswerTimePrevious3Days INT NULL,
+		AverageAnswerTime3DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast7Days INT NULL,
+		AverageAnswerTimePrevious7Days INT NULL,
+		AverageAnswerTime7DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast30Days INT NULL,
+		AverageAnswerTimePrevious30Days INT NULL,
+		AverageAnswerTime30DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast90Days INT NULL,
+		AverageAnswerTimePrevious90Days INT NULL,
+		AverageAnswerTime90DayTrend NUMERIC(9,4) NULL,
+		AverageAnswerTimeLast180Days INT NULL,
+		AverageAnswerTimePrevious180Days INT NULL,
+		AverageAnswerTime180DayTrend NUMERIC(9,4) NULL,		
+		ThreadAuthorCountLast1Day INT NOT NULL,
+		ThreadAuthorCountPrevious1Day INT NOT NULL,
+		ThreadAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast3Days INT NOT NULL,
+		ThreadAuthorCountPrevious3Days INT NOT NULL,
+		ThreadAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast7Days INT NOT NULL,
+		ThreadAuthorCountPrevious7Days INT NOT NULL,
+		ThreadAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast30Days INT NOT NULL,
+		ThreadAuthorCountPrevious30Days INT NOT NULL,
+		ThreadAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast90Days INT NOT NULL,
+		ThreadAuthorCountPrevious90Days INT NOT NULL,
+		ThreadAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ThreadAuthorCountLast180Days INT NOT NULL,
+		ThreadAuthorCountPrevious180Days INT NOT NULL,
+		ThreadAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,	
+		ReplyAuthorCountLast1Day INT NOT NULL,
+		ReplyAuthorCountPrevious1Day INT NOT NULL,
+		ReplyAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast3Days INT NOT NULL,
+		ReplyAuthorCountPrevious3Days INT NOT NULL,
+		ReplyAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast7Days INT NOT NULL,
+		ReplyAuthorCountPrevious7Days INT NOT NULL,
+		ReplyAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast30Days INT NOT NULL,
+		ReplyAuthorCountPrevious30Days INT NOT NULL,
+		ReplyAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast90Days INT NOT NULL,
+		ReplyAuthorCountPrevious90Days INT NOT NULL,
+		ReplyAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		ReplyAuthorCountLast180Days INT NOT NULL,
+		ReplyAuthorCountPrevious180Days INT NOT NULL,
+		ReplyAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,			
+		SuggestedAnswerAuthorCountLast1Day INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious1Day INT NOT NULL,
+		SuggestedAnswerAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast3Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious3Days INT NOT NULL,
+		SuggestedAnswerAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast7Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious7Days INT NOT NULL,
+		SuggestedAnswerAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast30Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious30Days INT NOT NULL,
+		SuggestedAnswerAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast90Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious90Days INT NOT NULL,
+		SuggestedAnswerAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		SuggestedAnswerAuthorCountLast180Days INT NOT NULL,
+		SuggestedAnswerAuthorCountPrevious180Days INT NOT NULL,
+		SuggestedAnswerAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,	
+		AnswerAuthorCountLast1Day INT NOT NULL,
+		AnswerAuthorCountPrevious1Day INT NOT NULL,
+		AnswerAuthorCount1DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast3Days INT NOT NULL,
+		AnswerAuthorCountPrevious3Days INT NOT NULL,
+		AnswerAuthorCount3DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast7Days INT NOT NULL,
+		AnswerAuthorCountPrevious7Days INT NOT NULL,
+		AnswerAuthorCount7DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast30Days INT NOT NULL,
+		AnswerAuthorCountPrevious30Days INT NOT NULL,
+		AnswerAuthorCount30DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast90Days INT NOT NULL,
+		AnswerAuthorCountPrevious90Days INT NOT NULL,
+		AnswerAuthorCount90DayTrend NUMERIC(9,4) NOT NULL,
+		AnswerAuthorCountLast180Days INT NOT NULL,
+		AnswerAuthorCountPrevious180Days INT NOT NULL,
+		AnswerAuthorCount180DayTrend NUMERIC(9,4) NOT NULL,
+		CONSTRAINT PK_FactForumB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumB ADD  CONSTRAINT FK_FactForumB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumB ADD  CONSTRAINT FK_FactForumB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumB ADD  CONSTRAINT FK_FactForumB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumB ADD  CONSTRAINT FK_FactForumB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumB ADD  CONSTRAINT FK_FactForumB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactForum', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactForum FOR dbo.FactForumA'
+END
+
+IF OBJECT_ID(N'dbo.FactForumOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactForumOld FOR dbo.FactForumB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactForum3', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactForum3] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactForum3], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactForum3] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactForumNewIndexes]
+* Previous: [5.0-FactForum3]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForumNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForum3');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactForumNewIndexes] as previous patch [5.0-FactForum3] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactForumNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactForumA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactForumA', 'FactForumA', 'PRIMARY KEY CLUSTERED', 'FactForumA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactForumA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactForumB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactForumB', 'FactForumB', 'PRIMARY KEY CLUSTERED', 'FactForumB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactForumB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactForumNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactForumNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactForumNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactForumNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactForumThread]
+* Previous: [5.0-FactForumNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForumThread');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForumNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactForumThread] as previous patch [5.0-FactForumNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactForumThread] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactForumThreadA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactForumThreadA
+	(
+		ContentKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		HasReply BIT NOT NULL,
+		SecondsToFirstReply INT NULL,
+		HasSuggestedAnswer BIT NOT NULL,
+		SecondsToFirstSuggestedAnswer INT NULL,
+		HasVerifiedAnswer BIT NOT NULL,
+		SecondsToFirstVerifiedAnswer INT NULL,
+		HasNonOriginatorReply BIT NOT NULL,
+		SecondsToFirstNonOriginatorReply INT NULL,
+		HasNonOriginatorSuggestedAnswer BIT NOT NULL,
+		SecondsToFirstNonOriginatorSuggestedAnswer INT NULL,
+		HasNonOriginatorVerifiedAnswer BIT NOT NULL,
+		SecondsToFirstNonOriginatorVerifiedAnswer INT NULL,
+		CONSTRAINT PK_FactForumThreadA PRIMARY KEY CLUSTERED 
+		(
+			ContentKey
+		)
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadA ADD CONSTRAINT FK_FactForumThreadA_DimContent FOREIGN KEY (ContentKey)
+	REFERENCES dbo.DimContent (ContentKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadA ADD CONSTRAINT FK_FactForumThreadA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadA ADD CONSTRAINT FK_FactForumThreadA_CreatedDateKey_DimDate FOREIGN KEY(CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadA ADD CONSTRAINT FK_FactForumThreadA_CreatedTimeOfDayKey_DimTimeOfDay FOREIGN KEY(CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactForumThreadB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactForumThreadB
+	(
+		ContentKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		HasReply BIT NOT NULL,
+		SecondsToFirstReply INT NULL,
+		HasSuggestedAnswer BIT NOT NULL,
+		SecondsToFirstSuggestedAnswer INT NULL,
+		HasVerifiedAnswer BIT NOT NULL,
+		SecondsToFirstVerifiedAnswer INT NULL,
+		HasNonOriginatorReply BIT NOT NULL,
+		SecondsToFirstNonOriginatorReply INT NULL,
+		HasNonOriginatorSuggestedAnswer BIT NOT NULL,
+		SecondsToFirstNonOriginatorSuggestedAnswer INT NULL,
+		HasNonOriginatorVerifiedAnswer BIT NOT NULL,
+		SecondsToFirstNonOriginatorVerifiedAnswer INT NULL,
+		CONSTRAINT PK_FactForumThreadB PRIMARY KEY CLUSTERED 
+		(
+			ContentKey
+		)
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadB ADD CONSTRAINT FK_FactForumThreadB_DimContent FOREIGN KEY (ContentKey)
+	REFERENCES dbo.DimContent (ContentKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadB ADD CONSTRAINT FK_FactForumThreadB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadB ADD CONSTRAINT FK_FactForumThreadB_CreatedDateKey_DimDate FOREIGN KEY(CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactForumThreadB ADD CONSTRAINT FK_FactForumThreadB_CreatedTimeOfDayKey_DimTimeOfDay FOREIGN KEY(CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactForumThread', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactForumThread FOR dbo.FactForumThreadA'
+END
+
+IF OBJECT_ID(N'dbo.FactForumThreadOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactForumThreadOld FOR dbo.FactForumThreadB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactForumThread', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactForumThread] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactForumThread], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactForumThread] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactForumThreadNewIndexes]
+* Previous: [5.0-FactForumThread]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForumThreadNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForumThread');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactForumThreadNewIndexes] as previous patch [5.0-FactForumThread] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactForumThreadNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactForumThreadA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactForumThreadA', 'FactForumThreadA', 'PRIMARY KEY CLUSTERED', 'FactForumThreadA', 'ContentKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactForumThreadA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumThreadA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumThreadA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactForumThreadA_CreatedDateKey_ApplicationKey_Inc_All', 'FactForumThreadA', 'NONCLUSTERED', 'FactForumThreadA', 'CreatedDateKey,ApplicationKey', 'HasReply,SecondsToFirstReply,HasSuggestedAnswer,SecondsToFirstSuggestedAnswer,HasVerifiedAnswer,SecondsToFirstVerifiedAnswer,HasNonOriginatorReply,SecondsToFirstNonOriginatorReply,HasNonOriginatorSuggestedAnswer,SecondsToFirstNonOriginatorSuggestedAnswer,HasNonOriginatorVerifiedAnswer,SecondsToFirstNonOriginatorVerifiedAnswer'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactForumThreadA_CreatedDateKey_ApplicationKey_Inc_All')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactForumThreadA_CreatedDateKey_ApplicationKey_Inc_All'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactForumThreadA_CreatedDateKey_ApplicationKey_Inc_All'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactForumThreadA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactForumThreadB', 'FactForumThreadB', 'PRIMARY KEY CLUSTERED', 'FactForumThreadB', 'ContentKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactForumThreadB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumThreadB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactForumThreadB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactForumThreadB_CreatedDateKey_ApplicationKey_Inc_All', 'FactForumThreadB', 'NONCLUSTERED', 'FactForumThreadB', 'CreatedDateKey,ApplicationKey', 'HasReply,SecondsToFirstReply,HasSuggestedAnswer,SecondsToFirstSuggestedAnswer,HasVerifiedAnswer,SecondsToFirstVerifiedAnswer,HasNonOriginatorReply,SecondsToFirstNonOriginatorReply,HasNonOriginatorSuggestedAnswer,SecondsToFirstNonOriginatorSuggestedAnswer,HasNonOriginatorVerifiedAnswer,SecondsToFirstNonOriginatorVerifiedAnswer'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactForumThreadB_CreatedDateKey_ApplicationKey_Inc_All')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactForumThreadB_CreatedDateKey_ApplicationKey_Inc_All'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactForumThreadB_CreatedDateKey_ApplicationKey_Inc_All'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactForumThreadNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactForumThreadNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactForumThreadNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactForumThreadNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactBlog2]
+* Previous: [5.0-FactForumThreadNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactBlog2');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactForumThreadNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactBlog2] as previous patch [5.0-FactForumThreadNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactBlog2] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactBlogA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactBlogA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalPostCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewPostCountLast1Day INT NOT NULL,
+		NewPostCountPrevious1Day INT NOT NULL,
+		NewPostCount1DayTrend NUMERIC(9,4),
+		NewPostCountLast3Days INT NOT NULL,
+		NewPostCountPrevious3Days INT NOT NULL,
+		NewPostCount3DayTrend NUMERIC(9,4),
+		NewPostCountLast7Days INT NOT NULL,
+		NewPostCountPrevious7Days INT NOT NULL,
+		NewPostCount7DayTrend NUMERIC(9,4),
+		NewPostCountLast30Days INT NOT NULL,
+		NewPostCountPrevious30Days INT NOT NULL,
+		NewPostCount30DayTrend NUMERIC(9,4),
+		NewPostCountLast90Days INT NOT NULL,
+		NewPostCountPrevious90Days INT NOT NULL,
+		NewPostCount90DayTrend NUMERIC(9,4),
+		NewPostCountLast180Days INT NOT NULL,
+		NewPostCountPrevious180Days INT NOT NULL,
+		NewPostCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactBlogA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogA ADD  CONSTRAINT FK_FactBlogA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogA ADD  CONSTRAINT FK_FactBlogA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogA ADD  CONSTRAINT FK_FactBlogA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogA ADD  CONSTRAINT FK_FactBlogA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogA ADD  CONSTRAINT FK_FactBlogA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactBlogB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactBlogB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalPostCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewPostCountLast1Day INT NOT NULL,
+		NewPostCountPrevious1Day INT NOT NULL,
+		NewPostCount1DayTrend NUMERIC(9,4),
+		NewPostCountLast3Days INT NOT NULL,
+		NewPostCountPrevious3Days INT NOT NULL,
+		NewPostCount3DayTrend NUMERIC(9,4),
+		NewPostCountLast7Days INT NOT NULL,
+		NewPostCountPrevious7Days INT NOT NULL,
+		NewPostCount7DayTrend NUMERIC(9,4),
+		NewPostCountLast30Days INT NOT NULL,
+		NewPostCountPrevious30Days INT NOT NULL,
+		NewPostCount30DayTrend NUMERIC(9,4),
+		NewPostCountLast90Days INT NOT NULL,
+		NewPostCountPrevious90Days INT NOT NULL,
+		NewPostCount90DayTrend NUMERIC(9,4),
+		NewPostCountLast180Days INT NOT NULL,
+		NewPostCountPrevious180Days INT NOT NULL,
+		NewPostCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactBlogB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogB ADD  CONSTRAINT FK_FactBlogB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogB ADD  CONSTRAINT FK_FactBlogB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogB ADD  CONSTRAINT FK_FactBlogB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogB ADD  CONSTRAINT FK_FactBlogB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactBlogB ADD  CONSTRAINT FK_FactBlogB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactBlog', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactBlog FOR dbo.FactBlogA'
+END
+
+IF OBJECT_ID(N'dbo.FactBlogOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactBlogOld FOR dbo.FactBlogB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactBlog2', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactBlog2] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactBlog2], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactBlog2] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactBlogNewIndexes]
+* Previous: [5.0-FactBlog2]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactBlogNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactBlog2');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactBlogNewIndexes] as previous patch [5.0-FactBlog2] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactBlogNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactBlogA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactBlogA', 'FactBlogA', 'PRIMARY KEY CLUSTERED', 'FactBlogA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactBlogA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactBlogA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactBlogA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactBlogB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactBlogB', 'FactBlogB', 'PRIMARY KEY CLUSTERED', 'FactBlogB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactBlogB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactBlogB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactBlogB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactBlogNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactBlogNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactBlogNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactBlogNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactMediaGallery]
+* Previous: [5.0-FactBlogNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactMediaGallery');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactBlogNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactMediaGallery] as previous patch [5.0-FactBlogNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactMediaGallery] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactMediaGalleryA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactMediaGalleryA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalFileCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewFileCountLast1Day INT NOT NULL,
+		NewFileCountPrevious1Day INT NOT NULL,
+		NewFileCount1DayTrend NUMERIC(9,4),
+		NewFileCountLast3Days INT NOT NULL,
+		NewFileCountPrevious3Days INT NOT NULL,
+		NewFileCount3DayTrend NUMERIC(9,4),
+		NewFileCountLast7Days INT NOT NULL,
+		NewFileCountPrevious7Days INT NOT NULL,
+		NewFileCount7DayTrend NUMERIC(9,4),
+		NewFileCountLast30Days INT NOT NULL,
+		NewFileCountPrevious30Days INT NOT NULL,
+		NewFileCount30DayTrend NUMERIC(9,4),
+		NewFileCountLast90Days INT NOT NULL,
+		NewFileCountPrevious90Days INT NOT NULL,
+		NewFileCount90DayTrend NUMERIC(9,4),
+		NewFileCountLast180Days INT NOT NULL,
+		NewFileCountPrevious180Days INT NOT NULL,
+		NewFileCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,	
+		DownloadCountLast1Day INT NOT NULL,
+		DownloadCountPrevious1Day INT NOT NULL,
+		DownloadCount1DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast3Days INT NOT NULL,
+		DownloadCountPrevious3Days INT NOT NULL,
+		DownloadCount3DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast7Days INT NOT NULL,
+		DownloadCountPrevious7Days INT NOT NULL,
+		DownloadCount7DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast30Days INT NOT NULL,
+		DownloadCountPrevious30Days INT NOT NULL,
+		DownloadCount30DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast90Days INT NOT NULL,
+		DownloadCountPrevious90Days INT NOT NULL,
+		DownloadCount90DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast180Days INT NOT NULL,
+		DownloadCountPrevious180Days INT NOT NULL,
+		DownloadCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactMediaGalleryA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryA ADD  CONSTRAINT FK_FactMediaGalleryA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryA ADD  CONSTRAINT FK_FactMediaGalleryA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryA ADD  CONSTRAINT FK_FactMediaGalleryA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryA ADD  CONSTRAINT FK_FactMediaGalleryA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryA ADD  CONSTRAINT FK_FactMediaGalleryA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactMediaGalleryB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactMediaGalleryB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalFileCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewFileCountLast1Day INT NOT NULL,
+		NewFileCountPrevious1Day INT NOT NULL,
+		NewFileCount1DayTrend NUMERIC(9,4),
+		NewFileCountLast3Days INT NOT NULL,
+		NewFileCountPrevious3Days INT NOT NULL,
+		NewFileCount3DayTrend NUMERIC(9,4),
+		NewFileCountLast7Days INT NOT NULL,
+		NewFileCountPrevious7Days INT NOT NULL,
+		NewFileCount7DayTrend NUMERIC(9,4),
+		NewFileCountLast30Days INT NOT NULL,
+		NewFileCountPrevious30Days INT NOT NULL,
+		NewFileCount30DayTrend NUMERIC(9,4),
+		NewFileCountLast90Days INT NOT NULL,
+		NewFileCountPrevious90Days INT NOT NULL,
+		NewFileCount90DayTrend NUMERIC(9,4),
+		NewFileCountLast180Days INT NOT NULL,
+		NewFileCountPrevious180Days INT NOT NULL,
+		NewFileCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast1Day INT NOT NULL,
+		DownloadCountPrevious1Day INT NOT NULL,
+		DownloadCount1DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast3Days INT NOT NULL,
+		DownloadCountPrevious3Days INT NOT NULL,
+		DownloadCount3DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast7Days INT NOT NULL,
+		DownloadCountPrevious7Days INT NOT NULL,
+		DownloadCount7DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast30Days INT NOT NULL,
+		DownloadCountPrevious30Days INT NOT NULL,
+		DownloadCount30DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast90Days INT NOT NULL,
+		DownloadCountPrevious90Days INT NOT NULL,
+		DownloadCount90DayTrend NUMERIC(9,4) NOT NULL,
+		DownloadCountLast180Days INT NOT NULL,
+		DownloadCountPrevious180Days INT NOT NULL,
+		DownloadCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactMediaGalleryB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryB ADD  CONSTRAINT FK_FactMediaGalleryB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryB ADD  CONSTRAINT FK_FactMediaGalleryB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryB ADD  CONSTRAINT FK_FactMediaGalleryB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryB ADD  CONSTRAINT FK_FactMediaGalleryB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactMediaGalleryB ADD  CONSTRAINT FK_FactMediaGalleryB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactMediaGallery', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactMediaGallery FOR dbo.FactMediaGalleryA'
+END
+
+IF OBJECT_ID(N'dbo.FactMediaGalleryOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactMediaGalleryOld FOR dbo.FactMediaGalleryB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactMediaGallery', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactMediaGallery] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactMediaGallery], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactMediaGallery] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactMediaGalleryNewIndexes]
+* Previous: [5.0-FactMediaGallery]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactMediaGalleryNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactMediaGallery');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactMediaGalleryNewIndexes] as previous patch [5.0-FactMediaGallery] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactMediaGalleryNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactMediaGalleryA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactMediaGalleryA', 'FactMediaGalleryA', 'PRIMARY KEY CLUSTERED', 'FactMediaGalleryA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactMediaGalleryA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactMediaGalleryA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactMediaGalleryA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactMediaGalleryB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactMediaGalleryB', 'FactMediaGalleryB', 'PRIMARY KEY CLUSTERED', 'FactMediaGalleryB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactMediaGalleryB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactMediaGalleryB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactMediaGalleryB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactMediaGalleryNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactMediaGalleryNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactMediaGalleryNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactMediaGalleryNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactWiki]
+* Previous: [5.0-FactMediaGalleryNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactWiki');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactMediaGalleryNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactWiki] as previous patch [5.0-FactMediaGalleryNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactWiki] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactWikiA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactWikiA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalPageCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewPageCountLast1Day INT NOT NULL,
+		NewPageCountPrevious1Day INT NOT NULL,
+		NewPageCount1DayTrend NUMERIC(9,4),
+		NewPageCountLast3Days INT NOT NULL,
+		NewPageCountPrevious3Days INT NOT NULL,
+		NewPageCount3DayTrend NUMERIC(9,4),
+		NewPageCountLast7Days INT NOT NULL,
+		NewPageCountPrevious7Days INT NOT NULL,
+		NewPageCount7DayTrend NUMERIC(9,4),
+		NewPageCountLast30Days INT NOT NULL,
+		NewPageCountPrevious30Days INT NOT NULL,
+		NewPageCount30DayTrend NUMERIC(9,4),
+		NewPageCountLast90Days INT NOT NULL,
+		NewPageCountPrevious90Days INT NOT NULL,
+		NewPageCount90DayTrend NUMERIC(9,4),
+		NewPageCountLast180Days INT NOT NULL,
+		NewPageCountPrevious180Days INT NOT NULL,
+		NewPageCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactWikiA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiA ADD  CONSTRAINT FK_FactWikiA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiA ADD  CONSTRAINT FK_FactWikiA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiA ADD  CONSTRAINT FK_FactWikiA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiA ADD  CONSTRAINT FK_FactWikiA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiA ADD  CONSTRAINT FK_FactWikiA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactWikiB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactWikiB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalPageCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewPageCountLast1Day INT NOT NULL,
+		NewPageCountPrevious1Day INT NOT NULL,
+		NewPageCount1DayTrend NUMERIC(9,4),
+		NewPageCountLast3Days INT NOT NULL,
+		NewPageCountPrevious3Days INT NOT NULL,
+		NewPageCount3DayTrend NUMERIC(9,4),
+		NewPageCountLast7Days INT NOT NULL,
+		NewPageCountPrevious7Days INT NOT NULL,
+		NewPageCount7DayTrend NUMERIC(9,4),
+		NewPageCountLast30Days INT NOT NULL,
+		NewPageCountPrevious30Days INT NOT NULL,
+		NewPageCount30DayTrend NUMERIC(9,4),
+		NewPageCountLast90Days INT NOT NULL,
+		NewPageCountPrevious90Days INT NOT NULL,
+		NewPageCount90DayTrend NUMERIC(9,4),
+		NewPageCountLast180Days INT NOT NULL,
+		NewPageCountPrevious180Days INT NOT NULL,
+		NewPageCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactWikiB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiB ADD  CONSTRAINT FK_FactWikiB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiB ADD  CONSTRAINT FK_FactWikiB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiB ADD  CONSTRAINT FK_FactWikiB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiB ADD  CONSTRAINT FK_FactWikiB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactWikiB ADD  CONSTRAINT FK_FactWikiB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactWiki', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactWiki FOR dbo.FactWikiA'
+END
+
+IF OBJECT_ID(N'dbo.FactWikiOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactWikiOld FOR dbo.FactWikiB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactWiki', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactWiki] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactWiki], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactWiki] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactWikiNewIndexes]
+* Previous: [5.0-FactWiki]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactWikiNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactWiki');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactWikiNewIndexes] as previous patch [5.0-FactWiki] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactWikiNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactWikiA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactWikiA', 'FactWikiA', 'PRIMARY KEY CLUSTERED', 'FactWikiA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactWikiA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactWikiA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactWikiA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactWikiB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactWikiB', 'FactWikiB', 'PRIMARY KEY CLUSTERED', 'FactWikiB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactWikiB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactWikiB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactWikiB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactWikiNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactWikiNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactWikiNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactWikiNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactIdeation]
+* Previous: [5.0-FactWikiNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactIdeation');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactWikiNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactIdeation] as previous patch [5.0-FactWikiNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactIdeation] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactIdeationA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactIdeationA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalIdeaCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewIdeaCountLast1Day INT NOT NULL,
+		NewIdeaCountPrevious1Day INT NOT NULL,
+		NewIdeaCount1DayTrend NUMERIC(9,4),
+		NewIdeaCountLast3Days INT NOT NULL,
+		NewIdeaCountPrevious3Days INT NOT NULL,
+		NewIdeaCount3DayTrend NUMERIC(9,4),
+		NewIdeaCountLast7Days INT NOT NULL,
+		NewIdeaCountPrevious7Days INT NOT NULL,
+		NewIdeaCount7DayTrend NUMERIC(9,4),
+		NewIdeaCountLast30Days INT NOT NULL,
+		NewIdeaCountPrevious30Days INT NOT NULL,
+		NewIdeaCount30DayTrend NUMERIC(9,4),
+		NewIdeaCountLast90Days INT NOT NULL,
+		NewIdeaCountPrevious90Days INT NOT NULL,
+		NewIdeaCount90DayTrend NUMERIC(9,4),
+		NewIdeaCountLast180Days INT NOT NULL,
+		NewIdeaCountPrevious180Days INT NOT NULL,
+		NewIdeaCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactIdeationA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationA ADD  CONSTRAINT FK_FactIdeationA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationA ADD  CONSTRAINT FK_FactIdeationA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationA ADD  CONSTRAINT FK_FactIdeationA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationA ADD  CONSTRAINT FK_FactIdeationA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationA ADD  CONSTRAINT FK_FactIdeationA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactIdeationB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactIdeationB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalIdeaCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewIdeaCountLast1Day INT NOT NULL,
+		NewIdeaCountPrevious1Day INT NOT NULL,
+		NewIdeaCount1DayTrend NUMERIC(9,4),
+		NewIdeaCountLast3Days INT NOT NULL,
+		NewIdeaCountPrevious3Days INT NOT NULL,
+		NewIdeaCount3DayTrend NUMERIC(9,4),
+		NewIdeaCountLast7Days INT NOT NULL,
+		NewIdeaCountPrevious7Days INT NOT NULL,
+		NewIdeaCount7DayTrend NUMERIC(9,4),
+		NewIdeaCountLast30Days INT NOT NULL,
+		NewIdeaCountPrevious30Days INT NOT NULL,
+		NewIdeaCount30DayTrend NUMERIC(9,4),
+		NewIdeaCountLast90Days INT NOT NULL,
+		NewIdeaCountPrevious90Days INT NOT NULL,
+		NewIdeaCount90DayTrend NUMERIC(9,4),
+		NewIdeaCountLast180Days INT NOT NULL,
+		NewIdeaCountPrevious180Days INT NOT NULL,
+		NewIdeaCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactIdeationB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationB ADD  CONSTRAINT FK_FactIdeationB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationB ADD  CONSTRAINT FK_FactIdeationB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationB ADD  CONSTRAINT FK_FactIdeationB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationB ADD  CONSTRAINT FK_FactIdeationB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactIdeationB ADD  CONSTRAINT FK_FactIdeationB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactIdeation', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactIdeation FOR dbo.FactIdeationA'
+END
+
+IF OBJECT_ID(N'dbo.FactIdeationOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactIdeationOld FOR dbo.FactIdeationB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactIdeation', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactIdeation] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactIdeation], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactIdeation] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactIdeationNewIndexes]
+* Previous: [5.0-FactIdeation]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactIdeationNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactIdeation');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactIdeationNewIndexes] as previous patch [5.0-FactIdeation] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactIdeationNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactIdeationA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactIdeationA', 'FactIdeationA', 'PRIMARY KEY CLUSTERED', 'FactIdeationA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactIdeationA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactIdeationA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactIdeationA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactIdeationB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactIdeationB', 'FactIdeationB', 'PRIMARY KEY CLUSTERED', 'FactIdeationB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactIdeationB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactIdeationB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactIdeationB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactIdeationNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactIdeationNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactIdeationNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactIdeationNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactCalendar]
+* Previous: [5.0-FactIdeationNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactCalendar');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactIdeationNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactCalendar] as previous patch [5.0-FactIdeationNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactCalendar] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactCalendarA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactCalendarA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalEventCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewEventCountLast1Day INT NOT NULL,
+		NewEventCountPrevious1Day INT NOT NULL,
+		NewEventCount1DayTrend NUMERIC(9,4),
+		NewEventCountLast3Days INT NOT NULL,
+		NewEventCountPrevious3Days INT NOT NULL,
+		NewEventCount3DayTrend NUMERIC(9,4),
+		NewEventCountLast7Days INT NOT NULL,
+		NewEventCountPrevious7Days INT NOT NULL,
+		NewEventCount7DayTrend NUMERIC(9,4),
+		NewEventCountLast30Days INT NOT NULL,
+		NewEventCountPrevious30Days INT NOT NULL,
+		NewEventCount30DayTrend NUMERIC(9,4),
+		NewEventCountLast90Days INT NOT NULL,
+		NewEventCountPrevious90Days INT NOT NULL,
+		NewEventCount90DayTrend NUMERIC(9,4),
+		NewEventCountLast180Days INT NOT NULL,
+		NewEventCountPrevious180Days INT NOT NULL,
+		NewEventCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactCalendarA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarA ADD  CONSTRAINT FK_FactCalendarA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarA ADD  CONSTRAINT FK_FactCalendarA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarA ADD  CONSTRAINT FK_FactCalendarA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarA ADD  CONSTRAINT FK_FactCalendarA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarA ADD  CONSTRAINT FK_FactCalendarA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactCalendarB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactCalendarB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalEventCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewEventCountLast1Day INT NOT NULL,
+		NewEventCountPrevious1Day INT NOT NULL,
+		NewEventCount1DayTrend NUMERIC(9,4),
+		NewEventCountLast3Days INT NOT NULL,
+		NewEventCountPrevious3Days INT NOT NULL,
+		NewEventCount3DayTrend NUMERIC(9,4),
+		NewEventCountLast7Days INT NOT NULL,
+		NewEventCountPrevious7Days INT NOT NULL,
+		NewEventCount7DayTrend NUMERIC(9,4),
+		NewEventCountLast30Days INT NOT NULL,
+		NewEventCountPrevious30Days INT NOT NULL,
+		NewEventCount30DayTrend NUMERIC(9,4),
+		NewEventCountLast90Days INT NOT NULL,
+		NewEventCountPrevious90Days INT NOT NULL,
+		NewEventCount90DayTrend NUMERIC(9,4),
+		NewEventCountLast180Days INT NOT NULL,
+		NewEventCountPrevious180Days INT NOT NULL,
+		NewEventCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactCalendarB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarB ADD  CONSTRAINT FK_FactCalendarB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarB ADD  CONSTRAINT FK_FactCalendarB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarB ADD  CONSTRAINT FK_FactCalendarB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarB ADD  CONSTRAINT FK_FactCalendarB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactCalendarB ADD  CONSTRAINT FK_FactCalendarB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactCalendar', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactCalendar FOR dbo.FactCalendarA'
+END
+
+IF OBJECT_ID(N'dbo.FactCalendarOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactCalendarOld FOR dbo.FactCalendarB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactCalendar', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactCalendar] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactCalendar], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactCalendar] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactCalendarNewIndexes]
+* Previous: [5.0-FactCalendar]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactCalendarNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactCalendar');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactCalendarNewIndexes] as previous patch [5.0-FactCalendar] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactCalendarNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactCalendarA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactCalendarA', 'FactCalendarA', 'PRIMARY KEY CLUSTERED', 'FactCalendarA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactCalendarA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactCalendarA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactCalendarA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactCalendarB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactCalendarB', 'FactCalendarB', 'PRIMARY KEY CLUSTERED', 'FactCalendarB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactCalendarB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactCalendarB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactCalendarB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactCalendarNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactCalendarNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactCalendarNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactCalendarNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-DimActivityType-IsInteractionActivity]
+* Previous: [5.0-FactCalendarNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'DimActivityType-IsInteractionActivity');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactCalendarNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-DimActivityType-IsInteractionActivity] as previous patch [5.0-FactCalendarNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-DimActivityType-IsInteractionActivity] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.StagingActivityTypes', 'U') IS NOT NULL 
+	AND COL_LENGTH(N'dbo.StagingActivityTypes', N'IsInteractionActivity') IS NULL
+BEGIN
+	EXEC sp_executesql N'TRUNCATE TABLE dbo.StagingActivityTypes
+	
+	ALTER TABLE dbo.StagingActivityTypes ADD IsInteractionActivity BIT NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.DimActivityType', 'U') IS NOT NULL 
+	AND COL_LENGTH(N'dbo.DimActivityType', N'IsInteractionActivity') IS NULL
+BEGIN
+	EXEC sp_executesql N'ALTER TABLE dbo.DimActivityType ADD IsInteractionActivity BIT NOT NULL DEFAULT(0)'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'DimActivityType-IsInteractionActivity', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-DimActivityType-IsInteractionActivity] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-DimActivityType-IsInteractionActivity], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-DimActivityType-IsInteractionActivity] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactGroupTotals]
+* Previous: [5.0-DimActivityType-IsInteractionActivity]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactGroupTotals');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'DimActivityType-IsInteractionActivity');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactGroupTotals] as previous patch [5.0-DimActivityType-IsInteractionActivity] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactGroupTotals] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactContainer', N'U') IS NOT NULL
+BEGIN
+	IF COL_LENGTH(N'dbo.FactContainer', N'LatestContentCreatedDateUtc') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN LatestContentCreatedDateUtc'
+	END
+	IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(N'dbo.FactContainer', N'U') AND name = 'FK_FactContainer_DimDate_LatestContentCreated')
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer
+		DROP CONSTRAINT FK_FactContainer_DimDate_LatestContentCreated'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'LatestContentCreatedDateKey') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN LatestContentCreatedDateKey'
+	END
+	IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(N'dbo.FactContainer', N'U') AND name = 'FK_FactContainer_DimTimeOfDay_LatestContentCreated')
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer
+		DROP CONSTRAINT FK_FactContainer_DimTimeOfDay_LatestContentCreated'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'LatestContentCreatedTimeOfDayKey') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN LatestContentCreatedTimeOfDayKey'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'LatestContentActivityDateUtc') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN LatestContentActivityDateUtc'
+	END
+	IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(N'dbo.FactContainer', N'U') AND name = 'FK_FactContainer_DimDate_LatestContentActivity')
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer
+		DROP CONSTRAINT FK_FactContainer_DimDate_LatestContentActivity'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'LatestContentActivityDateKey') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN LatestContentActivityDateKey'
+	END
+	IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(N'dbo.FactContainer', N'U') AND name = 'FK_FactContainer_DimTimeOfDay_LatestContentActivity')
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer
+		DROP CONSTRAINT FK_FactContainer_DimTimeOfDay_LatestContentActivity'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'LatestContentActivityTimeOfDayKey') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN LatestContentActivityTimeOfDayKey'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'ActiveActivitiesTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN ActiveActivitiesTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'EngagerActivitiesTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN EngagerActivitiesTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'ContributorActivitiesTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN ContributorActivitiesTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'OriginatorActivitiesTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN OriginatorActivitiesTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'ActiveUsersTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN ActiveUsersTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'ViewsTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN ViewsTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'ViewersTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN ViewersTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'ContentTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN ContentTotal'
+	END
+	IF COL_LENGTH(N'dbo.FactContainer', N'ActiveContentTotal') IS NOT NULL
+	BEGIN
+		EXEC sp_executesql N'
+		ALTER TABLE dbo.FactContainer 
+		DROP COLUMN ActiveContentTotal'
+	END
+END
+
+
+IF OBJECT_ID(N'dbo.FactGroupA', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA 
+	ADD LatestContentCreatedDateUtc DATETIME2(0) NULL,
+		LatestContentCreatedDateKey INT NULL,
+		LatestContentCreatedTimeOfDayKey INT NULL,
+		LatestContentActivityDateUtc DATETIME2(0) NULL,
+		LatestContentActivityDateKey INT NULL,
+		LatestContentActivityTimeOfDayKey INT NULL,
+		ActiveActivitiesTotal BIGINT NULL,
+		EngagerActivitiesTotal INT NULL,
+		ContributorActivitiesTotal INT NULL,
+		OriginatorActivitiesTotal INT NULL,
+		ActiveUsersTotal INT NULL,
+		ViewsTotal BIGINT NULL,
+		ViewersTotal INT NULL,
+		ContentTotal INT NULL,
+		ActiveContentTotal INT NULL'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA
+	ADD CONSTRAINT FK_FactGroupA_DimDate_LatestContentCreated FOREIGN KEY (LatestContentCreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA
+	ADD CONSTRAINT FK_FactGroupA_DimTimeOfDay_LatestContentCreated FOREIGN KEY (LatestContentCreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA
+	ADD CONSTRAINT FK_FactGroupA_DimDate_LatestContentActivity FOREIGN KEY (LatestContentActivityDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupA
+	ADD CONSTRAINT FK_FactGroupA_DimTimeOfDay_LatestContentActivity FOREIGN KEY (LatestContentActivityTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'
+END
+
+
+IF OBJECT_ID(N'dbo.FactGroupB', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB
+	ADD LatestContentCreatedDateUtc DATETIME2(0) NULL,
+		LatestContentCreatedDateKey INT NULL,
+		LatestContentCreatedTimeOfDayKey INT NULL,
+		LatestContentActivityDateUtc DATETIME2(0) NULL,
+		LatestContentActivityDateKey INT NULL,
+		LatestContentActivityTimeOfDayKey INT NULL,
+		ActiveActivitiesTotal BIGINT NULL,
+		EngagerActivitiesTotal INT NULL,
+		ContributorActivitiesTotal INT NULL,
+		OriginatorActivitiesTotal INT NULL,
+		ActiveUsersTotal INT NULL,
+		ViewsTotal BIGINT NULL,
+		ViewersTotal INT NULL,
+		ContentTotal INT NULL,
+		ActiveContentTotal INT NULL'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB
+	ADD CONSTRAINT FK_FactGroupB_DimDate_LatestContentCreated FOREIGN KEY (LatestContentCreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB
+	ADD CONSTRAINT FK_FactGroupB_DimTimeOfDay_LatestContentCreated FOREIGN KEY (LatestContentCreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB
+	ADD CONSTRAINT FK_FactGroupB_DimDate_LatestContentActivity FOREIGN KEY (LatestContentActivityDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactGroupB
+	ADD CONSTRAINT FK_FactGroupB_DimTimeOfDay_LatestContentActivity FOREIGN KEY (LatestContentActivityTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactGroupTotals', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactGroupTotals] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactGroupTotals], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactGroupTotals] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FilterByContentIds]
+* Previous: [5.0-FactGroupTotals]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FilterByContentIds');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactGroupTotals');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FilterByContentIds] as previous patch [5.0-FactGroupTotals] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FilterByContentIds] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF TYPE_ID('dbo.ContentIds') IS NOT NULL
+	EXECUTE sp_executesql N'DROP TYPE ContentIds'
+
+EXECUTE sp_executesql N'
+	CREATE TYPE dbo.ContentIds As Table
+	(
+		ContentId UNIQUEIDENTIFIER NOT NULL
+	)'
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FilterByContentIds', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FilterByContentIds] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FilterByContentIds], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FilterByContentIds] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-KnowledgeManagement]
+* Previous: [5.0-FilterByContentIds]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'KnowledgeManagement');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FilterByContentIds');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-KnowledgeManagement] as previous patch [5.0-FilterByContentIds] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-KnowledgeManagement] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''KnowledgeManagementCollectionRowVersionControl'' AS ControlName, ''0'' AS ControlValue
+	WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = ''KnowledgeManagementCollectionRowVersionControl'')
+	UNION ALL
+	SELECT ''KnowledgeManagementDocumentRowVersionControl'' AS ControlName, ''0'' AS ControlValue
+	WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = ''KnowledgeManagementDocumentRowVersionControl'')'
+END
+
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingKnowledgeManagementCollections
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		ApplicationTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		HasDimApplicationError BIT NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingKnowledgeManagementCollections ADD  CONSTRAINT DF_StagingKnowledgeManagementCollections_HasDimApplicationError  DEFAULT ((0)) FOR HasDimApplicationError'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingKnowledgeManagementCollections ADD  CONSTRAINT DF_StagingKnowledgeManagementCollections_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationKnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ApplicationKnowledgeManagementCollections
+	(
+		ApplicationKey BIGINT NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		ApplicationTypeKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		ContainerKey BIGINT NULL
+	) 
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentKnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentKnowledgeManagementCollections
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactApplicationKnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactApplicationKnowledgeManagementCollections
+	(
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		ContainerKey BIGINT NULL,
+		HasError BIT NOT NULL
+	) 
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactApplicationKnowledgeManagementCollections ADD  CONSTRAINT DF_StagingNew_FactApplicationKnowledgeManagementCollections_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentKnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentKnowledgeManagementCollections
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentKnowledgeManagementCollections ADD  CONSTRAINT DF_StagingNew_FactContentKnowledgeManagementCollections_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingReference_KnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingReference_KnowledgeManagementCollections
+	(
+		ApplicationId UNIQUEIDENTIFIER NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_ApplicationKnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_ApplicationKnowledgeManagementCollections
+	(
+		ApplicationKey BIGINT NOT NULL
+	)
+'
+END
+IF OBJECT_ID(N'dbo.StagingDelete_ContentKnowledgeManagementCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_ContentKnowledgeManagementCollections
+	(
+		ContentKey BIGINT NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementDocuments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingKnowledgeManagementDocuments
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		[Subject] NVARCHAR(256) NOT NULL,
+		ContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		IsApproved BIT NOT NULL,
+		IsActive BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingKnowledgeManagementDocuments ADD  CONSTRAINT DF_StagingKnowledgeManagementDocuments_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementDocumentComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingKnowledgeManagementDocumentComments
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		[Subject] NVARCHAR(256) NOT NULL,
+		ContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		ContentSubType NVARCHAR(100) NOT NULL,
+		IsApproved BIT NOT NULL,
+		IsActive BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingKnowledgeManagementDocumentComments ADD  CONSTRAINT DF_StagingKnowledgeManagementDocumentComments_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentKnowledgeManagementDocuments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentKnowledgeManagementDocuments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentKnowledgeManagementDocumentComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentKnowledgeManagementDocumentComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentKnowledgeManagementDocuments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentKnowledgeManagementDocuments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentKnowledgeManagementDocuments ADD  CONSTRAINT DF_StagingNew_FactContentKnowledgeManagementDocuments_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentKnowledgeManagementDocumentComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentKnowledgeManagementDocumentComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentKnowledgeManagementDocumentComments ADD  CONSTRAINT DF_StagingNew_FactContentKnowledgeManagementDocumentComments_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingReference_KnowledgeManagementDocuments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingReference_KnowledgeManagementDocuments
+	(
+		ContentId UNIQUEIDENTIFIER NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_KnowledgeManagementDocuments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_KnowledgeManagementDocuments
+	(
+		ContentKey BIGINT NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.FactKnowledgeManagementCollectionA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactKnowledgeManagementCollectionA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalDocumentCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewDocumentCountLast1Day INT NOT NULL,
+		NewDocumentCountPrevious1Day INT NOT NULL,
+		NewDocumentCount1DayTrend NUMERIC(9,4),
+		NewDocumentCountLast3Days INT NOT NULL,
+		NewDocumentCountPrevious3Days INT NOT NULL,
+		NewDocumentCount3DayTrend NUMERIC(9,4),
+		NewDocumentCountLast7Days INT NOT NULL,
+		NewDocumentCountPrevious7Days INT NOT NULL,
+		NewDocumentCount7DayTrend NUMERIC(9,4),
+		NewDocumentCountLast30Days INT NOT NULL,
+		NewDocumentCountPrevious30Days INT NOT NULL,
+		NewDocumentCount30DayTrend NUMERIC(9,4),
+		NewDocumentCountLast90Days INT NOT NULL,
+		NewDocumentCountPrevious90Days INT NOT NULL,
+		NewDocumentCount90DayTrend NUMERIC(9,4),
+		NewDocumentCountLast180Days INT NOT NULL,
+		NewDocumentCountPrevious180Days INT NOT NULL,
+		NewDocumentCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactKnowledgeManagementCollectionA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionA ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionA ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionA ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionA ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionA ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactKnowledgeManagementCollectionB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactKnowledgeManagementCollectionB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalDocumentCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewDocumentCountLast1Day INT NOT NULL,
+		NewDocumentCountPrevious1Day INT NOT NULL,
+		NewDocumentCount1DayTrend NUMERIC(9,4),
+		NewDocumentCountLast3Days INT NOT NULL,
+		NewDocumentCountPrevious3Days INT NOT NULL,
+		NewDocumentCount3DayTrend NUMERIC(9,4),
+		NewDocumentCountLast7Days INT NOT NULL,
+		NewDocumentCountPrevious7Days INT NOT NULL,
+		NewDocumentCount7DayTrend NUMERIC(9,4),
+		NewDocumentCountLast30Days INT NOT NULL,
+		NewDocumentCountPrevious30Days INT NOT NULL,
+		NewDocumentCount30DayTrend NUMERIC(9,4),
+		NewDocumentCountLast90Days INT NOT NULL,
+		NewDocumentCountPrevious90Days INT NOT NULL,
+		NewDocumentCount90DayTrend NUMERIC(9,4),
+		NewDocumentCountLast180Days INT NOT NULL,
+		NewDocumentCountPrevious180Days INT NOT NULL,
+		NewDocumentCount180DayTrend NUMERIC(9,4),
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCount1DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCount3DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCount7DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCount30DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCount90DayTrend NUMERIC(9,4) NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		NewCommentCount180DayTrend NUMERIC(9,4) NOT NULL,		
+		CONSTRAINT PK_FactKnowledgeManagementCollectionB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionB ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionB ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionB ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionB ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactKnowledgeManagementCollectionB ADD  CONSTRAINT FK_FactKnowledgeManagementCollectionB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactKnowledgeManagementCollection', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactKnowledgeManagementCollection FOR dbo.FactKnowledgeManagementCollectionA'
+END
+
+IF OBJECT_ID(N'dbo.FactKnowledgeManagementCollectionOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactKnowledgeManagementCollectionOld FOR dbo.FactKnowledgeManagementCollectionB'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'KnowledgeManagement', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-KnowledgeManagement] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-KnowledgeManagement], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-KnowledgeManagement] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-FactKnowledgeManagementCollectionNewIndexes]
+* Previous: [5.0-KnowledgeManagement]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactKnowledgeManagementCollectionNewIndexes');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'KnowledgeManagement');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-FactKnowledgeManagementCollectionNewIndexes] as previous patch [5.0-KnowledgeManagement] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-FactKnowledgeManagementCollectionNewIndexes] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactWikiA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactKnowledgeManagementCollectionA', 'FactKMA', 'PRIMARY KEY CLUSTERED', 'FactKnowledgeManagementCollectionA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactKnowledgeManagementCollectionA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactKnowledgeManagementCollectionA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactKnowledgeManagementCollectionA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactWikiB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactKnowledgeManagementCollectionB', 'FactKMB', 'PRIMARY KEY CLUSTERED', 'FactKnowledgeManagementCollectionB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactKnowledgeManagementCollectionB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactKnowledgeManagementCollectionB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactKnowledgeManagementCollectionB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'FactKnowledgeManagementCollectionNewIndexes', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-FactKnowledgeManagementCollectionNewIndexes] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-FactKnowledgeManagementCollectionNewIndexes], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-FactKnowledgeManagementCollectionNewIndexes] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-ActivitiesPrimaryAndSecondaryContent2]
+* Previous: [5.0-FactKnowledgeManagementCollectionNewIndexes]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'ActivitiesPrimaryAndSecondaryContent2');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'FactKnowledgeManagementCollectionNewIndexes');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-ActivitiesPrimaryAndSecondaryContent2] as previous patch [5.0-FactKnowledgeManagementCollectionNewIndexes] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-ActivitiesPrimaryAndSecondaryContent2] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''0''
+	WHERE ControlName = ''ActivityRowVersionControl''
+	
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''1/1/1900''
+	WHERE ControlName = ''ActivityLastUpdatedDateUtcControl'''
+END
+IF OBJECT_ID(N'dbo.StagingActivities', 'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingActivities', 'ContentId') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	TRUNCATE TABLE dbo.StagingActivities'
+
+	EXEC sp_executesql N'
+	EXEC sp_rename ''dbo.StagingActivities.ContentId'', ''PrimaryContentId'', ''COLUMN'''
+END
+IF OBJECT_ID(N'dbo.StagingActivities', 'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingActivities', 'SecondaryContentId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	TRUNCATE TABLE dbo.StagingActivities'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingActivities
+	ADD SecondaryContentId UNIQUEIDENTIFIER NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingNew_FactUserActivities', 'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingNew_FactUserActivities', 'ContentKey') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	TRUNCATE TABLE dbo.StagingNew_FactUserActivities'
+
+	EXEC sp_executesql N'
+	EXEC sp_rename ''dbo.StagingNew_FactUserActivities.ContentKey'', ''PrimaryContentKey'', ''COLUMN'''
+END
+IF OBJECT_ID(N'dbo.StagingNew_FactUserActivities', 'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingNew_FactUserActivities', 'SecondaryContentKey') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	TRUNCATE TABLE dbo.StagingNew_FactUserActivities'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactUserActivities
+	ADD SecondaryContentKey BIGINT NOT NULL'
+END
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.StagingActivities') AND name = 'UCIX_StagingActivities_ContentId_ActivityDateUtc_ActivityUserId_ActivityTypeId')
+	BEGIN
+		EXEC sp_executesql N'
+		DROP INDEX UCIX_StagingActivities_ContentId_ActivityDateUtc_ActivityUserId_ActivityTypeId ON dbo.StagingActivities'
+	END
+IF OBJECT_ID(N'dbo.FactUserActivity', 'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.FactUserActivity', 'ContentKey') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	TRUNCATE TABLE dbo.FactUserActivity'	
+
+	IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.StagingNew_FactUserActivities') AND name = 'UCIX_StagingNew_FactUserActivities_ActivityDateKey_ContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey')
+	BEGIN
+		EXEC sp_executesql N'
+		DROP INDEX UCIX_StagingNew_FactUserActivities_ActivityDateKey_ContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey ON dbo.StagingNew_FactUserActivities'
+	END
+
+	IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.FactUserActivity') AND name = 'UCIX_FactUserActivity_ActivityDateKey_ContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey')
+	BEGIN
+		EXEC sp_executesql N'
+		DROP INDEX UCIX_FactUserActivity_ActivityDateKey_ContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey ON dbo.FactUserActivity'
+	END
+
+	IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.FactUserActivity') AND name = 'IX_FactUserActivity_ActivityDateKey_ContentKey_Inc_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeKey')
+	BEGIN
+		EXEC sp_executesql N'
+		DROP INDEX IX_FactUserActivity_ActivityDateKey_ContentKey_Inc_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeKey ON dbo.FactUserActivity'
+	END
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactUserActivity DROP CONSTRAINT FK_FactUserActivity_DimContent'	
+
+	EXEC sp_executesql N'
+	EXEC sp_rename ''dbo.FactUserActivity.ContentKey'', ''PrimaryContentKey'', ''COLUMN'''
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactUserActivity WITH CHECK ADD CONSTRAINT FK_FactUserActivity_DimContent_Primary FOREIGN KEY (PrimaryContentKey)
+	REFERENCES dbo.DimContent (ContentKey)'
+END
+IF OBJECT_ID(N'dbo.FactUserActivity', 'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.FactUserActivity', 'SecondaryContentKey') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	TRUNCATE TABLE dbo.FactUserActivity'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactUserActivity
+	ADD SecondaryContentKey BIGINT NOT NULL'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactUserActivity WITH CHECK ADD CONSTRAINT FK_FactUserActivity_DimContent_Secondary FOREIGN KEY (SecondaryContentKey)
+	REFERENCES dbo.DimContent (ContentKey)'
+
+	EXEC sp_executesql N'DELETE FROM dbo.ReportingIndexPlan
+	WHERE IndexId IN (SELECT IndexId FROM dbo.ReportingIndex WHERE IndexName = ''UCIX_FactUserActivity_ActivityDateKey_ContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey'')'
+
+	EXEC sp_executesql N'DELETE FROM dbo.ReportingIndex
+	WHERE IndexName = ''UCIX_FactUserActivity_ActivityDateKey_ContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey'''
+
+	EXEC sp_executesql N'INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+	SELECT ''UCIX_FactUserActivity_ActivityDateKey_PrimaryContentKey_SecondaryContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey'', ''FactUserActivity'', ''UNIQUE CLUSTERED'', ''FactUserActivity'', ''ActivityDateKey,PrimaryContentKey,SecondaryContentKey,ActivityUserKey,ActivityTypeKey,ActivityTimeOfDayKey'', NULL
+	WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = ''UCIX_FactUserActivity_ActivityDateKey_PrimaryContentKey_SecondaryContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey'')'
+
+	EXEC sp_executesql N'INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+	SELECT IndexId, 0, ''Rebuild''
+	FROM dbo.ReportingIndex i
+	WHERE IndexName = ''UCIX_FactUserActivity_ActivityDateKey_PrimaryContentKey_SecondaryContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey''
+		AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)'
+
+	EXEC sp_executesql N'INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+	SELECT IndexId, 1, ''Rebuild''
+	FROM dbo.ReportingIndex i
+	WHERE IndexName = ''UCIX_FactUserActivity_ActivityDateKey_PrimaryContentKey_SecondaryContentKey_ActivityUserKey_ActivityTypeKey_ActivityTimeOfDayKey''
+		AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)'
+END
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.FactUserActivity') AND name = 'IX_FactUserActivity_ActivityDateKey_ContentKey_Inc_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK')
+	BEGIN
+		EXEC sp_executesql N'
+		DROP INDEX IX_FactUserActivity_ActivityDateKey_ContentKey_Inc_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK ON dbo.FactUserActivity'
+	END
+IF OBJECT_ID(N'dbo.ReportingIndex') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DELETE FROM dbo.ReportingIndexPlan
+	WHERE IndexId IN (SELECT IndexId FROM dbo.ReportingIndex WHERE IndexName = ''IX_FactUserActivity_ActivityDateKey_ContentKey_Inc_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeKey'')'
+
+	EXEC sp_executesql N'DELETE FROM dbo.ReportingIndex
+	WHERE IndexName = ''IX_FactUserActivity_ActivityDateKey_ContentKey_Inc_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeKey'''
+
+	EXEC sp_executesql N'INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+	SELECT ''IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK'', ''FactUserActivity'', ''NONCLUSTERED'', ''FactUserActivity'', ''ActivityDateKey,PrimaryContentKey'', ''SecondaryContentKey,ActivityUserKey,ActivityTimeOfDayKey,ActivityTypeKey''
+	WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = ''IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK'')'
+
+	EXEC sp_executesql N'INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+	SELECT IndexId, 0, ''DropCreate''
+	FROM dbo.ReportingIndex i
+	WHERE IndexName = ''IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK''
+		AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)'
+
+	EXEC sp_executesql N'INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+	SELECT IndexId, 1, ''Rebuild''
+	FROM dbo.ReportingIndex i
+	WHERE IndexName = ''IX_FactUserActivity_ActivityDateKey_PrimaryContentKey_Inc_SecondaryContentKey_ActivityUserKey_ActivityTimeOfDayKey_ActivityTypeK''
+		AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'ActivitiesPrimaryAndSecondaryContent2', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-ActivitiesPrimaryAndSecondaryContent2] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-ActivitiesPrimaryAndSecondaryContent2], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-ActivitiesPrimaryAndSecondaryContent2] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-StatusMessageComments]
+* Previous: [5.0-ActivitiesPrimaryAndSecondaryContent2]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'StatusMessageComments');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'ActivitiesPrimaryAndSecondaryContent2');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-StatusMessageComments] as previous patch [5.0-ActivitiesPrimaryAndSecondaryContent2] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-StatusMessageComments] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''0''
+	WHERE ControlName = ''CommentRowVersionControl'''
+END
+
+IF OBJECT_ID(N'dbo.StagingStatusMessageComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingStatusMessageComments
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		[Subject] NVARCHAR(256) NOT NULL,
+		ContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		ContentSubType NVARCHAR(100) NOT NULL,
+		IsApproved BIT NOT NULL,
+		IsActive BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingStatusMessageComments ADD  CONSTRAINT DF_StagingStatusMessageComments_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentStatusMessageComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentStatusMessageComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentStatusMessageComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentStatusMessageComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentStatusMessageComments ADD  CONSTRAINT DF_StagingNew_FactContentStatusMessageComments_HasError  DEFAULT ((0)) FOR HasError'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'StatusMessageComments', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-StatusMessageComments] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-StatusMessageComments], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-StatusMessageComments] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-Leaderboards]
+* Previous: [5.0-StatusMessageComments]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'Leaderboards');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'StatusMessageComments');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-Leaderboards] as previous patch [5.0-StatusMessageComments] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-Leaderboards] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''LeaderboardRowVersionControl'' AS ControlName, ''0'' AS ControlValue
+	WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = ''LeaderboardRowVersionControl'')'
+END
+
+IF OBJECT_ID(N'dbo.StagingLeaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingLeaderboards
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		ApplicationTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		HasDimApplicationError BIT NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingLeaderboards ADD  CONSTRAINT DF_StagingLeaderboards_HasDimApplicationError  DEFAULT ((0)) FOR HasDimApplicationError'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingLeaderboards ADD  CONSTRAINT DF_StagingLeaderboards_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationLeaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ApplicationLeaderboards
+	(
+		ApplicationKey BIGINT NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		ApplicationTypeKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		ContainerKey BIGINT NULL
+	) 
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentLeaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentLeaderboards
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactApplicationLeaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactApplicationLeaderboards
+	(
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		ContainerKey BIGINT NULL,
+		HasError BIT NOT NULL
+	) 
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactApplicationLeaderboards ADD  CONSTRAINT DF_StagingNew_FactApplicationLeaderboards_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentLeaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentLeaderboards
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentLeaderboards ADD  CONSTRAINT DF_StagingNew_FactContentLeaderboards_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingReference_Leaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingReference_Leaderboards
+	(
+		ApplicationId UNIQUEIDENTIFIER NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_ApplicationLeaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_ApplicationLeaderboards
+	(
+		ApplicationKey BIGINT NOT NULL
+	)
+'
+END
+IF OBJECT_ID(N'dbo.StagingDelete_ContentLeaderboards', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_ContentLeaderboards
+	(
+		ContentKey BIGINT NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingLeaderboardComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingLeaderboardComments
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		[Subject] NVARCHAR(256) NOT NULL,
+		ContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		ContentSubType NVARCHAR(100) NOT NULL,
+		IsApproved BIT NOT NULL,
+		IsActive BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingLeaderboardComments ADD  CONSTRAINT DF_StagingLeaderboardComments_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentLeaderboardComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentLeaderboardComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentLeaderboardComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentLeaderboardComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentLeaderboardComments ADD  CONSTRAINT DF_StagingNew_FactContentLeaderboardComments_HasError  DEFAULT ((0)) FOR HasError'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'Leaderboards', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-Leaderboards] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-Leaderboards], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-Leaderboards] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-Articles3]
+* Previous: [5.0-Leaderboards]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'Articles3');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'Leaderboards');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-Articles3] as previous patch [5.0-Leaderboards] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-Articles3] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''ArticleCollectionRowVersionControl'' AS ControlName, ''0'' AS ControlValue
+	WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = ''ArticleCollectionRowVersionControl'')
+	UNION ALL
+	SELECT ''ArticleRowVersionControl'' AS ControlName, ''0'' AS ControlValue
+	WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = ''ArticleRowVersionControl'')'
+END
+
+IF OBJECT_ID(N'dbo.StagingArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingArticleCollections
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		ApplicationTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		HasDimApplicationError BIT NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingArticleCollections ADD  CONSTRAINT DF_StagingArticleCollections_HasDimApplicationError  DEFAULT ((0)) FOR HasDimApplicationError'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingArticleCollections ADD  CONSTRAINT DF_StagingArticleCollections_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ApplicationArticleCollections
+	(
+		ApplicationKey BIGINT NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		ApplicationTypeKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		ContainerKey BIGINT NULL
+	) 
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentArticleCollections
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactApplicationArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactApplicationArticleCollections
+	(
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		ContainerKey BIGINT NULL,
+		HasError BIT NOT NULL
+	) 
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactApplicationArticleCollections ADD  CONSTRAINT DF_StagingNew_FactApplicationArticleCollections_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentArticleCollections
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentArticleCollections ADD  CONSTRAINT DF_StagingNew_FactContentArticleCollections_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingReference_ArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingReference_ArticleCollections
+	(
+		ApplicationId UNIQUEIDENTIFIER NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_ApplicationArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_ApplicationArticleCollections
+	(
+		ApplicationKey BIGINT NOT NULL
+	)
+'
+END
+IF OBJECT_ID(N'dbo.StagingDelete_ContentArticleCollections', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_ContentArticleCollections
+	(
+		ContentKey BIGINT NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingArticles', N'U') IS NOT NULL
+BEGIN 
+	EXEC sp_executesql N'
+	DROP TABLE dbo.StagingArticles'
+END
+
+IF OBJECT_ID(N'dbo.StagingArticles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingArticles
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		[Subject] NVARCHAR(256) NOT NULL,
+		ContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		IsApproved BIT NOT NULL,
+		IsActive BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		PublishedDateUtc DATETIME2(0) NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		PublishedUserId UNIQUEIDENTIFIER NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingArticles ADD  CONSTRAINT DF_StagingArticles_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingArticleComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingArticleComments
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		ContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		ParentContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NOT NULL,
+		[Subject] NVARCHAR(256) NOT NULL,
+		ContentTypeId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NOT NULL,
+		ApplicationId UNIQUEIDENTIFIER NOT NULL,
+		ContentSubType NVARCHAR(100) NOT NULL,
+		IsApproved BIT NOT NULL,
+		IsActive BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedUserId UNIQUEIDENTIFIER NOT NULL,
+		HasDimContentError BIT NOT NULL
+	)
+'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingArticleComments ADD  CONSTRAINT DF_StagingArticleComments_HasDimContentError  DEFAULT ((0)) FOR HasDimContentError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentArticles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentArticles
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentArticleComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_ContentArticleComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		ParentContentId UNIQUEIDENTIFIER NOT NULL,
+		[Name] NVARCHAR(256) NULL,
+		[Subject] NVARCHAR(256) NULL,
+		ContentTypeKey INT NOT NULL,
+		ContentSubType NVARCHAR(100) NULL,
+		IsApproved BIT NOT NULL,
+		[Status] NVARCHAR(128) NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		ParentContentKey BIGINT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentArticles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentArticles
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentArticles ADD  CONSTRAINT DF_StagingNew_FactContentArticles_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactContentArticleComments', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactContentArticleComments
+	(
+		ContentKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactContentArticleComments ADD  CONSTRAINT DF_StagingNew_FactContentArticleComments_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_FactArticles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_FactArticles
+	(
+		ContentKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		PublishedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		LastPublishedDateUtc DATETIME2(0) NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactArticles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactArticles
+	(
+		ContentKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NULL,
+		CreatedDateKey INT NOT NULL,
+		CreatedTimeOfDayKey INT NOT NULL,
+		LastPublishedDateUtc DATETIME2(0) NULL,
+		LastPublishedDateKey INT NOT NULL,
+		LastPublishedTimeOfDayKey INT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		PublishedUserKey INT NOT NULL,
+		HasError BIT NOT NULL
+	)
+'
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactArticles ADD  CONSTRAINT DF_StagingNew_FactArticles_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingReference_Articles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingReference_Articles
+	(
+		ContentId UNIQUEIDENTIFIER NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_Articles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_Articles
+	(
+		ContentKey BIGINT NOT NULL
+	)
+'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'Articles3', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-Articles3] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-Articles3], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-Articles3] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-14361-IncreaseContentNameColumnLength]
+* Previous: [5.0-Articles3]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14361-IncreaseContentNameColumnLength');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'Articles3');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-14361-IncreaseContentNameColumnLength] as previous patch [5.0-Articles3] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-14361-IncreaseContentNameColumnLength] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.StagingBlogPostComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingBlogPostComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingCalendarEventComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingCalendarEventComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementDocumentComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingForumThreadReplyComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingForumThreadComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingForumThreadComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementDocumentComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingKnowledgeManagementDocumentComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingLeaderboardComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingLeaderboardComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingMediaGalleryFileComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingMediaGalleryFileComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingStatusMessageComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingStatusMessageComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingWikiPageComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingWikiPageComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_Content') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_Content
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentBlogPostComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentBlogPostComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentBlogPosts') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentBlogPosts
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentBlogs') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentBlogs
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentCalendarEventComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentCalendarEventComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentCalendarEvents') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentCalendarEvents
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentCalendars') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentCalendars
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentConversationMessages') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentConversationMessages
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentForums') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentForums
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentForumThreadComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentForumThreadComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentForumThreadReplies') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentForumThreadReplies
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentForumThreadReplyComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentForumThreadReplyComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentForumThreads') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentForumThreads
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentGroups') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentGroups
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentIdeaComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentIdeaComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentIdeas') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentIdeas
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentIdeations') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentIdeations
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentKnowledgeManagementCollections') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentKnowledgeManagementCollections
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentKnowledgeManagementDocumentComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentKnowledgeManagementDocumentComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentKnowledgeManagementDocuments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentKnowledgeManagementDocuments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentLeaderboardComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentLeaderboardComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentLeaderboards') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentLeaderboards
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentMediaGalleries') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentMediaGalleries
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentMediaGalleryFileComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentMediaGalleryFileComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentMediaGalleryFiles') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentMediaGalleryFiles
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentStatusMessageComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentStatusMessageComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentStatusMessages') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentStatusMessages
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentUsers') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentUsers
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentWikiPageComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentWikiPageComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentWikiPages') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentWikiPages
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContentWikis') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContentWikis
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingContent') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingContent
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_Containers') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_Containers
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_Applications') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_Applications
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContainerUsers') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContainerUsers
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ContainerGroups') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ContainerGroups
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationUsers') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationUsers
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationGroups') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationGroups
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationBlogs') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationBlogs
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationForums') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationForums
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationMediaGalleries') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationMediaGalleries
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationWikis') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationWikis
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationCalendars') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationCalendars
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationIdeations') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationIdeations
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingContainers') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingContainers
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingApplications') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingApplications
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingGroups') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingGroups
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingWikis') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingWikis
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingBlogs') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingBlogs
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingForums') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingForums
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingLeaderboards') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingLeaderboards
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingMediaGalleries') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingMediaGalleries
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationLeaderboards') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationLeaderboards
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingIdeations') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingIdeations
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.DimContainer') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.DimContainer
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.DimApplication') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.DimApplication
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingCalendars') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingCalendars
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingWikiPages') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingWikiPages
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementCollections') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingKnowledgeManagementCollections
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.DimContent') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.DimContent
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingBlogPosts') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingBlogPosts
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingForumThreads') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingForumThreads
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_ApplicationKnowledgeManagementCollections') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingDifferences_ApplicationKnowledgeManagementCollections
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingForumThreadReplies') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingForumThreadReplies
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingMediaGalleryFiles') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingMediaGalleryFiles
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingStatusMessages') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingStatusMessages
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingCalendarEvents') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingCalendarEvents
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementDocuments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingKnowledgeManagementDocuments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingIdeas') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingIdeas
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingConversationMessages') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingConversationMessages
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+IF OBJECT_ID(N'dbo.StagingIdeaComments') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingIdeaComments
+	ALTER COLUMN [Name] NVARCHAR(272) NOT NULL'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-14361-IncreaseContentNameColumnLength', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-14361-IncreaseContentNameColumnLength] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-14361-IncreaseContentNameColumnLength], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-14361-IncreaseContentNameColumnLength] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-12291-ChangeAddedUserToGroupActivity]
+* Previous: [5.0-TE-14361-IncreaseContentNameColumnLength]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-12291-ChangeAddedUserToGroupActivity');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14361-IncreaseContentNameColumnLength');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-12291-ChangeAddedUserToGroupActivity] as previous patch [5.0-TE-14361-IncreaseContentNameColumnLength] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-12291-ChangeAddedUserToGroupActivity] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''0''
+	WHERE ControlName = ''ActivityRowVersionControl''
+	
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''1/1/1900''
+	WHERE ControlName = ''ActivityLastUpdatedDateUtcControl'''
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-12291-ChangeAddedUserToGroupActivity', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-12291-ChangeAddedUserToGroupActivity] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-12291-ChangeAddedUserToGroupActivity], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-12291-ChangeAddedUserToGroupActivity] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-SearchHistoryReporting]
+* Previous: [5.0-TE-12291-ChangeAddedUserToGroupActivity]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'SearchHistoryReporting');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-12291-ChangeAddedUserToGroupActivity');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-SearchHistoryReporting] as previous patch [5.0-TE-12291-ChangeAddedUserToGroupActivity] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-SearchHistoryReporting] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+		DELETE 
+		FROM dbo.ReportingControl
+		WHERE ControlName = ''SearchLastUpdatedDateUtcControl''
+	'
+
+	EXEC sp_executesql N'
+		INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+		SELECT ''SearchRowVersionControl'' AS ControlName, ''0'' AS ControlValue
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = ''SearchRowVersionControl'')
+
+	'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_Search') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_Search
+	(
+		SearchKey BIGINT NOT NULL
+	)'
+END
+IF OBJECT_ID(N'dbo.StagingReference_Search') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingReference_Search
+	(
+		SearchHistoryId UNIQUEIDENTIFIER NOT NULL
+	)'
+END
+IF OBJECT_ID(N'dbo.StagingSearch') IS NOT NULL 
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.StagingSearch'
+END
+
+IF OBJECT_ID(N'dbo.StagingSearch') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingSearch
+	(
+		SearchHistoryId UNIQUEIDENTIFIER NOT NULL,
+		ContainerId UNIQUEIDENTIFIER NULL,
+		ApplicationId UNIQUEIDENTIFIER NULL,
+		UserId UNIQUEIDENTIFIER NOT NULL,
+		Query NVARCHAR(MAX) NOT NULL,
+		QueryHash VARBINARY(32) NOT NULL,
+		LoweredQueryHash VARBINARY(32) NOT NULL,
+		SearchDateUtc DATETIME2(0) NOT NULL,
+		TotalResults INT NOT NULL,
+		HasError BIT NOT NULL
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingSearch ADD  CONSTRAINT DF_StagingSearch_HasError  DEFAULT ((0)) FOR HasError'
+END
+IF OBJECT_ID(N'dbo.StagingSearchFlags') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingSearchFlags
+	(
+		SearchHistoryId UNIQUEIDENTIFIER NOT NULL,
+		SearchFlag NVARCHAR(256) NULL,
+		HasError BIT NOT NULL
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingSearchFlags ADD  CONSTRAINT DF_StagingSearchFlags_HasError  DEFAULT ((0)) FOR HasError'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactSearch') IS NOT NULL 
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.StagingNew_FactSearch'
+END
+IF OBJECT_ID(N'dbo.StagingNew_FactSearch') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingNew_FactSearch
+	(
+		SearchHistoryId UNIQUEIDENTIFIER NOT NULL,
+		SearchQueryKey BIGINT NOT NULL,
+		SearchFlagGroupKey INT NOT NULL,
+		ApplicationKey BIGINT NULL,
+		ContainerKey BIGINT NULL,
+		UserKey INT NOT NULL,
+		SearchDateUtc DATETIME2(0) NOT NULL,
+		SearchDateKey INT NOT NULL,
+		SearchTimeOfDayKey INT NOT NULL,
+		TotalResults INT NOT NULL,
+		HasError BIT NOT NULL 
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.StagingNew_FactSearch ADD  CONSTRAINT DF_StagingNew_FactSearch_HasError  DEFAULT ((0)) FOR HasError'
+END
+IF OBJECT_ID(N'dbo.StagingDifferences_FactSearch') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDifferences_FactSearch
+	(
+		SearchHistoryId UNIQUEIDENTIFIER NOT NULL,
+		UserKey INT NOT NULL 
+	)'
+END
+IF OBJECT_ID(N'dbo.DimSearchQuery') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.DimSearchQuery
+	(
+		SearchQueryKey BIGINT NOT NULL IDENTITY(1,1),
+		Query NVARCHAR(MAX) NOT NULL,
+		QueryHash VARBINARY(32) NOT NULL,
+		LoweredQueryHash VARBINARY(32) NOT NULL,
+		CONSTRAINT PK_DimSearchQuery PRIMARY KEY CLUSTERED
+		(
+			SearchQueryKey
+		)
+	)'
+END
+IF OBJECT_ID(N'dbo.DimSearchFlag') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.DimSearchFlag
+	(
+		SearchFlagKey INT NOT NULL IDENTITY(1,1),
+		SearchFlag NVARCHAR(256) NOT NULL,
+		CONSTRAINT PK_DimSearchFlag PRIMARY KEY CLUSTERED
+		(
+			SearchFlagKey
+		)
+	)'
+END
+IF OBJECT_ID(N'dbo.DimSearchFlagGroup') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.DimSearchFlagGroup
+	(
+		SearchFlagGroupKey INT NOT NULL,
+		CONSTRAINT PK_DimSearchFlagGroup PRIMARY KEY CLUSTERED
+		(
+			SearchFlagGroupKey
+		)
+	)'
+END
+IF OBJECT_ID(N'dbo.DimSearchFlagBridge') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.DimSearchFlagBridge
+	(
+		SearchFlagGroupKey INT NOT NULL,
+		SearchFlagKey INT NOT NULL,
+		CONSTRAINT PK_DimSearchFlagBridge PRIMARY KEY CLUSTERED
+		(
+			SearchFlagGroupKey,
+			SearchFlagKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.DimSearchFlagBridge ADD CONSTRAINT FK_DimSearchFlagBridge_DimSearchFlagGroup FOREIGN KEY(SearchFlagGroupKey)
+	REFERENCES dbo.DimSearchFlagGroup (SearchFlagGroupKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.DimSearchFlagBridge ADD CONSTRAINT FK_DimSearchFlagBridge_DimSearchFlag FOREIGN KEY(SearchFlagKey)
+	REFERENCES dbo.DimSearchFlag (SearchFlagKey)'
+END
+IF OBJECT_ID(N'dbo.FactSearch') IS NOT NULL 
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.FactSearch'
+END
+IF OBJECT_ID(N'dbo.FactSearch') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactSearch
+	(
+		SearchKey BIGINT NOT NULL IDENTITY(1,1),
+		SearchHistoryId UNIQUEIDENTIFIER NOT NULL,
+		SearchQueryKey BIGINT NOT NULL,
+		CommonSearchQueryKey BIGINT NOT NULL,
+		SearchFlagGroupKey INT NOT NULL,
+		ApplicationKey BIGINT NULL,
+		ContainerKey BIGINT NULL,
+		UserKey INT NOT NULL,
+		SearchDateUtc DATETIME2(0) NOT NULL,
+		SearchDateKey INT NOT NULL,
+		SearchTimeOfDayKey INT NOT NULL,
+		TotalResults INT NOT NULL,
+		CONSTRAINT PK_FactSearch PRIMARY KEY CLUSTERED
+		(
+			SearchHistoryId
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD CONSTRAINT FK_FactSearch_DimSearchQuery_SearchQueryKey FOREIGN KEY(SearchQueryKey)
+	REFERENCES dbo.DimSearchQuery (SearchQueryKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD CONSTRAINT FK_FactSearch_DimSearchQuery_CommonSearchQueryKey FOREIGN KEY(CommonSearchQueryKey)
+	REFERENCES dbo.DimSearchQuery (SearchQueryKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD CONSTRAINT FK_FactSearch_DimSearchFlagGroup FOREIGN KEY(SearchFlagGroupKey)
+	REFERENCES dbo.DimSearchFlagGroup (SearchFlagGroupKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD  CONSTRAINT FK_FactSearch_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD  CONSTRAINT FK_FactSearch_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD  CONSTRAINT FK_FactSearch_DimUser FOREIGN KEY (UserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD  CONSTRAINT FK_FactSearch_DimDate FOREIGN KEY (SearchDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearch ADD  CONSTRAINT FK_FactSearch_DimTimeOfDay FOREIGN KEY (SearchTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'
+
+	EXEC sp_executesql N'
+	CREATE INDEX IX_FactSearch_SearchFlagGroupKey_Inc_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_TotalResults ON dbo.FactSearch (SearchFlagGroupKey)
+	INCLUDE (SearchQueryKey,ApplicationKey,ContainerKey,SearchDateKey,SearchTimeOfDayKey,TotalResults)'
+END
+
+--DimSearchQuery
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_DimSearchQuery', 'Dim', 'PRIMARY KEY CLUSTERED', 'DimSearchQuery', 'SearchQueryKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_DimSearchQuery')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_DimSearchQuery'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_DimSearchQuery'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_DimSearchQuery_QueryHash_Inc_LoweredQueryHash', 'Dim', 'UNIQUE NONCLUSTERED', 'DimSearchQuery', 'QueryHash', 'LoweredQueryHash'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_DimSearchQuery_QueryHash_Inc_LoweredQueryHash')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_DimSearchQuery_QueryHash_Inc_LoweredQueryHash'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_DimSearchQuery_QueryHash_Inc_LoweredQueryHash'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--DimSearchFlag
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_DimSearchFlag', 'Dim', 'PRIMARY KEY CLUSTERED', 'DimSearchFlag', 'SearchFlagKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_DimSearchFlag')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_DimSearchFlag'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_DimSearchFlag'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_DimSearchFlag_SearchFlag', 'Dim', 'UNIQUE NONCLUSTERED', 'DimSearchFlag', 'SearchFlag', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_DimSearchFlag_SearchFlag')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_DimSearchFlag_SearchFlag'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_DimSearchFlag_SearchFlag'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--DimSearchFlagGroup
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_DimSearchFlagGroup', 'Dim', 'PRIMARY KEY CLUSTERED', 'DimSearchFlagGroup', 'SearchFlagGroupKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_DimSearchFlagGroup')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_DimSearchFlagGroup'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_DimSearchFlagGroup'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--DimSearchFlagBridge
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_DimSearchFlagBridge', 'Dim', 'PRIMARY KEY CLUSTERED', 'DimSearchFlagBridge', 'SearchFlagGroupKey,SearchFlagKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_DimSearchFlagBridge')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_DimSearchFlagBridge'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_DimSearchFlag_SearchFlag'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactSearch
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactSearch', 'Fact', 'PRIMARY KEY CLUSTERED', 'FactSearch', 'SearchHistoryId', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactSearch')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactSearch'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactSearch'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+DELETE 
+FROM dbo.ReportingIndexPlan
+WHERE IndexId IN (SELECT IndexId FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactSearch_SearchFlagGroupKey_Inc_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_TotalResults')
+
+DELETE 
+FROM dbo.ReportingIndex
+WHERE IndexName = 'IX_FactSearch_SearchFlagGroupKey_Inc_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_TotalResults'
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactSearch_SearchFlagGroupKey_Inc_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Total_1', 'Fact', 'NONCLUSTERED', 'FactSearch', 'SearchFlagGroupKey', 'UserKey,SearchQueryKey,ApplicationKey,ContainerKey,SearchDateKey,SearchTimeOfDayKey,TotalResults'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactSearch_SearchFlagGroupKey_Inc_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Total_1')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearch_SearchFlagGroupKey_Inc_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Total_1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearch_SearchFlagGroupKey_Inc_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Total_1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+DELETE 
+FROM dbo.ReportingTableReferences
+
+
+IF TYPE_ID('dbo.SearchFlags') IS NOT NULL
+	EXECUTE sp_executesql N'DROP TYPE SearchFlags'
+
+EXECUTE sp_executesql N'
+	CREATE TYPE dbo.SearchFlags As Table
+	(
+		SearchFlag NVARCHAR(256) NOT NULL
+	)'
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'SearchHistoryReporting', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-SearchHistoryReporting] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-SearchHistoryReporting], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-SearchHistoryReporting] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-14218-ImproveCalendarEventRegistrationTracking]
+* Previous: [5.0-SearchHistoryReporting]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14218-ImproveCalendarEventRegistrationTracking');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'SearchHistoryReporting');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-14218-ImproveCalendarEventRegistrationTracking] as previous patch [5.0-SearchHistoryReporting] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-14218-ImproveCalendarEventRegistrationTracking] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''0''
+	WHERE ControlName = ''ActivityRowVersionControl''
+	
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''1/1/1900''
+	WHERE ControlName = ''ActivityLastUpdatedDateUtcControl''
+	
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''0''
+	WHERE ControlName = ''IndexPlanUserActivity'''
+END
+
+IF OBJECT_ID(N'dbo.StagingEventRegistrationCanceledActivities') IS NULL
+BEGIN
+EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingEventRegistrationCanceledActivities
+	(
+		Id INT IDENTITY(1,1) NOT NULL,
+		PrimaryContentId UNIQUEIDENTIFIER NOT NULL,
+		SecondaryContentId UNIQUEIDENTIFIER NOT NULL,
+		ActivityUserId UNIQUEIDENTIFIER NOT NULL,
+		ActivityTypeId INT NOT NULL,
+		ActivityDateUtc DATETIME2(0) NOT NULL
+	)
+'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_CalendarEventRegistraionActivities') IS NULL
+BEGIN
+EXEC sp_executesql N'
+	CREATE TABLE dbo.StagingDelete_CalendarEventRegistraionActivities
+	(
+		ActivityKey BIGINT NOT NULL
+	)
+'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-14218-ImproveCalendarEventRegistrationTracking', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-14218-ImproveCalendarEventRegistrationTracking] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-14218-ImproveCalendarEventRegistrationTracking], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-14218-ImproveCalendarEventRegistrationTracking] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-SearchHistoryTopSearches]
+* Previous: [5.0-TE-14218-ImproveCalendarEventRegistrationTracking]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'SearchHistoryTopSearches');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14218-ImproveCalendarEventRegistrationTracking');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-SearchHistoryTopSearches] as previous patch [5.0-TE-14218-ImproveCalendarEventRegistrationTracking] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-SearchHistoryTopSearches] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactTopSearchA', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.FactTopSearchA'
+END
+IF OBJECT_ID(N'dbo.FactTopSearchB', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.FactTopSearchB'
+END
+
+IF OBJECT_ID(N'dbo.FactTopSearchA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactTopSearchA
+	(
+		TopSearchKey INT NOT NULL IDENTITY(1,1),
+		SearchQueryKey BIGINT NOT NULL,
+		SearchFlagGroupKey INT NOT NULL,
+		ApplicationKey BIGINT NULL,
+		ContainerKey BIGINT NULL,
+		UserKey INT NOT NULL,
+		SearchDateKey INT NOT NULL,
+		SearchTimeOfDayKey INT,	
+		SearchCount INT NOT NULL,	
+		CONSTRAINT PK_FactTopSearchA PRIMARY KEY CLUSTERED
+		(
+			TopSearchKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchA ADD  CONSTRAINT FK_FactTopSearchA_DimSearchQuery FOREIGN KEY (SearchQueryKey)
+	REFERENCES dbo.DimSearchQuery (SearchQueryKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchA ADD  CONSTRAINT FK_FactTopSearchA_DimSearchFlagGroup FOREIGN KEY (SearchFlagGroupKey)
+	REFERENCES dbo.DimSearchFlagGroup (SearchFlagGroupKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchA ADD  CONSTRAINT FK_FactTopSearchA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchA ADD  CONSTRAINT FK_FactTopSearchA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchA ADD  CONSTRAINT FK_FactTopSearchA_DimUser FOREIGN KEY (UserKey)
+	REFERENCES dbo.DimUser(UserKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchA ADD  CONSTRAINT FK_FactTopSearchA_DimDate FOREIGN KEY (SearchDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchA ADD  CONSTRAINT FK_FactTopSearchA_DimTimeOfDay FOREIGN KEY (SearchTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+END
+
+IF OBJECT_ID(N'dbo.FactTopSearchB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactTopSearchB
+	(
+		TopSearchKey INT NOT NULL IDENTITY(1,1),
+		SearchQueryKey BIGINT NOT NULL,
+		SearchFlagGroupKey INT NOT NULL,
+		ApplicationKey BIGINT NULL,
+		ContainerKey BIGINT NULL,
+		UserKey INT NOT NULL,
+		SearchDateKey INT NOT NULL,
+		SearchTimeOfDayKey INT,	
+		SearchCount INT NOT NULL,	
+		CONSTRAINT PK_FactTopSearchB PRIMARY KEY CLUSTERED
+		(
+			TopSearchKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchB ADD  CONSTRAINT FK_FactTopSearchB_DimSearchQuery FOREIGN KEY (SearchQueryKey)
+	REFERENCES dbo.DimSearchQuery (SearchQueryKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchB ADD  CONSTRAINT FK_FactTopSearchB_DimSearchFlagGroup FOREIGN KEY (SearchFlagGroupKey)
+	REFERENCES dbo.DimSearchFlagGroup (SearchFlagGroupKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchB ADD  CONSTRAINT FK_FactTopSearchB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchB ADD  CONSTRAINT FK_FactTopSearchB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchB ADD  CONSTRAINT FK_FactTopSearchB_DimUser FOREIGN KEY (UserKey)
+	REFERENCES dbo.DimUser(UserKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchB ADD  CONSTRAINT FK_FactTopSearchB_DimDate FOREIGN KEY (SearchDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactTopSearchB ADD  CONSTRAINT FK_FactTopSearchB_DimTimeOfDay FOREIGN KEY (SearchTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+END
+
+IF OBJECT_ID(N'dbo.FactTopSearch', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactTopSearch FOR dbo.FactTopSearchA'
+END
+
+IF OBJECT_ID(N'dbo.FactTopSearchOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactTopSearchOld FOR dbo.FactTopSearchB'
+END
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactTopSearchA', 'FactTopSearchA', 'PRIMARY KEY CLUSTERED', 'FactTopSearchA', 'TopSearchKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactTopSearchA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactTopSearchA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactTopSearchA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactTopSearchB', 'FactTopSearchB', 'PRIMARY KEY CLUSTERED', 'FactTopSearchB', 'TopSearchKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactTopSearchB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactTopSearchB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactTopSearchB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+DELETE 
+FROM dbo.ReportingIndexPlan
+WHERE IndexId IN (SELECT IndexId FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactTopSearchA_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_SearchCou1')
+
+DELETE 
+FROM dbo.ReportingIndex 
+WHERE IndexName = 'UIX_FactTopSearchA_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_SearchCou1'
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'UIX_FactTopSearchA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1', 'FactTopSearchA', 'UNIQUE NONCLUSTERED', 'FactTopSearchA', 'SearchFlagGroupKey,UserKey,SearchQueryKey,ApplicationKey,ContainerKey,SearchDateKey,SearchTimeOfDayKey', 'SearchCount'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactTopSearchA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactTopSearchA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactTopSearchA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactTopSearchA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey', 'FactTopSearchA', 'NONCLUSTERED', 'FactTopSearchA', 'SearchFlagGroupKey', 'SearchCount,SearchQueryKey,SearchDateKey,SearchTimeOfDayKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactTopSearchA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactTopSearchA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactTopSearchA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+DELETE 
+FROM dbo.ReportingIndexPlan
+WHERE IndexId IN (SELECT IndexId FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactTopSearchB_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_SearchCou1')
+
+DELETE 
+FROM dbo.ReportingIndex 
+WHERE IndexName = 'UIX_FactTopSearchB_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_SearchCou1'
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'UIX_FactTopSearchB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1', 'FactTopSearchB', 'UNIQUE NONCLUSTERED', 'FactTopSearchB', 'SearchFlagGroupKey,UserKey,SearchQueryKey,ApplicationKey,ContainerKey,SearchDateKey,SearchTimeOfDayKey', 'SearchCount'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactTopSearchB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactTopSearchB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactTopSearchB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_Inc_1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactTopSearchB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey', 'FactTopSearchB', 'NONCLUSTERED', 'FactTopSearchB', 'SearchFlagGroupKey', 'SearchCount,SearchQueryKey,SearchDateKey,SearchTimeOfDayKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactTopSearchB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactTopSearchB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactTopSearchB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'SearchHistoryTopSearches', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-SearchHistoryTopSearches] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-SearchHistoryTopSearches], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-SearchHistoryTopSearches] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-SearchHistorySearchesWithNoResults]
+* Previous: [5.0-SearchHistoryTopSearches]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'SearchHistorySearchesWithNoResults');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'SearchHistoryTopSearches');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-SearchHistorySearchesWithNoResults] as previous patch [5.0-SearchHistoryTopSearches] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-SearchHistorySearchesWithNoResults] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactSearchesWithNoResultsA', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.FactSearchesWithNoResultsA'
+END
+
+IF OBJECT_ID(N'dbo.FactSearchesWithNoResultsB', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'DROP TABLE dbo.FactSearchesWithNoResultsB'
+END
+
+IF OBJECT_ID(N'dbo.FactSearchesWithNoResultsA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactSearchesWithNoResultsA
+	(
+		SearchesWithNoResultsKey INT NOT NULL IDENTITY(1,1),
+		SearchQueryKey BIGINT NOT NULL,
+		SearchFlagGroupKey INT NOT NULL,
+		ApplicationKey BIGINT NULL,
+		ContainerKey BIGINT NULL,
+		UserKey INT NOT NULL,
+		SearchDateKey INT NOT NULL,
+		SearchTimeOfDayKey INT,	
+		SearchCount INT NOT NULL,	
+		CONSTRAINT PK_FactSearchesWithNoResultsA PRIMARY KEY CLUSTERED
+		(
+			SearchesWithNoResultsKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsA ADD  CONSTRAINT FK_FactSearchesWithNoResultsA_DimSearchQuery FOREIGN KEY (SearchQueryKey)
+	REFERENCES dbo.DimSearchQuery (SearchQueryKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsA ADD  CONSTRAINT FK_FactSearchesWithNoResultsA_DimSearchFlagGroup FOREIGN KEY (SearchFlagGroupKey)
+	REFERENCES dbo.DimSearchFlagGroup (SearchFlagGroupKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsA ADD  CONSTRAINT FK_FactSearchesWithNoResultsA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsA ADD  CONSTRAINT FK_FactSearchesWithNoResultsA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsA ADD  CONSTRAINT FK_FactSearchesWithNoResultsA_DimUser FOREIGN KEY (UserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsA ADD  CONSTRAINT FK_FactSearchesWithNoResultsA_DimDate FOREIGN KEY (SearchDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsA ADD  CONSTRAINT FK_FactSearchesWithNoResultsA_DimTimeOfDay FOREIGN KEY (SearchTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+END
+
+IF OBJECT_ID(N'dbo.FactSearchesWithNoResultsB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactSearchesWithNoResultsB
+	(
+		SearchesWithNoResultsKey INT NOT NULL IDENTITY(1,1),
+		SearchQueryKey BIGINT NOT NULL,
+		SearchFlagGroupKey INT NOT NULL,
+		ApplicationKey BIGINT NULL,
+		ContainerKey BIGINT NULL,
+		UserKey INT NOT NULL,
+		SearchDateKey INT NOT NULL,
+		SearchTimeOfDayKey INT,	
+		SearchCount INT NOT NULL,	
+		CONSTRAINT PK_FactSearchesWithNoResultsB PRIMARY KEY CLUSTERED
+		(
+			SearchesWithNoResultsKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsB ADD  CONSTRAINT FK_FactSearchesWithNoResultsB_DimSearchQuery FOREIGN KEY (SearchQueryKey)
+	REFERENCES dbo.DimSearchQuery (SearchQueryKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsB ADD  CONSTRAINT FK_FactSearchesWithNoResultsB_DimSearchFlagGroup FOREIGN KEY (SearchFlagGroupKey)
+	REFERENCES dbo.DimSearchFlagGroup (SearchFlagGroupKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsB ADD  CONSTRAINT FK_FactSearchesWithNoResultsB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsB ADD  CONSTRAINT FK_FactSearchesWithNoResultsB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsB ADD  CONSTRAINT FK_FactSearchesWithNoResultsB_DimUser FOREIGN KEY (UserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsB ADD  CONSTRAINT FK_FactSearchesWithNoResultsB_DimDate FOREIGN KEY (SearchDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactSearchesWithNoResultsB ADD  CONSTRAINT FK_FactSearchesWithNoResultsB_DimTimeOfDay FOREIGN KEY (SearchTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+END
+
+IF OBJECT_ID(N'dbo.FactSearchesWithNoResults', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactSearchesWithNoResults FOR dbo.FactSearchesWithNoResultsA'
+END
+
+IF OBJECT_ID(N'dbo.FactSearchesWithNoResultsOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactSearchesWithNoResultsOld FOR dbo.FactSearchesWithNoResultsB'
+END
+
+ALTER TABLE dbo.ReportingIndex ALTER COLUMN Category NVARCHAR(100) NOT NULL
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactSearchesWithNoResultsA', 'FactSearchesWithNoResultsA', 'PRIMARY KEY CLUSTERED', 'FactSearchesWithNoResultsA', 'SearchesWithNoResultsKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactSearchesWithNoResultsA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactSearchesWithNoResultsA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactSearchesWithNoResultsA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactSearchesWithNoResultsB', 'FactSearchesWithNoResultsB', 'PRIMARY KEY CLUSTERED', 'FactSearchesWithNoResultsB', 'SearchesWithNoResultsKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactSearchesWithNoResultsB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactSearchesWithNoResultsB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactSearchesWithNoResultsB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+	
+DELETE 
+FROM dbo.ReportingIndexPlan
+WHERE IndexId IN (SELECT IndexId FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactSearchesWithNoResultsA_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_I1')
+
+DELETE 
+FROM dbo.ReportingIndex 
+WHERE IndexName = 'UIX_FactSearchesWithNoResultsA_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_I1'
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'UIX_FactSearchesWithNoResultsA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1', 'FactSearchesWithNoResultsA', 'UNIQUE NONCLUSTERED', 'FactSearchesWithNoResultsA', 'SearchFlagGroupKey,UserKey,SearchQueryKey,ApplicationKey,ContainerKey,SearchDateKey,SearchTimeOfDayKey', 'SearchCount'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactSearchesWithNoResultsA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactSearchesWithNoResultsA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactSearchesWithNoResultsA_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactSearchesWithNoResultsA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey', 'FactSearchesWithNoResultsA', 'NONCLUSTERED', 'FactSearchesWithNoResultsA', 'SearchFlagGroupKey', 'SearchCount,SearchQueryKey,SearchDateKey,SearchTimeOfDayKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactSearchesWithNoResultsA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsA_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactSearchesWithNoResultsA_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey', 'FactSearchesWithNoResultsA', 'NONCLUSTERED', 'FactSearchesWithNoResultsA', 'UserKey', 'SearchFlagGroupKey,SearchCount,SearchQueryKey,SearchDateKey,SearchTimeOfDayKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactSearchesWithNoResultsA_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsA_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsA_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+DELETE 
+FROM dbo.ReportingIndexPlan
+WHERE IndexId IN (SELECT IndexId FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactSearchesWithNoResultsB_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_I1')
+
+DELETE 
+FROM dbo.ReportingIndex 
+WHERE IndexName = 'UIX_FactSearchesWithNoResultsB_SearchFlagGroupKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTimeOfDayKey_I1'
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'UIX_FactSearchesWithNoResultsB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1', 'FactSearchesWithNoResultsB', 'UNIQUE NONCLUSTERED', 'FactSearchesWithNoResultsB', 'SearchFlagGroupKey,UserKey,SearchQueryKey,ApplicationKey,ContainerKey,SearchDateKey,SearchTimeOfDayKey', 'SearchCount'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'UIX_FactSearchesWithNoResultsB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactSearchesWithNoResultsB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'UIX_FactSearchesWithNoResultsB_SearchFlagGroupKey_UserKey_SearchQueryKey_ApplicationKey_ContainerKey_SearchDateKey_SearchTime_I1'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactSearchesWithNoResultsB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey', 'FactSearchesWithNoResultsB', 'NONCLUSTERED', 'FactSearchesWithNoResultsB', 'SearchFlagGroupKey', 'SearchCount,SearchQueryKey,SearchDateKey,SearchTimeOfDayKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactSearchesWithNoResultsB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsB_SearchFlagGroupKey_Inc_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactSearchesWithNoResultsB_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey', 'FactSearchesWithNoResultsB', 'NONCLUSTERED', 'FactSearchesWithNoResultsB', 'UserKey', 'SearchFlagGroupKey,SearchCount,SearchQueryKey,SearchDateKey,SearchTimeOfDayKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactSearchesWithNoResultsB_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsB_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactSearchesWithNoResultsB_UserKey_Inc_SearchFlagGroupKey_SearchCount_SearchQueryKey_SearchDateKey_SearchTimeOfDayKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'SearchHistorySearchesWithNoResults', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-SearchHistorySearchesWithNoResults] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-SearchHistorySearchesWithNoResults], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-SearchHistorySearchesWithNoResults] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts]
+* Previous: [5.0-SearchHistorySearchesWithNoResults]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14789-ReportingETLContentViewUpdateTimeouts');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'SearchHistorySearchesWithNoResults');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts] as previous patch [5.0-SearchHistorySearchesWithNoResults] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingIndex') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+		IF EXISTS (SELECT 1 FROM sys.indexes where name = ''IX_FactContentView_ContentKey_ViewDateUtc_ViewUserKey_Inc_ViewCount'' AND object_id = OBJECT_ID(N''dbo.FactContentView''))
+		BEGIN
+			DROP INDEX IX_FactContentView_ContentKey_ViewDateUtc_ViewUserKey_Inc_ViewCount ON dbo.FactContentView
+		END'
+
+	EXEC sp_executesql N'
+		DELETE i
+		FROM dbo.ReportingIndexPlan i
+		WHERE EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE i.IndexId = IndexId AND IndexName = ''IX_FactContentView_ContentKey_ViewDateUtc_ViewUserKey_Inc_ViewCount'')'
+
+ 	EXEC sp_executesql N'
+		DELETE
+		FROM dbo.ReportingIndex
+		WHERE IndexName = ''IX_FactContentView_ContentKey_ViewDateUtc_ViewUserKey_Inc_ViewCount'''
+END 
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-14789-ReportingETLContentViewUpdateTimeouts', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends]
+* Previous: [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14469-ReportingFactForumSchemaModificationLargeTrends');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14789-ReportingETLContentViewUpdateTimeouts');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends] as previous patch [5.0-TE-14789-ReportingETLContentViewUpdateTimeouts] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactForumA') IS NOT NULL
+BEGIN
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate1DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate3DayTrend NUMERIC(9,4)'
+	END	
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate7DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate1Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate3Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate7Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate1Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate3Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate7Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate1Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate3Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN ResponseRate7Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate1DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate3DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate7DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate1Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate3Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate7Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate1Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate3Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate7Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate1Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate3Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN SuggestedAnswerRate7Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate1DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate3DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate7DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate1Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate3Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate7Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate1Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate3Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate7Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate1Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate3Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumA') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumA
+			ALTER COLUMN AnswerRate7Day180DayTrend NUMERIC(9,4)'
+	END
+END
+
+IF OBJECT_ID(N'dbo.FactForumB') IS NOT NULL
+BEGIN
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate1DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate3DayTrend NUMERIC(9,4)'
+	END	
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate7DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate1Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate3Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate7Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate1Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate3Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate7Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate1Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate1Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate3Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate3Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'ResponseRate7Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN ResponseRate7Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate1DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate3DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate7DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate1Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate3Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate7Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate1Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate3Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate7Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate1Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate1Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate3Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate3Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'SuggestedAnswerRate7Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN SuggestedAnswerRate7Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate1DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate3DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate7DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate1Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate3Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7Day30DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate7Day30DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate1Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate3Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7Day90DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate7Day90DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate1Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate1Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate3Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate3Day180DayTrend NUMERIC(9,4)'
+	END
+	IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.FactForumB') AND system_type_id = 108 AND [precision] = 5 and scale = 4 and [name] = 'AnswerRate7Day180DayTrend')
+	BEGIN
+		EXEC sp_executesql N'
+			ALTER TABLE dbo.FactForumB
+			ALTER COLUMN AnswerRate7Day180DayTrend NUMERIC(9,4)'
+	END
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-14469-ReportingFactForumSchemaModificationLargeTrends', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-14998-ContentModerationActivity]
+* Previous: [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14998-ContentModerationActivity');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14469-ReportingFactForumSchemaModificationLargeTrends');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-14998-ContentModerationActivity] as previous patch [5.0-TE-14469-ReportingFactForumSchemaModificationLargeTrends] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-14998-ContentModerationActivity] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''0''
+	WHERE ControlName = ''ActivityRowVersionControl''
+	
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''1/1/1900''
+	WHERE ControlName = ''ActivityLastUpdatedDateUtcControl''
+	
+	UPDATE dbo.ReportingControl
+	SET ControlValue = ''0''
+	WHERE ControlName = ''IndexPlanUserActivity'''
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-14998-ContentModerationActivity', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-14998-ContentModerationActivity] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-14998-ContentModerationActivity], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-14998-ContentModerationActivity] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-14706-ReportingFactUserActivityIndex]
+* Previous: [5.0-TE-14998-ContentModerationActivity]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14706-ReportingFactUserActivityIndex');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14998-ContentModerationActivity');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-14706-ReportingFactUserActivityIndex] as previous patch [5.0-TE-14998-ContentModerationActivity] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-14706-ReportingFactUserActivityIndex] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.ReportingIndex') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+		IF EXISTS (SELECT 1 FROM sys.indexes where name = ''IX_FactUserActivity_PrimaryContentKey_ActivityDateUtc_Inc_ActivityTypeKey_ActivityUserKey'' AND object_id = OBJECT_ID(N''dbo.FactUserActivity''))
+		BEGIN
+			DROP INDEX IX_FactUserActivity_PrimaryContentKey_ActivityDateUtc_Inc_ActivityTypeKey_ActivityUserKey ON dbo.FactUserActivity
+		END'
+
+	EXEC sp_executesql N'
+		INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+		SELECT ''IX_FactUserActivity_PrimaryContentKey_ActivityDateUtc_Inc_ActivityTypeKey_ActivityUserKey'', ''FactUserActivity'', ''NONCLUSTERED'', ''FactUserActivity'', ''PrimaryContentKey,ActivityDateUtc'', ''ActivityTypeKey,ActivityUserKey''
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = ''IX_FactUserActivity_PrimaryContentKey_ActivityDateUtc_Inc_ActivityTypeKey_ActivityUserKey'')'
+
+	EXEC sp_executesql N'
+		INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+		SELECT IndexId, 0, ''DropCreate''
+		FROM dbo.ReportingIndex i
+		WHERE IndexName = ''IX_FactUserActivity_PrimaryContentKey_ActivityDateUtc_Inc_ActivityTypeKey_ActivityUserKey''
+			AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+		INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+		SELECT IndexId, 1, ''Rebuild''
+		FROM dbo.ReportingIndex i
+		WHERE IndexName = ''IX_FactUserActivity_PrimaryContentKey_ActivityDateUtc_Inc_ActivityTypeKey_ActivityUserKey''
+			AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-14706-ReportingFactUserActivityIndex', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-14706-ReportingFactUserActivityIndex] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-14706-ReportingFactUserActivityIndex], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-14706-ReportingFactUserActivityIndex] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-ArticlesSummary4]
+* Previous: [5.0-TE-14706-ReportingFactUserActivityIndex]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'ArticlesSummary4');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-14706-ReportingFactUserActivityIndex');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-ArticlesSummary4] as previous patch [5.0-TE-14706-ReportingFactUserActivityIndex] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-ArticlesSummary4] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactArticleCollectionA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactArticleCollectionA
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalArticleCount INT NOT NULL,
+		TotalPublishedArticleCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewArticleCountLast1Day INT NOT NULL,
+		NewArticleCountPrevious1Day INT NOT NULL,
+		NewArticleCountLast3Days INT NOT NULL,
+		NewArticleCountPrevious3Days INT NOT NULL,
+		NewArticleCountLast7Days INT NOT NULL,
+		NewArticleCountPrevious7Days INT NOT NULL,
+		NewArticleCountLast30Days INT NOT NULL,
+		NewArticleCountPrevious30Days INT NOT NULL,
+		NewArticleCountLast90Days INT NOT NULL,
+		NewArticleCountPrevious90Days INT NOT NULL,
+		NewArticleCountLast180Days INT NOT NULL,
+		NewArticleCountPrevious180Days INT NOT NULL,
+		EditArticleCountLast1Day INT NOT NULL,
+		EditArticleCountPrevious1Day INT NOT NULL,
+		EditArticleCountLast3Days INT NOT NULL,
+		EditArticleCountPrevious3Days INT NOT NULL,
+		EditArticleCountLast7Days INT NOT NULL,
+		EditArticleCountPrevious7Days INT NOT NULL,
+		EditArticleCountLast30Days INT NOT NULL,
+		EditArticleCountPrevious30Days INT NOT NULL,
+		EditArticleCountLast90Days INT NOT NULL,
+		EditArticleCountPrevious90Days INT NOT NULL,
+		EditArticleCountLast180Days INT NOT NULL,
+		EditArticleCountPrevious180Days INT NOT NULL,
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,
+		CONSTRAINT PK_FactArticleCollectionA PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionA ADD  CONSTRAINT FK_FactArticleCollectionA_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionA ADD  CONSTRAINT FK_FactArticleCollectionA_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionA ADD  CONSTRAINT FK_FactArticleCollectionA_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionA ADD  CONSTRAINT FK_FactArticleCollectionA_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionA ADD  CONSTRAINT FK_FactArticleCollectionA_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactArticleCollectionB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactArticleCollectionB
+	(
+		ApplicationKey BIGINT NOT NULL,
+		ContainerKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		TotalArticleCount INT NOT NULL,
+		TotalPublishedArticleCount INT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		NewArticleCountLast1Day INT NOT NULL,
+		NewArticleCountPrevious1Day INT NOT NULL,
+		NewArticleCountLast3Days INT NOT NULL,
+		NewArticleCountPrevious3Days INT NOT NULL,
+		NewArticleCountLast7Days INT NOT NULL,
+		NewArticleCountPrevious7Days INT NOT NULL,
+		NewArticleCountLast30Days INT NOT NULL,
+		NewArticleCountPrevious30Days INT NOT NULL,
+		NewArticleCountLast90Days INT NOT NULL,
+		NewArticleCountPrevious90Days INT NOT NULL,
+		NewArticleCountLast180Days INT NOT NULL,
+		NewArticleCountPrevious180Days INT NOT NULL,
+		EditArticleCountLast1Day INT NOT NULL,
+		EditArticleCountPrevious1Day INT NOT NULL,
+		EditArticleCountLast3Days INT NOT NULL,
+		EditArticleCountPrevious3Days INT NOT NULL,
+		EditArticleCountLast7Days INT NOT NULL,
+		EditArticleCountPrevious7Days INT NOT NULL,
+		EditArticleCountLast30Days INT NOT NULL,
+		EditArticleCountPrevious30Days INT NOT NULL,
+		EditArticleCountLast90Days INT NOT NULL,
+		EditArticleCountPrevious90Days INT NOT NULL,
+		EditArticleCountLast180Days INT NOT NULL,
+		EditArticleCountPrevious180Days INT NOT NULL,
+		NewCommentCountLast1Day INT NOT NULL,
+		NewCommentCountPrevious1Day INT NOT NULL,
+		NewCommentCountLast3Days INT NOT NULL,
+		NewCommentCountPrevious3Days INT NOT NULL,
+		NewCommentCountLast7Days INT NOT NULL,
+		NewCommentCountPrevious7Days INT NOT NULL,
+		NewCommentCountLast30Days INT NOT NULL,
+		NewCommentCountPrevious30Days INT NOT NULL,
+		NewCommentCountLast90Days INT NOT NULL,
+		NewCommentCountPrevious90Days INT NOT NULL,
+		NewCommentCountLast180Days INT NOT NULL,
+		NewCommentCountPrevious180Days INT NOT NULL,	
+		CONSTRAINT PK_FactArticleCollectionB PRIMARY KEY CLUSTERED
+		(
+			ApplicationKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionB ADD  CONSTRAINT FK_FactArticleCollectionB_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionB ADD  CONSTRAINT FK_FactArticleCollectionB_DimContainer FOREIGN KEY (ContainerKey)
+	REFERENCES dbo.DimContainer (ContainerKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionB ADD  CONSTRAINT FK_FactArticleCollectionB_DimDate FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionB ADD  CONSTRAINT FK_FactArticleCollectionB_DimTimeOfDay FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleCollectionB ADD  CONSTRAINT FK_FactArticleCollectionB_DimUser FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactArticleCollection', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactArticleCollection FOR dbo.FactArticleCollectionA'
+END
+
+IF OBJECT_ID(N'dbo.FactArticleCollectionOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactArticleCollectionOld FOR dbo.FactArticleCollectionB'
+END
+
+
+--FactArticleCollectionA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactArticleCollectionA', 'FactACA', 'PRIMARY KEY CLUSTERED', 'FactArticleCollectionA', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactArticleCollectionA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleCollectionA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleCollectionA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactArticleCollectionB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactArticleCollectionB', 'FactACB', 'PRIMARY KEY CLUSTERED', 'FactArticleCollectionB', 'ApplicationKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactArticleCollectionB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleCollectionB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleCollectionB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+IF OBJECT_ID(N'dbo.FactArticle', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactArticle
+	(
+		ContentKey BIGINT NOT NULL,
+		ApplicationKey BIGINT NOT NULL,
+		CreatedUserKey INT NOT NULL,
+		PublishedUserKey INT NOT NULL,
+		CreatedDateUtc DATETIME2(0) NOT NULL,
+		CreatedDateKey INT NOT NULL, 
+		CreatedTimeOfDayKey INT NOT NULL,
+		LastPublishedDateUtc DATETIME2(0) NULL,
+		LastPublishedDateKey INT NOT NULL,
+		LastPublishedTimeOfDayKey INT NOT NULL,
+		CONSTRAINT PK_FactArticle PRIMARY KEY CLUSTERED
+		(
+			ContentKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimContent FOREIGN KEY (ContentKey)
+	REFERENCES dbo.DimContent (ContentKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimApplication FOREIGN KEY (ApplicationKey)
+	REFERENCES dbo.DimApplication (ApplicationKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimDate_CreatedDateKey FOREIGN KEY (CreatedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimTimeOfDay_CreatedTimeOfDayKey FOREIGN KEY (CreatedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimDate_LastPublishedDateKey FOREIGN KEY (LastPublishedDateKey)
+	REFERENCES dbo.DimDate (DateKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimTimeOfDay_LastPublishedTimeOfDayKey FOREIGN KEY (LastPublishedTimeOfDayKey)
+	REFERENCES dbo.DimTimeOfDay (TimeOfDayKey)'	
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimUser_CreatedUserKey FOREIGN KEY (CreatedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticle ADD  CONSTRAINT FK_FactArticle_DimUser_PublishedUserKey FOREIGN KEY (PublishedUserKey)
+	REFERENCES dbo.DimUser (UserKey)'
+END
+
+--FactArticle
+DELETE rip
+FROM dbo.ReportingIndexPlan rip
+WHERE EXISTS (SELECT 1 FROM dbo.ReportingIndex ri WHERE rip.IndexId = ri.IndexId AND ri.IndexName = 'PK_FactArticle')
+
+DELETE
+FROM dbo.ReportingIndex
+WHERE IndexName = 'PK_FactArticle'
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactArticle', 'Fact', 'PRIMARY KEY CLUSTERED', 'FactArticle', 'ContentKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactArticle')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticle'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticle'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+IF OBJECT_ID(N'dbo.FactArticleSummaryA', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	DROP TABLE dbo.FactArticleSummaryA'
+END
+
+IF OBJECT_ID(N'dbo.FactArticleSummaryA', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactArticleSummaryA
+	(
+		ContentKey BIGINT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		TotalHelpfulVotes INT NOT NULL,
+		TotalFeedback INT NOT NULL, 
+		TotalResolvedFeedback INT NOT NULL,
+		CONSTRAINT PK_FactArticleSummaryA PRIMARY KEY CLUSTERED
+		(
+			ContentKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleSummaryA ADD  CONSTRAINT FK_FactArticleSummaryA_DimContent FOREIGN KEY (ContentKey)
+	REFERENCES dbo.DimContent (ContentKey)'
+END
+
+
+IF OBJECT_ID(N'dbo.FactArticleSummaryB', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	DROP TABLE dbo.FactArticleSummaryB'
+END
+
+IF OBJECT_ID(N'dbo.FactArticleSummaryB', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE TABLE dbo.FactArticleSummaryB
+	(
+		ContentKey BIGINT NOT NULL,
+		TotalCommentCount INT NOT NULL,
+		TotalHelpfulVotes INT NOT NULL,
+		TotalFeedback INT NOT NULL, 
+		TotalResolvedFeedback INT NOT NULL,
+		CONSTRAINT PK_FactArticleSummaryB PRIMARY KEY CLUSTERED
+		(
+			ContentKey
+		)
+	)'
+
+	EXEC sp_executesql N'
+	ALTER TABLE dbo.FactArticleSummaryB ADD  CONSTRAINT FK_FactArticleSummaryB_DimContent FOREIGN KEY (ContentKey)
+	REFERENCES dbo.DimContent (ContentKey)'
+END
+
+IF OBJECT_ID(N'dbo.FactArticleSummary', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactArticleSummary FOR dbo.FactArticleSummaryA'
+END
+
+IF OBJECT_ID(N'dbo.FactArticleSummaryOld', N'SN') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+	CREATE SYNONYM dbo.FactArticleSummaryOld FOR dbo.FactArticleSummaryB'
+END
+
+--FactArticleSummaryA
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactArticleSummaryA', 'FactArticleSummaryA', 'PRIMARY KEY CLUSTERED', 'FactArticleSummaryA', 'ContentKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactArticleSummaryA')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleSummaryA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleSummaryA'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+--FactArticleSummaryB
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactArticleSummaryB', 'FactArticleSummaryB', 'PRIMARY KEY CLUSTERED', 'FactArticleSummaryB', 'ContentKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactArticleSummaryB')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleSummaryB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactArticleSummaryB'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+IF OBJECT_ID(N'dbo.StagingHelpfulness') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.StagingHelpfulness
+		(
+			HelpfulnessId INT NOT NULL,
+			ContentId UNIQUEIDENTIFIER NOT NULL,
+			UserId UNIQUEIDENTIFIER NOT NULL, 
+			CreatedDateUtc DATETIME2(3) NOT NULL,
+			IsHelpful BIT NOT NULL,
+			IsResolved BIT NULL,
+			IsIgnored BIT NULL,
+			HasError BIT NOT NULL CONSTRAINT DF_StagingHelpfulness_HasError DEFAULT(0)
+		)'
+END
+
+IF OBJECT_ID(N'dbo.StagingReference_Helpfulness') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.StagingReference_Helpfulness
+		(
+			HelpfulnessId INT NOT NULL
+		)'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_Helpfulness') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.StagingDelete_Helpfulness
+		(
+			HelpfulnessKey INT NOT NULL
+		)'
+END
+
+IF OBJECT_ID(N'dbo.StagingDifferences_Helpfulness') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.StagingDifferences_Helpfulness
+		(
+			HelpfulnessKey INT NOT NULL,
+			ContentKey BIGINT NOT NULL,
+			CreatedUserKey INT NOT NULL,
+			CreatedDateUtc DATETIME2(3) NOT NULL,
+			IsHelpful BIT NOT NULL,
+			IsResolved BIT NOT NULL,
+			IsIgnored BIT NOT NULL
+		)'
+END
+
+IF OBJECT_ID(N'dbo.StagingNew_FactHelpfulness') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.StagingNew_FactHelpfulness
+		(
+			HelpfulnessKey INT NOT NULL,
+			ContentKey BIGINT NOT NULL,
+			CreatedUserKey INT NOT NULL,
+			CreatedDateUtc DATETIME2(3) NOT NULL,
+			CreatedDateKey INT NOT NULL,
+			CreatedTimeOfDayKey INT NOT NULL,
+			IsHelpful BIT NOT NULL,
+			IsResolved BIT NOT NULL,
+			IsIgnored BIT NOT NULL,
+			HasError BIT NOT NULL CONSTRAINT DF_StagingNew_FactHelpfulness_HasError DEFAULT(0)
+		)'
+END
+
+IF OBJECT_ID(N'dbo.FactHelpfulness') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.FactHelpfulness
+		(
+			HelpfulnessKey INT NOT NULL,
+			ContentKey BIGINT NOT NULL,
+			CreatedUserKey INT NOT NULL,
+			CreatedDateUtc DATETIME2(3) NOT NULL,
+			CreatedDateKey INT NOT NULL,
+			CreatedTimeOfDayKey INT NOT NULL,
+			IsHelpful BIT NOT NULL,
+			IsResolved BIT NOT NULL,
+			IsIgnored BIT NOT NULL,
+			CONSTRAINT PK_FactHelpfulness PRIMARY KEY CLUSTERED
+			(
+				HelpfulnessKey
+			)
+		)'
+END
+
+--FactHelpfulness
+DELETE rip
+FROM dbo.ReportingIndexPlan rip
+WHERE EXISTS (SELECT 1 FROM dbo.ReportingIndex ri WHERE rip.IndexId = ri.IndexId AND ri.IndexName = 'PK_FactHelpfulness')
+
+DELETE
+FROM dbo.ReportingIndex
+WHERE IndexName = 'PK_FactHelpfulness'
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'PK_FactHelpfulness', 'Fact', 'PRIMARY KEY CLUSTERED', 'FactHelpfulness', 'HelpfulnessKey', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'PK_FactHelpfulness')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactHelpfulness'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'PK_FactHelpfulness'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactHelpfulness_ContentKey_CreatedDateKey_CreatedUserKey_Inc_IsHelpful_IsResolved_IsIgnored', 'FactHelpfulness', 'UNIQUE NONCLUSTERED', 'FactHelpfulness', 'ContentKey,CreatedDateKey,CreatedUserKey', 'IsHelpful,IsResolved,IsIgnored'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactHelpfulness_ContentKey_CreatedDateKey_CreatedUserKey_Inc_IsHelpful_IsResolved_IsIgnored')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactHelpfulness_ContentKey_CreatedDateKey_CreatedUserKey_Inc_IsHelpful_IsResolved_IsIgnored'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactHelpfulness_ContentKey_CreatedDateKey_CreatedUserKey_Inc_IsHelpful_IsResolved_IsIgnored'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactHelpfulness_CreatedDateKey_CreatedUserKey_Inc_ContentKey_IsHelpful_IsResolved_IsIgnored', 'FactHelpfulness', 'UNIQUE NONCLUSTERED', 'FactHelpfulness', 'CreatedDateKey,CreatedUserKey', 'ContentKey,IsHelpful,IsResolved,IsIgnored'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactHelpfulness_CreatedDateKey_CreatedUserKey_Inc_ContentKey_IsHelpful_IsResolved_IsIgnored')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactHelpfulness_CreatedDateKey_CreatedUserKey_Inc_ContentKey_IsHelpful_IsResolved_IsIgnored'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactHelpfulness_CreatedDateKey_CreatedUserKey_Inc_ContentKey_IsHelpful_IsResolved_IsIgnored'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+
+INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+SELECT 'HelpfulnessRowVersionControl' AS ControlName, '0' AS ControlValue
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = 'HelpfulnessRowVersionControl')
+
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'ArticlesSummary4', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-ArticlesSummary4] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-ArticlesSummary4], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-ArticlesSummary4] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-16009-NewIndex]
+* Previous: [5.0-ArticlesSummary4]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-16009-NewIndex');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'ArticlesSummary4');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-16009-NewIndex] as previous patch [5.0-ArticlesSummary4] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-16009-NewIndex] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+--FactContent
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactContent_ApplicationKey_CreatedDateKey_Inc_CreatedUserKey_ContainerKey', 'Fact', 'NONCLUSTERED', 'FactContent', 'ApplicationKey,CreatedDateKey', 'CreatedUserKey,ContainerKey'
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactContent_ApplicationKey_CreatedDateKey_Inc_CreatedUserKey_ContainerKey')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactContent_ApplicationKey_CreatedDateKey_Inc_CreatedUserKey_ContainerKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactContent_ApplicationKey_CreatedDateKey_Inc_CreatedUserKey_ContainerKey'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-16009-NewIndex', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-16009-NewIndex] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-16009-NewIndex], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-16009-NewIndex] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-16389-PerformanceETLImprovements]
+* Previous: [5.0-TE-16009-NewIndex]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-16389-PerformanceETLImprovements');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-16009-NewIndex');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-16389-PerformanceETLImprovements] as previous patch [5.0-TE-16009-NewIndex] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-16389-PerformanceETLImprovements] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.FactContentView',N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''IX_FactContentView_ViewDateUtc'' AND object_id = OBJECT_ID(N''dbo.FactContentView'', N''U''))
+	BEGIN
+		SET QUOTED_IDENTIFIER ON;
+		CREATE INDEX IX_FactContentView_ViewDateUtc ON dbo.FactContentView (ViewDateUtc)
+	END'
+END
+
+--FactContentView
+INSERT INTO dbo.ReportingIndex (IndexName, Category, IndexType, IndexTable, IndexColumns, IndexIncludeColumns)
+SELECT 'IX_FactContentView_ViewDateUtc', 'FactContentView', 'NONCLUSTERED', 'FactContentView', 'ViewDateUtc', NULL
+WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingIndex WHERE IndexName = 'IX_FactContentView_ViewDateUtc')
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 0, 'DropCreate'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactContentView_ViewDateUtc'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 0)
+
+INSERT INTO dbo.ReportingIndexPlan (IndexId, IndexPlan, PlanAction)
+SELECT IndexId, 1, 'Rebuild'
+FROM dbo.ReportingIndex i
+WHERE IndexName = 'IX_FactContentView_ViewDateUtc'
+	AND NOT EXISTS (SELECT 1 FROM dbo.ReportingIndexPlan WHERE IndexId = i.IndexId and IndexPlan = 1)
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-16389-PerformanceETLImprovements', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-16389-PerformanceETLImprovements] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-16389-PerformanceETLImprovements], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-16389-PerformanceETLImprovements] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-17027-ReportingETLCanSkipData_11]
+* Previous: [5.0-TE-16389-PerformanceETLImprovements]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-17027-ReportingETLCanSkipData_11');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-16389-PerformanceETLImprovements');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-17027-ReportingETLCanSkipData_11] as previous patch [5.0-TE-16389-PerformanceETLImprovements] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-17027-ReportingETLCanSkipData_11] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.StagingActivities', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingActivities', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingActivities'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingActivities
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingApplications', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingApplications', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingApplications'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingApplications
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingBlogPostComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingBlogPostComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingBlogPostComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingBlogPostComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingBlogPosts', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingBlogPosts', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingBlogPosts'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingBlogPosts
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingBlogs', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingBlogs', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingBlogs'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingBlogs
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingCalendarEventComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingCalendarEventComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingCalendarEventComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingCalendarEventComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingCalendarEvents', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingCalendarEvents', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingCalendarEvents'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingCalendarEvents
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingCalendars', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingCalendars', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingCalendars'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingCalendars
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingContainers', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingContainers', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingContainers'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingContainers
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingContent', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingContent', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingContent'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingContent
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingContentViews', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingContentViews', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingContentViews'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingContentViews
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingConversationMessages', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingConversationMessages', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingConversationMessages'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingConversationMessages
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingForums', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingForums', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingForums'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingForums
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingForumThreadComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingForumThreadComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingForumThreadComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingForumThreadComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingForumThreadReplies', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingForumThreadReplies', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingForumThreadReplies'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingForumThreadReplies
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingForumThreadReplyComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingForumThreadReplyComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingForumThreadReplyComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingForumThreadReplyComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingForumThreads', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingForumThreads', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingForumThreads'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingForumThreads
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingGroups', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingGroups', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingGroups'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingGroups
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingIdeaComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingIdeaComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingIdeaComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingIdeaComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingIdeas', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingIdeas', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingIdeas'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingIdeas
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingIdeations', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingIdeations', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingIdeations'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingIdeations
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementCollections', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingKnowledgeManagementCollections', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingKnowledgeManagementCollections'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingKnowledgeManagementCollections
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementDocumentComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingKnowledgeManagementDocumentComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingKnowledgeManagementDocumentComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingKnowledgeManagementDocumentComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingKnowledgeManagementDocuments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingKnowledgeManagementDocuments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingKnowledgeManagementDocuments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingKnowledgeManagementDocuments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingLeaderboardComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingLeaderboardComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingLeaderboardComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingLeaderboardComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingLeaderboards', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingLeaderboards', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingLeaderboards'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingLeaderboards
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingMediaGalleries', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingMediaGalleries', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingMediaGalleries'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingMediaGalleries
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingMediaGalleryFileComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingMediaGalleryFileComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingMediaGalleryFileComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingMediaGalleryFileComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingMediaGalleryFiles', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingMediaGalleryFiles', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingMediaGalleryFiles'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingMediaGalleryFiles
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingRatings', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingRatings', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingRatings'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingRatings
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingSearch', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingSearch', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingSearch'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingSearch
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingStatusMessageComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingStatusMessageComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingStatusMessageComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingStatusMessageComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingStatusMessages', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingStatusMessages', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingStatusMessages'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingStatusMessages
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingUsers', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingUsers', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingUsers'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingUsers
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingVotes', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingVotes', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingVotes'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingVotes
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingWikiPageComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingWikiPageComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingWikiPageComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingWikiPageComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingWikiPages', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingWikiPages', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingWikiPages'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingWikiPages
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingWikis', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingWikis', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingWikis'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingWikis
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.ReportingControl', N'U') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''ContainerRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''ContainerRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''ApplicationRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''ApplicationRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''ContentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''ContentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''WikiPageCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''WikiPageCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''BlogPostCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''BlogPostCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''MediaGalleryFileCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''MediaGalleryFileCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''ForumThreadCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''ForumThreadCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''ForumThreadReplyCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''ForumThreadReplyCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''StatusMessageCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''StatusMessageCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''CalendarEventCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''CalendarEventCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''IdeaCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''IdeaCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''KnowledgeManagementDocumentCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''KnowledgeManagementDocumentCommentRowVersionControl''
+			)
+
+	INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+	SELECT ''LeaderboardCommentRowVersionControl'', ''0''
+	WHERE NOT EXISTS 
+			(
+				SELECT 1
+				FROM dbo.ReportingControl
+				WHERE ControlName = ''LeaderboardCommentRowVersionControl''
+			)'
+
+	
+	EXEC sp_executesql N'
+	DECLARE @ControlValue NVARCHAR(256)
+
+	SELECT @ControlValue = ControlValue
+	FROM dbo.ReportingControl
+	WHERE ControlName = ''RowVersionControl''
+
+	IF ISNUMERIC(@ControlValue) = 1
+	BEGIN
+		UPDATE dbo.ReportingControl
+		SET ControlValue = CONVERT(NVARCHAR(50), CAST(CAST(ControlValue AS BIGINT) AS BINARY(8)), 1)
+		WHERE ControlName LIKE ''%RowVer%''
+	END'
+END
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-17027-ReportingETLCanSkipData_11', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-17027-ReportingETLCanSkipData_11] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-17027-ReportingETLCanSkipData_11], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-17027-ReportingETLCanSkipData_11] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-17027-ReportingETLCanSkipData_12]
+* Previous: [5.0-TE-17027-ReportingETLCanSkipData_11]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-17027-ReportingETLCanSkipData_12');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-17027-ReportingETLCanSkipData_11');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-17027-ReportingETLCanSkipData_12] as previous patch [5.0-TE-17027-ReportingETLCanSkipData_11] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-17027-ReportingETLCanSkipData_12] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.StagingArticleCollections', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingArticleCollections', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingArticleCollections'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingArticleCollections
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingArticleComments', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingArticleComments', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingArticleComments'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingArticleComments
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+
+IF OBJECT_ID(N'dbo.StagingArticles', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingArticles', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingArticles'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingArticles
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingHelpfulness', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingHelpfulness', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingHelpfulness'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingHelpfulness
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+SELECT 'ArticleCommentRowVersionControl', '0x0000000000000000'
+WHERE NOT EXISTS 
+		(
+			SELECT 1
+			FROM dbo.ReportingControl
+			WHERE ControlName = 'ArticleCommentRowVersionControl'
+		)
+
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-17027-ReportingETLCanSkipData_12', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-17027-ReportingETLCanSkipData_12] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-17027-ReportingETLCanSkipData_12], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-17027-ReportingETLCanSkipData_12] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+
+
+/***********************************************
+* Patch:    [5.0-TE-17654-ETLPerformance]
+* Previous: [5.0-TE-17027-ReportingETLCanSkipData_12]
+***********************************************/
+set ansi_nulls on;
+set quoted_identifier on;
+set nocount on;
+
+declare @Installed datetime2 = (select [InstalledOn] from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-17654-ETLPerformance');
+declare @PreviousInstalled bit = (select 1 from [dbo].[ReportingSchemaVersion] where [Version] = '5.0' and [Patch] = 'TE-17027-ReportingETLCanSkipData_12');
+
+if (@PreviousInstalled is null)
+	raiserror(N'Unable to apply patch [5.0-TE-17654-ETLPerformance] as previous patch [5.0-TE-17027-ReportingETLCanSkipData_12] is missing. This is likey caused by previous errors.', 16, 1);
+else if (@Installed is null)
+begin
+	declare @startAt datetime = GetDate();
+	declare @startString varchar(128) = convert(varchar, @startAt, 120);
+	raiserror (N'Starting applying schema patch [5.0-TE-17654-ETLPerformance] at %s',0,1, @startString) with nowait;
+
+	begin try
+
+IF OBJECT_ID(N'dbo.StagingRoles', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.StagingRoles', N'RowVersionId') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		TRUNCATE TABLE dbo.StagingRoles'
+
+	EXEC sp_executesql N'
+		ALTER TABLE dbo.StagingRoles
+		ADD RowVersionId BINARY(8) NOT NULL'
+END
+
+IF OBJECT_ID(N'dbo.StagingReference_Roles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.StagingReference_Roles
+		(
+			ContainerId UNIQUEIDENTIFIER NOT NULL,
+			RoleId INT NOT NULL,
+			UserId UNIQUEIDENTIFIER NOT NULL
+		)'
+END
+
+IF OBJECT_ID(N'dbo.StagingDelete_Roles', N'U') IS NULL
+BEGIN
+	EXEC sp_executesql N'
+		CREATE TABLE dbo.StagingDelete_Roles
+		(
+			ContainerKey BIGINT NOT NULL,
+			RoleKey INT NOT NULL,
+			UserKey INT NOT NULL
+		)'
+END
+
+IF OBJECT_ID(N'dbo.ReportingControl') IS NOT NULL
+BEGIN
+	EXEC sp_executesql N'
+		INSERT INTO dbo.ReportingControl (ControlName, ControlValue)
+		SELECT ''RoleVersionControl'', ''0x0000000000000000''
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.ReportingControl WHERE ControlName = ''RoleRowVersionControl'')'
+END
+		if (@Installed is null)
+		begin
+			insert into [dbo].[ReportingSchemaVersion]([Version], [Patch], [InstalledOn])
+			values ('5.0', 'TE-17654-ETLPerformance', GetUtcDate());
+		end
+		print 'Successfully applied patch [5.0-TE-17654-ETLPerformance] after ' + Convert(varchar,DateDiff(ms, @startAt, GetDate())) + 'ms'	
+
+	end try begin catch
+		declare @eNum int, @eSev int, @eSte int, @eLne int, @eMsg nvarchar(4000);
+		select @eNum=error_number(), @eSev=error_severity(), @eSte=error_state(), @eLne=error_line(), @eMsg=error_message();
+		raiserror (N'Failed to apply schema patch [5.0-TE-17654-ETLPerformance], Error %d, Level %d, State %d, Batch Line %d: %s', 16, 1, @eNum, @eSev, @eSte, @eLne, @eMsg);
+		set noexec on;
+	end catch
+end
+else if (@Installed is not null)
+	print 'Skipping patch [5.0-TE-17654-ETLPerformance] as it was already applied on ' + convert(varchar, @Installed);
+
+set nocount off;
+GO
+/***********************************************
+* Item: __SPROCS_TO_DELETE.sql
+***********************************************/
+Print 'Executing __SPROCS_TO_DELETE.sql'
+DECLARE @ObsoleteSprocs TABLE
+(
+  Sproc sysname 
+)
+
+DECLARE  SprocsToDeleteCursor CURSOR FOR
+SELECT Sproc from @ObsoleteSprocs
+WHERE OBJECT_ID(Sproc, 'P') IS NOT NULL
+
+DECLARE @SprocName sysname
+
+OPEN SprocsToDeleteCursor
+FETCH NEXT FROM SprocsToDeleteCursor into @SprocName
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	EXEC (N'print ''Dropping Stored Procedure ' + @SprocName + ''';DROP PROCEDURE ' + @SprocName)
+	FETCH NEXT FROM SprocsToDeleteCursor into @SprocName
+END
+
+CLOSE SprocsToDeleteCursor
+DEALLOCATE SprocsToDeleteCursor
+
+GO
+
+
+GO
+
+
+/***********************************************
+* Procedure:    [DimActivityType_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimActivityType_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimActivityType_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimActivityType_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimActivityType_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ActivityTypeId INT,  
+		@ActivityType NVARCHAR(256),
+		@Description NVARCHAR(MAX),
+		@IsActiveActivity BIT,
+		@IsOriginatorActivity BIT,
+		@IsContributorActivity BIT,
+		@IsEngagerActivity BIT,
+		@IsViewerActivity BIT,
+		@IsOwnerActivity BIT,
+		@IsModeratorActivity BIT,
+		@IsAdminActivity BIT,
+		@IsActiveGroupActivity BIT,
+		@IsActiveContentActivity BIT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id						=	Id,
+			@ActivityTypeId			=	ActivityTypeId,
+			@ActivityType			=	ActivityType,
+			@Description			=   [Description],
+			@IsActiveActivity		=	IsActiveActivity,
+			@IsOriginatorActivity	=	IsOriginatorActivity,
+			@IsContributorActivity	=	IsContributorActivity,
+			@IsEngagerActivity		=	IsEngagerActivity,
+			@IsViewerActivity		=	IsViewerActivity,
+			@IsOwnerActivity		=	IsOwnerActivity,
+			@IsModeratorActivity	=	IsModeratorActivity,
+			@IsAdminActivity		=	IsAdminActivity,
+			@IsActiveGroupActivity	=	IsActiveGroupActivity,
+			@IsActiveContentActivity=	IsActiveContentActivity
+		FROM dbo.StagingActivityTypes staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimActivityType WHERE staging.ActivityTypeId = ActivityTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimActivityType (ActivityTypeId, ActivityType, [Description], IsActiveActivity, IsOriginatorActivity,
+										 IsContributorActivity, IsEngagerActivity, IsViewerActivity, IsOwnerActivity,
+										 IsModeratorActivity, IsAdminActivity, IsActiveGroupActivity, IsActiveContentActivity)
+		SELECT	@ActivityTypeId, 
+				@ActivityType,
+				@Description,
+				@IsActiveActivity,
+				@IsOriginatorActivity,
+				@IsContributorActivity,
+				@IsEngagerActivity,
+				@IsViewerActivity,
+				@IsOwnerActivity,
+				@IsModeratorActivity,
+				@IsAdminActivity,
+				@IsActiveGroupActivity,
+				@IsActiveContentActivity
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimActivityType (ActivityTypeId, ActivityType, [Description], IsActiveActivity, IsOriginatorActivity,
+										 IsContributorActivity, IsEngagerActivity, IsViewerActivity, IsOwnerActivity,
+										 IsModeratorActivity, IsAdminActivity, IsActiveGroupActivity, IsActiveContentActivity)
+		SELECT TOP (@RowsToInsert) 
+				ActivityTypeId,
+				ActivityType,
+				[Description],
+				IsActiveActivity,
+				IsOriginatorActivity,
+				IsContributorActivity,
+				IsEngagerActivity,
+				IsViewerActivity,
+				IsOwnerActivity,
+				IsModeratorActivity,
+				IsAdminActivity,
+				IsActiveGroupActivity,
+				IsActiveContentActivity
+ FROM	 dbo.StagingActivityTypes	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimActivityType WHERE staging.ActivityTypeId = ActivityTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimActivityType_InsertFromStaging', 'ActivityTypeId', CAST(@ActivityTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingActivityTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimActivityType_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingApplications]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingApplications'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingApplications', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingApplications
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingApplications
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingApplications staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingApplications staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingApplications', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingApplications
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingApplications] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingBlogs]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingBlogs'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingBlogs', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingBlogs
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingBlogs
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingBlogs staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingBlogs staging		
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingBlogs', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingBlogs
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingBlogs] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingCalendars]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingCalendars'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingCalendars', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingCalendars
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingCalendars
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingCalendars staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingCalendars staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingCalendars', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingCalendars
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingCalendars] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingForums]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingForums'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingForums', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingForums
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingForums
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingForums staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingForums staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingForums', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingForums
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingForums] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingGroups]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingGroups'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingGroups', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingGroups
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingGroups
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ContainerId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingGroups staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ContainerTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ContainerId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ContainerId AS ApplicationId
+			,staging.[Name] AS [Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingGroups staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ContainerTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ContainerId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingGroups', 'ContainerId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingGroups
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingGroups] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingIdeations]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingIdeations'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingIdeations', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingIdeations
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingIdeations
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingIdeations staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingIdeations staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingIdeations', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingIdeations
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingIdeations] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingKnowledgeManagementCollections]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingKnowledgeManagementCollections'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingKnowledgeManagementCollections', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingKnowledgeManagementCollections
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingKnowledgeManagementCollections
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingKnowledgeManagementCollections staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingKnowledgeManagementCollections staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingKnowledgeManagementCollections', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingKnowledgeManagementCollections
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingKnowledgeManagementCollections] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingLeaderboards]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingLeaderboards'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingLeaderboards', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingLeaderboards
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingLeaderboards
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingLeaderboards staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingLeaderboards staging		
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingLeaderboards', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingLeaderboards
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingLeaderboards] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingMediaGalleries]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingMediaGalleries'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingMediaGalleries', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingMediaGalleries
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingMediaGalleries
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingMediaGalleries staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingMediaGalleries staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingMediaGalleries', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingMediaGalleries
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingMediaGalleries] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingUsers]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingUsers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingUsers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingUsers
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingUsers
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	MembershipId,
+			@Name						=	Username,
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingUsers staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ContentTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.MembershipId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				MembershipId AS ApplicationId
+			,Username AS [Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingUsers staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ContentTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.MembershipId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingUsers', 'MembershipId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingUsers
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingUsers] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplication_InsertFromStagingWikis]
+***********************************************/
+Print 'Creating Procedure DimApplication_InsertFromStagingWikis'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplication_InsertFromStagingWikis', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplication_InsertFromStagingWikis
+GO
+
+CREATE PROCEDURE dbo.DimApplication_InsertFromStagingWikis
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationId UNIQUEIDENTIFIER,  
+		@Name NVARCHAR(256), 
+		@ApplicationTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationId				=	ApplicationId,
+			@Name						=	staging.[Name],
+			@ApplicationTypeKey			=	ISNULL(dat.ApplicationTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status]
+		FROM dbo.StagingWikis staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT	@ApplicationId, 
+				@Name, 
+				@ApplicationTypeKey, 
+				@CreatedDateUtc, 
+				@Status
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplication (ApplicationId, [Name], ApplicationTypeKey, CreatedDateUtc, [Status])
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId
+			,staging.[Name]
+			,ISNULL(dat.ApplicationTypeKey, 0) AS ApplicationTypeKey
+			,CreatedDateUtc
+			,[Status]
+		FROM dbo.StagingWikis staging
+		LEFT OUTER JOIN dbo.DimApplicationType dat ON staging.ApplicationTypeId = dat.ApplicationTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimApplication WHERE staging.ApplicationId = ApplicationId)
+			AND HasDimApplicationError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplication_InsertFromStagingWikis', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingWikis
+		SET HasDimApplicationError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplication_InsertFromStagingWikis] TO [public];
+
+/***********************************************
+* Procedure:    [DimApplicationType_InsertFromStagingApplicationTypes]
+***********************************************/
+Print 'Creating Procedure DimApplicationType_InsertFromStagingApplicationTypes'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimApplicationType_InsertFromStagingApplicationTypes', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimApplicationType_InsertFromStagingApplicationTypes
+GO
+
+CREATE PROCEDURE dbo.DimApplicationType_InsertFromStagingApplicationTypes
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ApplicationTypeId UNIQUEIDENTIFIER, 
+		@Name NVARCHAR(256), 
+		@AggregateName NVARCHAR(512), 
+		@IsEnabled BIT,
+		@IsContainer BIT,
+		@IsApplication BIT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ApplicationTypeId			=	ApplicationTypeId,
+			@Name						=	[Name],
+			@AggregateName				=	AggregateName,
+			@IsEnabled					=	IsEnabled,
+			@IsContainer				=	IsContainer,
+			@IsApplication				=	IsApplication
+		FROM dbo.StagingApplicationTypes staging
+		WHERE HasError = 1
+			AND NOT EXISTS (SELECT 1 FROM dbo.DimApplicationType WHERE staging.ApplicationTypeId = ApplicationTypeId)
+		ORDER BY staging.ApplicationTypeId
+
+		INSERT INTO dbo.DimApplicationType (ApplicationTypeId, [Name], AggregateName, IsEnabled, IsContainer, IsApplication)
+		SELECT	@ApplicationTypeId, 
+				@Name, 
+				@AggregateName,
+				@IsEnabled,
+				@IsContainer,
+				@IsApplication
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimApplicationType (ApplicationTypeId, [Name], AggregateName, IsEnabled, IsContainer, IsApplication)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationTypeId AS ApplicationTypeId,
+			 [Name] AS [Name],
+			 AggregateName,
+			 IsEnabled,
+			 IsContainer,
+			 IsApplication
+		FROM dbo.StagingApplicationTypes staging
+		WHERE HasError = 1
+			AND NOT EXISTS (SELECT 1 FROM dbo.DimApplicationType WHERE staging.ApplicationTypeId = ApplicationTypeId)
+		ORDER BY staging.ApplicationTypeId
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimApplicationType_InsertFromStagingApplicationTypes', 'ApplicationTypeId', CAST(@ApplicationTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingApplicationTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimApplicationType_InsertFromStagingApplicationTypes] TO [public];
+
+/***********************************************
+* Procedure:    [DimContainer_InsertFromStagingContainers]
+***********************************************/
+Print 'Creating Procedure DimContainer_InsertFromStagingContainers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContainer_InsertFromStagingContainers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContainer_InsertFromStagingContainers
+GO
+
+CREATE PROCEDURE dbo.DimContainer_InsertFromStagingContainers
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContainerId UNIQUEIDENTIFIER, 
+		@ParentContainerId UNIQUEIDENTIFIER, 
+		@Name NVARCHAR(256), 
+		@ContainerTypeKey INT,
+		@ContainerSubType NVARCHAR(100), 
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@DefaultExcludedContainer BIT, 
+		@ContainerParentKey BIGINT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContainerId				=	ContainerId,
+			@ParentContainerId			=	ParentContainerId,
+			@Name						=	staging.[Name],
+			@ContainerTypeKey			=	ISNULL(ct.ContainerTypeKey, 0),
+			@ContainerSubType			=	ContainerSubType,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@DefaultExcludedContainer	=	DefaultExcludedContainer,
+			@ContainerParentKey			=	ISNULL((SELECT ContainerKey FROM DimContainer WHERE staging.ContainerId = ContainerId),0)
+		FROM dbo.StagingContainers staging
+		LEFT OUTER JOIN dbo.DimContainerType ct ON staging.ContainerTypeId = ct.ContainerTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContainer WHERE staging.ContainerId = ContainerId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContainer (ContainerId, ParentContainerId, [Name], ContainerTypeKey, ContainerSubType, CreatedDateUtc, [Status], DefaultExcludedContainer, ParentContainerKey)
+		SELECT	@ContainerId, 
+				@ParentContainerId, 
+				@Name, 
+				@ContainerTypeKey,
+				@ContainerSubType,
+				@CreatedDateUtc, 
+				@Status,
+				@DefaultExcludedContainer, 
+				@ContainerParentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContainer (ContainerId, ParentContainerId, [Name], ContainerTypeKey, ContainerSubType, CreatedDateUtc, [Status], DefaultExcludedContainer, ParentContainerKey)
+		SELECT TOP (@RowsToInsert) 
+				ContainerId AS ContainerId,
+			 ParentContainerId AS ParentContainerId,
+			 staging.[Name] AS [Name],
+			 ISNULL(ct.ContainerTypeKey, 0) AS ContainerTypeKey,
+			 ContainerSubType,
+			 CreatedDateUtc,
+			 [Status],
+			 DefaultExcludedContainer,
+			 ISNULL((SELECT ContainerKey FROM DimContainer WHERE staging.ContainerId = ContainerId),0) AS ParentContainerKey
+		FROM dbo.StagingContainers staging
+		LEFT OUTER JOIN dbo.DimContainerType ct ON staging.ContainerTypeId = ct.ContainerTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContainer WHERE staging.ContainerId = ContainerId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContainer_InsertFromStagingContainers', 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingContainers
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContainer_InsertFromStagingContainers] TO [public];
+
+/***********************************************
+* Procedure:    [DimContainer_InsertFromStagingGroups]
+***********************************************/
+Print 'Creating Procedure DimContainer_InsertFromStagingGroups'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContainer_InsertFromStagingGroups', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContainer_InsertFromStagingGroups
+GO
+
+CREATE PROCEDURE dbo.DimContainer_InsertFromStagingGroups
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContainerId UNIQUEIDENTIFIER, 
+		@ParentContainerId UNIQUEIDENTIFIER, 
+		@Name NVARCHAR(256), 
+		@ContainerTypeKey INT,
+		@ContainerSubType NVARCHAR(100), 
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@DefaultExcludedContainer BIT, 
+		@ContainerParentKey BIGINT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContainerId				=	ContainerId,
+			@ParentContainerId			=	ParentContainerId,
+			@Name						=	staging.[Name],
+			@ContainerTypeKey			=	ISNULL(ct.ContainerTypeKey, 0),
+			@ContainerSubType			=	ContainerSubType,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@DefaultExcludedContainer	=	DefaultExcludedContainer,
+			@ContainerParentKey			=	ISNULL((SELECT ContainerKey FROM DimContainer WHERE staging.ContainerId = ContainerId),0)
+		FROM dbo.StagingGroups staging
+		LEFT OUTER JOIN dbo.DimContainerType ct ON staging.ContainerTypeId = ct.ContainerTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContainer WHERE staging.ContainerId = ContainerId)
+			AND HasDimContainerError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContainer (ContainerId, ParentContainerId, [Name], ContainerTypeKey, ContainerSubType, CreatedDateUtc, [Status], DefaultExcludedContainer, ParentContainerKey)
+		SELECT	@ContainerId, 
+				@ParentContainerId, 
+				@Name, 
+				@ContainerTypeKey,
+				@ContainerSubType,
+				@CreatedDateUtc, 
+				@Status,
+				@DefaultExcludedContainer, 
+				@ContainerParentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContainer (ContainerId, ParentContainerId, [Name], ContainerTypeKey, ContainerSubType, CreatedDateUtc, [Status], DefaultExcludedContainer, ParentContainerKey)
+		SELECT TOP (@RowsToInsert) 
+				ContainerId AS ContainerId,
+			 ParentContainerId AS ParentContainerId,
+			 staging.[Name] AS [Name],
+			 ISNULL(ct.ContainerTypeKey, 0) AS ContainerTypeKey,
+			 ContainerSubType,
+			 CreatedDateUtc,
+			 [Status],
+			 DefaultExcludedContainer,
+			 ISNULL((SELECT ContainerKey FROM DimContainer WHERE staging.ContainerId = ContainerId),0) AS ParentContainerKey
+		FROM dbo.StagingGroups staging
+		LEFT OUTER JOIN dbo.DimContainerType ct ON staging.ContainerTypeId = ct.ContainerTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContainer WHERE staging.ContainerId = ContainerId)
+			AND HasDimContainerError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContainer_InsertFromStagingGroups', 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingGroups
+		SET HasDimContainerError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContainer_InsertFromStagingGroups] TO [public];
+
+/***********************************************
+* Procedure:    [DimContainer_InsertFromStagingUsers]
+***********************************************/
+Print 'Creating Procedure DimContainer_InsertFromStagingUsers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContainer_InsertFromStagingUsers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContainer_InsertFromStagingUsers
+GO
+
+CREATE PROCEDURE dbo.DimContainer_InsertFromStagingUsers
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContainerId UNIQUEIDENTIFIER, 
+		@ParentContainerId UNIQUEIDENTIFIER, 
+		@Name NVARCHAR(256), 
+		@ContainerTypeKey INT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@DefaultExcludedContainer BIT, 
+		@ContainerParentKey BIGINT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContainerId				=	MembershipId,
+			@ParentContainerId			=	MembershipId,
+			@Name						=	Username,
+			@ContainerTypeKey			=	ISNULL(ct.ContainerTypeKey, 0),
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@DefaultExcludedContainer	=	DefaultExcludedContainer,
+			@ContainerParentKey			=	0
+		FROM dbo.StagingUsers staging
+		LEFT OUTER JOIN dbo.DimContainerType ct ON staging.ContentTypeId = ct.ContainerTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContainer WHERE staging.MembershipId = ContainerId)
+			AND HasDimContainerError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContainer (ContainerId, ParentContainerId, [Name], ContainerTypeKey, CreatedDateUtc, [Status], DefaultExcludedContainer, ParentContainerKey)
+		SELECT	@ContainerId, 
+				@ParentContainerId, 
+				@Name, 
+				@ContainerTypeKey,
+				@CreatedDateUtc, 
+				@Status,
+				@DefaultExcludedContainer, 
+				@ContainerParentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContainer (ContainerId, ParentContainerId, [Name], ContainerTypeKey, CreatedDateUtc, [Status], DefaultExcludedContainer, ParentContainerKey)
+		SELECT TOP (@RowsToInsert) 
+				MembershipId AS ContainerId,
+			 MembershipId AS ParentContainerId,
+			 Username AS [Name],
+			 ISNULL(ct.ContainerTypeKey, 0) AS ContainerTypeKey,
+			 CreatedDateUtc,
+			 [Status],
+			 DefaultExcludedContainer,
+			 0 AS ContainerParentKey
+		FROM dbo.StagingUsers staging
+		LEFT OUTER JOIN dbo.DimContainerType ct ON staging.ContentTypeId = ct.ContainerTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContainer WHERE staging.MembershipId = ContainerId)
+			AND HasDimContainerError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContainer_InsertFromStagingUsers', 'MembershipId', CAST(@ContainerId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingUsers
+		SET HasDimContainerError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContainer_InsertFromStagingUsers] TO [public];
+
+/***********************************************
+* Procedure:    [DimContainerType_InsertFromStagingContainerTypes]
+***********************************************/
+Print 'Creating Procedure DimContainerType_InsertFromStagingContainerTypes'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContainerType_InsertFromStagingContainerTypes', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContainerType_InsertFromStagingContainerTypes
+GO
+
+CREATE PROCEDURE dbo.DimContainerType_InsertFromStagingContainerTypes
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContainerTypeId UNIQUEIDENTIFIER, 
+		@Name NVARCHAR(256), 
+		@AggregateName NVARCHAR(512),
+		@IsEnabled BIT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContainerTypeId			=	ContainerTypeId,
+			@Name						=	[Name],
+			@AggregateName				=	AggregateName,
+			@IsEnabled					=	IsEnabled
+		FROM dbo.StagingContainerTypes staging
+		WHERE HasError = 1
+			AND NOT EXISTS (SELECT 1 FROM dbo.DimContainerType WHERE staging.ContainerTypeId = ContainerTypeId)
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContainerType (ContainerTypeId, [Name], AggregateName, IsEnabled)
+		SELECT	@ContainerTypeId, 
+				@Name, 
+				@AggregateName,
+				@IsEnabled
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContainerType (ContainerTypeId, [Name], AggregateName, IsEnabled)
+		SELECT TOP (@RowsToInsert) 
+				ContainerTypeId AS ContainerTypeId,
+			 [Name] AS [Name],
+			 AggregateName,
+			 IsEnabled
+		FROM dbo.StagingContainerTypes staging
+		WHERE HasError = 1
+			AND NOT EXISTS (SELECT 1 FROM dbo.DimContainerType WHERE staging.ContainerTypeId = ContainerTypeId)
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContainerType_InsertFromStagingContainerTypes', 'ContainerTypeId', CAST(@ContainerTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingContainerTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContainerType_InsertFromStagingContainerTypes] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingBlogPostComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingBlogPostComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingBlogPostComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingBlogPostComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingBlogPostComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingBlogPostComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingBlogPostComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingBlogPostComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingBlogPostComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingBlogPostComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingBlogPosts]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingBlogPosts'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingBlogPosts', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingBlogPosts
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingBlogPosts
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingBlogPosts staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingBlogPosts	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingBlogPosts', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingBlogPosts
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingBlogPosts] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingBlogs]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingBlogs'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingBlogs', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingBlogs
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingBlogs
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingBlogs staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingBlogs	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingBlogs', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingBlogs
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingBlogs] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingCalendarEventComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingCalendarEventComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingCalendarEventComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingCalendarEventComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingCalendarEventComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingCalendarEventComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingCalendarEventComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingCalendarEventComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingCalendarEventComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingCalendarEventComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingCalendarEvents]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingCalendarEvents'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingCalendarEvents', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingCalendarEvents
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingCalendarEvents
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingCalendarEvents staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingCalendarEvents	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingCalendarEvents', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingCalendarEvents
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingCalendarEvents] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingCalendars]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingCalendars'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingCalendars', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingCalendars
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingCalendars
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingCalendars staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingCalendars	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingCalendars', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingCalendars
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingCalendars] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingContent]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingContent'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingContent', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingContent
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingContent
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingContent staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0),
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ContentParentKey
+ FROM	 dbo.StagingContent	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingContent', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingContent
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingContent] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingForums]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingForums'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingForums', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingForums
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingForums
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingForums staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingForums	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingForums', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingForums
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingForums] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingForumThreadComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingForumThreadComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingForumThreadComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingForumThreadComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingForumThreadComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingForumThreadComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingForumThreadComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingForumThreadComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingForumThreadComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingForumThreadComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingForumThreadReplies]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingForumThreadReplies'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingForumThreadReplies', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingForumThreadReplies
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingForumThreadReplies
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingForumThreadReplies staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingForumThreadReplies	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000' 
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingForumThreadReplies', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingForumThreadReplies
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingForumThreadReplies] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingForumThreadReplyComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingForumThreadReplyComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingForumThreadReplyComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingForumThreadReplyComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingForumThreadReplyComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingForumThreadReplyComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingForumThreadReplyComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingForumThreadReplyComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingForumThreadReplyComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingForumThreadReplyComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingForumThreads]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingForumThreads'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingForumThreads', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingForumThreads
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingForumThreads
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	ContentSubType,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingForumThreads staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				ContentSubType AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingForumThreads	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingForumThreads', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingForumThreads
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingForumThreads] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingGroups]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingGroups'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingGroups', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingGroups
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingGroups
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContainerId,
+			@ParentContentId			=	ContainerId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingGroups staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContainerTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContainerId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContainerId AS ContentId,
+				ContainerId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingGroups	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContainerTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContainerId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingGroups', 'ContainerId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingGroups
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingGroups] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingIdeaComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingIdeaComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingIdeaComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingIdeaComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingIdeaComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingIdeaComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingIdeaComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingIdeaComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingIdeaComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingIdeaComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingIdeas]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingIdeas'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingIdeas', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingIdeas
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingIdeas
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingIdeas staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingIdeas	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingIdeas', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingIdeas
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingIdeas] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingIdeations]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingIdeations'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingIdeations', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingIdeations
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingIdeations
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingIdeations staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingIdeations	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingIdeations', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingIdeations
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingIdeations] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingKnowledgeManagementCollections]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingKnowledgeManagementCollections'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingKnowledgeManagementCollections', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingKnowledgeManagementCollections
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingKnowledgeManagementCollections
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingKnowledgeManagementCollections staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingKnowledgeManagementCollections	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingKnowledgeManagementCollections', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingKnowledgeManagementCollections
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingKnowledgeManagementCollections] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingKnowledgeManagementDocumentComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingKnowledgeManagementDocumentComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingKnowledgeManagementDocumentComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingKnowledgeManagementDocumentComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingKnowledgeManagementDocumentComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingKnowledgeManagementDocumentComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingKnowledgeManagementDocumentComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingKnowledgeManagementDocumentComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingKnowledgeManagementDocumentComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingKnowledgeManagementDocumentComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingKnowledgeManagementDocuments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingKnowledgeManagementDocuments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingKnowledgeManagementDocuments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingKnowledgeManagementDocuments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingKnowledgeManagementDocuments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingKnowledgeManagementDocuments staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingKnowledgeManagementDocuments	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingKnowledgeManagementDocuments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingKnowledgeManagementDocuments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingKnowledgeManagementDocuments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingLeaderboardComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingLeaderboardComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingLeaderboardComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingLeaderboardComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingLeaderboardComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingLeaderboardComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingLeaderboardComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingLeaderboardComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingLeaderboardComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingLeaderboardComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingLeaderboards]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingLeaderboards'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingLeaderboards', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingLeaderboards
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingLeaderboards
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingLeaderboards staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingLeaderboards	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingLeaderboards', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingLeaderboards
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingLeaderboards] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingMediaGalleries]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingMediaGalleries'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingMediaGalleries', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingMediaGalleries
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingMediaGalleries
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeKey INT,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingMediaGalleries staging
+		INNER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingMediaGalleries	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingMediaGalleries', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingMediaGalleries
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingMediaGalleries] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingMediaGalleryFileComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingMediaGalleryFileComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingMediaGalleryFileComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingMediaGalleryFileComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingMediaGalleryFileComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingMediaGalleryFileComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingMediaGalleryFileComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingMediaGalleryFileComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingMediaGalleryFileComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingMediaGalleryFileComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingMediaGalleryFiles]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingMediaGalleryFiles'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingMediaGalleryFiles', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingMediaGalleryFiles
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingMediaGalleryFiles
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingMediaGalleryFiles staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingMediaGalleryFiles	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingMediaGalleryFiles', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingMediaGalleryFiles
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingMediaGalleryFiles] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingStatusMessageComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingStatusMessageComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingStatusMessageComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingStatusMessageComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingStatusMessageComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingStatusMessageComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingStatusMessageComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingStatusMessageComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingStatusMessageComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingStatusMessageComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingStatusMessages]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingStatusMessages'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingStatusMessages', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingStatusMessages
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingStatusMessages
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingStatusMessages staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ContentParentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingStatusMessages	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingStatusMessages', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingStatusMessages
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingStatusMessages] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingUsers]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingUsers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingUsers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingUsers
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingUsers
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	MembershipId,
+			@ParentContentId			=	MembershipId,
+			@Name						=	Username,
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingUsers staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.MembershipId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				MembershipId AS ContentId,
+				MembershipId AS ContentParentId, 
+				Username AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ContentParentKey
+ FROM	 dbo.StagingUsers	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.MembershipId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingUsers', 'MembershipId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingUsers
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingUsers] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingWikiPageComments]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingWikiPageComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingWikiPageComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingWikiPageComments
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingWikiPageComments
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT,  
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	staging.ContentId,
+			@ParentContentId			=	staging.ParentContentId,
+			@ParentContentTypeId		=	staging.ParentContentTypeId,
+			@Name						=	staging.[Name],
+			@Subject					=	staging.[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	staging.IsApproved,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@Status						=	staging.[Status],
+			@CreatedUserId				=	staging.CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	ISNULL(pc.ContentKey, 0)
+		FROM dbo.StagingWikiPageComments staging
+		LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ContentId
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentId AS ContentId,
+				staging.ParentContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				staging.[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				staging.IsApproved,
+				staging.[Status],
+				staging.CreatedDateUtc,
+				NULL AS ContentSubType,
+				ISNULL(pc.ContentKey, 0) AS ParentContentKey
+ FROM	 dbo.StagingWikiPageComments	staging
+ LEFT OUTER JOIN dbo.DimContent pc ON staging.ParentContentId = pc.ParentContentId
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND staging.ParentContentTypeId = ct.ParentContentTypeId
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingWikiPageComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ParentContentId', CAST(@ParentContentId AS NVARCHAR(50)), 'ParentContentTypeId', CAST(@ParentContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingWikiPageComments
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingWikiPageComments] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingWikiPages]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingWikiPages'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingWikiPages', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingWikiPages
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingWikiPages
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ContentId,
+			@ParentContentId			=	ContentId,
+			@Name						=	staging.[Name],
+			@Subject					=	[Subject],
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingWikiPages staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ContentId AS ContentId,
+				ContentId AS ParentContentId,
+				staging.[Name] AS [Name],
+				[Subject] AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0),
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ContentParentKey
+ FROM	 dbo.StagingWikiPages	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ContentTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ContentId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingWikiPages', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingWikiPages
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingWikiPages] TO [public];
+
+/***********************************************
+* Procedure:    [DimContent_InsertFromStagingWikis]
+***********************************************/
+Print 'Creating Procedure DimContent_InsertFromStagingWikis'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContent_InsertFromStagingWikis', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContent_InsertFromStagingWikis
+GO
+
+CREATE PROCEDURE dbo.DimContent_InsertFromStagingWikis
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentId UNIQUEIDENTIFIER,  
+		@ParentContentId UNIQUEIDENTIFIER,
+		@ParentContentKey BIGINT,
+		@Name NVARCHAR(256), 
+		@Subject NVARCHAR(256), 
+		@ContentTypeKey INT, 
+		@IsModerated BIT,
+		@IsApproved BIT,
+		@IsActive BIT,
+		@CreatedDateUtc DATETIME2(3), 
+		@Status NVARCHAR(128),
+		@CreatedUserId UNIQUEIDENTIFIER,
+		@ContentSubType NVARCHAR(100)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentId					=	ApplicationId,
+			@ParentContentId			=	ApplicationId,
+			@Name						=	staging.[Name],
+			@Subject					=	'',
+			@ContentTypeKey				=	ISNULL(ct.ContentTypeKey, 0),
+			@IsApproved					=	IsApproved,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@Status						=	[Status],
+			@CreatedUserId				=	CreatedUserId,
+			@ContentSubType				=	NULL,			
+			@ParentContentKey			=	0
+		FROM dbo.StagingWikis staging
+		LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, [Status], IsApproved, CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT	@ContentId, 
+				@ParentContentId, 
+				@Name,
+				@Subject,
+				@ContentTypeKey,
+				@Status,
+				@IsApproved, 
+				@CreatedDateUtc, 
+				@ContentSubType,
+				@ParentContentKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContent (ContentId, ParentContentId, [Name], [Subject], ContentTypeKey, IsApproved, [Status], CreatedDateUtc, ContentSubType, ParentContentKey)
+		SELECT TOP (@RowsToInsert) 
+				ApplicationId AS ContentId,
+				ApplicationId AS ParentContentId,
+				staging.[Name] AS [Name],
+				'' AS [Subject],
+				ISNULL(ct.ContentTypeKey, 0) AS ContentTypeKey,
+				IsApproved,
+				[Status],
+				CreatedDateUtc,
+				NULL AS ContentSubType,
+				0 AS ParentContentKey
+ FROM	 dbo.StagingWikis	staging
+ LEFT OUTER JOIN dbo.DimContentType ct ON staging.ApplicationTypeId = ct.ContentTypeId AND ct.ParentContentTypeId = '00000000-0000-0000-0000-000000000000'
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimContent WHERE staging.ApplicationId = ContentId)
+			AND HasDimContentError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContent_InsertFromStagingWikis', 'ApplicationId', CAST(@ContentId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingWikis
+		SET HasDimContentError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContent_InsertFromStagingWikis] TO [public];
+
+/***********************************************
+* Procedure:    [DimContentType_InsertFromStagingContentTypes]
+***********************************************/
+Print 'Creating Procedure DimContentType_InsertFromStagingContentTypes'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimContentType_InsertFromStagingContentTypes', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimContentType_InsertFromStagingContentTypes
+GO
+
+CREATE PROCEDURE dbo.DimContentType_InsertFromStagingContentTypes
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@ContentTypeId UNIQUEIDENTIFIER, 
+		@ParentContentTypeId UNIQUEIDENTIFIER,
+		@Name NVARCHAR(256), 
+		@ParentName NVARCHAR(256),
+		@AggregateName NVARCHAR(512), 
+		@IsEnabled BIT,
+		@IsContainer BIT,
+		@IsApplication BIT,
+		@IsContent BIT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@ContentTypeId				=	ContentTypeId,
+			@ParentContentTypeId		=	ParentContentTypeId,
+			@Name						=	[Name],
+			@ParentName					=	ParentName,
+			@AggregateName				=	AggregateName,
+			@IsEnabled					=	IsEnabled,
+			@IsContainer				=	IsContainer,
+			@IsApplication				=	IsApplication,
+			@IsContent					=	IsContent
+		FROM dbo.StagingContentTypes staging
+		WHERE HasError = 1
+			AND NOT EXISTS (SELECT 1 FROM dbo.DimContentType WHERE staging.ContentTypeId = ContentTypeId AND staging.ParentContentTypeId = ParentContentTypeId)
+		ORDER BY staging.ContentTypeId
+
+		INSERT INTO dbo.DimContentType (ContentTypeId, ParentContentTypeId, [Name], ParentName, AggregateName, IsEnabled, IsContainer, IsApplication, IsContent)
+		SELECT	@ContentTypeId, 
+				@ParentContentTypeId,
+				@Name, 
+				@ParentName,
+				@AggregateName,
+				@IsEnabled,
+				@IsContainer,
+				@IsApplication,
+				@IsContent
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimContentType (ContentTypeId, ParentContentTypeId, [Name], ParentName, AggregateName, IsEnabled, IsContainer, IsApplication, IsContent)
+		SELECT TOP (@RowsToInsert) 
+				ContentTypeId,
+				ParentContentTypeId,
+			 [Name],
+			 ParentName,
+			 AggregateName,
+			 IsEnabled,
+			 IsContainer,
+			 IsApplication,
+			 IsContent
+		FROM dbo.StagingContentTypes staging
+		WHERE HasError = 1
+			AND NOT EXISTS (SELECT 1 FROM dbo.DimContentType WHERE staging.ContentTypeId = ContentTypeId)
+		ORDER BY staging.ContentTypeId
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimContentType_InsertFromStagingContentTypes', 'ContentTypeId', CAST(@ContentTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingContentTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimContentType_InsertFromStagingContentTypes] TO [public];
+
+/***********************************************
+* Procedure:    [DimGroupMembershipType_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimGroupMembershipType_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimGroupMembershipType_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimGroupMembershipType_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimGroupMembershipType_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@MembershipTypeId TINYINT,  
+		@MembershipType NVARCHAR(50)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id					=	Id,
+			@MembershipTypeId	=	MembershipTypeId,
+			@MembershipType		=	MembershipType			
+		FROM dbo.StagingGroupMembershipTypes staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimGroupMembershipType WHERE staging.MembershipTypeId = MembershipTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimGroupMembershipType (MembershipTypeId, MembershipType)
+		SELECT	@MembershipTypeId, 
+				@MembershipType
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimGroupMembershipType (MembershipTypeId, MembershipType)
+		SELECT TOP (@RowsToInsert) 
+				MembershipTypeId,
+				MembershipType
+ FROM	 dbo.StagingGroupMembershipTypes	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimGroupMembershipType WHERE staging.MembershipTypeId = MembershipTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimGroupMembershipType_InsertFromStaging', 'MembershipTypeId', CAST(@MembershipTypeId AS NVARCHAR(50)), 'MembershipType', @MembershipType, 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingGroupMembershipTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimGroupMembershipType_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimPermission_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimPermission_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimPermission_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimPermission_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimPermission_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@PermissionId UNIQUEIDENTIFIER,  
+		@Description NVARCHAR(1024)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id				=	Id,
+			@PermissionId	=	PermissionId,
+			@Description	=	[Description]			
+		FROM dbo.StagingPermissionTypes staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimPermission WHERE staging.PermissionId = PermissionId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimPermission (PermissionId, [Description])
+		SELECT	@PermissionId, 
+				@Description
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimPermission (PermissionId, [Description])
+		SELECT TOP (@RowsToInsert) 
+				PermissionId,
+				[Description]
+ FROM	 dbo.StagingPermissionTypes	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimPermission WHERE staging.PermissionId = PermissionId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimPermission_InsertFromStaging', 'PermissionId', CAST(@PermissionId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingPermissionTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimPermission_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimRatingType_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimRatingType_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimRatingType_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimRatingType_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimRatingType_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@RatingTypeId UNIQUEIDENTIFIER,  
+		@RatingType NVARCHAR(256)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id				=	Id,
+			@RatingTypeId	=	RatingTypeId,
+			@RatingType		=	RatingType			
+		FROM dbo.StagingRatingTypes staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimRatingType WHERE staging.RatingTypeId = RatingTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimRatingType (RatingTypeId, RatingType)
+		SELECT	@RatingTypeId, 
+				@RatingType
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimRatingType (RatingTypeId, RatingType)
+		SELECT TOP (@RowsToInsert) 
+				RatingTypeId,
+				RatingType
+ FROM	 dbo.StagingRatingTypes	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimRatingType WHERE staging.RatingTypeId = RatingTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimRatingType_InsertFromStaging', 'RatingTypeId', CAST(@RatingTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingRatingTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimRatingType_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimRole_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimRole_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimRole_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimRole_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimRole_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@RoleId INT, 
+		@MembershipRoleId UNIQUEIDENTIFIER,
+		@Name NVARCHAR(160),
+		@Description NVARCHAR(512),
+		@IsSiteRole BIT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id					=	Id,
+			@RoleId				=	RoleId,
+			@MembershipRoleId	=	MembershipRoleId,
+			@Name				=	[Name],
+			@Description		=	[Description],
+			@IsSiteRole			=	IsSiteRole			
+		FROM dbo.StagingRoleTypes staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimRole WHERE staging.RoleId = RoleId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimRole (RoleId, MembershipRoleId, [Name], [Description], IsSiteRole)
+		SELECT	@RoleId, 
+				@MembershipRoleId,
+				@Name,
+				@Description,
+				@IsSiteRole
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimRole (RoleId, MembershipRoleId, [Name], [Description], IsSiteRole)
+		SELECT TOP (@RowsToInsert) 
+				RoleId,
+				MembershipRoleId,
+				[Name],
+				[Description],
+				IsSiteRole
+ FROM	 dbo.StagingRoleTypes	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimRole WHERE staging.RoleId = RoleId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimRole_InsertFromStaging', 'RoleId', CAST(@RoleId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingRoleTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimRole_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimSearchFlag_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimSearchFlag_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimSearchFlag_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimSearchFlag_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimSearchFlag_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@SearchFlag NVARCHAR(256)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) @SearchFlag			=	SearchFlag			
+		FROM dbo.StagingSearchFlags staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimSearchFlag WHERE staging.SearchFlag = SearchFlag)
+			AND HasError = 0
+		ORDER BY staging.SearchFlag
+
+		INSERT INTO dbo.DimSearchFlag (SearchFlag)
+		SELECT	@SearchFlag
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimSearchFlag (SearchFlag)
+		SELECT DISTINCT TOP (@RowsToInsert) 
+				SearchFlag
+ FROM	 dbo.StagingSearchFlags	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimSearchFlag WHERE staging.SearchFlag = SearchFlag)
+			AND HasError = 0
+		ORDER BY staging.SearchFlag
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimSearchFlag_InsertFromStaging', 'SearchFlag', SUBSTRING(@SearchFlag,1,100), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingSearchFlags
+		SET HasError = 1
+		WHERE SearchFlag = @SearchFlag
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimSearchFlag_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimSearchFlagBridge_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimSearchFlagBridge_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimSearchFlagBridge_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimSearchFlagBridge_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimSearchFlagBridge_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@SearchFlag NVARCHAR(256),
+		@SearchFlagKey BIGINT,
+		@SearchFlagGroupKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		;WITH SearchFlags AS
+		(
+			SELECT	dSearchFlagBridge2.SearchFlagGroupKey,
+					dSearchFlagBridge2.SearchFlagKey,
+					dSearchFlag2.SearchFlag,
+					STUFF(
+						(SELECT '.' + SearchFlag
+						FROM dbo.DimSearchFlagBridge dSearchFlagBridge
+						INNER JOIN dbo.DimSearchFlag dSearchFlag ON dSearchFlagBridge.SearchFlagKey = dSearchFlag.SearchFlagKey
+						WHERE dSearchFlagBridge.SearchFlagGroupKey = dSearchFlagBridge2.SearchFlagGroupKey
+						ORDER BY SearchFlag
+						FOR XML PATH('')
+						),1,1,'') as SearchFlags
+			FROM	dbo.DimSearchFlagBridge dSearchFlagBridge2
+			INNER JOIN dbo.DimSearchFlag dSearchFlag2 ON dSearchFlagBridge2.SearchFlagKey = dSearchFlag2.SearchFlagKey
+		),
+		NewSearchFlags AS 
+		(
+			SELECT	SearchHistoryId,
+					SearchFlagKey,
+					staging2.SearchFlag,
+					STUFF(
+						(SELECT '.' + SearchFlag
+						FROM dbo.StagingSearchFlags staging
+						WHERE staging.SearchHistoryId = staging2.SearchHistoryId
+						ORDER BY SearchFlag
+						FOR XML PATH('')
+						),1,1,'') as SearchFlags
+			FROM dbo.StagingSearchFlags staging2
+			INNER JOIN dbo.DimSearchFlag dSearchFlag ON staging2.SearchFlag = dSearchFlag.SearchFlag
+		)
+				
+		SELECT	DISTINCT TOP 1
+				@SearchFlagGroupKey = ISNULL((SELECT MAX(SearchFlagGroupKey) FROM dbo.DimSearchFlagBridge), 0) + DENSE_RANK() OVER (ORDER BY SearchFlags ),
+				@SearchFlagKey = SearchFlagKey,
+				@SearchFlag = SearchFlag
+		FROM	NewSearchFlags
+		WHERE NOT EXISTS (SELECT 1 FROM SearchFlags WHERE SearchFlags.SearchFlags = NewSearchFlags.SearchFlags)
+		ORDER	BY 1
+
+		INSERT INTO dbo.DimSearchFlagGroup (SearchFlagGroupKey)
+		SELECT @SearchFlagGroupKey
+
+		INSERT INTO dbo.DimSearchFlagBridge (SearchFlagGroupKey, SearchFlagKey)
+		SELECT	@SearchFlagGroupKey, @SearchFlagKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		;WITH SearchFlags AS
+		(
+			SELECT	dSearchFlagBridge2.SearchFlagGroupKey,
+					dSearchFlagBridge2.SearchFlagKey,
+					dSearchFlag2.SearchFlag,
+					STUFF(
+						(SELECT '.' + SearchFlag
+						FROM dbo.DimSearchFlagBridge dSearchFlagBridge
+						INNER JOIN dbo.DimSearchFlag dSearchFlag ON dSearchFlagBridge.SearchFlagKey = dSearchFlag.SearchFlagKey
+						WHERE dSearchFlagBridge.SearchFlagGroupKey = dSearchFlagBridge2.SearchFlagGroupKey
+						ORDER BY SearchFlag
+						FOR XML PATH('')
+						),1,1,'') as SearchFlags
+			FROM	dbo.DimSearchFlagBridge dSearchFlagBridge2
+			INNER JOIN dbo.DimSearchFlag dSearchFlag2 ON dSearchFlagBridge2.SearchFlagKey = dSearchFlag2.SearchFlagKey
+		),
+		NewSearchFlags AS 
+		(
+			SELECT	SearchHistoryId,
+					SearchFlagKey,
+					staging2.SearchFlag,
+					STUFF(
+						(SELECT '.' + SearchFlag
+						FROM dbo.StagingSearchFlags staging
+						WHERE staging.SearchHistoryId = staging2.SearchHistoryId
+						ORDER BY SearchFlag
+						FOR XML PATH('')
+						),1,1,'') as SearchFlags
+			FROM dbo.StagingSearchFlags staging2
+			INNER JOIN dbo.DimSearchFlag dSearchFlag ON staging2.SearchFlag = dSearchFlag.SearchFlag
+		)
+
+		INSERT INTO dbo.DimSearchFlagGroup (SearchFlagGroupKey)		
+				
+		SELECT	DISTINCT TOP (@RowsToInsert)
+				ISNULL((SELECT MAX(SearchFlagGroupKey) FROM dbo.DimSearchFlagBridge), 0) + DENSE_RANK() OVER (ORDER BY SearchFlags ) AS SearchFlagGroupKey
+		FROM	NewSearchFlags
+		WHERE NOT EXISTS (SELECT 1 FROM SearchFlags WHERE SearchFlags.SearchFlags = NewSearchFlags.SearchFlags)
+		ORDER	BY SearchFlagGroupKey
+
+		;WITH SearchFlags AS
+		(
+			SELECT	dSearchFlagBridge2.SearchFlagGroupKey,
+					dSearchFlagBridge2.SearchFlagKey,
+					dSearchFlag2.SearchFlag,
+					STUFF(
+						(SELECT '.' + SearchFlag
+						FROM dbo.DimSearchFlagBridge dSearchFlagBridge
+						INNER JOIN dbo.DimSearchFlag dSearchFlag ON dSearchFlagBridge.SearchFlagKey = dSearchFlag.SearchFlagKey
+						WHERE dSearchFlagBridge.SearchFlagGroupKey = dSearchFlagBridge2.SearchFlagGroupKey
+						ORDER BY SearchFlag
+						FOR XML PATH('')
+						),1,1,'') as SearchFlags
+			FROM	dbo.DimSearchFlagBridge dSearchFlagBridge2
+			INNER JOIN dbo.DimSearchFlag dSearchFlag2 ON dSearchFlagBridge2.SearchFlagKey = dSearchFlag2.SearchFlagKey
+		),
+		NewSearchFlags AS 
+		(
+			SELECT	SearchHistoryId,
+					SearchFlagKey,
+					staging2.SearchFlag,
+					STUFF(
+						(SELECT '.' + SearchFlag
+						FROM dbo.StagingSearchFlags staging
+						WHERE staging.SearchHistoryId = staging2.SearchHistoryId
+						ORDER BY SearchFlag
+						FOR XML PATH('')
+						),1,1,'') as SearchFlags
+			FROM dbo.StagingSearchFlags staging2
+			INNER JOIN dbo.DimSearchFlag dSearchFlag ON staging2.SearchFlag = dSearchFlag.SearchFlag
+		)
+
+		INSERT INTO dbo.DimSearchFlagBridge (SearchFlagGroupKey, SearchFlagKey)		
+				
+		SELECT	DISTINCT TOP (@RowsToInsert)
+				ISNULL((SELECT MAX(SearchFlagGroupKey) FROM dbo.DimSearchFlagBridge), 0) + DENSE_RANK() OVER (ORDER BY SearchFlags ) AS SearchFlagGroupKey,
+				SearchFlagKey
+		FROM	NewSearchFlags
+		WHERE NOT EXISTS (SELECT 1 FROM SearchFlags WHERE SearchFlags.SearchFlags = NewSearchFlags.SearchFlags)
+		ORDER	BY SearchFlagGroupKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimSearchFlagBridge_InsertFromStaging', 'SearchFlag', SUBSTRING(@SearchFlag,1,100), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingSearchFlags
+		SET HasError = 1
+		WHERE SearchFlag = @SearchFlag
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimSearchFlagBridge_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimSearchQuery_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimSearchQuery_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimSearchQuery_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimSearchQuery_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimSearchQuery_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Query NVARCHAR(MAX),
+		@QueryHash VARBINARY(32),
+		@LoweredQueryHash VARBINARY(32)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT DISTINCT TOP (1) 
+			@Query				=	Query,
+			@QueryHash			=	QueryHash,
+			@LoweredQueryHash	=	LoweredQueryHash
+		FROM dbo.StagingSearch staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimSearchQuery WHERE staging.QueryHash = QueryHash)
+			AND HasError = 0
+		ORDER BY staging.Query
+
+		INSERT INTO dbo.DimSearchQuery (Query, QueryHash, LoweredQueryHash)
+		SELECT	@Query, @QueryHash, @LoweredQueryHash
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimSearchQuery (Query, QueryHash, LoweredQueryHash)
+		SELECT DISTINCT TOP (@RowsToInsert) 
+				Query,
+				QueryHash,
+				LoweredQueryHash
+ FROM	 dbo.StagingSearch	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimSearchQuery WHERE staging.QueryHash = QueryHash)
+			AND HasError = 0
+		ORDER BY staging.Query
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimSearchQuery_InsertFromStaging', 'Query', SUBSTRING(@Query,1,100), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingSearch
+		SET HasError = 1
+		WHERE QueryHash = @QueryHash
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimSearchQuery_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimUser_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimUser_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimUser_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimUser_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimUser_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@MembershipID UNIQUEIDENTIFIER,  
+		@UserId INT,
+		@EmailAddress NVARCHAR(256), 
+		@UserName NVARCHAR(256), 
+		@CreatedDateUtc DATETIME2(0),
+		@AccountStatus NVARCHAR(128), 		
+		@DefaultExcludedUser BIT 
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id							=	Id,
+			@MembershipID				=	MembershipId,
+			@UserId						=	UserId,
+			@UserName					=	Username,
+			@EmailAddress				=	EmailAddress,
+			@CreatedDateUtc				=	CreatedDateUtc,
+			@AccountStatus				=	AccountStatus,
+			@DefaultExcludedUser		=	DefaultExcludedUser			
+		FROM dbo.StagingUsers su
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimUser WHERE su.MembershipId = MembershipId)
+			AND HasDimUserError = 0
+		ORDER BY su.Id
+
+		INSERT INTO dbo.DimUser (MembershipId, UserId, Username, EmailAddress, AccountStatus, CreatedDateUtc, DefaultExcludedUser)
+		SELECT	@MembershipID, 
+				@UserId, 
+				@UserName,
+				@EmailAddress,
+				@AccountStatus,
+				@CreatedDateUtc,
+				@DefaultExcludedUser
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimUser (MembershipId, UserId, Username, EmailAddress, AccountStatus, CreatedDateUtc, DefaultExcludedUser)
+		SELECT TOP (@RowsToInsert) 
+				MembershipId, 
+				UserId, 
+				Username,
+				EmailAddress,
+				AccountStatus,
+				CreatedDateUtc,
+				DefaultExcludedUser
+ FROM	 dbo.StagingUsers	su
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimUser WHERE su.MembershipId = MembershipId)
+			AND HasDimUserError = 0
+		ORDER BY su.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimUser_InsertFromStaging', 'MembershipId', CAST(@MembershipID AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingUsers
+		SET HasDimUserError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimUser_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [DimVoteType_InsertFromStaging]
+***********************************************/
+Print 'Creating Procedure DimVoteType_InsertFromStaging'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.DimVoteType_InsertFromStaging', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.DimVoteType_InsertFromStaging
+GO
+
+CREATE PROCEDURE dbo.DimVoteType_InsertFromStaging
+(
+	@BatchId INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @Id INT,
+		@VoteTypeId INT,  
+		@VoteType NVARCHAR(256)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@Id					=	Id,
+			@VoteTypeId			=	VoteTypeId,
+			@VoteType			=	VoteType
+		FROM dbo.StagingVoteTypes staging
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.DimVoteType WHERE staging.VoteTypeId = VoteTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		INSERT INTO dbo.DimVoteType (VoteTypeId, VoteType)
+
+		SELECT	@VoteTypeId, 
+				@VoteType
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.DimVoteType (VoteTypeId, VoteType)
+		SELECT TOP (@RowsToInsert) 
+				VoteTypeId,
+				VoteType
+ FROM	 dbo.StagingVoteTypes	staging
+ WHERE	 NOT EXISTS (SELECT	1 FROM dbo.DimVoteType WHERE staging.VoteTypeId = VoteTypeId)
+			AND HasError = 0
+		ORDER BY staging.Id
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'DimVoteType_InsertFromStaging', 'VoteTypeId', CAST(@VoteTypeId AS NVARCHAR(50)), 'Id', CAST(@Id AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingVoteTypes
+		SET HasError = 1
+		WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[DimVoteType_InsertFromStaging] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationArticleCollections]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationArticleCollections'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationArticleCollections', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationArticleCollections
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationArticleCollections
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationArticleCollections staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+                            FROM dbo.FactApplication
+                            WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationArticleCollections staging
+		WHERE HasError = 0
+		AND NOT EXISTS (SELECT 1 
+                        FROM dbo.FactApplication
+                        WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationArticleCollections', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationArticleCollections
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationArticleCollections staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationArticleCollections] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationBlogs]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationBlogs'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationBlogs', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationBlogs
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationBlogs
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationBlogs staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+                            FROM dbo.FactApplication
+                            WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationBlogs staging
+		WHERE HasError = 0
+		AND NOT EXISTS (SELECT 1 
+                        FROM dbo.FactApplication
+                        WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationBlogs', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationBlogs
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationBlogs staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationBlogs] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationCalendars]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationCalendars'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationCalendars', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationCalendars
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationCalendars
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationCalendars staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationCalendars staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingCalendars', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationCalendars
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationCalendars staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationCalendars] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationForums]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationForums'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationForums', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationForums
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationForums
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationForums staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationForums staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationForums', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationForums
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationForums staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationForums] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationGroups]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationGroups'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationGroups', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationGroups
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationGroups
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationGroups staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationGroups staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationGroups', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationGroups
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationGroups staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationGroups] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationIdeations]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationIdeations'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationIdeations', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationIdeations
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationIdeations
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationIdeations staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationIdeations staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationIdeations', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationIdeations
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationIdeations staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationIdeations] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationKnowledgeManagementCollections]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationKnowledgeManagementCollections'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationKnowledgeManagementCollections', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationKnowledgeManagementCollections
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationKnowledgeManagementCollections
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationKnowledgeManagementCollections staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationKnowledgeManagementCollections staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationKnowledgeManagementCollections', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationKnowledgeManagementCollections
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationKnowledgeManagementCollections staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationKnowledgeManagementCollections] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationLeaderboards]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationLeaderboards'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationLeaderboards', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationLeaderboards
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationLeaderboards
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationLeaderboards staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+                            FROM dbo.FactApplication
+                            WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationLeaderboards staging
+		WHERE HasError = 0
+		AND NOT EXISTS (SELECT 1 
+                        FROM dbo.FactApplication
+                        WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationLeaderboards', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationLeaderboards
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationLeaderboards staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationLeaderboards] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationMediaGalleries]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationMediaGalleries'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationMediaGalleries', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationMediaGalleries
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationMediaGalleries
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationMediaGalleries staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationMediaGalleries staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationMediaGalleries', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationMediaGalleries
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationMediaGalleries staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationMediaGalleries] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplications]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplications'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplications', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplications
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplications
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplications staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+                            FROM dbo.FactApplication
+                            WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplications staging
+		WHERE HasError = 0
+		AND NOT EXISTS (SELECT 1 
+                        FROM dbo.FactApplication
+                        WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplications', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplications
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplications staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplications] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationUsers]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationUsers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationUsers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationUsers
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationUsers
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationUsers staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationUsers staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationUsers', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationUsers
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationUsers staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationUsers] TO [public];
+
+/***********************************************
+* Procedure:    [FactApplication_InsertFromStagingNew_FactApplicationWikis]
+***********************************************/
+Print 'Creating Procedure FactApplication_InsertFromStagingNew_FactApplicationWikis'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactApplication_InsertFromStagingNew_FactApplicationWikis', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationWikis
+GO
+
+CREATE PROCEDURE dbo.FactApplication_InsertFromStagingNew_FactApplicationWikis
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId				=	dApplication.ApplicationId,  
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationWikis staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		LEFT OUTER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		LEFT OUTER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		INSERT INTO dbo.FactApplication(ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactApplication (ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactApplicationWikis staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactApplication
+                     WHERE staging.ApplicationKey = ApplicationKey)
+		ORDER BY staging.ApplicationKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactApplication_InsertFromStagingNew_FactApplicationWikis', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(40)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(40)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactApplicationWikis
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactApplicationWikis staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactApplication
+         WHERE staging.ApplicationKey = ApplicationKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactApplication_InsertFromStagingNew_FactApplicationWikis] TO [public];
+
+/***********************************************
+* Procedure:    [FactArticle_InsertFromStagingNew_FactArticles]
+***********************************************/
+Print 'Creating Procedure FactArticle_InsertFromStagingNew_FactArticles'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactArticle_InsertFromStagingNew_FactArticles', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactArticle_InsertFromStagingNew_FactArticles
+GO
+
+CREATE PROCEDURE dbo.FactArticle_InsertFromStagingNew_FactArticles
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@CreatedMembershipId UNIQUEIDENTIFIER,
+		@PublishedMembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@PublishedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT,
+		@LastPublishedDateUtc DATETIME2(0),
+		@LastPublishedDateKey INT,
+		@LastPublishedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,
+			@ApplicationId				=	dApplication.ApplicationId,
+			@CreatedMembershipId		=	dUser.MembershipId,
+			@PublishedMembershipId		=	dUser2.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@CreatedDateUtc				=	staging.CreatedDateUtc,
+			@LastPublishedDateUtc		=	staging.LastPublishedDateUtc,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@PublishedUserKey			=	staging.PublishedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey,
+			@LastPublishedDateKey		=	staging.LastPublishedDateKey,
+			@LastPublishedTimeOfDayKey	=	staging.LastPublishedTimeOfDayKey
+		FROM dbo.StagingNew_FactArticles staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+        INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+        INNER JOIN dbo.DimUser dUser2 ON staging.PublishedUserKey = dUser2.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactArticle
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactArticle (ContentKey, ApplicationKey, CreatedUserKey, PublishedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey, LastPublishedDateUtc, LastPublishedDateKey, LastPublishedTimeOfDayKey)
+		SELECT	@ContentKey, 
+				@ApplicationKey,
+				@CreatedUserKey,
+				@PublishedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey,
+				@LastPublishedDateUtc,
+				@LastPublishedDateKey,
+				@LastPublishedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactArticle (ContentKey, ApplicationKey, CreatedUserKey, PublishedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey, LastPublishedDateUtc, LastPublishedDateKey, LastPublishedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+					staging.ContentKey,
+					staging.ApplicationKey,
+                    staging.CreatedUserKey,
+                    staging.PublishedUserKey,
+                    staging.CreatedDateUtc,
+                    staging.CreatedDateKey,
+                    staging.CreatedTimeOfDayKey,
+                    staging.LastPublishedDateUtc,
+                    staging.LastPublishedDateKey,
+                    staging.LastPublishedTimeOfDayKey
+        FROM    dbo.StagingNew_FactArticles     staging
+        WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactVote
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactArticle_InsertFromStagingNew_FactArticles', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'CreatedMembershipId', CAST(@CreatedMembershipId AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactArticles
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactArticles staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactArticle
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactArticle_InsertFromStagingNew_FactArticles] TO [public];
+
+/***********************************************
+* Procedure:    [FactContainer_InsertFromStagingNew_FactContainers]
+***********************************************/
+Print 'Creating Procedure FactContainer_InsertFromStagingNew_FactContainers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContainer_InsertFromStagingNew_FactContainers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContainer_InsertFromStagingNew_FactContainers
+GO
+
+CREATE PROCEDURE dbo.FactContainer_InsertFromStagingNew_FactContainers
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContainers staging
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContainer
+                     WHERE staging.ContainerKey = ContainerKey)
+		ORDER BY staging.ContainerKey
+
+		INSERT INTO dbo.FactContainer(ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContainer (ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContainers staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContainer
+                     WHERE staging.ContainerKey = ContainerKey)
+		ORDER BY staging.ContainerKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContainer_InsertFromStagingNew_FactContainers', 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContainers
+		SET HasError = 1
+		WHERE ContainerKey = @ContainerKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContainers staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContainer
+         WHERE staging.ContainerKey = ContainerKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContainer_InsertFromStagingNew_FactContainers] TO [public];
+
+/***********************************************
+* Procedure:    [FactContainer_InsertFromStagingNew_FactContainerUsers]
+***********************************************/
+Print 'Creating Procedure FactContainer_InsertFromStagingNew_FactContainerUsers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContainer_InsertFromStagingNew_FactContainerUsers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContainer_InsertFromStagingNew_FactContainerUsers
+GO
+
+CREATE PROCEDURE dbo.FactContainer_InsertFromStagingNew_FactContainerUsers
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContainerId UNIQUEIDENTIFIER,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContainerId				=	dContainer.ContainerId,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContainerUsers staging
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		WHERE HasError = 0
+            AND NOT EXISTS
+                (SELECT 1
+                 FROM dbo.FactContainer
+                 WHERE staging.ContainerKey = ContainerKey)
+		ORDER BY staging.ContainerKey
+
+		INSERT INTO dbo.FactContainer(ContainerKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContainerKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContainer (ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContainerUsers staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContainer
+                     WHERE staging.ContainerKey = ContainerKey)
+		ORDER BY staging.ContainerKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContainer_InsertFromStagingNew_FactContainerUsers', 'MembershipId', CAST(@ContainerId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContainerUsers
+		SET HasError = 1
+		WHERE ContainerKey = @ContainerKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContainerUsers staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContainer
+         WHERE staging.ContainerKey = ContainerKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContainer_InsertFromStagingNew_FactContainerUsers] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContent]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContent'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContent', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContent
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContent
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,  
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContent staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContent staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContent', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContent
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContent staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContent] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentArticleCollections]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentArticleCollections'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentArticleCollections', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentArticleCollections
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentArticleCollections
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentArticleCollections staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentArticleCollections staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentArticleCollections', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentArticleCollections
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentArticleCollections staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentArticleCollections] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentArticleComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentArticleComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentArticleComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentArticleComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentArticleComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentArticleComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentArticleComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentArticleComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentArticleComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentArticleComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentArticleComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentArticles]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentArticles'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentArticles', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentArticles
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentArticles
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,  
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentArticles staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentArticles staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentArticles', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentArticles
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentArticles staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentArticles] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentBlogPostComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentBlogPostComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentBlogPostComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentBlogPostComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentBlogPostComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentBlogPostComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentBlogPostComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentBlogPostComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentBlogPostComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentBlogPostComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentBlogPostComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentBlogPosts]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentBlogPosts'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentBlogPosts', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentBlogPosts
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentBlogPosts
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,  
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentBlogPosts staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentBlogPosts staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentBlogPosts', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentBlogPosts
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentBlogPosts staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentBlogPosts] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentBlogs]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentBlogs'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentBlogs', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentBlogs
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentBlogs
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentBlogs staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentBlogs staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentBlogs', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentBlogs
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentBlogs staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentBlogs] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentCalendarEventComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentCalendarEventComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentCalendarEventComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentCalendarEventComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentCalendarEventComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentCalendarEventComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentCalendarEventComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentCalendarEventComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentCalendarEventComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentCalendarEventComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentCalendarEventComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentCalendarEvents]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentCalendarEvents'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentCalendarEvents', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentCalendarEvents
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentCalendarEvents
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentCalendarEvents staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentCalendarEvents staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentCalendarEvents', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentCalendarEvents
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentCalendarEvents staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentCalendarEvents] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentCalendars]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentCalendars'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentCalendars', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentCalendars
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentCalendars
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentCalendars staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentCalendars staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentCalendars', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentCalendars
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentCalendars staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentCalendars] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentForums]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentForums'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentForums', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForums
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForums
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForums staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForums staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentForums', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentForums
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentForums staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentForums] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentForumThreadComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentForumThreadComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentForumThreadComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreadComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreadComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreadComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreadComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentForumThreadComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentForumThreadComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentForumThreadComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentForumThreadComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentForumThreadReplies]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentForumThreadReplies'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentForumThreadReplies', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreadReplies
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreadReplies
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreadReplies staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreadReplies staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentForumThreadReplies', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentForumThreadReplies
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentForumThreadReplies staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentForumThreadReplies] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentForumThreadReplyComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentForumThreadReplyComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentForumThreadReplyComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreadReplyComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreadReplyComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreadReplyComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreadReplyComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentForumThreadReplyComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentForumThreadReplyComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentForumThreadReplyComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentForumThreadReplyComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentForumThreads]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentForumThreads'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentForumThreads', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreads
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentForumThreads
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreads staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentForumThreads staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentForumThreads', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentForumThreads
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentForumThreads staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentForumThreads] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentGroups]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentGroups'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentGroups', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentGroups
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentGroups
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentGroups staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentGroups staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentGroups', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentGroups
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentGroups staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentGroups] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentIdeaComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentIdeaComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentIdeaComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentIdeaComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentIdeaComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentIdeaComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentIdeaComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentIdeaComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentIdeaComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentIdeaComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentIdeaComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentIdeas]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentIdeas'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentIdeas', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentIdeas
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentIdeas
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentIdeas staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentIdeas staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentIdeas', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentIdeas
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentIdeas staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentIdeas] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentIdeations]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentIdeations'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentIdeations', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentIdeations
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentIdeations
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentIdeations staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentIdeations staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentIdeations', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentIdeations
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentIdeations staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentIdeations] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentKnowledgeManagementCollections]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentKnowledgeManagementCollections'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementCollections', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementCollections
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementCollections
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentKnowledgeManagementCollections staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentKnowledgeManagementCollections staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentKnowledgeManagementCollections', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentKnowledgeManagementCollections
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentKnowledgeManagementCollections staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentKnowledgeManagementCollections] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocumentComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocumentComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocumentComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocumentComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocumentComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentKnowledgeManagementDocumentComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentKnowledgeManagementDocumentComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocumentComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentKnowledgeManagementDocumentComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentKnowledgeManagementDocumentComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocumentComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocuments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocuments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocuments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocuments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocuments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentKnowledgeManagementDocuments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentKnowledgeManagementDocuments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocuments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentKnowledgeManagementDocuments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentKnowledgeManagementDocuments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentKnowledgeManagementDocuments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentLeaderboardComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentLeaderboardComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentLeaderboardComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentLeaderboardComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentLeaderboardComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentLeaderboardComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentLeaderboardComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentLeaderboardComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentLeaderboardComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentLeaderboardComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentLeaderboardComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentLeaderboards]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentLeaderboards'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentLeaderboards', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentLeaderboards
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentLeaderboards
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentLeaderboards staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentLeaderboards staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentLeaderboards', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentLeaderboards
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentLeaderboards staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentLeaderboards] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentMediaGalleries]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentMediaGalleries'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleries', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleries
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleries
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentMediaGalleries staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey= dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentMediaGalleries staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentMediaGalleries', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentMediaGalleries
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentMediaGalleries staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentMediaGalleries] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentMediaGalleryFileComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentMediaGalleryFileComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleryFileComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleryFileComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleryFileComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentMediaGalleryFileComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentMediaGalleryFileComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentMediaGalleryFileComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentMediaGalleryFileComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentMediaGalleryFileComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentMediaGalleryFileComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentMediaGalleryFiles]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentMediaGalleryFiles'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleryFiles', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleryFiles
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentMediaGalleryFiles
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentMediaGalleryFiles staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentMediaGalleryFiles staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentMediaGalleryFiles', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentMediaGalleryFiles
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentMediaGalleryFiles staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentMediaGalleryFiles] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentStatusMessageComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentStatusMessageComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentStatusMessageComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentStatusMessageComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentStatusMessageComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentStatusMessageComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentStatusMessageComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentStatusMessageComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentStatusMessageComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentStatusMessageComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentStatusMessageComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentStatusMessages]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentStatusMessages'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentStatusMessages', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentStatusMessages
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentStatusMessages
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentStatusMessages staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentStatusMessages staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentStatusMessages', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentStatusMessages
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentStatusMessages staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentStatusMessages] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentUsers]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentUsers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentUsers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentUsers
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentUsers
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentUsers staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentUsers staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentUsers', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentUsers
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentUsers staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentUsers] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentWikiPageComments]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentWikiPageComments'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentWikiPageComments', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentWikiPageComments
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentWikiPageComments
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentWikiPageComments staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentWikiPageComments staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentWikiPageComments', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentWikiPageComments
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentWikiPageComments staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentWikiPageComments] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentWikiPages]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentWikiPages'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentWikiPages', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentWikiPages
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentWikiPages
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentWikiPages staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentWikiPages staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentWikiPages', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentWikiPages
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentWikiPages staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentWikiPages] TO [public];
+
+/***********************************************
+* Procedure:    [FactContent_InsertFromStagingNew_FactContentWikis]
+***********************************************/
+Print 'Creating Procedure FactContent_InsertFromStagingNew_FactContentWikis'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContent_InsertFromStagingNew_FactContentWikis', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentWikis
+GO
+
+CREATE PROCEDURE dbo.FactContent_InsertFromStagingNew_FactContentWikis
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId					=	dContent.ContentId,  
+			@ApplicationId				=	dApplication.ApplicationId,
+			@ContainerId				=	dContainer.ContainerId,
+			@MembershipId				=	dUser.MembershipId,
+			@ContentKey					=	staging.ContentKey,
+			@ApplicationKey				=	staging.ApplicationKey,
+			@ContainerKey				=	staging.ContainerKey,
+			@CreatedUserKey				=	staging.CreatedUserKey,
+			@CreatedDateKey				=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey		=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentWikis staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@ContentKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContent(ContentKey, ApplicationKey, ContainerKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactContentWikis staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContent
+                     WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContent_InsertFromStagingNew_FactContentWikis', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentWikis
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentWikis staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContent
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContent_InsertFromStagingNew_FactContentWikis] TO [public];
+
+/***********************************************
+* Procedure:    [FactContentView_InsertFromStagingNew_FactContentViews]
+***********************************************/
+Print 'Creating Procedure FactContentView_InsertFromStagingNew_FactContentViews'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactContentView_InsertFromStagingNew_FactContentViews', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactContentView_InsertFromStagingNew_FactContentViews
+GO
+
+CREATE PROCEDURE dbo.FactContentView_InsertFromStagingNew_FactContentViews
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@ViewUserKey BIGINT,
+		@ViewDateUtc DATETIME2(0),
+		@ViewDateKey INT,
+		@ViewTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId			=	dContent.ContentId,
+			@MembershipId		=	dUser.MembershipId,
+			@ContentKey			=	staging.ContentKey,
+			@ViewUserKey		=	staging.ViewUserKey,
+			@ViewDateUtc		=	staging.ViewDateUtc,
+			@ViewDateKey		=	staging.ViewDateKey,
+			@ViewTimeOfDayKey	=	staging.ViewTimeOfDayKey
+		FROM dbo.StagingNew_FactContentViews staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimUser dUser ON staging.ViewUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContentView
+                     WHERE staging.ContentKey = ContentKey
+						AND staging.ViewDateKey = ViewDateKey
+						AND staging.ViewUserKey = ViewUserKey
+						AND staging.ViewTimeOfDayKey = ViewTimeOfDayKey)
+		ORDER BY staging.ViewDateKey,
+				 staging.ContentKey,
+				 staging.ViewUserKey,
+				 staging.ViewTimeOfDayKey
+
+		INSERT INTO dbo.FactContentView (ContentKey, ViewUserKey, ViewDateUtc, ViewDateKey, ViewTimeOfDayKey)
+		SELECT	@ContentKey, 
+				@ViewUserKey,
+				@ViewDateUtc,
+				@ViewDateKey,
+				@ViewTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactContentView (ContentKey, ViewUserKey, ViewDateUtc, ViewDateKey, ViewTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+					staging.ContentKey,
+                    staging.ViewUserKey,
+                    staging.ViewDateUtc,
+                    staging.ViewDateKey,
+                    staging.ViewTimeOfDayKey
+        FROM    dbo.StagingNew_FactContentViews     staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactContentView
+                     WHERE staging.ContentKey = ContentKey
+						AND staging.ViewDateKey = ViewDateKey
+						AND staging.ViewUserKey = ViewUserKey
+						AND staging.ViewTimeOfDayKey = ViewTimeOfDayKey)
+		ORDER BY staging.ViewDateKey,
+				 staging.ContentKey,				 
+				 staging.ViewUserKey,
+				 staging.ViewTimeOfDayKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactContentView_InsertFromStagingNew_FactContentViews', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'ViewDateUtc', CAST(@ViewDateUtc AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactContentViews
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+			AND ViewDateKey = @ViewDateKey
+			AND ViewUserKey = @ViewUserKey
+			AND ViewTimeOfDayKey = @ViewTimeOfDayKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactContentViews staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactContentView
+         WHERE staging.ContentKey = ContentKey
+			AND staging.ViewDateKey = ViewDateKey
+			AND staging.ViewUserKey = ViewUserKey
+			AND staging.ViewTimeOfDayKey = ViewTimeOfDayKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactContentView_InsertFromStagingNew_FactContentViews] TO [public];
+
+/***********************************************
+* Procedure:    [FactForumThreadReply_InsertFromStagingNew_FactForumThreadReplies]
+***********************************************/
+Print 'Creating Procedure FactForumThreadReply_InsertFromStagingNew_FactForumThreadReplies'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactForumThreadReply_InsertFromStagingNew_FactForumThreadReplies', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactForumThreadReply_InsertFromStagingNew_FactForumThreadReplies
+GO
+
+CREATE PROCEDURE dbo.FactForumThreadReply_InsertFromStagingNew_FactForumThreadReplies
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentKey BIGINT,
+		@ContentId UNIQUEIDENTIFIER,
+		@MembershipId_Created UNIQUEIDENTIFIER, 
+		@CreatedUserKey BIGINT, 
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT,
+		@IsNonOriginatorReply BIT,
+		@IsSuggestedAnswer BIT,
+		@SuggestedAnswerDateUtc DATETIME2(0),
+		@SuggestedAnswerDateKey INT,
+		@SuggestedAnswerTimeOfDayKey INT,
+		@MembershipId_SuggestedAnswer UNIQUEIDENTIFIER,
+		@SuggestedAnswerUserKey BIGINT,
+		@IsVerifiedAnswer BIT,
+		@VerifiedAnswerDateUtc DATETIME2(0),
+		@VerifiedAnswerDateKey INT,
+		@VerifiedAnswerTimeOfDayKey INT,
+		@MembershipId_VerifiedAnswer UNIQUEIDENTIFIER,
+		@VerifiedAnswerUserKey BIGINT,
+		@SecondsToReply INT,
+		@SecondsToSuggestedAnswer INT,
+		@SecondsToVerifiedAnswer INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId						=	dContent.ContentId,
+			@MembershipId_Created			=	dUser_Created.MembershipId,
+			@MembershipId_SuggestedAnswer	=	dUser_SuggestedAnswer.MembershipId,
+			@MembershipId_VerifiedAnswer	=	dUser_VerifiedAnswer.MembershipId,
+			@ContentKey						=	staging.ContentKey,
+			@MembershipId_Created			=	dUser_Created.MembershipId,
+			@CreatedDateUtc					=	staging.CreatedDateUtc,
+			@CreatedDateKey					=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey			=	staging.CreatedTimeOfDayKey,
+			@IsNonOriginatorReply			=	staging.IsNonOriginatorReply,
+			@IsSuggestedAnswer				=	staging.IsSuggestedAnswer,
+			@SuggestedAnswerDateUtc			=	staging.SuggestedAnswerDateUtc,
+			@SuggestedAnswerDateKey			=	staging.SuggestedAnswerDateKey,
+			@SuggestedAnswerTimeOfDayKey	=	staging.SuggestedAnswerTimeOfDayKey,
+			@SuggestedAnswerUserKey			=	staging.SuggestedAnswerUserKey,
+			@IsVerifiedAnswer				=	staging.IsVerifiedAnswer,
+			@VerifiedAnswerDateUtc			=	staging.VerifiedAnswerDateUtc,
+			@VerifiedAnswerDateKey			=	staging.VerifiedAnswerDateKey,
+			@VerifiedAnswerTimeOfDayKey		=	staging.VerifiedAnswerTimeOfDayKey,
+			@VerifiedAnswerUserKey			=	staging.VerifiedAnswerUserKey,
+			@SecondsToReply					=	staging.SecondsToReply,
+            @SecondsToSuggestedAnswer		=	staging.SecondsToSuggestedAnswer,
+            @SecondsToVerifiedAnswer		=	staging.SecondsToVerifiedAnswer
+		FROM dbo.StagingNew_FactForumThreadReplies staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimUser dUser_Created ON staging.CreatedUserKey = dUser_Created.UserKey
+		INNER JOIN dbo.DimUser dUser_SuggestedAnswer ON staging.SuggestedAnswerUserKey = dUser_SuggestedAnswer.UserKey
+		INNER JOIN dbo.DimUser dUser_VerifiedAnswer ON staging.SuggestedAnswerUserKey = dUser_VerifiedAnswer.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactForumThreadReply
+							WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		INSERT INTO dbo.FactForumThreadReply(ContentKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey, IsNonOriginatorReply, 
+												IsSuggestedAnswer, SuggestedAnswerDateUtc, SuggestedAnswerDateKey, SuggestedAnswerTimeOfDayKey, 
+												SuggestedAnswerUserKey, IsVerifiedAnswer, VerifiedAnswerDateUtc, VerifiedAnswerDateKey, 
+												VerifiedAnswerTimeOfDayKey, VerifiedAnswerUserKey, SecondsToReply, SecondsToSuggestedAnswer, 
+												SecondsToVerifiedAnswer)
+		SELECT	@ContentKey,
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey,
+				@IsNonOriginatorReply,
+				@IsSuggestedAnswer,
+				@SuggestedAnswerDateUtc,
+				@SuggestedAnswerDateKey,
+				@SuggestedAnswerTimeOfDayKey,
+				@SuggestedAnswerUserKey,
+				@IsVerifiedAnswer,
+				@VerifiedAnswerDateUtc,
+				@VerifiedAnswerDateKey,
+				@VerifiedAnswerTimeOfDayKey,
+				@VerifiedAnswerUserKey,
+				@SecondsToReply,
+				@SecondsToSuggestedAnswer,
+				@SecondsToVerifiedAnswer
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactForumThreadReply(ContentKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey, IsNonOriginatorReply, 
+												IsSuggestedAnswer, SuggestedAnswerDateUtc, SuggestedAnswerDateKey, SuggestedAnswerTimeOfDayKey, 
+												SuggestedAnswerUserKey, IsVerifiedAnswer, VerifiedAnswerDateUtc, VerifiedAnswerDateKey, 
+												VerifiedAnswerTimeOfDayKey, VerifiedAnswerUserKey, SecondsToReply, SecondsToSuggestedAnswer, 
+												SecondsToVerifiedAnswer)
+		SELECT TOP (@RowsToInsert) 
+				staging.ContentKey,
+				staging.CreatedUserKey,
+				staging.CreatedDateUtc,
+				staging.CreatedDateKey,
+				staging.CreatedTimeOfDayKey,  
+				staging.IsNonOriginatorReply,
+				staging.IsSuggestedAnswer,
+				staging.SuggestedAnswerDateUtc,
+				staging.SuggestedAnswerDateKey,
+				staging.SuggestedAnswerTimeOfDayKey,
+				staging.SuggestedAnswerUserKey,
+				staging.IsVerifiedAnswer,
+				staging.VerifiedAnswerDateUtc,
+				staging.VerifiedAnswerDateKey,
+				staging.VerifiedAnswerTimeOfDayKey,
+				staging.VerifiedAnswerUserKey,
+				staging.SecondsToReply,
+				staging.SecondsToSuggestedAnswer,
+				staging.SecondsToVerifiedAnswer
+		FROM dbo.StagingNew_FactForumThreadReplies staging
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactForumThreadReply
+							WHERE staging.ContentKey = ContentKey)
+		ORDER BY staging.ContentKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactForumThreadReply_InsertFromStagingNew_FactForumThreadReplies', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'MembershipId_Created', CAST(@MembershipId_Created AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(20)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactForumThreadReplies
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactForumThreadReplies staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactForumThreadReply
+         WHERE staging.ContentKey = ContentKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactForumThreadReply_InsertFromStagingNew_FactForumThreadReplies] TO [public];
+
+/***********************************************
+* Procedure:    [FactHelpfulness_InsertFromStagingNew_FactHelpfulness]
+***********************************************/
+Print 'Creating Procedure FactHelpfulness_InsertFromStagingNew_FactHelpfulness'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactHelpfulness_InsertFromStagingNew_FactHelpfulness', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactHelpfulness_InsertFromStagingNew_FactHelpfulness
+GO
+
+CREATE PROCEDURE dbo.FactHelpfulness_InsertFromStagingNew_FactHelpfulness
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@HelpfulnessKey INT,
+		@ContentKey BIGINT,
+		@CreatedUserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT,
+		@IsHelpful BIT,
+		@IsResolved BIT,
+		@IsIgnored BIT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId				=	dContent.ContentId,
+			@MembershipId			=	dUser.MembershipId,
+			@HelpfulnessKey			=	staging.HelpfulnessKey,
+			@ContentKey				=	staging.ContentKey,
+			@CreatedDateUtc			=	staging.CreatedDateUtc,
+			@CreatedUserKey			=	staging.CreatedUserKey,
+			@CreatedDateKey			=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey	=	staging.CreatedTimeOfDayKey,
+			@IsHelpful				=	staging.IsHelpful,
+			@IsResolved				=	staging.IsResolved,
+			@IsIgnored				=	staging.IsIgnored
+		FROM dbo.StagingNew_FactHelpfulness staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+        INNER JOIN dbo.DimUser dUser ON staging.CreatedUserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactHelpfulness
+                     WHERE staging.HelpfulnessKey = HelpfulnessKey)
+		ORDER BY staging.HelpfulnessKey
+
+		INSERT INTO dbo.FactHelpfulness (HelpfulnessKey, ContentKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey, IsHelpful, IsResolved, IsIgnored)
+		SELECT	@HelpfulnessKey,
+				@ContentKey, 
+				@CreatedUserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey,
+				@IsHelpful,
+				@IsResolved,
+				@IsIgnored
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactHelpfulness (HelpfulnessKey, ContentKey, CreatedUserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey, IsHelpful, IsResolved, IsIgnored)
+		SELECT TOP (@RowsToInsert) 
+					staging.HelpfulnessKey,
+					staging.ContentKey,
+                    staging.CreatedUserKey,
+                    staging.CreatedDateUtc,
+                    staging.CreatedDateKey,
+                    staging.CreatedTimeOfDayKey,
+                    staging.IsHelpful,
+					staging.IsResolved,
+					staging.IsIgnored
+        FROM    dbo.StagingNew_FactHelpfulness     staging
+        WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactVote
+                     WHERE staging.HelpfulnessKey = HelpfulnessKey)
+		ORDER BY staging.HelpfulnessKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactHelpfulness_InsertFromStagingNew_FactHelpfulness', 'HelpfulnessKey', CAST(@HelpfulnessKey AS NVARCHAR(50)), 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactHelpfulness
+		SET HasError = 1
+		WHERE HelpfulnessKey = @HelpfulnessKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactHelpfulness staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactHelpfulness
+         WHERE staging.HelpfulnessKey = HelpfulnessKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactHelpfulness_InsertFromStagingNew_FactHelpfulness] TO [public];
+
+/***********************************************
+* Procedure:    [FactPermission_InsertFromStagingNew_FactPermissions]
+***********************************************/
+Print 'Creating Procedure FactPermission_InsertFromStagingNew_FactPermissions'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactPermission_InsertFromStagingNew_FactPermissions', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactPermission_InsertFromStagingNew_FactPermissions
+GO
+
+CREATE PROCEDURE dbo.FactPermission_InsertFromStagingNew_FactPermissions
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ApplicationId UNIQUEIDENTIFIER,
+		@RoleId INT,
+		@PermissionId UNIQUEIDENTIFIER,
+		@ApplicationKey BIGINT,
+		@RoleKey BIGINT,
+		@PermissionKey BIGINT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ApplicationId	=	dApplication.ApplicationId,
+			@RoleId			=	dRole.RoleId,
+			@PermissionId	=	dPermission.PermissionId,
+			@ApplicationKey =	staging.ApplicationKey,
+			@RoleKey		=	staging.RoleKey,
+			@PermissionKey	=	staging.PermissionKey
+		FROM dbo.StagingNew_FactPermissions staging
+		INNER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+        INNER JOIN dbo.DimRole dRole ON staging.RoleKey = dRole.RoleKey
+		INNER JOIN dbo.DimPermission dPermission ON staging.PermissionKey = dPermission.PermissionKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactPermission
+                     WHERE staging.ApplicationKey = ApplicationKey
+						AND staging.RoleKey = RoleKey
+						AND staging.PermissionKey = PermissionKey)
+		ORDER BY staging.ApplicationKey,
+				 staging.RoleKey,
+				 staging.PermissionKey
+
+		INSERT INTO dbo.FactPermission (ApplicationKey, RoleKey, PermissionKey)
+		SELECT	@ApplicationKey,
+				@RoleKey,
+				@PermissionKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactPermission (ApplicationKey, RoleKey, PermissionKey)
+		SELECT TOP (@RowsToInsert) 
+					staging.ApplicationKey,
+                    staging.RoleKey,
+                    staging.PermissionKey
+        FROM    dbo.StagingNew_FactPermissions    staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactPermission
+                     WHERE staging.ApplicationKey = ApplicationKey
+						AND staging.RoleKey = RoleKey
+						AND staging.PermissionKey = PermissionKey)
+		ORDER BY staging.ApplicationKey,
+				 staging.RoleKey,
+				 staging.PermissionKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactPermission_InsertFromStagingNew_FactPermissions', 'ApplicationId', CAST(@ApplicationId AS NVARCHAR(50)), 'RoleId', CAST(@RoleId AS NVARCHAR(50)), 'PermissionId', CAST(@PermissionId AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactPermissions
+		SET HasError = 1
+		WHERE ApplicationKey = @ApplicationKey
+			AND RoleKey = @RoleKey
+			AND PermissionKey = @PermissionKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactPermissions staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactPermission
+         WHERE staging.ApplicationKey = ApplicationKey
+			AND staging.RoleKey = RoleKey
+			AND staging.PermissionKey = PermissionKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactPermission_InsertFromStagingNew_FactPermissions] TO [public];
+
+/***********************************************
+* Procedure:    [FactRating_InsertFromStagingNew_FactRatings]
+***********************************************/
+Print 'Creating Procedure FactRating_InsertFromStagingNew_FactRatings'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactRating_InsertFromStagingNew_FactRatings', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactRating_InsertFromStagingNew_FactRatings
+GO
+
+CREATE PROCEDURE dbo.FactRating_InsertFromStagingNew_FactRatings
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@RatingTypeId UNIQUEIDENTIFIER,
+		@ContentKey BIGINT,
+		@RatingUserKey BIGINT,
+		@RatingTypeKey INT,
+		@RatingDateUtc DATETIME2(0),
+		@RatingDateKey INT,
+		@RatingTimeOfDayKey INT,
+		@Rating NUMERIC(9, 8)
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId		=	dContent.ContentId,
+			@MembershipId   =	dUser.MembershipId,
+			@RatingTypeId	=	dRatingType.RatingTypeId,
+			@ContentKey		=	staging.ContentKey,
+			@RatingDateUtc	=	staging.RatingDateUtc,
+			@RatingTypeKey	=	staging.RatingTypeKey,
+			@RatingUserKey	=	staging.RatingUserKey,
+			@RatingDateKey	=	staging.RatingDateKey,
+			@RatingTimeOfDayKey	=	staging.RatingTimeOfDayKey
+		FROM dbo.StagingNew_FactRatings staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+        INNER JOIN dbo.DimUser dUser ON staging.RatingUserKey = dUser.UserKey
+        INNER JOIN dbo.DimRatingType dRatingType ON staging.RatingTypeKey = dRatingType.RatingTypeKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactRating
+                     WHERE staging.ContentKey = ContentKey
+						AND staging.RatingUserKey = RatingUserKey
+						AND staging.RatingTypeKey = RatingTypeKey)
+		ORDER BY staging.ContentKey, staging.RatingUserKey, staging.RatingTypeKey
+
+		INSERT INTO dbo.FactRating (ContentKey, RatingTypeKey, RatingUserKey, RatingDateUtc, RatingDateKey, RatingTimeOfDayKey, Rating)
+		SELECT	@ContentKey, 
+				@RatingTypeKey,
+				@RatingUserKey,
+				@RatingDateUtc,
+				@RatingDateKey,
+				@RatingTimeOfDayKey,
+				@Rating
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactRating (ContentKey, RatingTypeKey, RatingUserKey, RatingDateUtc, RatingDateKey, RatingTimeOfDayKey, Rating)
+		SELECT TOP (@RowsToInsert) 
+					staging.ContentKey,
+                    staging.RatingTypeKey,
+                    staging.RatingUserKey,
+                    staging.RatingDateUtc,
+                    staging.RatingDateKey,
+                    staging.RatingTimeOfDayKey,
+                    staging.Rating
+        FROM    dbo.StagingNew_FactRatings     staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactRating
+                     WHERE staging.ContentKey = ContentKey
+						AND staging.RatingUserKey = RatingUserKey
+						AND staging.RatingTypeKey = RatingTypeKey)
+		ORDER BY staging.ContentKey, staging.RatingUserKey, staging.RatingTypeKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactRating_InsertFromStagingNew_FactRatings', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'RatingTypeId', CAST(@RatingTypeId AS NVARCHAR(50)), 'RatingDateUtc', CAST(@RatingDateUtc AS NVARCHAR(50)),@ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactRatings
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+			AND RatingUserKey = @RatingUserKey
+			AND RatingTypeKey = @RatingTypeKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactRatings staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactRating
+         WHERE staging.ContentKey = ContentKey
+			AND staging.RatingUserKey = RatingUserKey
+			AND staging.RatingTypeKey = RatingTypeKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactRating_InsertFromStagingNew_FactRatings] TO [public];
+
+/***********************************************
+* Procedure:    [FactRole_InsertFromStagingNew_FactRoles]
+***********************************************/
+Print 'Creating Procedure FactRole_InsertFromStagingNew_FactRoles'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactRole_InsertFromStagingNew_FactRoles', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactRole_InsertFromStagingNew_FactRoles
+GO
+
+CREATE PROCEDURE dbo.FactRole_InsertFromStagingNew_FactRoles
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContainerId UNIQUEIDENTIFIER,
+		@RoleId INT,
+		@MembershipId UNIQUEIDENTIFIER,
+		@MembershipTypeId TINYINT,
+		@MembershipType NVARCHAR(50),
+		@ContainerKey BIGINT,
+		@RoleKey BIGINT,
+		@UserKey BIGINT,
+		@MembershipTypeKey BIGINT,
+		@GroupMemberDateUtc DATETIME2(0),
+		@GroupMemberDateKey INT,
+		@GroupMemberTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContainerId				=	dContainer.ContainerId,
+			@RoleId						=	dRole.RoleId,
+			@MembershipId				=	dUser.MembershipId,
+			@MembershipTypeId			=	dGroupMembershipType.MembershipTypeId,
+			@MembershipType				=	dGroupMembershipType.MembershipType,
+			@ContainerKey				=	staging.ContainerKey,
+			@RoleKey					=	staging.RoleKey,
+			@UserKey					=	staging.UserKey,
+			@MembershipTypeKey			=	staging.MembershipTypeKey,
+			@GroupMemberDateUtc			=	staging.GroupMemberDateUtc,
+			@GroupMemberDateKey			=	staging.GroupMemberDateKey,
+			@GroupMemberTimeOfDayKey	=	staging.GroupMemberTimeOfDayKey
+		FROM dbo.StagingNew_FactRoles staging
+		INNER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimRole dRole ON staging.RoleKey = dRole.RoleKey
+		INNER JOIN dbo.DimUser dUser ON staging.UserKey = dUser.UserKey
+		LEFT OUTER JOIN dbo.DimGroupMembershipType dGroupMembershipType ON staging.MembershipTypeKey = dGroupMembershipType.MembershipTypeKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactRole
+							WHERE staging.ContainerKey = ContainerKey
+								AND staging.RoleKey = RoleKey
+								AND staging.UserKey = UserKey
+								AND (staging.MembershipTypeKey = MembershipTypeKey
+								OR staging.MembershipTypeKey IS NULL AND MembershipTypeKey IS NULL))
+		ORDER BY staging.ContainerKey,
+				 staging.RoleKey,
+				 staging.UserKey,
+				 staging.MembershipTypeKey
+
+		INSERT INTO dbo.FactRole (ContainerKey, RoleKey, UserKey, MembershipTypeKey, GroupMemberDateUtc, GroupMemberDateKey, GroupMemberTimeOfDayKey)
+		SELECT	@ContainerKey, 
+				@RoleKey,
+				@UserKey,
+				@MembershipTypeKey,
+				@GroupMemberDateUtc,
+				@GroupMemberDateKey,
+				@GroupMemberTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactRole (ContainerKey, RoleKey, UserKey, MembershipTypeKey, GroupMemberDateUtc, GroupMemberDateKey, GroupMemberTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+					staging.ContainerKey,
+                    staging.RoleKey,
+                    staging.UserKey,
+					staging.MembershipTypeKey,
+                    staging.GroupMemberDateUtc,
+                    staging.GroupMemberDateKey,
+                    staging.GroupMemberTimeOfDayKey
+        FROM    dbo.StagingNew_FactRoles     staging
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactRole
+							WHERE staging.ContainerKey = ContainerKey
+								AND staging.RoleKey = RoleKey
+								AND staging.UserKey = UserKey
+								AND (staging.MembershipTypeKey = MembershipTypeKey
+								OR staging.MembershipTypeKey IS NULL AND MembershipTypeKey IS NULL))
+		ORDER BY staging.ContainerKey,
+				 staging.RoleKey,
+				 staging.UserKey,
+				 staging.MembershipTypeKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactRole_InsertFromStagingNew_FactRoles', 'ContainerId', CAST(@ContainerId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'RoleId', CAST(@RoleId AS NVARCHAR(50)), 'MembershipTypeId', CAST(@MembershipTypeId AS NVARCHAR(50)), 'MembershipType', @MembershipType, @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactRoles
+		SET HasError = 1
+		WHERE ContainerKey = @ContainerKey
+			AND RoleKey = @RoleKey
+			AND UserKey = @UserKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactRoles staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactRole
+         WHERE staging.ContainerKey = ContainerKey
+			AND staging.RoleKey = RoleKey
+			AND staging.UserKey = UserKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactRole_InsertFromStagingNew_FactRoles] TO [public];
+
+/***********************************************
+* Procedure:    [FactSearch_InsertFromStagingNew_FactSearch]
+***********************************************/
+Print 'Creating Procedure FactSearch_InsertFromStagingNew_FactSearch'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactSearch_InsertFromStagingNew_FactSearch', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactSearch_InsertFromStagingNew_FactSearch
+GO
+
+CREATE PROCEDURE dbo.FactSearch_InsertFromStagingNew_FactSearch
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @SearchHistoryId UNIQUEIDENTIFIER,
+		@SearchQuery NVARCHAR(MAX),
+		@ApplicationId UNIQUEIDENTIFIER,
+		@ContainerId UNIQUEIDENTIFIER,
+		@UserKey INT,
+		@SearchFlagGroupKey INT,
+		@SearchQueryKey BIGINT,
+		@ApplicationKey BIGINT,
+		@ContainerKey BIGINT,
+		@SearchTypeKey INT,
+		@SearchDateUtc DATETIME2(0),
+		@SearchDateKey INT,
+		@SearchTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@SearchHistoryId		=	staging.SearchHistoryId,
+			@ApplicationId			=	dApplication.ApplicationId,
+			@ContainerId			=	dContainer.ContainerId,
+			@SearchQuery			=	dSearchQuery.Query,
+			@ApplicationKey			=	dApplication.ApplicationKey,
+			@ContainerKey			=	dContainer.ContainerKey,
+			@UserKey				=	staging.UserKey,
+			@SearchFlagGroupKey		=	staging.SearchFlagGroupKey,
+			@SearchQueryKey			=	staging.SearchQueryKey,
+			@SearchFlagGroupKey		=	staging.SearchFlagGroupKey,
+			@SearchDateUtc			=	staging.SearchDateUtc,
+			@SearchDateKey			=	staging.SearchDateKey,
+			@SearchTimeOfDayKey		=	staging.SearchTimeOfDayKey
+		FROM dbo.StagingNew_FactSearch staging
+		LEFT OUTER JOIN dbo.DimApplication dApplication ON staging.ApplicationKey = dApplication.ApplicationKey
+		LEFT OUTER JOIN dbo.DimContainer dContainer ON staging.ContainerKey = dContainer.ContainerKey
+		INNER JOIN dbo.DimSearchQuery dSearchQuery ON staging.SearchQueryKey = dSearchQuery.SearchQueryKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactSearch
+							WHERE staging.SearchHistoryId = SearchHistoryId)
+		ORDER BY staging.SearchHistoryId
+
+		INSERT INTO dbo.FactSearch (SearchHistoryId, SearchQueryKey, ApplicationKey, ContainerKey, UserKey, SearchFlagGroupKey, SearchDateUtc, SearchDateKey, SearchTimeOfDayKey)
+		SELECT	@SearchHistoryId, 
+				@SearchQueryKey,
+				@ApplicationKey,
+				@ContainerKey,
+				@UserKey,
+				@SearchFlagGroupKey,
+				@SearchDateUtc,
+				@SearchDateKey,
+				@SearchTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactSearch (SearchHistoryId, SearchQueryKey, ApplicationKey, ContainerKey, UserKey, SearchFlagGroupKey, SearchDateUtc, SearchDateKey, SearchTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+				staging.SearchHistoryId, 
+				staging.SearchQueryKey,
+				staging.ApplicationKey,
+				staging.ContainerKey,
+				staging.UserKey,
+				staging.SearchFlagGroupKey,
+				staging.SearchDateUtc,
+				staging.SearchDateKey,
+				staging.SearchTimeOfDayKey
+        FROM    dbo.StagingNew_FactSearch     staging
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactSearch
+							WHERE staging.SearchHistoryId = SearchHistoryId)
+		ORDER BY staging.SearchHistoryId
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactSearch_InsertFromStagingNew_FactSearch', 'SearchHistoryId', CAST(@SearchHistoryId AS NVARCHAR(50)), 'SearchDateUtc', CAST(@SearchDateUtc AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactSearch
+		SET HasError = 1
+		WHERE SearchHistoryId = @SearchHistoryId
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactSearch staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+		 FROM dbo.FactSearch
+		 WHERE staging.SearchHistoryId = @SearchHistoryId)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactSearch_InsertFromStagingNew_FactSearch] TO [public];
+
+/***********************************************
+* Procedure:    [FactUser_InsertFromStagingNew_FactUsers]
+***********************************************/
+Print 'Creating Procedure FactUser_InsertFromStagingNew_FactUsers'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactUser_InsertFromStagingNew_FactUsers', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactUser_InsertFromStagingNew_FactUsers
+GO
+
+CREATE PROCEDURE dbo.FactUser_InsertFromStagingNew_FactUsers
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @MembershipId UNIQUEIDENTIFIER,
+		@UserKey BIGINT,
+		@CreatedDateUtc DATETIME2(0),
+		@CreatedDateKey INT,
+		@CreatedTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@MembershipId			=	dUser.MembershipId,
+			@UserKey				=	staging.UserKey,
+			@CreatedDateUtc			=	staging.CreatedDateUtc,
+			@CreatedDateKey			=	staging.CreatedDateKey,
+			@CreatedTimeOfDayKey	=	staging.CreatedTimeOfDayKey
+		FROM dbo.StagingNew_FactUsers staging
+		INNER JOIN dbo.DimUser dUser ON staging.UserKey = dUser.UserKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactUser
+                     WHERE staging.UserKey = UserKey)
+		ORDER BY staging.UserKey
+
+		INSERT INTO dbo.FactUser (UserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT	@UserKey,
+				@CreatedDateUtc,
+				@CreatedDateKey,
+				@CreatedTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactUser (UserKey, CreatedDateUtc, CreatedDateKey, CreatedTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+                    staging.UserKey,
+                    staging.CreatedDateUtc,
+                    staging.CreatedDateKey,
+                    staging.CreatedTimeOfDayKey
+        FROM    dbo.StagingNew_FactUsers     staging
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactUser
+                     WHERE staging.UserKey = UserKey)
+		ORDER BY staging.UserKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactUser_InsertFromStagingNew_FactUsers', 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'CreatedDateUtc', CAST(@CreatedDateUtc AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactUsers
+		SET HasError = 1
+		WHERE UserKey = @UserKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactUsers staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactUser
+         WHERE staging.UserKey = UserKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactUser_InsertFromStagingNew_FactUsers] TO [public];
+
+/***********************************************
+* Procedure:    [FactUserActivity_InsertFromStagingNew_FactUserActivities]
+***********************************************/
+Print 'Creating Procedure FactUserActivity_InsertFromStagingNew_FactUserActivities'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactUserActivity_InsertFromStagingNew_FactUserActivities', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactUserActivity_InsertFromStagingNew_FactUserActivities
+GO
+
+CREATE PROCEDURE dbo.FactUserActivity_InsertFromStagingNew_FactUserActivities
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @PrimaryContentId UNIQUEIDENTIFIER,
+		@SecondaryContentId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@ActivityTypeId INT,
+		@PrimaryContentKey BIGINT,
+		@SecondaryContentKey BIGINT,
+		@ActivityUserKey BIGINT,
+		@ActivityTypeKey INT,
+		@ActivityDateUtc DATETIME2(0),
+		@ActivityDateKey INT,
+		@ActivityTimeOfDayKey INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@PrimaryContentId		=	dContent.ContentId,
+			@SecondaryContentId		=	dContent2.ContentId,
+			@MembershipId			=	dUser.MembershipId,
+			@ActivityTypeId			=	dActivityType.ActivityTypeId,
+			@PrimaryContentKey		=	staging.PrimaryContentKey,
+			@SecondaryContentKey	=	staging.SecondaryContentKey,
+			@ActivityUserKey		=	staging.ActivityUserKey,
+			@ActivityTypeKey		=	staging.ActivityTypeKey,
+			@ActivityDateUtc		=	staging.ActivityDateUtc,
+			@ActivityDateKey		=	staging.ActivityDateKey,
+			@ActivityTimeOfDayKey	=	staging.ActivityTimeOfDayKey
+		FROM dbo.StagingNew_FactUserActivities staging
+		INNER JOIN dbo.DimContent dContent ON staging.PrimaryContentKey = dContent.ContentKey
+		INNER JOIN dbo.DimContent dContent2 ON staging.SecondaryContentKey = dContent2.ContentKey
+		INNER JOIN dbo.DimUser dUser ON staging.ActivityUserKey = dUser.UserKey
+		INNER JOIN dbo.DimActivityType dActivityType ON staging.ActivityTypeKey = dActivityType.ActivityTypeKey
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactUserActivity
+							WHERE staging.PrimaryContentKey = PrimaryContentKey
+								AND staging.SecondaryContentKey = SecondaryContentKey
+								AND staging.ActivityUserKey = ActivityUserKey
+								AND staging.ActivityDateKey = ActivityDateKey
+								AND staging.ActivityTypeKey = ActivityTypeKey
+								AND staging.ActivityTimeOfDayKey = ActivityTimeOfDayKey)
+		ORDER BY staging.ActivityDateKey,
+				 staging.PrimaryContentKey,
+				 staging.SecondaryContentKey,
+				 staging.ActivityUserKey,
+				 staging.ActivityTypeKey,
+				 staging.ActivityTimeOfDayKey
+
+		INSERT INTO dbo.FactUserActivity (PrimaryContentKey, SecondaryContentKey, ActivityUserKey, ActivityTypeKey, ActivityDateUtc, ActivityDateKey, ActivityTimeOfDayKey)
+		SELECT	@PrimaryContentKey, 
+				@SecondaryContentKey,
+				@ActivityUserKey,
+				@ActivityTypeKey,
+				@ActivityDateUtc,
+				@ActivityDateKey,
+				@ActivityTimeOfDayKey
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactUserActivity (PrimaryContentKey, SecondaryContentKey, ActivityUserKey, ActivityTypeKey, ActivityDateUtc, ActivityDateKey, ActivityTimeOfDayKey)
+		SELECT TOP (@RowsToInsert) 
+					staging.PrimaryContentKey,
+					staging.SecondaryContentKey,
+                    staging.ActivityUserKey,
+					staging.ActivityTypeKey,
+                    staging.ActivityDateUtc,
+                    staging.ActivityDateKey,
+                    staging.ActivityTimeOfDayKey
+        FROM    dbo.StagingNew_FactUserActivities     staging
+		WHERE HasError = 0
+			AND NOT EXISTS (SELECT 1 
+							FROM dbo.FactUserActivity
+							WHERE staging.PrimaryContentKey = PrimaryContentKey
+								AND staging.SecondaryContentKey = SecondaryContentKey
+								AND staging.ActivityUserKey = ActivityUserKey
+								AND staging.ActivityDateKey = ActivityDateKey
+								AND staging.ActivityTypeKey = ActivityTypeKey
+								AND staging.ActivityTimeOfDayKey = ActivityTimeOfDayKey)
+		ORDER BY staging.ActivityDateKey,
+				 staging.PrimaryContentKey,
+				 staging.SecondaryContentKey,
+				 staging.ActivityUserKey,
+				 staging.ActivityTypeKey,
+				 staging.ActivityTimeOfDayKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, KeyName4, KeyValue4, KeyName5, KeyValue5, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactUserActivity_InsertFromStagingNew_FactUserActivities', 'PrimaryContentId', CAST(@PrimaryContentId AS NVARCHAR(50)), 'SecondaryContentId', CAST(@SecondaryContentId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'ActivityTypeId', CAST(@ActivityTypeId AS NVARCHAR(50)), 'ActivityDateUtc', CAST(@ActivityDateUtc AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactUserActivities
+		SET HasError = 1
+		WHERE PrimaryContentKey = @PrimaryContentKey
+			AND SecondaryContentKey = @SecondaryContentKey
+			AND ActivityTypeKey	= @ActivityTypeKey
+			AND ActivityDateKey = @ActivityDateKey
+			AND ActivityUserKey = @ActivityUserKey
+			AND ActivityTimeOfDayKey = @ActivityTimeOfDayKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactUserActivities staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+		 FROM dbo.FactUserActivity
+		 WHERE staging.PrimaryContentKey = PrimaryContentKey
+			AND staging.SecondaryContentKey = SecondaryContentKey
+			AND staging.ActivityUserKey = ActivityUserKey
+			AND staging.ActivityDateKey = ActivityDateKey
+			AND staging.ActivityTypeKey = ActivityTypeKey
+			AND staging.ActivityTimeOfDayKey = ActivityTimeOfDayKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactUserActivity_InsertFromStagingNew_FactUserActivities] TO [public];
+
+/***********************************************
+* Procedure:    [FactVote_InsertFromStagingNew_FactVotes]
+***********************************************/
+Print 'Creating Procedure FactVote_InsertFromStagingNew_FactVotes'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.FactVote_InsertFromStagingNew_FactVotes', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.FactVote_InsertFromStagingNew_FactVotes
+GO
+
+CREATE PROCEDURE dbo.FactVote_InsertFromStagingNew_FactVotes
+(
+	@BatchId INT = 0,
+	@DateTimeOffSet INT = 0,
+	@RowsToInsert INT = 0,
+	@RowsInserted INT = 0 OUTPUT,
+	@RowsWithErrors INT = 0 OUTPUT
+)
+AS
+SET NOCOUNT ON
+
+DECLARE @ContentId UNIQUEIDENTIFIER,
+		@MembershipId UNIQUEIDENTIFIER,
+		@VoteTypeId INT,
+		@ContentKey BIGINT,
+		@VoteUserKey BIGINT,
+		@VoteTypeKey INT,
+		@VoteDateUtc DATETIME2(0),
+		@VoteDateKey INT,
+		@VoteTimeOfDayKey INT,
+		@Value INT
+
+BEGIN TRY
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT TOP (1) 
+			@ContentId		=	dContent.ContentId,
+			@MembershipId   =	dUser.MembershipId,
+			@VoteTypeId		=	dVoteType.VoteTypeId,
+			@ContentKey		=	staging.ContentKey,
+			@VoteDateUtc	=	staging.VoteDateUtc,
+			@VoteTypeKey	=	staging.VoteTypeKey,
+			@VoteUserKey	=	staging.VoteUserKey,
+			@VoteDateKey	=	staging.VoteDateKey,
+			@VoteTimeOfDayKey	=	staging.VoteTimeOfDayKey,
+			@Value = staging.[Value]
+		FROM dbo.StagingNew_FactVotes staging
+		INNER JOIN dbo.DimContent dContent ON staging.ContentKey = dContent.ContentKey
+        INNER JOIN dbo.DimUser dUser ON staging.VoteUserKey = dUser.UserKey
+        INNER JOIN dbo.DimVoteType dVoteType ON staging.VoteTypeKey = dVoteType.VoteTypeKey
+		WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactVote
+                     WHERE staging.ContentKey = ContentKey
+						AND staging.VoteUserKey = VoteUserKey
+						AND staging.VoteTypeKey = VoteTypeKey)
+		ORDER BY staging.ContentKey,
+				 staging.VoteUserKey,
+				 staging.VoteTypeKey
+
+		INSERT INTO dbo.FactVote (ContentKey, VoteTypeKey, VoteUserKey, VoteDateUtc, VoteDateKey, VoteTimeOfDayKey, [Value])
+		SELECT	@ContentKey, 
+				@VoteTypeKey,
+				@VoteUserKey,
+				@VoteDateUtc,
+				@VoteDateKey,
+				@VoteTimeOfDayKey,
+				@Value
+						
+		SELECT @RowsInserted = 1
+	END
+	ELSE
+	BEGIN
+		INSERT INTO dbo.FactVote (ContentKey, VoteTypeKey, VoteUserKey, VoteDateUtc, VoteDateKey, VoteTimeOfDayKey, [Value])
+		SELECT TOP (@RowsToInsert) 
+					staging.ContentKey,
+                    staging.VoteTypeKey,
+                    staging.VoteUserKey,
+                    staging.VoteDateUtc,
+                    staging.VoteDateKey,
+                    staging.VoteTimeOfDayKey,
+                    staging.[Value]
+        FROM    dbo.StagingNew_FactVotes     staging
+        WHERE HasError = 0
+			AND NOT EXISTS
+                    (SELECT 1
+                     FROM dbo.FactVote
+                     WHERE staging.ContentKey = ContentKey
+						AND staging.VoteUserKey = VoteUserKey
+						AND staging.VoteTypeKey = VoteTypeKey)
+		ORDER BY staging.ContentKey,
+				 staging.VoteUserKey,
+				 staging.VoteTypeKey
+
+		SELECT @RowsInserted = @@ROWCOUNT
+	END
+END TRY
+BEGIN CATCH
+	
+	DECLARE @ErrorNumber INT = ERROR_NUMBER();
+	DECLARE @ErrorLine INT = ERROR_LINE();
+	DECLARE @ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+	DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+	DECLARE @ErrorState INT = ERROR_STATE();
+
+	IF (@RowsToInsert = 1)
+	BEGIN
+		SELECT @RowsWithErrors = 1
+		--Log error
+		INSERT INTO dbo.ReportingBatchErrorLog( BatchId, ErrorDateUtc, Module, KeyName1, KeyValue1, KeyName2, KeyValue2, KeyName3, KeyValue3, ErrorMessage )
+		SELECT @BatchId, GETUTCDATE(), 'FactVote_InsertFromStagingNew_FactVotes', 'ContentId', CAST(@ContentId AS NVARCHAR(50)), 'MembershipId', CAST(@MembershipId AS NVARCHAR(50)), 'VoteTypeId', CAST(@VoteTypeId AS NVARCHAR(50)), @ErrorMessage
+
+		-- Flag record in staging as HasError.
+		UPDATE dbo.StagingNew_FactVotes
+		SET HasError = 1
+		WHERE ContentKey = @ContentKey
+			AND VoteUserKey = @VoteUserKey
+			AND VoteTypeKey = @VoteTypeKey
+	END
+	ELSE
+	BEGIN
+		RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState)
+	END
+
+END CATCH
+
+DELETE staging
+FROM dbo.StagingNew_FactVotes staging
+WHERE HasError = 0
+	AND EXISTS 
+		(SELECT 1 
+         FROM dbo.FactVote
+         WHERE staging.ContentKey = ContentKey
+			AND staging.VoteUserKey = VoteUserKey
+			AND staging.VoteTypeKey = VoteTypeKey)
+
+GO
+
+GO
+
+GRANT EXECUTE ON [dbo].[FactVote_InsertFromStagingNew_FactVotes] TO [public];
+
+/***********************************************
+* Procedure:    [IndexPlan_ScriptOutIndexes]
+***********************************************/
+Print 'Creating Procedure IndexPlan_ScriptOutIndexes'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.IndexPlan_ScriptOutIndexes', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.IndexPlan_ScriptOutIndexes
+GO
+
+CREATE PROCEDURE dbo.IndexPlan_ScriptOutIndexes
+( 
+	 @IndexPlan		TINYINT	= 0
+	,@Category		NVARCHAR(20)
+)
+
+AS
+
+SET NOCOUNT ON
+
+DECLARE  @Drop		NVARCHAR(MAX)
+DECLARE	 @Create	NVARCHAR(MAX)
+DECLARE  @Rebuild	NVARCHAR(MAX)
+
+
+--Ensure all Index Plan
+--If DropCreate do not exist, do not create.
+--If Rebuild do not exist, create before scripting.
+IF EXISTS (SELECT 1 
+			FROM dbo.ReportingIndexPlan aip 
+			INNER JOIN dbo.ReportingIndex ai ON aip.IndexId = ai.IndexId
+			WHERE aip.IndexPlan = @IndexPlan AND ai.Category = @Category
+				AND aip.PlanAction = 'Rebuild'
+				AND NOT EXISTS (SELECT 1 FROM sys.indexes i WHERE ai.IndexName COLLATE DATABASE_DEFAULT = i.name))
+BEGIN
+	SELECT   @Create = STUFF( (SELECT ' ' + IndexScript 
+								FROM	(SELECT 'IF NOT EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = ''' + IndexName + ''') ' + 
+											'ALTER TABLE dbo.'+ ai.IndexTable +' ADD CONSTRAINT ' + IndexName +' '+ IndexType + ' ( ' +
+											IndexColumns + ' ) '  +
+											CHAR(10) AS IndexScript
+										FROM	dbo.ReportingIndex ai
+										INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+										WHERE	 ai.Category = @Category
+											AND	 aip.IndexPlan = @IndexPlan	
+											AND aip.PlanAction = 'Rebuild'	
+											AND ai.IndexType LIKE 'PRIMARY KEY%'								
+											AND NOT EXISTS (SELECT 1 FROM sys.indexes i WHERE ai.IndexName COLLATE DATABASE_DEFAULT = i.name)
+											) a
+								FOR XML PATH('')), 1, 1, '')
+
+	SELECT   @Create = ISNULL(@Create, '') + ISNULL(STUFF( (SELECT ' ' + IndexScript 
+								FROM	(SELECT 'IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''' + IndexName + ''') ' + 
+											'CREATE ' + IndexType + ' INDEX ' + IndexName + ' ON dbo.' + IndexTable + ' ( ' +
+											IndexColumns + ' ) '  + 
+											CASE WHEN IndexIncludeColumns IS NOT NULL
+											THEN ' INCLUDE ( ' + IndexIncludeColumns + ' ) ' 
+											ELSE '' END +
+											CHAR(10) AS IndexScript, 
+											CASE ai.IndexType WHEN 'UNIQUE CLUSTERED' THEN 1
+																WHEN 'UNIQUE NONCLUSTERED' THEN 2
+																ELSE 3
+											END AS SortId
+										FROM	dbo.ReportingIndex ai
+										INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+										WHERE	 ai.Category = @Category
+											AND	 aip.IndexPlan = @IndexPlan	
+											AND aip.PlanAction = 'Rebuild'	
+											AND ai.IndexType NOT LIKE 'PRIMARY KEY%'									
+											AND NOT EXISTS (SELECT 1 FROM sys.indexes i WHERE ai.IndexName COLLATE DATABASE_DEFAULT = i.name)
+											) a
+								ORDER BY SortId FOR XML PATH('')), 1, 1, ''), '')
+
+	IF ISNULL(@Create,'') <> ''
+		EXEC sp_executesql @Create
+	ELSE
+	BEGIN
+		RAISERROR ('Error: Missing Index Plan Index', 16, 1)
+		RETURN
+	END
+END
+
+--Script DROP script for all DropCreate Indexes for the @IndexPlan and the @Category
+IF EXISTS (SELECT 1 
+			FROM dbo.ReportingIndex ai
+			INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+			WHERE ai.Category = @Category 
+				AND aip.IndexPlan = @IndexPlan
+				AND aip.PlanAction = 'DropCreate')
+BEGIN
+	SELECT   @Drop = STUFF( (SELECT ' ' + IndexScript 
+								FROM	(SELECT 'IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''' + IndexName + ''') ' + 
+											'DROP INDEX ' + IndexName + ' ON dbo.' + IndexTable +
+											CHAR(10) AS IndexScript, 
+											CASE ai.IndexType WHEN 'UNIQUE CLUSTERED' THEN 1
+																WHEN 'UNIQUE NONCLUSTERED' THEN 2
+																ELSE 3
+											END AS SortId
+										FROM	dbo.ReportingIndex ai
+										INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+										WHERE	 ai.Category = @Category
+											AND	 aip.IndexPlan = @IndexPlan	
+											AND aip.PlanAction = 'DropCreate'
+											AND ai.IndexType NOT LIKE 'PRIMARY KEY%') a
+								ORDER BY SortId DESC FOR XML PATH('')), 1, 1, '')
+
+	SELECT   @Drop = ISNULL(@Drop, '') + ISNULL(STUFF( (SELECT ' ' + IndexScript 
+								FROM	(SELECT 'IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = ''' + IndexName + ''') ' + 
+											'ALTER TABLE dbo.'+ ai.IndexTable +' DROP CONSTRAINT ' + IndexName +
+											CHAR(10) AS IndexScript
+										FROM	dbo.ReportingIndex ai
+										INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+										WHERE	 ai.Category = @Category
+											AND	 aip.IndexPlan = @IndexPlan	
+											AND aip.PlanAction = 'DropCreate'
+											AND ai.IndexType LIKE 'PRIMARY KEY%') a
+								FOR XML PATH('')), 1, 1, ''), '')
+
+	UPDATE	 ReportingIndexPlanScript
+	SET		 Script		=	ISNULL(@Drop,'')
+	WHERE	 IndexPlan	=	@IndexPlan
+		AND	 Category	=	@Category
+		AND	 ScriptType	=	'Drop'
+		AND  ISNULL(@Drop,'') <> ''
+		
+	IF @@ROWCOUNT = 0
+	INSERT INTO ReportingIndexPlanScript (IndexPlan, Category, ScriptType, Script)
+	SELECT	 @IndexPlan, @Category, 'Drop', ISNULL(@Drop,'')
+	WHERE	 ISNULL(@Drop,'') <> ''	
+	
+
+	--Create script
+	SELECT   @Create = STUFF( (SELECT ' ' + IndexScript 
+								FROM	(SELECT 'IF NOT EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = ''' + IndexName + ''') ' + 
+											'ALTER TABLE dbo.'+ ai.IndexTable +' ADD CONSTRAINT ' + IndexName +' '+ IndexType + ' ( ' +
+											IndexColumns + ' ) '  +
+											CHAR(10) AS IndexScript
+										FROM	dbo.ReportingIndex ai
+										INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+										WHERE	 ai.Category = @Category
+											AND	 aip.IndexPlan = @IndexPlan	
+											AND aip.PlanAction = 'DropCreate'
+											AND ai.IndexType LIKE 'PRIMARY KEY%'
+											) a
+								FOR XML PATH('')), 1, 1, '')
+
+	SELECT   @Create = ISNULL(@Create, '') + ISNULL(STUFF( (SELECT ' ' + IndexScript 
+								FROM	(SELECT 'IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''' + IndexName + ''') ' + 
+											'CREATE ' + IndexType + ' INDEX ' + IndexName + ' ON dbo.' + IndexTable + ' ( ' +
+											IndexColumns + ' ) '  + 
+											CASE WHEN IndexIncludeColumns IS NOT NULL
+											THEN ' INCLUDE ( ' + IndexIncludeColumns + ' ) ' 
+											ELSE '' END +
+											CHAR(10) AS IndexScript, 
+											CASE ai.IndexType WHEN 'UNIQUE CLUSTERED' THEN 1
+																WHEN 'UNIQUE NONCLUSTERED' THEN 2
+																ELSE 3
+											END AS SortId
+										FROM	dbo.ReportingIndex ai
+										INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+										WHERE	 ai.Category = @Category
+											AND	 aip.IndexPlan = @IndexPlan	
+											AND aip.PlanAction = 'DropCreate'
+											AND ai.IndexType NOT LIKE 'PRIMARY KEY%'
+											) a
+								ORDER BY SortId FOR XML PATH('')), 1, 1, ''), '')
+
+	UPDATE	 ReportingIndexPlanScript
+	SET		 Script		=	@Create
+	WHERE	 IndexPlan	=	@IndexPlan
+		AND	 Category	=	@Category
+		AND	 ScriptType	=	'Create'
+		AND	 ISNULL(@Create,'') <> ''
+
+	IF @@ROWCOUNT = 0
+	INSERT INTO ReportingIndexPlanScript (IndexPlan, Category, ScriptType, Script)
+	SELECT	 @IndexPlan, @Category, 'Create', @Create
+	WHERE	 ISNULL(@Create,'') <> ''
+END
+
+--ScriptType = Rebuild
+IF EXISTS (SELECT 1 
+			FROM dbo.ReportingIndex ai
+			INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+			WHERE ai.Category = @Category 
+				AND aip.IndexPlan = @IndexPlan
+				AND aip.PlanAction = 'Rebuild')
+BEGIN
+	SELECT   @Rebuild = STUFF( (SELECT ' ' + IndexScript 
+								FROM	(SELECT 'IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''' + IndexName + ''') ' + 
+											'CREATE ' + CASE WHEN IndexType = 'PRIMARY KEY CLUSTERED' THEN 'UNIQUE CLUSTERED' 
+															 WHEN IndexType = 'PRIMARY KEY CLUSTERED' THEN 'UNIQUE NONCLUSTERED' 
+															 ELSE IndexType END + ' INDEX ' + IndexName + ' ON dbo.' + IndexTable + ' ( ' +
+											IndexColumns + ' ) '  + 
+											CASE WHEN IndexIncludeColumns IS NOT NULL
+											THEN ' INCLUDE ( ' + IndexIncludeColumns + ' ) ' 
+											ELSE '' END +
+											' WITH (DROP_EXISTING = ON)' +
+											CHAR(10) AS IndexScript, 
+											CASE ai.IndexType WHEN 'UNIQUE CLUSTERED' THEN 1
+																WHEN 'UNIQUE NONCLUSTERED' THEN 2
+																ELSE 3
+											END AS SortId
+										FROM	dbo.ReportingIndex ai
+										INNER JOIN dbo.ReportingIndexPlan aip ON ai.IndexId = aip.IndexId
+										WHERE	 ai.Category = @Category
+											AND	 aip.IndexPlan = @IndexPlan	
+											AND aip.PlanAction = 'Rebuild'									
+											) a
+								ORDER BY SortId FOR XML PATH('')), 1, 1, '')
+	
+	UPDATE	 ReportingIndexPlanScript
+	SET		 Script		=	@Rebuild
+	WHERE	 IndexPlan	=	@IndexPlan
+		AND	 Category	=	@Category
+		AND	 ScriptType	=	'Rebuild'
+		AND	 ISNULL(@Rebuild,'') <> ''
+
+
+	IF @@ROWCOUNT = 0
+	INSERT INTO ReportingIndexPlanScript (IndexPlan, Category, ScriptType, Script)
+	SELECT	 @IndexPlan, @Category, 'Rebuild', @Rebuild
+	WHERE	 ISNULL(@Rebuild,'') <> ''
+END
+GO
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[IndexPlan_ScriptOutIndexes] TO [public];
+
+/***********************************************
+* Procedure:    [ReportingTableReferences_CreateReferences]
+***********************************************/
+Print 'Creating Procedure ReportingTableReferences_CreateReferences'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.ReportingTableReferences_CreateReferences', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.ReportingTableReferences_CreateReferences
+GO
+
+CREATE PROCEDURE dbo.ReportingTableReferences_CreateReferences
+(
+	@Table NVARCHAR(100)	
+)
+
+AS
+
+DECLARE @CreateScript NVARCHAR(MAX)
+
+SELECT  @CreateScript = CreateScript
+FROM    dbo.ReportingTableReferences
+WHERE   TableName = @Table
+
+IF @CreateScript IS NOT NULL
+BEGIN
+	EXEC sp_executesql @CreateScript
+END
+
+GO
+
+GRANT EXECUTE ON [dbo].[ReportingTableReferences_CreateReferences] TO [public];
+
+/***********************************************
+* Procedure:    [ReportingTableReferences_DropReferences]
+***********************************************/
+Print 'Creating Procedure ReportingTableReferences_DropReferences'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.ReportingTableReferences_DropReferences', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.ReportingTableReferences_DropReferences
+GO
+
+CREATE PROCEDURE dbo.ReportingTableReferences_DropReferences
+(
+	@Table NVARCHAR(100)	
+)
+
+AS
+
+DECLARE @CreateScript NVARCHAR(MAX),
+		@DropScript NVARCHAR(MAX)
+
+SELECT  @CreateScript = CreateScript,
+		@DropScript = DropScript
+FROM    dbo.ReportingTableReferences
+WHERE   TableName = @Table
+
+IF @CreateScript IS NOT NULL AND @DropScript IS NOT NULL
+BEGIN
+	EXEC sp_executesql @DropScript
+END
+
+GO
+
+GRANT EXECUTE ON [dbo].[ReportingTableReferences_DropReferences] TO [public];
+
+/***********************************************
+* Procedure:    [ReportingTableReferences_ScriptOutReferences]
+***********************************************/
+Print 'Creating Procedure ReportingTableReferences_ScriptOutReferences'
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+
+IF OBJECT_ID(N'dbo.ReportingTableReferences_ScriptOutReferences', N'P') IS NOT NULL
+	DROP PROCEDURE dbo.ReportingTableReferences_ScriptOutReferences
+GO
+
+CREATE PROCEDURE dbo.ReportingTableReferences_ScriptOutReferences
+(
+	@Table NVARCHAR(100)	
+)
+
+AS
+
+DECLARE @CreateScript NVARCHAR(MAX),
+		@DropScript NVARCHAR(MAX)
+
+SELECT  @CreateScript = CreateScript,
+		@DropScript = DropScript
+FROM    dbo.ReportingTableReferences
+WHERE   TableName = @Table
+
+IF  @CreateScript IS NULL
+BEGIN
+	DECLARE @ChildTable NVARCHAR(100)
+
+	DECLARE Cur1 CURSOR FOR
+	SELECT SCHEMA_NAME(co.schema_id) + '.' + OBJECT_NAME(co.object_id)
+	FROM sys.objects po
+	INNER JOIN sys.foreign_keys fk on po.object_id = fk.referenced_object_id
+	INNER JOIN sys.objects co ON fk.parent_object_id = co.object_id
+	WHERE po.object_id = OBJECT_ID(@Table)
+
+	OPEN Cur1
+	FETCH NEXT FROM Cur1 INTO @ChildTable
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		SELECT @CreateScript = ISNULL(@CreateScript,'') + 'IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE referenced_object_id = OBJECT_ID(N'''+@Table+''') AND name = ''' + fk.[name] + ''')' + CHAR(13) +
+										'ALTER TABLE '+@ChildTable+' ADD CONSTRAINT ' + fk.[name] + ' FOREIGN KEY (' + 
+												STUFF(( SELECT ',' + QUOTENAME(c.[name])
+														FROM sys.columns c
+														INNER JOIN sys.foreign_key_columns fkc ON c.column_id = fkc.parent_column_id AND c.object_id = fkc.parent_object_id 
+														WHERE fkc.constraint_object_id = fk.object_id
+														ORDER BY fkc.constraint_column_id 
+														FOR XML PATH('')), 1, 1, '') +') ' + CHAR(13) + 'REFERENCES '+@ChildTable+' (' + 
+												STUFF(( SELECT ',' + QUOTENAME(c.[name]) 
+														FROM sys.columns c
+														INNER JOIN sys.foreign_key_columns fkc ON c.column_id = fkc.referenced_column_id AND c.object_id = fkc.referenced_object_id 
+														WHERE fkc.constraint_object_id = fk.object_id
+														ORDER BY fkc.constraint_column_id 
+														FOR XML PATH('')), 1, 1, '') +')' + CHAR(10) + CHAR(13)
+										FROM sys.foreign_keys fk
+										WHERE fk.referenced_object_id = OBJECT_ID(@Table) AND fk.parent_object_id = OBJECT_ID(@ChildTable)	
+			FETCH NEXT FROM Cur1 INTO @ChildTable								
+	END
+
+	CLOSE Cur1
+	DEALLOCATE Cur1
+
+END
+
+IF @DropScript IS NULL
+BEGIN
+	DECLARE Cur1 CURSOR FOR
+	SELECT SCHEMA_NAME(co.schema_id) + '.' + OBJECT_NAME(co.object_id)
+	FROM sys.objects po
+	INNER JOIN sys.foreign_keys fk on po.object_id = fk.referenced_object_id
+	INNER JOIN sys.objects co ON fk.parent_object_id = co.object_id
+	WHERE po.object_id = OBJECT_ID(@Table)
+
+	OPEN Cur1
+	FETCH NEXT FROM Cur1 INTO @ChildTable
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		SELECT @DropScript = ISNULL(@DropScript,'') + 'IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE referenced_object_id = OBJECT_ID(N'''+@Table+''') AND name = ''' + fk.[name] + ''')' + CHAR(13) +
+										'ALTER TABLE '+@ChildTable+' DROP CONSTRAINT ' + fk.[name] + CHAR(10) + CHAR(13)
+										FROM sys.foreign_keys fk
+										WHERE fk.referenced_object_id = OBJECT_ID(@Table) AND fk.parent_object_id = OBJECT_ID(@ChildTable)	
+			FETCH NEXT FROM Cur1 INTO @ChildTable								
+	END
+
+	CLOSE Cur1
+	DEALLOCATE Cur1
+END
+
+IF (@CreateScript IS NOT NULL AND @DropScript IS NOT NULL)
+BEGIN
+	UPDATE dbo.ReportingTableReferences
+	SET CreateScript = @CreateScript,
+		DropScript = @DropScript
+	WHERE TableName = @Table
+
+	IF @@ROWCOUNT < 1
+	BEGIN
+		INSERT INTO dbo.ReportingTableReferences (TableName, CreateScript, DropScript)
+		VALUES (@Table, @CreateScript, @DropScript)
+	END
+END
+
+
+GO
+
+GRANT EXECUTE ON [dbo].[ReportingTableReferences_ScriptOutReferences] TO [public];

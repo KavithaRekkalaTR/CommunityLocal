@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<scriptedEmails>
+  <scriptedEmail name="Article Create Notifications" version="13.0.0.0" description="Raises notifications to subscribers when an article is published." id="70fb16f812d6432ba525da93c301d156" lastModified="2023-08-30 16:30:47Z" isFactoryDefault="true">
+    <subjectScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.ArticleList.Count == 1)
+	#foreach($article in $context_v1_email.Context.ArticleList)
+	    #format($core_v2_language.GetResource('Subject_Single'))
+	    #token('article_title')
+		    $article.Title
+		#token('articlecollection_name')
+		    $context_v1_email.Context.ArticleCollection.Name
+		#token('group_name')
+		    $context_v1_email.Context.ArticleCollection.Group.Name
+		#end
+	#end
+#else
+	#format($core_v2_language.GetResource('Subject_Multiple'))
+    #token('article_count')
+	    $core_v2_language.FormatNumber($context_v1_email.Context.ArticleList.Count)
+	#token('articlecollection_name')
+	    $context_v1_email.Context.ArticleCollection.Name
+	#token('group_name')
+	    $context_v1_email.Context.ArticleCollection.Group.Name
+	#end
+#end]]></subjectScript>
+    <headerScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.ArticleList.Count == 1)
+	#foreach($article in $context_v1_email.Context.ArticleList)
+		<a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">$article.Title</a>
+	#end
+#else
+	#format($core_v2_language.GetResource('Subject_Multiple'))
+    #token('article_count')
+	    $core_v2_language.FormatNumber($context_v1_email.Context.ArticleList.Count)
+	#token('articlecollection_name')
+	    $context_v1_email.Context.ArticleCollection.Name
+	#token('group_name')
+	    $context_v1_email.Context.ArticleCollection.Group.Name
+	#end
+#end
+]]></headerScript>
+    <bodyScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.ArticleList.Count == 1)
+	#foreach($article in $context_v1_email.Context.ArticleList)
+		$article.Body('Email')
+	#end
+#else
+	<p>
+	#format($core_v2_language.GetResource('Body_Introduction'))
+	#token('article_count')
+	    $context_v1_email.Context.ArticleList.Count
+	#token('group_name_link')
+	    <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ArticleCollection.Group.Url)">$context_v1_email.Context.ArticleCollection.Group.Name</a>
+	#token('articlecollection_name_link')
+		<a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ArticleCollection.Url)">$context_v1_email.Context.ArticleCollection.Name</a>
+	#end
+	</p>
+
+	<ul>
+	#foreach($article in $context_v1_email.Context.ArticleList)
+		<li><a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">$article.Title</a></li>
+	#end
+	</ul>
+	#if ($context_v1_email.Context.ArticleList.Count > 25)
+		<p>
+		$core_v2_language.GetResource('AndMore')
+		</p>
+	#end
+#end]]></bodyScript>
+    <footerScript language="Velocity"><![CDATA[#if ($context_v1_email.Context.ArticleList.Count == 1)
+	#foreach($article in $context_v1_email.Context.ArticleList)
+		<p>
+		#format($core_v2_language.GetResource('Footer_Single'))
+		#token('unsubscribe_link')
+			<a href="$core_v2_encoding.HtmlAttributeEncode($article.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+		#end
+		</p>
+		#set($reportUrl = $core_v2_urls.ReportAbuse($article.Url, $article.ContentId, $articles_v1_articles.ContentTypeId))
+		#if ($reportUrl)
+		    <p>
+		    #format($core_v2_language.GetResource('Footer_ReportAbuse'))
+		    #token('report_link')
+		        <a href="$core_v2_encoding.HtmlAttributeEncode($reportUrl)">$core_v2_language.GetResource('ReportAbuse')</a>
+		    #end
+		    </p>
+		#end
+	#end
+#else
+    <p>
+    #format($core_v2_language.GetResource('Footer_Multiple'))
+    #token('unsubscribe_link')
+        <a href="$core_v2_encoding.HtmlAttributeEncode($context_v1_email.Context.ArticleCollection.Url)">$core_v2_language.GetResource('Unsubscribe')</a>
+    #end
+    </p>
+#end]]></footerScript>
+    <languageResources><![CDATA[<language key="en-us">
+  <resource name="AndMore">and more...</resource>
+  <resource name="Body_Introduction">There are {article_count} additions in {group_name_link} - {articlecollection_name_link}:</resource>
+  <resource name="Footer_Multiple">You received this notification because you subscribed to get get updates. To unsubscribe, {unsubscribe_link}.</resource>
+  <resource name="Footer_ReportAbuse">{report_link}.</resource>
+  <resource name="Footer_Single">You received this notification because you subscribed to get updates. To unsubscribe, {unsubscribe_link}.</resource>
+  <resource name="ReportAbuse">Flag as spam/abuse</resource>
+  <resource name="Subject_Multiple">{group_name} - {articlecollection_name}: {article_count} additions</resource>
+  <resource name="Subject_Single">{group_name} - {articlecollection_name}: {article_title} was added</resource>
+  <resource name="Unsubscribe">go here</resource>
+</language>]]></languageResources>
+  </scriptedEmail>
+</scriptedEmails>

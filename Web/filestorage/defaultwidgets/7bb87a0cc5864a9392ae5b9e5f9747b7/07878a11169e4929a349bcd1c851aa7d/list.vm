@@ -1,0 +1,42 @@
+#foreach($achievement in $achievements)
+#beforeall
+	<ul class="content-list content margin-bottom">
+#each
+	#if ($content == 'userachievement')
+		<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($achievement.Achievement.Url)">
+			<div class="content abbreviated">
+				<div class="avatar round">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($achievement.Achievement.Url)">$core_v2_ui.GetResizedImageHtml($achievement.Achievement.BadgeIconUrl, 100, 100, "%{alt=$achievement.Achievement.Title,border='0',ResizeMethod = 'ZoomAndCrop'}")</a>
+				</div>
+				<div class="summary">
+					<h2 class="name"><a href="$core_v2_encoding.HtmlAttributeEncode($achievement.Achievement.Url)">$achievement.Achievement.Title</a></h2>
+					<div class="content">$core_v2_language.FormatAgoDate($achievement.CreatedDate)</div>
+				</div>
+			</div>
+		</li>
+	#else
+		<li class="content-item" data-href="$core_v2_encoding.HtmlAttributeEncode($achievement.Url)">
+			<div class="content abbreviated">
+				<div class="avatar round">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($achievement.Url)">$core_v2_ui.GetResizedImageHtml($achievement.BadgeIconUrl, 100, 100, "%{alt=$achievement.Title,border='0',ResizeMethod = 'ZoomAndCrop'}")</a>
+				</div>
+				<div class="summary">
+					<h2 class="name"><a href="$core_v2_encoding.HtmlAttributeEncode($achievement.Url)">$achievement.Title</a></h2>
+					<div class="content">$core_v2_language.truncate($!achievement.Criteria, 100, '...')</div>
+				</div>
+			</div>
+		</li>
+	#end
+#afterall
+	</ul>
+#nodata
+	<div class="message norecords">
+		#if($queryType=='achievements')
+			$core_v2_language.GetResource('Achievements_AchievementList_NoAchievements')
+		#elseif($queryType=='currentUser')
+			$core_v2_language.FormatString($core_v2_language.GetResource('Achievements_UserAchievements_None'), $core_v2_user.Current.DisplayName)
+		#else
+			$core_v2_language.FormatString($core_v2_language.GetResource('Achievements_UserAchievements_None'), $core_v2_user.Accessing.DisplayName)
+		#end
+	</div>
+#end

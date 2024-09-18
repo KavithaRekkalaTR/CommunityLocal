@@ -1,0 +1,21 @@
+#set ($allCommentsOptions = "%{}")
+$allCommentsOptions.add('ContentId', $content.ContentId)
+$allCommentsOptions.add('ContentTypeId', $content.ContentTypeId)
+$allCommentsOptions.add('IncludeChildren', 'True')
+$allCommentsOptions.add('IsApproved', 'True')
+$allCommentsOptions.add('PageSize', 1)
+$allCommentsOptions.add('PageIndex', 0)
+#set ($totalComments = 0)
+#set ($allComments = $core_v2_comments.List($allCommentsOptions))
+#if ($allComments)
+	#set ($totalComments = $allComments.TotalCount)
+#end
+
+#set ($presentUsers = 1)
+#set ($presenceSummary = $core_v2_contentPresence.GetSummary($content.ContentId, $content.ContentTypeId, "%{ CacheOnly = 'true' }"))
+#if ($presenceSummary)
+	#set ($presentUsers = $presenceSummary.PresentUsers)
+#end
+
+#set ($statisticsWrapperId = $core_v2_widget.UniqueId('statisticsWrapper'))
+<div id="$core_v2_encoding.HtmlAttributeEncode($statisticsWrapperId)" class="comment-statistics"></div>
